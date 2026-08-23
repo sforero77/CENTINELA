@@ -133,6 +133,7 @@ tests/           unit/, integration/, golden/, fixtures/
 
 ## Documentacion
 
+- [`PENDIENTES.md`](PENDIENTES.md) — **que falta, quien puede hacerlo y en que orden**
 - [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificacion tecnica v0.9
 - [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — como publicar el activo y por que no va en git
 - [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con metodo y hallazgos
