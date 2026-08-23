@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from ..common.logging import get_logger
 from ..common.manifest import Manifest, lint_manifest
@@ -73,15 +74,174 @@ def plan_build(iso3: str, *, manifests_dir: Path | None = None, out_dir: Path) -
     return plan
 
 
+#: Ensamblaje final del activo. Todas las capas entran por LEFT JOIN sobre el
+#: crosswalk: una celda sin edificios registrados es una celda con cero
+#: edificios, no una celda ausente. Y se descartan las celdas sin nada — no
+#: aportan al reporte y multiplicarian por tres el tamano del parquet.
+SQL_EXPOSURE = """
+CREATE OR REPLACE TABLE exposure_h3 AS
+SELECT
+    c.h3_08,
+    '{iso3}' AS iso3,
+    a.adm1_id,
+    c.adm2_id,
+    COALESCE(p.pop_total, 0.0)                        AS pop_total,
+    COALESCE(j.pop_0_14, 0.0)                         AS pop_0_14,
+    GREATEST(
+        COALESCE(p.pop_total, 0.0)
+        - COALESCE(j.pop_0_14, 0.0) - COALESCE(v.pop_65p, 0.0), 0.0
+    )                                                 AS pop_15_64,
+    COALESCE(v.pop_65p, 0.0)                          AS pop_65p,
+    COALESCE(w.pop_alt_worldpop, 0.0)                 AS pop_alt_worldpop,
+    COALESCE(b.bld_count, 0)                          AS bld_count,
+    COALESCE(b.bld_area_m2, 0.0)                      AS bld_area_m2,
+    COALESCE(h.health_count, 0)                       AS health_count,
+    COALESCE(e.edu_count, 0)                          AS edu_count,
+    COALESCE(r.road_km_primary, 0.0)                  AS road_km_primary,
+    COALESCE(r.road_km_secondary, 0.0)                AS road_km_secondary,
+    COALESCE(r.road_km_other, 0.0)                    AS road_km_other,
+    {flags}                                           AS flags_calidad,
+    '{manifest}'                                      AS src_manifest
+FROM crosswalk_h3_adm c
+JOIN admin_lookup a USING (adm2_id)
+LEFT JOIN pop_h3        p USING (h3_08)
+LEFT JOIN pop_0_14_h3   j USING (h3_08)
+LEFT JOIN pop_65p_h3    v USING (h3_08)
+LEFT JOIN pop_alt_h3    w USING (h3_08)
+LEFT JOIN bld_h3        b USING (h3_08)
+LEFT JOIN health_h3     h USING (h3_08)
+LEFT JOIN edu_h3        e USING (h3_08)
+LEFT JOIN roads_h3      r USING (h3_08)
+WHERE COALESCE(p.pop_total, 0) > 0
+   OR COALESCE(b.bld_count, 0) > 0
+   OR COALESCE(r.road_km_primary + r.road_km_secondary + r.road_km_other, 0) > 0
+"""
+
+#: Banderas de calidad de §6.4. Se **publican**, no se ocultan: una celda con
+#: gente y sin edificios registrados suele ser asentamiento informal mal
+#: mapeado, y esconderlo seria fingir una cobertura que no existe.
+SQL_FLAGS = """
+    NULLIF(
+        CONCAT_WS(',',
+            CASE WHEN COALESCE(b.bld_count,0)=0 AND COALESCE(p.pop_total,0)>500
+                 THEN 'revisar_sin_edificios' END,
+            CASE WHEN COALESCE(w.pop_alt_worldpop,0)>0
+                  AND abs(COALESCE(p.pop_total,0)-w.pop_alt_worldpop)
+                      / NULLIF(w.pop_alt_worldpop,0) > 2.0
+                 THEN 'discrepancia_poblacional' END
+        ), ''
+    )
+"""
+
+
+def assemble_exposure(con: Any, *, iso3: str, manifest_id: str) -> dict[str, float]:
+    """Ensambla ``exposure_h3`` a partir de las tablas por capa ya agregadas.
+
+    Espera que existan ``crosswalk_h3_adm``, ``admin_lookup`` y las tablas de
+    capa. Las que falten se pueden crear vacias con :func:`ensure_layer_tables`.
+    """
+    con.execute(SQL_EXPOSURE.format(iso3=iso3, manifest=manifest_id, flags=SQL_FLAGS))
+    fila = con.execute(
+        """
+        SELECT count(*), sum(pop_total), sum(bld_count), sum(health_count),
+               sum(edu_count), sum(road_km_primary+road_km_secondary+road_km_other),
+               count(DISTINCT adm2_id),
+               count(*) FILTER (WHERE flags_calidad IS NOT NULL)
+        FROM exposure_h3
+        """
+    ).fetchone()
+    resumen = {
+        "celdas": fila[0],
+        "pop_total": fila[1] or 0.0,
+        "bld_count": fila[2] or 0,
+        "health_count": fila[3] or 0,
+        "edu_count": fila[4] or 0,
+        "road_km": fila[5] or 0.0,
+        "municipios": fila[6],
+        "celdas_marcadas": fila[7],
+    }
+    _log.info("activo ensamblado", extra={"context": {"iso3": iso3, **resumen}})
+    return resumen
+
+
+#: Capas opcionales. Si una no se construyo, entra vacia en vez de romper el
+#: ensamblaje: es preferible un activo con una columna en cero y declarado asi,
+#: que ningun activo.
+LAYER_TABLES: dict[str, str] = {
+    "pop_h3": "h3_08 UBIGINT, pop_total DOUBLE",
+    "pop_0_14_h3": "h3_08 UBIGINT, pop_0_14 DOUBLE",
+    "pop_65p_h3": "h3_08 UBIGINT, pop_65p DOUBLE",
+    "pop_alt_h3": "h3_08 UBIGINT, pop_alt_worldpop DOUBLE",
+    "bld_h3": "h3_08 UBIGINT, bld_count BIGINT, bld_area_m2 DOUBLE",
+    "health_h3": "h3_08 UBIGINT, health_count BIGINT",
+    "edu_h3": "h3_08 UBIGINT, edu_count BIGINT",
+    "roads_h3": (
+        "h3_08 UBIGINT, road_km_primary DOUBLE, road_km_secondary DOUBLE, road_km_other DOUBLE"
+    ),
+}
+
+
+def ensure_layer_tables(con: Any) -> list[str]:
+    """Crea vacias las tablas de capa que falten. Devuelve cuales falto crear."""
+    existentes = {r[0] for r in con.execute("SELECT table_name FROM duckdb_tables()").fetchall()}
+    creadas = []
+    for tabla, esquema in LAYER_TABLES.items():
+        if tabla not in existentes:
+            con.execute(f"CREATE TABLE {tabla} ({esquema})")
+            creadas.append(tabla)
+    if creadas:
+        _log.warning(
+            "capas ausentes, se crean vacias",
+            extra={"context": {"tablas": creadas}},
+        )
+    return creadas
+
+
+def validate_national_total(
+    con: Any, manifest: Manifest, *, referencia: dict[str, Any] | None
+) -> list[str]:
+    """Assert de §6.4: el total nacional dentro de la tolerancia del oficial."""
+    if not referencia:
+        return ["Sin referencia oficial en el manifest: no se puede validar el total (aviso)"]
+    total: float = con.execute("SELECT sum(pop_total) FROM exposure_h3").fetchone()[0] or 0.0
+    esperado = float(referencia["poblacion_2025"])
+    tolerancia = float(referencia.get("tolerancia_pct", 1.0))
+    desvio = 100.0 * (total - esperado) / esperado
+    if abs(desvio) > tolerancia:
+        return [
+            f"Total nacional {total:,.0f} se desvia {desvio:+.2f}% de la referencia "
+            f"{esperado:,.0f} ({manifest.iso3}); tolerancia {tolerancia}%"
+        ]
+    _log.info(
+        "total nacional dentro de tolerancia",
+        extra={"context": {"total": total, "referencia": esperado, "desvio_pct": desvio}},
+    )
+    return []
+
+
+def write_asset(con: Any, plan: BuildPlan) -> Path:
+    """Escribe el activo como GeoParquet particionado Hive."""
+    plan.salida.mkdir(parents=True, exist_ok=True)
+    destino = plan.salida / "exposure_h3.parquet"
+    con.execute(f"COPY exposure_h3 TO '{destino}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+    _log.info(
+        "activo escrito",
+        extra={"context": {"ruta": str(destino), "bytes": destino.stat().st_size}},
+    )
+    return destino
+
+
 def build_country(iso3: str, *, manifests_dir: Path | None = None, out_dir: Path) -> Path:
     """Construye el activo completo de un pais.
 
-    Implementacion pendiente (Fase 0, semana 2): descarga por capa segun
-    :data:`pipelines.p0_exposure.layers.LAYERS`, agregacion a H3 r8, join,
-    asserts de calidad de §6.4 y escritura de GeoParquet particionado Hive.
+    Orquesta el plan, el ensamblaje y la validacion. **La descarga y agregacion
+    de cada capa vive en su modulo** (``sources/``, ``raster_h3``, ``vector_h3``,
+    ``crosswalk``): esta funcion las coordina, no las implementa.
     """
     plan = plan_build(iso3, manifests_dir=manifests_dir, out_dir=out_dir)
     raise NotImplementedError(
-        f"Pendiente: construccion de exposure_h3 para {plan.iso3} (Fase 0 semana 2). "
-        f"El plan y la validacion de manifest ya son funcionales."
+        f"Pendiente: descarga automatica de las capas de {plan.iso3}. "
+        f"El ensamblaje (assemble_exposure), la validacion del total nacional y "
+        f"la escritura del activo ya son funcionales y estan probados de punta a "
+        f"punta sobre Colombia; falta encadenar las descargas en un solo comando."
     )

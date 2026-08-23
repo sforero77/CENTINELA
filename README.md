@@ -76,8 +76,9 @@ arranque no funciona en tu maquina, eso es un bug.
 | P2 muestreo de Ground Failure | ✅ funcional |
 | P2 join de impacto en DuckDB | ✅ funcional |
 | **Backtest del 10-ago-2026 end-to-end** | ✅ **reporte publicado** |
-| P0 capas de salud, educacion, vias y etaria | ⏳ pendiente |
-| P0 `build_country` como un solo comando | ⏳ pendiente |
+| P0 capas de salud, educacion, vias y desglose etario | ✅ funcional |
+| P0 ensamblaje, validacion del total y escritura del activo | ✅ funcional |
+| P0 `build_country`: encadenar las descargas en un comando | ⏳ pendiente |
 | Mapa estatico del reporte | ⏳ decision T0.8 |
 | P4 brigada de imagen | ⏳ Fase 2 |
 
@@ -99,9 +100,17 @@ sintetica habria encontrado — ver `tests/fixtures/golden/README.md`.
 |---|---|
 | Personas en MMI≥6 | **6.960.086** |
 | Personas en MMI≥7 | **2.415.793** |
+| De ellas, 65 anos o mas | **270 mil** |
 | Edificaciones en MMI≥7 | **444.281** |
+| Sedes de salud en MMI≥7 | **512** |
+| Sedes educativas en MMI≥7 | **997** |
+| Kilometros de via en MMI≥7 | **1.400** |
 | Personas en zona de licuefaccion alta | **1.660.190** |
 | Municipios alcanzados | **297** |
+
+El activo del que salen: **519.735 celdas**, 52,9 millones de habitantes, 15,4
+millones de edificaciones, 9.615 sedes de salud, 43.837 sedes educativas y
+44.919 km de via, en los 1.122 municipios del pais. 17,3 MB de GeoParquet.
 
 Y el dato que cambia la conversacion: los municipios mas expuestos no estaban en
 Chocó sino en el Eje Cafetero y el Valle — Pereira, Buenaventura, Armenia,

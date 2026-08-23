@@ -10,9 +10,11 @@
 | Poblacion en MMI≥7 | 2,4 millones |
 | Poblacion en MMI≥8 | 0 |
 | Edificaciones en MMI≥7 | 440 mil |
-| Sedes de salud en MMI≥7 | 0 |
-| Sedes educativas en MMI≥7 | 0 |
-| Kilometros de via en MMI≥7 | 0 km |
+| Sedes de salud en MMI≥7 | 512 |
+| Sedes educativas en MMI≥7 | 997 |
+| Kilometros de via en MMI≥7 | 1.400 km |
+
+De la poblacion en intensidad MMI≥7, alrededor de **270 mil** personas tienen 65 anos o mas.
 
 ## Municipios mas expuestos (top 15)
 
@@ -47,15 +49,15 @@ PAGER (USGS) estima para este evento una alerta **red**. CENTINELA no estima vic
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el area afectada: **0,0 %**.
+Discrepancia entre GHS-POP y WorldPop en el area afectada: **3,2 %**.
 
 - BACKTEST: reconstruccion retrospectiva del evento, no un reporte emitido en su momento.
-- Cobertura de salud, educacion, vias y desglose etario aun no incluida en el activo v0.4.
-- Banda de discrepancia GHS-POP vs WorldPop pendiente de calcular.
+- Salud y educacion provienen de OpenStreetMap: su cobertura es desigual y tiende a subestimar en zona rural.
+- El ShakeMap tiene resolucion nominal de ~1 km; las cifras no admiten lectura a escala mas fina.
 
 ## Descargas
 
-- [GeoParquet (celdas H3 r8)](exposure_col.parquet)
+- [GeoParquet (celdas H3 r8)](exposure_h3.parquet)
 - [CSV por municipio](adm2.csv)
 
 ## Procedencia
@@ -63,7 +65,7 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **0,0 %**.
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v7**
 - Manifest de exposicion: `col-v0.4`
-- Pipeline: `0.1.0` · Generado: 2026-08-23T15:07:06Z
+- Pipeline: `0.1.0` · Generado: 2026-08-23T17:38:50Z
 
 ## Advertencias
 
