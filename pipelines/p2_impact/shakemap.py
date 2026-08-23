@@ -75,35 +75,85 @@ def parse_contours(payload: dict[str, Any]) -> list[MmiContour]:
     return sorted(contours, key=lambda c: c.value)
 
 
+def rings_to_geometry(contour: MmiContour) -> Any:
+    """Convierte los anillos cerrados de un contorno en un area (shapely).
+
+    Los anillos anidados del mismo nivel son huecos: un anillo de MMI 6 dentro
+    de otro de MMI 6 delimita una zona que **no** alcanza MMI 6. La diferencia
+    simetrica acumulada da exactamente esa semantica par/impar, y para anillos
+    disjuntos se comporta como la union — que es lo que se quiere para las
+    islas de intensidad separadas.
+
+    Requiere el extra ``[geo]``.
+    """
+    from shapely.geometry import Polygon
+    from shapely.ops import unary_union
+
+    # buffer(0) repara autointersecciones: los contornos de ShakeMap traen
+    # anillos que se tocan a si mismos donde la isolinea roza el borde de la
+    # grilla, y shapely los rechaza sin esto.
+    poligonos = [Polygon(anillo).buffer(0) for anillo in contour.rings if len(anillo) >= 4]
+    poligonos = [p for p in poligonos if not p.is_empty]
+    if not poligonos:
+        return None
+    # De mayor a menor: cada anillo interior recorta al que lo contiene.
+    poligonos.sort(key=lambda p: p.area, reverse=True)
+    area = poligonos[0]
+    for p in poligonos[1:]:
+        area = area.symmetric_difference(p)
+    return unary_union(area)
+
+
 def contours_to_h3(
     contours: list[MmiContour],
     *,
     resolution: int = H3_RES_COMPUTE,
+    min_value: float = 0.0,
 ) -> dict[int, MmiCell]:
     """Convierte contornos de isointensidad en celdas H3 con MMI asignada.
 
-    Contrato, corregido tras inspeccionar el ShakeMap real de Chocó:
+    Contrato, fijado tras inspeccionar el ShakeMap real de Chocó:
 
-    * La entrada son **isolineas**, no poligonos. Hay que cerrarlas en anillos
-      antes de rellenar. Los contornos de MMI≥5 —los unicos que el reporte
-      publica— vienen cerrados; los de MMI bajo aparecen cortados por el borde
-      de la grilla y hay que recortarlos contra ese borde o descartarlos.
-    * Un mismo nivel trae **muchas lineas** (el ShakeMap de Chocó tiene 76 para
-      MMI 4.0): islas de intensidad separadas, no un anillo unico.
-    * Los niveles son anidados: MMI 7,5 dentro de 7,0 dentro de 6,5. Se
-      recorren de menor a mayor y la celda conserva el **maximo** MMI de los
-      contornos que la contienen.
-    * Un anillo dentro de otro del mismo nivel es un hueco, y hay que restarlo.
-    * ``mmi_mean`` se estima con el valor del contorno asignado; refinarlo
-      exige muestrear ``grid.xml``, que es la alternativa raster si el cierre
-      de isolineas resulta demasiado fragil.
-    * Devuelve ``h3_08 -> MmiCell`` para join directo.
+    * La entrada son **isolineas**, no poligonos. Se cierran en anillos antes de
+      rellenar. Los contornos de MMI>=5 —los unicos que el reporte publica—
+      vienen cerrados; los de MMI bajo aparecen cortados por el borde de la
+      grilla y sus lineas abiertas se descartan, porque cerrarlas a la brava
+      inventaria area que el ShakeMap no afirma.
+    * Un mismo nivel trae **muchas** lineas (76 para MMI 4,0 en Chocó): islas de
+      intensidad separadas, no un anillo unico.
+    * Los niveles son anidados. Se recorren de menor a mayor y cada celda
+      conserva el **maximo** MMI de los contornos que la contienen.
+    * ``mmi_mean`` se estima con el valor del contorno asignado. Refinarlo
+      exigiria muestrear ``grid.xml``.
 
-    Implementacion pendiente (Fase 0, semana 3): ``shapely.polygonize`` sobre
-    las lineas cerradas, jerarquia de contencion para huecos, y
-    ``h3.polygon_to_cells`` por anillo. Requiere el extra ``[geo]``.
+    Args:
+        contours: contornos ya parseados.
+        resolution: resolucion H3 de salida.
+        min_value: ignora contornos por debajo de este MMI. El reporte publica
+            desde MMI 6, y rellenar los niveles bajos multiplica el numero de
+            celdas sin aportar nada al resultado.
+
+    Returns:
+        ``h3_08 -> MmiCell``, listo para join.
     """
-    raise NotImplementedError(
-        "Pendiente: polyfill H3 de contornos MMI (Fase 0 semana 3). "
-        "Contrato definido contra el ShakeMap real de Chocó."
-    )
+    import h3
+
+    celdas: dict[int, float] = {}
+    for contorno in sorted(contours, key=lambda c: c.value):
+        if contorno.value < min_value:
+            continue
+        area = rings_to_geometry(contorno)
+        if area is None or area.is_empty:
+            continue
+        try:
+            alcanzadas = h3.geo_to_cells(area.__geo_interface__, resolution)
+        except Exception as exc:  # geometria degenerada del contorno
+            raise ValueError(
+                f"No se pudo rellenar el contorno MMI {contorno.value}: {exc}"
+            ) from exc
+        for celda in alcanzadas:
+            entero = h3.str_to_int(celda) if isinstance(celda, str) else int(celda)
+            # Recorrido de menor a mayor: el ultimo en escribir es el mayor MMI.
+            celdas[entero] = contorno.value
+
+    return {h: MmiCell(h3_08=h, mmi_mean=v, mmi_max=v) for h, v in celdas.items()}

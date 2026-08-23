@@ -184,3 +184,37 @@ def test_un_nivel_trae_muchas_islas(choco_contornos: dict[str, Any]) -> None:
 
     por_valor = {c.value: c for c in parse_contours(choco_contornos)}
     assert len(por_valor[4.0].geometry["coordinates"]) > 50
+
+
+# --- Polyfill sobre el ShakeMap real ---------------------------------------
+
+
+@pytest.mark.geo
+def test_el_polyfill_produce_bandas_anidadas(choco_contornos: dict[str, Any]) -> None:
+    """Cada celda conserva el MAXIMO MMI: las bandas altas son subconjuntos."""
+    from collections import Counter
+
+    from pipelines.p2_impact.shakemap import contours_to_h3, parse_contours
+
+    celdas = contours_to_h3(parse_contours(choco_contornos), min_value=5.0)
+    assert len(celdas) > 100_000
+
+    por_banda = Counter(c.mmi_max for c in celdas.values())
+    # Anidamiento: cuanto mas alta la intensidad, menos area alcanza.
+    assert por_banda[7.5] < por_banda[7.0] < por_banda[6.5]
+
+    # El maximo del ShakeMap de Chocó es MMI 7,5: nada debe salir por encima.
+    assert max(c.mmi_max for c in celdas.values()) == 7.5
+
+
+@pytest.mark.geo
+def test_el_polyfill_ignora_las_bandas_por_debajo_del_umbral(
+    choco_contornos: dict[str, Any],
+) -> None:
+    """Rellenar MMI 4 multiplica las celdas sin aportar al reporte."""
+    from pipelines.p2_impact.shakemap import contours_to_h3, parse_contours
+
+    contornos = parse_contours(choco_contornos)
+    assert len(contours_to_h3(contornos, min_value=6.0)) < len(
+        contours_to_h3(contornos, min_value=5.0)
+    )

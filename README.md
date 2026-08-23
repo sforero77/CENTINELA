@@ -70,9 +70,15 @@ arranque no funciona en tu maquina, eso es un bug.
 | Regla de los tres cubos y lint de manifests | ✅ funcional, corre en CI |
 | Golden tests G1/G2/G3 con productos reales congelados | ✅ corren |
 | Resolucion de descargas por la API de HDX | ✅ funcional |
-| P2 polyfill H3, muestreo de Ground Failure, join DuckDB | ⏳ semana 3 |
-| P0 construccion del activo y crosswalk DIVIPOLA | ⏳ semana 2 |
-| Mapa estatico del reporte | ⏳ semana 3 (decision T0.8) |
+| P0 crosswalk DIVIPOLA (1.122 municipios, 1,5 M celdas) | ✅ funcional |
+| P0 agregacion raster→H3 y seleccion de fuentes | ✅ funcional |
+| P2 polyfill H3 de contornos MMI | ✅ funcional |
+| P2 muestreo de Ground Failure | ✅ funcional |
+| P2 join de impacto en DuckDB | ✅ funcional |
+| **Backtest del 10-ago-2026 end-to-end** | ✅ **reporte publicado** |
+| P0 capas de salud, educacion, vias y etaria | ⏳ pendiente |
+| P0 `build_country` como un solo comando | ⏳ pendiente |
+| Mapa estatico del reporte | ⏳ decision T0.8 |
 | P4 brigada de imagen | ⏳ Fase 2 |
 
 Las etapas pendientes fallan de forma ruidosa y explicita — nunca devuelven un
@@ -81,8 +87,26 @@ inventario vivo de esa deuda: la lista encogiendo es el indicador de avance.
 
 Los golden tests corren contra **productos reales congelados** de los dos
 eventos que motivan el proyecto: Chocó (`us6000tjl2`) y el doble mainshock de
-Venezuela (`us6000t7zp`, `us6000t7zc`). Ya cazaron un bug que ninguna prueba
+Venezuela (`us6000t7zp`, `us6000t7zc`). Ya cazaron dos bugs que ninguna prueba
 sintetica habria encontrado — ver `tests/fixtures/golden/README.md`.
+
+### El backtest del Chocó
+
+`reports/us6000tjl2/` es la respuesta a la pregunta que motiva el proyecto:
+**esto es lo que el pais habria sabido el 10 de agosto**, en vez de esperar dias.
+
+| | |
+|---|---|
+| Personas en MMI≥6 | **6.960.086** |
+| Personas en MMI≥7 | **2.415.793** |
+| Edificaciones en MMI≥7 | **444.281** |
+| Personas en zona de licuefaccion alta | **1.660.190** |
+| Municipios alcanzados | **297** |
+
+Y el dato que cambia la conversacion: los municipios mas expuestos no estaban en
+Chocó sino en el Eje Cafetero y el Valle — Pereira, Buenaventura, Armenia,
+Tuluá, Dosquebradas. La unica evaluacion de dano con IA que existio cubrio una
+sola ciudad.
 
 ## Estructura
 

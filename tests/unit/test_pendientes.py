@@ -16,21 +16,10 @@ from pathlib import Path
 import pytest
 
 from pipelines.p0_exposure.build import build_country
-from pipelines.p0_exposure.crosswalk import build_crosswalk
-from pipelines.p2_impact.exposure_join import JoinInputs, run_join
-from pipelines.p2_impact.ground_failure import sample_rasters
-from pipelines.p2_impact.shakemap import contours_to_h3
 from pipelines.p3_report.static_map import MapVariant, render_map
 
 PENDIENTES: list[tuple[str, Callable[[], object]]] = [
-    ("P0 crosswalk hex<->DIVIPOLA", lambda: build_crosswalk("COL")),
     ("P0 build de exposure_h3", lambda: build_country("COL", out_dir=Path("/tmp/x"))),
-    ("P2 polyfill H3 de contornos MMI", lambda: contours_to_h3([])),
-    ("P2 muestreo de Ground Failure", lambda: sample_rasters(None, None, [])),
-    (
-        "P2 join de impacto en DuckDB",
-        lambda: run_join(JoinInputs("us1", 1, "glob", {}, {})),
-    ),
 ]
 
 

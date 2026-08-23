@@ -32,6 +32,18 @@ class Fetcher(Protocol):
     def get_bytes(self, url: str) -> bytes: ...
 
 
+class RangeCapable(Protocol):
+    """Cliente que ademas sabe pedir rangos de bytes.
+
+    Lo usa la extraccion selectiva de ZIPs remotos: el MGN del DANE es un solo
+    archivo de 3,39 GB del que P0 solo necesita ~100 MB.
+    """
+
+    def get_range(self, url: str, start: int, end: int) -> bytes: ...
+
+    def content_length(self, url: str) -> int: ...
+
+
 class HttpFetcher:
     """Implementacion real, con reintento exponencial ante fallo de red."""
 
@@ -75,6 +87,44 @@ class HttpFetcher:
     def get_bytes(self, url: str) -> bytes:
         return self._get(url).content
 
+    def get_range(self, url: str, start: int, end: int) -> bytes:
+        """Bytes ``[start, end]`` inclusive.
+
+        Raises:
+            RuntimeError: si el servidor ignora el ``Range`` y responde 200 con
+                el archivo entero. Aceptarlo en silencio significaria bajar
+                gigas creyendo que se bajaron kilobytes.
+        """
+        for attempt in range(self._retries):
+            try:
+                response = httpx.get(
+                    url,
+                    timeout=self._timeout_s,
+                    follow_redirects=True,
+                    headers={"User-Agent": USER_AGENT, "Range": f"bytes={start}-{end}"},
+                )
+                response.raise_for_status()
+                if response.status_code != 206:
+                    raise RuntimeError(
+                        f"El servidor ignoro el Range en {url} (HTTP "
+                        f"{response.status_code}): no se puede extraer por rangos."
+                    )
+                return response.content
+            except (httpx.HTTPError, httpx.StreamError):  # pragma: no cover - red
+                time.sleep(self._sleep * (2**attempt))
+        raise RuntimeError(f"No se pudo leer el rango {start}-{end} de {url}")
+
+    def content_length(self, url: str) -> int:
+        """Tamano total del recurso, por HEAD."""
+        response = httpx.head(
+            url,
+            timeout=self._timeout_s,
+            follow_redirects=True,
+            headers={"User-Agent": USER_AGENT},
+        )
+        response.raise_for_status()
+        return int(response.headers.get("content-length", 0))
+
 
 class FixtureFetcher:
     """Fetcher de pruebas: sirve respuestas grabadas por URL.
@@ -104,3 +154,10 @@ class FixtureFetcher:
         if isinstance(value, str):
             return value.encode("utf-8")
         return json.dumps(value).encode("utf-8")
+
+    def get_range(self, url: str, start: int, end: int) -> bytes:
+        """Rango sobre el contenido grabado, para probar la extraccion de ZIPs."""
+        return self.get_bytes(url)[start : end + 1]
+
+    def content_length(self, url: str) -> int:
+        return len(self.get_bytes(url))

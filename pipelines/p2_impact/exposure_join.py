@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from ..common.constants import GROUND_FAILURE_HIGH_PROB
+
 #: Extensiones que P0 y P2 requieren cargadas.
 DUCKDB_EXTENSIONS: tuple[str, ...] = ("spatial", "h3")
 
@@ -108,8 +110,11 @@ class JoinInputs:
 
     usgs_id: str
     shakemap_version: int
+    #: Ruta o glob del activo de exposicion (GeoParquet particionado).
     exposure_glob: str
+    #: ``h3_08 -> MmiCell`` del polyfill de contornos.
     mmi_cells: dict[int, Any]
+    #: ``h3_08 -> GroundFailureCell``. Vacio si el producto no existe (G3).
     gf_cells: dict[int, Any]
 
 
@@ -123,19 +128,77 @@ def connect(database: Path | None = None) -> Any:
 
     con = duckdb.connect(str(database) if database else ":memory:")
     for extension in DUCKDB_EXTENSIONS:
-        con.execute(f"INSTALL {extension}")
+        origen = " FROM community" if extension == "h3" else ""
+        con.execute(f"INSTALL {extension}{origen}")
         con.execute(f"LOAD {extension}")
     return con
 
 
-def run_join(inputs: JoinInputs, *, database: Path | None = None) -> Any:
+def register_cells(con: Any, inputs: JoinInputs) -> None:
+    """Materializa las celdas de intensidad y de falla de terreno.
+
+    Se pasan por Arrow y no por ``VALUES``: un ShakeMap de M7 alcanza cientos de
+    miles de celdas, y armar esa sentencia como texto es lento y fragil.
+    """
+    import pyarrow as pa
+
+    celdas = list(inputs.mmi_cells.values())
+    con.register(
+        "mmi_arrow",
+        pa.table(
+            {
+                "h3_08": pa.array([c.h3_08 for c in celdas], pa.uint64()),
+                "mmi_mean": pa.array([c.mmi_mean for c in celdas], pa.float64()),
+                "mmi_max": pa.array([c.mmi_max for c in celdas], pa.float64()),
+            }
+        ),
+    )
+    con.execute("CREATE OR REPLACE TABLE mmi_cells AS SELECT * FROM mmi_arrow")
+    con.unregister("mmi_arrow")
+
+    gf = list(inputs.gf_cells.values())
+    con.register(
+        "gf_arrow",
+        pa.table(
+            {
+                "h3_08": pa.array([c.h3_08 for c in gf], pa.uint64()),
+                "ls_prob": pa.array([c.ls_prob for c in gf], pa.float64()),
+                "lq_prob": pa.array([c.lq_prob for c in gf], pa.float64()),
+            }
+        ),
+    )
+    con.execute("CREATE OR REPLACE TABLE gf_cells AS SELECT * FROM gf_arrow")
+    con.unregister("gf_arrow")
+
+
+def run_join(inputs: JoinInputs, *, con: Any, gf_high: float = GROUND_FAILURE_HIGH_PROB) -> Any:
     """Ejecuta el join completo y devuelve la conexion con las tablas creadas.
 
-    Implementacion pendiente (Fase 0, semana 3): registrar ``mmi_cells`` y
-    ``gf_cells`` como tablas temporales, ejecutar SQL_IMPACT_H3 y
-    SQL_IMPACT_ADM2, correr QUALITY_ASSERTIONS y anexar QUALITY_FLAGS.
+    Deja materializadas ``impact_h3`` e ``impact_adm2``, y corre los asserts de
+    calidad de §6.4 sobre el resultado.
     """
-    raise NotImplementedError(
-        "Pendiente: join de impacto en DuckDB (Fase 0 semana 3). "
-        "Las consultas ya son el contrato revisable de este modulo."
+    register_cells(con, inputs)
+    con.execute(
+        SQL_IMPACT_H3,
+        {
+            "usgs_id": inputs.usgs_id,
+            "shakemap_version": inputs.shakemap_version,
+            "exposure_glob": inputs.exposure_glob,
+        },
     )
+    con.execute(SQL_IMPACT_ADM2, {"gf_high": gf_high})
+    return con
+
+
+def check_quality(con: Any, *, tabla_exposicion: str = "exposure_h3") -> list[str]:
+    """Corre los asserts de §6.4. Devuelve la lista de fallos (vacia = limpio)."""
+    fallos: list[str] = []
+    for nombre, consulta in QUALITY_ASSERTIONS:
+        try:
+            filas = con.execute(consulta.replace("exposure_h3", tabla_exposicion)).fetchall()
+        except Exception as exc:  # tabla ausente en una corrida parcial
+            fallos.append(f"{nombre}: no se pudo evaluar ({exc})")
+            continue
+        if filas:
+            fallos.append(f"{nombre}: {len(filas)} filas incumplen (ej. {filas[:3]})")
+    return fallos

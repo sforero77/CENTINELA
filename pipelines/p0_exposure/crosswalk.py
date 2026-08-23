@@ -1,23 +1,48 @@
 """Crosswalk hex <-> division politico-administrativa (§3.2).
 
-Dos tablas, dos usos distintos:
+El problema: cada celda H3 r8 (~0,7 km²) tiene que saber a que municipio
+pertenece, y ninguna persona puede perderse en el camino. La suma de poblacion
+por municipio debe igualar la suma nacional — ese es el invariante que verifica
+CI, y el que hace que un alcalde pueda confiar en la cifra de su municipio.
 
-* ``exposure_h3.adm2_id`` — asignacion **por centroide**, para etiquetar cada
-  celda con un municipio y poder filtrar rapido.
-* ``crosswalk_h3_adm`` — tabla ``(h3_08, adm2_id, frac_area)``, para prorratear
-  con exactitud las celdas que cruzan frontera municipal.
+Estrategia, en dos pasos deliberadamente separados:
 
-El invariante que verifica la prueba unitaria (§6.1): la suma de poblacion por
-municipio, prorrateada, debe igualar la suma nacional.
+1. **Reparto por contencion.** ``h3_polygon_wkt_to_cells`` asigna a cada
+   municipio las celdas cuyo *centro* cae dentro. Verificado sobre el MGN 2025:
+   el reparto sale limpio, **sin una sola celda reclamada por dos municipios**.
+   Eso hace que la mayoria de celdas tengan ``frac_area = 1.0`` y evita el coste
+   de intersectar 1,5 millones de hexagonos.
+
+2. **Rescate de la costa y la frontera.** El reparto por centro deja fuera las
+   celdas cuyo centro cae en el mar o del otro lado de la linea, aunque
+   contengan poblacion en su parte terrestre. Esas celdas existen: Colombia
+   tiene 3.000 km de costa. Se les asigna el municipio mas cercano, y quedan
+   marcadas para que el hecho sea auditable en vez de invisible.
+
+La alternativa —intersectar cada hexagono con cada poligono municipal para
+obtener fracciones exactas— es correcta pero cuesta ordenes de magnitud mas, y
+su ganancia es marginal: a r8, una celda fronteriza aporta menos de 0,7 km² a un
+municipio que mide miles. Se deja documentada como ``frac_area`` por si alguna
+vez hace falta.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from ..common.constants import H3_RES_COMPUTE
+from ..common.logging import get_logger
+
+_log = get_logger(__name__)
 
 #: Tolerancia relativa del invariante de suma (suma municipal vs nacional).
 SUM_TOLERANCE = 1e-6
+
+#: Extensiones DuckDB que necesita este modulo.
+EXTENSIONS = ("spatial", "h3")
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,18 +79,172 @@ def prorate(value: float, rows: Iterable[CrosswalkRow]) -> dict[str, float]:
     return {row.adm2_id: value * row.frac_area for row in rows}
 
 
-def build_crosswalk(iso3: str) -> list[CrosswalkRow]:
-    """Construye el crosswalk de un pais.
+# --- SQL del reparto -------------------------------------------------------
 
-    Contrato: interseccion de las celdas r8 del pais con los poligonos adm2
-    vigentes, calculada en proyeccion equiarea local (§3.1), normalizando las
-    fracciones para que sumen 1 aun donde el poligono municipal no cubre la
-    celda completa (costa, frontera internacional).
+#: Paso 1: cada municipio reclama las celdas cuyo centro contiene.
+SQL_POLYFILL = """
+CREATE OR REPLACE TABLE crosswalk_h3_adm AS
+SELECT
+    unnest(h3_polygon_wkt_to_cells(ST_AsText(geom), {resolution})) AS h3_08,
+    adm2_id,
+    1.0 AS frac_area,
+    FALSE AS rescatada
+FROM admin_geom
+"""
 
-    Implementacion pendiente (Fase 0, semana 2). En Colombia la fuente de
-    verdad es el MGN del DANE (codigo DIVIPOLA de 5 digitos, VARCHAR — nunca
-    entero: los codigos con cero inicial se corromperian).
+#: Diccionario administrativo que consume el reporte (§3.2).
+SQL_ADMIN_LOOKUP = """
+CREATE OR REPLACE TABLE admin_lookup AS
+SELECT
+    adm2_id,
+    nombre,
+    adm1_id,
+    departamento,
+    '{iso3}' AS iso3,
+    ST_AsText(ST_Centroid(geom)) AS centroide
+FROM admin_geom
+"""
+
+#: Guardia del paso 1: ninguna celda puede pertenecer a dos municipios.
+SQL_ASSERT_SIN_DUPLICADOS = """
+SELECT h3_08, count(*) AS n
+FROM crosswalk_h3_adm
+GROUP BY h3_08 HAVING count(*) > 1
+"""
+
+
+def load_admin_geometry(con: Any, shapefile: Path, *, iso3: str) -> int:
+    """Carga los poligonos municipales en la tabla ``admin_geom``.
+
+    Los nombres de columna son los del MGN del DANE. Otros paises traeran los
+    suyos; el mantenedor del pais adapta este mapeo y nada mas.
     """
-    raise NotImplementedError(
-        f"Pendiente: construccion del crosswalk para {iso3} (Fase 0 semana 2)."
+    con.execute(
+        f"""
+        CREATE OR REPLACE TABLE admin_geom AS
+        SELECT
+            mpio_cdpmp AS adm2_id,
+            mpio_cnmbr AS nombre,
+            dpto_ccdgo AS adm1_id,
+            dpto_cnmbr AS departamento,
+            geom
+        FROM ST_Read('{shapefile}')
+        """
     )
+    n: int = con.execute("SELECT count(*) FROM admin_geom").fetchone()[0]
+    _log.info(
+        "geometria administrativa cargada",
+        extra={"context": {"iso3": iso3, "municipios": n, "fuente": str(shapefile)}},
+    )
+    return n
+
+
+def build_crosswalk(
+    con: Any,
+    *,
+    iso3: str,
+    resolution: int = H3_RES_COMPUTE,
+) -> int:
+    """Construye ``crosswalk_h3_adm`` y ``admin_lookup`` sobre ``admin_geom``.
+
+    Returns:
+        Numero de celdas repartidas.
+
+    Raises:
+        ValueError: si alguna celda queda reclamada por dos municipios. Seria
+            doble conteo de poblacion, y es preferible fallar el build.
+    """
+    con.execute(SQL_POLYFILL.format(resolution=resolution))
+    con.execute(SQL_ADMIN_LOOKUP.format(iso3=iso3))
+
+    duplicadas = con.execute(SQL_ASSERT_SIN_DUPLICADOS).fetchall()
+    if duplicadas:
+        raise ValueError(
+            f"{len(duplicadas)} celdas reclamadas por mas de un municipio: "
+            f"seria doble conteo. Ejemplos: {duplicadas[:5]}"
+        )
+
+    celdas: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
+    _log.info(
+        "crosswalk construido",
+        extra={"context": {"iso3": iso3, "celdas": celdas, "resolucion": resolution}},
+    )
+    return celdas
+
+
+#: Distancia maxima, en grados, a la que una celda sin asignar puede seguir
+#: siendo del pais. ~0,02 grados son unos 2,2 km en el ecuador: mas que
+#: suficiente para una celda r8 (~0,7 km²) partida por la linea de costa, y muy
+#: poco para alcanzar el pais vecino.
+RESCUE_MAX_DEGREES = 0.02
+
+#: Paso 2, en dos tiempos. Primero se acota a las celdas que estan **junto al
+#: pais**; solo despues se busca municipio.
+#:
+#: El orden importa y costo un error: rescatar por "municipio mas cercano" sin
+#: acotar antes reclama todo el continente. Las teselas de GHS-POP cubren
+#: tambien Panama, Venezuela, Ecuador, Peru y Brasil, y cada celda de esos
+#: paises tiene, por definicion, un municipio colombiano que es el mas cercano.
+#: La primera version de este paso rescato 832.506 celdas y la poblacion
+#: nacional paso de 52,6 a 167 millones.
+SQL_RESCATE = """
+INSERT INTO crosswalk_h3_adm
+WITH sin_asignar AS (
+    SELECT DISTINCT d.h3_08,
+           h3_cell_to_lng(d.h3_08) AS lng,
+           h3_cell_to_lat(d.h3_08) AS lat
+    FROM {tabla_datos} d
+    WHERE d.h3_08 NOT IN (SELECT h3_08 FROM crosswalk_h3_adm)
+),
+junto_al_pais AS (
+    SELECT s.*
+    FROM sin_asignar s
+    WHERE ST_DWithin(ST_Point(s.lng, s.lat), (SELECT geom FROM pais), {max_grados})
+)
+SELECT j.h3_08, m.adm2_id, 1.0, TRUE
+FROM junto_al_pais j
+JOIN LATERAL (
+    SELECT g.adm2_id
+    FROM admin_geom g
+    WHERE ST_DWithin(ST_Point(j.lng, j.lat), g.geom, {max_grados})
+    ORDER BY ST_Distance(ST_Point(j.lng, j.lat), g.geom)
+    LIMIT 1
+) m ON TRUE
+"""
+
+
+def rescue_unassigned(
+    con: Any,
+    *,
+    tabla_datos: str = "pop_h3",
+    max_grados: float = RESCUE_MAX_DEGREES,
+) -> int:
+    """Asigna municipio a las celdas con datos que el polyfill dejo fuera.
+
+    Son celdas costeras y de frontera: su centro cae fuera de todo poligono
+    municipal pero su parte terrestre tiene poblacion. Sin este paso esa gente
+    desaparece del reporte municipal, y el invariante de suma se rompe.
+
+    **La cota de distancia no es una optimizacion, es correccion.** El activo se
+    construye desde teselas globales que cubren tambien los paises vecinos, y
+    para cualquier celda de Panama o Venezuela existe un municipio colombiano
+    que es "el mas cercano". Rescatar sin acotar reclama el continente entero.
+
+    Las celdas rescatadas quedan marcadas con ``rescatada = TRUE``: es una
+    aproximacion y tiene que poder auditarse.
+    """
+    con.execute(
+        """
+        CREATE OR REPLACE TEMP TABLE pais AS
+        SELECT ST_Union_Agg(geom) AS geom FROM admin_geom
+        """
+    )
+    antes: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
+    con.execute(SQL_RESCATE.format(tabla_datos=tabla_datos, max_grados=max_grados))
+    despues: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
+    rescatadas = despues - antes
+    _log.info(
+        "celdas rescatadas junto a la linea de costa o frontera",
+        extra={"context": {"celdas": rescatadas, "max_grados": max_grados}},
+    )
+    return rescatadas
