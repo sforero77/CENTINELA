@@ -11,14 +11,17 @@ reporte de hace seis meses siga siendo reproducible.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Self
 
 import yaml
+from jsonschema import Draft202012Validator
 
 from .licensing import Bucket, LicenseViolationError, bucket_for, resolve_bucket
-from .paths import MANIFESTS_DIR
+from .paths import MANIFESTS_DIR, SCHEMAS_DIR
 
 #: Valores prohibidos como "vintage": no fijan nada.
 _FLOATING_VINTAGES = frozenset({"latest", "current", "rolling", ""})
@@ -92,6 +95,37 @@ class Manifest:
         if not path.exists():
             raise FileNotFoundError(f"No hay manifest para {iso3.upper()}: {path}")
         return cls.from_dict(yaml.safe_load(path.read_text(encoding="utf-8")))
+
+
+@lru_cache(maxsize=1)
+def _schema_validator() -> Draft202012Validator:
+    """Validador del schema del manifest, cargado una sola vez."""
+    schema = json.loads((SCHEMAS_DIR / "manifest.schema.json").read_text(encoding="utf-8"))
+    return Draft202012Validator(schema)
+
+
+def lint_manifest_file(path: Path) -> list[str]:
+    """Valida un manifest en disco: primero su forma, luego su contenido.
+
+    El orden importa. ``Manifest.from_dict`` colapsa el YAML a dataclasses y en
+    el camino descarta lo que no reconoce; si el schema no se aplica antes, una
+    clave mal escrita se volveria invisible en vez de ser un error.
+    """
+    try:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        return [f"YAML invalido: {exc}"]
+    if not isinstance(raw, dict):
+        return ["El manifest no es un objeto YAML"]
+
+    forma = [
+        f"schema: {'.'.join(str(x) for x in error.path) or '(raiz)'}: {error.message}"
+        for error in sorted(_schema_validator().iter_errors(raw), key=str)
+    ]
+    if forma:
+        # Sin forma valida, el lint de contenido solo produciria ruido derivado.
+        return forma
+    return lint_manifest(Manifest.from_dict(raw))
 
 
 def lint_manifest(manifest: Manifest) -> list[str]:

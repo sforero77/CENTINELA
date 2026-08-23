@@ -7,12 +7,13 @@ sin recomputar el impacto.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
 from ..common.logging import get_logger
-from ..common.paths import report_dir
+from ..common.paths import REPORTS_DIR, validate_usgs_id
 from .csv_out import write_adm2_csv
 from .markdown import render_markdown
 from .model import Report
@@ -20,20 +21,31 @@ from .social import render_thread_text
 
 _log = get_logger(__name__)
 
+#: Indice que consume el visor estatico. Sin backend no hay forma de listar un
+#: directorio: si este archivo no existe, la lista de eventos del sitio queda
+#: vacia para siempre.
+INDEX_FILENAME = "index.json"
+
 
 def write_report_bundle(
     report: Report,
     adm2_rows: Iterable[Mapping[str, Any]],
     *,
-    out_dir: Path | None = None,
+    reports_root: Path | None = None,
 ) -> dict[str, Path]:
-    """Escribe el paquete completo de salidas de un evento.
+    """Escribe el paquete completo de salidas de un evento y refresca el indice.
+
+    Args:
+        report: reporte ya calculado, fuente de verdad de todos los derivados.
+        adm2_rows: filas municipales exactas para el CSV.
+        reports_root: raiz de ``reports/``. Los tests la redirigen.
 
     Returns:
         Mapa nombre-de-artefacto -> ruta escrita. El mapa PNG se agrega cuando
         T0.8 cierre; su ausencia no bloquea la publicacion del resto.
     """
-    directory = out_dir or report_dir(report.event.usgs_id)
+    root = reports_root or REPORTS_DIR
+    directory = root / validate_usgs_id(report.event.usgs_id)
     directory.mkdir(parents=True, exist_ok=True)
 
     escritos: dict[str, Path] = {}
@@ -49,6 +61,8 @@ def write_report_bundle(
     hilo_path.write_text(render_thread_text(report), encoding="utf-8")
     escritos["hilo_txt"] = hilo_path
 
+    escritos["index_json"] = rebuild_index(root)
+
     _log.info(
         "paquete de reporte escrito",
         extra={
@@ -61,3 +75,41 @@ def write_report_bundle(
         },
     )
     return escritos
+
+
+def rebuild_index(reports_root: Path | None = None) -> Path:
+    """Reconstruye ``reports/index.json`` a partir de los reportes en disco.
+
+    Se reconstruye entero en vez de anexar: el indice es un derivado, y un
+    derivado que se acumula termina divergiendo de lo que hay en el directorio.
+    Los eventos van del mas reciente al mas antiguo.
+    """
+    root = reports_root or REPORTS_DIR
+    entradas: list[dict[str, Any]] = []
+
+    for path in sorted(root.glob("*/report.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            entradas.append(
+                {
+                    "usgs_id": data["event"]["usgs_id"],
+                    "mag": data["event"]["mag"],
+                    "lugar": data["event"]["lugar"],
+                    "utc": data["event"]["utc"],
+                    "shakemap_version": data["inputs"]["shakemap_version"],
+                    "preliminar": bool(data.get("preliminar", False)),
+                    "generado_utc": data.get("generado_utc", ""),
+                }
+            )
+        except (OSError, ValueError, KeyError) as exc:
+            # Un reporte corrupto no puede tumbar el indice de todos los demas.
+            _log.warning(
+                "reporte ilegible, excluido del indice",
+                extra={"context": {"path": str(path), "error": str(exc)}},
+            )
+
+    entradas.sort(key=lambda e: str(e["utc"]), reverse=True)
+    destino = root / INDEX_FILENAME
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    destino.write_text(json.dumps(entradas, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return destino

@@ -7,6 +7,7 @@ decision.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Final
 
@@ -25,14 +26,32 @@ CACHE_DIR: Final[Path] = REPO_ROOT / "data" / "cache"
 BUILD_DIR: Final[Path] = REPO_ROOT / "data" / "build"
 
 
+#: Forma de un identificador de evento de USGS (``us7000sint``, ``ci40000000``).
+#: El id llega de un tercero y aqui se convierte en nombre de archivo: se valida
+#: en el unico punto donde eso ocurre, no en cada llamador.
+USGS_ID_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9_-]{3,64}$")
+
+
+def validate_usgs_id(usgs_id: str) -> str:
+    """Devuelve el id si tiene forma valida.
+
+    Raises:
+        ValueError: si el id no podria ser un identificador de USGS. Un id con
+            separadores de ruta escribiria fuera de ``events/``.
+    """
+    if not USGS_ID_RE.match(usgs_id):
+        raise ValueError(f"usgs_id con forma invalida: {usgs_id!r}")
+    return usgs_id
+
+
 def event_state_path(usgs_id: str) -> Path:
     """Ruta del ``event_state`` de un evento (§3.3)."""
-    return EVENTS_DIR / f"{usgs_id}.json"
+    return EVENTS_DIR / f"{validate_usgs_id(usgs_id)}.json"
 
 
 def report_dir(usgs_id: str) -> Path:
     """Directorio de salidas publicadas de un evento (§4.3)."""
-    return REPORTS_DIR / usgs_id
+    return REPORTS_DIR / validate_usgs_id(usgs_id)
 
 
 def ensure_workspace() -> None:

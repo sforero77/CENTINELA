@@ -9,7 +9,7 @@ import pytest
 import yaml
 
 from pipelines.common.licensing import Bucket
-from pipelines.common.manifest import Manifest, lint_manifest
+from pipelines.common.manifest import Manifest, lint_manifest, lint_manifest_file
 
 
 def _fuente(**overrides: Any) -> dict[str, Any]:
@@ -83,3 +83,35 @@ def test_manifest_de_colombia_pasa_el_lint() -> None:
     assert errores == []
     # Overture buildings es ODbL y contagia share-alike al activo completo.
     assert manifest.bucket is Bucket.ODBL
+
+
+def test_el_lint_de_archivo_atrapa_una_clave_mal_escrita(tmp_path: Path) -> None:
+    """Sin validacion de forma, `licence` se volveria invisible en vez de fallar."""
+    fuente = _fuente()
+    fuente["licence"] = fuente.pop("license")
+    path = tmp_path / "COL.yaml"
+    path.write_text(yaml.safe_dump(_manifest(fuente)), encoding="utf-8")
+
+    problemas = lint_manifest_file(path)
+    assert any("licence" in p for p in problemas)
+    assert all(p.startswith("schema:") for p in problemas)
+
+
+def test_el_lint_de_archivo_reporta_yaml_roto(tmp_path: Path) -> None:
+    path = tmp_path / "COL.yaml"
+    path.write_text("manifest_id: [sin cerrar\n", encoding="utf-8")
+    assert any("YAML invalido" in p for p in lint_manifest_file(path))
+
+
+def test_el_lint_de_archivo_llega_al_contenido(tmp_path: Path) -> None:
+    """Con la forma correcta, el lint sigue hasta las reglas de licencia."""
+    path = tmp_path / "COL.yaml"
+    path.write_text(yaml.safe_dump(_manifest(_fuente(license="CC-BY-NC-SA-4.0"))), encoding="utf-8")
+    assert any("fuente NC" in p for p in lint_manifest_file(path))
+
+
+def test_el_manifest_real_pasa_el_lint_de_archivo() -> None:
+    from pipelines.common.paths import MANIFESTS_DIR
+
+    errores = [p for p in lint_manifest_file(MANIFESTS_DIR / "COL.yaml") if "(aviso)" not in p]
+    assert errores == []

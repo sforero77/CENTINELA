@@ -53,12 +53,23 @@ jobs:
 
       - name: Persistir event_state
         if: steps.trigger.outputs.hay_trabajo == 'true' && !inputs.dry_run
+        env:
+          # Via env, no por interpolacion en el shell: los ids vienen de un
+          # tercero y no deben poder convertirse en comandos.
+          EVENTOS: ${{ steps.trigger.outputs.eventos }}
         run: |
           git config user.name "centinela-bot"
           git config user.email "noreply@users.noreply.github.com"
           git add events/
-          git diff --staged --quiet || git commit -m "P1: eventos detectados ${{ steps.trigger.outputs.eventos }}"
-          git push
+          git diff --staged --quiet && exit 0
+          git commit -m "P1: eventos detectados $EVENTOS"
+          # P2 empuja a la misma rama; sin rebase, dos jobs concurrentes se
+          # rechazan mutuamente y se pierde el estado del evento.
+          for intento in 1 2 3 4; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+            sleep $((2 ** intento))
+          done
+          exit 1
 
       # Latido para el monitor externo. Si deja de llegar, el equipo recibe
       # alerta en 30 min (§6.5) — la desactivacion silenciosa del cron es el
@@ -80,6 +91,9 @@ jobs:
       - name: Disparar P2 por evento
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Este job no hace checkout, asi que `gh` no puede inferir el
+          # repositorio del remoto de git: hay que decirselo.
+          GH_REPO: ${{ github.repository }}
           EVENTOS: ${{ needs.vigilar.outputs.eventos }}
         run: |
           echo "$EVENTOS" | python3 -c '

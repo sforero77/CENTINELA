@@ -80,3 +80,15 @@ def test_no_reprocesa_version_anterior() -> None:
     """Un producto que llega retrasado no debe hacer retroceder el reporte."""
     estado = _estado(versiones_procesadas=ProcessedVersions(shakemap=3, groundfailure=2))
     assert not estado.needs_reprocessing(1, 1)
+
+
+@pytest.mark.parametrize("malo", ["../../etc/passwd", "us/7000", "", "a", "us 7000"])
+def test_un_usgs_id_con_forma_invalida_no_escribe_ruta(malo: str, events_dir: Path) -> None:
+    """El id viene de un tercero y se convierte en nombre de archivo."""
+    with pytest.raises(ValueError, match="forma invalida"):
+        _estado(usgs_id=malo).save(events_dir)
+
+
+def test_usgs_ids_reales_son_validos(events_dir: Path) -> None:
+    for bueno in ("us7000sint", "ci40000000", "nc73872510", "official2026-08-10"):
+        assert _estado(usgs_id=bueno).save(events_dir).name == f"{bueno}.json"

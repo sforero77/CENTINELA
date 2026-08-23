@@ -19,11 +19,13 @@ jobs:
   construir:
     runs-on: ubuntu-latest
     if: github.repository == 'sforero77/CENTINELA'
-    strategy:
-      # Un pais que falla no debe impedir que los demas se reconstruyan.
-      fail-fast: false
-      matrix:
-        iso3: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.iso3)) || fromJSON('["COL"]') }}
+    env:
+      # Fase 0 construye un solo pais. Cuando Fase 1 traiga los siete, esto
+      # vuelve a ser una matriz con fail-fast: false, para que un pais roto no
+      # impida reconstruir los demas.
+      # Via env y siempre citada: `inputs.iso3` es texto libre y no debe poder
+      # convertirse en comando al interpolarse en un `run`.
+      ISO3: ${{ inputs.iso3 || 'COL' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,14 +39,20 @@ jobs:
       - name: Validar manifest antes de descargar nada
         run: uv run centinela lint-manifests
 
+      - name: Validar el codigo de pais
+        run: |
+          echo "$ISO3" | grep -Eq '^[A-Z]{3}$' || {
+            echo "::error::ISO3 invalido: $ISO3"; exit 1;
+          }
+
       - name: Construir exposure_h3
-        run: uv run centinela country ${{ matrix.iso3 }}
+        run: uv run centinela country "$ISO3"
 
       - name: Publicar Release versionado
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="exposure-$(echo ${{ matrix.iso3 }} | tr '[:upper:]' '[:lower:]')-$(date -u +%Y%m%d)"
+          TAG="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-$(date -u +%Y%m%d)"
           gh release create "$TAG" data/build/**/*.parquet \
-            --title "Activo de exposicion ${{ matrix.iso3 }} — $TAG" \
-            --notes-file data/manifests/${{ matrix.iso3 }}.yaml
+            --title "Activo de exposicion $ISO3 — $TAG" \
+            --notes-file "data/manifests/$ISO3.yaml"

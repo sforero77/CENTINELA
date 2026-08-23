@@ -21,7 +21,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Self
 
-from .paths import event_state_path
+from .paths import event_state_path, validate_usgs_id
 
 
 class EventStatus(StrEnum):
@@ -173,7 +173,11 @@ class EventState:
         Determinista (claves ordenadas, indentacion fija) para que el diff de
         git muestre solo lo que realmente cambio.
         """
-        path = (directory / f"{self.usgs_id}.json") if directory else event_state_path(self.usgs_id)
+        path = (
+            directory / f"{validate_usgs_id(self.usgs_id)}.json"
+            if directory
+            else event_state_path(self.usgs_id)
+        )
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".json.tmp")
         tmp.write_text(
@@ -186,7 +190,11 @@ class EventState:
     @classmethod
     def load(cls, usgs_id: str, directory: Path | None = None) -> Self | None:
         """Carga el estado, o ``None`` si el evento aun no se conoce."""
-        path = (directory / f"{usgs_id}.json") if directory else event_state_path(usgs_id)
+        path = (
+            directory / f"{validate_usgs_id(usgs_id)}.json"
+            if directory
+            else event_state_path(usgs_id)
+        )
         if not path.exists():
             return None
         return cls.from_dict(json.loads(path.read_text(encoding="utf-8")))

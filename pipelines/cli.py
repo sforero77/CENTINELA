@@ -14,7 +14,7 @@ from pathlib import Path
 
 from .common.http import HttpFetcher
 from .common.logging import get_logger
-from .common.manifest import Manifest, lint_manifest
+from .common.manifest import Manifest, lint_manifest_file
 from .common.paths import BUILD_DIR, MANIFESTS_DIR
 from .p0_exposure.build import build_country
 from .p1_trigger.run import run_trigger
@@ -63,12 +63,12 @@ def _cmd_lint_manifests(args: argparse.Namespace) -> int:
 
     fallo = False
     for path in archivos:
-        manifest = Manifest.load(path.stem, directory)
-        problemas = lint_manifest(manifest)
+        problemas = lint_manifest_file(path)
         errores = [p for p in problemas if "(aviso)" not in p]
         avisos = [p for p in problemas if "(aviso)" in p]
         estado = "FALLA" if errores else "ok"
-        print(f"{path.name}: {estado} (cubo {manifest.bucket.value})")
+        cubo = Manifest.load(path.stem, directory).bucket.value if not errores else "?"
+        print(f"{path.name}: {estado} (cubo {cubo})")
         for problema in errores:
             print(f"  ERROR {problema}")
         for aviso in avisos:
