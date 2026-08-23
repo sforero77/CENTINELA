@@ -28,11 +28,28 @@ class MmiCell:
 
 @dataclass(frozen=True, slots=True)
 class MmiContour:
-    """Un contorno de isointensidad del ShakeMap."""
+    """Un contorno de isointensidad del ShakeMap.
+
+    **La geometria es ``MultiLineString``, no poligonos.** Verificado contra el
+    ShakeMap real de Chocó: `cont_mmi.json` publica *isolineas*, y convertirlas
+    en areas es trabajo nuestro.
+    """
 
     value: float
-    #: Geometria GeoJSON (``Polygon`` o ``MultiPolygon``).
+    #: Geometria GeoJSON. En la practica siempre ``MultiLineString``.
     geometry: dict[str, Any]
+
+    @property
+    def rings(self) -> list[list[list[float]]]:
+        """Lineas que cierran sobre si mismas, utilizables como anillo."""
+        lineas = self.geometry.get("coordinates", [])
+        return [linea for linea in lineas if linea and linea[0] == linea[-1]]
+
+    @property
+    def open_lines(self) -> list[list[list[float]]]:
+        """Lineas abiertas, cortadas por el borde de la grilla del ShakeMap."""
+        lineas = self.geometry.get("coordinates", [])
+        return [linea for linea in lineas if linea and linea[0] != linea[-1]]
 
 
 def parse_contours(payload: dict[str, Any]) -> list[MmiContour]:
@@ -65,19 +82,28 @@ def contours_to_h3(
 ) -> dict[int, MmiCell]:
     """Convierte contornos de isointensidad en celdas H3 con MMI asignada.
 
-    Contrato:
-        * Los contornos son anidados (MMI 8 dentro de MMI 7 dentro de MMI 6).
-          Se recorren de menor a mayor y la celda conserva el **maximo** MMI
-          de los contornos que la contienen.
-        * ``mmi_mean`` se estima como el valor del contorno asignado; una
-          version futura puede refinarlo muestreando ``grid.xml``.
-        * Devuelve un diccionario ``h3_08 -> MmiCell`` para join directo.
+    Contrato, corregido tras inspeccionar el ShakeMap real de Chocó:
 
-    Implementacion pendiente (Fase 0, semana 3): ``h3.polygon_to_cells`` sobre
-    cada anillo, restando huecos, con ``shapely`` para la validacion de
-    geometria. Requiere el extra ``[geo]``.
+    * La entrada son **isolineas**, no poligonos. Hay que cerrarlas en anillos
+      antes de rellenar. Los contornos de MMI≥5 —los unicos que el reporte
+      publica— vienen cerrados; los de MMI bajo aparecen cortados por el borde
+      de la grilla y hay que recortarlos contra ese borde o descartarlos.
+    * Un mismo nivel trae **muchas lineas** (el ShakeMap de Chocó tiene 76 para
+      MMI 4.0): islas de intensidad separadas, no un anillo unico.
+    * Los niveles son anidados: MMI 7,5 dentro de 7,0 dentro de 6,5. Se
+      recorren de menor a mayor y la celda conserva el **maximo** MMI de los
+      contornos que la contienen.
+    * Un anillo dentro de otro del mismo nivel es un hueco, y hay que restarlo.
+    * ``mmi_mean`` se estima con el valor del contorno asignado; refinarlo
+      exige muestrear ``grid.xml``, que es la alternativa raster si el cierre
+      de isolineas resulta demasiado fragil.
+    * Devuelve ``h3_08 -> MmiCell`` para join directo.
+
+    Implementacion pendiente (Fase 0, semana 3): ``shapely.polygonize`` sobre
+    las lineas cerradas, jerarquia de contencion para huecos, y
+    ``h3.polygon_to_cells`` por anillo. Requiere el extra ``[geo]``.
     """
     raise NotImplementedError(
         "Pendiente: polyfill H3 de contornos MMI (Fase 0 semana 3). "
-        "Contrato definido y cubierto por tests/unit/test_shakemap_polyfill.py"
+        "Contrato definido contra el ShakeMap real de Chocó."
     )

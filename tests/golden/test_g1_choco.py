@@ -145,3 +145,42 @@ def test_pop_mmi7p_estable() -> None:
 @pytest.mark.skip(reason="Requiere exposure_h3 de Colombia (P0, Fase 0 semana 2)")
 def test_top15_municipios_estable() -> None:
     """Asercion (c): el ranking municipal es estable."""
+
+
+# --- Forma real de los contornos (contrato de P2) --------------------------
+
+
+def test_los_contornos_son_isolineas_no_poligonos(choco_contornos: dict[str, Any]) -> None:
+    """Correccion de v0.10: `cont_mmi` publica MultiLineString, no areas."""
+    from pipelines.p2_impact.shakemap import parse_contours
+
+    contornos = parse_contours(choco_contornos)
+    assert contornos
+    assert all(c.geometry["type"] == "MultiLineString" for c in contornos)
+
+
+def test_las_bandas_publicadas_vienen_cerradas(choco_contornos: dict[str, Any]) -> None:
+    """El reporte publica MMI≥6; esos anillos cierran y se pueden rellenar."""
+    from pipelines.p2_impact.shakemap import parse_contours
+
+    for c in parse_contours(choco_contornos):
+        if c.value >= 5.0:
+            assert not c.open_lines, f"MMI {c.value} trae lineas abiertas"
+
+
+def test_las_bandas_bajas_quedan_cortadas_por_la_grilla(
+    choco_contornos: dict[str, Any],
+) -> None:
+    """MMI 4 sale del borde del ShakeMap: por eso el polyfill debe recortar."""
+    from pipelines.p2_impact.shakemap import parse_contours
+
+    bajos = [c for c in parse_contours(choco_contornos) if c.value < 5.0]
+    assert any(c.open_lines for c in bajos)
+
+
+def test_un_nivel_trae_muchas_islas(choco_contornos: dict[str, Any]) -> None:
+    """MMI 4.0 en Chocó son 76 lineas: islas separadas, no un anillo unico."""
+    from pipelines.p2_impact.shakemap import parse_contours
+
+    por_valor = {c.value: c for c in parse_contours(choco_contornos)}
+    assert len(por_valor[4.0].geometry["coordinates"]) > 50

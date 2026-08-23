@@ -24,6 +24,12 @@ def choco_detail() -> dict[str, Any]:
 
 
 @pytest.fixture
+def choco_contornos() -> dict[str, Any]:
+    """Contornos MMI reales del ShakeMap v7 de Chocó."""
+    return _cargar(CHOCO / "cont_mmi_v7.json")
+
+
+@pytest.fixture
 def choco_feed() -> dict[str, Any]:
     return _cargar(CHOCO / "feed_reconstruido.json")
 
