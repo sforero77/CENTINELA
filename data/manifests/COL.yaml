@@ -4,114 +4,135 @@
 # STAC apunta siempre al ultimo; fijar el release explicito es lo que hace que
 # un reporte de hace seis meses siga siendo reproducible (RNF-04).
 #
-# Los `sha256` vacios son deuda conocida: el lint los reporta como aviso y se
-# llenan en la primera corrida real de P0 (Fase 0, semana 2).
+# Verificado contra fuentes primarias el 23-ago-2026: cada URL de aqui se probo
+# con una peticion real. Los `sha256` se llenan en la primera corrida de P0; el
+# lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.1-draft
+manifest_id: col-v0.2
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
 
 notas:
-  - "Borrador de andamiaje: las URL marcadas con 'VERIFICAR' son las tareas
-     pendientes de §8 y deben confirmarse antes del primer build real."
-  - "Ninguna fuente NC puede aparecer en este archivo: el activo que consume el
-     reporte automatico vive en los cubos core/ y odbl/ (§2.4)."
+  - "Overture conserva SOLO los dos releases mas recientes en su bucket
+     (verificado: 2026-07-22.0 y 2026-08-19.0, listado no truncado). Fijar el
+     release da reproducibilidad del calculo, no de la descarga: pasados ~2
+     meses la URL deja de existir. Por eso el activo construido se publica como
+     Release propio con su sha256 — esa es la copia que sostiene RNF-04."
+  - "REPS (salud) y sedes educativas MEN NO estan en este manifest, a
+     proposito. Dos razones independientes, ambas verificadas: (a) ninguno de
+     los dos datasets trae coordenadas, solo codigo DIVIPOLA y direccion, asi
+     que no pueden asignarse a una celda H3 sin geocodificar; (b) ambos son
+     CC BY-SA 4.0, copyleft incompatible con la ODbL de Overture: mezclarlos
+     produciria una tabla que no se puede licenciar bajo ninguna de las dos.
+     Se usaran como referencia de completitud a nivel municipal, en una tabla
+     aparte bajo CC BY-SA."
 
 sources:
   - id: ghs_pop_2025
     layer: pop_ghs
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
-    vintage: R2023A-E2025
+    vintage: R2023A-E2025-54009-100m
     sha256: ""
     notes: >-
-      Schiavina et al. 2023, doi:10.2905/2FF68A52. 100 m Mollweide.
-      Espejo alterno disponible en HDX si el FTP del JRC falla.
+      Verificado: sirve (HTTP 206). Schiavina et al. 2023, doi:10.2905/2FF68A52.
+      Existe tambien la variante WGS84 3ss (…_4326_3ss_V1_0.zip), igualmente
+      verificada, si el reproyectado desde Mollweide resulta ser el cuello de
+      botella de P0.
 
-  - id: worldpop_agesex_2020
+  - id: worldpop_agesex_2025
     layer: pop_worldpop_agesex
-    url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2000_2020_Constrained/2020/BSGM/COL/
+    url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/
     license: CC-BY-4.0
-    vintage: "2020-constrained-BSGM"
+    vintage: R2025A-2025-constrained-100m
     sha256: ""
     notes: >-
-      Unica epoca con desglose por edad y sexo. Bandas de 5 anos + <1, que se
-      colapsan a 0-14 / 15-64 / 65+. Limitacion declarada en metadatos: las
-      proporciones de 2020 se aplican sobre los totales 2025 de GHS-POP.
+      CORRIGE UN SUPUESTO DE LA ESPEC. §2.2 daba 2020 como la unica epoca con
+      desglose por edad y sexo, y de ahi salia la limitacion "proporciones de
+      2020 sobre totales de 2025". El release R2025A si publica age-sex
+      constrained para 2025: 62 rasters por pais (col_f_00…col_m_80 mas los
+      totales col_T_F / col_T_M). El supuesto de estructura etaria estable ya no
+      hace falta y desaparece de los metadatos del reporte.
 
   - id: worldpop_total_2025
     layer: pop_worldpop_total
-    url: https://data.worldpop.org/GIS/Population/Global_2015_2030_R2025A/2025/COL/
+    url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/col_pop_2025_CN_100m_R2025A_v1.tif
     license: CC-BY-4.0
-    vintage: "R2025A-2025-constrained"
+    vintage: R2025A-2025-constrained-100m
     sha256: ""
-    notes: "VERIFICAR ruta exacta del release R2025 antes del primer build."
+    notes: "Verificado: sirve (HTTP 200, ~64 MB). Alimenta la banda de discrepancia."
 
   - id: overture_buildings
     layer: buildings
-    url: s3://overturemaps-us-west-2/release/2026-07-23.0/theme=buildings
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
     license: ODbL-1.0
-    vintage: "2026-07-23.0"
+    vintage: "2026-08-19.0"
     sha256: ""
     notes: >-
-      VERIFICAR el identificador del release vigente. GeoParquet nativo con
-      columna bbox para filtro eficiente e IDs GERS estables.
+      Release vigente verificado en el bucket. El subtipo `type=building` es el
+      que trae las huellas; `type=building_part` es geometria auxiliar y no se
+      cuenta, o inflaria bld_count.
 
   - id: overture_transportation
     layer: roads
-    url: s3://overturemaps-us-west-2/release/2026-07-23.0/theme=transportation
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
     license: ODbL-1.0
-    vintage: "2026-07-23.0"
+    vintage: "2026-08-19.0"
     sha256: ""
-    notes: "VERIFICAR el identificador del release vigente."
+    notes: "`type=segment` es la geometria lineal; `type=connector` son nodos."
 
   - id: overture_divisions
     layer: divisions
-    url: s3://overturemaps-us-west-2/release/2026-07-23.0/theme=divisions
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=divisions/type=division_area
     license: ODbL-1.0
-    vintage: "2026-07-23.0"
+    vintage: "2026-08-19.0"
     sha256: ""
+    notes: "`type=division_area` trae los poligonos; `division` son puntos."
 
-  - id: dane_mgn
+  - id: dane_mgn_2025
     layer: divisions
-    url: https://geoportal.dane.gov.co/servicios/descarga-y-metadatos/descarga-mgn-marco-geoestadistico-nacional/
-    license: gov-open-co
-    vintage: "MGN-2025"
+    url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_00_COLOMBIA.zip
+    license: CC-BY-4.0
+    vintage: MGN-2025
     sha256: ""
     notes: >-
-      Fuente de verdad del crosswalk hex<->DIVIPOLA. T0.4: confirmar terminos
-      exactos de reuso del MGN (historicamente abiertos).
+      T0.4 RESUELTA. El Geoportal DANE publica su informacion geografica bajo
+      CC BY 4.0: permite uso comercial y redistribucion, y pide citar
+      "Departamento Administrativo Nacional de Estadistica - DANE:
+      www.dane.gov.co". Fuente de verdad del crosswalk hex<->DIVIPOLA.
+      El archivo nacional pesa 3,39 GB. Existen entregas por nivel mucho mas
+      livianas (MGN2025_DPTO_POLITICO.zip = 12,5 MB; MGN2025_CLASE.zip = 120 MB);
+      el nombre exacto del nivel municipal no se pudo deducir probando y hay que
+      leerlo del geoportal antes del primer build, para no bajar 3,4 GB cada
+      trimestre.
 
   - id: osm_health
     layer: health
     url: https://overpass-api.de/api/interpreter
     license: ODbL-1.0
-    vintage: "snapshot-2026-08-01"
-    sha256: ""
-    notes: "amenity=hospital|clinic dentro del bbox de Colombia."
-
-  - id: reps_minsalud
-    layer: health
-    url: https://www.datos.gov.co/Salud-y-Protecci-n-Social/
-    license: gov-open-co
-    vintage: "REPS-2026-Q2"
+    vintage: snapshot-2026-08-01
     sha256: ""
     notes: >-
-      T0.5: confirmar dataset y llave de georreferenciacion. Parte del REPS
-      viene sin coordenadas y hay que geocodificar contra el MGN.
+      amenity=hospital|clinic|doctors dentro del bbox de Colombia. Unica fuente
+      de salud con coordenadas: el REPS no las trae.
 
-  - id: men_sedes
+  - id: osm_education
     layer: education
-    url: https://www.datos.gov.co/Educaci-n/
-    license: gov-open-co
-    vintage: "MEN-2026"
+    url: https://overpass-api.de/api/interpreter
+    license: ODbL-1.0
+    vintage: snapshot-2026-08-01
     sha256: ""
-    notes: "T0.6: confirmar dataset MEN con coordenadas."
+    notes: >-
+      amenity=school|college|university. Unica fuente de educacion con
+      coordenadas: el directorio del MEN no las trae.
 
   - id: ourairports
     layer: airports
     url: https://davidmegginson.github.io/ourairports-data/airports.csv
     license: public-domain
-    vintage: "snapshot-2026-08-01"
+    vintage: snapshot-2026-08-01
     sha256: ""
-    notes: "T1.2: verificacion trivial."
+    notes: >-
+      T1.2: disponibilidad verificada (HTTP 200, 12,7 MB). La declaracion de
+      dominio publico viene del propio proyecto y queda pendiente de citar con
+      su texto exacto.

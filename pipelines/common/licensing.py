@@ -42,8 +42,9 @@ LICENSE_BUCKET: Final[dict[str, Bucket]] = {
     "CC-BY-4.0": Bucket.CORE,
     "EC-reuse-attribution": Bucket.CORE,  # JRC / GHSL, Copernicus EMS
     "gov-open-co": Bucket.CORE,  # datos.gov.co, DANE MGN, REPS, MEN
-    # odbl (share-alike)
+    # share-alike: redistribuibles, pero obligan a licenciar el derivado igual
     "ODbL-1.0": Bucket.ODBL,
+    "CC-BY-SA-4.0": Bucket.ODBL,
     # nc (no redistribuible en el nucleo)
     "CC-BY-NC-4.0": Bucket.NC,
     "CC-BY-NC-SA-4.0": Bucket.NC,
@@ -51,6 +52,19 @@ LICENSE_BUCKET: Final[dict[str, Bucket]] = {
 
 #: Cubos que puede consumir el reporte automatico (§2.4 regla 1).
 REPORT_ALLOWED_BUCKETS: Final[frozenset[Bucket]] = frozenset({Bucket.CORE, Bucket.ODBL})
+
+#: Pares de licencias share-alike que **no** pueden convivir en un mismo
+#: derivado. ODbL y CC BY-SA 4.0 son ambas copyleft y mutuamente incompatibles:
+#: cada una exige que el derivado se publique bajo ella, y no existe una
+#: licencia unica que satisfaga a las dos. Mezclarlas produce una tabla que
+#: literalmente no se puede licenciar.
+#:
+#: Aparece en la practica: los datasets colombianos de salud (REPS) y educacion
+#: (MEN) en datos.gov.co son CC BY-SA 4.0, mientras que las edificaciones y
+#: vias de Overture son ODbL.
+INCOMPATIBLE_SHARE_ALIKE: Final[frozenset[frozenset[str]]] = frozenset(
+    {frozenset({"ODbL-1.0", "CC-BY-SA-4.0"})}
+)
 
 
 def bucket_for(license_id: str) -> Bucket:
@@ -75,9 +89,20 @@ def resolve_bucket(license_ids: Iterable[str]) -> Bucket:
     La combinacion es un "peor caso": basta una fuente NC para que el derivado
     entero sea NC, y basta una ODbL para que el derivado herede share-alike.
     """
-    buckets = {bucket_for(lid) for lid in license_ids}
+    ids = set(license_ids)
+    buckets = {bucket_for(lid) for lid in ids}
     if not buckets:
         raise LicenseViolationError("Un derivado debe declarar al menos una fuente.")
+
+    for par in INCOMPATIBLE_SHARE_ALIKE:
+        if par <= ids:
+            raise LicenseViolationError(
+                f"Licencias share-alike incompatibles en el mismo derivado: "
+                f"{sorted(par)}. Cada una exige que el derivado se publique bajo "
+                f"ella y no hay licencia que cumpla las dos. Separa las capas en "
+                f"tablas distintas o descarta una de las fuentes."
+            )
+
     if Bucket.NC in buckets:
         return Bucket.NC
     if Bucket.ODBL in buckets:

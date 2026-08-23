@@ -25,7 +25,7 @@
           "license": {
             "type": "string",
             "enum": ["public-domain-usgov", "public-domain", "CC0-1.0", "CC-BY-4.0",
-                     "EC-reuse-attribution", "gov-open-co", "ODbL-1.0",
+                     "EC-reuse-attribution", "gov-open-co", "ODbL-1.0", "CC-BY-SA-4.0",
                      "CC-BY-NC-4.0", "CC-BY-NC-SA-4.0"]
           },
           "vintage": { "type": "string", "minLength": 1 },

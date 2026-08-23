@@ -93,6 +93,7 @@ tests/           unit/, integration/, golden/, fixtures/
 ## Documentacion
 
 - [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificacion tecnica v0.9
+- [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con metodo y hallazgos
 - [`DISCLAIMER.md`](DISCLAIMER.md) — que informa y que no informa el sistema
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — como ayudar (incluye rol de mantenedor por pais)
 - [`GOVERNANCE.md`](GOVERNANCE.md) — roles, decisiones, frontera comunidad ↔ empresa

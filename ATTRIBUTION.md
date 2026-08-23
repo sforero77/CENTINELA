@@ -23,11 +23,21 @@ especificacion) y se verifica en CI.
   `divisions`. ODbL.
 - **© OpenStreetMap contributors** — datos incluidos en Overture y consultas
   directas de equipamiento. ODbL. https://www.openstreetmap.org/copyright
-- **DANE (Colombia)** — Marco Geoestadistico Nacional (MGN), base del crosswalk
-  hex↔DIVIPOLA.
-- **MinSalud (Colombia)** — REPS, sedes de salud.
-- **MEN (Colombia)** — directorio de sedes educativas.
+- **Departamento Administrativo Nacional de Estadistica - DANE:
+  www.dane.gov.co** — Marco Geoestadistico Nacional (MGN), base del crosswalk
+  hex↔DIVIPOLA. CC BY 4.0 (esta es la formula de atribucion que el propio
+  Geoportal DANE pide).
 - **OurAirports** — aeropuertos. Dominio publico.
+
+## Fuentes de referencia, fuera del activo redistribuible
+
+Estas no alimentan `exposure_h3` y viven en una tabla aparte bajo CC BY-SA 4.0,
+porque su copyleft es incompatible con la ODbL de Overture (ver
+`VERIFICACIONES.md`):
+
+- **MinSalud (Colombia)** — REPS, Registro Especial de Prestadores y Sedes de
+  Servicios de Salud. CC BY-SA 4.0.
+- **MEN (Colombia)** — directorio de establecimientos educativos. CC BY-SA 4.0.
 
 ## Capas de contexto (cubo `nc/`, fuera del reporte automatico)
 

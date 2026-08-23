@@ -56,3 +56,17 @@ def test_el_reporte_rechaza_nc_y_nombra_al_culpable() -> None:
     """GEM y xBD son NC: si se cuelan, el dataset entero deja de ser reusable."""
     with pytest.raises(LicenseViolationError, match=re.escape("CC-BY-NC-SA-4.0")):
         assert_publishable_in_report(["CC-BY-4.0", "CC-BY-NC-SA-4.0"])
+
+
+def test_odbl_y_cc_by_sa_no_pueden_convivir() -> None:
+    """Dos copyleft distintos en un derivado producen una tabla inlicenciable.
+
+    No es hipotetico: REPS y MEN (datos.gov.co) son CC BY-SA 4.0 y las
+    edificaciones de Overture son ODbL.
+    """
+    with pytest.raises(LicenseViolationError, match="incompatibles"):
+        resolve_bucket(["ODbL-1.0", "CC-BY-SA-4.0"])
+
+
+def test_cc_by_sa_sola_es_share_alike_valido() -> None:
+    assert resolve_bucket(["CC-BY-4.0", "CC-BY-SA-4.0"]) is Bucket.ODBL

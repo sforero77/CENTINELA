@@ -47,13 +47,14 @@ LAYERS: tuple[LayerSpec, ...] = (
     ),
     LayerSpec(
         id="pop_worldpop_agesex",
-        titulo="Estructura etaria/sexo — WorldPop age-sex constrained 2020",
+        titulo="Estructura etaria/sexo — WorldPop age-sex constrained R2025A, epoca 2025",
         license="CC-BY-4.0",
         columnas=("pop_0_14", "pop_15_64", "pop_65p"),
-        agregacion="proporciones 2020 aplicadas sobre pop_total 2025",
+        agregacion="proporciones 2025 aplicadas sobre pop_total de GHS-POP 2025",
         limitacion=(
-            "Supuesto de estructura etaria estable entre 2020 y 2025. "
-            "Se declara en los metadatos de cada reporte (§2.2)."
+            "Modelado, como toda la cadena. El supuesto de estructura etaria "
+            "estable que la espec daba por inevitable ya no aplica: WorldPop "
+            "publica desglose age-sex para 2025 en el release R2025A."
         ),
     ),
     LayerSpec(
@@ -84,27 +85,38 @@ LAYERS: tuple[LayerSpec, ...] = (
     ),
     LayerSpec(
         id="health",
-        titulo="Salud — OSM + healthsites.io + REPS (MinSalud CO)",
+        titulo="Salud — OpenStreetMap + healthsites.io",
         license="ODbL-1.0",
         columnas=("health_count",),
         agregacion="conteo de puntos por celda, deduplicado por proximidad",
-        limitacion="Parte del REPS llega sin coordenadas; se geocodifica contra MGN (T0.5).",
+        limitacion=(
+            "El REPS de MinSalud no entra aqui: no publica coordenadas (solo "
+            "DIVIPOLA y direccion) y es CC BY-SA 4.0, copyleft incompatible con "
+            "la ODbL de Overture. Sirve como referencia de completitud "
+            "municipal en una tabla aparte, no como conteo por celda."
+        ),
     ),
     LayerSpec(
         id="education",
-        titulo="Educacion — Sedes educativas MEN + OSM",
-        license="gov-open-co",
+        titulo="Educacion — OpenStreetMap",
+        license="ODbL-1.0",
         columnas=("edu_count",),
         agregacion="conteo de puntos por celda, deduplicado por proximidad",
-        limitacion="Dataset MEN con coordenadas pendiente de confirmar (T0.6).",
+        limitacion=(
+            "El directorio del MEN tampoco publica coordenadas y es CC BY-SA "
+            "4.0: mismo tratamiento que el REPS."
+        ),
     ),
     LayerSpec(
         id="divisions",
-        titulo="Division politico-administrativa — Overture divisions + MGN DANE",
-        license="gov-open-co",
+        titulo="Division politico-administrativa — MGN del DANE + Overture divisions",
+        license="CC-BY-4.0",
         columnas=("iso3", "adm1_id", "adm2_id"),
         agregacion="asignacion por centroide + tabla de fracciones en frontera",
-        limitacion="Terminos exactos de reuso del MGN pendientes de confirmar (T0.4).",
+        limitacion=(
+            "El MGN es la fuente de verdad del codigo DIVIPOLA y del toponimo "
+            "oficial; Overture divisions solo se usa donde el MGN no llega."
+        ),
     ),
     LayerSpec(
         id="airports",

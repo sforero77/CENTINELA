@@ -30,6 +30,12 @@ No con documentacion. Con codigo:
   mezcla.
 - `resolve_bucket()` implementa la regla de peor caso: una fuente NC contamina
   el derivado entero; una ODbL le contagia share-alike.
+- `resolve_bucket()` tambien rechaza **dos copyleft incompatibles en el mismo
+  derivado**. La regla de los tres cubos no bastaba: ODbL y CC BY-SA 4.0 caen
+  las dos del lado «redistribuible», pero cada una exige que el derivado se
+  publique bajo ella y no hay licencia que cumpla ambas. El caso no es
+  hipotetico — los registros colombianos de salud y educacion son CC BY-SA 4.0
+  y las edificaciones de Overture son ODbL. Detalle en `../VERIFICACIONES.md`.
 
 ## Licencias de referencia
 
