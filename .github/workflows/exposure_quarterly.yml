@@ -18,7 +18,7 @@ permissions:
 jobs:
   construir:
     runs-on: ubuntu-latest
-    if: github.repository == 'sforero77/centinela'
+    if: github.repository == 'sforero77/CENTINELA'
     strategy:
       # Un pais que falla no debe impedir que los demas se reconstruyan.
       fail-fast: false

@@ -18,7 +18,7 @@ from .logging import get_logger
 
 _log = get_logger(__name__)
 
-USER_AGENT = "centinela/0.1 (+https://github.com/sforero77/centinela) comunidad GeoAI LATAM"
+USER_AGENT = "centinela/0.1 (+https://github.com/sforero77/CENTINELA) comunidad GeoAI LATAM"
 
 DEFAULT_TIMEOUT_S = 30.0
 DEFAULT_RETRIES = 3

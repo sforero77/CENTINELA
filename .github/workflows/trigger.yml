@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     # Los forks no deben disparar reportes: es el comportamiento por defecto de
     # GitHub para schedules, y aqui es exactamente lo que queremos (RNF-07).
-    if: github.repository == 'sforero77/centinela'
+    if: github.repository == 'sforero77/CENTINELA'
     outputs:
       eventos: ${{ steps.trigger.outputs.eventos }}
       hay_trabajo: ${{ steps.trigger.outputs.hay_trabajo }}

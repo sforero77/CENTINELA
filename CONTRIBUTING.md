@@ -6,7 +6,7 @@ propia dos veces en dos meses. Toda ayuda cuenta.
 ## Arranque rapido
 
 ```bash
-git clone https://github.com/sforero77/centinela
+git clone https://github.com/sforero77/CENTINELA
 cd centinela
 make setup     # instala todo con uv (Python 3.12)
 make check     # lint + mypy + pruebas: debe pasar antes de abrir PR

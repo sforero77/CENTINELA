@@ -16,7 +16,7 @@ permissions:
 jobs:
   latir:
     runs-on: ubuntu-latest
-    if: github.repository == 'sforero77/centinela'
+    if: github.repository == 'sforero77/CENTINELA'
     steps:
       - uses: actions/checkout@v4
 
