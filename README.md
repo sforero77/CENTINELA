@@ -134,6 +134,7 @@ tests/           unit/, integration/, golden/, fixtures/
 ## Documentacion
 
 - [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificacion tecnica v0.9
+- [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — como publicar el activo y por que no va en git
 - [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con metodo y hallazgos
 - [`DISCLAIMER.md`](DISCLAIMER.md) — que informa y que no informa el sistema
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — como ayudar (incluye rol de mantenedor por pais)
