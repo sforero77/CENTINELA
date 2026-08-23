@@ -68,15 +68,21 @@ arranque no funciona en tu maquina, eso es un bug.
 | Decision de impacto e idempotencia por version | ✅ funcional |
 | Modelo y render del reporte (json, md, CSV, hilo) | ✅ funcional |
 | Regla de los tres cubos y lint de manifests | ✅ funcional, corre en CI |
+| Golden tests G1/G2/G3 con productos reales congelados | ✅ corren |
+| Resolucion de descargas por la API de HDX | ✅ funcional |
 | P2 polyfill H3, muestreo de Ground Failure, join DuckDB | ⏳ semana 3 |
 | P0 construccion del activo y crosswalk DIVIPOLA | ⏳ semana 2 |
 | Mapa estatico del reporte | ⏳ semana 3 (decision T0.8) |
-| Golden tests G1/G2 con productos reales congelados | ⏳ bloqueados por T0.1/T0.2 |
 | P4 brigada de imagen | ⏳ Fase 2 |
 
 Las etapas pendientes fallan de forma ruidosa y explicita — nunca devuelven un
 cero que acabaria publicado como cifra. `tests/unit/test_pendientes.py` es el
 inventario vivo de esa deuda: la lista encogiendo es el indicador de avance.
+
+Los golden tests corren contra **productos reales congelados** de los dos
+eventos que motivan el proyecto: Chocó (`us6000tjl2`) y el doble mainshock de
+Venezuela (`us6000t7zp`, `us6000t7zc`). Ya cazaron un bug que ninguna prueba
+sintetica habria encontrado — ver `tests/fixtures/golden/README.md`.
 
 ## Estructura
 

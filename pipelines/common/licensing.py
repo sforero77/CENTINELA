@@ -41,7 +41,8 @@ LICENSE_BUCKET: Final[dict[str, Bucket]] = {
     "CC0-1.0": Bucket.CORE,
     "CC-BY-4.0": Bucket.CORE,
     "EC-reuse-attribution": Bucket.CORE,  # JRC / GHSL, Copernicus EMS
-    "gov-open-co": Bucket.CORE,  # datos.gov.co, DANE MGN, REPS, MEN
+    "CC-BY-IGO": Bucket.CORE,  # COD de OCHA/HDX: atribucion, sin share-alike ni NC
+    "gov-open-co": Bucket.CORE,  # datos.gov.co sin licencia CC declarada
     # share-alike: redistribuibles, pero obligan a licenciar el derivado igual
     "ODbL-1.0": Bucket.ODBL,
     "CC-BY-SA-4.0": Bucket.ODBL,

@@ -8,7 +8,7 @@
 # con una peticion real. Los `sha256` se llenan en la primera corrida de P0; el
 # lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.2
+manifest_id: col-v0.3
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -18,6 +18,12 @@ notas:
      release da reproducibilidad del calculo, no de la descarga: pasados ~2
      meses la URL deja de existir. Por eso el activo construido se publica como
      Release propio con su sha256 — esa es la copia que sostiene RNF-04."
+  - "Las fuentes con `hdx_dataset` NO se descargan por la url de este archivo:
+     esa url es la pagina estable del dataset, para poder revisarla a mano. La
+     de descarga se resuelve por la API de HDX en cada build. Motivo verificado:
+     un mismo dataset de HOTOSM tiene al menos tres formas de URL segun el pais
+     (COL, MEX y PER difieren), asi que adivinar la ruta funciona hasta que
+     Fase 1 agrega el pais que no encaja."
   - "REPS (salud) y sedes educativas MEN NO estan en este manifest, a
      proposito. Dos razones independientes, ambas verificadas: (a) ninguno de
      los dos datasets trae coordenadas, solo codigo DIVIPOLA y direccion, asi
@@ -89,6 +95,21 @@ sources:
     sha256: ""
     notes: "`type=division_area` trae los poligonos; `division` son puntos."
 
+  - id: cod_ab_col
+    layer: divisions
+    url: https://data.humdata.org/dataset/cod-ab-col
+    hdx_dataset: cod-ab-col
+    license: CC-BY-IGO
+    vintage: COD-AB-2025-05-27
+    sha256: ""
+    notes: >-
+      Common Operational Dataset de OCHA. Para Colombia es el propio MGN del
+      DANE reempaquetado, asi que no aporta geometria nueva aqui; entra porque
+      el patron `cod-ab-<iso3>` existe verificado para LOS SIETE paises de Fase
+      1 (COL, MEX, PER, ECU, CHL, VEN, GTM) con la misma licencia y la misma
+      forma. Es la via que evita que cada mantenedor de pais tenga que
+      ingeniar el geoportal nacional de turno solo para obtener adm1/adm2.
+
   - id: dane_mgn_2025
     layer: divisions
     url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_00_COLOMBIA.zip
@@ -106,25 +127,42 @@ sources:
       leerlo del geoportal antes del primer build, para no bajar 3,4 GB cada
       trimestre.
 
-  - id: osm_health
+  - id: hotosm_health
     layer: health
-    url: https://overpass-api.de/api/interpreter
+    url: https://data.humdata.org/dataset/hotosm_col_health_facilities
+    hdx_dataset: hotosm_col_health_facilities
     license: ODbL-1.0
-    vintage: snapshot-2026-08-01
+    vintage: "2026-08-06"
     sha256: ""
     notes: >-
-      amenity=hospital|clinic|doctors dentro del bbox de Colombia. Unica fuente
-      de salud con coordenadas: el REPS no las trae.
+      Extracto OSM de HOT, GeoPackage de ~1 MB, con geometria. Sustituye al REPS
+      como fuente de conteo por celda: es la que si trae coordenadas. La URL de
+      descarga se resuelve por la API de HDX en cada build — no se adivina, ver
+      pipelines/common/hdx.py.
 
-  - id: osm_education
-    layer: education
-    url: https://overpass-api.de/api/interpreter
+  - id: healthsites_hdx
+    layer: health
+    url: https://data.humdata.org/dataset/colombia-healthsites
+    hdx_dataset: colombia-healthsites
     license: ODbL-1.0
-    vintage: snapshot-2026-08-01
+    vintage: "2026-06-11"
     sha256: ""
     notes: >-
-      amenity=school|college|university. Unica fuente de educacion con
-      coordenadas: el directorio del MEN no las trae.
+      healthsites.io publicado en HDX como GeoJSON. Se usa esta via y no la API
+      de healthsites.io porque esa exige API key, y O4 pide reconstruir el
+      activo sin credenciales privadas. Complementa a HOTOSM; se deduplica por
+      proximidad.
+
+  - id: hotosm_education
+    layer: education
+    url: https://data.humdata.org/dataset/hotosm_col_education_facilities
+    hdx_dataset: hotosm_col_education_facilities
+    license: ODbL-1.0
+    vintage: "2026-08-06"
+    sha256: ""
+    notes: >-
+      Extracto OSM de HOT, GeoPackage de ~5 MB, con geometria. Sustituye al
+      directorio del MEN por la misma razon que arriba.
 
   - id: ourairports
     layer: airports

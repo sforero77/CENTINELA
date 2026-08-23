@@ -39,6 +39,11 @@ class Source:
     #: sha256 del insumo descargado. Vacio mientras la tarea de verificacion
     #: correspondiente siga pendiente (§8); el lint lo reporta como aviso.
     sha256: str = ""
+    #: Nombre del dataset en HDX cuando la descarga se resuelve por su API en
+    #: vez de por URL fija. Ver :mod:`pipelines.common.hdx`: la ruta real de un
+    #: mismo dataset de HOTOSM cambia de forma segun el pais, asi que el
+    #: identificador estable es el nombre, no la URL.
+    hdx_dataset: str = ""
     notes: str = ""
 
     @property
@@ -57,6 +62,7 @@ class Source:
             license=str(data["license"]),
             vintage=str(data["vintage"]),
             sha256=str(data.get("sha256", "")),
+            hdx_dataset=str(data.get("hdx_dataset", "")),
             notes=str(data.get("notes", "")),
         )
 
@@ -155,6 +161,12 @@ def lint_manifest(manifest: Manifest) -> list[str]:
             )
         if not source.url.startswith(("http://", "https://", "s3://", "az://")):
             problems.append(f"[{source.id}] url no reconocida: {source.url!r}")
+        if source.hdx_dataset and "data.humdata.org" not in source.url:
+            problems.append(
+                f"[{source.id}] declara hdx_dataset pero su url no apunta a HDX: "
+                f"la url debe ser la pagina estable del dataset, y la de descarga "
+                f"se resuelve por la API en cada build"
+            )
         if bucket is Bucket.NC:
             problems.append(
                 f"[{source.id}] fuente NC ({source.license}) en el manifest de exposicion: "

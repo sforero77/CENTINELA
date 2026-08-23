@@ -2,27 +2,41 @@
 
 Pruebas de regresion contra eventos reales congelados. Corren en cada PR (§6.3).
 
-| Id | Evento | Que fija |
-|---|---|---|
-| G1 | Choco, M7.4, 10-ago-2026 | Que el trigger habria disparado; `pop_mmi7p` estable ±0.5 % entre commits; top-15 municipal estable; el reporte final referencia la ultima version de ShakeMap |
-| G2 | Venezuela, 24-jun-2026 | Idem, mas bbox y manejo de evento doble (dos mainshocks) |
-| G3 | Evento profundo sin Ground Failure | Que el reporte omite la seccion con nota explicita y **no falla** |
+| Id | Evento | `usgs_id` | Estado |
+|---|---|---|---|
+| G1 | Chocó, M7.4, 10-ago-2026 | `us6000tjl2` | ✅ corre |
+| G2 | Venezuela, doble mainshock, 24-jun-2026 | `us6000t7zp`, `us6000t7zc` | ✅ corre |
+| G3 | Evento sin Ground Failure publicado | sintetico | ✅ corre |
 
-## Estado
+## Que fija cada uno
 
-G1 y G2 estan **bloqueados por fixtures**: requieren T0.1 (obtener los `usgs_id`
-oficiales de ambos eventos) y T0.2 (descargar y congelar los productos con
-`includesuperseded` via `libcomcat`). Hasta entonces se saltan con razon
-explicita — nunca se marcan como verdes.
+**G1 — Chocó.** Que el trigger habria disparado (verificado contra el evento
+real), los datos del evento, que se elige la version vigente del ShakeMap entre
+las siete congeladas, y que un estado atrasado dispara re-emision mientras uno
+al dia no (RF-04).
 
-G3 ya corre: su parte de render vive en `tests/unit/test_report.py`.
+**G2 — Venezuela.** Lo mismo, mas el **evento doble**: dos mainshocks separados
+por 33 segundos y 145 km deben producir dos `event_state` y dos reportes, nunca
+uno tratado como replica del otro. Incluye la regresion del bug de seleccion de
+version que esta fixture destapo.
 
-## Como congelar una fixture
+**G3 — Sin Ground Failure.** Que el reporte omite la seccion con nota explicita
+y no falla. Ojo: la espec v0.9 lo describia como «evento profundo», pero Chocó
+fue a 110 km y si tiene Ground Failure — la profundidad no es el criterio.
 
-```bash
-# T0.2 — requiere libcomcat instalado localmente, no en CI
-uv run --extra dev python scripts/freeze_event.py <usgs_id> --out tests/fixtures/golden/<usgs_id>
-```
+## Lo que sigue pendiente
 
-Las fixtures congeladas se versionan: son la unica forma de que el sistema
-pueda decir "esto habria salido a las 08:3X" del 10 de agosto.
+Las aserciones (b) `pop_mmi7p` estable ±0.5% y (c) top-15 municipios estable
+estan marcadas `skip` con razon: **necesitan el activo `exposure_h3` de
+Colombia**, que es P0 (Fase 0, semana 2). No estan bloqueadas por fixtures.
+
+Falta tambien congelar los **contenidos** de los productos —`cont_mmi.json` y
+los rasters de Ground Failure— que necesitara el polyfill H3. Las fixtures
+actuales congelan la estructura de productos y su historial de versiones, que
+es lo que el contrato de P2 consume hoy.
+
+## Como congelar
+
+Ver `tests/fixtures/golden/README.md`: comandos exactos, por que se recortan de
+8,4 MB a 244 KB, y por que el feed se reconstruye con una consulta FDSN y no con
+el detail del evento.

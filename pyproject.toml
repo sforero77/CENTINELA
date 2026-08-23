@@ -71,6 +71,11 @@ strict = true
 warn_unreachable = true
 disallow_any_generics = true
 files = ["pipelines", "tests"]
+# Hay un conftest.py por directorio de pruebas; sin esto mypy los ve como dos
+# modulos llamados igual y se detiene antes de revisar nada.
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "."
 
 [[tool.mypy.overrides]]
 module = ["duckdb.*", "h3.*", "rasterio.*", "contextily.*", "matplotlib.*"]

@@ -119,17 +119,48 @@ class ProductSet:
 def _preferred(entries: list[dict[str, Any]], tipo: str) -> ProductRef | None:
     """Elige la version vigente de un producto.
 
-    USGS entrega una lista por tipo de producto (versiones y contribuidores).
-    Criterio: mayor ``preferredWeight``, y a igualdad, el mas reciente. Los
-    productos con ``status=DELETE`` se ignoran.
+    USGS entrega una lista por tipo de producto que mezcla dos ejes distintos:
+    **contribuidores** (``us``, ``atlas``, una red regional) y **versiones** de
+    cada contribuidor. ``preferredWeight`` desempata el primer eje, no el
+    segundo, y usarlo para lo segundo da respuestas obsoletas.
+
+    No es teoria. En el evento de Venezuela ``us6000t7zp``, con
+    ``includesuperseded=true``, las versiones v1-v4 de junio pesan **232** y la
+    vigente v14 de agosto pesa **228**. Ordenar por peso elige un ShakeMap de
+    hace mes y medio y el reporte saldria con cifras equivocadas sin que nada
+    falle. Lo cazaron las fixtures golden.
+
+    Criterio correcto, en este orden:
+
+    1. Descartar ``status=DELETE``.
+    2. Elegir **contribuidor** por su mayor ``preferredWeight`` — para eso
+       existe el campo.
+    3. Dentro de ese contribuidor, elegir la entrada mas reciente por
+       ``updateTime``, desempatando por numero de version.
     """
     vivos = [e for e in entries if str(e.get("status", "UPDATE")).upper() != "DELETE"]
     if not vivos:
         return None
-    best = max(
-        vivos,
-        key=lambda e: (int(e.get("preferredWeight", 0) or 0), int(e.get("updateTime", 0) or 0)),
-    )
+
+    def peso(e: dict[str, Any]) -> int:
+        return int(e.get("preferredWeight", 0) or 0)
+
+    def actualizado(e: dict[str, Any]) -> int:
+        return int(e.get("updateTime", 0) or 0)
+
+    def version(e: dict[str, Any]) -> int:
+        return ProductRef.from_dict(tipo, e).version
+
+    # Paso 2: el contribuidor cuyo mejor producto pesa mas.
+    mejor_peso_por_fuente: dict[str, int] = {}
+    for e in vivos:
+        fuente = str(e.get("source", "us"))
+        mejor_peso_por_fuente[fuente] = max(mejor_peso_por_fuente.get(fuente, 0), peso(e))
+    fuente_elegida = max(mejor_peso_por_fuente, key=lambda f: (mejor_peso_por_fuente[f], f))
+
+    # Paso 3: dentro del contribuidor, la mas reciente.
+    del_contribuidor = [e for e in vivos if str(e.get("source", "us")) == fuente_elegida]
+    best = max(del_contribuidor, key=lambda e: (actualizado(e), version(e)))
     return ProductRef.from_dict(tipo, best)
 
 

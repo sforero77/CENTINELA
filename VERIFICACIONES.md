@@ -4,13 +4,32 @@ Cierre de las tareas ⚠️ de §8 de la especificacion. Cada entrada dice **com
 se verifico, no solo el resultado: una verificacion que no se puede repetir no
 sirve de nada dentro de seis meses.
 
-Fecha de esta ronda: **23 de agosto de 2026**. Metodo: peticiones reales a las
+Rondas: **23 de agosto de 2026** (fuentes de §8) y **auditoria completa del registro**, misma fecha. Metodo: peticiones reales a las
 fuentes primarias (listados S3, indices HTTP, API de Socrata de datos.gov.co,
 paginas de licencia de los publicadores).
 
 ---
 
 ## Resumen
+
+### Ronda 2 — auditoria del registro completo
+
+Criterio de admision aplicado a cada fuente: **sin geometria no sirve**. Un
+registro administrativo sin coordenadas no se puede asignar a una celda H3, por
+buena que sea su cobertura.
+
+| Fuente | Geometria | Veredicto |
+|---|---|---|
+| USGS feeds / detail / ShakeMap / Ground Failure / PAGER | sí | ✅ probados contra el evento real de Chocó |
+| GHS-POP, WorldPop, Overture, MGN-DANE | sí | ✅ (ronda 1) |
+| REPS (`c36g-9fc2`), MEN (`cfw5-qzt5`) | **no** | ❌ fuera del activo |
+| **API** de healthsites.io | sí | ❌ exige API key, viola O4 |
+| HOTOSM `hotosm_<iso>_health_facilities` (HDX) | sí | ✅ **sustituye al REPS** |
+| HOTOSM `hotosm_<iso>_education_facilities` (HDX) | sí | ✅ **sustituye al MEN** |
+| healthsites.io publicado en HDX | sí | ✅ complemento sin credenciales |
+| COD-AB de OCHA `cod-ab-<iso3>` | sí | ✅ **cubre los 7 paises de Fase 1** |
+
+### Ronda 1 — tareas ⚠️ de §8
 
 | Tarea | Estado | Resultado |
 |---|---|---|
@@ -22,6 +41,82 @@ paginas de licencia de los publicadores).
 | WorldPop age-sex | ✅ mejora | Hay desglose **para 2025**: cae un supuesto de la espec |
 | WorldPop total | ✅ corregida | Ruta real hallada |
 | GHS-POP | ✅ confirmada | Ambas variantes sirven |
+
+---
+
+## Hallazgos de la ronda 2
+
+### 4. Un bug de seleccion de version, cazado por las fixtures reales
+
+El caso que justifica congelar productos reales en vez de sinteticos.
+
+En `us6000t7zp` (Venezuela, M7.5) el ShakeMap va por la version **14**. Con
+`includesuperseded=true` se ven las catorce, y sus pesos son estos:
+
+| Version | Fecha | `preferredWeight` |
+|---|---|---|
+| v1–v4 | junio 2026 | **232** |
+| v13–v14 | agosto 2026 | **228** |
+
+El parser ordenaba por `preferredWeight` y elegia **v4**: un ShakeMap de hace
+mes y medio. El reporte habria salido con cifras equivocadas, ninguna prueba
+habria fallado y nada en la salida habria delatado el problema.
+
+`preferredWeight` desempata **contribuidores** (`us` frente a `atlas` o una red
+regional), no versiones de un mismo contribuidor. El criterio correcto, ya
+implementado: descartar `DELETE`, elegir contribuidor por peso, y dentro de el
+la entrada mas reciente por `updateTime`. Verificado contra la respuesta
+autoritativa de ComCat para los tres eventos: v7, v14 y v9.
+
+La regresion vive en `tests/golden/test_g2_venezuela.py::test_no_se_elige_una_version_obsoleta`,
+y comprueba primero que la fixture siga reproduciendo la trampa — una prueba de
+regresion que deja de reproducir el caso es peor que no tenerla.
+
+### 5. `includesuperseded=true` funciona directo en FDSN
+
+La espec asumia que recuperar el historial de versiones requeria `libcomcat`.
+No: el parametro funciona sobre el endpoint FDSN y devuelve todas las versiones
+de cada producto. Una dependencia menos en el procedimiento de congelado.
+
+### 6. T0.1 resuelta: los tres eventos identificados
+
+| Evento | `usgs_id` | Cuando | Detalle |
+|---|---|---|---|
+| Chocó | `us6000tjl2` | 2026-08-10T12:34:28Z | M7.4, **110 km**, PAGER rojo, ShakeMap v7 |
+| Catia La Mar | `us6000t7zp` | 2026-06-24T22:05:04Z | M7.5, 10 km, ShakeMap v14 |
+| San Felipe | `us6000t7zc` | 2026-06-24T22:04:31Z | M7.2, 10 km, ShakeMap v9 |
+
+Dos cosas que la espec no anticipaba. Los eventos de Venezuela estan separados
+por **33 segundos** y 145 km: ese es el «evento doble» de G2, y el sistema debe
+producir dos reportes con areas de intensidad solapadas sin fusionarlos. Y Chocó
+fue **profundo** (110 km) pero **si** tiene Ground Failure, asi que G3 no puede
+definirse como «evento profundo» — lo que hay que probar es la ausencia del
+producto, venga de donde venga.
+
+### 7. La URL de HOTOSM cambia de forma segun el pais
+
+Para la misma capa logica `health_facilities` conviven al menos tres patrones:
+
+```
+COL -> production-raw-data-api.s3.amazonaws.com/ISO3/COL/health_facilities/…
+MEX -> s3.dualstack.us-east-1.amazonaws.com/production-raw-data-api/ISO3/MEX/health_facilities/points/…
+PER -> export.hotosm.org/downloads/<uuid>/…
+```
+
+Adivinar la ruta funciona para cinco de los siete paises de Fase 1 y falla para
+dos — es decir, funciona hasta que alguien agrega el pais que no encaja, y falla
+en produccion, no en CI. El identificador estable es el **nombre del dataset**;
+la URL se resuelve por la API de CKAN de HDX en cada build
+(`pipelines/common/hdx.py`).
+
+### 8. COD-AB cubre los siete paises de Fase 1
+
+`cod-ab-col`, `cod-ab-mex`, `cod-ab-per`, `cod-ab-ecu`, `cod-ab-chl`,
+`cod-ab-ven` y `cod-ab-gtm` existen, todos **CC BY-IGO**, todos con shapefile o
+geodatabase. Para Colombia el COD es el propio MGN del DANE reempaquetado, asi
+que no aporta geometria nueva; su valor esta en Fase 1, donde evita que cada
+mantenedor de pais tenga que ingeniar el geoportal nacional de turno solo para
+obtener adm1/adm2.
 
 ---
 
@@ -157,10 +252,10 @@ resulta ser el cuello de botella de P0.
 
 | Tarea | Que falta |
 |---|---|
-| T0.1 / T0.2 | `usgs_id` oficiales de Choco y Venezuela; congelar productos |
+| T0.2 (resto) | Congelar los **contenidos**: `cont_mmi.json` y rasters de Ground Failure, que necesita el polyfill H3. Lo congelado hoy es la estructura de productos y su historial de versiones |
+| T0.9 (nueva) | Nombre del archivo MGN a nivel municipal: el nacional pesa 3,39 GB |
 | T0.7 | Benchmark `exactextract` vs muestreo simple (<1 % en poblacion nacional) |
 | T0.8 | Motor del mapa estatico: matplotlib+contextily vs MapLibre headless |
-| T0.4 (resto) | Nombre del archivo MGN a nivel municipal |
 | T1.1 | Formatos y terminos de las redes sismologicas nacionales |
 | T1.3 | Plantillas HDX y validacion de las cabeceras HXL |
 | T2.1–T2.4 | Todo lo de la brigada de imagen (Fase 2) |

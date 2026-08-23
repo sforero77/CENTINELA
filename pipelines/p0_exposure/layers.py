@@ -85,7 +85,7 @@ LAYERS: tuple[LayerSpec, ...] = (
     ),
     LayerSpec(
         id="health",
-        titulo="Salud — OpenStreetMap + healthsites.io",
+        titulo="Salud — HOTOSM (HDX) + healthsites.io via HDX",
         license="ODbL-1.0",
         columnas=("health_count",),
         agregacion="conteo de puntos por celda, deduplicado por proximidad",
@@ -93,12 +93,14 @@ LAYERS: tuple[LayerSpec, ...] = (
             "El REPS de MinSalud no entra aqui: no publica coordenadas (solo "
             "DIVIPOLA y direccion) y es CC BY-SA 4.0, copyleft incompatible con "
             "la ODbL de Overture. Sirve como referencia de completitud "
-            "municipal en una tabla aparte, no como conteo por celda."
+            "municipal en una tabla aparte, no como conteo por celda. "
+            "Tampoco se usa la API de healthsites.io: exige API key y O4 pide "
+            "reconstruir el activo sin credenciales privadas."
         ),
     ),
     LayerSpec(
         id="education",
-        titulo="Educacion — OpenStreetMap",
+        titulo="Educacion — HOTOSM (HDX)",
         license="ODbL-1.0",
         columnas=("edu_count",),
         agregacion="conteo de puntos por celda, deduplicado por proximidad",
@@ -109,13 +111,15 @@ LAYERS: tuple[LayerSpec, ...] = (
     ),
     LayerSpec(
         id="divisions",
-        titulo="Division politico-administrativa — MGN del DANE + Overture divisions",
+        titulo="Division politico-administrativa — MGN del DANE + COD-AB de OCHA + Overture",
         license="CC-BY-4.0",
         columnas=("iso3", "adm1_id", "adm2_id"),
         agregacion="asignacion por centroide + tabla de fracciones en frontera",
         limitacion=(
             "El MGN es la fuente de verdad del codigo DIVIPOLA y del toponimo "
-            "oficial; Overture divisions solo se usa donde el MGN no llega."
+            "oficial. Para Fase 1 el patron cod-ab-<iso3> de OCHA da adm1/adm2 "
+            "de los siete paises con una sola licencia y una sola forma, sin "
+            "pelear con siete geoportales nacionales."
         ),
     ),
     LayerSpec(

@@ -1,6 +1,17 @@
 # CENTINELA — Sistema de Exposición Sísmica Automatizada para LATAM
-### Proyecto comunitario GeoAI LATAM · Especificación técnica v0.9 (borrador para revisión)
+### Proyecto comunitario GeoAI LATAM · Especificación técnica v0.10
 **Fecha:** 23 de agosto de 2026 · **Autor del borrador:** Sebastián Forero + Claude · **Nombre en clave provisional:** `centinela` (abierto a votación de la comunidad)
+
+> **Cambios de v0.9 → v0.10.** Todas las fuentes del registro se probaron contra documentación primaria con peticiones reales. Seis correcciones al documento, cinco de ellas porque la realidad no coincidía con el supuesto:
+>
+> 1. **WorldPop sí publica estructura etaria para 2025** (release R2025A). Cae el supuesto de «proporciones de 2020 sobre totales de 2025» que se declaraba en cada reporte.
+> 2. **REPS y sedes MEN no tienen coordenadas** y son CC BY-SA 4.0, copyleft incompatible con la ODbL de Overture. Salen del activo; salud y educación por celda pasan a extractos de HOTOSM publicados en HDX.
+> 3. **Overture conserva solo dos releases** en su bucket: fijar el release da reproducibilidad del cálculo, no de la descarga.
+> 4. **`includesuperseded=true` funciona directo en FDSN**: congelar el histórico de versiones no necesita `libcomcat`.
+> 5. **T0.1 resuelta**: los `usgs_id` de Chocó y Venezuela están identificados y confirmados contra ComCat.
+> 6. **COD-AB de OCHA cubre los siete países de Fase 1** con una licencia y una forma únicas.
+>
+> El registro completo, con método de verificación y evidencia, está en `VERIFICACIONES.md`.
 
 ---
 
@@ -67,7 +78,7 @@ Convención de estado: **✅ verificado** (contrastado contra documentación pri
 |---|---|---|---|---|
 | USGS feeds GeoJSON tiempo real (`4.5_hour`, `4.5_day`) | `earthquake.usgs.gov/earthquakes/feed/v1.0/summary/…` | Dominio público (obra del gobierno de EE. UU.) | ✅ | El propio USGS indica que las aplicaciones automatizadas deben usar los feeds en tiempo real, no consultas FDSN repetidas, por rendimiento y disponibilidad. Los feeds siguen una política de ciclo de vida publicada. |
 | USGS GeoJSON *detail* por evento | propiedad `detail` de cada feature | Dominio público | ✅ | Incluye objeto `products` con todos los productos aportados: `shakemap`, `losspager`, `ground-failure`, `origin`, `dyfi`, etc. Es la puerta única a los productos. |
-| USGS FDSN Event (ComCat) | `earthquake.usgs.gov/fdsnws/event/1/query` | Dominio público | ✅ | Solo para backtests e históricos (incluye `includesuperseded` vía libcomcat para versiones). No para polling. |
+| USGS FDSN Event (ComCat) | `earthquake.usgs.gov/fdsnws/event/1/query` | Dominio público | ✅ | Solo para backtests e históricos. **Verificado:** el parámetro `includesuperseded=true` funciona directamente sobre el endpoint FDSN y devuelve todas las versiones de cada producto — no hace falta `libcomcat`. No para polling. |
 | ShakeMap (por evento) | vía `products.shakemap` → `grid.xml`, rásters, contornos GeoJSON (`cont_mmi`), `uncertainty` | Dominio público | ✅ | **Versionado**: un evento acumula múltiples versiones de ShakeMap (v1, v2, …). El sistema debe re-emitir reporte al detectar nueva versión y etiquetar cada salida con la versión consumida. |
 | USGS Ground Failure (por evento) | vía `products.ground-failure` → rásters de probabilidad de deslizamiento y licuefacción | Dominio público | ✅ | Producto presente en el catálogo de productos de ComCat; también versionado. Diferenciador clave frente a GDACS: casi nadie lo integra. |
 | PAGER | vía `products.losspager` | Dominio público | ✅ | Solo como referencia cruzada en el reporte ("PAGER estima: alerta X"); nunca como cifra propia. |
@@ -78,14 +89,14 @@ Convención de estado: **✅ verificado** (contrastado contra documentación pri
 | Capa | Fuente | Vintage | Resolución | Licencia | Estado | Notas |
 |---|---|---|---|---|---|---|
 | Población total | GHS-POP R2023A (JRC/Copernicus) | Épocas 1975–2030 c/5 años; usar 2025 | 100 m (Mollweide) y 3″ (WGS84) | Reuso CE con atribución | ✅ | Derivado de GPWv4.11 + volumen construido GHSL. Descarga directa JRC y espejo en HDX. Citar Schiavina et al. 2023, doi:10.2905/2FF68A52. |
-| Estructura etaria/sexo | WorldPop age-sex **constrained** | 2020 (única época con desglose) | 100 m (3″) | CC BY 4.0 | ✅ | Bandas de 5 años + <1; se colapsan a 0-14 / 15-64 / 65+. Limitación documentada: proporciones de 2020 aplicadas sobre totales 2025 de GHS-POP (supuesto de estructura estable; se declara en metadatos). |
+| Estructura etaria/sexo | WorldPop age-sex **constrained**, release **R2025A** | **2025** (anual 2015–2030) | 100 m | CC BY 4.0 | ✅ | **Corrige v0.9.** El release R2025A publica desglose por edad y sexo hasta 2026: 62 rásters por país para 2025. Se colapsan a 0-14 / 15-64 / 65+. **El supuesto de estructura etaria estable desaparece**: la cifra de 65+ en MMI≥7 deja de arrastrar cinco años de desfase. |
 | Población total (contraste) | WorldPop constrained 2015–2030 (R2025) | anual | 100 m | CC BY 4.0 | ✅ | Solo para banda de discrepancia GHS-POP vs WorldPop por celda (métrica de incertidumbre publicada). |
-| Edificaciones | Overture Maps `theme=buildings` | Release mensual (fijar en manifest) | vector | **ODbL** (incluye OSM) | ✅ | GeoParquet nativo en S3/Azure con columna `bbox` para filtro eficiente y IDs GERS estables. Catálogo STAC apunta siempre al último release: fijar release explícito, no "latest". |
-| Vías | Overture `theme=transportation` | mensual | vector | ODbL | ✅ | km por clase (motorway→secondary) por celda. |
-| División político-administrativa | Overture `theme=divisions` + DANE MGN (CO) | mensual / vigente DANE | vector | ODbL / abierta DANE | ✅ / ⚠️ | El crosswalk oficial hex↔DIVIPOLA se construye con MGN del DANE (T0.4: confirmar términos exactos de reuso del MGN, históricamente abiertos). |
-| Salud | OSM (`amenity=hospital|clinic`) + healthsites.io + REPS (MinSalud CO) | rolling | puntos | ODbL / ODbL / abierta gov | ✅ / ⚠️ / ⚠️ | REPS vía datos.gov.co (T0.5: confirmar dataset y llave de georreferenciación; parte del REPS viene sin coordenadas → geocodificar contra MGN). |
-| Educación | Sedes educativas MEN (datos.gov.co) + OSM | vigente | puntos | Abierta gov / ODbL | ⚠️ / ✅ | T0.6: confirmar dataset MEN con coordenadas. |
-| Aeropuertos | OurAirports | rolling | puntos | Dominio público | ⚠️ | Verificación trivial (T1.2). |
+| Edificaciones | Overture `theme=buildings/type=building` | Release mensual (fijar en manifest) | vector | **ODbL** (incluye OSM) | ✅ | GeoParquet nativo con columna `bbox` e IDs GERS estables. Fijar release explícito, nunca "latest". Usar `type=building`, **no** `type=building_part` (geometría auxiliar, inflaría `bld_count`). ⚠️ **El bucket conserva solo los dos releases más recientes**: ver §2.5. |
+| Vías | Overture `theme=transportation/type=segment` | mensual | vector | ODbL | ✅ | km por clase (motorway→secondary) por celda. `type=connector` son nodos, no geometría lineal. |
+| División político-administrativa | DANE MGN 2025 (CO) + **COD-AB de OCHA** (resto) + Overture `divisions/type=division_area` | vigente / COD 2025 / mensual | vector | **CC BY 4.0** / **CC BY-IGO** / ODbL | ✅ | **T0.4 resuelta:** el Geoportal DANE publica bajo CC BY 4.0 (uso comercial y redistribución permitidos; citar «Departamento Administrativo Nacional de Estadística - DANE: www.dane.gov.co»). **Hallazgo de Fase 1:** el patrón `cod-ab-<iso3>` existe verificado para los siete países con licencia y forma uniformes — evita pelear con siete geoportales nacionales. |
+| Salud | **HOTOSM `hotosm_<iso>_health_facilities`** (HDX) + **healthsites.io vía HDX** | rolling | puntos | ODbL / ODbL | ✅ | **T0.5 resuelta en contra.** El REPS (`c36g-9fc2`, 76.821 sedes) **no publica coordenadas** — solo DIVIPOLA y dirección, el dataset entero, no «una parte» — y es **CC BY-SA 4.0**, copyleft incompatible con ODbL. Sale del activo: pasa a referencia de completitud municipal en tabla aparte. La **API** de healthsites.io exige API key y viola O4; su publicación en HDX no. |
+| Educación | **HOTOSM `hotosm_<iso>_education_facilities`** (HDX) | rolling | puntos | ODbL | ✅ | **T0.6 resuelta en contra.** El directorio del MEN (`cfw5-qzt5`) tampoco publica coordenadas y también es CC BY-SA 4.0; además sus 588.334 filas son registros por establecimiento **y año**. Mismo tratamiento que el REPS. |
+| Aeropuertos | OurAirports | rolling | puntos | Dominio público | 🟡 | Disponibilidad verificada (HTTP 200, 12,7 MB). Falta citar el texto exacto de la declaración de dominio público del proyecto (T1.2). |
 | Contexto: susceptibilidad a deslizamiento | SIMMA/SGC (CO); NASA LHASA global (resto) | estático | ráster/vector | por confirmar | ⚠️ | Capa de contexto del visor, no del reporte automático (el reporte usa Ground Failure por evento, que es específico y dominio público). |
 | Amenaza sísmica de fondo | GEM Global Hazard Map | 2023 | ráster | **CC BY-NC-SA** | ✅ (licencia) | ⚠️ NC → solo visor/contexto, bucket NC, jamás mezclada en el núcleo redistribuible. |
 
@@ -107,6 +118,17 @@ Convención de estado: **✅ verificado** (contrastado contra documentación pri
 1. **Tres cubos físicamente separados:** `core/` (dominio público + CC-BY + atribución CE), `odbl/` (todo lo que toque OSM/Overture buildings/transportation) y `nc/` (Vantor, GEM, xBD-derivados). El reporte automático consume `core/` + `odbl/`; el share-alike de ODbL se cumple publicando el derivado bajo ODbL (que es lo que ya hacemos).
 2. **Atribución en cada artefacto** (pie de mapa, `ATTRIBUTION.md`, propiedades del GeoParquet): USGS, © OpenStreetMap contributors (ODbL), Overture Maps Foundation, JRC/Comisión Europea (GHSL), WorldPop (CC BY 4.0), y las que apliquen por evento.
 3. **INSPOW no toca `nc/`.** La frontera comunidad↔empresa queda escrita en `GOVERNANCE.md`.
+4. **Dos copyleft distintos no caben en el mismo derivado.** ODbL y CC BY-SA 4.0 son ambas share-alike y mutuamente incompatibles: cada una exige que el derivado se publique bajo ella y no existe licencia que satisfaga a las dos. La regla de los tres cubos no atrapa este caso, porque ambas caen del lado «redistribuible». `resolve_bucket()` rechaza la combinación con error explícito. El caso no es hipotético: es exactamente el que sacan REPS y MEN frente a Overture.
+
+### 2.5 Restricciones operativas de las fuentes (verificadas)
+
+Tres hechos que no son detalles de implementación, porque cambian lo que el sistema puede prometer.
+
+**Overture conserva solo los dos releases más recientes.** Listado del bucket, no truncado: existen exactamente dos. Fijar el release explícito —decisión correcta, se mantiene— da reproducibilidad **del cálculo**, no **de la descarga**: pasados unos dos meses la URL del manifest deja de existir. **RNF-04 se sostiene por el Release propio del activo construido con su `sha256`, no por la URL de origen.** Es la copia publicada, y no la fuente, la que hace re-derivable un número de hace seis meses.
+
+**La URL de un mismo dataset de HOTOSM cambia de forma según el país.** Para la capa `health_facilities` conviven al menos tres patrones (COL, MEX y PER difieren entre sí). El identificador estable es el **nombre del dataset**, y la URL se resuelve por la API de CKAN de HDX en cada build. Adivinar la ruta funciona hasta que Fase 1 agrega el país que no encaja — y ahí falla en producción, no en CI.
+
+**Ninguna fuente puede exigir credenciales.** O4 lo pide y aquí muerde: la API de healthsites.io requiere API key, así que se consume su publicación en HDX. El criterio general de la auditoría de fuentes es más simple todavía: **una fuente sin geometría no sirve**, por buena que sea su cobertura. Un registro administrativo sin coordenadas no puede asignarse a una celda H3; sirve como referencia de completitud, nunca como conteo.
 
 ---
 
@@ -129,7 +151,7 @@ Convención de estado: **✅ verificado** (contrastado contra documentación pri
 | h3_08 | UINT64 | — | PK |
 | iso3, adm1_id, adm2_id | VARCHAR | crosswalk | asignación por centroide + tabla de fracciones para celdas fronterizas |
 | pop_total | DOUBLE | GHS-POP 2025 | suma dasimétrica de píxeles → celda |
-| pop_0_14, pop_15_64, pop_65p | DOUBLE | WorldPop 2020 (proporciones) × pop_total | supuesto declarado §2.2 |
+| pop_0_14, pop_15_64, pop_65p | DOUBLE | WorldPop **R2025A época 2025** (proporciones) × pop_total | sin supuesto de estructura estable (v0.10) |
 | pop_alt_worldpop | DOUBLE | WorldPop total | banda de discrepancia |
 | bld_count, bld_area_m2 | INT/DOUBLE | Overture buildings | |
 | health_count, edu_count | INT | OSM+REPS / MEN+OSM | |
@@ -266,9 +288,9 @@ centinela/
 
 ### 6.3 Golden tests (regresión, corren en cada PR)
 
-- **G1 — Chocó 10-ago-2026:** entrada = productos reales archivados del evento (T0.2: descargar y congelar con `includesuperseded` vía libcomcat). Aserciones: (a) el trigger habría disparado; (b) `pop_mmi7p` estable ±0.5% entre commits; (c) top-15 municipios estable; (d) el reporte v-final referencia la última versión de ShakeMap del evento.
-- **G2 — Venezuela 24-jun-2026:** ídem; además valida bbox y manejo de evento doble (dos mainshocks).
-- **G3 — Evento profundo sin Ground Failure publicado:** el reporte omite la sección con nota explícita, no falla.
+- **G1 — Chocó 10-ago-2026 · `us6000tjl2`:** M7.4, 2026-08-10T12:34:28Z, 5 km al S de San José del Palmar, **110 km de profundidad**, PAGER rojo. ShakeMap y Ground Failure con **7 versiones cada uno**, todas obtenibles con `includesuperseded=true` sobre FDSN. Aserciones: (a) el trigger habría disparado — **ya verificado contra el evento real**; (b) `pop_mmi7p` estable ±0.5% entre commits; (c) top-15 municipios estable; (d) el reporte v-final referencia la última versión de ShakeMap.
+- **G2 — Venezuela 24-jun-2026 · `us6000t7zp` + `us6000t7zc`:** M7.5 (Catia La Mar, ShakeMap v14) y M7.2 (San Felipe, ShakeMap v9), ambos a 10 km de profundidad y **separados por 33 segundos**. Ídem G1; además valida bbox y el manejo de evento doble: dos `usgs_id` distintos, dos reportes, con áreas de intensidad que se solapan. El sistema no debe fusionarlos ni tratar el segundo como réplica.
+- **G3 — Evento sin Ground Failure publicado:** el reporte omite la sección con nota explícita, no falla. (Nota: Chocó, pese a sus 110 km, **sí** tiene Ground Failure, así que G3 necesita otro evento o una fixture sintética.)
 
 ### 6.4 Calidad de datos (asserts SQL en DuckDB, corren en P0 y P2)
 
@@ -298,8 +320,8 @@ centinela/
 
 | Semana | Entregables | Tareas de verificación pendientes |
 |---|---|---|
-| 1 | Repo + CI + esqueleto; **T0.1** obtener `usgs_id` oficiales de Chocó y Venezuela; **T0.2** congelar productos (fixtures golden); contrato JSON Schema del feed | T0.4 términos MGN-DANE |
-| 2 | P0 Colombia: `exposure_h3` (pop + etario + edificios + vías) + crosswalk DIVIPOLA + manifest v1; Release `exposure-col-v0.1` | T0.5 REPS, T0.6 MEN, T0.7 benchmark exactextract |
+| 1 | Repo + CI + esqueleto ✅; **T0.1** ✅ `usgs_id` identificados y confirmados; **T0.2** congelar productos (fixtures golden); contrato JSON Schema del feed ✅ | T0.4 ✅ CC BY 4.0 |
+| 2 | P0 Colombia: `exposure_h3` (pop + etario + edificios + vías) + crosswalk DIVIPOLA + manifest ✅; Release `exposure-col-v0.1` | T0.5 ✅ y T0.6 ✅ resueltas en contra; T0.7 benchmark exactextract |
 | 3 | P1 trigger + P2 impacto + G1/G2 en verde; keepalive + monitor externo | T0.8 render de mapa |
 | 4 | P3 reporte (json/md/png/csv) + página estática mínima; **demo: backtest público del 10-ago** ("esto habría salido a las 08:3X") + primer reporte real con réplica/sismo de la región | — |
 
@@ -334,13 +356,17 @@ centinela/
 | Drift de esquema USGS | Baja | Alto | Contratos + degradación a preliminar + issue automático |
 | Falso disparo / cifra alarmista | Media | Alto | Umbral M≥5.5; publicación de hilo con humano; lenguaje de exposición, nunca de daño |
 | Huecos de exposición (Chocó rural, informalidad) | Alta | Medio | Flags de calidad publicados; banda GHS vs WorldPop; nunca ocultar el vacío |
-| Contaminación de licencias | Media | Alto | Tres cubos físicos; CI que rechaza mezclas (lint de manifest) |
+| Contaminación de licencias | Media | Alto | Tres cubos físicos; CI que rechaza mezclas (lint de manifest); guardia extra contra dos copyleft incompatibles |
+| Fuente upstream que retira el vintage fijado | **Alta** (confirmada en Overture) | Medio | El Release propio del activo con su `sha256` es la copia que sostiene RNF-04, no la URL de origen |
+| Fuente que empieza a exigir credenciales | Media | Medio | O4 es criterio de admisión: una fuente con API key obligatoria no entra al camino crítico (caso healthsites.io) |
 | Percepción de competir con SGC/UNGRD | Media | Medio | No-objetivos públicos; disclaimers; Fase 3 de acercamiento formal |
 
 ---
 
 ## 8. Pendientes de verificación (honestidad metodológica)
 
-Consolidado de ⚠️: T0.4 (MGN-DANE), T0.5 (REPS), T0.6 (MEN), T0.7 (exactextract), T0.8 (render), T1.1 (redes nacionales), T1.2 (OurAirports), T1.3 (HDX/HXL), T2.1 (licencia exacta vectores Copernicus EMS), T2.2 (Umbra/Capella), T2.3 (esquema GeoPackage Microsoft), T2.4 (linaje de pesos xBD), T3.1 (redistribución de embeddings). Ninguno bloquea el arranque de la semana 1.
+**Cerradas en v0.10** (evidencia y método en `VERIFICACIONES.md`): T0.1 `usgs_id` de Chocó y Venezuela · T0.4 MGN-DANE es CC BY 4.0 · T0.5 REPS resuelta en contra · T0.6 MEN resuelta en contra.
 
-*Verificado hoy con documentación primaria: comportamiento de feeds y productos USGS (incl. recomendación de feeds sobre FDSN, versionado de ShakeMap y presencia de ground-failure), licencias y cadencia de Overture (buildings ODbL, releases mensuales, STAC, GeoParquet en S3/Azure), GHS-POP R2023A (épocas a 2030, 100 m, reuso CE con atribución), WorldPop age-sex constrained 2020 (CC BY 4.0), y restricciones de GitHub Actions (mínimo 5 min, demoras 5–30 min, desactivación a 60 días, forks, rama por defecto).*
+**Abiertas:** T0.2 (congelar productos de G1/G2 — ya sin necesidad de `libcomcat`), T0.7 (benchmark exactextract), T0.8 (motor del mapa estático), T0.9 **nueva** (nombre del archivo MGN a nivel municipal: el nacional pesa 3,39 GB y bajarlo cada trimestre para quedarse con 1.100 polígonos es desperdicio), T1.1 (redes nacionales), T1.2 (texto exacto de la licencia de OurAirports), T1.3 (HDX/HXL), T2.1–T2.4 (brigada), T3.1 (embeddings). Ninguna bloquea la semana 2.
+
+*Verificado con documentación primaria y peticiones reales el 23-ago-2026: productos USGS contra el evento real de Chocó (`us6000tjl2`, 7 versiones de ShakeMap y de Ground Failure, `includesuperseded` sobre FDSN); listado del bucket de Overture y sus subtipos; rásters de GHS-POP R2023A época 2025 en sus dos proyecciones; árbol completo de WorldPop hasta los 62 rásters age-sex de Colombia 2025; licencia del Geoportal DANE y descarga directa del MGN 2025; datasets REPS y MEN vía la API de Socrata de datos.gov.co (columnas y licencia); catálogo de HDX para HOTOSM, healthsites y COD-AB de los siete países de Fase 1. El registro con método y evidencia está en `VERIFICACIONES.md`; las restricciones de GitHub Actions siguen como en v0.9.*
