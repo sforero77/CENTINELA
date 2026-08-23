@@ -3,33 +3,99 @@
   "$id": "https://centinela.dev/schemas/event-state.schema.json",
   "title": "CENTINELA — estado de un evento",
   "type": "object",
-  "required": ["usgs_id", "estado", "mag", "lon", "lat", "depth_km", "lugar", "origen_utc",
-               "versiones_procesadas"],
+  "required": [
+    "usgs_id",
+    "estado",
+    "mag",
+    "lon",
+    "lat",
+    "depth_km",
+    "lugar",
+    "origen_utc",
+    "versiones_procesadas"
+  ],
   "additionalProperties": false,
   "properties": {
-    "usgs_id": { "type": "string", "minLength": 1 },
+    "usgs_id": {
+      "type": "string",
+      "minLength": 1
+    },
     "estado": {
       "type": "string",
-      "enum": ["detectado", "preliminar", "publicado", "degradado", "descartado"]
+      "enum": [
+        "detectado",
+        "preliminar",
+        "publicado",
+        "degradado",
+        "descartado"
+      ]
     },
-    "mag": { "type": "number" },
-    "lon": { "type": "number", "minimum": -180, "maximum": 180 },
-    "lat": { "type": "number", "minimum": -90, "maximum": 90 },
-    "depth_km": { "type": "number" },
-    "lugar": { "type": "string" },
-    "origen_utc": { "type": "string", "format": "date-time" },
+    "mag": {
+      "type": "number"
+    },
+    "lon": {
+      "type": "number",
+      "minimum": -180,
+      "maximum": 180
+    },
+    "lat": {
+      "type": "number",
+      "minimum": -90,
+      "maximum": 90
+    },
+    "depth_km": {
+      "type": "number"
+    },
+    "lugar": {
+      "type": "string"
+    },
+    "origen_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
     "versiones_procesadas": {
       "type": "object",
-      "required": ["shakemap", "groundfailure"],
+      "required": [
+        "shakemap",
+        "groundfailure"
+      ],
       "additionalProperties": false,
       "properties": {
-        "shakemap": { "type": "integer", "minimum": 0 },
-        "groundfailure": { "type": "integer", "minimum": 0 }
+        "shakemap": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "groundfailure": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
-    "timestamps": { "type": "object", "additionalProperties": { "type": "string" } },
-    "hashes": { "type": "object", "additionalProperties": { "type": "string" } },
-    "intentos_preliminar": { "type": "integer", "minimum": 0 },
-    "notas": { "type": "array", "items": { "type": "string" } }
+    "timestamps": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "intentos_preliminar": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "notas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "backtest": {
+      "type": "boolean",
+      "description": "Reconstruccion retrospectiva, no una respuesta en vivo. Se excluye de la estadistica de latencia."
+    }
   }
 }

@@ -34,21 +34,35 @@ jobs:
       - name: Instalar nucleo + geo
         run: uv sync --python 3.12 --extra geo --extra render
 
+      # El activo no vive en git: 17 MB por pais. Se publica como Release
+      # versionado y esa copia es la que sostiene RNF-04, porque Overture
+      # retira sus releases a los dos meses (ver docs/PUBLICAR_ACTIVO.md).
       - name: Descargar activo de exposicion
-        run: |
-          mkdir -p data/build
-          # El activo se publica como GitHub Release versionado (Fase 0) y se
-          # migra a bucket publico R2 en Fase 1.
-          gh release download exposure-col-latest --dir data/build --clobber || \
-            echo "::warning::Sin activo de exposicion publicado todavia"
+        id: activo
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p data/build
+          TAG=$(gh release list --limit 50 \
+                 --json tagName --jq '[.[] | select(.tagName | startswith("exposure-col-"))]
+                                      | sort_by(.tagName) | last | .tagName')
+          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+            echo "::error::No hay ningun Release exposure-col-*. Publica el activo antes de operar."
+            exit 1
+          fi
+          gh release download "$TAG" --dir data/build --clobber
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          ls -la data/build
 
       - name: Calcular impacto y emitir reporte
         id: impacto
         run: |
           uv run centinela impact "$USGS_ID" \
-            --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=$USGS_ID&format=geojson"
+            --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=$USGS_ID&format=geojson" \
+            --exposure "data/build/exposure_h3.parquet" \
+            --manifest "$(uv run python -c "
+          from pipelines.common.manifest import Manifest
+          print(Manifest.load('COL').manifest_id)")"
 
       - name: Publicar artefactos
         if: success()

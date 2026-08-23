@@ -92,3 +92,15 @@ def test_un_usgs_id_con_forma_invalida_no_escribe_ruta(malo: str, events_dir: Pa
 def test_usgs_ids_reales_son_validos(events_dir: Path) -> None:
     for bueno in ("us7000sint", "ci40000000", "nc73872510", "official2026-08-10"):
         assert _estado(usgs_id=bueno).save(events_dir).name == f"{bueno}.json"
+
+
+def test_un_backtest_se_marca_como_tal(events_dir: Path) -> None:
+    """Su latencia no mide nada del sistema y no puede contaminar el p50."""
+    estado = _estado(backtest=True)
+    estado.save(events_dir)
+    recuperado = EventState.load("us7000sint", events_dir)
+    assert recuperado is not None and recuperado.backtest
+
+
+def test_por_defecto_un_evento_no_es_backtest() -> None:
+    assert _estado().backtest is False

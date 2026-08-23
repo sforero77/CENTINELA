@@ -15,16 +15,16 @@
   },
   "preliminar": false,
   "totales": {
-    "pop_mmi6p": 6960085.743641048,
+    "pop_mmi6p": 6960085.743641049,
     "pop_mmi7p": 2415793.4590726923,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 271688.1841125306,
-    "bld_mmi7p": 444281,
-    "health_mmi7p": 512,
-    "edu_mmi7p": 997,
-    "road_km_mmi7p": 1397.6578971489375,
-    "pop_ls_alta": 3.6383121609687805,
-    "pop_lq_alta": 1660189.6608447675
+    "pop_65p_mmi7p": 271688.18411253,
+    "bld_mmi7p": 444281.0,
+    "health_mmi7p": 512.0,
+    "edu_mmi7p": 997.0,
+    "road_km_mmi7p": 1397.6578971489403,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 1600028.0208497662
   },
   "top_municipios": [
     {
@@ -120,14 +120,10 @@
   ],
   "incertidumbre": {
     "pop_discrepancia_pct": 3.2,
-    "notas": [
-      "BACKTEST: reconstruccion retrospectiva del evento, no un reporte emitido en su momento.",
-      "Salud y educacion provienen de OpenStreetMap: su cobertura es desigual y tiende a subestimar en zona rural.",
-      "El ShakeMap tiene resolucion nominal de ~1 km; las cifras no admiten lectura a escala mas fina."
-    ]
+    "notas": []
   },
   "descargas": {
-    "geoparquet": "https://github.com/sforero77/CENTINELA/releases/download/exposure-col-20260823/exposure_h3.parquet",
+    "geoparquet": "",
     "pmtiles": "",
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
@@ -139,6 +135,6 @@
     "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
   ],
-  "generado_utc": "2026-08-23T17:38:50Z",
+  "generado_utc": "2026-08-23T18:25:59Z",
   "pipeline_version": "0.1.0"
 }

@@ -105,6 +105,10 @@ class EventState:
     timestamps: dict[str, str] = field(default_factory=dict)
     hashes: dict[str, str] = field(default_factory=dict)
     intentos_preliminar: int = 0
+    #: Reconstruccion retrospectiva, no una respuesta en vivo. Un backtest se
+    #: publica dias o meses despues del sismo, asi que su "latencia" no mide
+    #: nada del sistema: mezclarla con las reales daria un p50 sin sentido.
+    backtest: bool = False
     notas: list[str] = field(default_factory=list)
 
     # -- transiciones -------------------------------------------------------
@@ -144,6 +148,7 @@ class EventState:
             "timestamps": dict(sorted(self.timestamps.items())),
             "hashes": dict(sorted(self.hashes.items())),
             "intentos_preliminar": self.intentos_preliminar,
+            "backtest": self.backtest,
             "notas": list(self.notas),
         }
 
@@ -162,6 +167,7 @@ class EventState:
             timestamps=dict(data.get("timestamps", {})),
             hashes=dict(data.get("hashes", {})),
             intentos_preliminar=int(data.get("intentos_preliminar", 0)),
+            backtest=bool(data.get("backtest", False)),
             notas=list(data.get("notas", [])),
         )
 

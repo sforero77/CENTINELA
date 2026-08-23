@@ -31,16 +31,31 @@
       aparte para que se pueda auditar la diferencia.
     </p>
 
-    <h2>Ultimos latidos del trigger</h2>
-    <p class="cargando" id="estado-latidos">Pendiente: se conecta al historial
-      del monitor externo cuando la Fase 0 cierre.</p>
+    <h2>Latencia medida</h2>
+    <div id="resumen" class="cargando">Cargando…</div>
 
-    <h2>Ultimas corridas</h2>
-    <p class="cargando" id="estado-corridas">Pendiente.</p>
+    <h2>Eventos publicados</h2>
+    <p class="cargando" id="estado-eventos">Cargando…</p>
+    <div class="tabla-scroll"><table id="tabla-eventos" hidden>
+      <thead><tr><th>Evento</th><th>Origen (UTC)</th><th>Publicado (UTC)</th>
+        <th class="num">Latencia</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+
+    <h2>Ultimos latidos del disparador</h2>
+    <p class="nota">
+      El cron de GitHub Actions se desactiva solo tras 60 dias sin actividad en
+      el repositorio. Que dejen de aparecer latidos aqui es la senal de que eso
+      paso — el modo de falla mas probable de todo el sistema.
+    </p>
+    <p class="cargando" id="estado-latidos">Cargando…</p>
+    <ul class="lista-eventos" id="lista-latidos"></ul>
+
   </main>
 
   <footer>
     <p><a href="https://github.com/sforero77/CENTINELA">Codigo</a> · Apache-2.0</p>
   </footer>
+  <script src="assets/status.js" type="module"></script>
 </body>
 </html>

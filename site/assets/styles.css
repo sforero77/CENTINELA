@@ -88,3 +88,47 @@ footer p { margin: 0.35rem 0; }
 @media (max-width: 40rem) {
   .barra nav { margin-left: 0; width: 100%; }
 }
+
+
+/* --- Pagina de estado --- */
+
+.tabla-scroll { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+th, td {
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th { font-weight: 600; color: var(--tenue); }
+.num { text-align: right; }
+
+.metricas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2.5rem;
+  margin: 1rem 0;
+}
+
+.metrica .valor {
+  font-size: 1.7rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.metrica .etiqueta {
+  font-size: 0.78rem;
+  color: var(--tenue);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cumple { color: #1a7f37; }
+.incumple { color: var(--acento); }

@@ -231,17 +231,107 @@ def write_asset(con: Any, plan: BuildPlan) -> Path:
     return destino
 
 
-def build_country(iso3: str, *, manifests_dir: Path | None = None, out_dir: Path) -> Path:
-    """Construye el activo completo de un pais.
+#: Como se agrega cada capa. La clave es la tabla que produce; el valor dice de
+#: donde sale. Separarlo del codigo hace que agregar una capa en Fase 1 sea
+#: anadir una entrada, no tocar el orquestador.
+RASTER_LAYERS: dict[str, tuple[str, str]] = {
+    "pop_h3": ("pop_ghs", "pop_total"),
+    "pop_alt_h3": ("pop_worldpop_total", "pop_alt_worldpop"),
+}
+POINT_LAYERS: dict[str, tuple[str, str]] = {
+    "health_h3": ("health", "health_count"),
+    "edu_h3": ("education", "edu_count"),
+}
 
-    Orquesta el plan, el ensamblaje y la validacion. **La descarga y agregacion
-    de cada capa vive en su modulo** (``sources/``, ``raster_h3``, ``vector_h3``,
-    ``crosswalk``): esta funcion las coordina, no las implementa.
+
+def build_country(
+    iso3: str,
+    *,
+    manifests_dir: Path | None = None,
+    out_dir: Path,
+    con: Any | None = None,
+) -> Path:
+    """Construye el activo completo de un pais, de la descarga al parquet.
+
+    Es el comando que sostiene O4: cualquiera reconstruye el activo de un pais
+    desde fuentes publicas, sin credenciales. Los pasos son descarga guiada por
+    manifest, crosswalk, agregacion por capa, ensamblaje, asserts de calidad y
+    escritura.
+
+    El paso pesado no es el computo sino la descarga, y ahi esta el trabajo
+    real de este pipeline: ``sources/`` sabe pedir 93 MB de GHS-POP en vez de
+    5,25 GB, once ficheros de Overture en vez de 512, y 100 MB del ZIP de 3,39
+    GB del DANE.
     """
+    from ..common.http import HttpFetcher
+    from .crosswalk import build_crosswalk, load_admin_geometry, rescue_unassigned
+    from .download import download_manifest
+    from .raster_h3 import aggregate_rasters_to_h3
+    from .vector_h3 import aggregate_points_to_h3
+
     plan = plan_build(iso3, manifests_dir=manifests_dir, out_dir=out_dir)
-    raise NotImplementedError(
-        f"Pendiente: descarga automatica de las capas de {plan.iso3}. "
-        f"El ensamblaje (assemble_exposure), la validacion del total nacional y "
-        f"la escritura del activo ya son funcionales y estan probados de punta a "
-        f"punta sobre Colombia; falta encadenar las descargas en un solo comando."
+    trabajo = out_dir / "descargas" / plan.iso3
+    fetcher = HttpFetcher(timeout_s=600.0)
+
+    inventario = download_manifest(plan.manifest, trabajo, fetcher=fetcher)
+    por_capa: dict[str, list[Path]] = {}
+    for item in inventario:
+        por_capa.setdefault(item.layer, []).append(item.path)
+    _log.info(
+        "descarga completa",
+        extra={
+            "context": {
+                "iso3": plan.iso3,
+                "archivos": len(inventario),
+                "bytes": sum(i.bytes for i in inventario),
+            }
+        },
     )
+
+    from ..p2_impact.exposure_join import connect
+    from .crosswalk import EXTENSIONS  # noqa: F401  (documenta el requisito)
+
+    conexion = con if con is not None else connect()
+
+    shapefiles = [p for p in por_capa.get("divisions", []) if p.suffix == ".shp"]
+    if not shapefiles:
+        raise ValueError(
+            f"El manifest de {plan.iso3} no aporto geometria administrativa. "
+            f"Sin municipios no hay crosswalk, y sin crosswalk no hay activo."
+        )
+    load_admin_geometry(conexion, shapefiles[0], iso3=plan.iso3)
+    build_crosswalk(conexion, iso3=plan.iso3)
+
+    for tabla, (capa, columna) in RASTER_LAYERS.items():
+        rasters = [p for p in por_capa.get(capa, []) if p.suffix in (".tif", ".tiff")]
+        if rasters:
+            aggregate_rasters_to_h3(conexion, rasters, tabla=tabla, columna=columna)
+
+    for tabla, (capa, columna) in POINT_LAYERS.items():
+        fuentes = [str(p) for p in por_capa.get(capa, [])]
+        if fuentes:
+            aggregate_points_to_h3(conexion, fuentes, tabla=tabla, columna=columna)
+
+    # El rescate de costa necesita saber que celdas tienen dato, asi que va
+    # despues de la poblacion y antes del ensamblaje.
+    ensure_layer_tables(conexion)
+    rescue_unassigned(conexion, tabla_datos="pop_h3")
+
+    resumen = assemble_exposure(conexion, iso3=plan.iso3, manifest_id=plan.manifest.manifest_id)
+    referencia = getattr(plan.manifest, "referencia_oficial", None)
+    problemas = [
+        p
+        for p in validate_national_total(conexion, plan.manifest, referencia=referencia)
+        if "(aviso)" not in p
+    ]
+    if problemas:
+        raise ValueError(
+            "El activo no pasa los asserts de calidad:\n  - " + "\n  - ".join(problemas)
+        )
+
+    destino = write_asset(conexion, plan)
+    conexion.execute(
+        f"COPY admin_lookup TO '{plan.salida / 'admin_lookup.parquet'}' (FORMAT PARQUET)"
+    )
+    _log.info("activo construido", extra={"context": {"iso3": plan.iso3, **resumen}})
+    return destino

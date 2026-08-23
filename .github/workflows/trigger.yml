@@ -60,7 +60,7 @@ jobs:
         run: |
           git config user.name "centinela-bot"
           git config user.email "noreply@users.noreply.github.com"
-          git add events/
+          git add events/ site/status.json
           git diff --staged --quiet && exit 0
           git commit -m "P1: eventos detectados $EVENTOS"
           # P2 empuja a la misma rama; sin rebase, dos jobs concurrentes se

@@ -16,6 +16,7 @@ from .common.http import HttpFetcher
 from .common.logging import get_logger
 from .common.manifest import Manifest, lint_manifest_file
 from .common.paths import BUILD_DIR, MANIFESTS_DIR
+from .common.status import write_status
 from .p0_exposure.build import build_country
 from .p1_trigger.run import run_trigger
 from .p2_impact.run import run_impact
@@ -36,13 +37,31 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
     print(json.dumps(payload, ensure_ascii=False))
     _emit_github_output("eventos", json.dumps(result.a_despachar))
     _emit_github_output("hay_trabajo", "true" if result.a_despachar else "false")
+
+    # El latido alimenta /status. Se escribe siempre, tambien cuando no hay
+    # eventos: la ausencia de latidos es la senal de que el cron se desactivo,
+    # que es el modo de falla mas probable de todo el sistema.
+    write_status(
+        latido={
+            "utc": result.latido_utc,
+            "revisados": result.revisados,
+            "relevantes": result.relevantes,
+        }
+    )
     return 0
 
 
 def _cmd_impact(args: argparse.Namespace) -> int:
-    """P2: procesa un evento ya detectado."""
-    decision = run_impact(args.usgs_id, HttpFetcher(), detail_url=args.detail_url)
+    """P2/P3: procesa un evento ya detectado y publica su reporte."""
+    decision = run_impact(
+        args.usgs_id,
+        HttpFetcher(timeout_s=300.0),
+        detail_url=args.detail_url,
+        exposure_glob=args.exposure,
+        manifest_id=args.manifest,
+    )
     print(json.dumps({"accion": decision.action.value, "razon": decision.razon}))
+    _emit_github_output("accion", decision.action.value)
     return 0
 
 
@@ -77,6 +96,13 @@ def _cmd_lint_manifests(args: argparse.Namespace) -> int:
     return 1 if fallo else 0
 
 
+def _cmd_status(args: argparse.Namespace) -> int:
+    """Recalcula la pagina de estado a partir de los event_state en disco."""
+    path = write_status()
+    print(path)
+    return 0
+
+
 def _emit_github_output(key: str, value: str) -> None:
     """Escribe en ``$GITHUB_OUTPUT`` si el runner lo expone."""
     import os
@@ -99,6 +125,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_impact = sub.add_parser("impact", help="P2: procesa un evento")
     p_impact.add_argument("usgs_id")
     p_impact.add_argument("--detail-url", required=True, help="URL del feed detail del evento")
+    p_impact.add_argument(
+        "--exposure",
+        required=True,
+        help="ruta o glob del activo de exposicion (GeoParquet)",
+    )
+    p_impact.add_argument(
+        "--manifest",
+        default="",
+        help="id del manifest con el que se construyo el activo",
+    )
     p_impact.set_defaults(func=_cmd_impact)
 
     p_country = sub.add_parser("country", help="P0: construye exposure_h3 de un pais")
@@ -109,6 +145,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_lint = sub.add_parser("lint-manifests", help="valida licencias y vintages")
     p_lint.add_argument("--dir", help="directorio de manifests")
     p_lint.set_defaults(func=_cmd_lint_manifests)
+
+    p_status = sub.add_parser("status", help="recalcula site/status.json")
+    p_status.set_defaults(func=_cmd_status)
 
     return parser
 

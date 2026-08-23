@@ -12,7 +12,7 @@ reporte de hace seis meses siga siendo reproducible.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Self
@@ -75,6 +75,10 @@ class Manifest:
     iso3: str
     generated_utc: str
     sources: tuple[Source, ...]
+    #: Cifra oficial contra la que se valida el total nacional (assert §6.4).
+    #: Vacio significa que el activo se construye sin esa red de seguridad, y
+    #: el lint lo reporta como aviso.
+    referencia_oficial: dict[str, Any] = field(default_factory=dict)
 
     @property
     def bucket(self) -> Bucket:
@@ -91,6 +95,7 @@ class Manifest:
             iso3=str(data["iso3"]).upper(),
             generated_utc=str(data["generated_utc"]),
             sources=tuple(Source.from_dict(s) for s in data.get("sources", [])),
+            referencia_oficial=dict(data.get("referencia_oficial") or {}),
         )
 
     @classmethod

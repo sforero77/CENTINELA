@@ -38,8 +38,8 @@ De la poblacion en intensidad MMI≥7, alrededor de **270 mil** personas tienen 
 
 ## Deslizamiento y licuefaccion
 
-- Poblacion en celdas con probabilidad **alta de deslizamiento**: 4
-- Poblacion en celdas con probabilidad **alta de licuefaccion**: 1,7 millones
+- Poblacion en celdas con probabilidad **alta de deslizamiento**: 0
+- Poblacion en celdas con probabilidad **alta de licuefaccion**: 1,6 millones
 
 Fuente: producto *Ground Failure* de USGS (v7), dominio publico.
 
@@ -51,13 +51,8 @@ PAGER (USGS) estima para este evento una alerta **red**. CENTINELA no estima vic
 
 Discrepancia entre GHS-POP y WorldPop en el area afectada: **3,2 %**.
 
-- BACKTEST: reconstruccion retrospectiva del evento, no un reporte emitido en su momento.
-- Salud y educacion provienen de OpenStreetMap: su cobertura es desigual y tiende a subestimar en zona rural.
-- El ShakeMap tiene resolucion nominal de ~1 km; las cifras no admiten lectura a escala mas fina.
-
 ## Descargas
 
-- [GeoParquet (celdas H3 r8)](https://github.com/sforero77/CENTINELA/releases/download/exposure-col-20260823/exposure_h3.parquet)
 - [CSV por municipio](adm2.csv)
 - [Mapa PNG](mapa_general.png)
 
@@ -66,7 +61,7 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **3,2 %**.
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v7**
 - Manifest de exposicion: `col-v0.4`
-- Pipeline: `0.1.0` · Generado: 2026-08-23T17:38:50Z
+- Pipeline: `0.1.0` · Generado: 2026-08-23T18:25:59Z
 
 ## Advertencias
 
