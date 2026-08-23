@@ -87,6 +87,36 @@
           }
         }
       }
+    },
+    "referencia_oficial": {
+      "type": "object",
+      "description": "Cifra oficial contra la que se valida el total nacional (assert de §6.4).",
+      "required": [
+        "poblacion_2025",
+        "fuente",
+        "tolerancia_pct"
+      ],
+      "properties": {
+        "poblacion_2025": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuente": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tolerancia_pct": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "medido_ghs_pop": {
+          "type": "integer"
+        },
+        "nota": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

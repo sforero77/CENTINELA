@@ -8,9 +8,22 @@
 # con una peticion real. Los `sha256` se llenan en la primera corrida de P0; el
 # lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.3
+manifest_id: col-v0.4
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
+
+# Referencia oficial para el assert de calidad de §6.4 (totales pais ±1%).
+# Medido: GHS-POP E2025 recortado por el limite del MGN 2025 da 52.601.276
+# habitantes, es decir -0,75% frente a la proyeccion del DANE. Pasa.
+referencia_oficial:
+  poblacion_2025: 53000000
+  fuente: "DANE, proyecciones de poblacion CNPV-2018 actualizadas (nota tecnica jul-2025)"
+  tolerancia_pct: 1.0
+  medido_ghs_pop: 52601276
+  nota: >-
+    La cifra del DANE es la redondeada que publica en su nota tecnica. T0.10:
+    reemplazarla por el valor exacto del anexo en Excel de las proyecciones,
+    para que el assert compare contra un numero y no contra un redondeo.
 
 notas:
   - "Overture conserva SOLO los dos releases mas recientes en su bucket
@@ -41,10 +54,15 @@ sources:
     vintage: R2023A-E2025-54009-100m
     sha256: ""
     notes: >-
-      Verificado: sirve (HTTP 206). Schiavina et al. 2023, doi:10.2905/2FF68A52.
-      Existe tambien la variante WGS84 3ss (…_4326_3ss_V1_0.zip), igualmente
-      verificada, si el reproyectado desde Mollweide resulta ser el cuello de
-      botella de P0.
+      NO se descarga esta URL: el mosaico global pesa 5,25 GB. El JRC publica el
+      mismo producto en 375 teselas y Colombia necesita nueve, que suman 93 MB.
+      La seleccion la hace pipelines/p0_exposure/sources/ghsl.py, con el esquema
+      de teselado verificado contra la georreferenciacion real. Contrato medido:
+      ESRI:54009, 10.000x10.000 px a 100 m, float64, nodata = -200 (unos 22
+      millones de celdas por tesela, todo oceano — enmascarar antes de sumar o
+      la poblacion sale negativa). R2023A sigue siendo el ultimo release global:
+      el R2025A del FTP es solo del Artico. Schiavina et al. 2023,
+      doi:10.2905/2FF68A52.
 
   - id: worldpop_agesex_2025
     layer: pop_worldpop_agesex
@@ -75,9 +93,14 @@ sources:
     vintage: "2026-08-19.0"
     sha256: ""
     notes: >-
-      Release vigente verificado en el bucket. El subtipo `type=building` es el
-      que trae las huellas; `type=building_part` es geometria auxiliar y no se
-      cuenta, o inflaria bld_count.
+      512 ficheros, 277 GB, 2.529 millones de edificaciones en total; Colombia
+      toca once. La seleccion se hace con el bbox por fichero que publica el
+      catalogo STAC de la coleccion (155 KB), no leyendo los datos — ver
+      pipelines/p0_exposure/sources/overture.py, que documenta la trampa del
+      emparejamiento. Medido: contar las edificaciones de Quibdó dentro de un
+      fichero remoto de 5 millones de filas toma 2,2 s gracias a la poda por la
+      columna `bbox`. El subtipo `type=building` trae las huellas;
+      `type=building_part` es geometria auxiliar y contarla inflaria bld_count.
 
   - id: overture_transportation
     layer: roads

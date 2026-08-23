@@ -1,0 +1,144 @@
+"""Overture: seleccion de ficheros parquet por pais, via el catalogo STAC.
+
+El tema ``buildings`` del release vigente son **512 ficheros, 277 GB y 2.529
+millones de edificaciones**. Colombia toca once. Averiguar cuales sin leer los
+datos es la diferencia entre un build de minutos y uno imposible.
+
+El catalogo STAC de la coleccion (155 KB) trae el bbox de cada fichero en
+``extent.spatial.bbox``. Con eso se seleccionan los once ficheros, y dentro de
+cada uno el filtro sobre la columna ``bbox`` poda a nivel de row-group: contar
+las edificaciones de Quibdó en un fichero remoto de 5 millones de filas toma
+**2,2 segundos**.
+
+**Trampa verificada.** El estandar STAC dice que ``extent.spatial.bbox[0]`` es
+la union de todas las sub-extensiones y que las reales empiezan en el indice 1.
+Overture **no** hace eso: publica 512 entradas para 512 ficheros, y la entrada
+``[0]`` es el bbox del primer fichero, no una union. Aplicar la lectura del
+estandar —saltarse la primera— desplaza todo un puesto y hace leer los ficheros
+equivocados, en silencio y con resultados plausibles. El emparejamiento 1:1 esta
+comprobado contra la extension real medida de varios ficheros.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Final
+
+from ...common.geo import BBox
+from ...common.http import Fetcher
+
+STAC_ROOT: Final[str] = "https://stac.overturemaps.org"
+
+#: Temas y subtipos que consume el activo de exposicion. El subtipo importa:
+#: ``building_part`` es geometria auxiliar y contarla inflaria ``bld_count``.
+THEME_BUILDINGS: Final[tuple[str, str]] = ("buildings", "building")
+THEME_TRANSPORTATION: Final[tuple[str, str]] = ("transportation", "segment")
+THEME_DIVISIONS: Final[tuple[str, str]] = ("divisions", "division_area")
+
+
+class OvertureCatalogError(Exception):
+    """El catalogo STAC no tiene la forma que el pipeline espera."""
+
+
+@dataclass(frozen=True, slots=True)
+class ParquetFile:
+    """Un fichero parquet del release, con su extension espacial."""
+
+    url: str
+    bbox: tuple[float, float, float, float]
+
+    def intersects(self, other: BBox) -> bool:
+        xmin, ymin, xmax, ymax = self.bbox
+        return not (
+            xmax < other.lon_min
+            or xmin > other.lon_max
+            or ymax < other.lat_min
+            or ymin > other.lat_max
+        )
+
+
+def collection_url(release: str, theme: str, type_: str) -> str:
+    """URL del ``collection.json`` de un tema y subtipo en un release fijado."""
+    return f"{STAC_ROOT}/{release}/{theme}/{type_}/collection.json"
+
+
+def pmtiles_url(release: str, theme: str) -> str:
+    """PMTiles que Overture publica por release y tema.
+
+    Hallazgo de la validacion: no hace falta generar estas teselas con
+    ``tippecanoe`` para las capas de contexto del visor — Overture ya las
+    publica. Las de CENTINELA (coropletas de exposicion e impacto) si son
+    propias, porque son datos nuestros.
+    """
+    return f"https://tiles.overturemaps.org/{release}/{theme}.pmtiles"
+
+
+def parse_collection(payload: dict[str, Any]) -> list[ParquetFile]:
+    """Extrae los ficheros y su bbox de un ``collection.json``.
+
+    Raises:
+        OvertureCatalogError: si el numero de bboxes no coincide con el de
+            ficheros. Es la unica senal de que el emparejamiento 1:1 dejo de
+            valer, y seguir adelante significaria leer los ficheros equivocados.
+    """
+    try:
+        bboxes = payload["extent"]["spatial"]["bbox"]
+    except (KeyError, TypeError) as exc:
+        raise OvertureCatalogError(f"collection.json sin extent.spatial.bbox: {exc}") from exc
+
+    items = [
+        str(link["href"])
+        for link in payload.get("links", [])
+        if link.get("rel") == "item" and link.get("href")
+    ]
+    if not items:
+        raise OvertureCatalogError("collection.json sin enlaces 'item'")
+    if len(bboxes) != len(items):
+        raise OvertureCatalogError(
+            f"El catalogo trae {len(bboxes)} bboxes para {len(items)} ficheros. "
+            f"El emparejamiento 1:1 dejo de valer y la seleccion seria incorrecta; "
+            f"revisar si Overture adopto la lectura estandar de STAC "
+            f"(bbox[0] = union) antes de tocar nada."
+        )
+
+    ficheros: list[ParquetFile] = []
+    for href, bbox in zip(items, bboxes, strict=True):
+        if len(bbox) < 4:
+            raise OvertureCatalogError(f"bbox mal formado en el catalogo: {bbox!r}")
+        ficheros.append(
+            ParquetFile(
+                url=href, bbox=(float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3]))
+            )
+        )
+    return ficheros
+
+
+def select_files(
+    fetcher: Fetcher,
+    bbox: BBox,
+    *,
+    release: str,
+    theme: str = THEME_BUILDINGS[0],
+    type_: str = THEME_BUILDINGS[1],
+) -> list[ParquetFile]:
+    """Ficheros del tema que intersecan la caja del pais."""
+    payload = fetcher.get_json(collection_url(release, theme, type_))
+    return [f for f in parse_collection(payload) if f.intersects(bbox)]
+
+
+#: Filtro que se aplica dentro de cada fichero. Va sobre la columna ``bbox``
+#: —no sobre la geometria— porque es la que tiene estadisticas por row-group y
+#: por tanto la que permite podar sin descomprimir.
+BBOX_PREDICATE = (
+    "bbox.xmin BETWEEN {lon_min} AND {lon_max} AND bbox.ymin BETWEEN {lat_min} AND {lat_max}"
+)
+
+
+def bbox_predicate(bbox: BBox) -> str:
+    """Predicado SQL de poda para DuckDB."""
+    return BBOX_PREDICATE.format(
+        lon_min=bbox.lon_min,
+        lon_max=bbox.lon_max,
+        lat_min=bbox.lat_min,
+        lat_max=bbox.lat_max,
+    )

@@ -44,6 +44,76 @@ buena que sea su cobertura.
 
 ---
 
+## Ronda 3 — validacion de datos antes de construir P0
+
+No basta con que la URL responda: hay que abrir el archivo y comprobar que dice
+lo que se espera. Esta ronda descargo los datos y los midio.
+
+### El total nacional cuadra
+
+GHS-POP E2025 recortado por el limite oficial del MGN 2025 da **52.601.276**
+habitantes para Colombia. El DANE proyecta **~53 millones** para 2025. La
+diferencia es **-0,75 %**, dentro del ±1 % que exige el assert de §6.4. Es la
+primera evidencia de que la cadena poblacional sirve para lo que se quiere.
+
+### Contratos medidos, no supuestos
+
+| Fuente | Lo medido |
+|---|---|
+| GHS-POP tesela | `ESRI:54009`, 10.000×10.000 px a 100 m, `float64`, **nodata = -200** |
+| MGN 2025 dptos | 33 registros, `dpto_ccdgo` VARCHAR con el cero inicial intacto, EPSG:4326 |
+| Overture buildings | `id` (GERS), `bbox` STRUCT(xmin,xmax,ymin,ymax), `geometry` OGC:CRS84 |
+| HOTOSM salud COL | 9.618 elementos, geometrias **mixtas** POINT/POLYGON/MULTIPOLYGON |
+| OurAirports | 738 aeropuertos en Colombia, **todos** con coordenadas |
+
+El nodata de GHS-POP importa: son unos **22 millones de celdas por tesela**, todo
+oceano. Sumar sin enmascarar da poblacion negativa y dispara el assert de calidad
+sobre datos que en realidad estan sanos. Y las geometrias mixtas de HOTOSM
+significan que el conteo por celda tiene que pasar por centroide, no asumir puntos.
+
+### Descargar el subconjunto, no el mundo
+
+Dos fuentes son inmanejables enteras y ambas tienen una via de escape que hubo
+que encontrar:
+
+**GHS-POP**: el mosaico global pesa **5,25 GB**. El JRC publica el mismo producto
+en **375 teselas**; Colombia necesita **nueve**, que suman **93 MB**. El esquema de
+teselado (origen en x=-18.041.000, y=9.000.000, teselas de 1.000 km) se derivo y
+se verifico contra la georreferenciacion real de una tesela descargada.
+
+**Overture**: el tema `buildings` son **512 ficheros, 277 GB y 2.529 millones de
+edificaciones**. Colombia toca **once**. El `collection.json` del catalogo STAC
+(155 KB) trae el bbox de cada fichero, asi que la seleccion no cuesta leer datos.
+Dentro de cada fichero, el filtro sobre la columna `bbox` poda por row-group:
+**contar las edificaciones de Quibdó en un fichero remoto de 5 millones de filas
+toma 2,2 segundos**. Sin esto P0 no seria viable, asi que dejo de ser un detalle
+de implementacion.
+
+### 9. La trampa del catalogo STAC de Overture
+
+El estandar STAC dice que `extent.spatial.bbox[0]` es la **union** de las
+sub-extensiones, y que las reales empiezan en el indice 1. Overture no hace eso:
+publica **512 entradas para 512 ficheros**, y la `[0]` es el bbox del primer
+fichero.
+
+Aplicar la lectura del estandar —saltarse la primera— desplaza todo un puesto y
+hace leer los ficheros equivocados. Y como los ficheros vecinos cubren zonas
+adyacentes, el resultado seria plausible: un conteo de edificaciones que parece
+razonable y esta mal. Se detecto al cruzar los bboxes del catalogo con la
+extension real medida sobre los ficheros con DuckDB.
+
+`parse_collection()` falla explicitamente si el conteo deja de ser 1:1, porque
+esa es la unica senal de que la suposicion dejo de valer.
+
+### 10. Overture publica PMTiles por release
+
+`https://tiles.overturemaps.org/<release>/<tema>.pmtiles`. Las capas de contexto
+del visor no necesitan `tippecanoe`: ya estan teseladas. Las de CENTINELA
+—coropletas de exposicion e impacto— siguen siendo propias, porque son datos
+nuestros.
+
+---
+
 ## Hallazgos de la ronda 2
 
 ### 4. Un bug de seleccion de version, cazado por las fixtures reales
