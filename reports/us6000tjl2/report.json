@@ -127,10 +127,10 @@
     ]
   },
   "descargas": {
-    "geoparquet": "exposure_h3.parquet",
+    "geoparquet": "https://github.com/sforero77/CENTINELA/releases/download/exposure-col-20260823/exposure_h3.parquet",
     "pmtiles": "",
     "csv_adm2": "adm2.csv",
-    "mapa_png": ""
+    "mapa_png": "mapa_general.png"
   },
   "changelog": [],
   "disclaimers": [

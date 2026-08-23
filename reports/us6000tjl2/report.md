@@ -57,8 +57,9 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **3,2 %**.
 
 ## Descargas
 
-- [GeoParquet (celdas H3 r8)](exposure_h3.parquet)
+- [GeoParquet (celdas H3 r8)](https://github.com/sforero77/CENTINELA/releases/download/exposure-col-20260823/exposure_h3.parquet)
 - [CSV por municipio](adm2.csv)
+- [Mapa PNG](mapa_general.png)
 
 ## Procedencia
 

@@ -38,7 +38,7 @@ def test_escribe_el_paquete_completo(tmp_path: Path) -> None:
     filas = [
         {"usgs_id": "us7000sint", "adm2_id": "27001", "nombre": "Quibdo", "pop_mmi7p": 118_000}
     ]
-    escritos = write_report_bundle(_reporte(), filas, reports_root=tmp_path)
+    escritos = write_report_bundle(_reporte(), filas, reports_root=tmp_path, con_mapa=False)
     assert set(escritos) == {"report_json", "report_md", "adm2_csv", "hilo_txt", "index_json"}
     for path in escritos.values():
         assert path.exists() and path.stat().st_size > 0
@@ -46,13 +46,13 @@ def test_escribe_el_paquete_completo(tmp_path: Path) -> None:
 
 def test_el_reporte_cabe_en_un_movil_3g(tmp_path: Path) -> None:
     """RNF-05: md + png < 500 KB. Aqui verificamos la parte de texto."""
-    escritos = write_report_bundle(_reporte(), [], reports_root=tmp_path)
+    escritos = write_report_bundle(_reporte(), [], reports_root=tmp_path, con_mapa=False)
     assert escritos["report_md"].stat().st_size < 100_000
 
 
 def test_el_indice_lista_el_evento(tmp_path: Path) -> None:
     """Sin backend, el visor no puede listar un directorio: vive del indice."""
-    write_report_bundle(_reporte(), [], reports_root=tmp_path)
+    write_report_bundle(_reporte(), [], reports_root=tmp_path, con_mapa=False)
     indice = json.loads((tmp_path / "index.json").read_text(encoding="utf-8"))
     assert [e["usgs_id"] for e in indice] == ["us7000sint"]
     assert indice[0]["shakemap_version"] == 3
@@ -60,17 +60,34 @@ def test_el_indice_lista_el_evento(tmp_path: Path) -> None:
 
 def test_el_indice_se_reconstruye_entero(tmp_path: Path) -> None:
     """Reconstruir, no anexar: un indice acumulado diverge del directorio."""
-    write_report_bundle(_reporte(), [], reports_root=tmp_path)
-    write_report_bundle(_otro_reporte(), [], reports_root=tmp_path)
+    write_report_bundle(_reporte(), [], reports_root=tmp_path, con_mapa=False)
+    write_report_bundle(_otro_reporte(), [], reports_root=tmp_path, con_mapa=False)
     indice = json.loads((tmp_path / "index.json").read_text(encoding="utf-8"))
     assert [e["usgs_id"] for e in indice] == ["us7000otro", "us7000sint"]  # reciente primero
 
 
 def test_un_reporte_corrupto_no_tumba_el_indice(tmp_path: Path) -> None:
-    write_report_bundle(_reporte(), [], reports_root=tmp_path)
+    write_report_bundle(_reporte(), [], reports_root=tmp_path, con_mapa=False)
     roto = tmp_path / "us7000roto"
     roto.mkdir()
     (roto / "report.json").write_text("{ esto no es json", encoding="utf-8")
 
     indice = json.loads(rebuild_index(tmp_path).read_text(encoding="utf-8"))
     assert [e["usgs_id"] for e in indice] == ["us7000sint"]
+
+
+def test_el_mapa_entra_en_el_paquete(tmp_path: Path) -> None:
+    """RNF-05: md + png por debajo de 500 KB entre los dos."""
+    filas = [
+        {
+            "adm2_id": "27001",
+            "nombre": "Quibdo",
+            "mmi_max": 7.0,
+            "pop_mmi7p": 111_742,
+            "centroide": "POINT (-76.65 5.69)",
+        }
+    ]
+    escritos = write_report_bundle(_reporte(), filas, reports_root=tmp_path)
+    assert "mapa_general" in escritos and "mapa_prensa" in escritos
+    peso = escritos["report_md"].stat().st_size + escritos["mapa_general"].stat().st_size
+    assert peso < 500_000

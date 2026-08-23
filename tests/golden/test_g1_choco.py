@@ -134,19 +134,6 @@ def test_un_estado_al_dia_no_reprocesa(choco_detail: dict[str, Any]) -> None:
     assert decide(estado, parse_products(choco_detail)).action is Action.OMITIR
 
 
-# --- Pendiente de P0/P2 ----------------------------------------------------
-
-
-@pytest.mark.skip(reason="Requiere exposure_h3 de Colombia (P0, Fase 0 semana 2)")
-def test_pop_mmi7p_estable() -> None:
-    """Asercion (b): la cifra principal no se mueve mas de ±0.5% entre commits."""
-
-
-@pytest.mark.skip(reason="Requiere exposure_h3 de Colombia (P0, Fase 0 semana 2)")
-def test_top15_municipios_estable() -> None:
-    """Asercion (c): el ranking municipal es estable."""
-
-
 # --- Forma real de los contornos (contrato de P2) --------------------------
 
 
@@ -218,3 +205,56 @@ def test_el_polyfill_ignora_las_bandas_por_debajo_del_umbral(
     assert len(contours_to_h3(contornos, min_value=6.0)) < len(
         contours_to_h3(contornos, min_value=5.0)
     )
+
+
+# --- Asercion (b) y (c): estabilidad de las cifras publicadas --------------
+
+
+def _reporte_publicado() -> dict[str, Any]:
+    import json
+
+    ruta = Path(__file__).parent.parent.parent / "reports" / "us6000tjl2" / "report.json"
+    if not ruta.exists():
+        pytest.skip("Aun no hay reporte publicado del backtest")
+    datos: dict[str, Any] = json.loads(ruta.read_text(encoding="utf-8"))
+    return datos
+
+
+#: Cifras del backtest publicado. Cambiarlas exige explicar por que en el PR:
+#: son la memoria de lo que el sistema dijo, y moverlas en silencio es
+#: exactamente lo que los golden tests existen para impedir.
+POP_MMI7P_ESPERADO = 2_415_793.0
+TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
+
+TOP5_ESPERADO = ["66001", "76109", "63001", "76834", "66170"]
+
+
+def test_pop_mmi7p_estable() -> None:
+    """Asercion (b): la cifra principal no se mueve mas de ±0,5 % entre commits."""
+    totales = _reporte_publicado()["totales"]
+    desvio = abs(totales["pop_mmi7p"] - POP_MMI7P_ESPERADO) / POP_MMI7P_ESPERADO
+    assert desvio <= TOLERANCIA_POP, (
+        f"pop_mmi7p paso de {POP_MMI7P_ESPERADO:,.0f} a {totales['pop_mmi7p']:,.0f} "
+        f"({100 * desvio:.2f}%). Si el cambio es correcto, actualiza la constante "
+        f"y explica por que en el PR."
+    )
+
+
+def test_top_municipios_estable() -> None:
+    """Asercion (c): el ranking municipal es estable."""
+    top = _reporte_publicado()["top_municipios"]
+    assert [m["adm2_id"] for m in top[:5]] == TOP5_ESPERADO
+
+
+def test_el_ranking_esta_ordenado_y_completo() -> None:
+    top = _reporte_publicado()["top_municipios"]
+    assert len(top) == 15
+    poblaciones = [m["pop_mmi7p"] for m in top]
+    assert poblaciones == sorted(poblaciones, reverse=True)
+
+
+def test_las_capas_del_activo_llegan_al_reporte() -> None:
+    """Sin esto, una capa que deje de construirse pasaria como 'cero' real."""
+    totales = _reporte_publicado()["totales"]
+    for columna in ("bld_mmi7p", "health_mmi7p", "edu_mmi7p", "road_km_mmi7p", "pop_65p_mmi7p"):
+        assert totales[columna] > 0, f"{columna} en cero: ¿se perdio una capa?"

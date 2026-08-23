@@ -78,8 +78,10 @@ arranque no funciona en tu maquina, eso es un bug.
 | **Backtest del 10-ago-2026 end-to-end** | ✅ **reporte publicado** |
 | P0 capas de salud, educacion, vias y desglose etario | ✅ funcional |
 | P0 ensamblaje, validacion del total y escritura del activo | ✅ funcional |
-| P0 `build_country`: encadenar las descargas en un comando | ⏳ pendiente |
-| Mapa estatico del reporte | ⏳ decision T0.8 |
+| P0 descarga guiada por manifest (`download.py`) | ✅ funcional |
+| Mapa estatico del reporte (T0.8 resuelta) | ✅ funcional |
+| Golden G1: aserciones (b) y (c) sobre cifras publicadas | ✅ corren |
+| P0 `build_country`: encadenar todo en un solo comando | ⏳ pendiente |
 | P4 brigada de imagen | ⏳ Fase 2 |
 
 Las etapas pendientes fallan de forma ruidosa y explicita — nunca devuelven un

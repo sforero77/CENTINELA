@@ -18,6 +18,7 @@ from .csv_out import write_adm2_csv
 from .markdown import render_markdown
 from .model import Report
 from .social import render_thread_text
+from .static_map import MapVariant, render_map
 
 _log = get_logger(__name__)
 
@@ -32,13 +33,17 @@ def write_report_bundle(
     adm2_rows: Iterable[Mapping[str, Any]],
     *,
     reports_root: Path | None = None,
+    con_mapa: bool = True,
 ) -> dict[str, Path]:
     """Escribe el paquete completo de salidas de un evento y refresca el indice.
 
     Args:
         report: reporte ya calculado, fuente de verdad de todos los derivados.
-        adm2_rows: filas municipales exactas para el CSV.
+        adm2_rows: filas municipales exactas para el CSV. Si traen la columna
+            ``centroide`` (WKT ``POINT``) tambien alimentan el mapa.
         reports_root: raiz de ``reports/``. Los tests la redirigen.
+        con_mapa: renderiza las dos variantes del PNG. Se puede apagar en
+            pruebas para no pagar el arranque de matplotlib.
 
     Returns:
         Mapa nombre-de-artefacto -> ruta escrita. El mapa PNG se agrega cuando
@@ -55,7 +60,25 @@ def write_report_bundle(
     md_path.write_text(render_markdown(report), encoding="utf-8")
     escritos["report_md"] = md_path
 
-    escritos["adm2_csv"] = write_adm2_csv(adm2_rows, directory / "adm2.csv")
+    filas = list(adm2_rows)
+    escritos["adm2_csv"] = write_adm2_csv(filas, directory / "adm2.csv")
+
+    if con_mapa:
+        for variante in MapVariant:
+            try:
+                escritos[f"mapa_{variante.value}"] = render_map(
+                    report,
+                    variante,
+                    directory / f"mapa_{variante.value}.png",
+                    municipios=filas,
+                )
+            except Exception as exc:  # el mapa es un derivado, no la verdad
+                # Un fallo de render no puede tumbar la publicacion: el JSON y
+                # el markdown ya estan en disco y son lo que importa.
+                _log.warning(
+                    "no se pudo renderizar el mapa",
+                    extra={"context": {"variante": variante.value, "error": str(exc)}},
+                )
 
     hilo_path = directory / "hilo.txt"
     hilo_path.write_text(render_thread_text(report), encoding="utf-8")

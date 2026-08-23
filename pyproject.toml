@@ -26,10 +26,10 @@ geo = [
   "pyproj>=3.6",
   "pyarrow>=17.0",
 ]
-# Render del mapa estatico del reporte (T0.8 decide la variante final).
+# Render del mapa estatico del reporte. T0.8 resuelta: matplotlib solo, sin
+# teselas de fondo — ver pipelines/p3_report/static_map.py.
 render = [
   "matplotlib>=3.9",
-  "contextily>=1.6",
 ]
 dev = [
   "pytest>=8.2",
