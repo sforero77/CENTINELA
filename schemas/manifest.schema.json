@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://centinela.dev/schemas/manifest.schema.json",
+  "title": "CENTINELA — manifest de vintages por pais",
+  "description": "Fija exactamente que version de que fuente entro al activo de exposicion. Es el eslabon que hace re-derivable todo numero publicado (RNF-04).",
+  "type": "object",
+  "required": ["manifest_id", "iso3", "generated_utc", "sources"],
+  "additionalProperties": false,
+  "properties": {
+    "manifest_id": { "type": "string", "minLength": 1 },
+    "iso3": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "generated_utc": { "type": "string" },
+    "notas": { "type": "array", "items": { "type": "string" } },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "layer", "url", "license", "vintage"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "layer": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "license": {
+            "type": "string",
+            "enum": ["public-domain-usgov", "public-domain", "CC0-1.0", "CC-BY-4.0",
+                     "EC-reuse-attribution", "gov-open-co", "ODbL-1.0",
+                     "CC-BY-NC-4.0", "CC-BY-NC-SA-4.0"]
+          },
+          "vintage": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+name: Keepalive
+
+# GitHub desactiva los workflows programados tras 60 dias sin actividad en el
+# repositorio. Para un sistema que puede pasar meses sin un sismo mayor, esa
+# desactivacion silenciosa es el modo de falla mas probable de todo el proyecto
+# (§4.2). Este workflow late antes del dia 45.
+
+on:
+  schedule:
+    - cron: "0 7 1,15 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  latir:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/centinela'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Registrar latido
+        run: |
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .keepalive
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+          git add .keepalive
+          git diff --staged --quiet || git commit -m "keepalive: mantener los schedules activos"
+          git push

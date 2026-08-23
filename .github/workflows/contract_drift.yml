@@ -1,0 +1,41 @@
+name: Deriva de contrato USGS (nocturno)
+
+# §6.2: este es el unico workflow que consulta el feed vivo. Solo **alerta**;
+# no bloquea. Si USGS cambia el esquema, queremos enterarnos por un issue a las
+# 3 a.m. y no por un reporte corrupto durante un terremoto.
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/centinela'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync --python 3.12 --extra dev
+
+      - name: Contrastar el feed vivo contra el contrato
+        id: drift
+        run: uv run pytest -m network
+
+      - name: Abrir issue si el contrato cambio
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Posible deriva del contrato USGS" \
+            --label "contrato,automatico" \
+            --body "El test nocturno contra el feed vivo fallo. Revisar schemas/usgs/ antes del proximo evento. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

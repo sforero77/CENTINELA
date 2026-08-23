@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://centinela.dev/schemas/usgs/feed-summary.schema.json",
+  "title": "Contrato del feed de resumen GeoJSON de USGS",
+  "description": "Solo se declaran los campos que CENTINELA consume. Si el contrato falla, el pipeline degrada a reporte preliminar y abre issue automatico (RNF-03); nunca publica datos corruptos.",
+  "type": "object",
+  "required": ["type", "features"],
+  "properties": {
+    "type": { "const": "FeatureCollection" },
+    "metadata": { "type": "object" },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "properties", "geometry"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "properties": {
+            "type": "object",
+            "required": ["mag", "place", "time", "detail"],
+            "properties": {
+              "mag": { "type": ["number", "null"] },
+              "place": { "type": ["string", "null"] },
+              "time": { "type": "integer" },
+              "updated": { "type": "integer" },
+              "detail": { "type": "string", "format": "uri" },
+              "status": { "type": "string" },
+              "type": { "type": "string" }
+            }
+          },
+          "geometry": {
+            "type": "object",
+            "required": ["type", "coordinates"],
+            "properties": {
+              "type": { "const": "Point" },
+              "coordinates": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

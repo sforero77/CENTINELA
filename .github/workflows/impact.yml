@@ -1,0 +1,72 @@
+name: P2/P3 · Impacto y reporte
+
+on:
+  workflow_dispatch:
+    inputs:
+      usgs_id:
+        description: "Identificador USGS del evento"
+        required: true
+        type: string
+  repository_dispatch:
+    types: [centinela-evento]
+
+permissions:
+  contents: write
+
+# Un job por evento a la vez: dos versiones de ShakeMap del mismo evento no
+# deben pisarse. Eventos distintos si corren en paralelo.
+concurrency:
+  group: impacto-${{ inputs.usgs_id || github.event.client_payload.usgs_id }}
+  cancel-in-progress: false
+
+jobs:
+  impacto:
+    runs-on: ubuntu-latest
+    env:
+      USGS_ID: ${{ inputs.usgs_id || github.event.client_payload.usgs_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo + geo
+        run: uv sync --python 3.12 --extra geo --extra render
+
+      - name: Descargar activo de exposicion
+        run: |
+          mkdir -p data/build
+          # El activo se publica como GitHub Release versionado (Fase 0) y se
+          # migra a bucket publico R2 en Fase 1.
+          gh release download exposure-col-latest --dir data/build --clobber || \
+            echo "::warning::Sin activo de exposicion publicado todavia"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calcular impacto y emitir reporte
+        id: impacto
+        run: |
+          uv run centinela impact "$USGS_ID" \
+            --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=$USGS_ID&format=geojson"
+
+      - name: Publicar artefactos
+        if: success()
+        run: |
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+          git add events/ reports/
+          git diff --staged --quiet || git commit -m "P3: reporte de $USGS_ID"
+          git push
+
+      # RNF-03: si el contrato USGS se rompe, el pipeline degrada y deja
+      # rastro accionable. Nunca publica datos corruptos en silencio.
+      - name: Abrir issue ante fallo
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "P2 fallo para $USGS_ID" \
+            --label "pipeline,automatico" \
+            --body "El pipeline de impacto fallo. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

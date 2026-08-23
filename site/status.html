@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CENTINELA — estado del sistema</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="barra">
+    <h1>Estado</h1>
+    <nav><a href="index.html">← Volver</a></nav>
+  </header>
+
+  <main>
+    <p>
+      La transparencia sobre la latencia es parte del producto (RNF-02). Esta
+      pagina publica la distribucion real de demoras, no la prometida.
+    </p>
+
+    <h2>Objetivo de latencia</h2>
+    <p>
+      Reporte v1 publicado en <strong>≤ 60 min (p50)</strong> y
+      <strong>≤ 90 min (p95)</strong> desde que el primer ShakeMap del evento
+      esta disponible.
+    </p>
+    <p class="nota">
+      El cron de GitHub Actions es <em>best-effort</em>: sus demoras
+      documentadas van de 5 a 30 minutos y no las controlamos. El objetivo se
+      define sobre lo que si controlamos, y la demora real del cron se publica
+      aparte para que se pueda auditar la diferencia.
+    </p>
+
+    <h2>Ultimos latidos del trigger</h2>
+    <p class="cargando" id="estado-latidos">Pendiente: se conecta al historial
+      del monitor externo cuando la Fase 0 cierre.</p>
+
+    <h2>Ultimas corridas</h2>
+    <p class="cargando" id="estado-corridas">Pendiente.</p>
+  </main>
+
+  <footer>
+    <p><a href="https://github.com/sforero77/centinela">Codigo</a> · Apache-2.0</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,70 @@
+{
+  "type": "Feature",
+  "id": "us7000sint",
+  "properties": {
+    "mag": 6.9,
+    "place": "38 km al W de Bahia Solano, Choco, Colombia",
+    "time": 1787115600000,
+    "alert": "orange",
+    "products": {
+      "shakemap": [
+        {
+          "status": "UPDATE",
+          "preferredWeight": 231,
+          "updateTime": 1787119600000,
+          "properties": { "version": "3", "map-status": "RELEASED" },
+          "contents": {
+            "download/cont_mmi.json": {
+              "url": "https://earthquake.usgs.gov/product/shakemap/us7000sint/us/1787119600000/download/cont_mmi.json",
+              "contentType": "application/json"
+            },
+            "download/grid.xml": {
+              "url": "https://earthquake.usgs.gov/product/shakemap/us7000sint/us/1787119600000/download/grid.xml",
+              "contentType": "application/xml"
+            }
+          }
+        },
+        {
+          "status": "UPDATE",
+          "preferredWeight": 100,
+          "updateTime": 1787117600000,
+          "properties": { "version": "2" },
+          "contents": {}
+        },
+        {
+          "status": "DELETE",
+          "preferredWeight": 500,
+          "updateTime": 1787129599000,
+          "properties": { "version": "9" },
+          "contents": {}
+        }
+      ],
+      "ground-failure": [
+        {
+          "status": "UPDATE",
+          "preferredWeight": 231,
+          "updateTime": 1787120600000,
+          "properties": { "version": "2" },
+          "contents": {
+            "jessee_2017.tif": {
+              "url": "https://earthquake.usgs.gov/product/ground-failure/us7000sint/us/1787120600000/jessee_2017.tif"
+            },
+            "zhu_2017_general.tif": {
+              "url": "https://earthquake.usgs.gov/product/ground-failure/us7000sint/us/1787120600000/zhu_2017_general.tif"
+            }
+          }
+        }
+      ],
+      "losspager": [
+        {
+          "status": "UPDATE",
+          "preferredWeight": 231,
+          "updateTime": 1787120100000,
+          "properties": { "version": "3", "alertlevel": "orange" },
+          "contents": {}
+        }
+      ]
+    }
+  },
+  "geometry": { "type": "Point", "coordinates": [-77.85, 6.42, 24.7] }
+}
