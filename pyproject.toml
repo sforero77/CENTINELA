@@ -94,6 +94,7 @@ markers = [
   "golden: pruebas de regresion contra eventos reales congelados",
   "network: requiere red viva (excluida de CI de PR)",
   "geo: requiere el extra [geo]",
+  "render: requiere el extra [render]",
 ]
 
 [tool.coverage.run]

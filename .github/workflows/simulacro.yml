@@ -24,7 +24,7 @@ jobs:
         with:
           enable-cache: true
 
-      - run: uv sync --python 3.12 --extra dev
+      - run: uv sync --python 3.12 --extra dev --extra geo
 
       - name: P1 en seco contra el feed vivo
         run: |

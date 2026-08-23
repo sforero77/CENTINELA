@@ -61,3 +61,29 @@ def events_dir(tmp_path: Path) -> Path:
     directory = tmp_path / "events"
     directory.mkdir()
     return directory
+
+
+# --- Saltos por dependencia ausente ---------------------------------------
+
+#: Modulo que delata cada extra opcional.
+_EXTRAS: dict[str, str] = {"geo": "h3", "render": "matplotlib"}
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Salta las pruebas cuyo extra no esta instalado, con razon explicita.
+
+    Un contribuidor que solo instala ``[dev]`` merece una corrida limpia con
+    saltos legibles, no seis errores de importacion. **CI si instala todos los
+    extras**, asi que alli no se salta nada: un salto silencioso en CI seria
+    peor que el error.
+    """
+    import importlib.util
+
+    faltan = {
+        extra for extra, modulo in _EXTRAS.items() if importlib.util.find_spec(modulo) is None
+    }
+    for extra in faltan:
+        marca = pytest.mark.skip(reason=f"requiere el extra [{extra}]: uv sync --extra {extra}")
+        for item in items:
+            if extra in item.keywords:
+                item.add_marker(marca)

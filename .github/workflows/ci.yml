@@ -24,8 +24,12 @@ jobs:
         with:
           enable-cache: true
 
+      # Con --extra dev a secas, mypy no encuentra numpy y las pruebas de geo
+      # revientan al importar. Un typecheck que no ve las librerias del codigo
+      # que revisa da confianza falsa, asi que CI instala lo mismo que usa el
+      # pipeline completo.
       - name: Sincronizar dependencias
-        run: uv sync --python 3.12 --extra dev
+        run: uv sync --python 3.12 --extra dev --extra geo --extra render
 
       - name: Ruff (lint)
         run: uv run ruff check .

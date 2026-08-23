@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from pipelines.common.constants import GROUND_FAILURE_HIGH_PROB
 from pipelines.p2_impact.ground_failure import (
     LANDSLIDE_MODEL,
@@ -15,10 +17,12 @@ from pipelines.p2_impact.ground_failure import (
 BOGOTA_R8 = 614299631221735423
 
 
+@pytest.mark.geo
 def test_sin_celdas_no_hay_trabajo() -> None:
     assert sample_rasters(None, None, []) == {}
 
 
+@pytest.mark.geo
 def test_sin_rasters_las_probabilidades_son_cero() -> None:
     """G3: la ausencia del producto no puede propagarse como NaN ni fallar."""
     celdas = sample_rasters(None, None, [BOGOTA_R8])
@@ -39,6 +43,7 @@ def test_los_modelos_vigentes_son_los_que_usgs_prefiere() -> None:
     assert LIQUEFACTION_MODEL == "zhu_2017_general_model.tif"
 
 
+@pytest.mark.geo
 def test_todas_las_celdas_reciben_respuesta() -> None:
     """El join posterior es LEFT, pero una celda perdida aqui seria un hueco."""
     import h3

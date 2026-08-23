@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from pipelines.p3_report.model import Evento, Inputs, MunicipioTop, Report, Totales
 from pipelines.p3_report.run import rebuild_index, write_report_bundle
 
@@ -76,6 +78,7 @@ def test_un_reporte_corrupto_no_tumba_el_indice(tmp_path: Path) -> None:
     assert [e["usgs_id"] for e in indice] == ["us7000sint"]
 
 
+@pytest.mark.render
 def test_el_mapa_entra_en_el_paquete(tmp_path: Path) -> None:
     """RNF-05: md + png por debajo de 500 KB entre los dos."""
     filas = [
