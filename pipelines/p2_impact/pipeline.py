@@ -289,6 +289,25 @@ def compute_impact(
     )
     register_exposure_view(con, exposure_glob)
     con.execute(SQL_IMPACT_H3, [products.usgs_id, products.shakemap_version])
+
+    # El activo y el sismo tienen que ser del mismo pais. Si no lo son, el join
+    # no encuentra una sola celda, `SQL_TOTALES` devuelve NULL en cada columna,
+    # `float(v or 0.0)` los convierte en ceros y **se publica un reporte
+    # diciendo que no hay nadie expuesto**. Durante un terremoto real, en el
+    # visor publico. Es preferible no publicar nada.
+    alcanzadas: int = con.execute("SELECT count(*) FROM impact_h3").fetchone()[0]
+    if alcanzadas == 0:
+        raise ValueError(
+            f"El ShakeMap de {products.usgs_id} no toca ninguna celda del activo "
+            f"({exposure_glob}). Casi siempre significa que el sismo cayo en un pais "
+            f"distinto al del activo descargado. Un reporte calculado asi saldria "
+            f"con ceros en todas las cifras, que es peor que no publicarlo."
+        )
+    _log.info(
+        "celdas alcanzadas por el ShakeMap",
+        extra={"context": {"usgs_id": products.usgs_id, "celdas": alcanzadas}},
+    )
+
     con.execute(SQL_IMPACT_ADM2.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB))
 
     fila = con.execute(

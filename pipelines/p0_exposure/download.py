@@ -80,6 +80,27 @@ COUNTRY_BBOX: dict[str, BBox] = {
 }
 
 
+def countries_for_point(lon: float, lat: float) -> list[str]:
+    """Paises cuya caja envolvente contiene el punto, del mas ajustado al menos.
+
+    Las cajas se solapan —la de Colombia y la de Venezuela comparten miles de
+    km²— asi que un epicentro puede caer en varias. Devolverlas todas, ordenadas
+    por area, es lo honesto: quien elige el activo prueba en ese orden y el join
+    contra las celdas H3 desempata de verdad.
+
+    Una lista vacia significa que el sismo esta dentro de la ventana LATAM pero
+    fuera de todos los paises con caja declarada — mar abierto, o un pais que el
+    sistema todavia no cubre.
+    """
+
+    def area(iso3: str) -> float:
+        caja = COUNTRY_BBOX[iso3]
+        return (caja.lon_max - caja.lon_min) * (caja.lat_max - caja.lat_min)
+
+    dentro = [iso3 for iso3, caja in COUNTRY_BBOX.items() if caja.contains(lon, lat)]
+    return sorted(dentro, key=area)
+
+
 @dataclass(frozen=True, slots=True)
 class Descargado:
     """Un archivo ya en disco, con su procedencia."""

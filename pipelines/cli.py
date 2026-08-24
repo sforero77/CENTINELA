@@ -16,6 +16,7 @@ from .common.http import HttpFetcher
 from .common.logging import get_logger
 from .common.manifest import Manifest, lint_manifest_file
 from .common.paths import BUILD_DIR, MANIFESTS_DIR
+from .common.state import EventState
 from .common.status import write_status
 from .p0_exposure.build import build_country
 from .p1_trigger.run import run_trigger
@@ -103,6 +104,40 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_paises(args: argparse.Namespace) -> int:
+    """Paises cuyo activo podria servir para un evento ya detectado.
+
+    Existe porque P1 vigila **toda** la ventana LATAM y el activo es por pais:
+    sin esto, el workflow de impacto bajaba siempre el de Colombia y un sismo en
+    Peru se calculaba contra celdas colombianas, publicando ceros.
+
+    Imprime los ISO3 candidatos separados por espacio, del pais mas ajustado al
+    mas amplio. Varias cajas se solapan, asi que puede devolver mas de uno: el
+    llamador prueba en ese orden y el join contra las celdas H3 desempata.
+    """
+    from .p0_exposure.download import countries_for_point
+
+    state = EventState.load(args.usgs_id, Path(args.events_dir) if args.events_dir else None)
+    if state is None:
+        print(f"No existe event_state para {args.usgs_id}", file=sys.stderr)
+        return 1
+
+    candidatos = countries_for_point(state.lon, state.lat)
+    if not candidatos:
+        print(
+            f"El epicentro de {args.usgs_id} ({state.lon}, {state.lat}) no cae en "
+            f"ningun pais con caja declarada. Puede ser mar abierto o un pais que "
+            f"el sistema todavia no cubre; anadelo a COUNTRY_BBOX.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(" ".join(candidatos))
+    _emit_github_output("paises", " ".join(candidatos))
+    _emit_github_output("pais", candidatos[0])
+    return 0
+
+
 def _emit_github_output(key: str, value: str) -> None:
     """Escribe en ``$GITHUB_OUTPUT`` si el runner lo expone."""
     import os
@@ -148,6 +183,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status", help="recalcula site/status.json")
     p_status.set_defaults(func=_cmd_status)
+
+    p_paises = sub.add_parser(
+        "paises-candidatos", help="ISO3 cuyo activo podria servir para un evento"
+    )
+    p_paises.add_argument("usgs_id")
+    p_paises.add_argument("--events-dir", help="directorio de event_state")
+    p_paises.set_defaults(func=_cmd_paises)
 
     return parser
 

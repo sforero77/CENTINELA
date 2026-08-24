@@ -129,6 +129,29 @@ compraria sismicidad oceanica frecuente y sin poblacion a cambio de una
 estacion cientifica.
 → `tests/unit/test_cobertura_latam.py`
 
+### 2.0b 🔴 El impacto usaba el activo de Colombia para toda LATAM
+
+Corregido, y era el peor de los ceros silenciosos. P1 vigila **toda** la ventana
+LATAM; `impact.yml` tenia Colombia fija en dos sitios. Un M6.8 en Peru: el
+trigger lo detecta, dispara el impacto, baja el activo **colombiano**, el join
+no encuentra una sola celda H3, `SQL_TOTALES` devuelve NULL en cada columna,
+`float(v or 0.0)` los convierte en ceros — y se publica un reporte diciendo que
+**no hay nadie expuesto**, en el visor publico, durante un terremoto real.
+
+Los demas ceros silenciosos salian en un build repetible. Este salia en el peor
+momento posible y decia exactamente lo contrario de la verdad.
+
+Dos arreglos:
+
+- **Guardia.** Si el join no produce ninguna celda, `compute_impact` falla. Un
+  reporte que no sale es un problema; uno que dice "0 personas" es una mentira.
+- **Enrutado por pais.** `centinela paises-candidatos <usgs_id>` resuelve el
+  pais desde el epicentro y el workflow busca el Release de ese pais. Si no hay
+  activo, falla con el comando exacto para construirlo y abre un issue. El
+  hueco se vuelve una tarea visible en vez de una cifra falsa.
+
+→ `tests/unit/test_pais_del_evento.py`
+
 ### 2.1 Cerrar G2: activo de Venezuela · **solo falta construirlo**
 
 El codigo ya esta hecho: `data/manifests/VEN.yaml`, `COUNTRY_BBOX["VEN"]`

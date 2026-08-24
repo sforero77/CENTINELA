@@ -34,35 +34,55 @@ jobs:
       - name: Instalar nucleo + geo
         run: uv sync --python 3.12 --extra geo --extra render
 
-      # El activo no vive en git: 17 MB por pais. Se publica como Release
+      # El activo no vive en git: unos 19 MB por pais. Se publica como Release
       # versionado y esa copia es la que sostiene RNF-04, porque Overture
       # retira sus releases a los dos meses (ver docs/PUBLICAR_ACTIVO.md).
+      #
+      # EL ACTIVO ES POR PAIS Y P1 VIGILA TODA LATAM. Antes este paso bajaba
+      # siempre el de Colombia: un sismo en Peru se calculaba contra celdas
+      # colombianas, el join no encontraba ninguna y el reporte salia con ceros
+      # en todas las cifras. Ahora el pais sale del epicentro del evento.
       - name: Descargar activo de exposicion
         id: activo
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p data/build
-          TAG=$(gh release list --limit 50 \
-                 --json tagName --jq '[.[] | select(.tagName | startswith("exposure-col-"))]
-                                      | sort_by(.tagName) | last | .tagName')
-          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
-            echo "::error::No hay ningun Release exposure-col-*. Publica el activo antes de operar."
-            exit 1
-          fi
-          gh release download "$TAG" --dir data/build --clobber
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          ls -la data/build
+          PAISES=$(uv run centinela paises-candidatos "$USGS_ID")
+          echo "candidatos por epicentro: $PAISES"
+
+          for ISO3 in $PAISES; do
+            PREFIJO="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-"
+            TAG=$(gh release list --limit 100 --json tagName \
+                   --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
+                         | sort_by(.tagName) | last | .tagName")
+            if [ -n "$TAG" ] && [ "$TAG" != "null" ]; then
+              gh release download "$TAG" --dir data/build --clobber
+              echo "tag=$TAG"   >> "$GITHUB_OUTPUT"
+              echo "iso3=$ISO3" >> "$GITHUB_OUTPUT"
+              echo "usando $TAG para $ISO3"
+              exit 0
+            fi
+            echo "sin activo publicado para $ISO3"
+          done
+
+          echo "::error::El sismo $USGS_ID cae en [$PAISES] y no hay activo de \
+          exposicion publicado para ninguno. Construyelo con: \
+          gh workflow run exposure_quarterly.yml -f iso3=<ISO3>"
+          exit 1
 
       - name: Calcular impacto y emitir reporte
         id: impacto
+        env:
+          ISO3: ${{ steps.activo.outputs.iso3 }}
         run: |
           uv run centinela impact "$USGS_ID" \
             --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=$USGS_ID&format=geojson" \
             --exposure "data/build/exposure_h3.parquet" \
             --manifest "$(uv run python -c "
+          import os
           from pipelines.common.manifest import Manifest
-          print(Manifest.load('COL').manifest_id)")"
+          print(Manifest.load(os.environ['ISO3']).manifest_id)")"
 
       - name: Publicar artefactos
         if: success()
