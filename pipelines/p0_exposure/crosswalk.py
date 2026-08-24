@@ -194,32 +194,45 @@ CREATE OR REPLACE TABLE crosswalk_h3_adm (
 )
 """
 
-#: Se rellena **un municipio por consulta**, no los mil de golpe.
+#: Las partes de cada municipio, numeradas. Un municipio con islas o exclaves es
+#: un MULTIPOLYGON, y `h3_polygon_wkt_to_cells` devuelve **cero** celdas ante uno
+#: —no la primera parte: cero— asi que hay que descomponerlo.
+SQL_PARTES = """
+CREATE OR REPLACE TABLE partes_admin AS
+SELECT adm2_id,
+       t.p.geom AS geom,
+       row_number() OVER (ORDER BY adm2_id) AS i
+FROM admin_geom, unnest(ST_Dump(geom)) AS t(p)
+"""
+
+#: Se rellena **por lotes de partes**, no el pais de golpe ni el municipio
+#: entero.
 #:
-#: Mientras el polyfill devolvia cero ante un MULTIPOLYGON, hacerlo de una vez
-#: era gratis: no hacia nada. Arreglado con `ST_Dump`, Chile agoto los 12,4 GB
-#: del runner en este mismo paso — 56 provincias patagonicas se descomponen en
-#: miles de islas, y sostener a la vez todos sus WKT, todas sus celdas y un
-#: DISTINCT sobre el conjunto no cabe.
+#: `h3_polygon_wkt_to_cells` recibe la geometria como **texto**, y DuckDB procesa
+#: en vectores: con miles de partes en vuelo, los `ST_AsText` de todas ellas
+#: coexisten en memoria. El COD-AB de Chile pesa mas de 182 MB —la costa de
+#: Magallanes tiene millones de vertices— y una sola provincia agoto los 12,4 GB
+#: del runner.
 #:
-#: Uno a uno la memoria queda acotada al municipio mas grande, el log deja ver
-#: el avance de un paso que en un pais grande tarda minutos, y un fallo dice
-#: **cual** municipio lo provoco en vez de "el pais".
-#:
-#: Es el mismo patron que ya se usa para leer Overture fichero a fichero, y por
-#: la misma razon.
-SQL_POLYFILL_MUNICIPIO = """
+#: Por lotes la memoria queda acotada al lote, y **sin perder un vertice**. La
+#: alternativa era simplificar la geometria, y se probo: simplificar cada
+#: municipio por su cuenta descuadra los bordes compartidos con sus vecinos y
+#: produjo 23 celdas reclamadas por dos municipios en Uruguay. La asercion de
+#: duplicados lo cazo. Trocear no tiene ese coste.
+SQL_POLYFILL_LOTE = """
 INSERT INTO crosswalk_h3_adm
 SELECT DISTINCT
-    unnest(h3_polygon_wkt_to_cells(ST_AsText(parte.geom), {resolution})) AS h3_08,
+    unnest(h3_polygon_wkt_to_cells(ST_AsText(geom), {resolution})) AS h3_08,
     adm2_id,
     1.0 AS frac_area,
     FALSE AS rescatada
-FROM admin_geom, unnest(ST_Dump(geom)) AS t(parte)
-WHERE adm2_id = ?
+FROM partes_admin
+WHERE i BETWEEN ? AND ?
 """
 
-#: Diccionario administrativo que consume el reporte (§3.2).
+#: Cuantas partes se rellenan por consulta.
+LOTE_PARTES = 100
+
 SQL_ADMIN_LOOKUP = """
 CREATE OR REPLACE TABLE admin_lookup AS
 SELECT
@@ -238,27 +251,6 @@ SELECT h3_08, count(*) AS n
 FROM crosswalk_h3_adm
 GROUP BY h3_08 HAVING count(*) > 1
 """
-
-
-#: Tolerancia con la que se simplifica la geometria administrativa al cargarla,
-#: en grados. 0,0005 son unos 55 m.
-#:
-#: **No es una optimizacion, es lo que hace el paso posible.** El COD-AB de
-#: Chile pesa mas de 182 MB: la costa de Magallanes tiene millones de vertices,
-#: y `h3_polygon_wkt_to_cells` recibe la geometria como **texto**. El WKT de una
-#: sola provincia agoto los 12,4 GB del runner — no el pais entero, una
-#: provincia.
-#:
-#: Que se pierde: el reparto asigna por el **centro** de la celda, y una celda
-#: r8 mide unos 740 m. Mover una frontera 55 m solo puede cambiar de municipio
-#: las celdas cuyo centro caiga a menos de 55 m de la linea, o sea menos de una
-#: catorceava parte del ancho de una celda.
-#:
-#: Y lo que no se pierde, que es lo que importa: **ninguna persona**. Una celda
-#: mal asignada cambia de municipio, no desaparece. El total nacional —el
-#: invariante que verifica CI— es exactamente el mismo. Se degrada la precision
-#: del reparto en el margen, no la cifra.
-SIMPLIFICACION_ADMIN_GRADOS = 0.0005
 
 
 def load_admin_geometry(
@@ -300,30 +292,16 @@ def load_admin_geometry(
             {mapeo.nombre}       AS nombre,
             {mapeo.adm1_id}      AS adm1_id,
             {mapeo.departamento} AS departamento,
-            ST_SimplifyPreserveTopology(geom, {SIMPLIFICACION_ADMIN_GRADOS}) AS geom,
-            ST_NPoints(geom) AS _vertices_originales
+            geom
         FROM ST_Read('{ruta}')
         """
     )
-    n, antes, despues = con.execute(
-        "SELECT count(*), sum(_vertices_originales), sum(ST_NPoints(geom)) FROM admin_geom"
-    ).fetchone()
-    con.execute("ALTER TABLE admin_geom DROP COLUMN _vertices_originales")
+    n: int = con.execute("SELECT count(*) FROM admin_geom").fetchone()[0]
     _log.info(
         "geometria administrativa cargada",
-        extra={
-            "context": {
-                "iso3": iso3,
-                "municipios": n,
-                "fuente": str(fuente),
-                # Publicado para que la simplificacion sea auditable: si un pais
-                # apenas baja, es que su geometria ya era simple.
-                "vertices": f"{antes:,} -> {despues:,}",
-                "tolerancia_grados": SIMPLIFICACION_ADMIN_GRADOS,
-            }
-        },
+        extra={"context": {"iso3": iso3, "municipios": n, "fuente": str(fuente)}},
     )
-    return int(n)
+    return n
 
 
 def build_crosswalk(
@@ -342,15 +320,18 @@ def build_crosswalk(
             doble conteo de poblacion, y es preferible fallar el build.
     """
     con.execute(SQL_CROSSWALK_VACIO)
-    ids = [str(fila[0]) for fila in con.execute("SELECT adm2_id FROM admin_geom").fetchall()]
-    sql = SQL_POLYFILL_MUNICIPIO.format(resolution=resolution)
-    for i, adm2_id in enumerate(ids, start=1):
-        con.execute(sql, [adm2_id])
-        if i % 200 == 0 or i == len(ids):
+    con.execute(SQL_PARTES)
+    partes: int = con.execute("SELECT count(*) FROM partes_admin").fetchone()[0]
+    sql = SQL_POLYFILL_LOTE.format(resolution=resolution)
+    for desde in range(1, partes + 1, LOTE_PARTES):
+        hasta = min(desde + LOTE_PARTES - 1, partes)
+        con.execute(sql, [desde, hasta])
+        if hasta == partes or (desde - 1) % (LOTE_PARTES * 20) == 0:
             _log.info(
                 "reparto en curso",
-                extra={"context": {"iso3": iso3, "municipios": f"{i}/{len(ids)}"}},
+                extra={"context": {"iso3": iso3, "partes": f"{hasta}/{partes}"}},
             )
+    con.execute("DROP TABLE partes_admin")
     con.execute(SQL_ADMIN_LOOKUP.format(iso3=iso3))
 
     duplicadas = con.execute(SQL_ASSERT_SIN_DUPLICADOS).fetchall()
