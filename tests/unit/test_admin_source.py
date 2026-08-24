@@ -343,3 +343,38 @@ def test_todas_las_rutas_de_descarga_saltan_lo_que_ya_esta(tmp_path: Path) -> No
         assert "exists()" in cuerpo or "_hdx_en_disco" in cuerpo, (
             f"{funcion.__name__} no comprueba si el archivo ya esta en disco"
         )
+
+
+# --- Copias del mismo nivel -------------------------------------------------
+
+#: Lo que trae el COD-AB de El Salvador: cada nivel por duplicado.
+COD_AB_SLV = [
+    Path("slv_admin0.geojson"),
+    Path("slv_admin0_em.geojson"),
+    Path("slv_admin1.geojson"),
+    Path("slv_admin1_em.geojson"),
+    Path("slv_admin2.geojson"),
+    Path("slv_admin2_em.geojson"),
+    Path("slv_adminlines.geojson"),
+]
+
+
+def test_una_copia_del_nivel_no_detiene_el_build() -> None:
+    """Medido: slv_admin2 y slv_admin2_em traen los mismos 48 registros.
+
+    Detener el build por una copia identica seria pedantico; elegir al azar
+    entre dos archivos distintos, peligroso. Se toma el nombre sin decorar.
+    """
+    assert pick_admin_source(COD_AB_SLV).name == "slv_admin2.geojson"
+
+
+def test_si_solo_existe_la_variante_se_usa() -> None:
+    """Descartar copias no puede convertirse en descartar la unica capa."""
+    solo_em = [Path("slv_admin1_em.geojson"), Path("slv_admin2_em.geojson")]
+    assert pick_admin_source(solo_em).name == "slv_admin2_em.geojson"
+
+
+def test_dos_capas_municipales_distintas_siguen_siendo_error() -> None:
+    """El descarte de copias no debe tapar un empate de verdad."""
+    with pytest.raises(ValueError, match="No se puede elegir"):
+        pick_admin_source([Path("pais_admin2.shp"), Path("otro_adm2.geojson")])

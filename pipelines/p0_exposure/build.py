@@ -340,6 +340,14 @@ AGESEX_LAYER = "pop_worldpop_agesex"
 #: puntos; tomar el primero que aparezca daria el pais entero como un municipio.
 ADM2_HINTS: tuple[str, ...] = ("admin2", "adm2", "mpio", "municip")
 
+#: Sufijos de copias del mismo nivel. El COD-AB de El Salvador publica
+#: ``slv_admin2.geojson`` y ``slv_admin2_em.geojson``: medidos, **los dos traen
+#: los mismos 48 registros y las mismas columnas**. Ante el empate se toma el
+#: nombre sin decorar como canonico, en vez de detener el build por una copia.
+#: Si algun dia una variante trae datos distintos, seguira sin distinguirse por
+#: el nombre — pero el pais tendra que declararlo en el manifest.
+ADM2_VARIANT_SUFFIXES: tuple[str, ...] = ("_em",)
+
 
 def pick_admin_source(rutas: list[Path], *, iso3: str = "", con: Any | None = None) -> Path:
     """Elige el archivo de geometria municipal entre los de la capa divisions.
@@ -370,6 +378,25 @@ def pick_admin_source(rutas: list[Path], *, iso3: str = "", con: Any | None = No
         )
 
     municipales = [p for p in candidatas if any(h in p.name.lower() for h in ADM2_HINTS)]
+    if len(municipales) > 1:
+        # Descartar copias del mismo nivel antes de dar el empate por irresoluble.
+        sin_variantes = [
+            p
+            for p in municipales
+            if not any(p.stem.lower().endswith(s) for s in ADM2_VARIANT_SUFFIXES)
+        ]
+        if len(sin_variantes) == 1:
+            _log.info(
+                "capa municipal elegida descartando copias",
+                extra={
+                    "context": {
+                        "elegida": sin_variantes[0].name,
+                        "copias": [p.name for p in municipales if p != sin_variantes[0]],
+                    }
+                },
+            )
+            return sin_variantes[0]
+        municipales = sin_variantes or municipales
     if len(municipales) == 1:
         return municipales[0]
     if not municipales and len(candidatas) == 1:
