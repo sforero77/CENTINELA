@@ -54,6 +54,48 @@ class CrosswalkRow:
     frac_area: float
 
 
+@dataclass(frozen=True, slots=True)
+class AdminColumns:
+    """Como se llaman en la fuente las cuatro columnas que el crosswalk usa."""
+
+    adm2_id: str
+    nombre: str
+    adm1_id: str
+    departamento: str
+
+
+#: Esquema por defecto: el **COD-AB de OCHA**, que publica adm1/adm2 con la
+#: misma forma para los 19 paises de LATAM. Es lo que evita pelear con veinte
+#: geoportales nacionales para obtener lo mismo.
+#:
+#: Medido sobre ``ven_admin2.shp`` del COD-AB de Venezuela (336 municipios): los
+#: nombres son minusculas y **no** son los ``ADM2_PCODE`` / ``ADM2_ES`` de la
+#: documentacion antigua de HDX. El shapefile trunca a diez caracteres, que es
+#: por lo que ``adm2_ref_name`` aparece como ``adm2_ref_n``.
+COD_AB_COLUMNS = AdminColumns(
+    adm2_id="adm2_pcode",
+    nombre="adm2_name",
+    adm1_id="adm1_pcode",
+    departamento="adm1_name",
+)
+
+#: Excepciones por pais. Colombia usa el MGN del DANE y no el COD-AB, porque el
+#: MGN es la fuente de verdad del codigo DIVIPOLA y del toponimo oficial.
+ADMIN_COLUMNS: dict[str, AdminColumns] = {
+    "COL": AdminColumns(
+        adm2_id="mpio_cdpmp",
+        nombre="mpio_cnmbr",
+        adm1_id="dpto_ccdgo",
+        departamento="dpto_cnmbr",
+    ),
+}
+
+
+def admin_columns(iso3: str) -> AdminColumns:
+    """Mapeo de columnas del pais; COD-AB si no hay excepcion declarada."""
+    return ADMIN_COLUMNS.get(iso3.upper(), COD_AB_COLUMNS)
+
+
 def validate_fractions(rows: Iterable[CrosswalkRow]) -> list[str]:
     """Verifica que las fracciones de cada celda sumen 1.
 
@@ -113,28 +155,54 @@ GROUP BY h3_08 HAVING count(*) > 1
 """
 
 
-def load_admin_geometry(con: Any, shapefile: Path, *, iso3: str) -> int:
+def load_admin_geometry(
+    con: Any, fuente: Path, *, iso3: str, columnas: AdminColumns | None = None
+) -> int:
     """Carga los poligonos municipales en la tabla ``admin_geom``.
 
-    Los nombres de columna son los del MGN del DANE. Otros paises traeran los
-    suyos; el mantenedor del pais adapta este mapeo y nada mas.
+    ``fuente`` es cualquier cosa que ``ST_Read`` sepa abrir: shapefile,
+    GeoPackage o GeoJSON. El mapeo de columnas sale de :func:`admin_columns`,
+    que por defecto asume COD-AB; un pais con fuente nacional propia declara su
+    excepcion en :data:`ADMIN_COLUMNS` y no toca nada mas.
+
+    Raises:
+        ValueError: si la fuente no trae alguna de las cuatro columnas. Fallar
+            aqui es barato; descubrirlo despues de agregar nueve capas no.
     """
+    mapeo = columnas or admin_columns(iso3)
+    ruta = fuente.as_posix()
+    disponibles = {
+        str(fila[0]).lower()
+        for fila in con.execute(f"DESCRIBE SELECT * FROM ST_Read('{ruta}')").fetchall()
+    }
+    faltan = [
+        col
+        for col in (mapeo.adm2_id, mapeo.nombre, mapeo.adm1_id, mapeo.departamento)
+        if col.lower() not in disponibles
+    ]
+    if faltan:
+        raise ValueError(
+            f"{fuente.name} no trae las columnas {faltan} que {iso3} necesita. "
+            f"Tiene: {sorted(disponibles)}. Declara el mapeo del pais en "
+            f"pipelines/p0_exposure/crosswalk.py::ADMIN_COLUMNS."
+        )
+
     con.execute(
         f"""
         CREATE OR REPLACE TABLE admin_geom AS
         SELECT
-            mpio_cdpmp AS adm2_id,
-            mpio_cnmbr AS nombre,
-            dpto_ccdgo AS adm1_id,
-            dpto_cnmbr AS departamento,
+            {mapeo.adm2_id}      AS adm2_id,
+            {mapeo.nombre}       AS nombre,
+            {mapeo.adm1_id}      AS adm1_id,
+            {mapeo.departamento} AS departamento,
             geom
-        FROM ST_Read('{shapefile}')
+        FROM ST_Read('{ruta}')
         """
     )
     n: int = con.execute("SELECT count(*) FROM admin_geom").fetchone()[0]
     _log.info(
         "geometria administrativa cargada",
-        extra={"context": {"iso3": iso3, "municipios": n, "fuente": str(shapefile)}},
+        extra={"context": {"iso3": iso3, "municipios": n, "fuente": str(fuente)}},
     )
     return n
 

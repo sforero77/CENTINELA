@@ -41,6 +41,7 @@
         "pop_mmi8p": { "type": "number", "minimum": 0 },
         "pop_65p_mmi7p": { "type": "number", "minimum": 0 },
         "bld_mmi7p": { "type": "number", "minimum": 0 },
+        "built_m2_mmi7p": { "type": "number", "minimum": 0 },
         "health_mmi7p": { "type": "number", "minimum": 0 },
         "edu_mmi7p": { "type": "number", "minimum": 0 },
         "road_km_mmi7p": { "type": "number", "minimum": 0 },

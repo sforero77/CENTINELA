@@ -8,7 +8,7 @@
 # con una peticion real. Los `sha256` se llenan en la primera corrida de P0; el
 # lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.4
+manifest_id: col-v0.5
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -64,6 +64,28 @@ sources:
       el R2025A del FTP es solo del Artico. Schiavina et al. 2023,
       doi:10.2905/2FF68A52.
 
+  - id: ghs_built_s_2025
+    layer: built_ghsl
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    sha256: ""
+    notes: >-
+      Superficie construida en m² por pixel de 100 m, derivada de Sentinel-2 y
+      Landsat. Misma retícula, misma epoca y misma licencia que GHS-POP, asi que
+      reutiliza el selector de teselas y no anade dependencias: unos 90 MB mas
+      por pais. Verificado que la tesela R9_C11 responde con el mismo esquema de
+      nombres que la de poblacion.
+      POR QUE ENTRA: la debilidad documentada del conteo de edificaciones de
+      Overture son los huecos en asentamientos informales y zona rural dispersa
+      —justo donde vive la poblacion mas expuesta—. Esta capa no depende de que
+      alguien haya mapeado el barrio, asi que convierte la bandera
+      `revisar_sin_edificios` en una cifra: `construido_no_mapeado` marca las
+      celdas con mas de 1.000 m² construidos y cero edificaciones registradas.
+      LO QUE NO ES: no dice cuantas edificaciones hay ni de que tipo. 40.000 m²
+      pueden ser una bodega o cien viviendas. Contrasta a Overture, no lo
+      sustituye.
+
   - id: worldpop_agesex_2025
     layer: pop_worldpop_agesex
     url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/
@@ -74,9 +96,15 @@ sources:
       CORRIGE UN SUPUESTO DE LA ESPEC. §2.2 daba 2020 como la unica epoca con
       desglose por edad y sexo, y de ahi salia la limitacion "proporciones de
       2020 sobre totales de 2025". El release R2025A si publica age-sex
-      constrained para 2025: 62 rasters por pais (col_f_00…col_m_80 mas los
-      totales col_T_F / col_T_M). El supuesto de estructura etaria estable ya no
-      hace falta y desaparece de los metadatos del reporte.
+      constrained para 2025 y el supuesto de estructura etaria estable ya no
+      hace falta.
+      La url apunta al DIRECTORIO, no a un fichero: el listado real trae 62
+      GeoTIFF —20 bandas de edad (00, 01, 05, 10 … 90) en tres series, col_f_,
+      col_m_ y la combinada col_t_, mas los totales col_T_F / col_T_M. Solo se
+      descarga la serie col_t_: sumar las tres contaria cada persona dos veces.
+      El conteo de 18 bandas hasta 80 que decia esta nota estaba mal; la banda
+      superior es 90+, y por eso pop_65p va de 65 a 90. Ver
+      pipelines/p0_exposure/sources/worldpop.py.
 
   - id: worldpop_total_2025
     layer: pop_worldpop_total
@@ -122,16 +150,23 @@ sources:
     layer: divisions
     url: https://data.humdata.org/dataset/cod-ab-col
     hdx_dataset: cod-ab-col
+    hdx_resource: "COL Administrative Divisions Shapefiles"
     license: CC-BY-IGO
     vintage: COD-AB-2025-05-27
     sha256: ""
     notes: >-
       Common Operational Dataset de OCHA. Para Colombia es el propio MGN del
       DANE reempaquetado, asi que no aporta geometria nueva aqui; entra porque
-      el patron `cod-ab-<iso3>` existe verificado para LOS SIETE paises de Fase
-      1 (COL, MEX, PER, ECU, CHL, VEN, GTM) con la misma licencia y la misma
-      forma. Es la via que evita que cada mantenedor de pais tenga que
+      el patron `cod-ab-<iso3>` existe verificado para LOS DIECINUEVE paises de
+      LATAM hispanohablante mas Brasil, con la misma licencia (CC BY-IGO) y la
+      misma forma. Es la via que evita que cada mantenedor de pais tenga que
       ingeniar el geoportal nacional de turno solo para obtener adm1/adm2.
+      `hdx_resource` NO es opcional aqui. Este dataset publica cuatro recursos
+      SHP y el resolutor tomaba el primero: MGN2024_URB_SECCION.zip, 48 MB de
+      secciones urbanas en vez de municipios. Verificado el 23-ago-2026 sobre la
+      respuesta real de la API. De los 19 paises revisados, solo Colombia,
+      Argentina, Brasil, Paraguay y Uruguay carecen de GeoJSON y caen a SHP; y
+      solo Colombia publica mas de un SHP.
 
   - id: dane_mgn_2025
     layer: divisions
@@ -167,14 +202,23 @@ sources:
     layer: health
     url: https://data.humdata.org/dataset/colombia-healthsites
     hdx_dataset: colombia-healthsites
+    hdx_resource: "colombia-healthsites-geojson"
     license: ODbL-1.0
     vintage: "2026-06-11"
     sha256: ""
     notes: >-
       healthsites.io publicado en HDX como GeoJSON. Se usa esta via y no la API
       de healthsites.io porque esa exige API key, y O4 pide reconstruir el
-      activo sin credenciales privadas. Complementa a HOTOSM; se deduplica por
-      proximidad.
+      activo sin credenciales privadas.
+      `hdx_resource` fija el GeoJSON simple: el dataset publica tambien
+      `colombia-healthsites-hxl-geojson`, con etiquetas HXL, 1,2 MB mas grande y
+      sin geometria adicional.
+      VA SEGUNDO Y ESO IMPORTA. Entra despues de HOTOSM y aporta solo lo que
+      HOTOSM no tiene. Medido el 23-ago-2026: de sus 8.443 puntos, el 96,6 %
+      cae a menos de 20 m de uno de HOTOSM —las dos fuentes derivan de OSM—, asi
+      que su contribucion real son unas 290 sedes. Sumarlas sin deduplicar daria
+      18.061 sedes en vez de ~9.900: casi el doble, y con toda la pinta de ser
+      una cifra correcta.
 
   - id: hotosm_education
     layer: education
@@ -194,6 +238,21 @@ sources:
     vintage: snapshot-2026-08-01
     sha256: ""
     notes: >-
-      T1.2: disponibilidad verificada (HTTP 200, 12,7 MB). La declaracion de
-      dominio publico viene del propio proyecto y queda pendiente de citar con
-      su texto exacto.
+      T1.2 RESUELTA (23-ago-2026). La dedicacion al dominio publico esta en dos
+      sitios, y los dos se leyeron directamente.
+      (a) La pagina de datos del proyecto (https://ourairports.com/data/) dice
+      literalmente: "All data is released to the Public Domain, and comes with
+      no guarantee of accuracy or fitness for use".
+      (b) El repositorio de descargas
+      (github.com/davidmegginson/ourairports-data) lleva un LICENSE con el texto
+      integro de **The Unlicense**: "This is free and unencumbered software
+      released into the public domain... Anyone is free to copy, modify,
+      publish, use, compile, sell, or distribute this software... for any
+      purpose, commercial or non-commercial".
+      MATIZ QUE CONVIENE NO ESCONDER: el texto de The Unlicense habla de
+      "software", no de datos, y ahi lo que se reutiliza son datos. Es la
+      declaracion de la pagina de datos —explicita sobre "all data"— la que
+      cubre el caso; el LICENSE la respalda pero no la sustituye. Con las dos,
+      la intencion no admite otra lectura.
+      El repositorio pide expresamente no abrir pull requests: las correcciones
+      se hacen con una cuenta en ourairports.com y entran en el volcado diario.

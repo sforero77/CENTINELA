@@ -15,8 +15,10 @@ from pipelines.common.http import FixtureFetcher
 from pipelines.p0_exposure.sources.overture import (
     OvertureCatalogError,
     collection_url,
+    item_data_url,
     parse_collection,
     pmtiles_url,
+    resolve_data_urls,
     select_files,
 )
 
@@ -86,3 +88,63 @@ def test_el_release_va_fijado_en_la_url() -> None:
     """Nunca 'latest': el catalogo tiene un alias que apunta al ultimo."""
     assert RELEASE in collection_url(RELEASE, "buildings", "building")
     assert RELEASE in pmtiles_url(RELEASE, "buildings")
+
+
+# --- Resolucion del parquet detras de cada item ----------------------------
+
+#: Forma real del item 00013 de `buildings/building` en el release 2026-08-19.0.
+#: El nombre del parquet lleva un UUID: no se puede deducir, hay que leerlo.
+ITEM_REAL: dict[str, Any] = {
+    "id": "00013",
+    "assets": {
+        "aws": {
+            "href": (
+                "https://overturemaps-us-west-2.s3.us-west-2.amazonaws.com/release/"
+                "2026-08-19.0/theme=buildings/type=building/"
+                "part-00013-f54530cc-76c0-5ff4-8e72-6b2b9b844f62-c000.zstd.parquet"
+            ),
+            "type": "application/vnd.apache.parquet",
+            "roles": ["data"],
+        },
+        "azure": {
+            "href": (
+                "https://overturemapswestus2.blob.core.windows.net/release/2026-08-19.0/"
+                "theme=buildings/type=building/"
+                "part-00013-f54530cc-76c0-5ff4-8e72-6b2b9b844f62-c000.zstd.parquet"
+            ),
+            "type": "application/vnd.apache.parquet",
+            "roles": ["data"],
+        },
+    },
+}
+
+
+def test_se_prefiere_el_asset_de_aws() -> None:
+    """Los dos sirven el mismo parquet; AWS es el que lee httpfs mas rapido."""
+    assert "s3.us-west-2.amazonaws.com" in item_data_url(ITEM_REAL)
+
+
+def test_se_puede_pedir_azure() -> None:
+    assert "blob.core.windows.net" in item_data_url(ITEM_REAL, prefer="azure")
+
+
+def test_un_asset_desconocido_cae_en_el_que_haya() -> None:
+    """Si Overture renombra el asset, mejor leer el otro que no leer nada."""
+    assert item_data_url(ITEM_REAL, prefer="gcs").endswith(".parquet")
+
+
+def test_un_item_sin_datos_es_error() -> None:
+    """Seguir devolveria una lista corta y un activo incompleto en silencio."""
+    with pytest.raises(OvertureCatalogError, match="asset"):
+        item_data_url({"id": "00013", "assets": {"thumbnail": {"href": "x.png"}}})
+
+
+def test_resolver_abre_un_item_por_fichero() -> None:
+    colombia = BBox(lon_min=-82.0, lat_min=-4.3, lon_max=-66.8, lat_max=13.5)
+    coleccion = _coleccion(BBOXES_REALES)
+    items = {str(link["href"]): ITEM_REAL for link in coleccion["links"] if link["rel"] == "item"}
+    fetcher = FixtureFetcher({collection_url(RELEASE, "buildings", "building"): coleccion, **items})
+    ficheros = select_files(fetcher, colombia, release=RELEASE)
+    urls = resolve_data_urls(fetcher, ficheros)
+    assert len(urls) == len(ficheros)
+    assert all(u.endswith(".parquet") for u in urls)

@@ -23,14 +23,36 @@ centinela impact us6000tjl2 \
 | Componente | Estado |
 |---|---|
 | P1 trigger (feed, filtro, dedupe, estado) | ✅ verificado contra el feed vivo |
-| P0 activo de exposicion (descarga → parquet) | ✅ funcional |
+| P0 activo de exposicion (descarga → parquet) | ✅ funcional, nueve capas |
 | P2 impacto (contornos → celdas → GF → join) | ✅ funcional |
 | P3 reporte (json, md, csv, hilo, 2 mapas) | ✅ funcional |
 | Pagina `/status` con latencia real | ✅ funcional |
 | Golden G1 (Chocó) y G3 | ✅ corren |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**210 pruebas**, `ruff` y `mypy --strict` limpios, arranque verificado desde clon vacio.
+**405 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), `ruff` y
+`mypy --strict` limpios, arranque verificado desde clon vacio.
+
+### El cero silencioso que casi se publica
+
+`build_country` cerraba sin construir tres capas. Edificaciones y vias tenian
+el selector de ficheros de Overture escrito y probado, pero **nadie lo
+llamaba**; el desglose etario tampoco se descargaba, porque su url apunta a un
+directorio de 62 rasters y la descarga caia en la rama "sin estrategia". Las
+cifras del backtest del Chocó salieron de orquestar esas piezas a mano.
+
+Nada fallaba. `ensure_layer_tables` crea vacia la tabla de una capa ausente, el
+`LEFT JOIN` la convierte en ceros y el activo se escribe; el assert de §6.4
+solo mira poblacion, asi que pasaba. La proxima corrida de
+`exposure_quarterly.yml` habria reemplazado el activo bueno por uno con **cero
+edificaciones, cero kilometros de via y cero adultos mayores**, publicado como
+Release, en silencio.
+
+Cerrado en tres piezas: el cableado de las capas que faltaban,
+`validate_layer_coverage` —que detiene el build si cualquier capa requerida
+suma cero en todo el pais— y las pruebas nocturnas contra Overture y WorldPop,
+que avisan cuando el contrato de la fuente se mueve en vez de esperar al
+trimestre.
 
 ### Lo que impide cerrar Fase 0
 
@@ -51,7 +73,9 @@ simulacro de §6.5.
 
 ## 1. 🔑 Tuyo — desbloquea la operacion
 
-Sin estos cuatro pasos el sistema **no puede operar**. Estan en orden.
+Sin estos pasos el sistema **no puede operar**. El detalle, con comandos exactos
+y como comprobar cada uno, esta en
+[`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md). Aqui va el resumen.
 
 ### 1.1 Fusionar el PR
 
@@ -62,17 +86,21 @@ https://github.com/sforero77/CENTINELA/pull/1 — CI en verde, sin conflictos.
 `impact.yml` **falla a proposito** si no encuentra un Release `exposure-col-*`:
 operar sin activo produciria un reporte vacio en vez de un error.
 
+**Dejaselo a CI.** Un solo comando construye el activo y publica el Release, y
+de paso prueba el workflow trimestral antes de que tenga que correr solo:
+
 ```bash
-# Renombra el parquet a exposure_h3.parquet: es el nombre que busca el workflow.
-gh release create exposure-col-20260823 exposure_h3.parquet \
-  --title "Activo de exposicion COL — 2026-08-23" \
-  --notes-file data/manifests/COL.yaml
+gh workflow run exposure_quarterly.yml -f iso3=COL
 ```
 
-Detalle, cifras y `sha256` en [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md).
+El paso lento del build es leer Overture en remoto y depende por completo del
+enlace. Medido en local a **95 KB/s**, cada fichero de edificaciones tardaba
+entre 4 y 18 minutos y el build no terminaba en una tarde; en la red de GitHub
+son minutos. Construir en local sigue disponible y es reanudable, pero conviene
+medir la conexion antes — procedimiento en
+[`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md).
 
-Si perdiste el archivo, se reconstruye con `make country ISO=COL` — tarda unos
-20 minutos, casi todo descarga.
+Detalle, cifras y `sha256` en [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md).
 
 ### 1.3 Habilitar GitHub Pages
 
@@ -102,19 +130,58 @@ circuito completo antes de que llegue un sismo de verdad.
 
 Ordenado por lo que mas desbloquea.
 
-### 2.1 Cerrar G2: activo de Venezuela · **alto valor, esfuerzo medio**
+### 2.0 🔴 La ventana del disparador cortaba paises cubiertos
 
-Es el pendiente mas valioso. Requiere:
+Corregido, pero conviene saberlo. `LATAM_BBOX` —el filtro de RF-01— iba de
+118,0°O a 34,0°O y de 56,0°S a 33,0°N. Al medir las cajas de los 19 paises
+salio que **no cubria territorio de paises que el sistema dice cubrir**:
 
-1. Anadir `VEN` a `COUNTRY_BBOX` en `pipelines/p0_exposure/download.py`.
-2. Crear `data/manifests/VEN.yaml`. El patron `cod-ab-ven` de OCHA ya esta
-   verificado, igual que `hotosm_ven_*`.
-3. Encontrar la referencia oficial de poblacion para el assert de §6.4.
-4. Correr `make country ISO=VEN` y activar la asercion saltada en
-   `tests/golden/test_g2_venezuela.py`.
+| | Llega a | La ventana cortaba en |
+|---|---|---|
+| Mexico (Isla Guadalupe, Revillagigedo) | 118,65°O | 118,0°O |
+| Chile (Cabo de Hornos, Diego Ramirez) | 56,78°S | 56,0°S |
+| Brasil (Fernando de Noronha, ~3.000 hab.) | 32,42°O | 34,0°O |
 
-Cierra la puerta de salida de Fase 0 y valida que el sistema es multi-pais de
-verdad, no solo en teoria.
+Un sismo relevante ahi no habria fallado: **habria dejado de existir para el
+sistema**. Chile importa especialmente, porque la zona de fractura de
+Shackleton produce sismos justo en ese margen.
+
+Nueva ventana: `lon -119,0..-32,0 / lat -57,5..33,0`. El limite este llega a
+Fernando de Noronha y se detiene antes del archipielago de San Pedro y San
+Pablo, que se asienta sobre la dorsal mesoatlantica: estirarlo hasta alli
+compraria sismicidad oceanica frecuente y sin poblacion a cambio de una
+estacion cientifica.
+→ `tests/unit/test_cobertura_latam.py`
+
+### 2.1 Cerrar G2: activo de Venezuela · **solo falta construirlo**
+
+El codigo ya esta hecho: `data/manifests/VEN.yaml`, `COUNTRY_BBOX["VEN"]`
+—medida sobre el COD-AB, no estimada—, el mapeo de columnas del COD-AB y las
+aserciones de G2, que se saltan solas mientras no exista el reporte y se
+activan sin tocar nada cuando exista.
+
+Falta correr `uv run centinela country VEN` y **medir**. La tolerancia esta en
+5 % contra la ONU (28.516.896 para 2025) y es una expectativa, no una
+verificacion: GHS-POP deriva de la ronda censal de 2010 y no modela la
+emigracion venezolana. Que el assert falle seria un hallazgo, no un bug.
+Procedimiento en [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md).
+
+### 2.1b Fuentes de LATAM: validadas las 19, manifests escritos
+
+Revisado el 23-ago-2026 con una peticion real por fuente y pais. **Los 19
+paises de LATAM hispanohablante mas Brasil tienen las cuatro fuentes
+nacionales**: WorldPop age-sex (20 bandas cada uno), WorldPop total,
+`cod-ab-<iso3>` (CC BY-IGO) y los extractos `hotosm_<iso>_health_facilities` y
+`hotosm_<iso>_education_facilities` (ODbL). No hay ningun pais sin camino.
+
+Dos irregularidades que conviene saber antes de Fase 1:
+
+- **Cinco paises no publican GeoJSON** en su COD-AB y caen a SHP: COL, ARG,
+  BRA, PRY, URY.
+- **Colombia publica cuatro recursos SHP** y el resolutor tomaba el primero,
+  que son secciones urbanas del MGN (48 MB), no municipios. Por eso existe
+  ahora `hdx_resource` en el manifest: un dataset con varios recursos del mismo
+  formato tiene que fijar cual, igual que fija el vintage.
 
 ### 2.2 T0.7: benchmark de `exactextract` · **bajo esfuerzo**
 
@@ -139,16 +206,37 @@ transiciona el estado. Falta la rama que emite el reporte preliminar.
 Importa porque un M7 sin ShakeMap durante media hora es exactamente el caso en
 que alguien necesita una cifra.
 
-### 2.5 Fase 1: seis paises mas · **alto esfuerzo**
+### 2.5 Fase 1: construir los paises · **el camino ya esta hecho**
 
-MX, PE, EC, CL, GT (VE sale en 2.1). El camino esta despejado: `cod-ab-<iso3>` y
-`hotosm_<iso>_*` existen verificados para los siete. Por pais hace falta el
-manifest, la caja envolvente y un mantenedor que valide los toponimos.
+Los **19 manifests estan escritos** y sus cajas envolventes medidas sobre
+`division_area` de Overture con un solo criterio. Por pais ya no hace falta
+buscar datos: hace falta **construir y medir**, mas un mantenedor que valide los
+toponimos.
+
+Lo que cada pais nuevo necesita, en orden:
+
+1. `uv run centinela country <ISO3>` — unos 800 MB y una hora larga por pais.
+2. Anotar `medido_ghs_pop` en su manifest y **ajustar `tolerancia_pct`**: hoy
+   todos los nuevos llevan un 5 % provisional que no es una medicion. Colombia,
+   que si esta medida, usa 1 %.
+3. Validar los toponimos y su codificacion (en Venezuela salen mal: «Falc?n»).
+4. Publicar el activo como Release.
+
+Ojo con el coste de las cajas insulares: Chile llega a 109,7°O por Rapa Nui,
+Mexico a 118,6°O por Guadalupe y Revillagigedo, Ecuador a 92,3°O por Galapagos.
+Son muchas teselas de GHS-POP por poca poblacion, pero el sistema no puede
+decidir que una isla habitada no cuenta.
 
 ### 2.6 Deuda menor
 
 - `data/manifests/COL.yaml` tiene los `sha256` vacios. Se llenan solos en la
   primera corrida de `make country`, que devuelve el inventario con hashes.
+- `overture_divisions` esta declarado en `COL.yaml` y no se usa: la geometria
+  sale del MGN. No cuesta nada (las fuentes `s3://` no se descargan) pero
+  induce a pensar que participa.
+- **T0.7** sigue abierta: falta comparar el muestreo actual contra
+  `exactextract`. Criterio de la espec: menos de 1 % de diferencia en la
+  poblacion nacional.
 - **T0.10**: la referencia de poblacion del DANE es la cifra redondeada de su
   nota tecnica (53.000.000). Sustituirla por el valor exacto del anexo en Excel
   haria que el assert compare contra un numero y no contra un redondeo.
@@ -178,6 +266,19 @@ cd CENTINELA
 make setup     # uv, Python 3.12, todo
 make check     # lint + mypy + pruebas: lo mismo que corre CI
 ```
+
+**En Windows no hay `make`.** Ni en `cmd`, ni en PowerShell, ni en el Git Bash
+que trae Git for Windows. Los objetivos del Makefile son atajos de una linea,
+asi que se corren sueltos:
+
+```powershell
+uv sync --python 3.12 --extra dev --extra geo --extra render
+uv run ruff check . ; uv run ruff format --check . ; uv run mypy ; uv run pytest -m "not network"
+```
+
+Si `uv` no tiene Python 3.12 lo descarga solo, pero baja ~21 MB de GitHub y con
+una conexion lenta agota el tiempo de espera. `uv python install 3.12` por
+separado deja el problema aislado y no hay que repetir el resto.
 
 **Los extras importan.** `make setup` instala `[dev]`, pero el codigo geo
 necesita `[geo]` y los mapas `[render]`:
@@ -223,6 +324,67 @@ estandar desplaza la seleccion un puesto y da resultados plausibles y erroneos.
 son ambas share-alike e incompatibles entre si.
 → `pipelines/common/licensing.py::resolve_bucket`
 
+**WorldPop publica tres series de edad, no una.** El mismo directorio trae
+`col_f_65`, `col_m_65` y la combinada `col_t_65`. Sumar todo lo que termina en
+`.tif` cuenta a cada persona dos veces, y la cifra resultante sigue pareciendo
+plausible.
+→ `pipelines/p0_exposure/sources/worldpop.py`, solo la serie `_t_`
+
+**La geometria de Overture llega tipada, no como BLOB.** La receta publicada
+usa `ST_GeomFromWKB(geometry)` y aqui revienta con "no function matches",
+porque el parquet declara `GEOMETRY('OGC:CRS84')`. Y cada tema particiona sus
+ficheros por su cuenta: el `00013` de edificaciones y el de transporte cubren
+areas distintas.
+→ `pipelines/p0_exposure/overture_h3.py` · `tests/integration/test_overture_contract_live.py`
+
+**Una capa vacia se publica como cero.** No hace falta un bug para llegar ahi:
+basta con no cablear la capa. El activo se escribe igual y el reporte informa
+"0 edificaciones en MMI≥7" con la misma cara que una cifra medida.
+→ `pipelines/p0_exposure/build.py::validate_layer_coverage`
+
+**HOTOSM y healthsites.io son la misma gente contada dos veces.** Las dos
+derivan de OSM: el 96,6 % de los puntos de healthsites cae a menos de 20 m de
+uno de HOTOSM. Sumarlas da 18.061 sedes de salud en Colombia donde hay ~9.900,
+y la cifra parece perfectamente sana.
+→ `pipelines/p0_exposure/vector_h3.py::aggregate_points_to_h3`, `DEDUPE_METERS`
+
+**Un dataset de HDX puede publicar varios recursos del mismo formato.** El
+COD-AB de Colombia publica cuatro SHP y el primero son secciones urbanas, no
+municipios. Tomar "el primero del formato preferido" descarga 48 MB del archivo
+equivocado sin quejarse.
+→ `hdx_resource` en el manifest · `pipelines/common/hdx.py::resolve_resource`
+
+**Colombia tiene dos fuentes municipales y solo una manda.** El MGN del DANE es
+la fuente de verdad del codigo DIVIPOLA; el COD-AB es el mismo MGN
+reempaquetado. El empate se deshace por las columnas que el pais declara, no
+por orden de llegada.
+→ `pipelines/p0_exposure/build.py::pick_admin_source`
+
+**La caja del pais se declara antes de poder medirla.** Es el unico dato del
+pipeline que empieza siendo una afirmacion: hace falta *antes* de descargar el
+limite administrativo. Una caja corta no falla — recorta teselas y ficheros, y
+el activo sale con una punta del pais sin poblacion ni edificaciones. Cuadra
+todo y falta territorio. Por eso el build la comprueba contra la geometria real
+en cuanto la carga.
+→ `pipelines/p0_exposure/build.py::validate_bbox_covers_country`
+
+**Mas resolucion no es mas informacion.** El HRSL de Meta esta a 30 m frente a
+los 100 m de GHS-POP, pero su vintage es 2019 y a celda r8 el detalle extra se
+promedia. Cambiar seria regalar seis anos de vigencia a cambio de nada.
+→ `VERIFICACIONES.md`, ronda 4
+
+**Los plazos por defecto de DuckDB no sirven para leer Overture.**
+`http_timeout` viene en 30 s y un fichero tarda minutos en conexion domestica.
+Peor: la lectura de Overture va al final del build, asi que el timeout mata la
+corrida con la hora de descargas ya pagada.
+→ `pipelines/p0_exposure/overture_h3.py::HTTPFS_SETTINGS`
+
+**Un build de un pais falla tarde, asi que reanudar tiene que ser barato.**
+Son ~1 GB y el paso que mas falla es el ultimo. Las seis rutas de descarga
+saltan lo que ya esta en disco, y escriben en `.parcial` para que un corte no
+deje un raster truncado que la siguiente corrida de por bueno.
+→ `pipelines/p0_exposure/download.py::write_atomic` · `_hdx_en_disco`
+
 Y una regla de producto: **exposicion no es dano**. Todo artefacto sale con sus
 disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
@@ -232,6 +394,7 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
 | | |
 |---|---|
+| [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md) | **Los pasos de administracion, con comandos y comprobaciones** |
 | [`ESPECIFICACION.md`](ESPECIFICACION.md) | Espec tecnica v0.10 |
 | [`VERIFICACIONES.md`](VERIFICACIONES.md) | Como se verifico cada fuente, con evidencia |
 | [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) | Publicar el activo y por que no va en git |

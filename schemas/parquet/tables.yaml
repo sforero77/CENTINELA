@@ -82,6 +82,7 @@ impact_adm2:
     - {nombre: pop_mmi8p,        tipo: DOUBLE,  nulo: false}
     - {nombre: pop_65p_mmi7p,    tipo: DOUBLE,  nulo: false}
     - {nombre: bld_mmi7p,        tipo: DOUBLE,  nulo: false}
+    - {nombre: built_m2_mmi7p,   tipo: DOUBLE,  nulo: false}
     - {nombre: health_mmi7p,     tipo: DOUBLE,  nulo: false}
     - {nombre: edu_mmi7p,        tipo: DOUBLE,  nulo: false}
     - {nombre: road_km_mmi7p,    tipo: DOUBLE,  nulo: false}

@@ -1,8 +1,12 @@
-name: Deriva de contrato USGS (nocturno)
+name: Deriva de contrato de fuentes (nocturno)
 
-# §6.2: este es el unico workflow que consulta el feed vivo. Solo **alerta**;
-# no bloquea. Si USGS cambia el esquema, queremos enterarnos por un issue a las
-# 3 a.m. y no por un reporte corrupto durante un terremoto.
+# §6.2: este es el unico workflow que consulta las fuentes vivas. Solo
+# **alerta**; no bloquea. Si USGS cambia el esquema, queremos enterarnos por un
+# issue a las 3 a.m. y no por un reporte corrupto durante un terremoto.
+#
+# Cubre tambien Overture y WorldPop, que son los contratos que el activo de
+# exposicion necesita para reconstruirse: Overture publica release mensual y
+# solo conserva dos, asi que el release fijado en el manifest caduca solo.
 
 on:
   schedule:
@@ -24,9 +28,12 @@ jobs:
         with:
           enable-cache: true
 
-      - run: uv sync --python 3.12 --extra dev
+      # Con --extra dev a secas las pruebas de Overture se saltan por falta
+      # de h3/duckdb, y un salto silencioso en el unico guardia nocturno es
+      # peor que no tenerlo.
+      - run: uv sync --python 3.12 --extra dev --extra geo
 
-      - name: Contrastar el feed vivo contra el contrato
+      - name: Contrastar las fuentes vivas contra el contrato
         id: drift
         run: uv run pytest -m network
 
@@ -36,6 +43,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue create \
-            --title "Posible deriva del contrato USGS" \
+            --title "Posible deriva del contrato de una fuente" \
             --label "contrato,automatico" \
-            --body "El test nocturno contra el feed vivo fallo. Revisar schemas/usgs/ antes del proximo evento. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            --body "El test nocturno contra las fuentes vivas fallo. Revisar schemas/usgs/ (feed de USGS), data/manifests/ (release de Overture fijado) y pipelines/p0_exposure/sources/ antes del proximo evento. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -50,11 +50,15 @@ LAYERS: tuple[LayerSpec, ...] = (
         titulo="Estructura etaria/sexo — WorldPop age-sex constrained R2025A, epoca 2025",
         license="CC-BY-4.0",
         columnas=("pop_0_14", "pop_15_64", "pop_65p"),
-        agregacion="proporciones 2025 aplicadas sobre pop_total de GHS-POP 2025",
+        agregacion="suma de la serie combinada por edad -> celda r8; 15-64 es el residuo",
         limitacion=(
             "Modelado, como toda la cadena. El supuesto de estructura etaria "
             "estable que la espec daba por inevitable ya no aplica: WorldPop "
-            "publica desglose age-sex para 2025 en el release R2025A."
+            "publica desglose age-sex para 2025 en el release R2025A. "
+            "Los extremos (0-14 y 65+) son conteos de WorldPop; la banda "
+            "central es lo que queda de pop_total tras restarlos, asi que "
+            "absorbe la diferencia entre ambos modelos de poblacion — que la "
+            "banda de discrepancia publicada acota."
         ),
     ),
     LayerSpec(
@@ -73,7 +77,24 @@ LAYERS: tuple[LayerSpec, ...] = (
         agregacion="conteo y area por celda del centroide",
         limitacion=(
             "Huecos conocidos en asentamientos informales y zona rural dispersa. "
-            "Se publica el flag 'revisar', no se oculta el vacio (§6.4)."
+            "Se publica el flag 'revisar', no se oculta el vacio (§6.4). "
+            "Desde col-v0.5 el hueco ademas se mide: 'built_m2' viene de satelite "
+            "y no depende de que alguien haya mapeado el barrio."
+        ),
+    ),
+    LayerSpec(
+        id="built_ghsl",
+        titulo="Superficie construida — GHS-BUILT-S R2023A epoca 2025",
+        license="EC-reuse-attribution",
+        columnas=("built_m2",),
+        agregacion="suma de superficie construida por pixel 100 m -> celda r8",
+        limitacion=(
+            "Mide cuanto hay construido, NO cuantas edificaciones son ni de que "
+            "tipo: 40.000 m² pueden ser una bodega o cien viviendas. No sustituye "
+            "a Overture, lo contrasta. Su valor esta en que se deriva de "
+            "Sentinel-2 y Landsat, asi que **no hereda los huecos de OSM en "
+            "asentamientos informales y zona rural dispersa** — justo donde vive "
+            "la poblacion mas expuesta y donde el conteo de edificaciones falla."
         ),
     ),
     LayerSpec(
@@ -88,7 +109,10 @@ LAYERS: tuple[LayerSpec, ...] = (
         titulo="Salud — HOTOSM (HDX) + healthsites.io via HDX",
         license="ODbL-1.0",
         columnas=("health_count",),
-        agregacion="conteo de puntos por celda, deduplicado por proximidad",
+        agregacion=(
+            "conteo de puntos por celda; la segunda fuente aporta solo lo que "
+            "no esta a menos de 20 m de un punto de la primera"
+        ),
         limitacion=(
             "El REPS de MinSalud no entra aqui: no publica coordenadas (solo "
             "DIVIPOLA y direccion) y es CC BY-SA 4.0, copyleft incompatible con "
@@ -103,7 +127,10 @@ LAYERS: tuple[LayerSpec, ...] = (
         titulo="Educacion — HOTOSM (HDX)",
         license="ODbL-1.0",
         columnas=("edu_count",),
-        agregacion="conteo de puntos por celda, deduplicado por proximidad",
+        agregacion=(
+            "conteo de puntos por celda; hoy una sola fuente, y si se anade una "
+            "segunda aportara solo lo que no este a menos de 20 m de la primera"
+        ),
         limitacion=(
             "El directorio del MEN tampoco publica coordenadas y es CC BY-SA "
             "4.0: mismo tratamiento que el REPS."
@@ -117,9 +144,10 @@ LAYERS: tuple[LayerSpec, ...] = (
         agregacion="asignacion por centroide + tabla de fracciones en frontera",
         limitacion=(
             "El MGN es la fuente de verdad del codigo DIVIPOLA y del toponimo "
-            "oficial. Para Fase 1 el patron cod-ab-<iso3> de OCHA da adm1/adm2 "
-            "de los siete paises con una sola licencia y una sola forma, sin "
-            "pelear con siete geoportales nacionales."
+            "oficial de Colombia. Para el resto, el patron cod-ab-<iso3> de "
+            "OCHA da adm1/adm2 de los 19 paises de LATAM con una sola licencia "
+            "y una sola forma, en vez de pelear con diecinueve geoportales "
+            "nacionales. Verificado pais por pais el 23-ago-2026."
         ),
     ),
     LayerSpec(

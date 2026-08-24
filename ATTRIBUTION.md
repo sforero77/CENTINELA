@@ -25,9 +25,30 @@ especificacion) y se verifica en CI.
   directas de equipamiento. ODbL. https://www.openstreetmap.org/copyright
 - **Departamento Administrativo Nacional de Estadistica - DANE:
   www.dane.gov.co** — Marco Geoestadistico Nacional (MGN), base del crosswalk
-  hex↔DIVIPOLA. CC BY 4.0 (esta es la formula de atribucion que el propio
-  Geoportal DANE pide).
+  hex↔DIVIPOLA en Colombia. CC BY 4.0 (esta es la formula de atribucion que el
+  propio Geoportal DANE pide).
+- **OCHA — Common Operational Datasets (COD-AB)**, publicados en el
+  Humanitarian Data Exchange. Limites administrativos adm1/adm2 de todos los
+  paises salvo Colombia, que usa el MGN. **CC BY-IGO**, que exige atribucion.
+  https://data.humdata.org/dataset/cod-ab-<iso3>
+- **Humanitarian OpenStreetMap Team (HOT)** — extractos
+  `hotosm_<iso>_health_facilities` y `hotosm_<iso>_education_facilities`,
+  publicados en HDX. ODbL, derivados de OpenStreetMap.
+- **healthsites.io** — publicacion en HDX, complemento de la capa de salud.
+  ODbL.
 - **OurAirports** — aeropuertos. Dominio publico.
+
+### Referencias de poblacion usadas en los asserts de calidad
+
+No entran al activo: son la cifra oficial contra la que se valida el total
+nacional (§6.4).
+
+- **DANE** — proyecciones CNPV-2018 (Colombia).
+- **Naciones Unidas, Division de Poblacion** — *World Population Prospects*
+  (Venezuela y, en adelante, los paises sin censo reciente). Se cita a la ONU
+  como fuente; la serie se consulta por la API abierta del Banco Mundial
+  (`SP.POP.TOTL`), que la republica sin credenciales, porque el endpoint de
+  datos de la propia ONU exige un token y eso incumpliria O4.
 
 ## Fuentes de referencia, fuera del activo redistribuible
 

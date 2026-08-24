@@ -44,6 +44,10 @@ class Source:
     #: mismo dataset de HOTOSM cambia de forma segun el pais, asi que el
     #: identificador estable es el nombre, no la URL.
     hdx_dataset: str = ""
+    #: Fragmento del nombre del recurso dentro del dataset. Hace falta cuando el
+    #: dataset publica varios recursos del mismo formato: sin el se toma el
+    #: primero, y en el COD-AB de Colombia el primer SHP son secciones urbanas.
+    hdx_resource: str = ""
     notes: str = ""
 
     @property
@@ -63,6 +67,7 @@ class Source:
             vintage=str(data["vintage"]),
             sha256=str(data.get("sha256", "")),
             hdx_dataset=str(data.get("hdx_dataset", "")),
+            hdx_resource=str(data.get("hdx_resource", "")),
             notes=str(data.get("notes", "")),
         )
 

@@ -79,9 +79,47 @@ def _tabla_totales(report: Report) -> str:
         ("Sedes educativas en MMI≥7", format_number_es(tot.edu_mmi7p)),
         ("Kilometros de via en MMI≥7", format_count_prose(tot.road_km_mmi7p) + " km"),
     ]
+    if tot.built_m2_mmi7p > 0:
+        km2 = tot.built_m2_mmi7p / 1_000_000.0
+        filas.append(("Superficie construida en MMI≥7", f"{format_number_es(km2, 1)} km²"))
     lineas = ["| Indicador | Estimado |", "|---|---:|"]
     lineas += [f"| {nombre} | {valor} |" for nombre, valor in filas]
-    return "\n".join(lineas)
+    return "\n".join(lineas) + _nota_superficie(report)
+
+
+#: Superficie media de una edificacion, en m², para contrastar el conteo de
+#: Overture con la superficie que ve el satelite. Es un orden de magnitud
+#: deliberadamente conservador: sirve para detectar un hueco de mapeo grande,
+#: no para estimar edificaciones.
+M2_POR_EDIFICACION = 100.0
+
+#: A partir de que proporcion se considera que falta mapeo. 1,5 significa que el
+#: satelite ve un 50 % mas de lo que explicarian las edificaciones registradas.
+UMBRAL_HUECO_MAPEO = 1.5
+
+
+def _nota_superficie(report: Report) -> str:
+    """Advierte cuando el satelite ve mucho mas construido de lo mapeado.
+
+    Es la unica forma que tiene el reporte de decir "esta cifra se queda corta"
+    sin callarse ni inventar. El hueco de OSM se concentra en asentamientos
+    informales y zona rural dispersa, o sea en la poblacion mas expuesta: darlo
+    por bueno seria publicar una cobertura que no existe (§6.4).
+    """
+    tot = report.totales
+    if tot.built_m2_mmi7p <= 0 or tot.bld_mmi7p <= 0:
+        return ""
+    esperado = tot.bld_mmi7p * M2_POR_EDIFICACION
+    if tot.built_m2_mmi7p < esperado * UMBRAL_HUECO_MAPEO:
+        return ""
+    veces = tot.built_m2_mmi7p / esperado
+    return (
+        f"\n\nEl satelite detecta **{format_number_es(veces, 1)} veces** mas superficie "
+        f"construida de la que explicarian las {format_count_prose(tot.bld_mmi7p)} "
+        f"edificaciones registradas. La diferencia suele ser asentamiento informal o "
+        f"zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto "
+        f"ahi, y la superficie construida no**."
+    )
 
 
 def _tabla_municipios(report: Report) -> str:

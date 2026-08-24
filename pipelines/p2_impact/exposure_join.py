@@ -34,7 +34,7 @@ SELECT
     COALESCE(g.ls_prob, 0.0) AS ls_prob,
     COALESCE(g.lq_prob, 0.0) AS lq_prob,
     e.pop_total, e.pop_0_14, e.pop_15_64, e.pop_65p, e.pop_alt_worldpop,
-    e.bld_count, e.bld_area_m2,
+    e.bld_count, e.bld_area_m2, e.built_m2,
     e.health_count, e.edu_count,
     e.road_km_primary, e.road_km_secondary, e.road_km_other,
     e.src_manifest
@@ -58,6 +58,7 @@ SELECT
     SUM(CASE WHEN i.mmi_max >= 8 THEN i.pop_total ELSE 0 END)   AS pop_mmi8p,
     SUM(CASE WHEN i.mmi_max >= 7 THEN i.pop_65p ELSE 0 END)     AS pop_65p_mmi7p,
     SUM(CASE WHEN i.mmi_max >= 7 THEN i.bld_count ELSE 0 END)   AS bld_mmi7p,
+    SUM(CASE WHEN i.mmi_max >= 7 THEN i.built_m2 ELSE 0 END)    AS built_m2_mmi7p,
     SUM(CASE WHEN i.mmi_max >= 7 THEN i.health_count ELSE 0 END) AS health_mmi7p,
     SUM(CASE WHEN i.mmi_max >= 7 THEN i.edu_count ELSE 0 END)   AS edu_mmi7p,
     SUM(CASE WHEN i.mmi_max >= 7
@@ -95,6 +96,13 @@ QUALITY_FLAGS: tuple[tuple[str, str], ...] = (
     (
         "revisar_sin_edificios",
         "bld_count = 0 AND pop_total > 500",
+    ),
+    (
+        # La version medible de la anterior: no "puede que falte mapeo" sino
+        # "el satelite ve 1.000 m² construidos donde no hay ninguna
+        # edificacion registrada".
+        "construido_no_mapeado",
+        "bld_count = 0 AND built_m2 > 1000",
     ),
     (
         "discrepancia_poblacional",

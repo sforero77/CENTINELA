@@ -114,6 +114,59 @@ def test_ambos_eventos_traen_contornos(
         assert url is not None, f"{usgs_id} sin cont_mmi"
 
 
-@pytest.mark.skip(reason="Requiere exposure_h3 de Venezuela (P0, Fase 1)")
-def test_pop_mmi7p_estable() -> None:
+#: Reportes de los dos mainshocks. Mientras no exista el activo de Venezuela no
+#: hay reporte que congelar, asi que la asercion (b) se salta **sola** en vez de
+#: estar apagada a mano: el dia que `centinela country VEN` produzca el activo y
+#: se publique el backtest, esta prueba empieza a correr sin que nadie recuerde
+#: quitarle un decorador.
+def _reporte_publicado(usgs_id: str) -> dict[str, Any]:
+    import json
+
+    ruta = Path(__file__).parent.parent.parent / "reports" / usgs_id / "report.json"
+    if not ruta.exists():
+        pytest.skip(
+            f"Aun no hay reporte publicado de {usgs_id}: requiere el activo de "
+            f"Venezuela (`centinela country VEN`, manifest ven-v0.1)."
+        )
+    datos: dict[str, Any] = json.loads(ruta.read_text(encoding="utf-8"))
+    return datos
+
+
+#: Cifras del backtest, a fijar con la primera corrida real. Ver la constante
+#: equivalente de G1: moverlas en silencio es lo que los golden existen para
+#: impedir, asi que cambiarlas exige explicar por que en el PR.
+POP_MMI7P_ESPERADO: dict[str, float] = {}
+TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
+
+
+@pytest.mark.parametrize("usgs_id", [CATIA_LA_MAR, SAN_FELIPE])
+def test_pop_mmi7p_estable(usgs_id: str) -> None:
     """Asercion (b) de G1, aplicada a los dos mainshocks."""
+    totales = _reporte_publicado(usgs_id)["totales"]
+    esperado = POP_MMI7P_ESPERADO.get(usgs_id)
+    if esperado is None:
+        pytest.skip(
+            f"Hay reporte de {usgs_id} pero no cifra congelada. Anota "
+            f"pop_mmi7p={totales['pop_mmi7p']:,.0f} en POP_MMI7P_ESPERADO."
+        )
+    desvio = abs(totales["pop_mmi7p"] - esperado) / esperado
+    assert desvio <= TOLERANCIA_POP, (
+        f"pop_mmi7p de {usgs_id} paso de {esperado:,.0f} a "
+        f"{totales['pop_mmi7p']:,.0f} ({100 * desvio:.2f}%)."
+    )
+
+
+@pytest.mark.parametrize("usgs_id", [CATIA_LA_MAR, SAN_FELIPE])
+def test_las_capas_del_activo_llegan_al_reporte(usgs_id: str) -> None:
+    """Un activo de VEN al que le falte una capa publicaria ceros creibles."""
+    totales = _reporte_publicado(usgs_id)["totales"]
+    for columna in ("bld_mmi7p", "health_mmi7p", "edu_mmi7p", "road_km_mmi7p", "pop_65p_mmi7p"):
+        assert totales[columna] > 0, f"{columna} en cero: ¿se perdio una capa?"
+
+
+def test_los_dos_eventos_no_se_fusionan() -> None:
+    """El corazon de G2: dos reportes, no uno con la suma de ambos."""
+    catia = _reporte_publicado(CATIA_LA_MAR)
+    san_felipe = _reporte_publicado(SAN_FELIPE)
+    assert catia["event"]["usgs_id"] != san_felipe["event"]["usgs_id"]
+    assert catia["totales"]["pop_mmi7p"] != san_felipe["totales"]["pop_mmi7p"]

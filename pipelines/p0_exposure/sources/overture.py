@@ -142,3 +142,49 @@ def bbox_predicate(bbox: BBox) -> str:
         lat_min=bbox.lat_min,
         lat_max=bbox.lat_max,
     )
+
+
+#: Clave del asset preferido dentro de un item STAC. Overture publica el mismo
+#: parquet en AWS y en Azure; ``aws`` es el que sirve por HTTPS desde la region
+#: donde vive el bucket, y es el que DuckDB lee mas rapido con ``httpfs``.
+PREFERRED_ASSET: Final[str] = "aws"
+
+#: Tipo MIME con el que el catalogo marca los ficheros de datos.
+PARQUET_MEDIA_TYPE: Final[str] = "application/vnd.apache.parquet"
+
+
+def item_data_url(payload: dict[str, Any], *, prefer: str = PREFERRED_ASSET) -> str:
+    """URL del parquet de un item STAC.
+
+    Los enlaces ``item`` del ``collection.json`` apuntan a un JSON por fichero,
+    no al parquet: el nombre real lleva un UUID que no se puede deducir. Hay que
+    abrir el item y leer su asset.
+
+    Raises:
+        OvertureCatalogError: si el item no publica ningun asset de datos.
+    """
+    assets = payload.get("assets") or {}
+    candidatos = {
+        nombre: asset
+        for nombre, asset in assets.items()
+        if isinstance(asset, dict)
+        and asset.get("href")
+        and (asset.get("type") == PARQUET_MEDIA_TYPE or "data" in (asset.get("roles") or []))
+    }
+    if not candidatos:
+        raise OvertureCatalogError(
+            f"El item {payload.get('id', '?')!r} no publica ningun asset de datos"
+        )
+    elegido = candidatos.get(prefer) or next(iter(candidatos.values()))
+    return str(elegido["href"])
+
+
+def resolve_data_urls(
+    fetcher: Fetcher, ficheros: list[ParquetFile], *, prefer: str = PREFERRED_ASSET
+) -> list[str]:
+    """Abre cada item seleccionado y devuelve la URL de su parquet.
+
+    Una peticion por fichero, pero solo por los que tocan el pais: once para
+    Colombia, no 512.
+    """
+    return [item_data_url(fetcher.get_json(f.url), prefer=prefer) for f in ficheros]

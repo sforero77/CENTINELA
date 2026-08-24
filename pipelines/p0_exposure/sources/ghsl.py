@@ -1,6 +1,12 @@
-"""GHS-POP: seleccion de teselas por pais.
+"""GHSL: seleccion de teselas por pais.
 
-El raster global de 100 m pesa **5,25 GB** comprimido. El JRC tambien publica
+Sirve a los dos productos del GHSL que usa el activo, porque **comparten
+retícula**: ``GHS_POP`` (poblacion) y ``GHS_BUILT_S`` (superficie construida).
+Las teselas de uno y otro se llaman igual salvo por el nombre del producto,
+cubren la misma extension y se seleccionan con el mismo calculo — verificado
+pidiendo la misma R9_C11 de ambos.
+
+El raster global de 100 m de GHS-POP pesa **5,25 GB** comprimido. El JRC tambien publica
 el mismo producto en **375 teselas**, y Colombia necesita nueve, que suman
 93 MB. La diferencia entre bajar 5,25 GB o 93 MB en cada rebuild trimestral es
 lo que hace que ``make country ISO=COL`` sea algo que alguien vaya a correr de
@@ -33,6 +39,31 @@ RELEASE: Final[str] = "R2023A"
 #: Epoca usada por el sistema. El producto publica 1975-2030 cada 5 anos.
 EPOCH: Final[int] = 2025
 
+
+@dataclass(frozen=True, slots=True)
+class Product:
+    """Un producto del GHSL sobre la retícula comun."""
+
+    #: Fragmento que identifica al producto en rutas y nombres de fichero.
+    slug: str
+    #: Que mide, para el log y los metadatos publicados.
+    titulo: str
+    #: Valor de nodata declarado por el producto.
+    nodata: float
+
+
+#: Poblacion residente por pixel. La cifra principal del sistema.
+POP = Product(slug="POP", titulo="Poblacion residente", nodata=-200.0)
+
+#: Superficie construida por pixel, en m². Derivada de Sentinel-2 y Landsat, no
+#: de mapeo colaborativo: es la unica capa del activo que **no** hereda los
+#: huecos de OSM en asentamientos informales y zona rural dispersa, que es
+#: justo donde vive la poblacion mas expuesta. Complementa a Overture, no lo
+#: sustituye: mide cuanto hay construido, no cuantas edificaciones son.
+BUILT_S = Product(slug="BUILT_S", titulo="Superficie construida (m²)", nodata=-200.0)
+
+PRODUCTS: Final[dict[str, Product]] = {p.slug: p for p in (POP, BUILT_S)}
+
 #: Valor de nodata del raster. **Critico**: aparece como -200 en ~22 millones de
 #: celdas por tesela (todo el oceano). Sumar sin enmascararlo da poblaciones
 #: negativas y dispara el assert de calidad de §6.4 sobre datos sanos.
@@ -45,8 +76,8 @@ GRID_Y0: Final[float] = 9_000_000.0
 TILE_SIZE_M: Final[float] = 1_000_000.0
 
 _BASE = (
-    "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_{release}"
-    "/GHS_POP_E{epoch}_GLOBE_{release}_54009_100/V1-0"
+    "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_{slug}_GLOBE_{release}"
+    "/GHS_{slug}_E{epoch}_GLOBE_{release}_54009_100/V1-0"
 )
 
 
@@ -58,14 +89,18 @@ class Tile:
     col: int
     release: str = RELEASE
     epoch: int = EPOCH
+    slug: str = POP.slug
 
     @property
     def name(self) -> str:
-        return f"GHS_POP_E{self.epoch}_GLOBE_{self.release}_54009_100_V1_0_R{self.row}_C{self.col}"
+        return (
+            f"GHS_{self.slug}_E{self.epoch}_GLOBE_{self.release}"
+            f"_54009_100_V1_0_R{self.row}_C{self.col}"
+        )
 
     @property
     def url(self) -> str:
-        base = _BASE.format(release=self.release, epoch=self.epoch)
+        base = _BASE.format(slug=self.slug, release=self.release, epoch=self.epoch)
         return f"{base}/tiles/{self.name}.zip"
 
     @property
@@ -76,10 +111,10 @@ class Tile:
         return (xmin, ymax - TILE_SIZE_M, xmin + TILE_SIZE_M, ymax)
 
 
-def global_url(release: str = RELEASE, epoch: int = EPOCH) -> str:
+def global_url(release: str = RELEASE, epoch: int = EPOCH, slug: str = POP.slug) -> str:
     """URL del mosaico global. 5,25 GB — preferir :func:`tiles_for_bbox`."""
-    base = _BASE.format(release=release, epoch=epoch)
-    return f"{base}/GHS_POP_E{epoch}_GLOBE_{release}_54009_100_V1_0.zip"
+    base = _BASE.format(slug=slug, release=release, epoch=epoch)
+    return f"{base}/GHS_{slug}_E{epoch}_GLOBE_{release}_54009_100_V1_0.zip"
 
 
 def tiles_for_mollweide_bbox(
@@ -90,6 +125,7 @@ def tiles_for_mollweide_bbox(
     *,
     release: str = RELEASE,
     epoch: int = EPOCH,
+    slug: str = POP.slug,
 ) -> list[Tile]:
     """Teselas que intersecan una caja ya proyectada a Mollweide."""
     col_min = int((xmin - GRID_X0) // TILE_SIZE_M) + 1
@@ -97,7 +133,7 @@ def tiles_for_mollweide_bbox(
     row_min = int((GRID_Y0 - ymax) // TILE_SIZE_M) + 1
     row_max = int((GRID_Y0 - ymin) // TILE_SIZE_M) + 1
     return [
-        Tile(row=r, col=c, release=release, epoch=epoch)
+        Tile(row=r, col=c, release=release, epoch=epoch, slug=slug)
         for r in range(row_min, row_max + 1)
         for c in range(col_min, col_max + 1)
     ]
@@ -108,6 +144,7 @@ def tiles_for_bbox(
     *,
     release: str = RELEASE,
     epoch: int = EPOCH,
+    slug: str = POP.slug,
 ) -> list[Tile]:
     """Teselas que cubren una caja en grados (EPSG:4326).
 
@@ -129,5 +166,5 @@ def tiles_for_bbox(
             xs.append(x)
             ys.append(y)
     return tiles_for_mollweide_bbox(
-        min(xs), min(ys), max(xs), max(ys), release=release, epoch=epoch
+        min(xs), min(ys), max(xs), max(ys), release=release, epoch=epoch, slug=slug
     )

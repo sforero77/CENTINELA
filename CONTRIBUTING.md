@@ -33,12 +33,28 @@ make check      # lo mismo que corre CI
 
 ### Mantenedor por pais
 
-El rol mas util del proyecto. Consiste en:
+El rol mas util del proyecto. **El manifest de tu pais ya existe**: los 19 de
+LATAM hispanohablante mas Brasil estan escritos, con sus fuentes verificadas una
+por una y su caja envolvente medida. Lo que falta no se puede hacer desde fuera
+del pais:
 
-1. Armar el manifest de tu pais (`data/manifests/<ISO3>.yaml`) con las fuentes
-   nacionales de salud, educacion y division administrativa.
-2. Verificar que los toponimos que publica el reporte sean los oficiales.
-3. Revisar el primer reporte real de tu pais y reportar lo que este mal.
+1. **Construir y medir.** `uv run centinela country <ISO3>` (~1 GB de descarga).
+   El manifest lleva una `tolerancia_pct` **provisional del 5 %** que no es una
+   medicion: al terminar, anota el desvio real como `medido_ghs_pop` y ajusta la
+   tolerancia, explicando el cambio en el PR. Colombia, que si esta medida, usa
+   1 %.
+2. **Validar los toponimos y su codificacion.** Salen impresos en el reporte y
+   en el hilo. En Venezuela el COD-AB los devuelve mal codificados («Falc?n» por
+   «Falcón») y hay que resolverlo antes de publicar nada.
+3. **Decidir si hay una referencia de poblacion mejor que la ONU.** Todos los
+   manifests nuevos usan World Population Prospects por uniformidad regional,
+   pero un instituto nacional con censo reciente es mejor para su propio pais
+   — Colombia usa el DANE. Cambiarla es tuya.
+4. **Sustituir fuentes nacionales donde mejoren a las regionales**, si existen
+   con coordenadas y con licencia compatible. Ojo con las dos trampas ya
+   documentadas: un registro sin coordenadas no se puede asignar a una celda, y
+   CC BY-SA no se puede mezclar con la ODbL de Overture.
+5. **Revisar el primer reporte real de tu pais** y reportar lo que este mal.
 
 No requiere ser programador. Requiere conocer los datos de tu pais.
 

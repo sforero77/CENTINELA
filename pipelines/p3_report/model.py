@@ -65,6 +65,9 @@ class Totales:
     pop_mmi8p: float = 0.0
     pop_65p_mmi7p: float = 0.0
     bld_mmi7p: float = 0.0
+    #: Superficie construida detectada por satelite. Contrasta a bld_mmi7p:
+    #: donde OSM no mapeo el barrio, esta cifra si lo ve.
+    built_m2_mmi7p: float = 0.0
     health_mmi7p: float = 0.0
     edu_mmi7p: float = 0.0
     road_km_mmi7p: float = 0.0
@@ -78,6 +81,7 @@ class Totales:
             "pop_mmi8p": self.pop_mmi8p,
             "pop_65p_mmi7p": self.pop_65p_mmi7p,
             "bld_mmi7p": self.bld_mmi7p,
+            "built_m2_mmi7p": self.built_m2_mmi7p,
             "health_mmi7p": self.health_mmi7p,
             "edu_mmi7p": self.edu_mmi7p,
             "road_km_mmi7p": self.road_km_mmi7p,

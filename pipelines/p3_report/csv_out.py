@@ -25,6 +25,7 @@ HXL_HEADERS: dict[str, str] = {
     "pop_mmi8p": "#population+mmi8",
     "pop_65p_mmi7p": "#population+age65+mmi7",
     "bld_mmi7p": "#infra+buildings+mmi7",
+    "built_m2_mmi7p": "#infra+built+area+mmi7",
     "health_mmi7p": "#infra+health+mmi7",
     "edu_mmi7p": "#infra+education+mmi7",
     "road_km_mmi7p": "#infra+roads+km+mmi7",

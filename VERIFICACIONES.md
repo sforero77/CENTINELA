@@ -27,7 +27,7 @@ buena que sea su cobertura.
 | HOTOSM `hotosm_<iso>_health_facilities` (HDX) | sí | ✅ **sustituye al REPS** |
 | HOTOSM `hotosm_<iso>_education_facilities` (HDX) | sí | ✅ **sustituye al MEN** |
 | healthsites.io publicado en HDX | sí | ✅ complemento sin credenciales |
-| COD-AB de OCHA `cod-ab-<iso3>` | sí | ✅ **cubre los 7 paises de Fase 1** |
+| COD-AB de OCHA `cod-ab-<iso3>` | sí | ✅ **cubre los 19 paises de LATAM** (ronda 4) |
 
 ### Ronda 1 — tareas ⚠️ de §8
 
@@ -36,7 +36,7 @@ buena que sea su cobertura.
 | T0.4 MGN-DANE | ✅ resuelta | **CC BY 4.0**, uso comercial y redistribucion permitidos |
 | T0.5 REPS | ⚠️ resuelta en contra | Sin coordenadas y **CC BY-SA 4.0**: fuera del activo |
 | T0.6 MEN | ⚠️ resuelta en contra | Idem REPS |
-| T1.2 OurAirports | 🟡 parcial | Disponibilidad verificada; texto de licencia sin citar |
+| T1.2 OurAirports | ✅ resuelta | Dominio publico citado: pagina de datos + The Unlicense |
 | Overture release | ✅ corregida | `2026-08-19.0`; el bucket solo guarda **dos** releases |
 | WorldPop age-sex | ✅ mejora | Hay desglose **para 2025**: cae un supuesto de la espec |
 | WorldPop total | ✅ corregida | Ruta real hallada |
@@ -114,6 +114,147 @@ nuestros.
 
 ---
 
+## Ronda 4 — cobertura regional y lo que destapo (23-ago-2026)
+
+El proyecto es para LATAM, asi que la pregunta no es si las fuentes existen para
+Colombia sino si existen **para todos**. Una peticion real por fuente y pais
+sobre los 19 de LATAM hispanohablante mas Brasil: ARG, BOL, BRA, CHL, COL, CRI,
+CUB, DOM, ECU, GTM, HND, MEX, NIC, PAN, PER, PRY, SLV, URY, VEN.
+
+### El camino esta despejado para los 19
+
+| Fuente | Cobertura |
+|---|---|
+| WorldPop age-sex R2025A 2025 | **19/19**, con las 20 bandas (00…90) cada uno |
+| WorldPop total constrained 2025 | **19/19** |
+| `cod-ab-<iso3>` (OCHA) | **19/19**, todos CC BY-IGO |
+| `hotosm_<iso>_health_facilities` | **19/19**, todos ODbL |
+| `hotosm_<iso>_education_facilities` | **19/19**, todos ODbL |
+
+No hay ningun pais sin camino. Eso convierte Fase 1 en escribir manifests, no en
+buscar datos.
+
+### Dos irregularidades del COD-AB
+
+**Cinco paises no publican GeoJSON** y caen a SHP: COL, ARG, BRA, PRY, URY.
+
+**Colombia publica cuatro recursos SHP en el mismo dataset**, y el resolutor
+tomaba el primero de cada formato: `MGN2024_URB_SECCION.zip`, 48 MB de
+**secciones urbanas** en vez de municipios. El que se quiere es
+`COL Administrative Divisions Shapefiles.zip`. De ahi el campo `hdx_resource`
+del manifest: un dataset con varios recursos del mismo formato tiene que fijar
+cual, igual que fija el vintage, y el resolutor falla si el fragmento no
+identifica exactamente uno.
+
+### Las columnas del COD-AB no son las que documenta HDX
+
+Leidas abriendo `ven_admin2.shp` con DuckDB, no de la documentacion:
+`adm2_pcode`, `adm2_name`, `adm1_pcode`, `adm1_name` — en minusculas, y **no**
+los `ADM2_PCODE` / `ADM2_ES` de las entregas antiguas. 336 registros, que
+cuadra con los 335 municipios de Venezuela mas el Distrito Capital.
+
+La caja envolvente del pais se midio sobre ese mismo archivo
+(−73,3691..−59,7411 / 0,6346..12,4988) en vez de estimarla. El extremo norte lo
+pone Dependencias Federales; el COD-AB no incluye la Isla de Aves.
+
+Pendiente para el mantenedor de pais: los toponimos salen mal codificados
+(«Falc?n» por «Falcón»). Hay que resolverlo antes de publicar un reporte de
+Venezuela, porque esos nombres se imprimen.
+
+### El solape entre HOTOSM y healthsites.io: 96,6 %
+
+El catalogo de capas declaraba la agregacion de salud como «conteo de puntos
+por celda, **deduplicado por proximidad**». La deduplicacion estaba declarada y
+**no implementada**: las dos fuentes se sumaban.
+
+Medido sobre Colombia:
+
+| | |
+|---|---|
+| HOTOSM `hotosm_col_health_facilities` | 9.618 puntos |
+| healthsites.io via HDX | 8.443 puntos |
+| De healthsites, a <20 m de un punto de HOTOSM | **8.152 (96,6 %)** |
+| a <50 m | 8.181 (96,9 %) |
+| a <100 m | 8.194 (97,1 %) |
+| **Suma sin deduplicar** | **18.061** |
+
+Las dos derivan de OpenStreetMap, asi que el solape era esperable en cuanto se
+midio. Sumadas daban **casi el doble** de las sedes que hay, y ninguna guardia
+lo habria notado: la cifra es positiva y del orden correcto. Que el umbral
+apenas mueva el solape entre 20 y 100 m confirma que se trata de los mismos
+establecimientos y no de vecindad casual; se fija en **20 m**.
+
+La correccion es la que el catalogo ya prometia: las fuentes entran en el orden
+del manifest, la primera completa, y cada siguiente aporta solo lo que no esta a
+menos de 20 m de un punto ya aceptado. healthsites aporta asi unas 290 sedes
+reales en vez de 8.443 duplicadas.
+
+### ¿Son estas las mayores fuentes posibles? Comprobado, y falta una
+
+**Edificaciones y vias: si.** Overture no es «una fuente mas»: es la fusion de
+las tres mayores colecciones abiertas. Medido leyendo la columna `sources` de
+las edificaciones de Quibdó en el parquet remoto:
+
+| Origen | Edificaciones |
+|---|---:|
+| OpenStreetMap | 22.176 |
+| Microsoft ML Buildings | 7.915 |
+| Google Open Buildings | 5.092 |
+
+**Poblacion: si, y con el release correcto.** El listado del FTP del JRC
+confirma que `GHS_POP_GLOBE_R2023A` sigue siendo el ultimo global; el
+`GHS_POP_ARCTIC_R2025A` que aparece al lado es solo del Artico. Dentro de
+R2023A, la epoca E2025 a 100 m es la mas fina util (E2030 existe, pero proyecta
+a 2030). WorldPop R2025A tambien es el ultimo.
+
+**Mas resolucion no habria sido mejor.** Existe el HRSL de Meta a **30 m**,
+CC BY, publicado en HDX para Colombia — once veces mas fino. Su vintage es
+**2019**. A celda H3 r8 (~0,74 km²) un raster de 100 m ya aporta ~74 pixeles por
+celda, asi que el detalle adicional se promedia y desaparece, mientras que seis
+anos de desactualizacion no. Cambiar habria sido regalar vigencia a cambio de
+nada. Por la misma razon **r8 no es una limitacion**: es la escala que
+corresponde a entradas de 100 m; bajar a r9 multiplica por siete las celdas para
+representar informacion que la fuente no tiene.
+
+**Lo que si faltaba: GHS-BUILT-S.** La debilidad documentada del conteo de
+edificaciones son los huecos de OSM en asentamientos informales y zona rural
+dispersa — donde vive la poblacion mas expuesta. GHS-BUILT-S deriva de
+Sentinel-2 y Landsat, asi que no tiene ese hueco. Comparte retícula, epoca,
+proyeccion y licencia con GHS-POP (verificado: la tesela R9_C11 responde con el
+mismo esquema de nombres), de modo que reutiliza el selector de teselas y cuesta
+unos 90 MB por pais. Entra como columna `built_m2` y convierte la bandera
+`revisar_sin_edificios` en una cifra: `construido_no_mapeado`.
+
+### La ventana del disparador cortaba paises cubiertos
+
+Al medir las cajas de los 19 paises con `division_area` de Overture salio que
+`LATAM_BBOX` —el filtro de RF-01— dejaba fuera territorio de paises que el
+sistema dice cubrir:
+
+| | Llega a | La ventana cortaba en |
+|---|---|---|
+| Mexico (Isla Guadalupe, Revillagigedo) | 118,65°O | 118,0°O |
+| Chile (Cabo de Hornos, Diego Ramirez) | 56,78°S | 56,0°S |
+| Brasil (Fernando de Noronha, ~3.000 hab.) | 32,42°O | 34,0°O |
+
+Un sismo relevante ahi no habria fallado: habria dejado de existir para el
+sistema, sin rastro que revisar. Chile es el caso serio — la zona de fractura de
+Shackleton produce sismos justo en ese margen.
+
+Nueva ventana: `lon -119,0..-32,0 / lat -57,5..33,0`. El limite este se detiene
+antes del archipielago de San Pedro y San Pablo (29,35°O), que se asienta
+**sobre la dorsal mesoatlantica**: estirar la ventana hasta el compraria
+sismicidad oceanica frecuente y sin poblacion a cambio de una estacion
+cientifica con unas pocas personas.
+
+### El release de Overture sigue vigente
+
+`2026-08-19.0` responde y es el ultimo; `2026-07-22.0` tambien. Confirmado que
+el bucket conserva **dos**, asi que el vintage fijado caduca solo. La prueba
+nocturna de contrato ahora lo vigila.
+
+---
+
 ## Hallazgos de la ronda 2
 
 ### 4. Un bug de seleccion de version, cazado por las fixtures reales
@@ -173,13 +314,13 @@ MEX -> s3.dualstack.us-east-1.amazonaws.com/production-raw-data-api/ISO3/MEX/hea
 PER -> export.hotosm.org/downloads/<uuid>/…
 ```
 
-Adivinar la ruta funciona para cinco de los siete paises de Fase 1 y falla para
+Adivinar la ruta funciona para unos paises y falla para
 dos — es decir, funciona hasta que alguien agrega el pais que no encaja, y falla
 en produccion, no en CI. El identificador estable es el **nombre del dataset**;
 la URL se resuelve por la API de CKAN de HDX en cada build
 (`pipelines/common/hdx.py`).
 
-### 8. COD-AB cubre los siete paises de Fase 1
+### 8. COD-AB cubre los siete paises de Fase 1 (ampliado a 19 en la ronda 4)
 
 `cod-ab-col`, `cod-ab-mex`, `cod-ab-per`, `cod-ab-ecu`, `cod-ab-chl`,
 `cod-ab-ven` y `cod-ab-gtm` existen, todos **CC BY-IGO**, todos con shapefile o
@@ -303,11 +444,30 @@ bloqueos, tiene columna `a_o`: las 588.334 filas son registros por
 establecimiento **y anio**, asi que habria que filtrar por el anio vigente
 antes de contar nada.
 
-### T1.2 — OurAirports · parcial
+### T1.2 — OurAirports · **resuelta** (23-ago-2026)
 
 `https://davidmegginson.github.io/ourairports-data/airports.csv` responde
-HTTP 200 con 12,7 MB. Falta citar el texto exacto de la declaracion de dominio
-publico del proyecto; el manifest lo dice asi en vez de darlo por hecho.
+HTTP 200 con 12,7 MB. El texto que faltaba citar esta en dos sitios, ambos
+leidos directamente:
+
+- **Pagina de datos** (`https://ourairports.com/data/`): «All data is released
+  to the Public Domain, and comes with no guarantee of accuracy or fitness for
+  use».
+- **Repositorio de descargas** (`github.com/davidmegginson/ourairports-data`):
+  el `LICENSE` es **The Unlicense** integro — «This is free and unencumbered
+  software released into the public domain… Anyone is free to copy, modify,
+  publish, use, compile, sell, or distribute this software… for any purpose,
+  commercial or non-commercial».
+
+**Matiz que se deja escrito en vez de redondear:** The Unlicense habla de
+*software*, y lo que aqui se reutiliza son *datos*. La declaracion que cubre el
+caso es la de la pagina de datos, explicita sobre «all data»; el `LICENSE` la
+respalda. Con las dos juntas la intencion no admite otra lectura, pero la
+cobertura no viene del `LICENSE` solo.
+
+Nota operativa: el repositorio pide expresamente **no abrir pull requests**;
+las correcciones se hacen con una cuenta en ourairports.com y entran en el
+volcado diario.
 
 ### GHS-POP · confirmada
 

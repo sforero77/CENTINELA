@@ -15,6 +15,9 @@ build/
 work/
 data/cache/
 data/build/
+# Descarga a medias (write_atomic). Vive dentro de data/build/, pero si alguien
+# apunta el build a otro sitio no debe acabar en un commit.
+*.parcial
 *.parquet
 *.pmtiles
 *.tif

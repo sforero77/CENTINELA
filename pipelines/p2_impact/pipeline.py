@@ -62,6 +62,7 @@ class ImpactTotals:
     pop_mmi8p: float = 0.0
     pop_65p_mmi7p: float = 0.0
     bld_mmi7p: float = 0.0
+    built_m2_mmi7p: float = 0.0
     health_mmi7p: float = 0.0
     edu_mmi7p: float = 0.0
     road_km_mmi7p: float = 0.0
@@ -76,6 +77,7 @@ class ImpactTotals:
             pop_mmi8p=self.pop_mmi8p,
             pop_65p_mmi7p=self.pop_65p_mmi7p,
             bld_mmi7p=self.bld_mmi7p,
+            built_m2_mmi7p=self.built_m2_mmi7p,
             health_mmi7p=self.health_mmi7p,
             edu_mmi7p=self.edu_mmi7p,
             road_km_mmi7p=self.road_km_mmi7p,
@@ -132,6 +134,52 @@ def download_products(
     return contornos, deslizamiento, licuefaccion
 
 
+# --- Compatibilidad con activos anteriores ---------------------------------
+
+#: Columnas que el activo gano despues de haberse publicado, con el valor que
+#: las sustituye si faltan. La clave del contrato: **un activo viejo tiene que
+#: seguir produciendo un reporte**.
+#:
+#: El caso real es `built_m2`, que llega en col-v0.5. El Release publicado en
+#: ese momento era col-v0.4 y no la tiene. Si P2 exigiera la columna, el primer
+#: sismo despues de actualizar el codigo y antes de republicar el activo se
+#: quedaria **sin reporte** — y no hay peor momento para eso. Con el sustituto,
+#: el reporte sale sin la fila de superficie construida, que es una ausencia
+#: honesta y no un cero: `_nota_superficie` y la tabla de totales omiten la
+#: cifra cuando vale 0 en vez de publicar "0 km² construidos".
+COLUMNAS_OPCIONALES: dict[str, str] = {"built_m2": "0.0"}
+
+
+def register_exposure_view(con: Any, exposure_glob: str) -> list[str]:
+    """Publica la vista ``exposure``, rellenando las columnas que falten.
+
+    Returns:
+        Las columnas que hubo que sustituir. Vacio con un activo al dia.
+    """
+    con.execute(
+        f"CREATE OR REPLACE VIEW _exposure_cruda AS SELECT * FROM read_parquet('{exposure_glob}')"
+    )
+    presentes = {
+        str(f[0]).lower() for f in con.execute("DESCRIBE SELECT * FROM _exposure_cruda").fetchall()
+    }
+    faltan = {c: v for c, v in COLUMNAS_OPCIONALES.items() if c.lower() not in presentes}
+    extra = "".join(f", {valor} AS {col}" for col, valor in faltan.items())
+    con.execute(f"CREATE OR REPLACE VIEW exposure AS SELECT *{extra} FROM _exposure_cruda")
+
+    if faltan:
+        _log.warning(
+            "el activo no trae columnas que el reporte sabe publicar; se omitiran",
+            extra={
+                "context": {
+                    "columnas_ausentes": sorted(faltan),
+                    "activo": exposure_glob,
+                    "accion": "reconstruir y republicar el activo para incluirlas",
+                }
+            },
+        )
+    return sorted(faltan)
+
+
 # --- SQL del computo -------------------------------------------------------
 
 SQL_IMPACT_H3 = """
@@ -156,6 +204,7 @@ SELECT
     SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END) AS pop_mmi8p,
     SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END) AS pop_65p_mmi7p,
     SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END) AS bld_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END) AS built_m2_mmi7p,
     SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END) AS health_mmi7p,
     SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END) AS edu_mmi7p,
     SUM(CASE WHEN mmi_max >= 7
@@ -176,6 +225,7 @@ SELECT
     SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END),
     SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 7
@@ -225,7 +275,7 @@ def compute_impact(
             gf_cells=celdas_gf,
         ),
     )
-    con.execute(f"CREATE OR REPLACE VIEW exposure AS SELECT * FROM read_parquet('{exposure_glob}')")
+    register_exposure_view(con, exposure_glob)
     con.execute(SQL_IMPACT_H3, [products.usgs_id, products.shakemap_version])
     con.execute(SQL_IMPACT_ADM2.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB))
 
@@ -256,7 +306,7 @@ def compute_preliminary(con: Any, state: EventState, *, exposure_glob: str) -> d
     honesto que se puede decir: no hay modelo de intensidad, solo distancia. El
     reporte lo declara asi y se re-emite solo en cuanto aparezca el ShakeMap.
     """
-    con.execute(f"CREATE OR REPLACE VIEW exposure AS SELECT * FROM read_parquet('{exposure_glob}')")
+    register_exposure_view(con, exposure_glob)
     filas = con.execute(
         "SELECT h3_cell_to_lat(h3_08), h3_cell_to_lng(h3_08), pop_total FROM exposure"
     ).fetchall()

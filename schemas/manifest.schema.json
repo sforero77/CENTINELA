@@ -84,6 +84,10 @@
           "hdx_dataset": {
             "type": "string",
             "description": "Nombre del dataset en HDX cuando la descarga se resuelve por su API (la ruta real varia por pais)."
+          },
+          "hdx_resource": {
+            "type": "string",
+            "description": "Fragmento del nombre del recurso dentro del dataset. Obligatorio cuando el dataset publica varios recursos del mismo formato: sin el se toma el primero, que no siempre es el que se quiere (el cod-ab de Colombia publica cuatro SHP y el primero son secciones urbanas, no municipios)."
           }
         }
       }

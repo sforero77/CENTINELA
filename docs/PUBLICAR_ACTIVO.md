@@ -10,7 +10,7 @@ sin una copia propia nadie puede rehacer el build de un reporte de hace seis
 meses. El Release con su `sha256` es lo que hace re-derivable un numero
 publicado.
 
-## Colombia v0.4 — activo vigente
+## Colombia v0.4 — activo publicado
 
 | | |
 |---|---|
@@ -26,13 +26,38 @@ publicado.
 | Municipios | 1.122 de 1.122 |
 | Manifest | `col-v0.4` |
 
+## Colombia v0.5 — que cambia
+
+El manifest sube a `col-v0.5` porque **el esquema del activo gana una columna**,
+`built_m2`: superficie construida vista por satelite (GHS-BUILT-S). No sustituye
+al conteo de edificaciones, lo contrasta — y donde OpenStreetMap no mapeo el
+barrio, es la unica de las dos que ve algo. De ahi sale la bandera
+`construido_no_mapeado` y la advertencia del reporte cuando el conteo se queda
+corto.
+
+Dos cifras de v0.4 se mueven ademas por correcciones, no por datos nuevos:
+
+- **Sedes de salud.** HOTOSM y healthsites.io se sumaban sin deduplicar, y el
+  96,6 % de los puntos de la segunda resulto estar a menos de 20 m de uno de la
+  primera. Las 9.615 de v0.4 salieron de usar solo HOTOSM; con las dos fuentes
+  ya deduplicadas la cifra sube en unas 290 sedes reales. Sin el arreglo habria
+  sido 18.061, casi el doble.
+- **Limites municipales.** El recurso del COD-AB que se descargaba eran
+  secciones urbanas del MGN, no municipios. Ahora va fijado con `hdx_resource`.
+
+Al republicar hay que actualizar la tabla de arriba con las cifras que imprima
+el build y el `sha256` nuevo.
+
 ## Como publicarlo
 
 ```bash
-gh release create exposure-col-20260823 exposure_h3.parquet \
+gh release create exposure-col-20260823 exposure_h3.parquet admin_lookup.parquet \
   --title "Activo de exposicion COL — 2026-08-23" \
   --notes-file data/manifests/COL.yaml
 ```
+
+Los **dos** archivos: sin `admin_lookup.parquet` el reporte sale con el codigo
+DIVIPOLA en vez del nombre del municipio.
 
 El workflow `exposure_quarterly.yml` lo hace solo cada trimestre. La publicacion
 manual es para el primer activo y para reconstrucciones fuera de cadencia.

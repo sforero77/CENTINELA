@@ -40,8 +40,28 @@ class BBox:
 
 
 #: Ventana de interes del sistema (RF-01). El limite norte se estira a 33°N
-#: para cubrir Mexico completo; el sur llega a 56°S (Cabo de Hornos).
-LATAM_BBOX: Final[BBox] = BBox(lon_min=-118.0, lat_min=-56.0, lon_max=-34.0, lat_max=33.0)
+#: para cubrir Mexico completo; el sur llega mas alla de Cabo de Hornos.
+#:
+#: **Corregida el 23-ago-2026.** Al medir la caja de los diecinueve paises con
+#: `division_area` de Overture salio que la ventana no cubria territorio de los
+#: paises que el sistema dice cubrir, y el disparador filtra por ella:
+#:
+#: * Mexico llega a **118,65°W** (Isla Guadalupe y Revillagigedo) y la ventana
+#:   cortaba en 118,0°W.
+#: * Chile llega a **56,78°S** (Cabo de Hornos, Diego Ramirez) y cortaba en
+#:   56,0°S — justo donde la zona de fractura de Shackleton produce sismos.
+#:
+#: Un sismo relevante ahi habria quedado fuera del filtro sin dejar rastro: no
+#: es un fallo, es un evento que nunca existio para el sistema.
+#:
+#: El limite este pasa de 34°W a **32°W**: Fernando de Noronha esta en 32,42°W
+#: con unos 3.000 habitantes y quedaba fuera. No llega hasta los 28,58°W que da
+#: Brasil, y eso es deliberado: alli esta el archipielago de San Pedro y San
+#: Pablo, que se asienta **sobre la dorsal mesoatlantica**. Estirar la ventana
+#: hasta el mete sismicidad oceanica frecuente y sin poblacion a cambio de una
+#: estacion cientifica con unas pocas personas. 32°W cubre a los habitantes y
+#: deja la dorsal fuera.
+LATAM_BBOX: Final[BBox] = BBox(lon_min=-119.0, lat_min=-57.5, lon_max=-32.0, lat_max=33.0)
 
 
 def haversine_km(lon_a: float, lat_a: float, lon_b: float, lat_b: float) -> float:

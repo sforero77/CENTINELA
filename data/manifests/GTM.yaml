@@ -1,0 +1,173 @@
+# Manifest de vintages — Guatemala (Fase 1).
+#
+# REGLA DURA: nunca "latest". Overture publica release mensual y su catalogo
+# STAC apunta siempre al ultimo; fijar el release explicito es lo que hace que
+# un reporte de hace seis meses siga siendo reproducible (RNF-04).
+#
+# ESTADO: fuentes verificadas con peticion real el 2026-08-23; **el activo no se ha
+# construido todavia**. Los `sha256` y `medido_ghs_pop` se llenan en la primera
+# corrida de `centinela country GTM`, y hasta entonces este manifest declara
+# de donde saldrian los datos, no que ya se hayan medido.
+
+manifest_id: gtm-v0.1
+iso3: GTM
+generated_utc: "2026-08-23T00:00:00Z"
+
+# Referencia oficial para el assert de calidad de §6.4.
+#
+# Se usa la ONU por uniformidad regional: cada instituto nacional publica con su
+# propia metodologia, su propio anio base y su propio calendario censal, y un
+# assert que compara diecinueve paises contra diecinueve criterios distintos no
+# compara nada. World Population Prospects da una serie homogenea.
+#
+# Obtenida sin credenciales: el endpoint de datos de la propia ONU responde 401
+# y exige un Bearer token, lo que viola O4. La API del Banco Mundial republica
+# la serie y responde en abierto; sus metadatos de SP.POP.TOTL citan como fuente
+# primaria "World Population Prospects, United Nations (UN), publisher: UN
+# Population Division".
+#
+#   https://api.worldbank.org/v2/country/GTM/indicator/SP.POP.TOTL?format=json&date=2025:2025
+#
+# Un instituto nacional con censo reciente es mejor referencia que la ONU para
+# su propio pais: el mantenedor de pais puede sustituirla, como hace Colombia
+# con el DANE, y estrechar la tolerancia.
+referencia_oficial:
+  poblacion_2025: 18687881
+  fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
+  tolerancia_pct: 5.0
+  nota: >-
+    TOLERANCIA PROVISIONAL. El 5% es un margen de arranque, no una medicion:
+    todavia no se ha construido el activo y no se sabe cuanto se desvia GHS-POP
+    de la ONU en este pais. Colombia, que si esta medida, usa 1%. La primera
+    corrida tiene que anotar `medido_ghs_pop` y ajustar la tolerancia a lo
+    observado, explicando el cambio en el PR. Mientras `medido_ghs_pop` este
+    ausente, esta cifra es una expectativa.
+
+notas:
+  - "Caja envolvente medida sobre `division_area` de Overture (subtype=country,
+     release 2026-08-19.0): lon -92.3649..-88.2134, lat 13.5634..17.8166. En COUNTRY_BBOX se declara redondeada
+     hacia afuera. El build comprueba que la caja declarada contenga la
+     geometria administrativa real, asi que un error aqui falla en vez de
+     perder territorio en silencio."
+  - "Los `hdx_dataset` NO se descargan por la url de este archivo: esa url es la
+     pagina estable del dataset. La de descarga se resuelve por la API de HDX en
+     cada build, porque la ruta real de un mismo dataset de HOTOSM cambia de
+     forma segun el pais."
+  - "Verificado el 2026-08-23: este COD-AB publica un unico recurso del formato
+     preferido, asi que no necesita `hdx_resource`. De los 19 paises de LATAM
+     revisados, **solo Colombia** publica varios recursos del mismo formato."
+  - "PENDIENTE DEL MANTENEDOR DE PAIS antes de publicar un reporte: validar los
+     toponimos del COD-AB y su codificacion. En Venezuela salen mal codificados
+     ('Falc?n' por 'Falcón') y esos nombres se imprimen en el reporte."
+
+sources:
+  - id: ghs_pop_2025
+    layer: pop_ghs
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    sha256: ""
+    notes: >-
+      No se descarga esta URL: el mosaico global pesa 5,25 GB. El JRC publica el
+      mismo producto en 375 teselas y la seleccion la hace
+      pipelines/p0_exposure/sources/ghsl.py a partir de la caja del pais.
+      nodata = -200 (todo oceano): enmascarar antes de sumar o la poblacion sale
+      negativa. Schiavina et al. 2023, doi:10.2905/2FF68A52.
+
+  - id: ghs_built_s_2025
+    layer: built_ghsl
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    sha256: ""
+    notes: >-
+      Superficie construida en m² por pixel, derivada de Sentinel-2 y Landsat.
+      Misma retícula y misma epoca que GHS-POP. No hereda los huecos de OSM en
+      asentamientos informales, que es donde el conteo de edificaciones falla y
+      donde vive la poblacion mas expuesta. Contrasta a Overture, no lo
+      sustituye: mide cuanto hay construido, no cuantas edificaciones son.
+
+  - id: worldpop_agesex_2025
+    layer: pop_worldpop_agesex
+    url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/GTM/v1/100m/constrained/
+    license: CC-BY-4.0
+    vintage: R2025A-2025-constrained-100m
+    sha256: ""
+    notes: >-
+      Verificado: HTTP 200 y las 20 bandas de la serie combinada `gtm_t_<edad>`,
+      de 00 a 90. La url apunta al DIRECTORIO; solo se baja la serie `_t_`, que
+      es la combinada. El mismo directorio publica `_f_` y `_m_`, y sumar las
+      tres contaria a cada persona dos veces.
+
+  - id: worldpop_total_2025
+    layer: pop_worldpop_total
+    url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/GTM/v1/100m/constrained/gtm_pop_2025_CN_100m_R2025A_v1.tif
+    license: CC-BY-4.0
+    vintage: R2025A-2025-constrained-100m
+    sha256: ""
+    notes: >-
+      Verificado: HTTP 200. Alimenta la banda de discrepancia publicada, nunca
+      la cifra principal.
+
+  - id: overture_buildings
+    layer: buildings
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    sha256: ""
+    notes: >-
+      No se descarga: DuckDB lee los parquet en remoto podando por la columna
+      `bbox`. `type=building` trae las huellas; `type=building_part` es
+      geometria auxiliar y contarla inflaria bld_count. Overture fusiona
+      OpenStreetMap, Microsoft ML Buildings y Google Open Buildings.
+
+  - id: overture_transportation
+    layer: roads
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    sha256: ""
+    notes: >-
+      `type=segment` es la geometria lineal; `type=connector` son nodos. Se
+      filtra `subtype = 'road'`: el tema tambien publica ferrocarril y agua.
+
+  - id: cod_ab_gtm
+    layer: divisions
+    url: https://data.humdata.org/dataset/cod-ab-gtm
+    hdx_dataset: cod-ab-gtm
+    license: CC-BY-IGO
+    vintage: COD-AB-2026-08
+    sha256: ""
+    notes: >-
+      Common Operational Dataset de OCHA, fuente de verdad de adm1/adm2. Es la
+      unica geometria administrativa de este manifest, asi que si el recurso
+      cambia de nombre el build falla en `pick_admin_source` en vez de construir
+      un crosswalk silenciosamente equivocado.
+      El nivel municipal se elige por nombre (`admin2`/`adm2`) y, si hay empate,
+      por las columnas que el pais declare en ADMIN_COLUMNS. Por defecto se
+      asumen las del COD-AB: adm2_pcode, adm2_name, adm1_pcode, adm1_name.
+
+  - id: hotosm_health
+    layer: health
+    url: https://data.humdata.org/dataset/hotosm_gtm_health_facilities
+    hdx_dataset: hotosm_gtm_health_facilities
+    license: ODbL-1.0
+    vintage: "2026-08-23"
+    sha256: ""
+    notes: >-
+      Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
+      Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital
+      grande esta mapeado como edificio, no como nodo—, y el agregador toma el
+      centroide de lo que venga.
+      Si algun dia se anade healthsites.io como segunda fuente de salud, tiene
+      que ir DESPUES de esta: se deduplica por proximidad contra la primera, y
+      en Colombia el 96,6% de sus puntos resulto ser el mismo establecimiento.
+
+  - id: hotosm_education
+    layer: education
+    url: https://data.humdata.org/dataset/hotosm_gtm_education_facilities
+    hdx_dataset: hotosm_gtm_education_facilities
+    license: ODbL-1.0
+    vintage: "2026-08-23"
+    sha256: ""
+    notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."

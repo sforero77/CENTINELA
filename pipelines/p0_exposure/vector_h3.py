@@ -45,6 +45,28 @@ class VectorSum:
     total: float
 
 
+#: Distancia por debajo de la cual dos puntos de fuentes distintas se toman por
+#: el mismo establecimiento.
+#:
+#: **No es un parametro de gusto.** Medido sobre Colombia el 23-ago-2026:
+#: HOTOSM trae 9.618 sedes de salud y healthsites.io 8.443, y **el 96,6 % de
+#: las de healthsites cae a menos de 20 m de una de HOTOSM** — las dos derivan
+#: de OpenStreetMap. Sumarlas sin deduplicar da 18.061 sedes, casi el doble de
+#: las que hay, y ninguna guardia lo notaria porque el numero sigue siendo
+#: positivo y del orden correcto. Subir el umbral a 50 o 100 m apenas mueve el
+#: solape (96,9 % y 97,1 %): 20 m ya captura la duplicacion real y deja fuera
+#: los establecimientos que de verdad estan pegados.
+DEDUPE_METERS = 20.0
+
+#: Grados por metro sobre el meridiano. Se usa igual en latitud y longitud, lo
+#: que hace la ventana un cuadrado y no un circulo, y algo mas ancha en
+#: longitud segun se sube de latitud (un grado de longitud mide 111 km en el
+#: ecuador y 93 km a 33°N, el extremo norte de la ventana LATAM). Para decidir
+#: si dos puntos son el mismo hospital, esa holgura es irrelevante y evita una
+#: distancia esferoidal por cada par.
+DEGREES_PER_METER = 1.0 / 111_320.0
+
+
 def aggregate_points_to_h3(
     con: Any,
     fuentes: list[str],
@@ -53,32 +75,74 @@ def aggregate_points_to_h3(
     columna: str,
     resolution: int = H3_RES_COMPUTE,
     filtro: str = "TRUE",
+    dedupe_m: float = DEDUPE_METERS,
 ) -> VectorSum:
     """Cuenta elementos por celda, tomando el centroide de cada geometria.
 
+    Las fuentes se procesan **en el orden en que llegan**, que es el del
+    manifest: la primera es la principal y entra entera; cada una posterior
+    aporta solo los puntos que no estan a menos de ``dedupe_m`` de otro ya
+    aceptado. Es lo que el catalogo de capas declara como "deduplicado por
+    proximidad", y hasta ahora estaba declarado pero no implementado.
+
     Args:
         fuentes: rutas legibles por ``ST_Read`` (GeoPackage, shapefile,
-            GeoJSON). Varias fuentes se acumulan en la misma tabla.
+            GeoJSON), la principal primero.
         filtro: SQL adicional, p. ej. para quedarse con un subconjunto de tags.
+        dedupe_m: umbral de proximidad. ``0`` desactiva la deduplicacion.
     """
-    con.execute(f"DROP TABLE IF EXISTS {tabla}")
-    con.execute(f"CREATE TABLE {tabla} (h3_08 UBIGINT, {columna} BIGINT)")
-    for fuente in fuentes:
+    grados = dedupe_m * DEGREES_PER_METER
+    puntos = f"_pts_{tabla}"
+    con.execute(f"DROP TABLE IF EXISTS {puntos}")
+    con.execute(f"CREATE TABLE {puntos} (lon DOUBLE, lat DOUBLE)")
+
+    for orden, fuente in enumerate(fuentes):
         con.execute(
             f"""
-            INSERT INTO {tabla}
-            SELECT h3_latlng_to_cell(ST_Y(c), ST_X(c), {resolution}) AS h3_08,
-                   count(*) AS {columna}
-            FROM (
-                SELECT ST_Centroid(geom) AS c FROM ST_Read('{fuente}') WHERE {filtro}
-            ) t
-            GROUP BY 1
+            CREATE OR REPLACE TEMP TABLE _entrantes AS
+            SELECT ST_X(c) AS lon, ST_Y(c) AS lat
+            FROM (SELECT ST_Centroid(geom) AS c FROM ST_Read('{fuente}') WHERE {filtro})
             """
         )
+        if orden == 0 or grados <= 0:
+            con.execute(f"INSERT INTO {puntos} SELECT lon, lat FROM _entrantes")
+            nuevos = con.execute("SELECT count(*) FROM _entrantes").fetchone()[0]
+            descartados = 0
+        else:
+            # Anti-join contra lo ya aceptado. Se materializa antes de insertar:
+            # leer y escribir la misma tabla en una sola sentencia haria que los
+            # puntos de esta fuente se deduplicaran contra si mismos.
+            con.execute(
+                f"""
+                CREATE OR REPLACE TEMP TABLE _nuevos AS
+                SELECT e.lon, e.lat FROM _entrantes e
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM {puntos} p
+                    WHERE abs(p.lon - e.lon) < {grados} AND abs(p.lat - e.lat) < {grados}
+                )
+                """
+            )
+            con.execute(f"INSERT INTO {puntos} SELECT lon, lat FROM _nuevos")
+            nuevos = con.execute("SELECT count(*) FROM _nuevos").fetchone()[0]
+            descartados = con.execute("SELECT count(*) FROM _entrantes").fetchone()[0] - nuevos
+        _log.info(
+            "fuente de puntos incorporada",
+            extra={
+                "context": {
+                    "tabla": tabla,
+                    "fuente": fuente,
+                    "nuevos": nuevos,
+                    "duplicados_descartados": descartados,
+                }
+            },
+        )
+
     con.execute(
         f"""
         CREATE OR REPLACE TABLE {tabla} AS
-        SELECT h3_08, sum({columna}) AS {columna} FROM {tabla} GROUP BY 1
+        SELECT h3_latlng_to_cell(lat, lon, {resolution}) AS h3_08,
+               count(*)::BIGINT AS {columna}
+        FROM {puntos} GROUP BY 1
         """
     )
     celdas, total = con.execute(f"SELECT count(*), sum({columna}) FROM {tabla}").fetchone()

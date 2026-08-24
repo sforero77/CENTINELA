@@ -94,3 +94,66 @@ def test_hdx_other_no_recibe_default_permisivo() -> None:
     """'hdx-other' es el cajon de sastre de HDX: exige revision humana."""
     with pytest.raises(HdxResolutionError, match="sin traduccion"):
         map_license("hdx-other")
+
+
+# --- Fijar el recurso, no solo el formato ---------------------------------
+
+#: Forma real de `cod-ab-col`: cuatro recursos SHP, y el primero NO es el que
+#: se quiere. Verificado contra la API el 23-ago-2026.
+COD_AB_COL: dict[str, Any] = {
+    "success": True,
+    "result": {
+        "resources": [
+            {"name": "MGN2024_URB_SECCION.zip", "format": "SHP", "url": "https://x/urb.zip"},
+            {"name": "Admin 3 level-vereda.zip", "format": "SHP", "url": "https://x/vereda.zip"},
+            {
+                "name": "COL Administrative Divisions Shapefiles.zip",
+                "format": "SHP",
+                "url": "https://x/adm.zip",
+            },
+            {"name": "MGN2024_RUR_SECCION.zip", "format": "SHP", "url": "https://x/rur.zip"},
+        ]
+    },
+}
+
+
+def _fetcher_col() -> FixtureFetcher:
+    return FixtureFetcher({HDX_PACKAGE_SHOW.format(dataset="cod-ab-col"): COD_AB_COL})
+
+
+def test_sin_recurso_se_toma_el_primero_del_formato() -> None:
+    """El comportamiento heredado, que aqui elige el archivo equivocado."""
+    _, url = resolve_resource(_fetcher_col(), "cod-ab-col")
+    assert url.endswith("urb.zip"), "secciones urbanas, no municipios"
+
+
+def test_con_recurso_se_toma_el_declarado() -> None:
+    """Es la razon de existir de `hdx_resource` en el manifest."""
+    formato, url = resolve_resource(
+        _fetcher_col(), "cod-ab-col", resource="COL Administrative Divisions Shapefiles"
+    )
+    assert formato == "SHP"
+    assert url.endswith("adm.zip")
+
+
+def test_el_recurso_no_distingue_mayusculas() -> None:
+    _, url = resolve_resource(_fetcher_col(), "cod-ab-col", resource="administrative divisions")
+    assert url.endswith("adm.zip")
+
+
+def test_un_recurso_ambiguo_es_error() -> None:
+    """Elegir uno de dos en silencio es como no haberlo fijado."""
+    with pytest.raises(HdxResolutionError, match="identifica 2 recursos"):
+        resolve_resource(_fetcher_col(), "cod-ab-col", resource="SECCION")
+
+
+def test_un_recurso_inexistente_es_error() -> None:
+    """Si el publicador renombra, hay que enterarse en el build, no despues."""
+    with pytest.raises(HdxResolutionError, match="identifica 0 recursos"):
+        resolve_resource(_fetcher_col(), "cod-ab-col", resource="no-existe")
+
+
+def test_el_error_lista_lo_que_si_hay() -> None:
+    """El mensaje tiene que decir con que reemplazarlo."""
+    with pytest.raises(HdxResolutionError, match="MGN2024_URB_SECCION"):
+        resolve_resource(_fetcher_col(), "cod-ab-col", resource="no-existe")

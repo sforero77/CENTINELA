@@ -59,7 +59,7 @@ arranque no funciona en tu maquina, eso es un bug.
 
 ## Estado del proyecto
 
-**Fase 0, semana 1 — andamiaje.** Lo que ya funciona y lo que falta:
+**Fase 0, semana 4.** Lo que ya funciona y lo que falta:
 
 | Componente | Estado |
 |---|---|
@@ -79,14 +79,25 @@ arranque no funciona en tu maquina, eso es un bug.
 | P0 capas de salud, educacion, vias y desglose etario | ✅ funcional |
 | P0 ensamblaje, validacion del total y escritura del activo | ✅ funcional |
 | P0 descarga guiada por manifest (`download.py`) | ✅ funcional |
+| P0 edificaciones y vias: Overture leido en remoto | ✅ funcional |
+| P0 desglose etario desde WorldPop age-sex | ✅ funcional |
+| P0 superficie construida (GHS-BUILT-S, satelite) | ✅ funcional |
+| Manifests de los 19 paises de LATAM | ✅ escritos, fuentes verificadas |
 | Mapa estatico del reporte (T0.8 resuelta) | ✅ funcional |
 | Golden G1: aserciones (b) y (c) sobre cifras publicadas | ✅ corren |
-| P0 `build_country`: encadenar todo en un solo comando | ⏳ pendiente |
+| P0 `build_country`: encadenar todo en un solo comando | ✅ funcional |
 | P4 brigada de imagen | ⏳ Fase 2 |
 
 Las etapas pendientes fallan de forma ruidosa y explicita — nunca devuelven un
 cero que acabaria publicado como cifra. `tests/unit/test_pendientes.py` es el
-inventario vivo de esa deuda: la lista encogiendo es el indicador de avance.
+inventario vivo de esa deuda, y hoy esta vacio.
+
+El cero silencioso tiene ademas su propia guardia. Una capa que no se construye
+entra vacia al ensamblaje, el `LEFT JOIN` la vuelve ceros y el activo se
+escribiria sin que nada proteste: el assert de total nacional solo mira
+poblacion. `validate_layer_coverage` detiene el build si **cualquier** capa
+requerida suma cero en todo el pais — es preferible no publicar activo que
+publicar uno que informa cero donde no midio nada.
 
 Los golden tests corren contra **productos reales congelados** de los dos
 eventos que motivan el proyecto: Chocó (`us6000tjl2`) y el doble mainshock de
@@ -124,7 +135,7 @@ sola ciudad.
 ```
 pipelines/       p0_exposure, p1_trigger, p2_impact, p3_report, p4_brigada, common
 schemas/         JSON Schema del reporte, del estado y de los contratos USGS
-data/manifests/  vintages por pais (fuente, url, licencia, hash, fecha)
+data/manifests/  vintages por pais (fuente, url, licencia, hash, fecha) — los 19 de LATAM
 events/          event_state por evento — la base de datos del sistema, en git
 reports/         salidas publicadas (json + md + csv + png)
 site/            visor estatico (MapLibre + PMTiles, cero llaves de API)
@@ -134,7 +145,7 @@ tests/           unit/, integration/, golden/, fixtures/
 ## Documentacion
 
 - [`PENDIENTES.md`](PENDIENTES.md) — **que falta, quien puede hacerlo y en que orden**
-- [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificacion tecnica v0.9
+- [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificacion tecnica v0.10
 - [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — como publicar el activo y por que no va en git
 - [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con metodo y hallazgos
 - [`DISCLAIMER.md`](DISCLAIMER.md) — que informa y que no informa el sistema
