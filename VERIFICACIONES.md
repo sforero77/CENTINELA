@@ -385,6 +385,55 @@ LATAM solo Cuba no toca a nadie por tierra, y hasta su caja alcanza a Haiti.
 La prediccion era 7.015.404 —el total menos el rescate medido antes— y salieron
 7.015.517: los 113 de diferencia son el rescate legitimo que queda.
 
+### Chile: dos muertes por memoria, un solo error de diseno
+
+Corregido Paraguay, Chile tumbo el build dos veces. La primera con
+`OutOfMemoryException` de DuckDB (12,3 de 12,4 GB), la segunda llevandose el
+proceso entero por delante — el paso salio `cancelled`, sin traza.
+
+**No era el tamano del pais.** Los dos filtros del rescate vivian en el mismo
+`WHERE`, asi que el planificador no garantizaba cual evaluaba primero. Y el
+conjunto de partida no son las celdas costeras de Chile: son **todas** las
+celdas con poblacion del recorte de GHS-POP que el polyfill dejo fuera, o sea
+media Argentina, Bolivia y Peru. Millones de puntos contra un multipoligono
+continental.
+
+Separado en cuatro pasos materializados —candidatas, acotar al pais, descartar
+vecinos, asignar municipio— al descarte solo llegan las que sobrevivieron a la
+cota.
+
+Y los poligonos se simplifican al cargarlos, con tolerancia 0,001 grados
+(~110 m), veinte veces mas fina que la cota del rescate. Medido sobre la caja de
+Chile con Overture 2026-08-19.0:
+
+| Vecino | Vertices tras recortar y simplificar |
+|---|---:|
+| AR | 7.698 |
+| BO | 735 |
+| PE | 60 |
+| BR, NZ, FJ | 0 (su interseccion con la caja es vacia) |
+| **Union** | **8.317** |
+
+60.000 puntos contra esa union: **5,2 s**.
+
+### Overture publica dos poligonos por pais, no uno
+
+`division_area` con `subtype='country'` devuelve **dos filas** por pais: la
+terrestre (`is_land`) y la de aguas territoriales (`is_territorial`). Medido
+sobre la caja de Chile:
+
+    AR  is_land=False is_territorial=True    AR  is_land=True is_territorial=False
+    PE  is_land=False is_territorial=True    PE  is_land=True is_territorial=False
+    BO  is_land=True  is_territorial=True
+
+Cargar las dos rompe justo el caso para el que existe el rescate: las aguas
+peruanas llegan hasta la frontera de Arica, asi que una celda del Pacifico
+frente a la costa chilena caeria "dentro de Peru" y se descartaria con su
+poblacion dentro. El mar no es de nadie a estos efectos.
+
+(Bolivia sale marcada con las dos, siendo interior. No estorba: se filtra por
+`is_land`, que en su caso es cierto.)
+
 ### El COD-AB publica dos nomenclaturas, no una
 
 Ecuador fue el primer pais construido con el COD-AB como unica fuente
