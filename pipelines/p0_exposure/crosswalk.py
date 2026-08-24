@@ -379,7 +379,7 @@ def rescue_unassigned(
     # frente a la ONU va de -0,80 % (Chile) a +6,59 % (Paraguay) y **se ordena
     # por cuanta frontera tiene cada pais en proporcion a su area**. Si la
     # hipotesis es correcta, esta fraccion deberia seguir el mismo orden.
-    poblacion = _poblacion_rescatada(con, tabla_datos)
+    poblacion = poblacion_rescatada(con, tabla_datos)
     _log.info(
         "celdas rescatadas junto a la linea de costa o frontera",
         extra={
@@ -393,7 +393,7 @@ def rescue_unassigned(
     return rescatadas
 
 
-def _poblacion_rescatada(con: Any, tabla_datos: str) -> dict[str, float]:
+def poblacion_rescatada(con: Any, tabla_datos: str) -> dict[str, float]:
     """Poblacion que entra por celdas rescatadas, absoluta y en porcentaje."""
     try:
         fila = con.execute(

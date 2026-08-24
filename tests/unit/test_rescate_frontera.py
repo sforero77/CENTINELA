@@ -17,7 +17,7 @@ from typing import Any
 
 import pytest
 
-from pipelines.p0_exposure.crosswalk import _poblacion_rescatada
+from pipelines.p0_exposure.crosswalk import poblacion_rescatada
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def _celda(con: Any, h3: int, pop: float, *, rescatada: bool) -> None:
 @pytest.mark.geo
 def test_sin_rescate_la_fraccion_es_cero(con: Any) -> None:
     _celda(con, 1, 1000.0, rescatada=False)
-    assert _poblacion_rescatada(con, "pop_h3")["pop_rescatada_pct"] == 0.0
+    assert poblacion_rescatada(con, "pop_h3")["pop_rescatada_pct"] == 0.0
 
 
 @pytest.mark.geo
@@ -53,7 +53,7 @@ def test_se_mide_la_gente_y_no_solo_las_celdas(con: Any) -> None:
     """
     _celda(con, 1, 9000.0, rescatada=False)
     _celda(con, 2, 1000.0, rescatada=True)
-    medida = _poblacion_rescatada(con, "pop_h3")
+    medida = poblacion_rescatada(con, "pop_h3")
     assert medida["pop_rescatada"] == 1000
     assert medida["pop_total"] == 10000
     assert medida["pop_rescatada_pct"] == 10.0
@@ -61,13 +61,13 @@ def test_se_mide_la_gente_y_no_solo_las_celdas(con: Any) -> None:
 
 @pytest.mark.geo
 def test_un_pais_sin_datos_no_divide_por_cero(con: Any) -> None:
-    assert _poblacion_rescatada(con, "pop_h3")["pop_rescatada_pct"] == 0.0
+    assert poblacion_rescatada(con, "pop_h3")["pop_rescatada_pct"] == 0.0
 
 
 @pytest.mark.geo
 def test_sin_tabla_de_poblacion_devuelve_vacio(con: Any) -> None:
     """El rescate corre tambien sobre capas sin `pop_total`; no debe reventar."""
-    assert _poblacion_rescatada(con, "no_existe") == {}
+    assert poblacion_rescatada(con, "no_existe") == {}
 
 
 def test_el_rescate_registra_la_poblacion_no_solo_el_conteo() -> None:
@@ -76,7 +76,7 @@ def test_el_rescate_registra_la_poblacion_no_solo_el_conteo() -> None:
 
     from pipelines.p0_exposure.crosswalk import rescue_unassigned
 
-    assert "_poblacion_rescatada" in inspect.getsource(rescue_unassigned)
+    assert "poblacion_rescatada" in inspect.getsource(rescue_unassigned)
 
 
 # --- Acotar el rescate al mar, no al pais vecino ----------------------------

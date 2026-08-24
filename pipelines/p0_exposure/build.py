@@ -15,6 +15,7 @@ from ..common.geo import BBox
 from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.manifest import Manifest, lint_manifest
+from ..common.state import utcnow_iso
 from .download import ISO3_A_ISO2
 from .layers import LAYERS, LayerSpec, required_layers
 
@@ -605,6 +606,53 @@ def build_overture_layers(
     aggregate_roads_to_h3(con, urls_de("roads", THEME_TRANSPORTATION), bbox=bbox)
 
 
+#: Nombre del fichero de medicion que acompana al activo en el Release.
+MEDICION_FICHERO = "medicion.json"
+
+
+def write_measurement(
+    plan: Any,
+    resumen: dict[str, Any],
+    *,
+    rescate: dict[str, float],
+    referencia: Any = None,
+) -> Path:
+    """Deja junto al activo lo que se midio al construirlo.
+
+    Las cifras ya iban al log, y de ahi se copiaban a mano al manifest —
+    `medido_ghs_pop`, la tolerancia, la nota. Copiar a mano es como se
+    desincronizan las cosas, y ademas obliga a bajar un log de varios MB por
+    pais para leer tres numeros.
+
+    El fichero se publica en el Release al lado del parquet: pesa un kilobyte,
+    y con el se puede reajustar la tolerancia de los diecinueve manifests sin
+    volver a construir nada ni descargar un solo log.
+    """
+    import json
+
+    oficial = getattr(referencia, "poblacion_2025", None) if referencia else None
+    pop = float(resumen.get("pop_total") or 0.0)
+    medicion: dict[str, Any] = {
+        "iso3": plan.iso3,
+        "manifest_id": plan.manifest.manifest_id,
+        "medido_utc": utcnow_iso(),
+        "resumen": resumen,
+        "rescate": rescate,
+    }
+    if oficial:
+        medicion["referencia"] = {
+            "poblacion": oficial,
+            "fuente": getattr(referencia, "fuente", ""),
+            "desvio_pct": round(100.0 * (pop - oficial) / oficial, 4),
+        }
+    destino: Path = plan.salida / MEDICION_FICHERO
+    destino.write_text(
+        json.dumps(medicion, ensure_ascii=False, indent=2, default=str) + "\n",
+        encoding="utf-8",
+    )
+    return destino
+
+
 def build_country(
     iso3: str,
     *,
@@ -625,7 +673,12 @@ def build_country(
     GB del DANE.
     """
     from ..common.http import HttpFetcher
-    from .crosswalk import build_crosswalk, load_admin_geometry, rescue_unassigned
+    from .crosswalk import (
+        build_crosswalk,
+        load_admin_geometry,
+        poblacion_rescatada,
+        rescue_unassigned,
+    )
     from .download import COUNTRY_BBOX, download_manifest
     from .raster_h3 import aggregate_rasters_to_h3
     from .vector_h3 import aggregate_points_to_h3
@@ -686,6 +739,7 @@ def build_country(
     ensure_layer_tables(conexion)
     load_country_neighbours(conexion, plan.iso3, bbox=caja, fetcher=fetcher)
     rescue_unassigned(conexion, tabla_datos="pop_h3")
+    rescate = poblacion_rescatada(conexion, "pop_h3")
 
     resumen = assemble_exposure(conexion, iso3=plan.iso3, manifest_id=plan.manifest.manifest_id)
     referencia = getattr(plan.manifest, "referencia_oficial", None)
@@ -706,5 +760,9 @@ def build_country(
     conexion.execute(
         f"COPY admin_lookup TO '{plan.salida / 'admin_lookup.parquet'}' (FORMAT PARQUET)"
     )
-    _log.info("activo construido", extra={"context": {"iso3": plan.iso3, **resumen}})
+    medicion = write_measurement(plan, resumen, rescate=rescate, referencia=referencia)
+    _log.info(
+        "activo construido",
+        extra={"context": {"iso3": plan.iso3, "medicion": str(medicion), **resumen}},
+    )
     return destino

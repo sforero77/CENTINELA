@@ -341,11 +341,49 @@ Es el mismo fallo que ya se corrigio una vez para Colombia —rescatar sin acota
 llevo la poblacion nacional de 52,6 a 167 millones— pero en pequeno, dentro de
 la cota, y por eso invisible durante meses.
 
-**La correccion que se perfila:** rescatar una celda solo si su centro no cae
-dentro de otro pais. Una celda cuyo centro esta en tierra brasilena es de
-Brasil, por cerca que este de la linea. Se puede resolver con los poligonos de
-pais de `division_area` de Overture, los mismos ocho ficheros que se leyeron
-para medir las cajas envolventes.
+**La correccion:** rescatar una celda solo si su centro no cae dentro de otro
+pais. Una celda cuyo centro esta en tierra brasilena es de Brasil, por cerca que
+este de la linea. Se resuelve con los poligonos de pais de `division_area` de
+Overture, los mismos ficheros que se leyeron para medir las cajas envolventes.
+
+#### Medida, en dos intentos
+
+El primero **no arreglo nada y no fallo**: Paraguay volvio a salir con los
+mismos 459.518 rescatados. La tabla de vecinos se habia cargado con **cero
+poligonos** y el build siguio adelante. La consulta corrio, devolvio cero filas,
+nadie se quejo — el modo de fallo que este proyecto persigue, cometido por el
+codigo que lo persigue.
+
+La causa: el filtro de poda de Overture comprueba que la **esquina inferior
+izquierda** del rasgo caiga dentro de la caja del pais. Vale para un edificio o
+un tramo de via, que son mas pequenos que la caja. Deja de valer para un pais:
+la esquina de Brasil esta en -73,99, muy al oeste de la caja paraguena, aunque
+Brasil ocupe media caja. Medido contra Overture 2026-08-19.0:
+
+| Poda | Paises devueltos en la caja de Paraguay |
+|---|---|
+| Contencion | PY |
+| **Interseccion** | **AR, BO, BR**, PY, FJ |
+
+Como el pais propio se excluye por definicion, con contencion la tabla quedaba
+vacia. (FJ aparece porque Fiji cruza el antimeridiano y su caja abarca el globo;
+no estorba, ningun punto paraguayo cae dentro de un poligono fiyiano.)
+
+Corregido a interseccion, y el caso "cero vecinos" pasa de INFO a WARNING: en
+LATAM solo Cuba no toca a nadie por tierra, y hasta su caja alcanza a Haiti.
+
+#### Resultado
+
+| Paraguay | Antes | Despues |
+|---|---:|---:|
+| Celdas rescatadas | 1.945 | **23** |
+| Poblacion rescatada | 459.518 | **112** |
+| Fraccion rescatada | 6,147 % | **0,002 %** |
+| Total nacional | 7.474.922 | **7.015.517** |
+| **Desvio frente a la ONU** | **+6,585 %** | **+0,035 %** |
+
+La prediccion era 7.015.404 —el total menos el rescate medido antes— y salieron
+7.015.517: los 113 de diferencia son el rescate legitimo que queda.
 
 ### El COD-AB publica dos nomenclaturas, no una
 

@@ -67,6 +67,10 @@ jobs:
             echo "::error::El build no dejo ningun .parquet en data/build"
             exit 1
           fi
+          # La medicion pesa un kilobyte y evita bajar el log entero para leer
+          # tres numeros al reajustar la tolerancia del manifest.
+          mapfile -t MEDICION < <(find data/build -name 'medicion.json' -type f)
+          PARQUETS+=("${MEDICION[@]}")
           printf 'publicando: %s\n' "${PARQUETS[@]}"
           # El tag lleva la fecha, asi que dos construcciones el mismo dia
           # chocan — y reconstruir el mismo dia es exactamente lo que pasa
