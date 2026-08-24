@@ -385,6 +385,34 @@ LATAM solo Cuba no toca a nadie por tierra, y hasta su caja alcanza a Haiti.
 La prediccion era 7.015.404 —el total menos el rescate medido antes— y salieron
 7.015.517: los 113 de diferencia son el rescate legitimo que queda.
 
+### Reemitir el backtest del Choco: cuanto corregian los arreglos
+
+El reporte publicado el 23-ago-2026 se calculo contra `col-v0.4`, el activo
+anterior a cablear las tres capas sueltas, a subir las bandas de edad hasta 90 y
+a anadir GHS-BUILT-S. Reemitido contra `col-v0.5` con `--reprocesar`:
+
+| Cifra en MMI≥7 | Publicado | Reemitido | |
+|---|---:|---:|---|
+| Kilometros de via | 1.397,7 | **8.502,9** | ×6,1 |
+| Poblacion 65+ | 271.688 | **289.257** | +6,5 % |
+| Edificaciones | 444.281 | 444.424 | +143 |
+| Sedes de salud | 512 | 518 | +6 |
+| Sedes educativas | 997 | 998 | +1 |
+| Superficie construida | — | 69,8 km² | capa nueva |
+| **Poblacion en MMI≥7** | **2.415.793,459** | **2.415.793,459** | **identica** |
+
+Dos cosas que conviene no mezclar.
+
+**La cifra principal no se movio ni un bit.** El golden de G1 la fija con ±0,5 %
+y pasa exacto. Tiene sentido: el area MMI≥7 de este evento es interior
+—Pereira, Buenaventura, Armenia, Tuluá, Dosquebradas— y ni el rescate de
+frontera ni el arreglo del multipoligono la tocan.
+
+**Los kilometros de via estaban seis veces cortos.** Un reporte publicado decia
+1.397 km cuando eran 8.503. Nadie lo habria notado: 1.397 km es una cifra
+perfectamente creible para una zona de intensidad. Es el cero silencioso en su
+version mas peligrosa — no un cero, un numero.
+
 ### El reparto no veia las islas, y el rescate lo tapaba
 
 `h3_polygon_wkt_to_cells` devuelve **cero** celdas ante un MULTIPOLYGON. No la
