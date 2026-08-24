@@ -201,7 +201,9 @@ def test_contencion_pierde_los_rasgos_mas_grandes_que_la_caja(
     caja = _caja_de_prueba()
 
     def cuenta(pred: str) -> int:
-        return int(con.execute(f"SELECT count(*) FROM rasgos WHERE {pred}").fetchone()[0])
+        fila = con.execute(f"SELECT count(*) FROM rasgos WHERE {pred}").fetchone()
+        assert fila is not None
+        return int(fila[0])
 
     assert bool(cuenta(bbox_predicate(caja))) is contiene, nombre
     assert bool(cuenta(bbox_predicate(caja, intersecta=True))) is interseca, nombre
