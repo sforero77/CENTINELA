@@ -1,6 +1,6 @@
 # Publicar el activo de exposicion
 
-El activo construido no va en git: pesa 17,3 MB por pais y crecera con cada
+El activo construido no va en git: pesa unos 19 MB por pais y crecera con cada
 pais de Fase 1. Va como **Release de GitHub**, y esa copia —no la URL de la
 fuente original— es la que sostiene RNF-04.
 
@@ -30,14 +30,15 @@ publicado.
 
 | Indicador | v0.4 (a mano) | v0.5 (pipeline) |
 |---|---:|---:|
-| Celdas | 519.735 | **561.244** |
+| Celdas | 519.735 | **558.022** |
 | Poblacion | 52.942.553 | **52.942.553** |
 | Edificaciones | 15.436.442 | **15.436.442** |
 | Sedes de salud | 9.615 | **9.907** |
-| Sedes educativas | 43.837 | **44.021** |
-| Kilometros de via | 44.919 | **335.244** |
+| Sedes educativas | 43.837 | **45.657** |
+| Kilometros de via | 44.919 | **307.784** |
 | Superficie construida | — | **1.600 km²** |
 | Municipios | 1.122 | **1.122** |
+| Peso | 17,3 MB | **18,9 MB** |
 
 **Poblacion y edificaciones coinciden hasta el ultimo digito.** Es la mejor
 evidencia de que el pipeline reproduce lo que se habia hecho a mano, y de que
@@ -48,11 +49,15 @@ Las que se mueven, y por que:
 
 - **Salud (+292):** ya no se pierde el aporte real de healthsites.io. Antes o se
   duplicaba o se descartaba entera; ahora entra deduplicada a 20 m.
-- **Educacion (+184):** deriva de OSM desde que se construyo el activo anterior.
-- **Celdas (+41.509):** las que tienen superficie construida detectada por
-  satelite pero ninguna otra capa. Son exactamente el hueco de mapeo que la
-  capa nueva existe para hacer visible.
-- **Vias (×7,5):** el activo anterior **excluia las calles residenciales**.
+- **Educacion (+1.820):** casi todo son celdas que el activo anterior tiraba.
+  El filtro que descarta las celdas vacias definia "vacia" con tres capas de
+  las nueve, asi que una celda cuyo unico contenido fuera una escuela se
+  descartaba con la escuela dentro: **1.664 sedes**, el 3,6 % de las del pais,
+  en zona rural dispersa. El resto es deriva de OSM.
+- **Celdas (+38.287):** las que tienen superficie construida detectada por
+  satelite, o solo equipamiento, y ninguna otra capa. Son exactamente el hueco
+  de mapeo que la capa nueva existe para hacer visible.
+- **Vias (×6,9):** el activo anterior **excluia las calles residenciales**.
   Medido sobre Quibdó, `residential` es el 60 % de la red. No es un error de
   ninguno de los dos: son dos cosas distintas, y por eso el reporte ahora
   publica **vias primarias y secundarias** y **vias locales** por separado en
