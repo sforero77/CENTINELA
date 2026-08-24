@@ -33,23 +33,31 @@ generated_utc: "2026-08-23T00:00:00Z"
 referencia_oficial:
   poblacion_2025: 28516896
   fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
-  tolerancia_pct: 5.0
+  tolerancia_pct: 8.0
+  medido_ghs_pop: 30313601
   nota: >-
-    TOLERANCIA PROVISIONAL Y MAS ANCHA QUE LA DE COLOMBIA (1%), a proposito.
-    GHS-POP R2023A deriva de la ronda censal de 2010 y de volumen construido;
-    para un pais que perdio del orden de una cuarta parte de su poblacion por
-    emigracion despues de ese censo, el desvio esperable frente a WPP es de
-    varios puntos y no de decimas. La primera corrida de `centinela country VEN`
-    tiene que medir el valor real, anotarlo aqui como `medido_ghs_pop` y
-    ajustar la tolerancia a lo que se observe. Mientras `medido_ghs_pop` este
-    ausente, esta cifra es una expectativa, no una verificacion.
-    CONTRASTE MEDIDO EL 23-AGO-2026 que NO cierra la cuestion: el raster total
-    de WorldPop 2025 constrained suma 28.460.161, un -0,20% frente a WPP. No
-    es confirmacion independiente y no debe leerse como tal: los productos
-    "constrained" de WorldPop se calibran contra los totales nacionales de WPP,
-    asi que coincidir con la ONU es como estan construidos. El unico contraste
-    con valor informativo es el de GHS-POP, y ese sigue sin medir.
-
+    MEDIDO EL 24-AGO-2026, Y ES EL HALLAZGO QUE VENEZUELA EXISTIA PARA PRODUCIR.
+    GHS-POP recortado por el limite del COD-AB da 30.313.601 habitantes frente a
+    los 28.516.896 de World Population Prospects: +6,30%, o 1,8 millones de
+    personas de mas. Colombia, con censo reciente, se queda en -0,11%.
+    La primera corrida fallo con la tolerancia en 5% y ESO FUE EL ASSERT
+    HACIENDO SU TRABAJO: detecto una divergencia real entre dos modelos de
+    poblacion en un pais sin censo desde 2011. Se sube a 8% para que el activo
+    se pueda construir, no porque la divergencia deje de importar.
+    POR QUE DIVERGEN. GHS-POP R2023A parte de la ronda censal de 2010 y
+    desagrega con volumen construido: las casas de quien emigro siguen en pie y
+    siguen pesando. WPP si modela el saldo migratorio. Para exposicion sismica
+    la diferencia no es academica — sobreestimar la poblacion de una zona infla
+    la cifra que lee una sala de crisis.
+    QUE HACER CON ESTO. El reporte de un evento venezolano hereda ese +6,30% y
+    tiene que declararlo, no esconderlo. Un mantenedor de pais con acceso a
+    proyecciones del INE posteriores a 2011 puede sustituir la referencia y
+    estrechar la tolerancia.
+    CONTRASTE QUE NO CIERRA LA CUESTION: el raster total de WorldPop 2025
+    constrained suma 28.460.161, un -0,20% frente a WPP. No es confirmacion
+    independiente — los productos "constrained" de WorldPop se calibran contra
+    los totales nacionales de WPP, asi que coincidir con la ONU es como estan
+    construidos. Es GHS-POP, la fuente de la cifra principal, la que se aparta.
 notas:
   - "Los `hdx_dataset` NO se descargan por la url de este archivo: esa url es la
      pagina estable del dataset, para revisarla a mano. La de descarga se

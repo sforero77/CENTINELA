@@ -247,6 +247,55 @@ antes del archipielago de San Pedro y San Pablo (29,35°O), que se asienta
 sismicidad oceanica frecuente y sin poblacion a cambio de una estacion
 cientifica con unas pocas personas.
 
+### GHS-POP sobrestima Venezuela en 1,8 millones de personas
+
+El hallazgo que Venezuela existia para producir, y la razon de haber elegido la
+ONU como referencia en vez del INE.
+
+| | |
+|---|---:|
+| GHS-POP E2025 recortado por el COD-AB | **30.313.601** |
+| ONU, World Population Prospects 2025 | 28.516.896 |
+| **Desvio** | **+6,30 %** |
+| Colombia, para comparar | -0,11 % |
+
+La primera corrida de `centinela country VEN` fallo con la tolerancia en 5 %, y
+**eso fue el assert funcionando**: detecto una divergencia real entre dos
+modelos de poblacion en un pais sin censo desde 2011. Se subio a 8 % para poder
+construir el activo, no porque la divergencia deje de importar.
+
+**Por que divergen.** GHS-POP R2023A parte de la ronda censal de 2010 y
+desagrega con volumen construido. Las casas de quien emigro siguen en pie y
+siguen pesando en el modelo. WPP si incorpora el saldo migratorio. Para un
+sistema de exposicion la diferencia no es academica: sobrestimar la poblacion de
+una zona infla la cifra que lee una sala de crisis.
+
+**El contraste que no cierra la cuestion.** El raster total de WorldPop 2025
+constrained suma 28.460.161, a -0,20 % de WPP. Parece confirmar a la ONU y no
+confirma nada: los productos "constrained" de WorldPop **se calibran contra los
+totales nacionales de WPP**, asi que coincidir es como estan construidos. La
+fuente que se aparta es GHS-POP, que es justamente de donde sale la cifra
+principal del reporte.
+
+**Consecuencia operativa.** Cualquier reporte de un evento venezolano hereda ese
++6,30 %. Un mantenedor de pais con proyecciones del INE posteriores a 2011 puede
+sustituir la referencia y estrechar la tolerancia.
+
+### El COD-AB publica dos nomenclaturas, no una
+
+Ecuador fue el primer pais construido con el COD-AB como unica fuente
+administrativa, y fallo:
+
+```
+ecu_adm_adm2_2024.shp no trae las columnas ['adm2_name', 'adm1_name'].
+Tiene: ['adm0_es', 'adm0_pcode', 'adm1_es', 'adm1_pcode', 'adm2_es', 'adm2_pcode', ...]
+```
+
+El codigo va siempre en `adm2_pcode`, pero el nombre depende de cuando se genero
+la entrega: `adm2_name` en las recientes —medido sobre Venezuela— y `adm2_es` en
+las antiguas. Con diecinueve paises, descubrir cada variante fallando no escala,
+asi que el mapeo admite varias y gana la primera cuyas cuatro columnas existan.
+
 ### El release de Overture sigue vigente
 
 `2026-08-19.0` responde y es el ultimo; `2026-07-22.0` tambien. Confirmado que
