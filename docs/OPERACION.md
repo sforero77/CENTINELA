@@ -71,7 +71,7 @@ queda corto justo donde vive la poblacion mas expuesta.
 
 ## 3. Lo que puede salir mal y no lo parece
 
-Siete cosas que producen cifras plausibles y equivocadas. Cada una tiene ya su
+Diez cosas que producen cifras plausibles y equivocadas. Cada una tiene ya su
 guardia; estan aqui para que se reconozcan si alguna vez fallan.
 
 **Una capa vacia se publica como cero.** No hace falta un bug: basta con no
@@ -109,7 +109,31 @@ celdas que caen dentro de ellos.
 
 Si Overture no responde, el rescate degrada al comportamiento anterior en vez de
 tumbar el build: correcto para una isla, generoso para un pais con frontera
-terrestre. El log lo dice.
+terrestre. El log lo dice — y **hay que mirarlo**, porque el primer intento de
+este arreglo cargo cero poligonos y siguio adelante sin quejarse. La linea
+`paises vecinos cargados` publica el embudo entero: candidatas, junto al pais,
+descartadas por vecino. Cero vecinos es ahora un WARNING: en LATAM solo Cuba no
+toca a nadie por tierra, y hasta su caja alcanza a Haiti.
+
+**Solo cuenta la tierra del vecino, no su mar.** Overture publica dos poligonos
+por pais —`is_land` e `is_territorial`— y cargar los dos rompe el caso costero:
+las aguas peruanas llegan hasta la frontera de Arica, asi que una celda del
+Pacifico frente a Chile caeria "dentro de Peru".
+
+**Una tolerancia ancha no vigila nada.** Las de los diecinueve manifests se
+fijaron para acomodar desvios que resultaron ser el fallo del rescate: la de
+Paraguay estaba en 7,5 % y su desvio real es +0,035 %. `centinela calibrar` las
+estrecha con lo que midio el ultimo build. **Ensancharlas no es automatico**: si
+el desvio se sale de la tolerancia vigente, el comando lo dice y no toca nada.
+Aflojar la alarma para que deje de sonar es lo que uno hace con prisa, y lo que
+no debe automatizarse.
+
+**Una funcion escrita no es una funcion conectada.** El calculo del reporte
+preliminar (RF-03) estaba escrito, comentado y probado, y no lo llamaba nadie:
+el evento pasaba a estado `preliminar` y no se publicaba nada. Ninguna prueba lo
+veia porque todas probaban la funcion, no el camino. Mismo patron que las tres
+capas del activo que se agregaban a tablas que nadie leia. Cuando algo "ya esta
+hecho", conviene comprobar quien lo llama.
 
 **Un NaN pasa por donde un cero no pasa.** `bool(float('nan'))` es `True`, asi
 que cualquier guardia escrita como `if not valor` lo deja pasar. Ecuador
@@ -183,7 +207,7 @@ En Windows no hay `make`; los objetivos del Makefile son atajos de una linea.
 | Requisito de la puerta de salida | Estado |
 |---|---|
 | G1 (Chocó) verde | ✅ |
-| G2 (Venezuela) verde | ⚠️ falta construir el activo de VEN |
+| G2 (Venezuela) verde | ⚠️ falta el **reporte**: el activo ya existe, falta correr el backtest de los dos mainshocks |
 | Un reporte real publicado sin intervencion | ⏳ lo cierra el primer sismo |
 | Latencia medida y publicada | ⏳ idem |
 
