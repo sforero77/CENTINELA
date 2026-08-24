@@ -64,6 +64,18 @@ class Calibracion:
     def aplicable(self) -> bool:
         return not self.motivo_bloqueo and self.estrecha
 
+    @property
+    def necesita_decision(self) -> bool:
+        """Solo cuando el desvio se sale de la tolerancia vigente.
+
+        Que la propuesta ensanche no es un problema: significa que la vigente ya
+        es mas estrecha que la politica de margen, y el assert pasa igual. Se
+        deja como esta y no se molesta a nadie. Confundir las dos cosas haria
+        que el comando pidiera atencion cada trimestre sin motivo, y una alarma
+        que suena sin motivo se acaba ignorando.
+        """
+        return bool(self.motivo_bloqueo) and abs(self.desvio_pct) > self.tolerancia_vigente > 0
+
 
 def tolerancia_propuesta(desvio_pct: float) -> float:
     """Tolerancia que corresponde a un desvio medido."""
@@ -96,8 +108,9 @@ def calibrar(medicion: dict[str, Any], referencia_manifest: dict[str, Any]) -> C
         )
     elif propuesta > vigente > 0:
         bloqueo = (
-            f"la tolerancia propuesta ({propuesta} %) ensancha la vigente "
-            f"({vigente} %). Solo se estrecha automaticamente."
+            f"nada que hacer: el desvio ({desvio:+.3f} %) cabe en la tolerancia "
+            f"vigente ({vigente} %), que ya es mas estrecha que la que propondria "
+            f"la politica de margen ({propuesta} %). Se deja como esta."
         )
     return Calibracion(
         iso3=iso3,

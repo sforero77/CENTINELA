@@ -147,7 +147,7 @@ def _cmd_calibrar(args: argparse.Namespace) -> int:
         if args.escribir:
             destino = (Path(args.manifests) if args.manifests else MANIFESTS_DIR) / f"{iso3}.yaml"
             escrito = aplicar(destino, cal, fecha=fecha)
-        if cal.motivo_bloqueo:
+        if cal.necesita_decision:
             bloqueadas += 1
         salida.append(
             {
@@ -159,6 +159,7 @@ def _cmd_calibrar(args: argparse.Namespace) -> int:
                 "tolerancia_propuesta": cal.tolerancia_propuesta,
                 "aplicable": cal.aplicable,
                 "motivo_bloqueo": cal.motivo_bloqueo,
+                "necesita_decision": cal.necesita_decision,
                 "escrito": escrito,
             }
         )
@@ -166,9 +167,13 @@ def _cmd_calibrar(args: argparse.Namespace) -> int:
     print(json.dumps(salida, ensure_ascii=False, indent=2))
     if not args.escribir:
         print("(simulacion: nada escrito. Anade --escribir)", file=sys.stderr)
-    # Una calibracion bloqueada no es un fallo del comando: es informacion que
-    # alguien tiene que mirar. Se distingue con codigo 2 para que un workflow
-    # pueda pararse sin confundirlo con un error.
+    # Un desvio fuera de tolerancia no es un fallo del comando: es informacion
+    # que alguien tiene que mirar. Se distingue con codigo 2 para que un
+    # workflow pueda pararse sin confundirlo con un error.
+    #
+    # Que la propuesta ensanche NO cuenta: significa que la vigente ya es mas
+    # estrecha que la politica de margen y el assert pasa igual. Una alarma que
+    # suena sin motivo cada trimestre se acaba ignorando.
     return 2 if bloqueadas else 0
 
 

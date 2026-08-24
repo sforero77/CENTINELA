@@ -47,12 +47,26 @@ def test_ensanchar_no_es_automatico() -> None:
     assert "aflojar la alarma" in cal.motivo_bloqueo
 
 
-def test_un_desvio_dentro_de_tolerancia_pero_mayor_tampoco_ensancha() -> None:
-    """3,0 % medido con 4,0 % vigente propondria 3,5 %: sigue siendo ensanchar."""
+def test_un_desvio_que_cabe_no_es_una_alarma() -> None:
+    """Caso real de Colombia y Mexico: la vigente ya es mas estrecha que la politica.
+
+    3,0 % medido con 3,2 % vigente: el assert pasa. La politica de margen
+    propondria 3,5 %, que ensancha, asi que no se toca — pero eso no es un
+    problema que alguien deba mirar. Confundirlo con uno haria sonar la alarma
+    cada trimestre sin motivo, y una alarma que suena sin motivo se ignora.
+    """
     cal = calibrar(_medicion("XXX", 103.0, 100.0, 3.0), {"tolerancia_pct": 3.2})
     assert cal.tolerancia_propuesta == pytest.approx(3.5)
     assert not cal.aplicable
-    assert "ensancha" in cal.motivo_bloqueo
+    assert not cal.necesita_decision
+    assert "nada que hacer" in cal.motivo_bloqueo
+
+
+def test_un_desvio_fuera_de_tolerancia_si_es_una_alarma() -> None:
+    """La otra mitad: aqui el assert del build ya estaria fallando."""
+    cal = calibrar(_medicion("XXX", 111.0, 100.0, 11.1), {"tolerancia_pct": 2.0})
+    assert cal.necesita_decision
+    assert "aflojar la alarma" in cal.motivo_bloqueo
 
 
 def test_hay_un_suelo() -> None:
