@@ -51,7 +51,12 @@
   </footer>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
+  <!-- pmtiles 4.x, no 3.x. MapLibre 4 pide las teselas desde un worker y el
+       protocolo de pmtiles 3.0.6 es anterior a ese cambio: el mapa se quedaba
+       en azul de agua, sin una sola capa y sin un solo error en consola.
+       Diagnosticado re-registrando el protocolo con la 4.3.0 en caliente:
+       el mapa ya creado empezo a dibujar en la siguiente peticion. -->
+  <script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
   <script src="assets/app.js" type="module"></script>
 </body>
 </html>
