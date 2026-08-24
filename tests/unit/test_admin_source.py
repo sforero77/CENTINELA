@@ -82,13 +82,41 @@ def test_las_pistas_cubren_las_dos_nomenclaturas() -> None:
 
 
 def test_colombia_usa_las_columnas_del_dane() -> None:
-    assert admin_columns("COL").adm2_id == "mpio_cdpmp"
+    variantes = admin_columns("COL")
+    assert len(variantes) == 1
+    assert variantes[0].adm2_id == "mpio_cdpmp"
 
 
 def test_el_resto_cae_en_cod_ab() -> None:
     """Es lo que hace que agregar un pais sea escribir un manifest, no codigo."""
+    from pipelines.p0_exposure.crosswalk import COD_AB_VARIANTES
+
     for iso3 in ("VEN", "MEX", "PER", "ECU", "CHL", "GTM", "BRA"):
-        assert admin_columns(iso3) is COD_AB_COLUMNS
+        assert admin_columns(iso3) is COD_AB_VARIANTES
+
+
+def test_el_cod_ab_tiene_dos_nomenclaturas() -> None:
+    """Medido: Venezuela usa adm2_name y Ecuador adm2_es.
+
+    Ecuador fallo el primer build con "no trae las columnas ['adm2_name',
+    'adm1_name']" y un listado que traia adm0_es, adm1_es y adm2_es. Las dos
+    conviven en el COD-AB segun cuando se publico la entrega.
+    """
+    from pipelines.p0_exposure.crosswalk import COD_AB_VARIANTES, match_columns
+
+    ven = {"adm2_pcode", "adm2_name", "adm1_pcode", "adm1_name", "geom"}
+    ecu = {"adm0_es", "adm0_pcode", "adm1_es", "adm1_pcode", "adm2_es", "adm2_pcode", "geom"}
+
+    assert match_columns(COD_AB_VARIANTES, ven) is not None
+    assert match_columns(COD_AB_VARIANTES, ecu) is not None
+    assert match_columns(COD_AB_VARIANTES, ven) != match_columns(COD_AB_VARIANTES, ecu)
+
+
+def test_una_nomenclatura_desconocida_no_encaja() -> None:
+    """Anadir una variante tiene que ser deliberado, no un acierto por azar."""
+    from pipelines.p0_exposure.crosswalk import COD_AB_VARIANTES, match_columns
+
+    assert match_columns(COD_AB_VARIANTES, {"codigo", "nombre", "geom"}) is None
 
 
 def test_las_columnas_de_cod_ab_son_las_medidas_en_el_archivo() -> None:
@@ -101,6 +129,14 @@ def test_las_columnas_de_cod_ab_son_las_medidas_en_el_archivo() -> None:
 
 def test_el_mapeo_no_distingue_mayusculas_en_el_iso() -> None:
     assert admin_columns("col") is admin_columns("COL")
+
+
+def test_las_columnas_se_comparan_sin_distinguir_mayusculas() -> None:
+    """HDX documenta ADM2_PCODE; el shapefile lo devuelve en minusculas."""
+    from pipelines.p0_exposure.crosswalk import COD_AB_VARIANTES, match_columns
+
+    mayusculas = {"ADM2_PCODE", "ADM2_NAME", "ADM1_PCODE", "ADM1_NAME"}
+    assert match_columns(COD_AB_VARIANTES, mayusculas) is not None
 
 
 # --- Escritura atomica de las descargas ------------------------------------
@@ -200,11 +236,21 @@ def test_el_empate_se_deshace_por_las_columnas_declaradas(tmp_path: Path) -> Non
 
     mgn = _capa(
         "MGN_ADM_MPIO_GRAFICO.geojson",
-        {"mpio_cdpmp": "05001", "mpio_cnmbr": "Medellín", "dpto_ccdgo": "05"},
+        {
+            "mpio_cdpmp": "05001",
+            "mpio_cnmbr": "Medellín",
+            "dpto_ccdgo": "05",
+            "dpto_cnmbr": "Antioquia",
+        },
     )
     cod_ab = _capa(
         "col_admbnda_adm2_2024.geojson",
-        {"adm2_pcode": "CO05001", "adm2_name": "Medellin", "adm1_pcode": "CO05"},
+        {
+            "adm2_pcode": "CO05001",
+            "adm2_name": "Medellin",
+            "adm1_pcode": "CO05",
+            "adm1_name": "Antioquia",
+        },
     )
 
     elegida = pick_admin_source([cod_ab, mgn], iso3="COL", con=connect())

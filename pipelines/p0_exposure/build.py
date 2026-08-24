@@ -360,9 +360,12 @@ def pick_admin_source(rutas: list[Path], *, iso3: str = "", con: Any | None = No
         return candidatas[0]
 
     if len(municipales) > 1 and con is not None and iso3:
-        mapeo = admin_columns(iso3)
-        pedidas = {mapeo.adm2_id.lower(), mapeo.nombre.lower()}
-        coinciden = [p for p in municipales if pedidas <= _columnas_de(con, p)]
+        from .crosswalk import match_columns
+
+        variantes = admin_columns(iso3)
+        coinciden = [
+            p for p in municipales if match_columns(variantes, _columnas_de(con, p)) is not None
+        ]
         if len(coinciden) == 1:
             _log.info(
                 "capa municipal elegida por columnas declaradas",

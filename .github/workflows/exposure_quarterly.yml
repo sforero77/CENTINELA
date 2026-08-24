@@ -1,5 +1,9 @@
 name: P0 · Activo de exposicion (trimestral)
 
+# El pais va en el nombre de la corrida: con varios paises en paralelo, la
+# lista de Actions es indistinguible sin esto.
+run-name: "Activo de exposicion — ${{ inputs.iso3 || 'COL' }}"
+
 on:
   schedule:
     # Dia 1 de enero, abril, julio y octubre, 06:00 UTC.

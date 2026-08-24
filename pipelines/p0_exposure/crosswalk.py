@@ -63,37 +63,80 @@ class AdminColumns:
     adm1_id: str
     departamento: str
 
+    @property
+    def nombres(self) -> tuple[str, ...]:
+        """Las cuatro columnas, para comprobarlas de una vez."""
+        return (self.adm2_id, self.nombre, self.adm1_id, self.departamento)
 
-#: Esquema por defecto: el **COD-AB de OCHA**, que publica adm1/adm2 con la
-#: misma forma para los 19 paises de LATAM. Es lo que evita pelear con veinte
-#: geoportales nacionales para obtener lo mismo.
+
+def match_columns(
+    variantes: tuple[AdminColumns, ...], disponibles: set[str]
+) -> AdminColumns | None:
+    """Primera variante cuyas cuatro columnas existan; ``None`` si ninguna.
+
+    La comparacion ignora mayusculas porque los shapefiles las devuelven en
+    minusculas y la documentacion de HDX las escribe en mayusculas.
+    """
+    en_minuscula = {c.lower() for c in disponibles}
+    for variante in variantes:
+        if all(col.lower() in en_minuscula for col in variante.nombres):
+            return variante
+    return None
+
+
+#: Esquema por defecto: el **COD-AB de OCHA**, que publica adm1/adm2 para los 19
+#: paises de LATAM. Es lo que evita pelear con veinte geoportales nacionales.
 #:
-#: Medido sobre ``ven_admin2.shp`` del COD-AB de Venezuela (336 municipios): los
-#: nombres son minusculas y **no** son los ``ADM2_PCODE`` / ``ADM2_ES`` de la
-#: documentacion antigua de HDX. El shapefile trunca a diez caracteres, que es
-#: por lo que ``adm2_ref_name`` aparece como ``adm2_ref_n``.
-COD_AB_COLUMNS = AdminColumns(
-    adm2_id="adm2_pcode",
-    nombre="adm2_name",
-    adm1_id="adm1_pcode",
-    departamento="adm1_name",
+#: **Pero no con una sola forma: con dos.** El codigo va siempre en
+#: ``adm2_pcode``, y el nombre depende de cuando se publico la entrega:
+#:
+#: * ``adm2_name`` en las recientes — medido sobre ``ven_admin2.shp``, 336
+#:   municipios.
+#: * ``adm2_es`` en las antiguas — medido sobre ``ecu_adm_adm2_2024.shp``, que
+#:   trae ``adm0_es``, ``adm1_es`` y ``adm2_es``.
+#:
+#: Se prueban en orden y gana la primera cuyas cuatro columnas existan. Anadir
+#: una variante nueva es anadir una entrada aqui, no una excepcion por pais:
+#: con diecinueve paises, lo segundo no escala.
+COD_AB_VARIANTES: tuple[AdminColumns, ...] = (
+    AdminColumns(
+        adm2_id="adm2_pcode",
+        nombre="adm2_name",
+        adm1_id="adm1_pcode",
+        departamento="adm1_name",
+    ),
+    AdminColumns(
+        adm2_id="adm2_pcode",
+        nombre="adm2_es",
+        adm1_id="adm1_pcode",
+        departamento="adm1_es",
+    ),
 )
+
+#: La primera variante, para quien solo necesite una referencia.
+COD_AB_COLUMNS = COD_AB_VARIANTES[0]
 
 #: Excepciones por pais. Colombia usa el MGN del DANE y no el COD-AB, porque el
 #: MGN es la fuente de verdad del codigo DIVIPOLA y del toponimo oficial.
-ADMIN_COLUMNS: dict[str, AdminColumns] = {
-    "COL": AdminColumns(
-        adm2_id="mpio_cdpmp",
-        nombre="mpio_cnmbr",
-        adm1_id="dpto_ccdgo",
-        departamento="dpto_cnmbr",
+ADMIN_COLUMNS: dict[str, tuple[AdminColumns, ...]] = {
+    "COL": (
+        AdminColumns(
+            adm2_id="mpio_cdpmp",
+            nombre="mpio_cnmbr",
+            adm1_id="dpto_ccdgo",
+            departamento="dpto_cnmbr",
+        ),
     ),
 }
 
 
-def admin_columns(iso3: str) -> AdminColumns:
-    """Mapeo de columnas del pais; COD-AB si no hay excepcion declarada."""
-    return ADMIN_COLUMNS.get(iso3.upper(), COD_AB_COLUMNS)
+def admin_columns(iso3: str) -> tuple[AdminColumns, ...]:
+    """Mapeos que puede tener el pais, en orden de preferencia.
+
+    Devuelve varios porque una misma fuente cambia de nomenclatura entre
+    entregas; quien los use prueba en orden contra las columnas reales.
+    """
+    return ADMIN_COLUMNS.get(iso3.upper(), COD_AB_VARIANTES)
 
 
 def validate_fractions(rows: Iterable[CrosswalkRow]) -> list[str]:
@@ -169,22 +212,21 @@ def load_admin_geometry(
         ValueError: si la fuente no trae alguna de las cuatro columnas. Fallar
             aqui es barato; descubrirlo despues de agregar nueve capas no.
     """
-    mapeo = columnas or admin_columns(iso3)
+    variantes = (columnas,) if columnas else admin_columns(iso3)
     ruta = fuente.as_posix()
     disponibles = {
         str(fila[0]).lower()
         for fila in con.execute(f"DESCRIBE SELECT * FROM ST_Read('{ruta}')").fetchall()
     }
-    faltan = [
-        col
-        for col in (mapeo.adm2_id, mapeo.nombre, mapeo.adm1_id, mapeo.departamento)
-        if col.lower() not in disponibles
-    ]
-    if faltan:
+    mapeo = match_columns(variantes, disponibles)
+    if mapeo is None:
+        pedidas = sorted({c for v in variantes for c in v.nombres})
         raise ValueError(
-            f"{fuente.name} no trae las columnas {faltan} que {iso3} necesita. "
-            f"Tiene: {sorted(disponibles)}. Declara el mapeo del pais en "
-            f"pipelines/p0_exposure/crosswalk.py::ADMIN_COLUMNS."
+            f"{fuente.name} no encaja con ninguna nomenclatura conocida para {iso3}. "
+            f"Se probaron {len(variantes)}: {pedidas}. El archivo tiene: "
+            f"{sorted(disponibles)}. Anade la variante en "
+            f"pipelines/p0_exposure/crosswalk.py::COD_AB_VARIANTES, o el mapeo del "
+            f"pais en ADMIN_COLUMNS si su fuente es nacional."
         )
 
     con.execute(
