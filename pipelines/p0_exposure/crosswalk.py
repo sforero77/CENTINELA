@@ -312,6 +312,18 @@ junto_al_pais AS (
     SELECT s.*
     FROM sin_asignar s
     WHERE ST_DWithin(ST_Point(s.lng, s.lat), (SELECT geom FROM pais), {max_grados})
+      -- Y que no caiga dentro de otro pais. Sin esto el rescate reclama una
+      -- franja del ancho de la cota alrededor de toda la frontera terrestre:
+      -- medido, Paraguay —interior— se llevaba 459.518 personas de Brasil,
+      -- Argentina y Bolivia, el 93 % de su desvio frente a la ONU.
+      --
+      -- La magnitud del rescate no distingue lo correcto de lo contaminado:
+      -- Chile rescata el 31 % de su poblacion y esta bien, porque su rescate es
+      -- mar. Lo que distingue es **sobre que esta la celda**.
+      AND NOT EXISTS (
+          SELECT 1 FROM vecinos v
+          WHERE ST_Within(ST_Point(s.lng, s.lat), v.geom)
+      )
 )
 SELECT j.h3_08, m.adm2_id, 1.0, TRUE
 FROM junto_al_pais j
@@ -351,6 +363,11 @@ def rescue_unassigned(
         SELECT ST_Union_Agg(geom) AS geom FROM admin_geom
         """
     )
+    # Sin tabla de vecinos el rescate no puede distinguir mar de pais ajeno. Se
+    # crea vacia para que el SQL siga siendo valido: en ese caso rescata como
+    # antes, que es lo correcto para una isla y lo demasiado generoso para un
+    # pais con frontera terrestre.
+    con.execute("CREATE TABLE IF NOT EXISTS vecinos (iso2 VARCHAR, geom GEOMETRY)")
     antes: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
     con.execute(SQL_RESCATE.format(tabla_datos=tabla_datos, max_grados=max_grados))
     despues: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]

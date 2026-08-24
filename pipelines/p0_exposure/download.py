@@ -80,6 +80,31 @@ COUNTRY_BBOX: dict[str, BBox] = {
 }
 
 
+#: ISO 3166-1 alfa-2 de cada pais cubierto. Overture etiqueta sus divisiones con
+#: el codigo de dos letras; el resto del sistema usa el de tres.
+ISO3_A_ISO2: dict[str, str] = {
+    "ARG": "AR",
+    "BOL": "BO",
+    "BRA": "BR",
+    "CHL": "CL",
+    "COL": "CO",
+    "CRI": "CR",
+    "CUB": "CU",
+    "DOM": "DO",
+    "ECU": "EC",
+    "GTM": "GT",
+    "HND": "HN",
+    "MEX": "MX",
+    "NIC": "NI",
+    "PAN": "PA",
+    "PER": "PE",
+    "PRY": "PY",
+    "SLV": "SV",
+    "URY": "UY",
+    "VEN": "VE",
+}
+
+
 def countries_for_point(lon: float, lat: float) -> list[str]:
     """Paises cuya caja envolvente contiene el punto, del mas ajustado al menos.
 

@@ -200,3 +200,48 @@ def aggregate_roads_to_h3(
         extra={"context": {"tabla": tabla, "celdas": celdas, "km": total, "ficheros": len(urls)}},
     )
     return VectorSum(tabla=tabla, celdas=int(celdas or 0), total=float(total or 0))
+
+
+#: Subtipo de ``division_area`` que delimita un pais entero.
+COUNTRY_SUBTYPE = "country"
+
+
+def load_neighbours(
+    con: Any,
+    urls: list[str],
+    *,
+    bbox: BBox,
+    iso2_propio: str,
+    tabla: str = "vecinos",
+) -> int:
+    """Materializa los poligonos de los **otros** paises dentro de la caja.
+
+    Los usa el rescate de celdas fronterizas para no reclamar gente del vecino.
+    Sin esta tabla el rescate solo sabe "esta cerca de mi pais", y cerca de una
+    frontera terrestre eso incluye el otro lado: medido, Paraguay se llevaba
+    459.518 personas de Brasil, Argentina y Bolivia.
+
+    Se excluye el pais propio a proposito. Sus celdas ya las reparte el polyfill
+    por contencion, y meterlo aqui haria que el rescate se descartara a si mismo.
+    """
+    ensure_httpfs(con)
+    con.execute(f"DROP TABLE IF EXISTS {tabla}")
+    con.execute(f"CREATE TABLE {tabla} (iso2 VARCHAR, geom GEOMETRY)")
+    for url in urls:
+        con.execute(
+            f"""
+            INSERT INTO {tabla}
+            SELECT country, geometry
+            FROM read_parquet('{url}')
+            WHERE subtype = '{COUNTRY_SUBTYPE}'
+              AND country IS NOT NULL
+              AND country <> '{iso2_propio}'
+              AND {bbox_predicate(bbox)}
+            """
+        )
+    n: int = con.execute(f"SELECT count(*) FROM {tabla}").fetchone()[0]
+    _log.info(
+        "paises vecinos cargados para acotar el rescate",
+        extra={"context": {"tabla": tabla, "poligonos": n, "excluido": iso2_propio}},
+    )
+    return n

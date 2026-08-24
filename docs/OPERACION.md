@@ -96,12 +96,20 @@ republicar el activo hay una ventana. La vista de exposicion rellena las
 columnas que falten para que el reporte salga igual, con una **ausencia** y no
 un cero.
 
-**El rescate de frontera puede reclamar gente del pais vecino.** Es el sospechoso
-confirmado del sesgo de poblacion: en Paraguay el 6,1 % del total entra por
-celdas rescatadas y explica el 93 % de su desvio frente a la ONU. Cada build
-registra ahora `pop_rescatada_pct`; **si sube de un 1-2 % en un pais con costa, o
-de casi nada en uno interior, hay que mirarlo**. Pendiente de corregir acotando
-el rescate a celdas que no caigan dentro de otro pais.
+**El rescate de frontera reclamaba gente del pais vecino.** Fue el origen del
+sesgo de poblacion: en Paraguay el 6,1 % del total entraba por celdas rescatadas
+y explicaba el 93 % de su desvio frente a la ONU.
+
+**La magnitud no es la senal.** Chile rescata el **31 %** de su poblacion y su
+cifra es correcta, porque su rescate es mar: sin el perderia 6,1 millones de
+personas. Lo que distingue lo correcto de lo contaminado no es cuanto se rescata
+sino **sobre que esta la celda** — agua, o tierra de otro pais. Corregido
+cargando los poligonos de los paises limitrofes desde Overture y excluyendo las
+celdas que caen dentro de ellos.
+
+Si Overture no responde, el rescate degrada al comportamiento anterior en vez de
+tumbar el build: correcto para una isla, generoso para un pais con frontera
+terrestre. El log lo dice.
 
 **Un NaN pasa por donde un cero no pasa.** `bool(float('nan'))` es `True`, asi
 que cualquier guardia escrita como `if not valor` lo deja pasar. Ecuador

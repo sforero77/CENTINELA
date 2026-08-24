@@ -15,9 +15,14 @@ from ..common.geo import BBox
 from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.manifest import Manifest, lint_manifest
+from .download import ISO3_A_ISO2
 from .layers import LAYERS, LayerSpec, required_layers
 
 _log = get_logger(__name__)
+
+#: Release de Overture usado cuando no se pasa uno explicito. Los manifests
+#: fijan el suyo; esto solo cubre la llamada suelta.
+OVERTURE_RELEASE_POR_DEFECTO = "2026-08-19.0"
 
 
 @dataclass(frozen=True, slots=True)
@@ -501,6 +506,57 @@ def age_rasters_by_column(rutas: list[Path]) -> dict[str, list[Path]]:
     }
 
 
+def load_country_neighbours(
+    con: Any,
+    iso3: str,
+    *,
+    bbox: BBox,
+    fetcher: Fetcher,
+    release: str = "",
+) -> int:
+    """Carga los paises limitrofes para que el rescate no invada al vecino.
+
+    El rescate asigna municipio a las celdas con poblacion que caen fuera del
+    pais. Sin saber donde empieza el vecino, "fuera del pais y cerca" incluye el
+    otro lado de la frontera: medido, Paraguay se llevaba 459.518 personas de
+    Brasil, Argentina y Bolivia — el 93 % de su desvio frente a la ONU.
+
+    No sustituye al rescate: Chile rescata el 31 % de su poblacion y esta bien,
+    porque su rescate es mar. Lo que acota es **de donde** puede rescatar.
+
+    Si Overture no responde se sigue sin vecinos, con el comportamiento anterior:
+    para una isla es correcto y para un pais con frontera terrestre, generoso.
+    Un fallo aqui no puede tumbar un build de casi una hora.
+    """
+    from .overture_h3 import load_neighbours
+    from .sources.overture import THEME_DIVISIONS, resolve_data_urls, select_files
+
+    iso2 = ISO3_A_ISO2.get(iso3.upper(), "")
+    if not iso2:
+        _log.warning(
+            "sin ISO2 declarado: el rescate no podra distinguir mar de pais vecino",
+            extra={"context": {"iso3": iso3}},
+        )
+        return 0
+    try:
+        ficheros = select_files(
+            fetcher,
+            bbox,
+            release=release or OVERTURE_RELEASE_POR_DEFECTO,
+            theme=THEME_DIVISIONS[0],
+            type_=THEME_DIVISIONS[1],
+        )
+        return load_neighbours(
+            con, resolve_data_urls(fetcher, ficheros), bbox=bbox, iso2_propio=iso2
+        )
+    except Exception as exc:  # el rescate degrada, no se cae
+        _log.warning(
+            "no se pudieron cargar los paises vecinos; el rescate sera mas generoso",
+            extra={"context": {"iso3": iso3, "error": str(exc)}},
+        )
+        return 0
+
+
 def build_overture_layers(
     con: Any,
     manifest: Manifest,
@@ -628,6 +684,7 @@ def build_country(
     # El rescate de costa necesita saber que celdas tienen dato, asi que va
     # despues de la poblacion y antes del ensamblaje.
     ensure_layer_tables(conexion)
+    load_country_neighbours(conexion, plan.iso3, bbox=caja, fetcher=fetcher)
     rescue_unassigned(conexion, tabla_datos="pop_h3")
 
     resumen = assemble_exposure(conexion, iso3=plan.iso3, manifest_id=plan.manifest.manifest_id)
