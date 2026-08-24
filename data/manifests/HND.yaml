@@ -34,20 +34,22 @@ generated_utc: "2026-08-23T00:00:00Z"
 referencia_oficial:
   poblacion_2025: 11005850
   fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
-  tolerancia_pct: 25.0
+  tolerancia_pct: 1.5
+  medido_ghs_pop: 11088173
   nota: >-
-    TOLERANCIA DE ARRANQUE, DELIBERADAMENTE ANCHA. Mientras `medido_ghs_pop`
-    este ausente el assert no puede comprobar que GHS-POP concuerde con la ONU
-    —nadie lo ha medido en este pais— y solo sirve para lo otro que vigila:
-    detectar un error grosero de construccion. Esos no se parecen a un 6% de
-    desvio, se parecen al de Colombia antes de acotar el rescate de costa, que
-    paso de 52,6 a 167 millones. Un 25% los caza y deja que la primera corrida
-    mida.
-    QUE HACER DESPUES. La primera corrida imprime el total real: hay que
-    anotarlo aqui como `medido_ghs_pop` y **estrechar la tolerancia** a lo
-    observado mas un margen, explicando el cambio en el PR. Colombia, medida,
-    usa 1%; Venezuela, 8%. Dejar el 25% seria conservar una guardia que ya no
-    vigila nada.
+    MEDIDO EL 24-AGO-2026. GHS-POP recortado por el limite del COD-AB da
+    11.088.173 habitantes frente a los 11.005.850 de World Population
+    Prospects: +0,75%
+    La tolerancia se fija en 1.5%, con un punto de margen
+    sobre lo observado.
+    CONTEXTO REGIONAL: medidos los 18 paises construidos, los desvios van de
+    -0,80% (Chile) a +6,59% (Paraguay), y quince de dieciocho son positivos.
+    La hipotesis que mejor encaja con ese orden es geometrica y no
+    demografica: los paises con mas frontera en proporcion a su area se
+    desvian mas, lo que apuntaria al rescate de celdas fronterizas del
+    crosswalk y no a un sesgo de GHS-POP. ESTA SIN COMPROBAR, y se comprueba
+    sumando la poblacion de las celdas marcadas `rescatada = TRUE`.
+    Mientras tanto la cifra de exposicion de este pais hereda ese desvio.
 
 notas:
   - "Caja envolvente medida sobre `division_area` de Overture (subtype=country,
