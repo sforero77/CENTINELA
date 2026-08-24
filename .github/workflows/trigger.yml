@@ -1,0 +1,106 @@
+name: P1 · Trigger USGS
+
+# Cron best-effort: GitHub Actions documenta demoras normales de 5-30 min y el
+# intervalo minimo es 5 min. El SLO (O1) se define sobre lo controlable, no
+# sobre la puntualidad del cron. Mitigaciones activas:
+#   * feed de respaldo 4.5_day, que cubre la demora sin perder eventos
+#   * workflow_dispatch, para disparar a mano en cualquier momento
+#   * keepalive.yml, contra la desactivacion automatica a los 60 dias
+#   * monitor externo (healthchecks.io), que alerta si no hay latido en 30 min
+# Upgrade path documentado (no Fase 0): cron externo -> repository_dispatch.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "No escribir event_state (simulacro)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trigger
+  cancel-in-progress: false
+
+jobs:
+  vigilar:
+    runs-on: ubuntu-latest
+    # Los forks no deben disparar reportes: es el comportamiento por defecto de
+    # GitHub para schedules, y aqui es exactamente lo que queremos (RNF-07).
+    if: github.repository == 'sforero77/CENTINELA'
+    outputs:
+      eventos: ${{ steps.trigger.outputs.eventos }}
+      hay_trabajo: ${{ steps.trigger.outputs.hay_trabajo }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Solo el nucleo: el trigger esta en el camino critico de latencia y no
+      # debe pagar el costo de instalar duckdb/rasterio.
+      - name: Instalar nucleo
+        run: uv sync --python 3.12 --no-dev
+
+      - name: Revisar el feed
+        id: trigger
+        run: uv run centinela trigger ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Persistir event_state
+        if: steps.trigger.outputs.hay_trabajo == 'true' && !inputs.dry_run
+        env:
+          # Via env, no por interpolacion en el shell: los ids vienen de un
+          # tercero y no deben poder convertirse en comandos.
+          EVENTOS: ${{ steps.trigger.outputs.eventos }}
+        run: |
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+          git add events/ site/status.json
+          git diff --staged --quiet && exit 0
+          git commit -m "P1: eventos detectados $EVENTOS"
+          # P2 empuja a la misma rama; sin rebase, dos jobs concurrentes se
+          # rechazan mutuamente y se pierde el estado del evento.
+          for intento in 1 2 3 4; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+            sleep $((2 ** intento))
+          done
+          exit 1
+
+      # Latido para el monitor externo. Si deja de llegar, el equipo recibe
+      # alerta en 30 min (§6.5) — la desactivacion silenciosa del cron es el
+      # modo de falla mas probable de todo el sistema.
+      - name: Latido al monitor externo
+        if: always() && env.HEALTHCHECK_URL != ''
+        env:
+          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+        run: curl -fsS --retry 3 "$HEALTHCHECK_URL" || true
+
+  despachar:
+    needs: vigilar
+    if: needs.vigilar.outputs.hay_trabajo == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Disparar P2 por evento
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Este job no hace checkout, asi que `gh` no puede inferir el
+          # repositorio del remoto de git: hay que decirselo.
+          GH_REPO: ${{ github.repository }}
+          EVENTOS: ${{ needs.vigilar.outputs.eventos }}
+        run: |
+          echo "$EVENTOS" | python3 -c '
+          import json, os, subprocess, sys
+          for usgs_id in json.load(sys.stdin):
+              subprocess.run([
+                  "gh", "workflow", "run", "impact.yml",
+                  "-f", f"usgs_id={usgs_id}",
+              ], check=True)
+          '

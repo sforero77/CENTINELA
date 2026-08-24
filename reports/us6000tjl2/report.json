@@ -1,0 +1,140 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us6000tjl2",
+    "mag": 7.4,
+    "depth_km": 110.285,
+    "utc": "2026-08-10T12:34:28Z",
+    "lugar": "5 km al S de San José del Palmar, Chocó, Colombia",
+    "pager_alert": "red"
+  },
+  "inputs": {
+    "shakemap_version": 7,
+    "groundfailure_version": 7,
+    "exposure_manifest": "col-v0.4"
+  },
+  "preliminar": false,
+  "totales": {
+    "pop_mmi6p": 6960085.743641049,
+    "pop_mmi7p": 2415793.4590726923,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 271688.18411253,
+    "bld_mmi7p": 444281.0,
+    "health_mmi7p": 512.0,
+    "edu_mmi7p": 997.0,
+    "road_km_mmi7p": 1397.6578971489403,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 1600028.0208497662
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "66001",
+      "nombre": "Pereira",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 498099.9250317244
+    },
+    {
+      "adm2_id": "76109",
+      "nombre": "Buenaventura",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 401081.3250222858
+    },
+    {
+      "adm2_id": "63001",
+      "nombre": "Armenia",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 339027.23267125804
+    },
+    {
+      "adm2_id": "76834",
+      "nombre": "Tuluá",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 256921.917987613
+    },
+    {
+      "adm2_id": "66170",
+      "nombre": "Dosquebradas",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 180620.49054662883
+    },
+    {
+      "adm2_id": "76147",
+      "nombre": "Cartago",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 129910.50064553693
+    },
+    {
+      "adm2_id": "27001",
+      "nombre": "Quibdó",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 111742.45586497057
+    },
+    {
+      "adm2_id": "66682",
+      "nombre": "Santa Rosa De Cabal",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 67775.61170557514
+    },
+    {
+      "adm2_id": "63401",
+      "nombre": "La Tebaida",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 54247.76072970964
+    },
+    {
+      "adm2_id": "76895",
+      "nombre": "Zarzal",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 39669.865389760584
+    },
+    {
+      "adm2_id": "76020",
+      "nombre": "Alcalá",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 37139.00253418367
+    },
+    {
+      "adm2_id": "76400",
+      "nombre": "La Unión",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 34735.664364411496
+    },
+    {
+      "adm2_id": "63470",
+      "nombre": "Montenegro",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 31681.55454718042
+    },
+    {
+      "adm2_id": "63594",
+      "nombre": "Quimbaya",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 31506.350372412242
+    },
+    {
+      "adm2_id": "17174",
+      "nombre": "Chinchiná",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 29454.54325528536
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 3.2,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-23T18:25:59Z",
+  "pipeline_version": "0.1.0"
+}

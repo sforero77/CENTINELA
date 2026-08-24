@@ -1,0 +1,21 @@
+{
+  "type": "Feature",
+  "id": "us7000fresh",
+  "properties": {
+    "mag": 6.1,
+    "place": "Costa de Ecuador",
+    "time": 1787115600000,
+    "products": {
+      "origin": [
+        {
+          "status": "UPDATE",
+          "preferredWeight": 231,
+          "updateTime": 1787115700000,
+          "properties": { "version": "1" },
+          "contents": {}
+        }
+      ]
+    }
+  },
+  "geometry": { "type": "Point", "coordinates": [-80.9, -0.9, 30.0] }
+}

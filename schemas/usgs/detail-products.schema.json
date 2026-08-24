@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://centinela.dev/schemas/usgs/detail-products.schema.json",
+  "title": "Contrato del feed detail de USGS (objeto products)",
+  "description": "El feed detail es la puerta unica a shakemap, ground-failure y losspager. Cada producto es una lista de versiones; CENTINELA elige por preferredWeight y updateTime.",
+  "type": "object",
+  "required": ["id", "properties"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "properties": {
+      "type": "object",
+      "required": ["products"],
+      "properties": {
+        "products": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "string" },
+                "preferredWeight": { "type": ["integer", "string"] },
+                "updateTime": { "type": ["integer", "string"] },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "version": { "type": ["string", "integer"] },
+                    "alertlevel": { "type": "string" }
+                  }
+                },
+                "contents": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "url": { "type": "string", "format": "uri" },
+                      "length": { "type": ["integer", "string"] },
+                      "contentType": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

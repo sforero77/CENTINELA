@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CENTINELA — exposicion sismica en America Latina</title>
+  <meta name="description" content="Reportes automaticos de exposicion sismica por municipio y celda H3 para America Latina. Datos abiertos, sin backend." />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <!-- Sin llaves de API en el camino critico (D6). Las librerias se sirven
+       desde CDN publica; el visor funciona sin backend propio. -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+</head>
+<body>
+  <header class="barra">
+    <h1>CENTINELA</h1>
+    <p class="lema">Exposicion sismica estimada · America Latina</p>
+    <nav>
+      <a href="#eventos">Eventos</a>
+      <a href="status.html">Estado</a>
+      <a href="https://github.com/sforero77/CENTINELA">Codigo</a>
+    </nav>
+  </header>
+
+  <aside class="aviso" role="note">
+    <strong>Exposicion no es dano.</strong> Este sistema no es una alerta
+    temprana, no estima victimas y no dictamina habitabilidad. Informa cuanta
+    poblacion e infraestructura quedo <em>dentro</em> de cada franja de
+    intensidad.
+  </aside>
+
+  <main>
+    <section id="mapa-seccion">
+      <div id="mapa" role="application" aria-label="Mapa de exposicion sismica"></div>
+      <div class="leyenda" id="leyenda" hidden></div>
+    </section>
+
+    <section id="eventos">
+      <h2>Reportes publicados</h2>
+      <p class="cargando" id="estado-lista">Cargando eventos…</p>
+      <ul class="lista-eventos" id="lista-eventos"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      Intensidad: USGS ShakeMap (dominio publico) ·
+      Poblacion: GHS-POP, JRC/Comision Europea ·
+      Edificaciones y vias: Overture Maps, © OpenStreetMap contributors (ODbL)
+    </p>
+    <p>Codigo bajo Apache-2.0 · Datos del nucleo bajo CC BY 4.0</p>
+  </footer>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
+  <script src="assets/app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+[
+  {
+    "usgs_id": "us6000tjl2",
+    "mag": 7.4,
+    "lugar": "5 km al S de San José del Palmar, Chocó, Colombia",
+    "utc": "2026-08-10T12:34:28Z",
+    "shakemap_version": 7,
+    "preliminar": false,
+    "generado_utc": "2026-08-23T18:25:59Z"
+  }
+]

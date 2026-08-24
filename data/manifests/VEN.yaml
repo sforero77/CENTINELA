@@ -1,0 +1,187 @@
+# Manifest de vintages — Venezuela (Fase 1, cierra la asercion (b) de G2).
+#
+# REGLA DURA: nunca "latest". Overture publica release mensual y su catalogo
+# STAC apunta siempre al ultimo; fijar el release explicito es lo que hace que
+# un reporte de hace seis meses siga siendo reproducible (RNF-04).
+#
+# Verificado contra fuentes primarias el 23-ago-2026: cada fuente de aqui se
+# probo con una peticion real, y las columnas del COD-AB se leyeron abriendo el
+# shapefile, no la documentacion. Los `sha256` se llenan en la primera corrida.
+
+manifest_id: ven-v0.1
+iso3: VEN
+generated_utc: "2026-08-23T00:00:00Z"
+
+# Referencia oficial para el assert de calidad de §6.4.
+#
+# Se usa la ONU y no el INE: el ultimo censo venezolano es de 2011 y sus
+# proyecciones no incorporan la emigracion posterior, que es el hecho
+# demografico dominante del pais en la ultima decada. World Population
+# Prospects si la modela.
+#
+# La cifra se obtiene sin credenciales. El endpoint de datos de la propia ONU
+# (population.un.org/dataportalapi/api/v1/data/...) responde 401 y exige un
+# Bearer token, lo que viola O4; la API del Banco Mundial republica la serie de
+# WPP y responde en abierto:
+#
+#   https://api.worldbank.org/v2/country/VEN/indicator/SP.POP.TOTL?format=json&date=2025:2025
+#
+# Los metadatos del indicador SP.POP.TOTL citan como fuente primaria
+# "World Population Prospects, United Nations (UN), publisher: UN Population
+# Division". Medido el 23-ago-2026: 2023 = 28.300.854, 2024 = 28.405.543,
+# 2025 = 28.516.896.
+referencia_oficial:
+  poblacion_2025: 28516896
+  fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
+  tolerancia_pct: 5.0
+  nota: >-
+    TOLERANCIA PROVISIONAL Y MAS ANCHA QUE LA DE COLOMBIA (1%), a proposito.
+    GHS-POP R2023A deriva de la ronda censal de 2010 y de volumen construido;
+    para un pais que perdio del orden de una cuarta parte de su poblacion por
+    emigracion despues de ese censo, el desvio esperable frente a WPP es de
+    varios puntos y no de decimas. La primera corrida de `centinela country VEN`
+    tiene que medir el valor real, anotarlo aqui como `medido_ghs_pop` y
+    ajustar la tolerancia a lo que se observe. Mientras `medido_ghs_pop` este
+    ausente, esta cifra es una expectativa, no una verificacion.
+    CONTRASTE MEDIDO EL 23-AGO-2026 que NO cierra la cuestion: el raster total
+    de WorldPop 2025 constrained suma 28.460.161, un -0,20% frente a WPP. No
+    es confirmacion independiente y no debe leerse como tal: los productos
+    "constrained" de WorldPop se calibran contra los totales nacionales de WPP,
+    asi que coincidir con la ONU es como estan construidos. El unico contraste
+    con valor informativo es el de GHS-POP, y ese sigue sin medir.
+
+notas:
+  - "Los `hdx_dataset` NO se descargan por la url de este archivo: esa url es la
+     pagina estable del dataset, para revisarla a mano. La de descarga se
+     resuelve por la API de HDX en cada build."
+  - "El COD-AB de Venezuela llega como ZIP con los cuatro niveles
+     administrativos mas lineas y puntos. `ven_admin2.shp` es el nivel
+     municipal: 336 registros, que coincide con los 335 municipios mas el
+     Distrito Capital. Columnas verificadas abriendo el archivo con DuckDB:
+     `adm2_pcode`, `adm2_name`, `adm1_pcode`, `adm1_name` — en minusculas y NO
+     los `ADM2_PCODE`/`ADM2_ES` que documenta HDX para entregas mas viejas."
+  - "PENDIENTE DEL MANTENEDOR DE PAIS: al leer los toponimos del COD-AB con
+     DuckDB aparecen mal codificados ('Falc?n' por 'Falcón'). Hay que
+     determinar si falta el `.cpg` en la entrega o si el `.dbf` no es UTF-8, y
+     corregirlo antes de publicar un reporte: los nombres de municipio salen
+     impresos en el reporte y en el hilo."
+  - "La caja envolvente de COUNTRY_BBOX['VEN'] esta medida sobre este mismo
+     ven_admin2.shp y excluye la Isla de Aves, que el COD-AB tampoco incluye."
+
+sources:
+  - id: ghs_pop_2025
+    layer: pop_ghs
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    sha256: ""
+    notes: >-
+      Mismo producto global que Colombia; la seleccion de teselas la hace
+      pipelines/p0_exposure/sources/ghsl.py a partir de la caja del pais. No se
+      descarga esta URL: el mosaico global pesa 5,25 GB.
+      Schiavina et al. 2023, doi:10.2905/2FF68A52.
+
+  - id: ghs_built_s_2025
+    layer: built_ghsl
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    sha256: ""
+    notes: >-
+      Superficie construida en m² por pixel de 100 m, derivada de Sentinel-2 y
+      Landsat. Misma retícula, misma epoca y misma licencia que GHS-POP, asi que
+      reutiliza el selector de teselas y no anade dependencias: unos 90 MB mas
+      por pais. Verificado que la tesela R9_C11 responde con el mismo esquema de
+      nombres que la de poblacion.
+      POR QUE ENTRA: la debilidad documentada del conteo de edificaciones de
+      Overture son los huecos en asentamientos informales y zona rural dispersa
+      —justo donde vive la poblacion mas expuesta—. Esta capa no depende de que
+      alguien haya mapeado el barrio, asi que convierte la bandera
+      `revisar_sin_edificios` en una cifra: `construido_no_mapeado` marca las
+      celdas con mas de 1.000 m² construidos y cero edificaciones registradas.
+      LO QUE NO ES: no dice cuantas edificaciones hay ni de que tipo. 40.000 m²
+      pueden ser una bodega o cien viviendas. Contrasta a Overture, no lo
+      sustituye.
+
+  - id: worldpop_agesex_2025
+    layer: pop_worldpop_agesex
+    url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/VEN/v1/100m/constrained/
+    license: CC-BY-4.0
+    vintage: R2025A-2025-constrained-100m
+    sha256: ""
+    notes: >-
+      Verificado: HTTP 200 y las 20 bandas de la serie combinada `ven_t_<edad>`,
+      de 00 a 90. La url apunta al directorio; solo se baja la serie `_t_`
+      (sumar tambien `_f_` y `_m_` contaria cada persona dos veces).
+
+  - id: worldpop_total_2025
+    layer: pop_worldpop_total
+    url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/VEN/v1/100m/constrained/ven_pop_2025_CN_100m_R2025A_v1.tif
+    license: CC-BY-4.0
+    vintage: R2025A-2025-constrained-100m
+    sha256: ""
+    notes: >-
+      Verificado: HTTP 200. Alimenta la banda de discrepancia publicada, nunca
+      la cifra principal. En Venezuela esa banda importa mas que en Colombia:
+      es la que hace visible la distancia entre dos modelos de poblacion en un
+      pais sin censo reciente.
+
+  - id: overture_buildings
+    layer: buildings
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    sha256: ""
+    notes: >-
+      No se descarga: DuckDB lee los parquet en remoto podando por la columna
+      `bbox`. El subtipo `type=building` trae las huellas; `type=building_part`
+      es geometria auxiliar y contarla inflaria bld_count.
+
+  - id: overture_transportation
+    layer: roads
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    sha256: ""
+    notes: >-
+      `type=segment` es la geometria lineal; `type=connector` son nodos. Se
+      filtra `subtype = 'road'`: el tema tambien publica ferrocarril y agua.
+
+  - id: cod_ab_ven
+    layer: divisions
+    url: https://data.humdata.org/dataset/cod-ab-ven
+    hdx_dataset: cod-ab-ven
+    hdx_resource: "ven_admin_boundaries.shp"
+    license: CC-BY-IGO
+    vintage: COD-AB-2020
+    sha256: ""
+    notes: >-
+      Fuente de verdad de adm1/adm2. Se fija el recurso SHP (18,8 MB) y no el
+      GeoJSON (17,5 MB) porque el shapefile trae el CRS declarado en su `.prj`
+      y es el que se uso para verificar columnas y caja envolvente.
+      A diferencia de Colombia, aqui no hay fuente nacional: el COD-AB es la
+      unica geometria administrativa del manifest, asi que si este recurso
+      cambia de nombre el build falla en `pick_admin_source` en vez de
+      construir un crosswalk silenciosamente equivocado.
+
+  - id: hotosm_health
+    layer: health
+    url: https://data.humdata.org/dataset/hotosm_ven_health_facilities
+    hdx_dataset: hotosm_ven_health_facilities
+    license: ODbL-1.0
+    vintage: "2026-08-06"
+    sha256: ""
+    notes: >-
+      Extracto OSM de HOT, con geometria. Verificado: el dataset existe, es
+      ODbL y publica Geopackage. El extracto mezcla POINT, POLYGON y
+      MULTIPOLYGON —un hospital grande esta mapeado como edificio, no como
+      nodo—, y el agregador toma el centroide de lo que venga.
+
+  - id: hotosm_education
+    layer: education
+    url: https://data.humdata.org/dataset/hotosm_ven_education_facilities
+    hdx_dataset: hotosm_ven_education_facilities
+    license: ODbL-1.0
+    vintage: "2026-08-06"
+    sha256: ""
+    notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."

@@ -1,0 +1,29 @@
+__pycache__/
+*.py[cod]
+.venv/
+.uv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Artefactos de datos: nunca se versionan, se publican en Releases/R2.
+work/
+data/cache/
+data/build/
+# Descarga a medias (write_atomic). Vive dentro de data/build/, pero si alguien
+# apunta el build a otro sitio no debe acabar en un commit.
+*.parcial
+*.parquet
+*.pmtiles
+*.tif
+*.tiff
+!tests/fixtures/**/*.parquet
+
+# Salidas locales del visor
+site/dist/
+node_modules/

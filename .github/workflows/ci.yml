@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Con --extra dev a secas, mypy no encuentra numpy y las pruebas de geo
+      # revientan al importar. Un typecheck que no ve las librerias del codigo
+      # que revisa da confianza falsa, asi que CI instala lo mismo que usa el
+      # pipeline completo.
+      - name: Sincronizar dependencias
+        run: uv sync --python 3.12 --extra dev --extra geo --extra render
+
+      - name: Ruff (lint)
+        run: uv run ruff check .
+
+      - name: Ruff (formato)
+        run: uv run ruff format --check .
+
+      - name: mypy estricto
+        run: uv run mypy
+
+      - name: Pruebas (sin red)
+        run: uv run pytest -m "not network" --cov --cov-report=term-missing
+
+      # Guardia de licencias: la contaminacion entre cubos es un riesgo de
+      # impacto alto (§7). No basta documentarla; el build falla si ocurre.
+      - name: Lint de manifests (regla de los tres cubos)
+        run: uv run centinela lint-manifests

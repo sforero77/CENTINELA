@@ -1,0 +1,134 @@
+/* Presupuesto de carga inicial: < 3 MB (RNF-05). Sin frameworks, sin fuentes
+   remotas: el visor debe abrir en un movil con mala conexion. */
+
+:root {
+  --fondo: #fbfaf8;
+  --texto: #1c1b1a;
+  --tenue: #55524e;
+  --borde: #dedad4;
+  --acento: #8a3324;
+  --aviso-fondo: #fdf4e3;
+  --aviso-borde: #d9a441;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #17161a;
+    --texto: #ecebe8;
+    --tenue: #a7a29b;
+    --borde: #333039;
+    --acento: #e08060;
+    --aviso-fondo: #2a2317;
+    --aviso-borde: #8a6a2a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 1.5rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--borde);
+}
+
+.barra h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.08em; }
+.lema { margin: 0; color: var(--tenue); font-size: 0.9rem; }
+.barra nav { margin-left: auto; display: flex; gap: 1rem; }
+
+a { color: var(--acento); }
+
+.aviso {
+  margin: 1rem 1.5rem;
+  padding: 0.85rem 1.1rem;
+  background: var(--aviso-fondo);
+  border-left: 3px solid var(--aviso-borde);
+  border-radius: 3px;
+  font-size: 0.94rem;
+}
+
+main { padding: 0 1.5rem 3rem; max-width: 70rem; margin: 0 auto; }
+
+#mapa {
+  height: min(60vh, 520px);
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  background: var(--borde);
+}
+
+h2 { margin-top: 2.5rem; font-size: 1.1rem; }
+
+.lista-eventos { list-style: none; padding: 0; }
+
+.lista-eventos li {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.cargando, .nota { color: var(--tenue); font-size: 0.92rem; }
+
+footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--borde);
+  color: var(--tenue);
+  font-size: 0.82rem;
+}
+
+footer p { margin: 0.35rem 0; }
+
+@media (max-width: 40rem) {
+  .barra nav { margin-left: 0; width: 100%; }
+}
+
+
+/* --- Pagina de estado --- */
+
+.tabla-scroll { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+th, td {
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th { font-weight: 600; color: var(--tenue); }
+.num { text-align: right; }
+
+.metricas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2.5rem;
+  margin: 1rem 0;
+}
+
+.metrica .valor {
+  font-size: 1.7rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.metrica .etiqueta {
+  font-size: 0.78rem;
+  color: var(--tenue);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cumple { color: #1a7f37; }
+.incumple { color: var(--acento); }

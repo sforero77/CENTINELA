@@ -1,0 +1,91 @@
+# Esquemas de las tablas GeoParquet publicadas (§3.2, §3.3).
+#
+# Particionado Hive: iso3=COL/layer=exposure/...
+# CRS de publicacion: EPSG:4326. Areas y longitudes se calculan en proyeccion
+# equiarea local por pais y se publican ya reducidas a metros/kilometros.
+
+exposure_h3:
+  descripcion: Activo de exposicion, una fila por celda H3 r8. Rebuild trimestral.
+  clave_primaria: [h3_08]
+  particion: [iso3, layer]
+  columnas:
+    - {nombre: h3_08,             tipo: UINT64,  nulo: false, fuente: "-"}
+    - {nombre: iso3,              tipo: VARCHAR, nulo: false, fuente: crosswalk}
+    - {nombre: adm1_id,           tipo: VARCHAR, nulo: false, fuente: crosswalk}
+    - {nombre: adm2_id,           tipo: VARCHAR, nulo: false, fuente: crosswalk,
+       nota: "DIVIPOLA de 5 digitos en CO. VARCHAR siempre: como entero se pierde el cero inicial."}
+    - {nombre: pop_total,         tipo: DOUBLE,  nulo: false, fuente: GHS-POP 2025}
+    - {nombre: pop_0_14,          tipo: DOUBLE,  nulo: false, fuente: WorldPop 2020 x pop_total}
+    - {nombre: pop_15_64,         tipo: DOUBLE,  nulo: false, fuente: WorldPop 2020 x pop_total}
+    - {nombre: pop_65p,           tipo: DOUBLE,  nulo: false, fuente: WorldPop 2020 x pop_total}
+    - {nombre: pop_alt_worldpop,  tipo: DOUBLE,  nulo: false, fuente: WorldPop total,
+       nota: "Solo alimenta la banda de discrepancia publicada."}
+    - {nombre: bld_count,         tipo: INTEGER, nulo: false, fuente: Overture buildings}
+    - {nombre: bld_area_m2,       tipo: DOUBLE,  nulo: false, fuente: Overture buildings}
+    - {nombre: health_count,      tipo: INTEGER, nulo: false, fuente: "OSM + REPS"}
+    - {nombre: edu_count,         tipo: INTEGER, nulo: false, fuente: "MEN + OSM"}
+    - {nombre: road_km_primary,   tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
+    - {nombre: road_km_secondary, tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
+    - {nombre: road_km_other,     tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
+    - {nombre: flags_calidad,     tipo: VARCHAR, nulo: true,  fuente: asserts §6.4,
+       nota: "Banderas separadas por coma. Se publican, no se ocultan."}
+    - {nombre: src_manifest,      tipo: VARCHAR, nulo: false, fuente: "-"}
+
+crosswalk_h3_adm:
+  descripcion: Fracciones de area para prorrateo exacto en frontera municipal.
+  clave_primaria: [h3_08, adm2_id]
+  columnas:
+    - {nombre: h3_08,     tipo: UINT64,  nulo: false}
+    - {nombre: adm2_id,   tipo: VARCHAR, nulo: false}
+    - {nombre: frac_area, tipo: DOUBLE,  nulo: false,
+       nota: "Las fracciones de una misma celda suman 1 (invariante verificado en CI)."}
+
+admin_lookup:
+  descripcion: Diccionario administrativo con topónimos oficiales.
+  clave_primaria: [adm2_id]
+  columnas:
+    - {nombre: adm2_id,      tipo: VARCHAR, nulo: false}
+    - {nombre: nombre,       tipo: VARCHAR, nulo: false}
+    - {nombre: adm1_id,      tipo: VARCHAR, nulo: false}
+    - {nombre: departamento, tipo: VARCHAR, nulo: false}
+    - {nombre: iso3,         tipo: VARCHAR, nulo: false}
+    - {nombre: centroide,    tipo: GEOMETRY, nulo: false}
+
+impact_h3:
+  descripcion: >-
+    Una fila por celda alcanzada, por version de ShakeMap. Copia todas las
+    columnas de exposicion al momento del corte: el reporte debe ser inmutable
+    aunque el activo se reconstruya despues.
+  clave_primaria: [usgs_id, shakemap_version, h3_08]
+  columnas:
+    - {nombre: usgs_id,          tipo: VARCHAR, nulo: false}
+    - {nombre: shakemap_version, tipo: INTEGER, nulo: false}
+    - {nombre: h3_08,            tipo: UINT64,  nulo: false}
+    - {nombre: mmi_mean,         tipo: DOUBLE,  nulo: false}
+    - {nombre: mmi_max,          tipo: DOUBLE,  nulo: false}
+    - {nombre: pga_g,            tipo: DOUBLE,  nulo: true}
+    - {nombre: ls_prob,          tipo: DOUBLE,  nulo: false, nota: "0.0 si no hay producto."}
+    - {nombre: lq_prob,          tipo: DOUBLE,  nulo: false, nota: "0.0 si no hay producto."}
+  hereda_columnas_de: exposure_h3
+
+impact_adm2:
+  descripcion: Agregado municipal. Es la tabla que consume el mundo.
+  clave_primaria: [usgs_id, shakemap_version, adm2_id]
+  columnas:
+    - {nombre: usgs_id,          tipo: VARCHAR, nulo: false}
+    - {nombre: shakemap_version, tipo: INTEGER, nulo: false}
+    - {nombre: adm2_id,          tipo: VARCHAR, nulo: false}
+    - {nombre: nombre,           tipo: VARCHAR, nulo: false}
+    - {nombre: mmi_max,          tipo: DOUBLE,  nulo: false}
+    - {nombre: pop_mmi6p,        tipo: DOUBLE,  nulo: false}
+    - {nombre: pop_mmi7p,        tipo: DOUBLE,  nulo: false}
+    - {nombre: pop_mmi8p,        tipo: DOUBLE,  nulo: false}
+    - {nombre: pop_65p_mmi7p,    tipo: DOUBLE,  nulo: false}
+    - {nombre: bld_mmi7p,        tipo: DOUBLE,  nulo: false}
+    - {nombre: built_m2_mmi7p,   tipo: DOUBLE,  nulo: false}
+    - {nombre: health_mmi7p,     tipo: DOUBLE,  nulo: false}
+    - {nombre: edu_mmi7p,        tipo: DOUBLE,  nulo: false}
+    - {nombre: road_km_mmi7p,    tipo: DOUBLE,  nulo: false}
+    - {nombre: ls_pop_expuesta,  tipo: DOUBLE,  nulo: false}
+    - {nombre: lq_pop_expuesta,  tipo: DOUBLE,  nulo: false}
+    - {nombre: flags_calidad,    tipo: VARCHAR, nulo: true}

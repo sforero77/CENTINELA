@@ -1,0 +1,46 @@
+name: Simulacro mensual
+
+# §6.5: el pipeline nunca debe oxidarse entre catastrofes. Este simulacro corre
+# solo, mide latencia interna y verifica que los artefactos se generan. No
+# escribe estado ni publica nada.
+
+on:
+  schedule:
+    - cron: "0 9 5 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  simulacro:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync --python 3.12 --extra dev --extra geo
+
+      - name: P1 en seco contra el feed vivo
+        run: |
+          inicio=$(date +%s)
+          uv run centinela trigger --dry-run
+          echo "latencia_p1_s=$(( $(date +%s) - inicio ))" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Golden tests
+        run: uv run pytest -m golden
+
+      - name: Abrir issue si el simulacro fallo
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "El simulacro mensual fallo" \
+            --label "operacion,automatico" \
+            --body "Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

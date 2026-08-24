@@ -1,0 +1,164 @@
+"""Pagina de estado: latencia medida y publicada (RNF-02).
+
+La espec es explicita en que **la transparencia es parte del producto**: no
+basta con tener un objetivo de latencia, hay que publicar la distribucion real
+y dejar que cualquiera compare. Aqui se calcula esa distribucion a partir de lo
+unico que no se puede falsear: los timestamps que el propio sistema fue
+escribiendo en cada ``event_state``.
+
+La latencia que importa es la que separa el **origen del sismo** de la
+**publicacion del reporte**. Incluye la demora del cron de GitHub Actions, que
+no controlamos, asi que se publica tambien desagregada — el SLO se define sobre
+lo controlable, pero el lector merece ver el total.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+from .logging import get_logger
+from .paths import EVENTS_DIR, SITE_DIR
+from .state import EventState, EventStatus, utcnow_iso
+
+_log = get_logger(__name__)
+
+#: Cuantos latidos del disparador se conservan. Suficiente para ver un patron
+#: sin que el archivo crezca sin limite.
+MAX_LATIDOS = 200
+
+STATUS_FILENAME = "status.json"
+
+
+@dataclass(frozen=True, slots=True)
+class EventLatency:
+    """Latencia de un evento publicado."""
+
+    usgs_id: str
+    origen_utc: str
+    publicado_utc: str
+    minutos: float
+    #: Reconstruccion retrospectiva: se lista, pero no cuenta para el p50/p95.
+    backtest: bool = False
+
+
+def _parse(ts: str) -> datetime | None:
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        return None
+
+
+def event_latencies(events_dir: Path | None = None) -> list[EventLatency]:
+    """Minutos entre el origen del sismo y la publicacion del reporte."""
+    base = events_dir or EVENTS_DIR
+    latencias: list[EventLatency] = []
+    for path in sorted(base.glob("*.json")):
+        try:
+            estado = EventState.from_dict(json.loads(path.read_text(encoding="utf-8")))
+        except (ValueError, KeyError):
+            continue
+        if estado.estado is not EventStatus.PUBLICADO:
+            continue
+        publicado = estado.timestamps.get("publicado", "")
+        inicio, fin = _parse(estado.origen_utc), _parse(publicado)
+        if inicio is None or fin is None:
+            continue
+        latencias.append(
+            EventLatency(
+                usgs_id=estado.usgs_id,
+                origen_utc=estado.origen_utc,
+                publicado_utc=publicado,
+                minutos=round((fin - inicio).total_seconds() / 60.0, 1),
+                backtest=estado.backtest,
+            )
+        )
+    return sorted(latencias, key=lambda e: e.origen_utc, reverse=True)
+
+
+def percentil(valores: list[float], p: float) -> float | None:
+    """Percentil por interpolacion lineal. ``None`` si no hay datos."""
+    if not valores:
+        return None
+    ordenados = sorted(valores)
+    if len(ordenados) == 1:
+        return round(ordenados[0], 1)
+    pos = (len(ordenados) - 1) * p
+    bajo = int(pos)
+    alto = min(bajo + 1, len(ordenados) - 1)
+    valor = ordenados[bajo] + (ordenados[alto] - ordenados[bajo]) * (pos - bajo)
+    return round(valor, 1)
+
+
+def build_status(
+    *, events_dir: Path | None = None, latidos: list[dict[str, Any]] | None = None
+) -> dict[str, Any]:
+    """Construye el ``status.json`` que consume la pagina."""
+    latencias = event_latencies(events_dir)
+    # Los backtests se listan pero no entran en la estadistica: se publican
+    # dias despues del sismo y su "latencia" no mide nada del sistema.
+    en_vivo = [e for e in latencias if not e.backtest]
+    minutos = [e.minutos for e in en_vivo]
+    return {
+        "generado_utc": utcnow_iso(),
+        "objetivo": {"p50_min": 60, "p95_min": 90},
+        "medido": {
+            "eventos_publicados": len(en_vivo),
+            "backtests_excluidos": len(latencias) - len(en_vivo),
+            "p50_min": percentil(minutos, 0.50),
+            "p95_min": percentil(minutos, 0.95),
+            "peor_min": max(minutos) if minutos else None,
+        },
+        "eventos": [
+            {
+                "usgs_id": e.usgs_id,
+                "origen_utc": e.origen_utc,
+                "publicado_utc": e.publicado_utc,
+                "minutos": e.minutos,
+                "backtest": e.backtest,
+            }
+            for e in latencias[:50]
+        ],
+        "latidos": (latidos or [])[-MAX_LATIDOS:],
+        "nota": (
+            "La latencia incluye la demora del cron de GitHub Actions, que el "
+            "proyecto no controla y que su documentacion situa entre 5 y 30 "
+            "minutos. El objetivo se define sobre lo controlable; esta cifra es "
+            "el total real, sin descontar nada."
+        ),
+    }
+
+
+def write_status(
+    *,
+    events_dir: Path | None = None,
+    site_dir: Path | None = None,
+    latido: dict[str, Any] | None = None,
+) -> Path:
+    """Escribe ``site/status.json``, conservando el historial de latidos."""
+    destino = (site_dir or SITE_DIR) / STATUS_FILENAME
+    previos: list[dict[str, Any]] = []
+    if destino.exists():
+        try:
+            previos = list(json.loads(destino.read_text(encoding="utf-8")).get("latidos", []))
+        except (ValueError, OSError):
+            previos = []
+    if latido:
+        previos.append(latido)
+
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    datos = build_status(events_dir=events_dir, latidos=previos)
+    destino.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _log.info(
+        "estado publicado",
+        extra={
+            "context": {
+                "eventos": datos["medido"]["eventos_publicados"],
+                "p50_min": datos["medido"]["p50_min"],
+            }
+        },
+    )
+    return destino

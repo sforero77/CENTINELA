@@ -1,0 +1,258 @@
+# Manifest de vintages — Colombia (Fase 0).
+#
+# REGLA DURA: nunca "latest". Overture publica release mensual y su catalogo
+# STAC apunta siempre al ultimo; fijar el release explicito es lo que hace que
+# un reporte de hace seis meses siga siendo reproducible (RNF-04).
+#
+# Verificado contra fuentes primarias el 23-ago-2026: cada URL de aqui se probo
+# con una peticion real. Los `sha256` se llenan en la primera corrida de P0; el
+# lint los reporta como aviso hasta entonces.
+
+manifest_id: col-v0.5
+iso3: COL
+generated_utc: "2026-08-23T00:00:00Z"
+
+# Referencia oficial para el assert de calidad de §6.4 (totales pais ±1%).
+# Medido: GHS-POP E2025 recortado por el limite del MGN 2025 da 52.601.276
+# habitantes, es decir -0,75% frente a la proyeccion del DANE. Pasa.
+referencia_oficial:
+  poblacion_2025: 53000000
+  fuente: "DANE, proyecciones de poblacion CNPV-2018 actualizadas (nota tecnica jul-2025)"
+  tolerancia_pct: 1.0
+  medido_ghs_pop: 52601276
+  nota: >-
+    La cifra del DANE es la redondeada que publica en su nota tecnica. T0.10:
+    reemplazarla por el valor exacto del anexo en Excel de las proyecciones,
+    para que el assert compare contra un numero y no contra un redondeo.
+
+notas:
+  - "Overture conserva SOLO los dos releases mas recientes en su bucket
+     (verificado: 2026-07-22.0 y 2026-08-19.0, listado no truncado). Fijar el
+     release da reproducibilidad del calculo, no de la descarga: pasados ~2
+     meses la URL deja de existir. Por eso el activo construido se publica como
+     Release propio con su sha256 — esa es la copia que sostiene RNF-04."
+  - "Las fuentes con `hdx_dataset` NO se descargan por la url de este archivo:
+     esa url es la pagina estable del dataset, para poder revisarla a mano. La
+     de descarga se resuelve por la API de HDX en cada build. Motivo verificado:
+     un mismo dataset de HOTOSM tiene al menos tres formas de URL segun el pais
+     (COL, MEX y PER difieren), asi que adivinar la ruta funciona hasta que
+     Fase 1 agrega el pais que no encaja."
+  - "REPS (salud) y sedes educativas MEN NO estan en este manifest, a
+     proposito. Dos razones independientes, ambas verificadas: (a) ninguno de
+     los dos datasets trae coordenadas, solo codigo DIVIPOLA y direccion, asi
+     que no pueden asignarse a una celda H3 sin geocodificar; (b) ambos son
+     CC BY-SA 4.0, copyleft incompatible con la ODbL de Overture: mezclarlos
+     produciria una tabla que no se puede licenciar bajo ninguna de las dos.
+     Se usaran como referencia de completitud a nivel municipal, en una tabla
+     aparte bajo CC BY-SA."
+
+sources:
+  - id: ghs_pop_2025
+    layer: pop_ghs
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    sha256: ""
+    notes: >-
+      NO se descarga esta URL: el mosaico global pesa 5,25 GB. El JRC publica el
+      mismo producto en 375 teselas y Colombia necesita nueve, que suman 93 MB.
+      La seleccion la hace pipelines/p0_exposure/sources/ghsl.py, con el esquema
+      de teselado verificado contra la georreferenciacion real. Contrato medido:
+      ESRI:54009, 10.000x10.000 px a 100 m, float64, nodata = -200 (unos 22
+      millones de celdas por tesela, todo oceano — enmascarar antes de sumar o
+      la poblacion sale negativa). R2023A sigue siendo el ultimo release global:
+      el R2025A del FTP es solo del Artico. Schiavina et al. 2023,
+      doi:10.2905/2FF68A52.
+
+  - id: ghs_built_s_2025
+    layer: built_ghsl
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    sha256: ""
+    notes: >-
+      Superficie construida en m² por pixel de 100 m, derivada de Sentinel-2 y
+      Landsat. Misma retícula, misma epoca y misma licencia que GHS-POP, asi que
+      reutiliza el selector de teselas y no anade dependencias: unos 90 MB mas
+      por pais. Verificado que la tesela R9_C11 responde con el mismo esquema de
+      nombres que la de poblacion.
+      POR QUE ENTRA: la debilidad documentada del conteo de edificaciones de
+      Overture son los huecos en asentamientos informales y zona rural dispersa
+      —justo donde vive la poblacion mas expuesta—. Esta capa no depende de que
+      alguien haya mapeado el barrio, asi que convierte la bandera
+      `revisar_sin_edificios` en una cifra: `construido_no_mapeado` marca las
+      celdas con mas de 1.000 m² construidos y cero edificaciones registradas.
+      LO QUE NO ES: no dice cuantas edificaciones hay ni de que tipo. 40.000 m²
+      pueden ser una bodega o cien viviendas. Contrasta a Overture, no lo
+      sustituye.
+
+  - id: worldpop_agesex_2025
+    layer: pop_worldpop_agesex
+    url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/
+    license: CC-BY-4.0
+    vintage: R2025A-2025-constrained-100m
+    sha256: ""
+    notes: >-
+      CORRIGE UN SUPUESTO DE LA ESPEC. §2.2 daba 2020 como la unica epoca con
+      desglose por edad y sexo, y de ahi salia la limitacion "proporciones de
+      2020 sobre totales de 2025". El release R2025A si publica age-sex
+      constrained para 2025 y el supuesto de estructura etaria estable ya no
+      hace falta.
+      La url apunta al DIRECTORIO, no a un fichero: el listado real trae 62
+      GeoTIFF —20 bandas de edad (00, 01, 05, 10 … 90) en tres series, col_f_,
+      col_m_ y la combinada col_t_, mas los totales col_T_F / col_T_M. Solo se
+      descarga la serie col_t_: sumar las tres contaria cada persona dos veces.
+      El conteo de 18 bandas hasta 80 que decia esta nota estaba mal; la banda
+      superior es 90+, y por eso pop_65p va de 65 a 90. Ver
+      pipelines/p0_exposure/sources/worldpop.py.
+
+  - id: worldpop_total_2025
+    layer: pop_worldpop_total
+    url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/col_pop_2025_CN_100m_R2025A_v1.tif
+    license: CC-BY-4.0
+    vintage: R2025A-2025-constrained-100m
+    sha256: ""
+    notes: "Verificado: sirve (HTTP 200, ~64 MB). Alimenta la banda de discrepancia."
+
+  - id: overture_buildings
+    layer: buildings
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    sha256: ""
+    notes: >-
+      512 ficheros, 277 GB, 2.529 millones de edificaciones en total; Colombia
+      toca once. La seleccion se hace con el bbox por fichero que publica el
+      catalogo STAC de la coleccion (155 KB), no leyendo los datos — ver
+      pipelines/p0_exposure/sources/overture.py, que documenta la trampa del
+      emparejamiento. Medido: contar las edificaciones de Quibdó dentro de un
+      fichero remoto de 5 millones de filas toma 2,2 s gracias a la poda por la
+      columna `bbox`. El subtipo `type=building` trae las huellas;
+      `type=building_part` es geometria auxiliar y contarla inflaria bld_count.
+
+  - id: overture_transportation
+    layer: roads
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    sha256: ""
+    notes: "`type=segment` es la geometria lineal; `type=connector` son nodos."
+
+  - id: overture_divisions
+    layer: divisions
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=divisions/type=division_area
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    sha256: ""
+    notes: "`type=division_area` trae los poligonos; `division` son puntos."
+
+  - id: cod_ab_col
+    layer: divisions
+    url: https://data.humdata.org/dataset/cod-ab-col
+    hdx_dataset: cod-ab-col
+    hdx_resource: "COL Administrative Divisions Shapefiles"
+    license: CC-BY-IGO
+    vintage: COD-AB-2025-05-27
+    sha256: ""
+    notes: >-
+      Common Operational Dataset de OCHA. Para Colombia es el propio MGN del
+      DANE reempaquetado, asi que no aporta geometria nueva aqui; entra porque
+      el patron `cod-ab-<iso3>` existe verificado para LOS DIECINUEVE paises de
+      LATAM hispanohablante mas Brasil, con la misma licencia (CC BY-IGO) y la
+      misma forma. Es la via que evita que cada mantenedor de pais tenga que
+      ingeniar el geoportal nacional de turno solo para obtener adm1/adm2.
+      `hdx_resource` NO es opcional aqui. Este dataset publica cuatro recursos
+      SHP y el resolutor tomaba el primero: MGN2024_URB_SECCION.zip, 48 MB de
+      secciones urbanas en vez de municipios. Verificado el 23-ago-2026 sobre la
+      respuesta real de la API. De los 19 paises revisados, solo Colombia,
+      Argentina, Brasil, Paraguay y Uruguay carecen de GeoJSON y caen a SHP; y
+      solo Colombia publica mas de un SHP.
+
+  - id: dane_mgn_2025
+    layer: divisions
+    url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_00_COLOMBIA.zip
+    license: CC-BY-4.0
+    vintage: MGN-2025
+    sha256: ""
+    notes: >-
+      T0.4 RESUELTA. El Geoportal DANE publica su informacion geografica bajo
+      CC BY 4.0: permite uso comercial y redistribucion, y pide citar
+      "Departamento Administrativo Nacional de Estadistica - DANE:
+      www.dane.gov.co". Fuente de verdad del crosswalk hex<->DIVIPOLA.
+      El archivo nacional pesa 3,39 GB. Existen entregas por nivel mucho mas
+      livianas (MGN2025_DPTO_POLITICO.zip = 12,5 MB; MGN2025_CLASE.zip = 120 MB);
+      el nombre exacto del nivel municipal no se pudo deducir probando y hay que
+      leerlo del geoportal antes del primer build, para no bajar 3,4 GB cada
+      trimestre.
+
+  - id: hotosm_health
+    layer: health
+    url: https://data.humdata.org/dataset/hotosm_col_health_facilities
+    hdx_dataset: hotosm_col_health_facilities
+    license: ODbL-1.0
+    vintage: "2026-08-06"
+    sha256: ""
+    notes: >-
+      Extracto OSM de HOT, GeoPackage de ~1 MB, con geometria. Sustituye al REPS
+      como fuente de conteo por celda: es la que si trae coordenadas. La URL de
+      descarga se resuelve por la API de HDX en cada build — no se adivina, ver
+      pipelines/common/hdx.py.
+
+  - id: healthsites_hdx
+    layer: health
+    url: https://data.humdata.org/dataset/colombia-healthsites
+    hdx_dataset: colombia-healthsites
+    hdx_resource: "colombia-healthsites-geojson"
+    license: ODbL-1.0
+    vintage: "2026-06-11"
+    sha256: ""
+    notes: >-
+      healthsites.io publicado en HDX como GeoJSON. Se usa esta via y no la API
+      de healthsites.io porque esa exige API key, y O4 pide reconstruir el
+      activo sin credenciales privadas.
+      `hdx_resource` fija el GeoJSON simple: el dataset publica tambien
+      `colombia-healthsites-hxl-geojson`, con etiquetas HXL, 1,2 MB mas grande y
+      sin geometria adicional.
+      VA SEGUNDO Y ESO IMPORTA. Entra despues de HOTOSM y aporta solo lo que
+      HOTOSM no tiene. Medido el 23-ago-2026: de sus 8.443 puntos, el 96,6 %
+      cae a menos de 20 m de uno de HOTOSM —las dos fuentes derivan de OSM—, asi
+      que su contribucion real son unas 290 sedes. Sumarlas sin deduplicar daria
+      18.061 sedes en vez de ~9.900: casi el doble, y con toda la pinta de ser
+      una cifra correcta.
+
+  - id: hotosm_education
+    layer: education
+    url: https://data.humdata.org/dataset/hotosm_col_education_facilities
+    hdx_dataset: hotosm_col_education_facilities
+    license: ODbL-1.0
+    vintage: "2026-08-06"
+    sha256: ""
+    notes: >-
+      Extracto OSM de HOT, GeoPackage de ~5 MB, con geometria. Sustituye al
+      directorio del MEN por la misma razon que arriba.
+
+  - id: ourairports
+    layer: airports
+    url: https://davidmegginson.github.io/ourairports-data/airports.csv
+    license: public-domain
+    vintage: snapshot-2026-08-01
+    sha256: ""
+    notes: >-
+      T1.2 RESUELTA (23-ago-2026). La dedicacion al dominio publico esta en dos
+      sitios, y los dos se leyeron directamente.
+      (a) La pagina de datos del proyecto (https://ourairports.com/data/) dice
+      literalmente: "All data is released to the Public Domain, and comes with
+      no guarantee of accuracy or fitness for use".
+      (b) El repositorio de descargas
+      (github.com/davidmegginson/ourairports-data) lleva un LICENSE con el texto
+      integro de **The Unlicense**: "This is free and unencumbered software
+      released into the public domain... Anyone is free to copy, modify,
+      publish, use, compile, sell, or distribute this software... for any
+      purpose, commercial or non-commercial".
+      MATIZ QUE CONVIENE NO ESCONDER: el texto de The Unlicense habla de
+      "software", no de datos, y ahi lo que se reutiliza son datos. Es la
+      declaracion de la pagina de datos —explicita sobre "all data"— la que
+      cubre el caso; el LICENSE la respalda pero no la sustituye. Con las dos,
+      la intencion no admite otra lectura.
+      El repositorio pide expresamente no abrir pull requests: las correcciones
+      se hacen con una cuenta en ourairports.com y entran en el volcado diario.
