@@ -1,0 +1,146 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us6000t7zc",
+    "mag": 7.2,
+    "depth_km": 10.0,
+    "utc": "2026-06-24T22:04:31Z",
+    "lugar": "20 km E of San Felipe, Venezuela",
+    "pager_alert": "red",
+    "lon": -68.5564,
+    "lat": 10.3713
+  },
+  "inputs": {
+    "shakemap_version": 9,
+    "groundfailure_version": 7,
+    "exposure_manifest": "ven-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 2771861.4076254987,
+    "pop_mmi7p": 491580.875195766,
+    "pop_mmi8p": 233421.8223408031,
+    "pop_65p_mmi7p": 28748.468650333733,
+    "bld_mmi7p": 194045.0,
+    "built_m2_mmi7p": 23632205.0,
+    "health_mmi7p": 31.0,
+    "edu_mmi7p": 92.0,
+    "road_km_mmi7p": 2312.012096500547,
+    "road_km_principal_mmi7p": 418.3685988840766,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 287308.6002515801
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "VE2211",
+      "nombre": "San Felipe",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 134194.50676600868
+    },
+    {
+      "adm2_id": "VE2214",
+      "nombre": "Veroes",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 101251.28157760017
+    },
+    {
+      "adm2_id": "VE0805",
+      "nombre": "Juan José Mora",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 58001.31473601004
+    },
+    {
+      "adm2_id": "VE2203",
+      "nombre": "Bruzual",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 44033.2049280568
+    },
+    {
+      "adm2_id": "VE2205",
+      "nombre": "Independencia",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 30384.867612460046
+    },
+    {
+      "adm2_id": "VE2201",
+      "nombre": "Arístides Bastidas",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 27080.431010633707
+    },
+    {
+      "adm2_id": "VE2212",
+      "nombre": "Sucre",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 26627.09749570489
+    },
+    {
+      "adm2_id": "VE2204",
+      "nombre": "Cocorote",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 24954.645382418064
+    },
+    {
+      "adm2_id": "VE2207",
+      "nombre": "La Trinidad",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 24800.116239912808
+    },
+    {
+      "adm2_id": "VE0811",
+      "nombre": "Puerto Cabello",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 15496.421104748733
+    },
+    {
+      "adm2_id": "VE1116",
+      "nombre": "Palmasola",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 1674.0007273815572
+    },
+    {
+      "adm2_id": "VE1120",
+      "nombre": "Silva",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 1585.1530282101594
+    },
+    {
+      "adm2_id": "VE0801",
+      "nombre": "Bejuma",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 1497.8345866203308
+    },
+    {
+      "adm2_id": "VE1802",
+      "nombre": "Araure",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0
+    },
+    {
+      "adm2_id": "VE1104",
+      "nombre": "Cacique Manaure",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 27.0,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-24T21:04:22Z",
+  "pipeline_version": "0.1.0"
+}
