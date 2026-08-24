@@ -1,11 +1,13 @@
 # Pendientes y hoja de ruta
 
-Estado al **23 de agosto de 2026**. Este documento es el traspaso: que queda por
-hacer, quien puede hacerlo, y en que orden.
+Estado al **24 de agosto de 2026**, el dia que el sistema se encendio. Este
+documento es el traspaso: que queda por hacer, quien puede hacerlo, y en que
+orden.
 
-La regla para leerlo: **lo que solo puede hacer alguien con permisos de
-administracion del repositorio o cuentas de terceros esta marcado 🔑**. Todo lo
-demas es codigo y se puede abordar desde un clon.
+Ya no hay pasos bloqueados por permisos: la puesta en marcha se completo (§1) y
+**todo lo que queda es codigo, abordable desde un clon**. Para vigilar el
+sistema ya operando, la referencia es
+[`docs/OPERACION.md`](docs/OPERACION.md).
 
 ---
 
@@ -22,7 +24,8 @@ centinela impact us6000tjl2 \
 
 | Componente | Estado |
 |---|---|
-| P1 trigger (feed, filtro, dedupe, estado) | ✅ verificado contra el feed vivo |
+| P1 trigger (feed, filtro, dedupe, estado) | ✅ **operando cada 10 min** |
+| Visor y `/status` publicados | ✅ https://sforero77.github.io/CENTINELA/ |
 | P0 activo de exposicion (descarga → parquet) | ✅ funcional, nueve capas |
 | P2 impacto (contornos → celdas → GF → join) | ✅ funcional |
 | P3 reporte (json, md, csv, hilo, 2 mapas) | ✅ funcional |
@@ -62,67 +65,40 @@ La puerta de salida de la espec pide cuatro cosas:
 |---|---|
 | G1 verde | ✅ |
 | G2 verde | ⚠️ una asercion saltada: necesita el activo de Venezuela |
-| Un reporte real publicado end-to-end **sin intervencion** | ❌ el pipeline nunca ha corrido dentro del workflow, solo en local |
-| Latencia medida y publicada | ⚠️ la pagina existe; faltan datos reales |
+| Un reporte real publicado end-to-end **sin intervencion** | ⏳ el sistema ya opera; falta que ocurra un sismo |
+| Latencia medida y publicada | ⏳ la pagina esta publicada y espera datos reales |
 
-Las dos que faltan se cierran **con el primer sismo M≥5.5 en LATAM**, que con la
-sismicidad normal de la region es cuestion de dias. O antes, disparando el
-simulacro de §6.5.
+Desde el 24-ago-2026 el sistema **esta encendido**: el trigger vigila el feed
+cada 10 minutos y el visor esta en linea. Las dos que faltan ya no dependen de
+nadie — las cierra el primer sismo M≥5.5 en LATAM, que con la sismicidad normal
+de la region es cuestion de dias.
 
 ---
 
-## 1. 🔑 Tuyo — desbloquea la operacion
+## 1. ✅ La puesta en marcha, hecha el 24-ago-2026
 
-Sin estos pasos el sistema **no puede operar**. El detalle, con comandos exactos
-y como comprobar cada uno, esta en
-[`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md). Aqui va el resumen.
+Los cinco pasos que desbloqueaban la operacion estan cerrados. Se dejan
+anotados porque son el registro de que el sistema arranco, y porque hay que
+rehacerlos si alguna vez se migra el repositorio.
 
-### 1.1 Fusionar el PR
+| | Paso | Resultado |
+|---|---|---|
+| 1.1 | Fusionar el PR #1 | `main` = `e67390c`, 100 archivos, CI en verde |
+| 1.2 | Publicar el activo | `exposure_quarterly.yml`, que construye y publica en un paso |
+| 1.3 | Habilitar Pages | https://sforero77.github.io/CENTINELA/ sirviendo visor, `/status` y reportes |
+| 1.4 | Monitor externo | `HEALTHCHECK_URL` guardado como secreto |
+| 1.5 | Probar el circuito | Trigger contra el feed vivo (18 sismos revisados, 0 relevantes) y simulacro, ambos verdes |
 
-https://github.com/sforero77/CENTINELA/pull/1 — CI en verde, sin conflictos.
+**El repositorio paso a publico** en el mismo movimiento. No fue solo para que
+Pages fuera gratis: un sistema cuyo objetivo declarado es servir de insumo
+abierto a la UNGRD y a pares regionales, con rol de mantenedor por pais y guarda
+anti-fork en los workflows, no puede vivir en privado.
 
-### 1.2 Publicar el activo de exposicion
-
-`impact.yml` **falla a proposito** si no encuentra un Release `exposure-col-*`:
-operar sin activo produciria un reporte vacio en vez de un error.
-
-**Dejaselo a CI.** Un solo comando construye el activo y publica el Release, y
-de paso prueba el workflow trimestral antes de que tenga que correr solo:
-
-```bash
-gh workflow run exposure_quarterly.yml -f iso3=COL
-```
-
-El paso lento del build es leer Overture en remoto y depende por completo del
-enlace. Medido en local a **95 KB/s**, cada fichero de edificaciones tardaba
-entre 4 y 18 minutos y el build no terminaba en una tarde; en la red de GitHub
-son minutos. Construir en local sigue disponible y es reanudable, pero conviene
-medir la conexion antes — procedimiento en
+**A partir de aqui la referencia es
+[`docs/OPERACION.md`](docs/OPERACION.md)**: que vigilar, que caduca solo, y que
+esperar del primer sismo real. El procedimiento de arranque, por si hay que
+repetirlo, sigue en
 [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md).
-
-Detalle, cifras y `sha256` en [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md).
-
-### 1.3 Habilitar GitHub Pages
-
-`Settings → Pages → Source: GitHub Actions`. Sin esto el visor y `/status` no se
-publican, y `site.yml` fallara en cada push.
-
-### 1.4 Monitor externo
-
-Crea un check en [healthchecks.io](https://healthchecks.io) (gratis), periodo 30
-min, y guarda su URL en `Settings → Secrets and variables → Actions` como
-`HEALTHCHECK_URL`.
-
-Importa mas de lo que parece. **GitHub desactiva los workflows programados tras
-60 dias sin actividad en el repositorio**, y para un sistema que puede pasar
-meses sin un sismo mayor esa desactivacion silenciosa es el modo de falla mas
-probable de todo el proyecto. El `keepalive.yml` lo previene; el monitor avisa
-si falla igual.
-
-### 1.5 Probar el circuito
-
-Tras fusionar: `Actions → Simulacro mensual → Run workflow`. Verifica el
-circuito completo antes de que llegue un sismo de verdad.
 
 ---
 
@@ -394,7 +370,8 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
 | | |
 |---|---|
-| [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md) | **Los pasos de administracion, con comandos y comprobaciones** |
+| [`docs/OPERACION.md`](docs/OPERACION.md) | **Que vigilar ahora que el sistema corre: relojes, fallos silenciosos, deuda por pais** |
+| [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md) | Los pasos de arranque, por si hay que repetirlos |
 | [`ESPECIFICACION.md`](ESPECIFICACION.md) | Espec tecnica v0.10 |
 | [`VERIFICACIONES.md`](VERIFICACIONES.md) | Como se verifico cada fuente, con evidencia |
 | [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) | Publicar el activo y por que no va en git |

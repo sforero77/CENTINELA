@@ -59,7 +59,9 @@ arranque no funciona en tu maquina, eso es un bug.
 
 ## Estado del proyecto
 
-**Fase 0, semana 4.** Lo que ya funciona y lo que falta:
+**Fase 0, semana 4 — el sistema esta operando.** Desde el 24-ago-2026 el
+trigger vigila el feed de USGS cada 10 minutos y el visor esta publicado en
+https://sforero77.github.io/CENTINELA/. Lo que ya funciona y lo que falta:
 
 | Componente | Estado |
 |---|---|
@@ -144,7 +146,8 @@ tests/           unit/, integration/, golden/, fixtures/
 
 ## Documentacion
 
-- [`PENDIENTES.md`](PENDIENTES.md) — **que falta, quien puede hacerlo y en que orden**
+- [`docs/OPERACION.md`](docs/OPERACION.md) — **que vigilar ahora que el sistema opera**
+- [`PENDIENTES.md`](PENDIENTES.md) — que falta, quien puede hacerlo y en que orden
 - [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificacion tecnica v0.10
 - [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — como publicar el activo y por que no va en git
 - [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con metodo y hallazgos
