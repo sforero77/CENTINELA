@@ -71,6 +71,9 @@ class Totales:
     health_mmi7p: float = 0.0
     edu_mmi7p: float = 0.0
     road_km_mmi7p: float = 0.0
+    #: Troncal, autopista, primaria y secundaria. El resto —residencial,
+    #: service, track— es la diferencia con road_km_mmi7p.
+    road_km_principal_mmi7p: float = 0.0
     pop_ls_alta: float = 0.0
     pop_lq_alta: float = 0.0
 
@@ -85,6 +88,7 @@ class Totales:
             "health_mmi7p": self.health_mmi7p,
             "edu_mmi7p": self.edu_mmi7p,
             "road_km_mmi7p": self.road_km_mmi7p,
+            "road_km_principal_mmi7p": self.road_km_principal_mmi7p,
             "pop_ls_alta": self.pop_ls_alta,
             "pop_lq_alta": self.pop_lq_alta,
         }

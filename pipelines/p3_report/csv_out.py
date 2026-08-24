@@ -29,6 +29,7 @@ HXL_HEADERS: dict[str, str] = {
     "health_mmi7p": "#infra+health+mmi7",
     "edu_mmi7p": "#infra+education+mmi7",
     "road_km_mmi7p": "#infra+roads+km+mmi7",
+    "road_km_principal_mmi7p": "#infra+roads+km+primary+mmi7",
     "ls_pop_expuesta": "#population+landslide",
     "lq_pop_expuesta": "#population+liquefaction",
     "flags_calidad": "#meta+flags",

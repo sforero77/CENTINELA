@@ -159,6 +159,28 @@ ROAD_CLASSES = {
     "secondary": ("secondary",),
 }
 
+#: Clases que NO cuentan como via, aunque `subtype='road'` las incluya.
+#:
+#: Overture hereda de OSM la nocion amplia de "via": una escalera, un sendero y
+#: una acera son `subtype='road'`. Sumarlas a los kilometros que publica el
+#: reporte es decir que hay acceso rodado donde no lo hay.
+#:
+#: Medido sobre Quibdó: son el 4 % de la red (7,7 de 189,6 km), asi que
+#: excluirlas no cambia la cifra — la cambia el hecho de que ahora significa lo
+#: que dice. La `residential`, que si es via de vehiculo, se queda: son 113,8 km
+#: de esos 189,6, o sea el 60 %.
+NON_VEHICLE_CLASSES: tuple[str, ...] = (
+    "footway",
+    "steps",
+    "path",
+    "pedestrian",
+    "cycleway",
+    "bridleway",
+    "sidewalk",
+    "crosswalk",
+    "unknown",
+)
+
 
 def road_class_expression(columna: str = "class") -> str:
     """``CASE`` que mapea la clase de Overture a las tres columnas del reporte."""

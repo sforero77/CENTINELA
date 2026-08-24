@@ -66,6 +66,11 @@ class ImpactTotals:
     health_mmi7p: float = 0.0
     edu_mmi7p: float = 0.0
     road_km_mmi7p: float = 0.0
+    #: Solo troncal, autopista, primaria y secundaria. Se publica aparte
+    #: porque no es lo mismo que quede cortada una troncal que una calle de
+    #: barrio, y porque es la cifra comparable con las estadisticas viales
+    #: oficiales. `road_km_mmi7p` sigue siendo el total de red rodada.
+    road_km_principal_mmi7p: float = 0.0
     pop_ls_alta: float = 0.0
     pop_lq_alta: float = 0.0
     discrepancia_pct: float = 0.0
@@ -81,6 +86,7 @@ class ImpactTotals:
             health_mmi7p=self.health_mmi7p,
             edu_mmi7p=self.edu_mmi7p,
             road_km_mmi7p=self.road_km_mmi7p,
+            road_km_principal_mmi7p=self.road_km_principal_mmi7p,
             pop_ls_alta=self.pop_ls_alta,
             pop_lq_alta=self.pop_lq_alta,
         )
@@ -210,6 +216,9 @@ SELECT
     SUM(CASE WHEN mmi_max >= 7
              THEN road_km_primary + road_km_secondary + road_km_other
              ELSE 0 END) AS road_km_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7
+             THEN road_km_primary + road_km_secondary
+             ELSE 0 END) AS road_km_principal_mmi7p,
     SUM(CASE WHEN ls_prob >= {gf} THEN pop_total ELSE 0 END) AS ls_pop_expuesta,
     SUM(CASE WHEN lq_prob >= {gf} THEN pop_total ELSE 0 END) AS lq_pop_expuesta,
     NULLIF(STRING_AGG(DISTINCT flags_calidad, ','), '') AS flags_calidad
@@ -230,6 +239,9 @@ SELECT
     SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 7
              THEN road_km_primary + road_km_secondary + road_km_other
+             ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 7
+             THEN road_km_primary + road_km_secondary
              ELSE 0 END),
     SUM(CASE WHEN ls_prob >= {gf} THEN pop_total ELSE 0 END),
     SUM(CASE WHEN lq_prob >= {gf} THEN pop_total ELSE 0 END),

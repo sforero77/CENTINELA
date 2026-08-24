@@ -45,6 +45,7 @@
         "health_mmi7p": { "type": "number", "minimum": 0 },
         "edu_mmi7p": { "type": "number", "minimum": 0 },
         "road_km_mmi7p": { "type": "number", "minimum": 0 },
+        "road_km_principal_mmi7p": { "type": "number", "minimum": 0 },
         "pop_ls_alta": { "type": "number", "minimum": 0 },
         "pop_lq_alta": { "type": "number", "minimum": 0 }
       }

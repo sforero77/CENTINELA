@@ -26,7 +26,41 @@ publicado.
 | Municipios | 1.122 de 1.122 |
 | Manifest | `col-v0.4` |
 
-## Colombia v0.5 — que cambia
+## Colombia v0.5 — medido en CI el 24-ago-2026
+
+| Indicador | v0.4 (a mano) | v0.5 (pipeline) |
+|---|---:|---:|
+| Celdas | 519.735 | **561.244** |
+| Poblacion | 52.942.553 | **52.942.553** |
+| Edificaciones | 15.436.442 | **15.436.442** |
+| Sedes de salud | 9.615 | **9.907** |
+| Sedes educativas | 43.837 | **44.021** |
+| Kilometros de via | 44.919 | **335.244** |
+| Superficie construida | — | **1.600 km²** |
+| Municipios | 1.122 | **1.122** |
+
+**Poblacion y edificaciones coinciden hasta el ultimo digito.** Es la mejor
+evidencia de que el pipeline reproduce lo que se habia hecho a mano, y de que
+las cifras del backtest del Chocó se sostienen. El total nacional queda a
+**-0,11 %** de la referencia del DANE.
+
+Las que se mueven, y por que:
+
+- **Salud (+292):** ya no se pierde el aporte real de healthsites.io. Antes o se
+  duplicaba o se descartaba entera; ahora entra deduplicada a 20 m.
+- **Educacion (+184):** deriva de OSM desde que se construyo el activo anterior.
+- **Celdas (+41.509):** las que tienen superficie construida detectada por
+  satelite pero ninguna otra capa. Son exactamente el hueco de mapeo que la
+  capa nueva existe para hacer visible.
+- **Vias (×7,5):** el activo anterior **excluia las calles residenciales**.
+  Medido sobre Quibdó, `residential` es el 60 % de la red. No es un error de
+  ninguno de los dos: son dos cosas distintas, y por eso el reporte ahora
+  publica **vias primarias y secundarias** y **vias locales** por separado en
+  vez de un solo numero. Lo que si se corrigio es que las escaleras, senderos y
+  aceras ya no cuentan como via — son el 4 % y decian que hay acceso rodado
+  donde no lo hay.
+
+## Colombia v0.5 — que cambia en el esquema
 
 El manifest sube a `col-v0.5` porque **el esquema del activo gana una columna**,
 `built_m2`: superficie construida vista por satelite (GHS-BUILT-S). No sustituye

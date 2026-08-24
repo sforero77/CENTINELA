@@ -64,6 +64,9 @@ SELECT
     SUM(CASE WHEN i.mmi_max >= 7
              THEN i.road_km_primary + i.road_km_secondary + i.road_km_other
              ELSE 0 END)                                        AS road_km_mmi7p,
+    SUM(CASE WHEN i.mmi_max >= 7
+             THEN i.road_km_primary + i.road_km_secondary
+             ELSE 0 END)                                        AS road_km_principal_mmi7p,
     SUM(CASE WHEN i.ls_prob >= $gf_high THEN i.pop_total ELSE 0 END) AS ls_pop_expuesta,
     SUM(CASE WHEN i.lq_prob >= $gf_high THEN i.pop_total ELSE 0 END) AS lq_pop_expuesta
 FROM impact_h3 AS i

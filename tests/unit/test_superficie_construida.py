@@ -101,3 +101,32 @@ def test_la_advertencia_dice_donde_esta_el_hueco(reporte: Report) -> None:
     """Sin el porque, la cifra parece un error del sistema y no del mapa."""
     md = render_markdown(_con(reporte, bld_mmi7p=1_000.0, built_m2_mmi7p=400_000.0))
     assert "asentamiento informal" in md
+
+
+# --- Desglose de vias -------------------------------------------------------
+
+
+def test_con_desglose_se_publican_dos_filas(reporte: Report) -> None:
+    """No es lo mismo que quede cortada una troncal que una calle de barrio."""
+    md = render_markdown(_con(reporte, road_km_mmi7p=1000.0, road_km_principal_mmi7p=300.0))
+    assert "Vias primarias y secundarias en MMI≥7" in md
+    assert "Vias locales en MMI≥7" in md
+    assert "Kilometros de via en MMI≥7" not in md
+
+
+def test_la_via_local_es_el_resto(reporte: Report) -> None:
+    md = render_markdown(_con(reporte, road_km_mmi7p=1000.0, road_km_principal_mmi7p=300.0))
+    assert "700 km" in md
+
+
+def test_un_activo_sin_desglose_publica_el_total(reporte: Report) -> None:
+    """Compatibilidad: un reporte anterior no tiene la columna nueva."""
+    md = render_markdown(_con(reporte, road_km_mmi7p=1000.0, road_km_principal_mmi7p=0.0))
+    assert "Kilometros de via en MMI≥7" in md
+    assert "Vias locales" not in md
+
+
+def test_la_local_nunca_sale_negativa(reporte: Report) -> None:
+    """Si por redondeo la principal supera al total, no se publica un negativo."""
+    md = render_markdown(_con(reporte, road_km_mmi7p=100.0, road_km_principal_mmi7p=120.0))
+    assert "-" not in md.split("Vias locales en MMI≥7")[1].split("|")[1]

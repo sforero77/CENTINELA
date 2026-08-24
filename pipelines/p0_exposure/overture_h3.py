@@ -26,7 +26,12 @@ from ..common.constants import H3_RES_COMPUTE
 from ..common.geo import BBox
 from ..common.logging import get_logger
 from .sources.overture import bbox_predicate
-from .vector_h3 import VectorSum, aggregate_lines_to_h3, road_class_expression
+from .vector_h3 import (
+    NON_VEHICLE_CLASSES,
+    VectorSum,
+    aggregate_lines_to_h3,
+    road_class_expression,
+)
 
 _log = get_logger(__name__)
 
@@ -125,11 +130,19 @@ def aggregate_buildings_to_h3(
 
 
 def roads_source_query(urls: list[str], bbox: BBox) -> str:
-    """Consulta ``(geometry, clase)`` que consume :func:`aggregate_lines_to_h3`."""
+    """Consulta ``(geometry, clase)`` que consume :func:`aggregate_lines_to_h3`.
+
+    Excluye las clases sin acceso rodado: Overture hereda de OSM que una
+    escalera o un sendero son ``subtype='road'``, y el reporte publica
+    "kilometros de via", no "kilometros de cosas por las que se puede pasar".
+    """
+    excluidas = ", ".join(f"'{c}'" for c in NON_VEHICLE_CLASSES)
     return f"""
         SELECT geometry, {road_class_expression("class")} AS clase
         FROM read_parquet({_lista_sql(urls)})
-        WHERE subtype = '{ROAD_SUBTYPE}' AND {bbox_predicate(bbox)}
+        WHERE subtype = '{ROAD_SUBTYPE}'
+          AND (class IS NULL OR class NOT IN ({excluidas}))
+          AND {bbox_predicate(bbox)}
     """
 
 

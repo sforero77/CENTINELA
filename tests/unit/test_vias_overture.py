@@ -128,3 +128,43 @@ def test_lo_de_fuera_de_la_caja_no_entra(con: Any, tmp_path: Path) -> None:
     lejos = "LINESTRING(-70.0 2.0, -69.9 2.0)"
     ruta = _parquet(con, tmp_path / "a.parquet", [(lejos, "road", "motorway")])
     assert aggregate_roads_to_h3(con, [ruta], bbox=CAJA, tabla="vias").total == 0.0
+
+
+@pytest.mark.geo
+def test_las_escaleras_y_senderos_no_son_via(con: Any, tmp_path: Path) -> None:
+    """Overture hereda de OSM que una escalera es subtype='road'.
+
+    Contarlas seria decir que hay acceso rodado donde no lo hay. Medido sobre
+    Quibdó son el 4 % de la red, asi que excluirlas apenas mueve la cifra — la
+    cambia el hecho de que pase a significar lo que dice.
+    """
+    ruta = _parquet(
+        con,
+        tmp_path / "a.parquet",
+        [(TRONCAL, "road", "footway"), (SECUNDARIA, "road", "steps"), (VECINAL, "road", "path")],
+    )
+    assert aggregate_roads_to_h3(con, [ruta], bbox=CAJA, tabla="vias").total == 0.0
+
+
+@pytest.mark.geo
+def test_las_calles_residenciales_si_cuentan(con: Any, tmp_path: Path) -> None:
+    """Son el 60 % de la red y por ellas circula un vehiculo.
+
+    Es la diferencia entre los 44.919 km del activo hecho a mano y los ~335.000
+    que da el pipeline: aquel las excluia.
+    """
+    ruta = _parquet(con, tmp_path / "a.parquet", [(TRONCAL, "road", "residential")])
+    resumen = aggregate_roads_to_h3(con, [ruta], bbox=CAJA, tabla="vias")
+    assert resumen.total > 0
+    otras = con.execute("SELECT sum(road_km_other) FROM vias").fetchone()[0]
+    assert otras == pytest.approx(resumen.total, rel=1e-9)
+
+
+def test_las_clases_excluidas_son_solo_las_sin_vehiculo() -> None:
+    """Ni residential ni service ni track pueden estar en la lista."""
+    from pipelines.p0_exposure.vector_h3 import NON_VEHICLE_CLASSES
+
+    for clase in ("residential", "service", "track", "unclassified", "tertiary"):
+        assert clase not in NON_VEHICLE_CLASSES
+    for clase in ("footway", "steps", "path"):
+        assert clase in NON_VEHICLE_CLASSES

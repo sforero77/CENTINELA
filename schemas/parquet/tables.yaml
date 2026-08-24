@@ -86,6 +86,7 @@ impact_adm2:
     - {nombre: health_mmi7p,     tipo: DOUBLE,  nulo: false}
     - {nombre: edu_mmi7p,        tipo: DOUBLE,  nulo: false}
     - {nombre: road_km_mmi7p,    tipo: DOUBLE,  nulo: false}
+    - {nombre: road_km_principal_mmi7p, tipo: DOUBLE, nulo: false}
     - {nombre: ls_pop_expuesta,  tipo: DOUBLE,  nulo: false}
     - {nombre: lq_pop_expuesta,  tipo: DOUBLE,  nulo: false}
     - {nombre: flags_calidad,    tipo: VARCHAR, nulo: true}

@@ -53,6 +53,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-$(date -u +%Y%m%d)"
-          gh release create "$TAG" data/build/**/*.parquet \
+          # `**` no expande sin `shopt -s globstar`, y el bash de Actions lo
+          # trae apagado: el glob se quedaba en un solo nivel y el activo vive
+          # en data/build/iso3=COL/layer=exposure/. Fallaba con "no matches
+          # found" DESPUES de construirlo entero, que es el peor sitio posible.
+          # `find` no depende de opciones del shell.
+          mapfile -t PARQUETS < <(find data/build -name '*.parquet' -type f)
+          if [ ${#PARQUETS[@]} -eq 0 ]; then
+            echo "::error::El build no dejo ningun .parquet en data/build"
+            exit 1
+          fi
+          printf 'publicando: %s\n' "${PARQUETS[@]}"
+          gh release create "$TAG" "${PARQUETS[@]}" \
             --title "Activo de exposicion $ISO3 — $TAG" \
             --notes-file "data/manifests/$ISO3.yaml"

@@ -77,8 +77,22 @@ def _tabla_totales(report: Report) -> str:
         ("Edificaciones en MMI≥7", format_count_prose(tot.bld_mmi7p)),
         ("Sedes de salud en MMI≥7", format_number_es(tot.health_mmi7p)),
         ("Sedes educativas en MMI≥7", format_number_es(tot.edu_mmi7p)),
-        ("Kilometros de via en MMI≥7", format_count_prose(tot.road_km_mmi7p) + " km"),
     ]
+    # Se publican por separado a proposito: no es lo mismo que quede cortada
+    # una troncal que una calle de barrio, y la red principal es ademas la
+    # cifra comparable con las estadisticas viales oficiales. Un solo numero
+    # que las sume esconde las dos cosas.
+    if tot.road_km_principal_mmi7p > 0:
+        local = max(tot.road_km_mmi7p - tot.road_km_principal_mmi7p, 0.0)
+        filas.append(
+            (
+                "Vias primarias y secundarias en MMI≥7",
+                format_count_prose(tot.road_km_principal_mmi7p) + " km",
+            )
+        )
+        filas.append(("Vias locales en MMI≥7", format_count_prose(local) + " km"))
+    else:
+        filas.append(("Kilometros de via en MMI≥7", format_count_prose(tot.road_km_mmi7p) + " km"))
     if tot.built_m2_mmi7p > 0:
         km2 = tot.built_m2_mmi7p / 1_000_000.0
         filas.append(("Superficie construida en MMI≥7", f"{format_number_es(km2, 1)} km²"))
