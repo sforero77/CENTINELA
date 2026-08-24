@@ -240,6 +240,27 @@ GROUP BY h3_08 HAVING count(*) > 1
 """
 
 
+#: Tolerancia con la que se simplifica la geometria administrativa al cargarla,
+#: en grados. 0,0005 son unos 55 m.
+#:
+#: **No es una optimizacion, es lo que hace el paso posible.** El COD-AB de
+#: Chile pesa mas de 182 MB: la costa de Magallanes tiene millones de vertices,
+#: y `h3_polygon_wkt_to_cells` recibe la geometria como **texto**. El WKT de una
+#: sola provincia agoto los 12,4 GB del runner — no el pais entero, una
+#: provincia.
+#:
+#: Que se pierde: el reparto asigna por el **centro** de la celda, y una celda
+#: r8 mide unos 740 m. Mover una frontera 55 m solo puede cambiar de municipio
+#: las celdas cuyo centro caiga a menos de 55 m de la linea, o sea menos de una
+#: catorceava parte del ancho de una celda.
+#:
+#: Y lo que no se pierde, que es lo que importa: **ninguna persona**. Una celda
+#: mal asignada cambia de municipio, no desaparece. El total nacional —el
+#: invariante que verifica CI— es exactamente el mismo. Se degrada la precision
+#: del reparto en el margen, no la cifra.
+SIMPLIFICACION_ADMIN_GRADOS = 0.0005
+
+
 def load_admin_geometry(
     con: Any, fuente: Path, *, iso3: str, columnas: AdminColumns | None = None
 ) -> int:
@@ -279,16 +300,30 @@ def load_admin_geometry(
             {mapeo.nombre}       AS nombre,
             {mapeo.adm1_id}      AS adm1_id,
             {mapeo.departamento} AS departamento,
-            geom
+            ST_SimplifyPreserveTopology(geom, {SIMPLIFICACION_ADMIN_GRADOS}) AS geom,
+            ST_NPoints(geom) AS _vertices_originales
         FROM ST_Read('{ruta}')
         """
     )
-    n: int = con.execute("SELECT count(*) FROM admin_geom").fetchone()[0]
+    n, antes, despues = con.execute(
+        "SELECT count(*), sum(_vertices_originales), sum(ST_NPoints(geom)) FROM admin_geom"
+    ).fetchone()
+    con.execute("ALTER TABLE admin_geom DROP COLUMN _vertices_originales")
     _log.info(
         "geometria administrativa cargada",
-        extra={"context": {"iso3": iso3, "municipios": n, "fuente": str(fuente)}},
+        extra={
+            "context": {
+                "iso3": iso3,
+                "municipios": n,
+                "fuente": str(fuente),
+                # Publicado para que la simplificacion sea auditable: si un pais
+                # apenas baja, es que su geometria ya era simple.
+                "vertices": f"{antes:,} -> {despues:,}",
+                "tolerancia_grados": SIMPLIFICACION_ADMIN_GRADOS,
+            }
+        },
     )
-    return n
+    return int(n)
 
 
 def build_crosswalk(
