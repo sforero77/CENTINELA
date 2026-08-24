@@ -13,6 +13,19 @@
     "generado_utc": "2026-08-24T21:01:11Z"
   },
   {
+    "usgs_id": "us6000t7zp",
+    "mag": 7.5,
+    "lugar": "20 km W of Catia La Mar, Venezuela",
+    "lon": -67.2167,
+    "lat": 10.6054,
+    "pop_mmi7p": 2276853.9713528785,
+    "utc": "2026-06-24T22:05:04Z",
+    "shakemap_version": 14,
+    "preliminar": false,
+    "backtest": true,
+    "generado_utc": "2026-08-24T21:09:24Z"
+  },
+  {
     "usgs_id": "us6000t7zc",
     "mag": 7.2,
     "lugar": "20 km E of San Felipe, Venezuela",

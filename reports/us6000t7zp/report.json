@@ -1,0 +1,146 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us6000t7zp",
+    "mag": 7.5,
+    "depth_km": 10.0,
+    "utc": "2026-06-24T22:05:04Z",
+    "lugar": "20 km W of Catia La Mar, Venezuela",
+    "pager_alert": "red",
+    "lon": -67.2167,
+    "lat": 10.6054
+  },
+  "inputs": {
+    "shakemap_version": 14,
+    "groundfailure_version": 12,
+    "exposure_manifest": "ven-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 9183151.962815084,
+    "pop_mmi7p": 2276853.9713528785,
+    "pop_mmi8p": 736970.7352275667,
+    "pop_65p_mmi7p": 226865.5566116787,
+    "bld_mmi7p": 504955.0,
+    "built_m2_mmi7p": 74831146.0,
+    "health_mmi7p": 578.0,
+    "edu_mmi7p": 810.0,
+    "road_km_mmi7p": 5265.768779357781,
+    "road_km_principal_mmi7p": 974.9592220731535,
+    "pop_ls_alta": 28985.956875724718,
+    "pop_lq_alta": 561150.0343206676
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "VE0101",
+      "nombre": "Libertador",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 647680.2640636018
+    },
+    {
+      "adm2_id": "VE2401",
+      "nombre": "Vargas",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 381695.780111006
+    },
+    {
+      "adm2_id": "VE1519",
+      "nombre": "Sucre",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 352685.5942679441
+    },
+    {
+      "adm2_id": "VE0811",
+      "nombre": "Puerto Cabello",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 206611.70656254236
+    },
+    {
+      "adm2_id": "VE1517",
+      "nombre": "Plaza",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 172919.1036837548
+    },
+    {
+      "adm2_id": "VE2211",
+      "nombre": "San Felipe",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 135247.57142168516
+    },
+    {
+      "adm2_id": "VE2214",
+      "nombre": "Veroes",
+      "mmi_max": 8.5,
+      "pop_mmi7p": 101400.31401313655
+    },
+    {
+      "adm2_id": "VE1507",
+      "nombre": "Chacao",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 83019.88845830341
+    },
+    {
+      "adm2_id": "VE0805",
+      "nombre": "Juan José Mora",
+      "mmi_max": 8.5,
+      "pop_mmi7p": 58001.31473601004
+    },
+    {
+      "adm2_id": "VE1116",
+      "nombre": "Palmasola",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 30577.811606292613
+    },
+    {
+      "adm2_id": "VE2205",
+      "nombre": "Independencia",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 30384.867612460046
+    },
+    {
+      "adm2_id": "VE2204",
+      "nombre": "Cocorote",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 24813.68682641664
+    },
+    {
+      "adm2_id": "VE2208",
+      "nombre": "Manuel Monge",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 12997.207302381285
+    },
+    {
+      "adm2_id": "VE0518",
+      "nombre": "Ocumare De La Costa De Oro",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 11392.981012304313
+    },
+    {
+      "adm2_id": "VE1120",
+      "nombre": "Silva",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 10051.20091214357
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 11.8,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-24T21:09:24Z",
+  "pipeline_version": "0.1.0"
+}
