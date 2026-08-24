@@ -68,11 +68,12 @@ notas:
      Distrito Capital. Columnas verificadas abriendo el archivo con DuckDB:
      `adm2_pcode`, `adm2_name`, `adm1_pcode`, `adm1_name` — en minusculas y NO
      los `ADM2_PCODE`/`ADM2_ES` que documenta HDX para entregas mas viejas."
-  - "PENDIENTE DEL MANTENEDOR DE PAIS: al leer los toponimos del COD-AB con
-     DuckDB aparecen mal codificados ('Falc?n' por 'Falcón'). Hay que
-     determinar si falta el `.cpg` en la entrega o si el `.dbf` no es UTF-8, y
-     corregirlo antes de publicar un reporte: los nombres de municipio salen
-     impresos en el reporte y en el hilo."
+  - "COMPROBADO EL 24-AGO-2026, NO HAY PROBLEMA DE CODIFICACION. Se anoto que
+     los toponimos salian como 'Falc?n' y era la consola de Windows, no el
+     dato. Verificado sobre el `admin_lookup.parquet` ya publicado, byte a
+     byte: 'Falcón' es 46 61 6c 63 c3 b3 6e — UTF-8 correcto. De los 336
+     municipios, 193 llevan acento y ninguno trae mojibake. Igual de correctos
+     Bolívar, Mérida, Táchira y Anzoátegui."
   - "La caja envolvente de COUNTRY_BBOX['VEN'] esta medida sobre este mismo
      ven_admin2.shp y excluye la Isla de Aves, que el COD-AB tampoco incluye."
 

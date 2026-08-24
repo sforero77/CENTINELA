@@ -260,7 +260,9 @@ Lo que cada pais nuevo necesita, en orden:
 2. Anotar `medido_ghs_pop` en su manifest y **ajustar `tolerancia_pct`**: hoy
    todos los nuevos llevan un 5 % provisional que no es una medicion. Colombia,
    que si esta medida, usa 1 %.
-3. Validar los toponimos y su codificacion (en Venezuela salen mal: «Falc?n»).
+3. Validar los toponimos. (La codificacion de Venezuela estaba anotada como
+   rota —«Falc?n»— y **no lo esta**: era la consola de Windows. Verificado
+   byte a byte sobre el parquet publicado.)
 4. Publicar el activo como Release.
 
 Ojo con el coste de las cajas insulares: Chile llega a 109,7°O por Rapa Nui,
