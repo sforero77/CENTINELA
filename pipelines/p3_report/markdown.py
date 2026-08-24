@@ -16,6 +16,24 @@ _ENCABEZADO_PRELIMINAR = (
     "en cuanto USGS publique el ShakeMap del evento."
 )
 
+#: Aviso de reconstruccion retrospectiva. No es un matiz menor: cambia lo que
+#: las cifras significan. La poblacion puede ser de la epoca del sismo —GHS-POP
+#: publica de 1975 a 2030 en pasos de cinco anos— pero las edificaciones, las
+#: vias y el equipamiento son **los de hoy**, porque OpenStreetMap y Overture no
+#: guardan el pasado. Un lector que no lo sepa leeria "444.281 edificaciones
+#: expuestas" como si hubieran existido entonces.
+_ENCABEZADO_BACKTEST = (
+    "> **Reconstruccion retrospectiva.** Este reporte se calculo despues del "
+    "evento, no en respuesta a el, y no cuenta para las metricas de latencia "
+    "del sistema.\n"
+    ">\n"
+    "> La **poblacion** corresponde a la epoca indicada en el manifest de "
+    "exposicion. Las **edificaciones, vias, sedes de salud y educativas son las "
+    "actuales**: OpenStreetMap y Overture publican el estado presente, no el "
+    'historico. Leelas como "que infraestructura de hoy caeria en esa zona de '
+    'intensidad", no como lo que habia entonces.'
+)
+
 
 def render_markdown(report: Report) -> str:
     """Genera el markdown del reporte en espanol neutro (RF-06)."""
@@ -30,6 +48,8 @@ def render_markdown(report: Report) -> str:
     )
     if report.preliminar:
         partes.append(_ENCABEZADO_PRELIMINAR)
+    if report.backtest:
+        partes.append(_ENCABEZADO_BACKTEST)
 
     partes.append("## Exposicion estimada")
     partes.append(_tabla_totales(report))

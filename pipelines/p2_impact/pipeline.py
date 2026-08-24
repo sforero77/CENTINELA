@@ -397,6 +397,9 @@ def build_report(
             exposure_manifest=manifest_id,
         ),
         totales=totales.to_totales(),
+        # El estado del evento sabe si es una reconstruccion; el reporte tiene
+        # que decirlo, porque cambia lo que sus cifras afirman.
+        backtest=state.backtest,
         top_municipios=tuple(top),
         incertidumbre=Incertidumbre(
             pop_discrepancia_pct=round(totales.discrepancia_pct, 1), notas=notas

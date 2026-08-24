@@ -160,6 +160,12 @@ class Report:
     descargas: Descargas = field(default_factory=Descargas)
     #: True cuando aun no hay ShakeMap y el corte es por radios (RF-03).
     preliminar: bool = False
+    #: True cuando el evento se reconstruyo despues de ocurrir. Cambia lo que
+    #: el reporte puede afirmar, asi que viaja hasta el visor: la poblacion
+    #: puede ser de la epoca —GHS-POP publica de 1975 a 2030— pero las
+    #: edificaciones, vias y equipamiento son los de hoy, porque OSM y
+    #: Overture no guardan el pasado.
+    backtest: bool = False
     #: Deltas frente a la version anterior del reporte (RF-04).
     changelog: tuple[str, ...] = ()
     schema: str = REPORT_SCHEMA_ID
@@ -172,6 +178,7 @@ class Report:
             "event": self.event.to_dict(),
             "inputs": self.inputs.to_dict(),
             "preliminar": self.preliminar,
+            "backtest": self.backtest,
             "totales": self.totales.to_dict(),
             "top_municipios": [m.to_dict() for m in self.top_municipios],
             "incertidumbre": self.incertidumbre.to_dict(),
@@ -203,6 +210,7 @@ class Report:
             ),
             descargas=Descargas(**data.get("descargas", {})),
             preliminar=bool(data.get("preliminar", False)),
+            backtest=bool(data.get("backtest", False)),
             changelog=tuple(data.get("changelog", [])),
             schema=str(data.get("schema", REPORT_SCHEMA_ID)),
             generado_utc=str(data.get("generado_utc", "")),

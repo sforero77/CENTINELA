@@ -132,3 +132,16 @@ th { font-weight: 600; color: var(--tenue); }
 
 .cumple { color: #1a7f37; }
 .incumple { color: var(--acento); }
+
+/* Aviso de reconstruccion retrospectiva en la lista de eventos.
+   Un historico no afirma lo mismo que un reporte en vivo: la poblacion puede
+   ser de la epoca del sismo, pero la infraestructura es la de hoy. */
+.aviso-backtest {
+  margin: 0.25rem 0 0;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid #b8860b;
+  background: #fdf6e3;
+  color: #6b5200;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}

@@ -93,6 +93,7 @@ def write_report_bundle(
                 "usgs_id": report.event.usgs_id,
                 "shakemap_version": report.inputs.shakemap_version,
                 "preliminar": report.preliminar,
+                "backtest": report.backtest,
                 "artefactos": sorted(escritos),
             }
         },
@@ -121,6 +122,7 @@ def rebuild_index(reports_root: Path | None = None) -> Path:
                     "utc": data["event"]["utc"],
                     "shakemap_version": data["inputs"]["shakemap_version"],
                     "preliminar": bool(data.get("preliminar", False)),
+                    "backtest": bool(data.get("backtest", False)),
                     "generado_utc": data.get("generado_utc", ""),
                 }
             )

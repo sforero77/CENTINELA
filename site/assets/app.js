@@ -47,11 +47,26 @@ function filaEvento(evento) {
     evento.utc,
     `ShakeMap v${evento.shakemap_version}`,
     evento.preliminar ? "preliminar" : null,
+    evento.backtest ? "reconstruccion retrospectiva" : null,
   ]
     .filter(Boolean)
     .join(" · ");
 
   li.append(enlace, meta);
+
+  // Un historico no dice lo mismo que un reporte en vivo, y quien lo abre desde
+  // la lista tiene que saberlo antes de leer las cifras. La poblacion puede ser
+  // de la epoca del sismo —GHS-POP publica de 1975 a 2030— pero edificaciones,
+  // vias y equipamiento son los de hoy: OSM y Overture no guardan el pasado.
+  if (evento.backtest) {
+    const aviso = document.createElement("p");
+    aviso.className = "aviso-backtest";
+    aviso.textContent =
+      "Reconstruido despues del evento. La poblacion es de la epoca; las " +
+      "edificaciones, vias y equipamiento son los actuales.";
+    li.append(aviso);
+  }
+
   return li;
 }
 

@@ -32,6 +32,7 @@
       }
     },
     "preliminar": { "type": "boolean" },
+    "backtest": { "type": "boolean" },
     "totales": {
       "type": "object",
       "additionalProperties": false,
