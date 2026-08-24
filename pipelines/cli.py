@@ -119,14 +119,27 @@ def _cmd_paises(args: argparse.Namespace) -> int:
     from .p0_exposure.download import countries_for_point
 
     state = EventState.load(args.usgs_id, Path(args.events_dir) if args.events_dir else None)
-    if state is None:
-        print(f"No existe event_state para {args.usgs_id}", file=sys.stderr)
+    if state is not None:
+        lon, lat = state.lon, state.lat
+    elif args.detail_url:
+        # Un historico no tiene estado hasta que P2 lo reconstruye, y en el
+        # workflow esta pregunta va **antes** de P2: hay que saber que activo
+        # bajar para poder correrlo. La respuesta es geografica, asi que el
+        # epicentro del detail sirve igual de bien que el estado.
+        detalle = HttpFetcher(timeout_s=60.0).get_json(args.detail_url)
+        lon, lat = (float(c) for c in detalle["geometry"]["coordinates"][:2])
+    else:
+        print(
+            f"No existe event_state para {args.usgs_id}. Si es un historico que P1 "
+            f"nunca vio, pasa --detail-url para sacar el epicentro del feed.",
+            file=sys.stderr,
+        )
         return 1
 
-    candidatos = countries_for_point(state.lon, state.lat)
+    candidatos = countries_for_point(lon, lat)
     if not candidatos:
         print(
-            f"El epicentro de {args.usgs_id} ({state.lon}, {state.lat}) no cae en "
+            f"El epicentro de {args.usgs_id} ({lon}, {lat}) no cae en "
             f"ningun pais con caja declarada. Puede ser mar abierto o un pais que "
             f"el sistema todavia no cubre; anadelo a COUNTRY_BBOX.",
             file=sys.stderr,
@@ -195,6 +208,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_paises = sub.add_parser(
         "paises-candidatos", help="ISO3 cuyo activo podria servir para un evento"
+    )
+    p_paises.add_argument(
+        "--detail-url",
+        default="",
+        help="feed detail del evento; se usa si aun no existe su event_state",
     )
     p_paises.add_argument("usgs_id")
     p_paises.add_argument("--events-dir", help="directorio de event_state")
