@@ -157,3 +157,86 @@ def test_el_error_lista_lo_que_si_hay() -> None:
     """El mensaje tiene que decir con que reemplazarlo."""
     with pytest.raises(HdxResolutionError, match="MGN2024_URB_SECCION"):
         resolve_resource(_fetcher_col(), "cod-ab-col", resource="no-existe")
+
+
+# --- Una capa partida por tipo de geometria --------------------------------
+
+#: Forma real de `hotosm_per_health_facilities`: el GeoPackage combinado apunta
+#: a un export efimero de export.hotosm.org que ya devuelve 404, y los mismos
+#: datos siguen vivos en S3 partidos en puntos y poligonos.
+PERU_SALUD: dict[str, Any] = {
+    "success": True,
+    "result": {
+        "resources": [
+            {
+                "name": "hotosm_per_health_facilities_gpkg.zip",
+                "format": "Geopackage",
+                "url": "https://export.hotosm.org/downloads/uuid/combinado.zip",
+            },
+            {
+                "name": "hotosm_per_health_facilities_points_gpkg.zip",
+                "format": "Geopackage",
+                "url": "https://s3/puntos.zip",
+            },
+            {
+                "name": "hotosm_per_health_facilities_polygons_gpkg.zip",
+                "format": "Geopackage",
+                "url": "https://s3/poligonos.zip",
+            },
+        ]
+    },
+}
+
+#: Colombia: un solo GeoPackage combinado.
+COL_SALUD: dict[str, Any] = {
+    "success": True,
+    "result": {
+        "resources": [
+            {
+                "name": "hotosm_col_health_facilities_osm_gpkg.zip",
+                "format": "Geopackage",
+                "url": "https://s3/col.zip",
+            }
+        ]
+    },
+}
+
+
+def test_un_dataset_combinado_da_un_solo_intento() -> None:
+    from pipelines.common.hdx import resolve_attempts
+
+    f = FixtureFetcher({HDX_PACKAGE_SHOW.format(dataset="col"): COL_SALUD})
+    intentos = resolve_attempts(f, "col")
+    assert intentos == [("Geopackage", ["https://s3/col.zip"])]
+
+
+def test_el_combinado_va_antes_que_los_parciales() -> None:
+    """Si los tres estuvieran vivos, bajarlos todos contaria cada sede dos veces."""
+    from pipelines.common.hdx import resolve_attempts
+
+    f = FixtureFetcher({HDX_PACKAGE_SHOW.format(dataset="per"): PERU_SALUD})
+    intentos = resolve_attempts(f, "per")
+    assert intentos[0][1] == ["https://export.hotosm.org/downloads/uuid/combinado.zip"]
+
+
+def test_los_parciales_van_juntos_y_completos() -> None:
+    """Quedarse con los puntos perderia los hospitales grandes.
+
+    El extracto mezcla POINT, POLYGON y MULTIPOLYGON porque un hospital grande
+    esta mapeado en OSM como edificio y no como nodo.
+    """
+    from pipelines.common.hdx import resolve_attempts
+
+    f = FixtureFetcher({HDX_PACKAGE_SHOW.format(dataset="per"): PERU_SALUD})
+    _, urls = resolve_attempts(f, "per")[1]
+    assert urls == ["https://s3/puntos.zip", "https://s3/poligonos.zip"]
+
+
+def test_fijar_el_recurso_sigue_dando_uno_solo() -> None:
+    """`hdx_resource` manda sobre todo lo demas: lo necesita el COD-AB de COL."""
+    from pipelines.common.hdx import resolve_attempts
+
+    f = _fetcher_col()
+    intentos = resolve_attempts(f, "cod-ab-col", resource="COL Administrative Divisions")
+    assert len(intentos) == 1
+    assert intentos[0][1] == ["https://x/adm.zip"]

@@ -31,8 +31,80 @@ HDX_PACKAGE_SHOW = "https://data.humdata.org/api/3/action/package_show?id={datas
 PREFERRED_FORMATS: tuple[str, ...] = ("Geopackage", "GeoJSON", "SHP")
 
 
+#: Fragmentos que delatan un recurso **parcial**: la misma capa partida por tipo
+#: de geometria. Aparecen en algunos paises y no en otros.
+PARTIAL_MARKERS: tuple[str, ...] = ("_points_", "_polygons_", "_lines_")
+
+
 class HdxResolutionError(Exception):
     """No se pudo resolver el recurso pedido en HDX."""
+
+
+def _es_parcial(nombre: str) -> bool:
+    return any(marca in nombre.lower() for marca in PARTIAL_MARKERS)
+
+
+def resolve_attempts(
+    fetcher: Fetcher,
+    dataset: str,
+    *,
+    formats: tuple[str, ...] = PREFERRED_FORMATS,
+    resource: str = "",
+) -> list[tuple[str, list[str]]]:
+    """Formas de obtener la capa completa, en orden de preferencia.
+
+    Cada intento es ``(formato, urls)`` y **todas sus urls hacen falta**: quien
+    descargue prueba el primero y pasa al siguiente si alguna falla.
+
+    Existe porque HOTOSM publica la misma capa de tres maneras segun el pais:
+
+    * Colombia y Ecuador: **un** GeoPackage combinado, en S3.
+    * Peru: el combinado apunta a ``export.hotosm.org`` —un export efimero que
+      ya devuelve 404— y ademas publica ``_points_`` y ``_polygons_`` por
+      separado, esos si vivos en S3.
+
+    Quedarse con los puntos no es opcion: el propio extracto de salud mezcla
+    POINT, POLYGON y MULTIPOLYGON porque **un hospital grande esta mapeado como
+    edificio y no como nodo**, asi que descartar los poligonos perderia
+    justamente los establecimientos mas grandes.
+
+    El combinado va primero y los parciales despues, nunca juntos: si los tres
+    estuvieran vivos, bajarlos todos contaria cada sede dos veces.
+    """
+    payload = fetcher.get_json(HDX_PACKAGE_SHOW.format(dataset=dataset))
+    if not payload.get("success"):
+        raise HdxResolutionError(f"HDX no reconoce el dataset {dataset!r}")
+    recursos = [r for r in (payload["result"].get("resources") or []) if r.get("url")]
+
+    if resource:
+        aguja = resource.lower()
+        elegidos = [r for r in recursos if aguja in str(r.get("name", "")).lower()]
+        if len(elegidos) != 1:
+            nombres = [str(r.get("name", "?")) for r in recursos]
+            raise HdxResolutionError(
+                f"{resource!r} identifica {len(elegidos)} recursos en {dataset!r}, "
+                f"y tiene que identificar exactamente uno. Disponibles: {nombres}"
+            )
+        return [(str(elegidos[0].get("format", "?")), [str(elegidos[0]["url"])])]
+
+    intentos: list[tuple[str, list[str]]] = []
+    for formato in formats:
+        del_formato = [r for r in recursos if str(r.get("format", "")).lower() == formato.lower()]
+        if not del_formato:
+            continue
+        completos = [r for r in del_formato if not _es_parcial(str(r.get("name", "")))]
+        parciales = [r for r in del_formato if _es_parcial(str(r.get("name", "")))]
+        if completos:
+            intentos.append((formato, [str(completos[0]["url"])]))
+        if parciales:
+            intentos.append((formato, [str(r["url"]) for r in parciales]))
+
+    if not intentos:
+        disponibles = sorted({str(r.get("format", "?")) for r in recursos})
+        raise HdxResolutionError(
+            f"{dataset!r} no publica ninguno de {list(formats)}; tiene {disponibles}"
+        )
+    return intentos
 
 
 def resolve_resource(

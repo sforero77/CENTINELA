@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..common.geo import BBox
-from ..common.hdx import resolve_resource
+from ..common.hdx import resolve_attempts
 from ..common.http import HttpFetcher
 from ..common.logging import get_logger
 from ..common.manifest import Manifest, Source
@@ -324,28 +324,47 @@ def download_hdx(source: Source, destino: Path, *, fetcher: HttpFetcher) -> list
         return ya_estan
 
     destino.mkdir(parents=True, exist_ok=True)
-    formato, url = resolve_resource(fetcher, source.hdx_dataset, resource=source.hdx_resource)
-    contenido = fetcher.get_bytes(url)
+    intentos = resolve_attempts(fetcher, source.hdx_dataset, resource=source.hdx_resource)
 
-    if contenido[:4] == _ZIP_MAGIC:
-        rutas = _extraer_zip(contenido, destino / source.id)
-    else:
-        path = destino / f"{source.id}{HDX_SUFFIX.get(formato.lower(), '.' + formato.lower())}"
-        write_atomic(path, contenido)
-        rutas = [path]
+    fallos: list[str] = []
+    for formato, urls in intentos:
+        try:
+            contenidos = [(url, fetcher.get_bytes(url)) for url in urls]
+        except RuntimeError as exc:
+            # Un recurso muerto no invalida el dataset: HDX cataloga exports de
+            # `export.hotosm.org` que caducan, mientras los mismos datos siguen
+            # vivos en S3 partidos por tipo de geometria. Se prueba el siguiente.
+            fallos.append(str(exc).split(" tras ")[0])
+            continue
 
-    _log.info(
-        "recurso de HDX descargado",
-        extra={
-            "context": {
-                "dataset": source.hdx_dataset,
-                "formato": formato,
-                "url": url,
-                "archivos": len(rutas),
-            }
-        },
+        rutas: list[Path] = []
+        for i, (_url, contenido) in enumerate(contenidos):
+            if contenido[:4] == _ZIP_MAGIC:
+                sufijo = f"{source.id}" if len(contenidos) == 1 else f"{source.id}_{i}"
+                rutas.extend(_extraer_zip(contenido, destino / sufijo))
+            else:
+                ext = HDX_SUFFIX.get(formato.lower(), "." + formato.lower())
+                nombre = f"{source.id}{ext}" if len(contenidos) == 1 else f"{source.id}_{i}{ext}"
+                rutas.append(write_atomic(destino / nombre, contenido))
+
+        _log.info(
+            "recurso de HDX descargado",
+            extra={
+                "context": {
+                    "dataset": source.hdx_dataset,
+                    "formato": formato,
+                    "partes": len(urls),
+                    "archivos": len(rutas),
+                    "descartados": fallos,
+                }
+            },
+        )
+        return rutas
+
+    raise RuntimeError(
+        f"Ningun recurso de {source.hdx_dataset!r} se pudo descargar. "
+        f"Se probaron {len(intentos)} formas y todas fallaron: {fallos}"
     )
-    return rutas
 
 
 def _extraer_zip(contenido: bytes, destino: Path) -> list[Path]:
