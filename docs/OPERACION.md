@@ -96,6 +96,14 @@ republicar el activo hay una ventana. La vista de exposicion rellena las
 columnas que falten para que el reporte salga igual, con una **ausencia** y no
 un cero.
 
+**Un sismo fuera del pais del activo.** P1 vigila toda LATAM y el activo es por
+pais. Si se calcula un sismo peruano contra celdas colombianas, el join no
+encuentra nada y todas las cifras salen en cero — publicadas, durante un
+terremoto. El activo se elige ahora por el epicentro, y `compute_impact` falla
+si el join queda vacio. **Si ves un issue que dice "no hay activo de exposicion
+publicado para X", eso es el sistema funcionando**: construye el pais con
+`gh workflow run exposure_quarterly.yml -f iso3=X`.
+
 ---
 
 ## 4. Deuda por pais

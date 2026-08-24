@@ -27,13 +27,13 @@ centinela impact us6000tjl2 \
 | P1 trigger (feed, filtro, dedupe, estado) | ✅ **operando cada 10 min** |
 | Visor y `/status` publicados | ✅ https://sforero77.github.io/CENTINELA/ |
 | P0 activo de exposicion (descarga → parquet) | ✅ funcional, nueve capas |
-| P2 impacto (contornos → celdas → GF → join) | ✅ funcional |
+| P2 impacto (contornos → celdas → GF → join) | ✅ funcional, con activo elegido por epicentro |
 | P3 reporte (json, md, csv, hilo, 2 mapas) | ✅ funcional |
 | Pagina `/status` con latencia real | ✅ funcional |
 | Golden G1 (Chocó) y G3 | ✅ corren |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**405 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), `ruff` y
+**431 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), `ruff` y
 `mypy --strict` limpios, arranque verificado desde clon vacio.
 
 ### El cero silencioso que casi se publica
