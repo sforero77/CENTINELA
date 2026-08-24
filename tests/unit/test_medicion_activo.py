@@ -39,8 +39,18 @@ def _plan(tmp_path: Path) -> Any:
     )
 
 
-def _referencia() -> Any:
-    return SimpleNamespace(poblacion_2025=7_013_078, fuente="ONU, World Population Prospects")
+def _referencia() -> dict[str, Any]:
+    """Un dict, que es lo que trae el manifest.
+
+    La primera version de esta prueba usaba un SimpleNamespace y por eso paso
+    mientras el codigo leia por atributo. `medicion.json` salio publicado sin
+    bloque de referencia: sin error y sin aviso, solo una clave que faltaba.
+    """
+    return {
+        "poblacion_2025": 7_013_078,
+        "fuente": "ONU, World Population Prospects",
+        "tolerancia_pct": 7.5,
+    }
 
 
 def test_calcula_el_desvio_frente_a_la_referencia(tmp_path: Path) -> None:
@@ -81,3 +91,22 @@ def test_es_json_valido_y_legible(tmp_path: Path) -> None:
     assert texto.endswith("\n")
     assert "\n  " in texto  # indentado, no una sola linea
     assert json.loads(texto)["medido_utc"].endswith("Z")
+
+
+def test_lee_la_referencia_como_dict_no_como_objeto(tmp_path: Path) -> None:
+    """Guardia del fallo real: `referencia_oficial` es un dict del manifest.
+
+    Leerla por atributo no falla, no avisa, y deja `medicion.json` sin bloque de
+    referencia — o sea sin el desvio, que es justo el numero para el que existe
+    el fichero. Se publico asi para Uruguay antes de detectarlo.
+    """
+    from pipelines.common.manifest import Manifest
+
+    manifest = Manifest.load("URY")
+    assert isinstance(manifest.referencia_oficial, dict)
+    ruta = write_measurement(
+        _plan(tmp_path), RESUMEN, rescate=RESCATE, referencia=manifest.referencia_oficial
+    )
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    assert "referencia" in datos
+    assert datos["referencia"]["poblacion"] == manifest.referencia_oficial["poblacion_2025"]

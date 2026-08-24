@@ -615,7 +615,7 @@ def write_measurement(
     resumen: dict[str, Any],
     *,
     rescate: dict[str, float],
-    referencia: Any = None,
+    referencia: dict[str, Any] | None = None,
 ) -> Path:
     """Deja junto al activo lo que se midio al construirlo.
 
@@ -630,7 +630,12 @@ def write_measurement(
     """
     import json
 
-    oficial = getattr(referencia, "poblacion_2025", None) if referencia else None
+    # `referencia_oficial` es un dict del manifest, no un objeto. La primera
+    # version leia por atributo y `medicion.json` salio sin bloque de
+    # referencia: sin error, sin aviso, solo una clave que faltaba. La prueba
+    # no lo vio porque usaba un SimpleNamespace — codificaba mi suposicion en
+    # vez de la forma real del dato.
+    oficial = (referencia or {}).get("poblacion_2025")
     pop = float(resumen.get("pop_total") or 0.0)
     medicion: dict[str, Any] = {
         "iso3": plan.iso3,
@@ -642,7 +647,7 @@ def write_measurement(
     if oficial:
         medicion["referencia"] = {
             "poblacion": oficial,
-            "fuente": getattr(referencia, "fuente", ""),
+            "fuente": (referencia or {}).get("fuente", ""),
             "desvio_pct": round(100.0 * (pop - oficial) / oficial, 4),
         }
     destino: Path = plan.salida / MEDICION_FICHERO
