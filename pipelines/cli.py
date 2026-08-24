@@ -107,6 +107,21 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_reindexar(args: argparse.Namespace) -> int:
+    """Rehace `reports/index.json` desde los reportes en disco.
+
+    Existe por un conflicto real: dos eventos publicados a la vez —el caso de
+    G2, dos mainshocks separados por 33 segundos— chocan en este fichero al
+    empujar a la misma rama. Fusionarlo linea a linea no tiene sentido porque es
+    un **derivado**: la verdad son los `report.json` del directorio. Se
+    regenera y se sigue.
+    """
+    from .p3_report.run import rebuild_index
+
+    print(rebuild_index(Path(args.reports) if args.reports else None))
+    return 0
+
+
 def _cmd_calibrar(args: argparse.Namespace) -> int:
     """Reajusta la tolerancia de los manifests con lo que midio el ultimo build.
 
@@ -265,6 +280,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status", help="recalcula site/status.json")
     p_status.set_defaults(func=_cmd_status)
+
+    p_reindexar = sub.add_parser(
+        "reindexar", help="rehace reports/index.json desde los reportes en disco"
+    )
+    p_reindexar.add_argument("--reports", help="raiz de reports/")
+    p_reindexar.set_defaults(func=_cmd_reindexar)
 
     p_calibrar = sub.add_parser(
         "calibrar", help="reajusta la tolerancia de los manifests con lo medido"

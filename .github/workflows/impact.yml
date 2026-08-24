@@ -22,6 +22,9 @@ on:
 
 permissions:
   contents: write
+  # Sin esto el manejador de fallos no puede abrir el issue, que es toda su
+  # razon de ser. No estaba.
+  issues: write
 
 # Un job por evento a la vez: dos versiones de ShakeMap del mismo evento no
 # deben pisarse. Eventos distintos si corren en paralelo.
@@ -109,13 +112,35 @@ jobs:
           git add events/ reports/
           git diff --staged --quiet && exit 0
           git commit -m "P3: reporte de $USGS_ID"
+
           # Dos eventos simultaneos tienen concurrency groups distintos y
-          # empujan a la misma rama: sin rebase uno de los dos se pierde.
+          # empujan a la misma rama. Con rebase basta para `events/` y para el
+          # directorio del evento, que son disjuntos — pero NO para
+          # `reports/index.json`, que los dos reescriben entero.
+          #
+          # Paso de verdad al reemitir los dos mainshocks de Venezuela, que es
+          # justo el caso para el que existe G2: el segundo murio con
+          # "CONFLICT (content): Merge conflict in reports/index.json" y su
+          # reporte, ya calculado, no llego a publicarse.
+          #
+          # No se fusiona: el indice es un **derivado** de los report.json del
+          # directorio. Se regenera y se sigue.
           for intento in 1 2 3 4; do
-            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+            if git pull --rebase origin "${GITHUB_REF_NAME}"; then
+              git push && exit 0
+            elif git status --porcelain | grep -q "^UU reports/index.json"; then
+              echo "::notice::indice en conflicto; se regenera en vez de fusionarse"
+              uv run centinela reindexar
+              git add reports/index.json
+              GIT_EDITOR=true git rebase --continue || git rebase --abort
+              git push && exit 0
+            else
+              git rebase --abort || true
+            fi
             sleep $((2 ** intento))
           done
           exit 1
+
 
       # RNF-03: si el contrato USGS se rompe, el pipeline degrada y deja
       # rastro accionable. Nunca publica datos corruptos en silencio.
@@ -124,7 +149,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue create \
-            --title "P2 fallo para $USGS_ID" \
-            --label "pipeline,automatico" \
-            --body "El pipeline de impacto fallo. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # Las etiquetas se crean si no existen. Sin esto el manejador de
+          # fallos **falla el mismo**: paso de verdad —"could not add label:
+          # 'pipeline' not found"— y el issue nunca se abrio, justo en la
+          # corrida que habia que investigar. Una red de seguridad que depende
+          # de configuracion previa del repo no es una red: es otro punto de
+          # fallo, y encima uno que solo se nota cuando ya hay un problema.
+          gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+          CUERPO="El pipeline de impacto fallo. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh issue create --title "P2 fallo para $USGS_ID" \
+                          --label "pipeline,automatico" --body "$CUERPO" \
+            || gh issue create --title "P2 fallo para $USGS_ID" --body "$CUERPO"
