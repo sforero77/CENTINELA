@@ -6,23 +6,29 @@
     "depth_km": 110.285,
     "utc": "2026-08-10T12:34:28Z",
     "lugar": "5 km al S de San José del Palmar, Chocó, Colombia",
-    "pager_alert": "red"
+    "pager_alert": "red",
+    "lon": -76.2422,
+    "lat": 4.8436
   },
   "inputs": {
     "shakemap_version": 7,
     "groundfailure_version": 7,
-    "exposure_manifest": "col-v0.4"
+    "exposure_manifest": "col-v0.5"
   },
   "preliminar": false,
+  "radios": [],
+  "backtest": true,
   "totales": {
-    "pop_mmi6p": 6960085.743641049,
+    "pop_mmi6p": 6960085.743641048,
     "pop_mmi7p": 2415793.4590726923,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 271688.18411253,
-    "bld_mmi7p": 444281.0,
-    "health_mmi7p": 512.0,
-    "edu_mmi7p": 997.0,
-    "road_km_mmi7p": 1397.6578971489403,
+    "pop_65p_mmi7p": 289256.9260005261,
+    "bld_mmi7p": 444424.0,
+    "built_m2_mmi7p": 69814813.0,
+    "health_mmi7p": 518.0,
+    "edu_mmi7p": 998.0,
+    "road_km_mmi7p": 8502.889960662442,
+    "road_km_principal_mmi7p": 984.7368105680957,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 1600028.0208497662
   },
@@ -119,7 +125,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 3.2,
+    "pop_discrepancia_pct": 3.1,
     "notas": []
   },
   "descargas": {
@@ -135,6 +141,6 @@
     "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
   ],
-  "generado_utc": "2026-08-23T18:25:59Z",
+  "generado_utc": "2026-08-24T21:01:11Z",
   "pipeline_version": "0.1.0"
 }

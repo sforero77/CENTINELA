@@ -2,6 +2,10 @@
 
 **Evento USGS:** `us6000tjl2` · **Origen:** 2026-08-10T12:34:28Z UTC · **Profundidad:** 110,3 km
 
+> **Reconstruccion retrospectiva.** Este reporte se calculo despues del evento, no en respuesta a el, y no cuenta para las metricas de latencia del sistema.
+>
+> La **poblacion** corresponde a la epoca indicada en el manifest de exposicion. Las **edificaciones, vias, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el historico. Leelas como "que infraestructura de hoy caeria en esa zona de intensidad", no como lo que habia entonces.
+
 ## Exposicion estimada
 
 | Indicador | Estimado |
@@ -10,11 +14,15 @@
 | Poblacion en MMI≥7 | 2,4 millones |
 | Poblacion en MMI≥8 | 0 |
 | Edificaciones en MMI≥7 | 440 mil |
-| Sedes de salud en MMI≥7 | 512 |
-| Sedes educativas en MMI≥7 | 997 |
-| Kilometros de via en MMI≥7 | 1.400 km |
+| Sedes de salud en MMI≥7 | 518 |
+| Sedes educativas en MMI≥7 | 998 |
+| Vias primarias y secundarias en MMI≥7 | 980 km |
+| Vias locales en MMI≥7 | 7.500 km |
+| Superficie construida en MMI≥7 | 69,8 km² |
 
-De la poblacion en intensidad MMI≥7, alrededor de **270 mil** personas tienen 65 anos o mas.
+El satelite detecta **1,6 veces** mas superficie construida de la que explicarian las 440 mil edificaciones registradas. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahi, y la superficie construida no**.
+
+De la poblacion en intensidad MMI≥7, alrededor de **290 mil** personas tienen 65 anos o mas.
 
 ## Municipios mas expuestos (top 15)
 
@@ -49,7 +57,7 @@ PAGER (USGS) estima para este evento una alerta **red**. CENTINELA no estima vic
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el area afectada: **3,2 %**.
+Discrepancia entre GHS-POP y WorldPop en el area afectada: **3,1 %**.
 
 ## Descargas
 
@@ -60,8 +68,8 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **3,2 %**.
 
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v7**
-- Manifest de exposicion: `col-v0.4`
-- Pipeline: `0.1.0` · Generado: 2026-08-23T18:25:59Z
+- Manifest de exposicion: `col-v0.5`
+- Pipeline: `0.1.0` · Generado: 2026-08-24T21:01:11Z
 
 ## Advertencias
 
