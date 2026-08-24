@@ -50,14 +50,30 @@ class Decision:
     groundfailure_version: int = 0
 
 
-def decide(state: EventState, products: ProductSet) -> Decision:
+def decide(state: EventState, products: ProductSet, *, forzar: bool = False) -> Decision:
     """Decide la accion a partir del estado persistido y los productos vivos.
 
     Esta funcion es el corazon de la idempotencia (RF-02): dos corridas sobre
     el mismo par ``(estado, productos)`` devuelven la misma decision.
+
+    Args:
+        forzar: reemite aunque no haya version nueva de ningun producto. El
+            estado solo sigue las versiones de USGS, asi que un reporte no se
+            entera de que **el pipeline** cambio: el del Choco quedo sin las
+            coordenadas del epicentro y sin la marca de backtest, ambas
+            anadidas despues. Es una decision de quien opera, no automatica,
+            porque reemitir cuesta y cambia un artefacto ya publicado.
     """
     if state.estado is EventStatus.DESCARTADO:
         return Decision(Action.OMITIR, "evento descartado")
+
+    if forzar and products.has_shakemap:
+        return Decision(
+            Action.COMPLETO,
+            "reproceso forzado: el pipeline cambio, no los productos",
+            products.shakemap_version,
+            products.groundfailure_version,
+        )
 
     if not products.has_shakemap:
         if state.intentos_preliminar >= MAX_PRELIMINARY_ATTEMPTS:
@@ -156,6 +172,7 @@ def run_impact(
     workdir: Path | None = None,
     admin_lookup_parquet: str | None = None,
     backtest: bool = False,
+    forzar: bool = False,
 ) -> Decision:
     """Procesa un evento de punta a punta: productos -> impacto -> reporte.
 
@@ -174,6 +191,7 @@ def run_impact(
         backtest: reconstruye el estado si P1 nunca vio el evento, y lo marca
             como retrospectivo. Sin esto un evento sin estado es un error, que
             es lo correcto en el camino en vivo: significa que P1 fallo.
+        forzar: reemite el reporte aunque no haya version nueva de productos.
 
     Returns:
         La decision tomada, ya ejecutada.
@@ -202,7 +220,7 @@ def run_impact(
         )
 
     products = parse_products(detail)
-    decision = decide(state, products)
+    decision = decide(state, products, forzar=forzar)
     _log.info(
         "decision de impacto",
         extra={

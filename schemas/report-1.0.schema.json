@@ -3,52 +3,155 @@
   "$id": "https://centinela.dev/schemas/report-1.0.schema.json",
   "title": "CENTINELA — reporte de exposicion sismica v1",
   "type": "object",
-  "required": ["schema", "event", "inputs", "totales", "disclaimers", "generado_utc",
-               "pipeline_version"],
+  "required": [
+    "schema",
+    "event",
+    "inputs",
+    "totales",
+    "disclaimers",
+    "generado_utc",
+    "pipeline_version"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schema": { "const": "centinela/report/1.0" },
+    "schema": {
+      "const": "centinela/report/1.0"
+    },
     "event": {
       "type": "object",
-      "required": ["usgs_id", "mag", "depth_km", "utc", "lugar"],
+      "required": [
+        "usgs_id",
+        "mag",
+        "depth_km",
+        "utc",
+        "lugar"
+      ],
       "additionalProperties": false,
       "properties": {
-        "usgs_id": { "type": "string", "minLength": 1 },
-        "mag": { "type": "number", "minimum": 0, "maximum": 10 },
-        "depth_km": { "type": "number", "minimum": 0 },
-        "utc": { "type": "string", "format": "date-time" },
-        "lugar": { "type": "string" },
-        "pager_alert": { "type": "string", "enum": ["", "green", "yellow", "orange", "red"] }
+        "usgs_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mag": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "depth_km": {
+          "type": "number",
+          "minimum": 0
+        },
+        "utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lugar": {
+          "type": "string"
+        },
+        "pager_alert": {
+          "type": "string",
+          "enum": [
+            "",
+            "green",
+            "yellow",
+            "orange",
+            "red"
+          ]
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180,
+          "description": "Longitud del epicentro. Anadida despues de publicar el primer reporte: el dato estaba en el event_state y no llegaba al artefacto publico, asi que nadie podia situar el sismo sin volver a USGS. Opcional para que los reportes ya publicados sigan validando."
+        },
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "description": "Latitud del epicentro. Ver la nota de 'lon'."
+        }
       }
     },
     "inputs": {
       "type": "object",
-      "required": ["shakemap_version", "groundfailure_version", "exposure_manifest"],
+      "required": [
+        "shakemap_version",
+        "groundfailure_version",
+        "exposure_manifest"
+      ],
       "additionalProperties": false,
       "properties": {
-        "shakemap_version": { "type": "integer", "minimum": 0 },
-        "groundfailure_version": { "type": "integer", "minimum": 0 },
-        "exposure_manifest": { "type": "string" }
+        "shakemap_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "groundfailure_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exposure_manifest": {
+          "type": "string"
+        }
       }
     },
-    "preliminar": { "type": "boolean" },
-    "backtest": { "type": "boolean" },
+    "preliminar": {
+      "type": "boolean"
+    },
+    "backtest": {
+      "type": "boolean"
+    },
     "totales": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "pop_mmi6p": { "type": "number", "minimum": 0 },
-        "pop_mmi7p": { "type": "number", "minimum": 0 },
-        "pop_mmi8p": { "type": "number", "minimum": 0 },
-        "pop_65p_mmi7p": { "type": "number", "minimum": 0 },
-        "bld_mmi7p": { "type": "number", "minimum": 0 },
-        "built_m2_mmi7p": { "type": "number", "minimum": 0 },
-        "health_mmi7p": { "type": "number", "minimum": 0 },
-        "edu_mmi7p": { "type": "number", "minimum": 0 },
-        "road_km_mmi7p": { "type": "number", "minimum": 0 },
-        "road_km_principal_mmi7p": { "type": "number", "minimum": 0 },
-        "pop_ls_alta": { "type": "number", "minimum": 0 },
-        "pop_lq_alta": { "type": "number", "minimum": 0 }
+        "pop_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_mmi8p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_65p_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bld_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "built_m2_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "health_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "edu_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "road_km_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "road_km_principal_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_ls_alta": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_lq_alta": {
+          "type": "number",
+          "minimum": 0
+        }
       }
     },
     "top_municipios": {
@@ -56,13 +159,29 @@
       "maxItems": 15,
       "items": {
         "type": "object",
-        "required": ["adm2_id", "nombre", "mmi_max", "pop_mmi7p"],
+        "required": [
+          "adm2_id",
+          "nombre",
+          "mmi_max",
+          "pop_mmi7p"
+        ],
         "additionalProperties": false,
         "properties": {
-          "adm2_id": { "type": "string" },
-          "nombre": { "type": "string" },
-          "mmi_max": { "type": "number", "minimum": 0, "maximum": 12 },
-          "pop_mmi7p": { "type": "number", "minimum": 0 }
+          "adm2_id": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "mmi_max": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 12
+          },
+          "pop_mmi7p": {
+            "type": "number",
+            "minimum": 0
+          }
         }
       }
     },
@@ -70,23 +189,54 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "pop_discrepancia_pct": { "type": "number" },
-        "notas": { "type": "array", "items": { "type": "string" } }
+        "pop_discrepancia_pct": {
+          "type": "number"
+        },
+        "notas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "descargas": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "geoparquet": { "type": "string" },
-        "pmtiles": { "type": "string" },
-        "csv_adm2": { "type": "string" },
-        "mapa_png": { "type": "string" }
+        "geoparquet": {
+          "type": "string"
+        },
+        "pmtiles": {
+          "type": "string"
+        },
+        "csv_adm2": {
+          "type": "string"
+        },
+        "mapa_png": {
+          "type": "string"
+        }
       }
     },
-    "changelog": { "type": "array", "items": { "type": "string" } },
-    "disclaimers": { "type": "array", "minItems": 1, "items": { "type": "string" } },
-    "generado_utc": { "type": "string", "format": "date-time" },
-    "pipeline_version": { "type": "string" }
+    "changelog": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "disclaimers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "generado_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pipeline_version": {
+      "type": "string"
+    }
   }
 }

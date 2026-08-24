@@ -12,6 +12,11 @@ on:
         required: false
         default: false
         type: boolean
+      reprocesar:
+        description: "Reemitir aunque USGS no publique nada nuevo (cambio el pipeline)"
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [centinela-evento]
 
@@ -86,8 +91,9 @@ jobs:
           # Solo por despacho manual. Un evento que llega por `repository_dispatch`
           # viene de P1, o sea que su estado existe y es en vivo por definicion.
           BACKTEST: ${{ inputs.backtest && '--backtest' || '' }}
+          REPROCESAR: ${{ inputs.reprocesar && '--reprocesar' || '' }}
         run: |
-          uv run centinela impact "$USGS_ID" $BACKTEST \
+          uv run centinela impact "$USGS_ID" $BACKTEST $REPROCESAR \
             --detail-url "$DETAIL_URL" \
             --exposure "data/build/exposure_h3.parquet" \
             --manifest "$(uv run python -c "

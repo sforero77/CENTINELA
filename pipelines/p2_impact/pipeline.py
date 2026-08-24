@@ -390,6 +390,8 @@ def build_report(
             utc=state.origen_utc,
             lugar=state.lugar,
             pager_alert=products.pager_alert(),
+            lon=state.lon,
+            lat=state.lat,
         ),
         inputs=Inputs(
             shakemap_version=products.shakemap_version,

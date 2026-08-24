@@ -28,6 +28,13 @@ class Evento:
     lugar: str
     #: Nivel PAGER, referencia cruzada. Vacio si el producto no existe.
     pager_alert: str = ""
+    #: Epicentro. Iba en el `event_state` y se quedaba ahi, asi que `report.json`
+    #: —el artefacto publico— no decia donde fue el sismo mas alla del toponimo.
+    #: Quien lo consumia tenia que volver a USGS para ponerlo en un mapa, y el
+    #: propio visor no podia dibujarlo. Por defecto (0, 0) para no romper los
+    #: reportes ya publicados al releerlos.
+    lon: float = 0.0
+    lat: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -37,6 +44,8 @@ class Evento:
             "utc": self.utc,
             "lugar": self.lugar,
             "pager_alert": self.pager_alert,
+            "lon": self.lon,
+            "lat": self.lat,
         }
 
 

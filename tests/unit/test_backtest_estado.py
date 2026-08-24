@@ -81,3 +81,26 @@ def test_reproduce_el_estado_del_choco_escrito_a_mano() -> None:
     assert a_mano["backtest"] is True
     assert a_mano["timestamps"]["usgs_origen"] == a_mano["origen_utc"]
     assert any("Backtest" in nota for nota in a_mano["notas"])
+
+
+# --- Reproceso forzado ------------------------------------------------------
+
+
+def test_sin_forzar_no_se_reemite_lo_ya_procesado() -> None:
+    """La idempotencia de RF-02 es el comportamiento por defecto."""
+    from dataclasses import replace
+
+    from pipelines.common.state import ProcessedVersions
+    from pipelines.p2_impact.products import ProductRef, ProductSet
+    from pipelines.p2_impact.run import Action, decide
+
+    estado = reconstruct_backtest_state(_detail("us6000t7zp"))
+    productos = ProductSet(
+        usgs_id="us6000t7zp",
+        shakemap=ProductRef(tipo="shakemap", version=14, actualizado_ms=0, contents={}),
+        ground_failure=None,
+        losspager=None,
+    )
+    ya = replace(estado, versiones_procesadas=ProcessedVersions(shakemap=14, groundfailure=0))
+    assert decide(ya, productos).action is Action.OMITIR
+    assert decide(ya, productos, forzar=True).action is Action.COMPLETO

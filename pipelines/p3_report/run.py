@@ -119,6 +119,12 @@ def rebuild_index(reports_root: Path | None = None) -> Path:
                     "usgs_id": data["event"]["usgs_id"],
                     "mag": data["event"]["mag"],
                     "lugar": data["event"]["lugar"],
+                    # Para dibujar el epicentro sin abrir cada reporte. Los
+                    # reportes anteriores no lo traen: quedan en 0,0 y el visor
+                    # los lista igual, solo que sin marcador.
+                    "lon": data["event"].get("lon", 0.0),
+                    "lat": data["event"].get("lat", 0.0),
+                    "pop_mmi7p": data["totales"]["pop_mmi7p"],
                     "utc": data["event"]["utc"],
                     "shakemap_version": data["inputs"]["shakemap_version"],
                     "preliminar": bool(data.get("preliminar", False)),

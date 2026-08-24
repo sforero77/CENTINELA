@@ -61,6 +61,7 @@ def _cmd_impact(args: argparse.Namespace) -> int:
         exposure_glob=args.exposure,
         manifest_id=args.manifest,
         backtest=args.backtest,
+        forzar=args.reprocesar,
     )
     print(json.dumps({"accion": decision.action.value, "razon": decision.razon}))
     _emit_github_output("accion", decision.action.value)
@@ -190,6 +191,14 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "evento historico que P1 nunca vio: reconstruye su estado desde el "
             "detail y lo marca como retrospectivo (queda fuera de la latencia)"
+        ),
+    )
+    p_impact.add_argument(
+        "--reprocesar",
+        action="store_true",
+        help=(
+            "reemite el reporte aunque USGS no haya publicado nada nuevo; para "
+            "cuando lo que cambio es el pipeline y no los productos"
         ),
     )
     p_impact.set_defaults(func=_cmd_impact)
