@@ -320,9 +320,18 @@ junto_al_pais AS (
       -- La magnitud del rescate no distingue lo correcto de lo contaminado:
       -- Chile rescata el 31 % de su poblacion y esta bien, porque su rescate es
       -- mar. Lo que distingue es **sobre que esta la celda**.
-      AND NOT EXISTS (
-          SELECT 1 FROM vecinos v
-          WHERE ST_Within(ST_Point(s.lng, s.lat), v.geom)
+      --
+      -- Se compara contra **una** geometria unida, igual que con `pais`, y no
+      -- con un EXISTS sobre la tabla: el EXISTS hace un bucle anidado de cada
+      -- celda candidata contra cada poligono de pais, y con Chile —59.179
+      -- celdas contra once multipoligonos— eso agoto los 12,4 GB del runner.
+      --
+      -- El COALESCE no es decorativo: sin vecinos `ST_Union_Agg` devuelve NULL,
+      -- `ST_Within` devuelve NULL y la fila se filtraria. O sea que sin vecinos
+      -- no se rescataria nada: el fallo opuesto, y peor.
+      AND NOT COALESCE(
+          ST_Within(ST_Point(s.lng, s.lat), (SELECT geom FROM vecinos_union)),
+          FALSE
       )
 )
 SELECT j.h3_08, m.adm2_id, 1.0, TRUE
@@ -368,6 +377,12 @@ def rescue_unassigned(
     # antes, que es lo correcto para una isla y lo demasiado generoso para un
     # pais con frontera terrestre.
     con.execute("CREATE TABLE IF NOT EXISTS vecinos (iso2 VARCHAR, geom GEOMETRY)")
+    con.execute(
+        """
+        CREATE OR REPLACE TEMP TABLE vecinos_union AS
+        SELECT ST_Union_Agg(geom) AS geom FROM vecinos
+        """
+    )
     antes: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
     con.execute(SQL_RESCATE.format(tabla_datos=tabla_datos, max_grados=max_grados))
     despues: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]

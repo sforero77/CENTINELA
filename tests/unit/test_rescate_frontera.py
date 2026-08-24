@@ -121,10 +121,10 @@ def test_una_celda_en_el_mar_si_se_rescata(escenario: Any) -> None:
     Chile rescata asi el 31 % de su poblacion y su cifra nacional es correcta;
     sin el rescate perderia 6,1 millones de personas.
     """
-    from pipelines.p0_exposure.crosswalk import SQL_RESCATE
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
 
     _sembrar_celda(escenario, -0.005, 0.5, 800.0)  # justo al oeste, en el mar
-    escenario.execute(SQL_RESCATE.format(tabla_datos="pop_h3", max_grados=0.02))
+    rescue_unassigned(escenario, tabla_datos="pop_h3", max_grados=0.02)
     assert escenario.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0] == 1
 
 
@@ -135,19 +135,19 @@ def test_una_celda_dentro_del_vecino_no_se_rescata(escenario: Any) -> None:
     Una celda cuyo centro esta en tierra del vecino es del vecino, por cerca que
     este de la linea.
     """
-    from pipelines.p0_exposure.crosswalk import SQL_RESCATE
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
 
     _sembrar_celda(escenario, 1.005, 0.5, 800.0)  # justo al este, dentro de XX
-    escenario.execute(SQL_RESCATE.format(tabla_datos="pop_h3", max_grados=0.02))
+    rescue_unassigned(escenario, tabla_datos="pop_h3", max_grados=0.02)
     assert escenario.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0] == 0
 
 
 @pytest.mark.geo
 def test_sin_tabla_de_vecinos_el_rescate_sigue_funcionando(escenario: Any) -> None:
     """Overture puede fallar; un build de una hora no puede caerse por eso."""
-    from pipelines.p0_exposure.crosswalk import SQL_RESCATE
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
 
     escenario.execute("DELETE FROM vecinos")
     _sembrar_celda(escenario, -0.005, 0.5, 800.0)
-    escenario.execute(SQL_RESCATE.format(tabla_datos="pop_h3", max_grados=0.02))
+    rescue_unassigned(escenario, tabla_datos="pop_h3", max_grados=0.02)
     assert escenario.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0] == 1

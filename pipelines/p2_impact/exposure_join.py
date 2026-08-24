@@ -10,6 +10,7 @@ por concatenacion: son parte del contrato revisable del sistema.
 
 from __future__ import annotations
 
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -138,6 +139,15 @@ def connect(database: Path | None = None) -> Any:
     import duckdb  # import diferido: el trigger no debe pagar este costo
 
     con = duckdb.connect(str(database) if database else ":memory:")
+    # Sin sitio donde volcar, una consulta que no cabe en RAM no se ralentiza:
+    # muere. Le paso a Chile: el rescate de sus 59.179 celdas costeras agoto los
+    # 12,4 GB del runner y tumbo un build de cuarenta minutos. Con
+    # `temp_directory` DuckDB derrama a disco y termina, mas lento pero termina.
+    #
+    # Es una red de seguridad, no una excusa: la consulta que la provoco tambien
+    # se arreglo. Pero un pipeline que corre desatendido sobre diecinueve paises
+    # de tamanos muy distintos no puede depender de que ninguno se pase.
+    con.execute(f"SET temp_directory = '{tempfile.gettempdir()}'")
     for extension in DUCKDB_EXTENSIONS:
         origen = " FROM community" if extension == "h3" else ""
         con.execute(f"INSTALL {extension}{origen}")

@@ -223,6 +223,20 @@ def load_neighbours(
 
     Se excluye el pais propio a proposito. Sus celdas ya las reparte el polyfill
     por contencion, y meterlo aqui haria que el rescate se descartara a si mismo.
+
+    **Solo tierra.** Overture publica dos poligonos por pais: el terrestre
+    (``is_land``) y el de aguas territoriales (``is_territorial``). Cargar los
+    dos rompe justo el caso para el que existe el rescate: las aguas peruanas
+    llegan hasta la frontera de Arica, asi que una celda del Pacifico frente a
+    la costa chilena caeria "dentro de Peru" y se descartaria con su poblacion
+    dentro. El mar no es de nadie a estos efectos — lo que descalifica a una
+    celda es estar sobre **tierra** de otro pais.
+
+    **Recortados a la caja.** El poligono terrestre de Brasil o de Argentina
+    pesa decenas de MB, y de todo eso solo importa la franja que entra en la
+    caja del pais que se construye. Sin recortar, el rescate de Chile —59.179
+    celdas candidatas contra once multipoligonos continentales— agoto los 12,4
+    GB de memoria del runner.
     """
     ensure_httpfs(con)
     con.execute(f"DROP TABLE IF EXISTS {tabla}")
@@ -231,11 +245,17 @@ def load_neighbours(
         con.execute(
             f"""
             INSERT INTO {tabla}
-            SELECT country, geometry
+            SELECT country,
+                   ST_Intersection(
+                       geometry,
+                       ST_MakeEnvelope({bbox.lon_min}, {bbox.lat_min},
+                                       {bbox.lon_max}, {bbox.lat_max})
+                   )
             FROM read_parquet('{url}')
             WHERE subtype = '{COUNTRY_SUBTYPE}'
               AND country IS NOT NULL
               AND country <> '{iso2_propio}'
+              AND is_land
               AND {bbox_predicate(bbox, intersecta=True)}
             """
         )
