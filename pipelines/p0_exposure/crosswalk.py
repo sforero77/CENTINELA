@@ -188,14 +188,35 @@ def prorate(value: float, rows: Iterable[CrosswalkRow]) -> dict[str, float]:
 #:
 #: DISTINCT porque dos partes del mismo municipio no deben producir la celda
 #: dos veces si llegaran a tocarse.
-SQL_POLYFILL = """
-CREATE OR REPLACE TABLE crosswalk_h3_adm AS
+SQL_CROSSWALK_VACIO = """
+CREATE OR REPLACE TABLE crosswalk_h3_adm (
+    h3_08 UBIGINT, adm2_id VARCHAR, frac_area DOUBLE, rescatada BOOLEAN
+)
+"""
+
+#: Se rellena **un municipio por consulta**, no los mil de golpe.
+#:
+#: Mientras el polyfill devolvia cero ante un MULTIPOLYGON, hacerlo de una vez
+#: era gratis: no hacia nada. Arreglado con `ST_Dump`, Chile agoto los 12,4 GB
+#: del runner en este mismo paso — 56 provincias patagonicas se descomponen en
+#: miles de islas, y sostener a la vez todos sus WKT, todas sus celdas y un
+#: DISTINCT sobre el conjunto no cabe.
+#:
+#: Uno a uno la memoria queda acotada al municipio mas grande, el log deja ver
+#: el avance de un paso que en un pais grande tarda minutos, y un fallo dice
+#: **cual** municipio lo provoco en vez de "el pais".
+#:
+#: Es el mismo patron que ya se usa para leer Overture fichero a fichero, y por
+#: la misma razon.
+SQL_POLYFILL_MUNICIPIO = """
+INSERT INTO crosswalk_h3_adm
 SELECT DISTINCT
     unnest(h3_polygon_wkt_to_cells(ST_AsText(parte.geom), {resolution})) AS h3_08,
     adm2_id,
     1.0 AS frac_area,
     FALSE AS rescatada
 FROM admin_geom, unnest(ST_Dump(geom)) AS t(parte)
+WHERE adm2_id = ?
 """
 
 #: Diccionario administrativo que consume el reporte (§3.2).
@@ -285,7 +306,16 @@ def build_crosswalk(
         ValueError: si alguna celda queda reclamada por dos municipios. Seria
             doble conteo de poblacion, y es preferible fallar el build.
     """
-    con.execute(SQL_POLYFILL.format(resolution=resolution))
+    con.execute(SQL_CROSSWALK_VACIO)
+    ids = [str(fila[0]) for fila in con.execute("SELECT adm2_id FROM admin_geom").fetchall()]
+    sql = SQL_POLYFILL_MUNICIPIO.format(resolution=resolution)
+    for i, adm2_id in enumerate(ids, start=1):
+        con.execute(sql, [adm2_id])
+        if i % 200 == 0 or i == len(ids):
+            _log.info(
+                "reparto en curso",
+                extra={"context": {"iso3": iso3, "municipios": f"{i}/{len(ids)}"}},
+            )
     con.execute(SQL_ADMIN_LOOKUP.format(iso3=iso3))
 
     duplicadas = con.execute(SQL_ASSERT_SIN_DUPLICADOS).fetchall()

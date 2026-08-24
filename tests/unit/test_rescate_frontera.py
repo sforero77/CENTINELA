@@ -156,6 +156,22 @@ def test_sin_tabla_de_vecinos_el_rescate_sigue_funcionando(escenario: Any) -> No
 # --- El reparto tiene que ver las islas ------------------------------------
 
 
+def _con_isla() -> Any:
+    """Un municipio de dos partes disjuntas, repartido por el camino real."""
+    from pipelines.p0_exposure.crosswalk import build_crosswalk
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE TABLE admin_geom AS SELECT 'X' AS adm2_id, 'Isla' AS nombre, "
+        "'01' AS adm1_id, 'Depto' AS departamento, ST_GeomFromText("
+        "'MULTIPOLYGON(((0 0, 1 0, 1 1, 0 1, 0 0)), ((5 5, 6 5, 6 6, 5 6, 5 5)))'"
+        ") AS geom"
+    )
+    build_crosswalk(con, iso3="XXX")
+    return con
+
+
 @pytest.mark.geo
 def test_un_municipio_multipoligono_reparte_sus_dos_partes() -> None:
     """`h3_polygon_wkt_to_cells` devuelve CERO celdas ante un MULTIPOLYGON.
@@ -168,16 +184,7 @@ def test_un_municipio_multipoligono_reparte_sus_dos_partes() -> None:
     un camino que no era el suyo. Lo delato Uruguay, rescatando el 48 % de su
     poblacion.
     """
-    from pipelines.p0_exposure.crosswalk import SQL_POLYFILL
-    from pipelines.p2_impact.exposure_join import connect
-
-    con = connect()
-    con.execute(
-        "CREATE TABLE admin_geom AS SELECT 'X' AS adm2_id, ST_GeomFromText("
-        "'MULTIPOLYGON(((0 0, 1 0, 1 1, 0 1, 0 0)), ((5 5, 6 5, 6 6, 5 6, 5 5)))'"
-        ") AS geom"
-    )
-    con.execute(SQL_POLYFILL.format(resolution=8))
+    con = _con_isla()
 
     def celdas_en(lon: float, lat: float) -> int:
         return int(
@@ -199,14 +206,5 @@ def test_el_reparto_no_marca_como_rescatado_lo_que_reparte() -> None:
     Puesto sobre medio pais no significa nada, y ese era el coste real del
     fallo del MULTIPOLYGON.
     """
-    from pipelines.p0_exposure.crosswalk import SQL_POLYFILL
-    from pipelines.p2_impact.exposure_join import connect
-
-    con = connect()
-    con.execute(
-        "CREATE TABLE admin_geom AS SELECT 'X' AS adm2_id, ST_GeomFromText("
-        "'MULTIPOLYGON(((0 0, 1 0, 1 1, 0 1, 0 0)), ((5 5, 6 5, 6 6, 5 6, 5 5)))'"
-        ") AS geom"
-    )
-    con.execute(SQL_POLYFILL.format(resolution=8))
+    con = _con_isla()
     assert con.execute("SELECT count(*) FROM crosswalk_h3_adm WHERE rescatada").fetchone()[0] == 0
