@@ -147,26 +147,32 @@ function iniciarMapa() {
           filter: ["in", ["get", "class"], ["literal", ["motorway", "trunk", "primary"]]],
           paint: { "line-color": COLOR.via, "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.4, 12, 1.6] },
         },
+        // Una frontera en disputa se dibuja distinto en vez de elegir un lado:
+        // el sistema no tiene por que tener una opinion territorial.
+        //
+        // Son dos capas y no una con un `case` porque `line-dasharray` no
+        // admite expresiones por dato en MapLibre, y una propiedad invalida no
+        // degrada esa capa: invalida el estilo entero y el mapa sale en negro.
         {
           id: "fronteras",
           type: "line",
           source: "divisiones",
           "source-layer": "division_boundary",
-          // Una frontera en disputa se dibuja distinto en vez de elegir un
-          // lado: el sistema no tiene por que tener una opinion territorial.
+          filter: ["!=", ["get", "is_disputed"], true],
           paint: {
-            "line-color": [
-              "case",
-              ["==", ["get", "is_disputed"], true],
-              COLOR.fronteraDisputada,
-              COLOR.frontera,
-            ],
-            "line-dasharray": [
-              "case",
-              ["==", ["get", "is_disputed"], true],
-              ["literal", [2, 2]],
-              ["literal", [1, 0]],
-            ],
+            "line-color": COLOR.frontera,
+            "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 8, 1.2],
+          },
+        },
+        {
+          id: "fronteras-en-disputa",
+          type: "line",
+          source: "divisiones",
+          "source-layer": "division_boundary",
+          filter: ["==", ["get", "is_disputed"], true],
+          paint: {
+            "line-color": COLOR.fronteraDisputada,
+            "line-dasharray": [2, 2],
             "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 8, 1.2],
           },
         },
