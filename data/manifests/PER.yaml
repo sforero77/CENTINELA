@@ -37,19 +37,17 @@ referencia_oficial:
   tolerancia_pct: 1.5
   medido_ghs_pop: 34726308
   nota: >-
-    MEDIDO EL 24-AGO-2026. GHS-POP recortado por el limite del COD-AB da
-    34.726.308 habitantes frente a los 34.576.665 de World Population
-    Prospects: +0,43%
-    La tolerancia se fija en 1.5%, con un punto de margen
-    sobre lo observado.
-    CONTEXTO REGIONAL: medidos los 18 paises construidos, los desvios van de
-    -0,80% (Chile) a +6,59% (Paraguay), y quince de dieciocho son positivos.
-    La hipotesis que mejor encaja con ese orden es geometrica y no
-    demografica: los paises con mas frontera en proporcion a su area se
-    desvian mas, lo que apuntaria al rescate de celdas fronterizas del
-    crosswalk y no a un sesgo de GHS-POP. ESTA SIN COMPROBAR, y se comprueba
-    sumando la poblacion de las celdas marcadas `rescatada = TRUE`.
-    Mientras tanto la cifra de exposicion de este pais hereda ese desvio.
+    La cifra medida vive en `medido_ghs_pop` y la fija cada build; la
+    tolerancia sale de `centinela calibrar`, que la estrecha con lo medido y
+    nunca la ensancha sola. Aqui no se repiten numeros a proposito: una prosa
+    con cifras se queda contradiciendo al dato de al lado en cuanto se
+    recalibra.
+    El desvio de GHS-POP frente a la referencia oficial es esperable y no es un
+    fallo: GHS-POP desagrega censos con teledeteccion y no reproduce una
+    proyeccion demografica. Lo que si era un fallo, y se corrigio el
+    24-ago-2026, es que el reparto reclamaba poblacion del pais vecino y no
+    veia los municipios multipoligono. La medida antes y despues, pais por
+    pais, esta en VERIFICACIONES.md.
 
 notas:
   - "Caja envolvente medida sobre `division_area` de Overture (subtype=country,

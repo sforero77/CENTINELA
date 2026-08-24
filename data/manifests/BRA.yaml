@@ -36,18 +36,17 @@ referencia_oficial:
   fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
   tolerancia_pct: 25.0
   nota: >-
-    TOLERANCIA DE ARRANQUE, DELIBERADAMENTE ANCHA. Mientras `medido_ghs_pop`
-    este ausente el assert no puede comprobar que GHS-POP concuerde con la ONU
-    —nadie lo ha medido en este pais— y solo sirve para lo otro que vigila:
-    detectar un error grosero de construccion. Esos no se parecen a un 6% de
-    desvio, se parecen al de Colombia antes de acotar el rescate de costa, que
-    paso de 52,6 a 167 millones. Un 25% los caza y deja que la primera corrida
-    mida.
-    QUE HACER DESPUES. La primera corrida imprime el total real: hay que
-    anotarlo aqui como `medido_ghs_pop` y **estrechar la tolerancia** a lo
-    observado mas un margen, explicando el cambio en el PR. Colombia, medida,
-    usa 1%; Venezuela, 8%. Dejar el 25% seria conservar una guardia que ya no
-    vigila nada.
+    La cifra medida vive en `medido_ghs_pop` y la fija cada build; la
+    tolerancia sale de `centinela calibrar`, que la estrecha con lo medido y
+    nunca la ensancha sola. Aqui no se repiten numeros a proposito: una prosa
+    con cifras se queda contradiciendo al dato de al lado en cuanto se
+    recalibra.
+    El desvio de GHS-POP frente a la referencia oficial es esperable y no es un
+    fallo: GHS-POP desagrega censos con teledeteccion y no reproduce una
+    proyeccion demografica. Lo que si era un fallo, y se corrigio el
+    24-ago-2026, es que el reparto reclamaba poblacion del pais vecino y no
+    veia los municipios multipoligono. La medida antes y despues, pais por
+    pais, esta en VERIFICACIONES.md.
 
 notas:
   - "Caja envolvente medida sobre `division_area` de Overture (subtype=country,

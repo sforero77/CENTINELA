@@ -21,9 +21,17 @@ referencia_oficial:
   tolerancia_pct: 1.0
   medido_ghs_pop: 52601276
   nota: >-
-    La cifra del DANE es la redondeada que publica en su nota tecnica. T0.10:
-    reemplazarla por el valor exacto del anexo en Excel de las proyecciones,
-    para que el assert compare contra un numero y no contra un redondeo.
+    La cifra medida vive en `medido_ghs_pop` y la fija cada build; la
+    tolerancia sale de `centinela calibrar`, que la estrecha con lo medido y
+    nunca la ensancha sola. Aqui no se repiten numeros a proposito: una prosa
+    con cifras se queda contradiciendo al dato de al lado en cuanto se
+    recalibra.
+    El desvio de GHS-POP frente a la referencia oficial es esperable y no es un
+    fallo: GHS-POP desagrega censos con teledeteccion y no reproduce una
+    proyeccion demografica. Lo que si era un fallo, y se corrigio el
+    24-ago-2026, es que el reparto reclamaba poblacion del pais vecino y no
+    veia los municipios multipoligono. La medida antes y despues, pais por
+    pais, esta en VERIFICACIONES.md.
 
 notas:
   - "Overture conserva SOLO los dos releases mas recientes en su bucket
