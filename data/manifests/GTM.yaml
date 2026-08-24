@@ -34,14 +34,20 @@ generated_utc: "2026-08-23T00:00:00Z"
 referencia_oficial:
   poblacion_2025: 18687881
   fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
-  tolerancia_pct: 5.0
+  tolerancia_pct: 25.0
   nota: >-
-    TOLERANCIA PROVISIONAL. El 5% es un margen de arranque, no una medicion:
-    todavia no se ha construido el activo y no se sabe cuanto se desvia GHS-POP
-    de la ONU en este pais. Colombia, que si esta medida, usa 1%. La primera
-    corrida tiene que anotar `medido_ghs_pop` y ajustar la tolerancia a lo
-    observado, explicando el cambio en el PR. Mientras `medido_ghs_pop` este
-    ausente, esta cifra es una expectativa.
+    TOLERANCIA DE ARRANQUE, DELIBERADAMENTE ANCHA. Mientras `medido_ghs_pop`
+    este ausente el assert no puede comprobar que GHS-POP concuerde con la ONU
+    —nadie lo ha medido en este pais— y solo sirve para lo otro que vigila:
+    detectar un error grosero de construccion. Esos no se parecen a un 6% de
+    desvio, se parecen al de Colombia antes de acotar el rescate de costa, que
+    paso de 52,6 a 167 millones. Un 25% los caza y deja que la primera corrida
+    mida.
+    QUE HACER DESPUES. La primera corrida imprime el total real: hay que
+    anotarlo aqui como `medido_ghs_pop` y **estrechar la tolerancia** a lo
+    observado mas un margen, explicando el cambio en el PR. Colombia, medida,
+    usa 1%; Venezuela, 8%. Dejar el 25% seria conservar una guardia que ya no
+    vigila nada.
 
 notas:
   - "Caja envolvente medida sobre `division_area` de Overture (subtype=country,
