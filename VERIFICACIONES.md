@@ -385,6 +385,45 @@ LATAM solo Cuba no toca a nadie por tierra, y hasta su caja alcanza a Haiti.
 La prediccion era 7.015.404 —el total menos el rescate medido antes— y salieron
 7.015.517: los 113 de diferencia son el rescate legitimo que queda.
 
+### El reparto no veia las islas, y el rescate lo tapaba
+
+`h3_polygon_wkt_to_cells` devuelve **cero** celdas ante un MULTIPOLYGON. No la
+primera parte: cero. Medido:
+
+| Geometria | Celdas r8 devueltas |
+|---|---:|
+| `POLYGON` (cuadrado A) | 22.365 |
+| `POLYGON` (cuadrado B) | 20.160 |
+| `MULTIPOLYGON(A, B)` | **0** |
+| `MULTIPOLYGON(A, B)` con `ST_Dump` | 42.525 |
+
+Un municipio con una isla, un exclave o un trozo separado por un rio es un
+MULTIPOLYGON. Ninguno de ellos aportaba una celda al reparto por contencion.
+
+**Nadie lo vio porque el paso siguiente lo tapaba.** Esas celdas quedaban sin
+asignar, caian dentro del pais, y el rescate las mandaba al municipio mas
+cercano — que para un punto dentro del municipio esta a distancia cero, o sea
+el correcto. La cifra nacional salia bien por un camino que no era el suyo.
+
+Lo delato Uruguay al instrumentar el embudo del rescate:
+
+    candidatas: 896.936 → junto al pais: 6.538 → descartadas por vecino: 909
+    pop_rescatada_pct: 48,026 %
+
+**El 48 % de la poblacion de Uruguay entraba por el rescate**, mas que Chile con
+sus 4.000 km de costa. No era costa: eran departamentos multipoligono entrando
+enteros por la puerta de atras.
+
+El coste no era la cifra, era el marcador. `rescatada = TRUE` significa "esto es
+una aproximacion, auditalo", y puesto sobre medio pais no significa nada. Y deja
+al reparto dependiendo de que el rescate exista, que es correccion por
+accidente: acotar mas el rescate —cosa que se hizo dos veces esta semana— se
+habria llevado medio pais por delante sin avisar.
+
+Consecuencia: **la fraccion rescatada de los diecinueve hay que remedirla**.
+Hasta ahora no media lo que se creia que medida, y la afirmacion "Chile rescata
+el 31 % porque su rescate es mar" esta sin comprobar por el mismo motivo.
+
 ### Chile: dos muertes por memoria, un solo error de diseno
 
 Corregido Paraguay, Chile tumbo el build dos veces. La primera con
