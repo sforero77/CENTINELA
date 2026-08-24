@@ -87,30 +87,32 @@ def match_columns(
 #: Esquema por defecto: el **COD-AB de OCHA**, que publica adm1/adm2 para los 19
 #: paises de LATAM. Es lo que evita pelear con veinte geoportales nacionales.
 #:
-#: **Pero no con una sola forma: con dos.** El codigo va siempre en
-#: ``adm2_pcode``, y el nombre depende de cuando se publico la entrega:
+#: **Pero no con una sola forma.** El codigo va siempre en ``adm2_pcode``; lo
+#: que cambia entre entregas es como se llama la columna del toponimo. Se
+#: prueban en orden y gana la primera cuyas cuatro columnas existan.
 #:
-#: * ``adm2_name`` en las recientes — medido sobre ``ven_admin2.shp``, 336
-#:   municipios.
-#: * ``adm2_es`` en las antiguas — medido sobre ``ecu_adm_adm2_2024.shp``, que
-#:   trae ``adm0_es``, ``adm1_es`` y ``adm2_es``.
+#: Las nomenclaturas vistas, en orden de preferencia:
 #:
-#: Se prueban en orden y gana la primera cuyas cuatro columnas existan. Anadir
-#: una variante nueva es anadir una entrada aqui, no una excepcion por pais:
-#: con diecinueve paises, lo segundo no escala.
-COD_AB_VARIANTES: tuple[AdminColumns, ...] = (
+#: * ``adm2_name`` — entregas recientes (Venezuela).
+#: * ``adm2_es`` — en espanol (Ecuador).
+#: * ``adm2_pt`` — Brasil. Aqui se entendio el patron: el sufijo es el
+#:   **idioma** de la entrega, no una version del formato. Obvio en
+#:   retrospectiva; no anticipado hasta que Brasil fallo.
+#: * ``adm2_en`` — previsto para el Caribe anglofono, si alguna vez entra.
+#:
+#: Anadir una nomenclatura es anadir un sufijo, no una excepcion por pais: con
+#: diecinueve paises, lo segundo no escala — cada uno tendria que descubrirse
+#: fallando, y asi fue como aparecieron Ecuador y Brasil.
+COD_AB_NAME_SUFFIXES: tuple[str, ...] = ("name", "es", "pt", "en")
+
+COD_AB_VARIANTES: tuple[AdminColumns, ...] = tuple(
     AdminColumns(
         adm2_id="adm2_pcode",
-        nombre="adm2_name",
+        nombre=f"adm2_{sufijo}",
         adm1_id="adm1_pcode",
-        departamento="adm1_name",
-    ),
-    AdminColumns(
-        adm2_id="adm2_pcode",
-        nombre="adm2_es",
-        adm1_id="adm1_pcode",
-        departamento="adm1_es",
-    ),
+        departamento=f"adm1_{sufijo}",
+    )
+    for sufijo in COD_AB_NAME_SUFFIXES
 )
 
 #: La primera variante, para quien solo necesite una referencia.

@@ -378,3 +378,33 @@ def test_dos_capas_municipales_distintas_siguen_siendo_error() -> None:
     """El descarte de copias no debe tapar un empate de verdad."""
     with pytest.raises(ValueError, match="No se puede elegir"):
         pick_admin_source([Path("pais_admin2.shp"), Path("otro_adm2.geojson")])
+
+
+def test_el_sufijo_del_nombre_es_el_idioma_de_la_entrega() -> None:
+    """Brasil rompio el supuesto: `_es` no era "version antigua" sino espanol.
+
+    Su COD-AB trae adm2_pt, y el archivo mezcla adm0_en con adm0_pt. El sufijo
+    es el idioma, no una version del formato — obvio en retrospectiva, y no
+    anticipado hasta que Brasil fallo.
+    """
+    from pipelines.p0_exposure.crosswalk import COD_AB_VARIANTES, match_columns
+
+    brasil = {
+        "adm0_en",
+        "adm0_pcode",
+        "adm0_pt",
+        "adm1_pcode",
+        "adm1_pt",
+        "adm2_pcode",
+        "adm2_pt",
+        "geom",
+    }
+    mapeo = match_columns(COD_AB_VARIANTES, brasil)
+    assert mapeo is not None
+    assert mapeo.nombre == "adm2_pt"
+
+
+def test_hay_variante_para_las_cuatro_nomenclaturas_vistas() -> None:
+    from pipelines.p0_exposure.crosswalk import COD_AB_NAME_SUFFIXES
+
+    assert COD_AB_NAME_SUFFIXES == ("name", "es", "pt", "en")
