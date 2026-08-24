@@ -420,6 +420,34 @@ al reparto dependiendo de que el rescate exista, que es correccion por
 accidente: acotar mas el rescate —cosa que se hizo dos veces esta semana— se
 habria llevado medio pais por delante sin avisar.
 
+#### No era solo el marcador: se perdian datos
+
+El rescate solo mira celdas **con poblacion** (`FROM pop_h3`). Una celda dentro
+de un municipio multipoligono con un colegio, una via o unas edificaciones pero
+sin poblacion censada no entraba por ninguno de los dos caminos: ni por el
+reparto —que no veia el multipoligono— ni por el rescate. Desaparecia del activo.
+
+Medido en Uruguay, misma corrida antes y despues del `ST_Dump`:
+
+| | Antes | Despues | Recuperado |
+|---|---:|---:|---:|
+| Celdas | 145.488 | 150.314 | **+4.826** |
+| Edificaciones | 2.411.764 | 2.418.920 | **+7.156** |
+| Kilometros de via | 86.867 | 89.090 | **+2.223** |
+| Poblacion | 3.426.966 | 3.429.034 | +2.068 |
+| Sedes educativas | 4.430 | 4.433 | +3 |
+| Sedes de salud | 1.149 | 1.149 | 0 |
+
+Y la fraccion rescatada cae de **48,026 % a 0,934 %**, que es lo que siempre
+debio medir: costa y frontera, no departamentos enteros.
+
+El desvio nacional apenas se mueve (+1,25 % → +1,31 %), lo que confirma que la
+poblacion ya estaba llegando —por el camino equivocado— y que lo que faltaba era
+sobre todo infraestructura sin poblacion alrededor.
+
+Es el mismo perfil que el fallo del filtro de celdas que perdio 1.664 colegios
+de Colombia: lo que se pierde no es donde vive la mayoria, es la periferia.
+
 Consecuencia: **la fraccion rescatada de los diecinueve hay que remedirla**.
 Hasta ahora no media lo que se creia que medida, y la afirmacion "Chile rescata
 el 31 % porque su rescate es mar" esta sin comprobar por el mismo motivo.
