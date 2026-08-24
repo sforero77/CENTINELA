@@ -7,6 +7,11 @@ on:
         description: "Identificador USGS del evento"
         required: true
         type: string
+      backtest:
+        description: "Historico que P1 nunca vio (no cuenta para la latencia)"
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [centinela-evento]
 
@@ -75,8 +80,11 @@ jobs:
         id: impacto
         env:
           ISO3: ${{ steps.activo.outputs.iso3 }}
+          # Solo por despacho manual. Un evento que llega por `repository_dispatch`
+          # viene de P1, o sea que su estado existe y es en vivo por definicion.
+          BACKTEST: ${{ inputs.backtest && '--backtest' || '' }}
         run: |
-          uv run centinela impact "$USGS_ID" \
+          uv run centinela impact "$USGS_ID" $BACKTEST \
             --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=$USGS_ID&format=geojson" \
             --exposure "data/build/exposure_h3.parquet" \
             --manifest "$(uv run python -c "

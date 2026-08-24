@@ -61,11 +61,11 @@ class EventCandidate:
                 lat=lat,
                 depth_km=depth,
                 lugar=str(props.get("place") or "ubicacion no reportada"),
-                origen_utc=_epoch_ms_to_iso(props["time"]),
+                origen_utc=epoch_ms_to_iso(props["time"]),
                 detail_url=str(props["detail"]),
                 tipo=str(props.get("type", "earthquake")),
                 estado_revision=str(props.get("status", "automatic")),
-                actualizado_utc=_epoch_ms_to_iso(props.get("updated", props["time"])),
+                actualizado_utc=epoch_ms_to_iso(props.get("updated", props["time"])),
             )
         except FeedContractError:
             raise
@@ -73,7 +73,7 @@ class EventCandidate:
             raise FeedContractError(f"Feature del feed no cumple el contrato USGS: {exc}") from exc
 
 
-def _epoch_ms_to_iso(value: Any) -> str:
+def epoch_ms_to_iso(value: Any) -> str:
     """Epoch en milisegundos -> ISO-8601 UTC (§3.1)."""
     ms = int(value)
     return (

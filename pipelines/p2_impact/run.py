@@ -15,10 +15,11 @@ from typing import Any
 from ..common.constants import PRELIMINARY_MAX_HOURS, PRELIMINARY_RETRY_MINUTES
 from ..common.http import Fetcher
 from ..common.logging import get_logger
-from ..common.state import EventState, EventStatus, ProcessedVersions
+from ..common.state import EventState, EventStatus, ProcessedVersions, utcnow_iso
+from ..p1_trigger.feed import FeedContractError, epoch_ms_to_iso
 from ..p3_report.run import write_report_bundle
 from .exposure_join import connect
-from .products import ProductSet, fetch_products
+from .products import ProductSet, parse_products
 
 _log = get_logger(__name__)
 
@@ -86,6 +87,63 @@ def decide(state: EventState, products: ProductSet) -> Decision:
     )
 
 
+#: Nota que queda en el `event_state` de un historico. Se escribe una sola vez,
+#: al reconstruirlo, y viaja al reporte por el campo `backtest`.
+NOTA_BACKTEST = "Backtest: reconstruccion retrospectiva de {fecha}, no una respuesta en vivo."
+
+
+def reconstruct_backtest_state(detail: dict[str, Any]) -> EventState:
+    """Arma el `event_state` de un evento que P1 nunca vio.
+
+    P1 vigila el feed de la ultima hora, asi que un sismo de hace dos meses no
+    tiene estado y P2 se niega a procesarlo. Para los casos golden —el Choco,
+    el doble evento de Venezuela— eso obliga a escribir el JSON a mano y
+    commitearlo. Se hizo una vez y no se debe hacer dos: un estado escrito a
+    mano no se puede volver a generar, y cuando el esquema cambie nadie sabra
+    que campos le faltan.
+
+    Queda marcado `backtest=True` desde el primer momento. No es una etiqueta
+    cosmetica: excluye el evento del p50/p95 de latencia —publicarlo dos meses
+    tarde daria una latencia de dos meses— y pone en el reporte el aviso de que
+    las edificaciones y las vias son las de hoy, no las del dia del sismo.
+    """
+    # No se reusa `EventCandidate.from_feature`: el feed de resumen y la
+    # respuesta detail son dos contratos distintos, y el detail no trae
+    # `properties.detail` —la URL a si mismo— que aquel exige. Compartir el
+    # lector obligaria a aflojar el contrato del camino en vivo, que es el que
+    # mas conviene que sea estricto.
+    try:
+        props: dict[str, Any] = detail["properties"]
+        coords = detail["geometry"]["coordinates"]
+        lon, lat, depth = float(coords[0]), float(coords[1]), float(coords[2])
+        mag = props["mag"]
+        if mag is None:
+            raise FeedContractError(f"Evento sin magnitud: {detail.get('id')}")
+        usgs_id = str(detail["id"])
+        origen_utc = epoch_ms_to_iso(props["time"])
+        lugar = str(props.get("place") or "ubicacion no reportada")
+    except FeedContractError:
+        raise
+    except (KeyError, TypeError, ValueError, IndexError) as exc:
+        raise FeedContractError(
+            f"El detail de {detail.get('id')} no cumple el contrato USGS: {exc}"
+        ) from exc
+
+    return EventState(
+        usgs_id=usgs_id,
+        estado=EventStatus.DETECTADO,
+        mag=float(mag),
+        lon=lon,
+        lat=lat,
+        depth_km=depth,
+        lugar=lugar,
+        origen_utc=origen_utc,
+        timestamps={"detectado": utcnow_iso(), "usgs_origen": origen_utc},
+        backtest=True,
+        notas=[NOTA_BACKTEST.format(fecha=origen_utc[:10])],
+    )
+
+
 def run_impact(
     usgs_id: str,
     fetcher: Fetcher,
@@ -97,6 +155,7 @@ def run_impact(
     reports_root: Path | None = None,
     workdir: Path | None = None,
     admin_lookup_parquet: str | None = None,
+    backtest: bool = False,
 ) -> Decision:
     """Procesa un evento de punta a punta: productos -> impacto -> reporte.
 
@@ -112,17 +171,37 @@ def run_impact(
             activo; viaja al reporte para cerrar la trazabilidad de RNF-04.
         admin_lookup_parquet: diccionario administrativo. Si es ``None`` se
             busca junto al activo.
+        backtest: reconstruye el estado si P1 nunca vio el evento, y lo marca
+            como retrospectivo. Sin esto un evento sin estado es un error, que
+            es lo correcto en el camino en vivo: significa que P1 fallo.
 
     Returns:
         La decision tomada, ya ejecutada.
     """
     from .pipeline import build_report, compute_impact, download_products
 
+    detail = fetcher.get_json(detail_url)
     state = EventState.load(usgs_id, events_dir)
     if state is None:
-        raise FileNotFoundError(f"No existe event_state para {usgs_id}; P1 debe crearlo primero")
+        if not backtest:
+            raise FileNotFoundError(
+                f"No existe event_state para {usgs_id}; P1 debe crearlo primero. "
+                f"Si es un evento historico que P1 nunca vio, corre con --backtest."
+            )
+        state = reconstruct_backtest_state(detail)
+        state.save(events_dir)
+        _log.info(
+            "estado reconstruido para un historico",
+            extra={
+                "context": {
+                    "usgs_id": usgs_id,
+                    "origen_utc": state.origen_utc,
+                    "lugar": state.lugar,
+                }
+            },
+        )
 
-    products = fetch_products(fetcher, detail_url)
+    products = parse_products(detail)
     decision = decide(state, products)
     _log.info(
         "decision de impacto",
