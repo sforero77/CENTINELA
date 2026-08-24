@@ -107,6 +107,28 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_contraste(args: argparse.Namespace) -> int:
+    """Compara el activo contra una evaluacion de dano externa (Fase 2)."""
+    from .p0_exposure.overture_h3 import ensure_httpfs
+    from .p2_impact.contraste import contrastar
+    from .p2_impact.exposure_join import connect
+
+    con = connect()
+    ensure_httpfs(con)
+    resultado = contrastar(
+        con,
+        fuente=args.fuente,
+        exposure_glob=args.exposure,
+        etiqueta=args.etiqueta,
+        crs_origen=args.crs,
+        columna_danado=args.columna,
+    )
+    print(json.dumps(resultado.to_dict(), ensure_ascii=False, indent=2))
+    # Una celda evaluada que el activo no tiene es un hueco de cobertura, no un
+    # matiz: se distingue con codigo 2 para que un workflow pueda pararse.
+    return 2 if resultado.celdas_sin_activo else 0
+
+
 def _cmd_reindexar(args: argparse.Namespace) -> int:
     """Rehace `reports/index.json` desde los reportes en disco.
 
@@ -285,6 +307,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status", help="recalcula site/status.json")
     p_status.set_defaults(func=_cmd_status)
+
+    p_contraste = sub.add_parser(
+        "contraste", help="compara el activo con una evaluacion de dano externa"
+    )
+    p_contraste.add_argument("fuente", help="ruta o URL GDAL del vector de dano")
+    p_contraste.add_argument("--exposure", required=True, help="activo de exposicion")
+    p_contraste.add_argument("--etiqueta", required=True, help="quien publica la evaluacion")
+    p_contraste.add_argument("--crs", required=True, help="EPSG del vector de dano")
+    p_contraste.add_argument("--columna", default="damaged", help="columna binaria de dano")
+    p_contraste.set_defaults(func=_cmd_contraste)
 
     p_reindexar = sub.add_parser(
         "reindexar", help="rehace reports/index.json desde los reportes en disco"

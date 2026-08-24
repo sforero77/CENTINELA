@@ -878,6 +878,58 @@ Tres cosas que se siguen de esto:
    activo ODbL sin arrastrarlo. Se consume como referencia externa, no como
    capa del activo. `resolve_bucket` ya lo impide.
 
+### Primera contrastacion: exposicion frente a dano, mismo evento
+
+`centinela contraste` lleva cada edificacion evaluada a su celda r8 por el
+centroide, igual que hace el activo, y compara sobre **las mismas celdas**. Asi
+la unica diferencia entre las dos cifras es lo que cada fuente metio en la
+celda, no como se recorto el mapa.
+
+Medido sobre La Guaira (`us6000t7zp`, Catia La Mar), con el activo `ven-v0.1`
+reconstruido y la evaluacion de Microsoft leida por rangos con `/vsicurl/`:
+
+| La Guaira · 74 celdas H3 r8 | |
+|---|---:|
+| Microsoft: edificaciones evaluadas | 26.143 |
+| **con dano detectado** | **965 (3,69 %)** |
+| CENTINELA: edificaciones Overture | 35.611 |
+| CENTINELA: poblacion | 166.989 |
+| **celdas evaluadas que el activo no cubre** | **0** |
+| Razon de conteo CENTINELA/Microsoft | 1,36 |
+
+Tres lecturas.
+
+**La cobertura del activo es completa ahi.** Ni una sola celda evaluada por
+Microsoft falta del activo. Es la comprobacion mas dura que se le ha hecho a la
+cobertura hasta ahora, porque la lista de celdas la puso otro.
+
+**La razon de conteo 1,36 no es un descuadre.** La evaluacion externa se recorta
+a su mascara de area valida —29,7 km² donde la imagen servia— y 74 celdas r8
+cubren unos 55 km². Una celda que queda medio dentro aporta todas sus
+edificaciones a un lado y solo parte al otro. Sirve para detectar un orden de
+magnitud raro, no para calibrar.
+
+**Y la cifra que importa: 3,69 %.** El reporte de ese evento publica 504.955
+edificaciones en MMI≥7 para todo el pais. En la franja costera peor golpeada,
+una evaluacion independiente detecta dano en el 3,69 % de lo que miro. Son dos
+preguntas distintas y ahora se pueden ensenar juntas en vez de explicarlas.
+
+Un matiz sobre el dato de Microsoft que conviene no perder: `damage_pct_0m` no
+pasa de 1,0 y promedia 0,4 % en las edificaciones marcadas. Su `damaged` es una
+**deteccion de cambio**, no una medida de severidad. Leerlo como "965 edificios
+destruidos" seria exactamente el tipo de lectura que este proyecto intenta
+evitar.
+
+#### El fallo que casi lo invalida
+
+La primera corrida dio **cero celdas en comun**, que se lee igual que un "no hay
+solape" legitimo. La causa: EPSG:4326 declara el orden de ejes **lat-lon**, y
+`ST_Transform` lo respeta. Sin `always_xy := true` las coordenadas salen
+invertidas —la longitud sale 10,58 y la latitud -66,97— la celda calculada no
+existe en ningun sitio y el join devuelve cero filas sin quejarse.
+
+Hay una prueba que lo fija.
+
 ### T2.4 — La rama de pesos, sin cambios
 
 Sigue en pie tal como esta escrito en `p4_brigada/protocol.py`: un modelo
