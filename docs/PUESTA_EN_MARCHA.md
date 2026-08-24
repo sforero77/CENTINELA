@@ -266,27 +266,80 @@ para publicar el hilo de `reports/<id>/hilo.txt`. El sistema lo genera pero
 
 ### Venezuela — cierra la asercion (b) de G2
 
-El codigo ya esta: `data/manifests/VEN.yaml`, la caja envolvente y el mapeo de
-columnas del COD-AB. Falta construir y medir.
+El activo ya esta construido y publicado (`exposure-ven-20260824`). Lo que falta
+es el **reporte** de los dos mainshocks del 24-jun-2026, que ademas estrena el
+camino P2→P3 en CI: hasta ahora `impact.yml` nunca ha calculado nada, solo ha
+devuelto `omitir: ya procesado`.
+
+**Primero hay que reconstruir el activo**, porque el publicado se hizo con el
+rescate que invadia al vecino y con el reparto que no veia los multipoligonos:
 
 ```powershell
-uv run centinela country VEN
+gh workflow run exposure_quarterly.yml -f iso3=VEN
 ```
 
-**Es probable que falle el assert de poblacion, y esa es la informacion.** La
-tolerancia esta en 5 % contra la cifra de la ONU (28.516.896 para 2025), pero
-GHS-POP deriva de la ronda censal de 2010 y no modela la emigracion venezolana.
-Cuando el build imprima el desvio real:
+Despues, los dos eventos:
 
-1. Anota el valor en `referencia_oficial.medido_ghs_pop` de `VEN.yaml`.
-2. Ajusta `tolerancia_pct` a lo observado, **explicando por que** en el PR.
-3. Si el desvio es grande, eso es un hallazgo publicable, no un bug: significa
-   que la cadena poblacional no sirve igual en un pais sin censo reciente, y el
-   reporte tiene que decirlo.
+```powershell
+gh workflow run impact.yml -f usgs_id=us6000t7zp -f backtest=true
+gh workflow run impact.yml -f usgs_id=us6000t7zc -f backtest=true
+```
 
-Hay un pendiente de mantenedor de pais anotado en el manifest: los toponimos
-del COD-AB salen mal codificados ("Falc?n" por "Falcón"). Hay que resolverlo
-antes de publicar un reporte de Venezuela, porque esos nombres se imprimen.
+`-f backtest=true` reconstruye el `event_state` que P1 nunca creo —el feed que
+vigila es el de la ultima hora, no un sismo de hace dos meses— y lo marca como
+retrospectivo: su latencia de dos meses no entra en el p50/p95, y el reporte
+lleva el aviso de que la poblacion es de la epoca pero las edificaciones y las
+vias son las de hoy.
+
+Cuando los dos reportes esten en `reports/`, la prueba de G2 deja de saltarse
+sola y pide congelar la cifra. Ella misma dice cual:
+
+```
+Hay reporte de us6000t7zp pero no cifra congelada.
+Anota pop_mmi7p=... en POP_MMI7P_ESPERADO.
+```
+
+**Sobre la tolerancia de poblacion:** esta en 5 % contra la ONU (28.516.896 para
+2025) y es una expectativa, no una verificacion. GHS-POP deriva de la ronda
+censal de 2010 y no modela la emigracion venezolana. Que el assert falle seria
+un hallazgo publicable, no un bug: significaria que la cadena poblacional no
+sirve igual en un pais sin censo reciente, y el reporte tiene que decirlo.
+
+(La codificacion de los toponimos estaba anotada como rota —«Falc?n» por
+«Falcón»— y **no lo esta**. Verificado byte a byte sobre el parquet publicado:
+`46 61 6c 63 c3 b3 6e`, UTF-8 correcto. Eran los interrogantes de la consola de
+Windows.)
+
+### Reconstruir los diecinueve y recalibrar
+
+Toca cada vez que cambia algo del reparto o del rescate. **Corre en CI y no
+gasta tus datos**; en local, cada pais descarga cerca de un giga.
+
+```powershell
+foreach ($iso in "ARG","BOL","BRA","CHL","COL","CRI","CUB","DOM","ECU","GTM",
+                 "HND","MEX","NIC","PAN","PER","PRY","SLV","URY","VEN") {
+  gh workflow run exposure_quarterly.yml -f iso3=$iso
+  Start-Sleep -Seconds 5
+}
+```
+
+Cuando terminen, la medicion de cada uno viaja en su Release —`medicion.json`,
+un kilobyte— y de ahi sale la recalibracion:
+
+```powershell
+foreach ($iso in "arg","bol","bra","chl","col","cri","cub","dom","ecu","gtm",
+                 "hnd","mex","nic","pan","per","pry","slv","ury","ven") {
+  $tag = gh release list --limit 100 --json tagName -q '.[].tagName' |
+         Select-String "^exposure-$iso-" | Sort-Object | Select-Object -Last 1
+  gh release download $tag -p medicion.json --dir "med/$iso" --clobber
+}
+uv run centinela calibrar (Get-ChildItem med -Recurse -Filter medicion.json).FullName
+```
+
+Sin `--escribir` solo enseña lo que cambiaria. **Estrechar la tolerancia es
+automatico; ensancharla no**: si el desvio medido se sale de la vigente, el
+comando lo dice y no toca nada, porque aflojar la alarma para que deje de sonar
+es lo que uno hace con prisa y no debe automatizarse.
 
 ### T0.10 — la cifra exacta del DANE
 
