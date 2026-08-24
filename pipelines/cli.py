@@ -11,6 +11,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from .common.http import HttpFetcher
 from .common.logging import get_logger
@@ -104,6 +105,56 @@ def _cmd_status(args: argparse.Namespace) -> int:
     path = write_status()
     print(path)
     return 0
+
+
+def _cmd_calibrar(args: argparse.Namespace) -> int:
+    """Reajusta la tolerancia de los manifests con lo que midio el ultimo build.
+
+    Estrechar es automatico; ensanchar no. Una tolerancia que se ensancha sola
+    para acomodar lo que salio deja de ser un guardian y pasa a ser un sello.
+    """
+    from datetime import UTC, datetime
+
+    from .common.manifest import Manifest
+    from .common.paths import MANIFESTS_DIR
+    from .p0_exposure.calibrar import aplicar, calibrar, leer_medicion
+
+    fecha = datetime.now(UTC).date().isoformat()
+    salida: list[dict[str, Any]] = []
+    bloqueadas = 0
+
+    for ruta in (Path(p) for p in args.medicion):
+        medicion = leer_medicion(ruta)
+        iso3 = str(medicion.get("iso3", ""))
+        manifest = Manifest.load(iso3, Path(args.manifests) if args.manifests else None)
+        cal = calibrar(medicion, manifest.referencia_oficial)
+        escrito = False
+        if args.escribir:
+            destino = (Path(args.manifests) if args.manifests else MANIFESTS_DIR) / f"{iso3}.yaml"
+            escrito = aplicar(destino, cal, fecha=fecha)
+        if cal.motivo_bloqueo:
+            bloqueadas += 1
+        salida.append(
+            {
+                "iso3": cal.iso3,
+                "medido": round(cal.medido),
+                "referencia": round(cal.referencia),
+                "desvio_pct": cal.desvio_pct,
+                "tolerancia_vigente": cal.tolerancia_vigente,
+                "tolerancia_propuesta": cal.tolerancia_propuesta,
+                "aplicable": cal.aplicable,
+                "motivo_bloqueo": cal.motivo_bloqueo,
+                "escrito": escrito,
+            }
+        )
+
+    print(json.dumps(salida, ensure_ascii=False, indent=2))
+    if not args.escribir:
+        print("(simulacion: nada escrito. Anade --escribir)", file=sys.stderr)
+    # Una calibracion bloqueada no es un fallo del comando: es informacion que
+    # alguien tiene que mirar. Se distingue con codigo 2 para que un workflow
+    # pueda pararse sin confundirlo con un error.
+    return 2 if bloqueadas else 0
 
 
 def _cmd_paises(args: argparse.Namespace) -> int:
@@ -214,6 +265,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status", help="recalcula site/status.json")
     p_status.set_defaults(func=_cmd_status)
+
+    p_calibrar = sub.add_parser(
+        "calibrar", help="reajusta la tolerancia de los manifests con lo medido"
+    )
+    p_calibrar.add_argument("medicion", nargs="+", help="ficheros medicion.json de los Releases")
+    p_calibrar.add_argument(
+        "--escribir", action="store_true", help="escribe los manifests (por defecto simula)"
+    )
+    p_calibrar.add_argument("--manifests", help="directorio de manifests")
+    p_calibrar.set_defaults(func=_cmd_calibrar)
 
     p_paises = sub.add_parser(
         "paises-candidatos", help="ISO3 cuyo activo podria servir para un evento"
