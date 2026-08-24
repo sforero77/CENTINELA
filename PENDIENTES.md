@@ -64,7 +64,7 @@ La puerta de salida de la espec pide cuatro cosas:
 | Requisito | Estado |
 |---|---|
 | G1 verde | ✅ |
-| G2 verde | ⚠️ una asercion saltada: necesita el activo de Venezuela |
+| G2 verde | ⚠️ una asercion saltada: necesita el **reporte** de Venezuela. El activo ya existe; falta correr el backtest de los dos mainshocks con `centinela impact --backtest` |
 | Un reporte real publicado end-to-end **sin intervencion** | ⏳ el sistema ya opera; falta que ocurra un sismo |
 | Latencia medida y publicada | ⏳ la pagina esta publicada y espera datos reales |
 
@@ -152,18 +152,35 @@ Dos arreglos:
 
 → `tests/unit/test_pais_del_evento.py`
 
-### 2.1 Cerrar G2: activo de Venezuela · **solo falta construirlo**
+### 2.1 Cerrar G2: reporte de Venezuela · **falta correr el backtest**
 
 El codigo ya esta hecho: `data/manifests/VEN.yaml`, `COUNTRY_BBOX["VEN"]`
 —medida sobre el COD-AB, no estimada—, el mapeo de columnas del COD-AB y las
 aserciones de G2, que se saltan solas mientras no exista el reporte y se
 activan sin tocar nada cuando exista.
 
-Falta correr `uv run centinela country VEN` y **medir**. La tolerancia esta en
-5 % contra la ONU (28.516.896 para 2025) y es una expectativa, no una
-verificacion: GHS-POP deriva de la ronda censal de 2010 y no modela la
-emigracion venezolana. Que el assert falle seria un hallazgo, no un bug.
-Procedimiento en [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md).
+El activo ya esta construido y publicado (`exposure-ven-20260824`). Lo que
+falta es el **reporte** de los dos mainshocks del 24-jun-2026, que ademas
+estrena el camino P2→P3 en CI: hasta ahora `impact.yml` nunca ha calculado
+nada, solo ha devuelto `omitir: ya procesado`.
+
+    gh workflow run impact.yml -f usgs_id=us6000t7zp -f backtest=true
+    gh workflow run impact.yml -f usgs_id=us6000t7zc -f backtest=true
+
+`--backtest` reconstruye el `event_state` que P1 nunca creo —el feed que vigila
+es el de la ultima hora— y lo marca como retrospectivo, para que su latencia de
+dos meses no entre en el p50/p95 y el reporte lleve el aviso de que las
+edificaciones y las vias son las de hoy.
+
+**Antes hay que reconstruir el activo de VEN con el rescate corregido.** El
+publicado se construyo con el rescate que invadia al vecino, y Venezuela se
+desvia +6,30 % — el mismo orden que Paraguay antes del arreglo. Congelar
+`POP_MMI7P_ESPERADO` contra un activo contaminado seria fijar el error.
+
+La tolerancia esta en 5 % contra la ONU (28.516.896 para 2025) y es una
+expectativa, no una verificacion: GHS-POP deriva de la ronda censal de 2010 y
+no modela la emigracion venezolana. Que el assert falle seria un hallazgo, no
+un bug. Procedimiento en [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md).
 
 ### 2.1b Fuentes de LATAM: validadas las 19, manifests escritos
 
@@ -188,22 +205,47 @@ Comparar el muestreo actual (suma de pixeles por celda) contra `exactextract`.
 Criterio de la espec: menos de 1 % de diferencia en la poblacion nacional. Si
 cumple, se documenta y se cierra; si no, se cambia el metodo.
 
-### 2.3 PMTiles del visor · **medio**
+### 2.3 PMTiles del visor · **mapa base hecho, faltan las coropletas**
 
-El visor tiene el mapa vacio. Hace falta generar teselas de las coropletas r7/r6
-con `tippecanoe` y publicarlas. **Ojo**: las capas de *contexto* no hacen falta
-generarlas — Overture publica sus propias PMTiles por release en
-`https://tiles.overturemaps.org/<release>/<tema>.pmtiles`. Solo son propias las
-coropletas de exposicion e impacto, que son datos nuestros.
+**Hecho el 24-ago-2026:** el mapa ya dibuja. Tierra, agua, fronteras y vias
+principales salen de las PMTiles que Overture publica por release, sin generar
+nada ni servir nada desde Pages. Las fronteras en disputa van punteadas y en
+otro color en vez de elegir un lado. Los epicentros de los reportes publicados
+se dibujan como circulos que escalan con la **poblacion expuesta a MMI≥7**, no
+con la magnitud: dos sismos de la misma magnitud sobre poblaciones distintas no
+son el mismo evento para quien responde.
 
-### 2.4 Reporte preliminar sin ShakeMap (RF-03) · **medio**
+Para eso hubo que meter `lon`/`lat` en `report.json`: estaban en el
+`event_state` y se quedaban ahi, asi que el artefacto publico no decia donde
+fue el sismo y ni el propio visor podia situarlo.
 
-`compute_preliminary()` calcula la poblacion por radios de 25/50/100 km, pero
-`run_impact` todavia no arma el reporte con ella: solo cuenta el intento y
-transiciona el estado. Falta la rama que emite el reporte preliminar.
+**Ojo con el release.** `OVERTURE_RELEASE` en `site/assets/app.js` esta fijado
+a mano y hay que subirlo cada trimestre con el activo: Overture solo conserva
+dos releases. Cuando caduque, el mapa se queda gris y los reportes siguen bien,
+porque las cifras no dependen de las teselas — pero hay que verlo venir.
 
-Importa porque un M7 sin ShakeMap durante media hora es exactamente el caso en
-que alguien necesita una cifra.
+**Falta:** las coropletas r7/r6 de exposicion e impacto, que si son datos
+nuestros y necesitan `tippecanoe`.
+
+### 2.4 ✅ Reporte preliminar sin ShakeMap (RF-03) · cerrado el 24-ago-2026
+
+`compute_preliminary()` estaba escrita, comentada y probada desde el principio,
+y **no la llamaba nadie**: el evento pasaba a estado `preliminar`, se guardaba
+el estado y no se publicaba nada. Durante las primeras horas —las unicas en que
+un preliminar sirve— el sistema callaba.
+
+Mismo patron que las tres capas del activo que se agregaban a tablas que nadie
+leia: una funcion escrita no es una funcion conectada, y ninguna prueba lo veia
+porque todas probaban la funcion, no el camino.
+
+El preliminar publica la tabla por radios **en lugar** de la de intensidad, no
+ademas. Sin ShakeMap todas las cifras por MMI valen cero, y "poblacion en
+MMI≥7: 0" bajo el titulo "Exposicion estimada" es una respuesta falsa y
+creible. Lleva ademas su propia advertencia: un radio no es una banda de
+intensidad —un M6 superficial y uno a 200 km tienen el mismo circulo de 50 km—
+y la cifra sirve para dimensionar, no para priorizar.
+
+→ `tests/unit/test_reporte_preliminar.py`
 
 ### 2.5 Fase 1: construir los paises · **el camino ya esta hecho**
 
