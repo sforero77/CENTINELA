@@ -64,6 +64,18 @@ jobs:
             exit 1
           fi
           printf 'publicando: %s\n' "${PARQUETS[@]}"
-          gh release create "$TAG" "${PARQUETS[@]}" \
-            --title "Activo de exposicion $ISO3 — $TAG" \
-            --notes-file "data/manifests/$ISO3.yaml"
+          # El tag lleva la fecha, asi que dos construcciones el mismo dia
+          # chocan — y reconstruir el mismo dia es exactamente lo que pasa
+          # cuando se corrige algo. Un Release del mismo dia es una correccion
+          # del mismo activo, no un vintage nuevo: se reemplazan los ficheros
+          # en su sitio. Dias distintos siguen creando tags distintos, asi que
+          # el historial de vintages se conserva.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::notice::$TAG ya existe; se reemplazan sus ficheros"
+            gh release upload "$TAG" "${PARQUETS[@]}" --clobber
+            gh release edit "$TAG" --notes-file "data/manifests/$ISO3.yaml"
+          else
+            gh release create "$TAG" "${PARQUETS[@]}" \
+              --title "Activo de exposicion $ISO3 — $TAG" \
+              --notes-file "data/manifests/$ISO3.yaml"
+          fi
