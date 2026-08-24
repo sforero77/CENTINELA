@@ -237,6 +237,28 @@
     },
     "pipeline_version": {
       "type": "string"
+    },
+    "radios": {
+      "type": "array",
+      "description": "Poblacion por radio del epicentro. Solo en reportes preliminares (RF-03), donde sustituye a 'totales': sin ShakeMap las cifras por intensidad valen cero y publicarlas seria una respuesta falsa y creible.",
+      "items": {
+        "type": "object",
+        "required": [
+          "radio_km",
+          "pop"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "radio_km": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pop": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
     }
   }
 }

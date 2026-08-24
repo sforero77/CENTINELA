@@ -158,6 +158,24 @@ class Descargas:
 
 
 @dataclass(frozen=True, slots=True)
+class PoblacionEnRadio:
+    """Poblacion dentro de un radio del epicentro, para el preliminar (RF-03).
+
+    No es equivalente a una banda de intensidad y no debe presentarse como tal:
+    aqui no hay modelo de sacudida, solo distancia. Un M6 superficial y un M6 a
+    200 km de profundidad tienen el mismo circulo de 50 km y no se parecen en
+    nada, y eso es exactamente lo que el reporte tiene que dejar claro mientras
+    USGS no publique el ShakeMap.
+    """
+
+    radio_km: int
+    pop: float
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"radio_km": self.radio_km, "pop": self.pop}
+
+
+@dataclass(frozen=True, slots=True)
 class Report:
     """Reporte completo, serializable a ``report.json``."""
 
@@ -169,6 +187,11 @@ class Report:
     descargas: Descargas = field(default_factory=Descargas)
     #: True cuando aun no hay ShakeMap y el corte es por radios (RF-03).
     preliminar: bool = False
+    #: Poblacion por radio. Solo se llena en un preliminar, y es lo que se
+    #: publica **en lugar** de la tabla por intensidad: enseniar `pop_mmi7p: 0`
+    #: en un reporte sin ShakeMap seria una cifra falsa y creible, que es el
+    #: unico error que este sistema no puede permitirse.
+    radios: tuple[PoblacionEnRadio, ...] = ()
     #: True cuando el evento se reconstruyo despues de ocurrir. Cambia lo que
     #: el reporte puede afirmar, asi que viaja hasta el visor: la poblacion
     #: puede ser de la epoca —GHS-POP publica de 1975 a 2030— pero las
@@ -187,6 +210,7 @@ class Report:
             "event": self.event.to_dict(),
             "inputs": self.inputs.to_dict(),
             "preliminar": self.preliminar,
+            "radios": [r.to_dict() for r in self.radios],
             "backtest": self.backtest,
             "totales": self.totales.to_dict(),
             "top_municipios": [m.to_dict() for m in self.top_municipios],
@@ -212,6 +236,7 @@ class Report:
             event=Evento(**data["event"]),
             inputs=Inputs(**data["inputs"]),
             totales=Totales(**data["totales"]),
+            radios=tuple(PoblacionEnRadio(**r) for r in data.get("radios", [])),
             top_municipios=tuple(MunicipioTop(**m) for m in data.get("top_municipios", [])),
             incertidumbre=Incertidumbre(
                 pop_discrepancia_pct=data["incertidumbre"]["pop_discrepancia_pct"],

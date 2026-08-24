@@ -51,10 +51,19 @@ def render_markdown(report: Report) -> str:
     if report.backtest:
         partes.append(_ENCABEZADO_BACKTEST)
 
-    partes.append("## Exposicion estimada")
-    partes.append(_tabla_totales(report))
+    if report.preliminar:
+        # Un preliminar publica la tabla por radios **en lugar** de la de
+        # intensidad, no ademas. Sin ShakeMap todas las cifras por MMI valen
+        # cero, y una tabla de ceros con el titulo "Exposicion estimada" es una
+        # respuesta falsa y creible: el unico error que este sistema no puede
+        # permitirse. Mejor una cifra mas pobre y verdadera.
+        partes.append("## Poblacion por distancia al epicentro")
+        partes.append(_tabla_radios(report))
+    else:
+        partes.append("## Exposicion estimada")
+        partes.append(_tabla_totales(report))
 
-    if tot.pop_65p_mmi7p:
+    if tot.pop_65p_mmi7p and not report.preliminar:
         partes.append(
             f"De la poblacion en intensidad MMI≥7, alrededor de "
             f"**{format_count_prose(tot.pop_65p_mmi7p)}** personas tienen 65 anos o mas."
@@ -86,6 +95,24 @@ def render_markdown(report: Report) -> str:
     partes.append("## Advertencias\n\n" + "\n".join(f"- {d}" for d in DISCLAIMERS))
 
     return "\n\n".join(p for p in partes if p) + "\n"
+
+
+def _tabla_radios(report: Report) -> str:
+    """Poblacion dentro de cada radio, con su advertencia (RF-03)."""
+    if not report.radios:
+        return (
+            "No se pudo calcular el corte por radios: no hay activo de exposicion "
+            "para el pais del epicentro."
+        )
+    lineas = ["| Radio desde el epicentro | Poblacion |", "|---|---:|"]
+    for r in sorted(report.radios, key=lambda x: x.radio_km):
+        lineas.append(f"| {r.radio_km} km | {format_count_prose(r.pop)} |")
+    return "\n".join(lineas) + (
+        "\n\nLos radios **no son bandas de intensidad**. Aqui no hay modelo de "
+        "sacudida, solo distancia: un sismo superficial y uno profundo de la misma "
+        "magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve "
+        "para dimensionar, no para priorizar."
+    )
 
 
 def _tabla_totales(report: Report) -> str:

@@ -243,8 +243,23 @@ def run_impact(
     if decision.action is Action.PRELIMINAR:
         # RF-03: sin ShakeMap no hay reporte completo, pero si un corte por
         # radios. Se cuenta el intento para que la ventana de 6 h se agote.
+        #
+        # El calculo existia desde el principio y **no lo llamaba nadie**: el
+        # evento pasaba a estado `preliminar` y no se publicaba nada, asi que
+        # durante las primeras horas —las unicas en que un preliminar sirve—
+        # el sistema no decia una palabra. Mismo patron que las tres capas del
+        # activo que se agregaban a una tabla que nadie leia.
         siguiente = replace(state, intentos_preliminar=state.intentos_preliminar + 1)
-        siguiente.transition(EventStatus.PRELIMINAR, nota=decision.razon).save(events_dir)
+        siguiente = siguiente.transition(EventStatus.PRELIMINAR, nota=decision.razon)
+        siguiente.save(events_dir)
+        _publicar_preliminar(
+            siguiente,
+            products,
+            exposure_glob=exposure_glob,
+            manifest_id=manifest_id,
+            reports_root=reports_root,
+            admin_lookup_parquet=admin_lookup_parquet,
+        )
         return decision
 
     trabajo = workdir or (Path(exposure_glob).parent / "work" / usgs_id)
@@ -294,6 +309,48 @@ def run_impact(
         },
     )
     return decision
+
+
+def _publicar_preliminar(
+    state: EventState,
+    products: ProductSet,
+    *,
+    exposure_glob: str,
+    manifest_id: str,
+    reports_root: Path | None,
+    admin_lookup_parquet: str | None,
+) -> None:
+    """Calcula el corte por radios y publica el reporte preliminar.
+
+    Un fallo aqui no puede tumbar el evento: el preliminar es lo mejor que hay
+    mientras no llega el ShakeMap, no es el reporte definitivo, y el reintento
+    vuelve a pasar por aqui en quince minutos. Se registra y se sigue.
+    """
+    from .pipeline import build_preliminary_report, compute_preliminary
+
+    try:
+        con = connect()
+        _cargar_admin_lookup(con, exposure_glob, admin_lookup_parquet)
+        por_radio = compute_preliminary(con, state, exposure_glob=exposure_glob)
+        reporte = build_preliminary_report(state, products, por_radio, manifest_id=manifest_id)
+        escritos = write_report_bundle(reporte, [], reports_root=reports_root)
+    except Exception as exc:
+        _log.warning(
+            "no se pudo publicar el preliminar; se reintenta en la proxima corrida",
+            extra={"context": {"usgs_id": state.usgs_id, "error": str(exc)}},
+        )
+        return
+    _log.info(
+        "reporte preliminar publicado",
+        extra={
+            "context": {
+                "usgs_id": state.usgs_id,
+                "intento": state.intentos_preliminar,
+                "artefactos": sorted(escritos),
+                **{f"r{km}km": pop for km, pop in sorted(por_radio.items())},
+            }
+        },
+    )
 
 
 def _cargar_admin_lookup(con: Any, exposure_glob: str, ruta: str | None) -> None:

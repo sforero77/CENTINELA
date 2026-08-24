@@ -32,6 +32,7 @@ from ..p3_report.model import (
     Incertidumbre,
     Inputs,
     MunicipioTop,
+    PoblacionEnRadio,
     Report,
     Totales,
 )
@@ -355,6 +356,46 @@ def compute_preliminary(con: Any, state: EventState, *, exposure_glob: str) -> d
         },
     )
     return por_radio
+
+
+def build_preliminary_report(
+    state: EventState,
+    products: ProductSet,
+    por_radio: dict[int, float],
+    *,
+    manifest_id: str,
+) -> Report:
+    """Arma el reporte preliminar de RF-03, el que sale sin ShakeMap.
+
+    Deliberadamente **no** lleva `Totales`: sin ShakeMap todas las cifras por
+    intensidad valen cero, y publicar "poblacion en MMI>=7: 0" seria una
+    respuesta falsa y creible. El markdown publica la tabla por radios en su
+    lugar, no ademas.
+    """
+    return Report(
+        event=Evento(
+            usgs_id=state.usgs_id,
+            mag=state.mag,
+            depth_km=state.depth_km,
+            utc=state.origen_utc,
+            lugar=state.lugar,
+            pager_alert=products.pager_alert(),
+            lon=state.lon,
+            lat=state.lat,
+        ),
+        inputs=Inputs(
+            shakemap_version=0,
+            groundfailure_version=products.groundfailure_version,
+            exposure_manifest=manifest_id,
+        ),
+        totales=Totales(),
+        radios=tuple(
+            PoblacionEnRadio(radio_km=int(km), pop=float(pop))
+            for km, pop in sorted(por_radio.items())
+        ),
+        preliminar=True,
+        backtest=state.backtest,
+    )
 
 
 # --- Construccion del reporte ----------------------------------------------
