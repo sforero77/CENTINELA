@@ -92,8 +92,9 @@ class HttpFetcher:
 
         Raises:
             RuntimeError: si el servidor ignora el ``Range`` y responde 200 con
-                el archivo entero. Aceptarlo en silencio significaria bajar
-                gigas creyendo que se bajaron kilobytes.
+                el archivo entero —aceptarlo en silencio significaria bajar
+                gigas creyendo que se bajaron kilobytes—, o si acepta el rango y
+                devuelve un cuerpo vacio.
         """
         for attempt in range(self._retries):
             try:
@@ -108,6 +109,19 @@ class HttpFetcher:
                     raise RuntimeError(
                         f"El servidor ignoro el Range en {url} (HTTP "
                         f"{response.status_code}): no se puede extraer por rangos."
+                    )
+                if not response.content:
+                    # Caso visto en el geoportal del DANE el 24-ago-2026: acepta
+                    # el rango, responde 206 y cierra sin enviar un byte, pero
+                    # solo por encima de ~1,5 GB de desplazamiento. Reintentar no
+                    # sirve —falla igual las tres veces— y el mensaje generico de
+                    # abajo mandaba a buscar un problema de red que no existia.
+                    raise RuntimeError(
+                        f"El servidor acepto el rango {start}-{end} de {url} "
+                        f"(HTTP 206) y devolvio un cuerpo vacio. Suele ser un "
+                        f"limite de desplazamiento del servidor, no un fallo de "
+                        f"red: comprueba si sirve rangos pequenos al inicio del "
+                        f"archivo y busca una entrega mas liviana de la fuente."
                     )
                 return response.content
             except (httpx.HTTPError, httpx.StreamError):  # pragma: no cover - red

@@ -170,7 +170,7 @@ sources:
 
   - id: dane_mgn_2025
     layer: divisions
-    url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_00_COLOMBIA.zip
+    url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_MPIO_GRAFICO.zip
     license: CC-BY-4.0
     vintage: MGN-2025
     sha256: ""
@@ -179,11 +179,19 @@ sources:
       CC BY 4.0: permite uso comercial y redistribucion, y pide citar
       "Departamento Administrativo Nacional de Estadistica - DANE:
       www.dane.gov.co". Fuente de verdad del crosswalk hex<->DIVIPOLA.
-      El archivo nacional pesa 3,39 GB. Existen entregas por nivel mucho mas
-      livianas (MGN2025_DPTO_POLITICO.zip = 12,5 MB; MGN2025_CLASE.zip = 120 MB);
-      el nombre exacto del nivel municipal no se pudo deducir probando y hay que
-      leerlo del geoportal antes del primer build, para no bajar 3,4 GB cada
-      trimestre.
+      NIVEL MUNICIPAL SUELTO, HALLADO EL 24-AGO-2026. La nota anterior decia
+      que el nombre del nivel municipal "no se pudo deducir probando": es
+      `MGN2025_MPIO_GRAFICO.zip`, 68 MB. Trae exactamente el mismo
+      MGN_ADM_MPIO_GRAFICO.shp que se extraia del archivo nacional de 3,39 GB,
+      con su .cpg y su .prj. Verificado: 1.122 municipios, las mismas columnas
+      (mpio_cdpmp, mpio_cnmbr, dpto_ccdgo, dpto_cnmbr) y la misma caja
+      envolvente (-81,7356..-66,8472 / -4,2294..13,3947) que registro el build.
+      SE CAMBIO POR UNA CAIDA, no por elegancia. El geoportal dejo de servir
+      peticiones de rango por encima de ~1,5 GB —responde HTTP 206 y cierra la
+      conexion sin enviar un byte— y el directorio central de un ZIP esta al
+      final, asi que la extraccion por rango del archivo de 3,39 GB dejo de
+      funcionar. Habia funcionado nueve horas antes. Con el archivo suelto no
+      hacen falta ni rangos ni 3,4 GB.
 
   - id: hotosm_health
     layer: health

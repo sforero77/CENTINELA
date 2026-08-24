@@ -343,6 +343,33 @@ def _extraer_zip(contenido: bytes, destino: Path) -> list[Path]:
     )
 
 
+def download_zip_completo(url: str, destino: Path, *, fetcher: HttpFetcher) -> list[Path]:
+    """Baja un ZIP entero y devuelve las capas que ``ST_Read`` sabe abrir.
+
+    Para archivos pequenos es mejor que :func:`download_zip_entries`: una
+    peticion en vez de muchas, y sin depender de que el servidor sirva rangos.
+
+    Existe por una caida real. El geoportal del DANE dejo de servir rangos por
+    encima de ~1,5 GB —responde 206 y cierra sin enviar nada—, y el nivel
+    municipal se extraia por rango del archivo nacional de 3,39 GB, cuyo
+    directorio central esta al final. El mismo shapefile se publica suelto en
+    68 MB, asi que ya no hace falta ni el rango ni los 3,39 GB.
+    """
+    carpeta = destino / "zip"
+    if carpeta.is_dir():
+        ya_estan = sorted(
+            p for p in carpeta.rglob("*") if p.suffix.lower() in GEOMETRY_SUFFIXES and p.is_file()
+        )
+        if ya_estan:
+            return ya_estan
+    rutas = _extraer_zip(fetcher.get_bytes(url), carpeta)
+    _log.info(
+        "ZIP descargado y extraido",
+        extra={"context": {"url": url, "capas": [p.name for p in rutas]}},
+    )
+    return rutas
+
+
 def download_zip_entries(
     url: str, destino: Path, *, patron: str, fetcher: HttpFetcher
 ) -> list[Path]:
@@ -416,11 +443,9 @@ def download_manifest(
         elif (slug := _producto_ghsl(source.url)) is not None:
             for tif in download_ghsl(carpeta, bbox, fetcher=cliente, slug=slug):
                 inventario.append(_registrar(source, tif))
-        elif source.url.endswith(".zip") and "geoportal.dane.gov.co" in source.url:
-            for shp in download_zip_entries(
-                source.url, carpeta, patron="MPIO_GRAFICO", fetcher=cliente
-            ):
-                inventario.append(_registrar(source, shp))
+        elif source.url.endswith(".zip"):
+            for capa in download_zip_completo(source.url, carpeta / source.id, fetcher=cliente):
+                inventario.append(_registrar(source, capa))
         elif source.url.endswith((".tif", ".csv")):
             carpeta.mkdir(parents=True, exist_ok=True)
             path = carpeta / Path(source.url).name
