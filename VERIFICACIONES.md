@@ -385,6 +385,36 @@ LATAM solo Cuba no toca a nadie por tierra, y hasta su caja alcanza a Haiti.
 La prediccion era 7.015.404 —el total menos el rescate medido antes— y salieron
 7.015.517: los 113 de diferencia son el rescate legitimo que queda.
 
+### Simplificar la geometria administrativa: control sobre Uruguay
+
+El COD-AB de Chile pesa mas de 182 MB y `h3_polygon_wkt_to_cells` recibe la
+geometria como **texto**: el `ST_AsText` de una sola provincia de Magallanes
+agoto los 12,4 GB del runner. Se simplifica al cargar, con tolerancia 0,0005
+grados (~55 m).
+
+La pregunta es que se pierde. Reconstruido Uruguay con y sin simplificacion, el
+mismo dia y con el mismo codigo por lo demas:
+
+| | Sin simplificar | Simplificado |
+|---|---:|---:|
+| Celdas | 150.314 | 150.314 |
+| Poblacion | 3.429.034 | 3.429.034 |
+| Edificaciones | 2.418.920 | 2.418.920 |
+| Superficie construida | 389.300.479 | 389.300.479 |
+| Kilometros de via | 89.090 | 89.090 |
+| Sedes de salud | 1.149 | 1.149 |
+| Sedes educativas | 4.433 | 4.433 |
+| Fraccion rescatada | 0,934 % | 0,934 % |
+| Desvio | +1,3102 % | +1,3102 % |
+
+**Identicas hasta la ultima unidad.** Es lo que tenia que pasar: el reparto
+asigna por el centro de la celda y una celda r8 mide unos 740 m, asi que mover
+una frontera 55 m solo puede cambiar de municipio las celdas cuyo centro caiga
+casi encima de la linea — y esas pasan al vecino, no al vacio.
+
+Lo que este control **no** prueba es la distribucion municipal, que es donde el
+efecto vive por definicion. Prueba lo que importa mas: que no se pierde nadie.
+
 ### Reemitir el backtest del Choco: cuanto corregian los arreglos
 
 El reporte publicado el 23-ago-2026 se calculo contra `col-v0.4`, el activo
