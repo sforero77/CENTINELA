@@ -805,6 +805,89 @@ resulta ser el cuello de botella de P0.
 
 ---
 
+## Ronda 5 — fuentes de Fase 2, validadas el 24-ago-2026
+
+### T2.1 — Copernicus EMS Rapid Mapping · **resuelta**
+
+Los terminos de uso del servicio permiten expresamente «reproduction,
+distribution, communication to the public, adaptation, modification and
+combination with other data», sin restriccion comercial. La unica obligacion es
+«inform the recipients of the source of that data and information», con el
+formato de cita fijado por el servicio:
+
+    Copernicus Emergency Management Service (© activation_year European Union), Activation ID
+
+y para un producto concreto:
+
+    Copernicus Emergency Management Service (© 2025 European Union), [EMSR780] Kaweni (AOI03): Grading Map
+
+Matiz que conviene tener escrito: los terminos anaden que «any independent
+intellectual property right generated as a result of modifying or adapting the
+data shall be owned by the respective creator(s)». O sea que las etiquetas
+derivadas son nuestras, con la atribucion puesta.
+
+**Consecuencia para el cubo de licencias:** EMS entra sin conflicto. No es
+share-alike, asi que no arrastra al activo.
+
+### T2.2 — SAR abierto · **resuelta, las dos**
+
+| Fuente | Licencia | Bucket | Credenciales |
+|---|---|---|---|
+| Umbra Open Data | CC BY 4.0 | `umbra-open-data-catalog` (us-west-2) | ninguna |
+| Capella Open Data | CC BY 4.0 | `capella-open-data` (us-west-2) | ninguna |
+
+Comprobado el listado de los dos buckets por HTTPS sin firmar: responden 200 y
+devuelven claves. Ninguno es requester-pays, asi que leerlos no cuesta ni
+requiere cuenta de AWS — la misma propiedad que hace posible leer Overture en
+remoto.
+
+Umbra no publica un fichero de licencia en el bucket; la declaracion vive en su
+entrada del AWS Open Data Registry y en su pagina de datos abiertos. Capella
+declara CC BY 4.0 en el registro y anade datos cada trimestre.
+
+**La via SAR importa por dos razones**: no la tapan las nubes —decisivo en la
+region andina y en el Caribe— y no tiene el problema de licencia NC que
+arrastra xBD.
+
+### T2.3 — Hay verdad de campo para **los dos eventos golden**
+
+Buscando el GeoPackage de Cali aparecio algo mejor: en HDX ya hay evaluaciones
+de dano abiertas de los dos sismos que este proyecto usa como golden.
+
+| Dataset | Organizacion | Licencia | Contenido |
+|---|---|---|---|
+| `2026-colombia-earthquake` | Microsoft AI for Good Lab | **CC BY** | Huellas con prediccion de dano sobre Cali, con dos fuentes de huella: Google (320.178 edificaciones, 621 danadas) y **Overture** (97.085, 266) |
+| `building-damage-assessment-la-guaira-coastline...` | Microsoft AI for Good Lab | **CC BY** | 26.142 edificaciones con prediccion en la costa de La Guaira |
+| `building-debris-assessment-venezuela-earthquake-june-2026` | UNEP/OCHA Joint Environment Unit | **CC BY-SA** | Escombros por deteccion de cambio SAR multisensor: rejilla de 3 km, rejilla de 350 m y por edificacion |
+
+Cali es el area del sismo del Choco del 10-ago-2026 (`us6000tjl2`), y La Guaira
+es donde cae Catia La Mar (`us6000t7zp`). O sea que **para los dos eventos
+congelados existe una evaluacion independiente y abierta**.
+
+Tres cosas que se siguen de esto:
+
+1. El primer hito de Fase 2 no es entrenar un modelo. Es **contrastar** lo que
+   CENTINELA publica —poblacion y edificaciones expuestas por banda de
+   intensidad— contra una estimacion de dano hecha por otros con otro metodo.
+   Exposicion y dano no son lo mismo, y esa distincion es justo la que el
+   sistema promete no confundir: tener las dos cifras del mismo evento permite
+   ensenar la diferencia en vez de explicarla.
+2. Microsoft uso **Overture**, la misma fuente de huellas que este proyecto.
+   Eso hace la comparacion de conteos interpretable en vez de anecdotica.
+3. **Ojo con el cubo.** El de UNEP/OCHA es CC BY-SA y no puede mezclarse con el
+   activo ODbL sin arrastrarlo. Se consume como referencia externa, no como
+   capa del activo. `resolve_bucket` ya lo impide.
+
+### T2.4 — La rama de pesos, sin cambios
+
+Sigue en pie tal como esta escrito en `p4_brigada/protocol.py`: un modelo
+afinado desde xBD/xView2 hereda CC BY-NC-SA y va al cubo `nc/`. Lo que cambia
+tras T2.1 y T2.2 es que **la rama limpia ya tiene de que alimentarse**: EMS para
+etiquetas, Umbra y Capella para imagen, las dos CC BY. La rama limpia deja de
+ser una aspiracion y pasa a ser una ruta con fuentes nombradas.
+
+---
+
 ## Sigue abierto
 
 | Tarea | Que falta |
@@ -815,5 +898,6 @@ resulta ser el cuello de botella de P0.
 | T0.8 | Motor del mapa estatico: matplotlib+contextily vs MapLibre headless |
 | T1.1 | Formatos y terminos de las redes sismologicas nacionales |
 | T1.3 | Plantillas HDX y validacion de las cabeceras HXL |
-| T2.1–T2.4 | Todo lo de la brigada de imagen (Fase 2) |
+| T2.1–T2.3 | ✅ resueltas el 24-ago-2026 (ronda 5) |
+| T2.4 | La rama de pesos limpia ya tiene fuentes; falta construirla |
 | T3.1 | Redistribucion de embeddings (Fase 3) |
