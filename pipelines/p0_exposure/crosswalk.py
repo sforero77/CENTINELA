@@ -197,12 +197,27 @@ CREATE OR REPLACE TABLE crosswalk_h3_adm (
 #: Las partes de cada municipio, numeradas. Un municipio con islas o exclaves es
 #: un MULTIPOLYGON, y `h3_polygon_wkt_to_cells` devuelve **cero** celdas ante uno
 #: —no la primera parte: cero— asi que hay que descomponerlo.
-SQL_PARTES = """
-CREATE OR REPLACE TABLE partes_admin AS
-SELECT adm2_id,
-       t.p.geom AS geom,
-       row_number() OVER (ORDER BY adm2_id) AS i
+SQL_PARTES_VACIO = """
+CREATE OR REPLACE TABLE partes_admin (adm2_id VARCHAR, geom GEOMETRY, i BIGINT)
+"""
+
+#: Y se descompone **un municipio por consulta**.
+#:
+#: `ST_Dump` de los 56 municipios de Chile a la vez agoto los 12,4 GB del runner
+#: en once segundos, antes de tocar una sola celda: DuckDB ejecuta por vectores y
+#: mantiene a la vez las listas de partes de varias provincias patagonicas, cada
+#: una con miles de islas. Uno a uno la memoria queda acotada al mayor.
+SQL_PARTES_MUNICIPIO = """
+INSERT INTO partes_admin
+SELECT adm2_id, t.p.geom, NULL
 FROM admin_geom, unnest(ST_Dump(geom)) AS t(p)
+WHERE adm2_id = ?
+"""
+
+#: Numerar despues, en una pasada barata sobre geometrias ya materializadas.
+SQL_NUMERAR_PARTES = """
+CREATE OR REPLACE TABLE partes_admin AS
+SELECT adm2_id, geom, row_number() OVER () AS i FROM partes_admin
 """
 
 #: Se rellena **por lotes de partes**, no el pais de golpe ni el municipio
@@ -320,8 +335,16 @@ def build_crosswalk(
             doble conteo de poblacion, y es preferible fallar el build.
     """
     con.execute(SQL_CROSSWALK_VACIO)
-    con.execute(SQL_PARTES)
+    con.execute(SQL_PARTES_VACIO)
+    ids = [str(f[0]) for f in con.execute("SELECT adm2_id FROM admin_geom").fetchall()]
+    for adm2_id in ids:
+        con.execute(SQL_PARTES_MUNICIPIO, [adm2_id])
+    con.execute(SQL_NUMERAR_PARTES)
     partes: int = con.execute("SELECT count(*) FROM partes_admin").fetchone()[0]
+    _log.info(
+        "geometrias descompuestas",
+        extra={"context": {"iso3": iso3, "municipios": len(ids), "partes": partes}},
+    )
     sql = SQL_POLYFILL_LOTE.format(resolution=resolution)
     for desde in range(1, partes + 1, LOTE_PARTES):
         hasta = min(desde + LOTE_PARTES - 1, partes)
