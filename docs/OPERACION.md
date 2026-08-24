@@ -233,7 +233,7 @@ En Windows no hay `make`; los objetivos del Makefile son atajos de una linea.
 | Requisito de la puerta de salida | Estado |
 |---|---|
 | G1 (Chocó) verde | ✅ |
-| G2 (Venezuela) verde | ⚠️ falta el **reporte**: el activo ya existe, falta correr el backtest de los dos mainshocks |
+| G2 (Venezuela) verde | ✅ cerrado el 24-ago-2026 |
 | Un reporte real publicado sin intervencion | ⏳ lo cierra el primer sismo |
 | Latencia medida y publicada | ⏳ idem |
 

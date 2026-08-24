@@ -132,10 +132,19 @@ def _reporte_publicado(usgs_id: str) -> dict[str, Any]:
     return datos
 
 
-#: Cifras del backtest, a fijar con la primera corrida real. Ver la constante
-#: equivalente de G1: moverlas en silencio es lo que los golden existen para
+#: Cifras del backtest, fijadas el 24-ago-2026 con la primera corrida real del
+#: camino P2→P3 en CI. Moverlas en silencio es lo que los golden existen para
 #: impedir, asi que cambiarlas exige explicar por que en el PR.
-POP_MMI7P_ESPERADO: dict[str, float] = {}
+#:
+#: Calculadas contra `ven-v0.1` reconstruido con el rescate de frontera acotado
+#: al vecino y el reparto viendo los municipios multipoligono. El desvio de
+#: poblacion nacional que hereda este pais es +4,94 % frente a la ONU, y esa
+#: parte **no** es un fallo del pipeline: GHS-POP deriva de la ronda censal de
+#: 2010 y no modela la emigracion venezolana.
+POP_MMI7P_ESPERADO: dict[str, float] = {
+    CATIA_LA_MAR: 2_276_853.971352878,
+    SAN_FELIPE: 491_580.875195766,
+}
 TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
 
 

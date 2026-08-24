@@ -64,7 +64,7 @@ La puerta de salida de la espec pide cuatro cosas:
 | Requisito | Estado |
 |---|---|
 | G1 verde | ✅ |
-| G2 verde | ⚠️ una asercion saltada: necesita el **reporte** de Venezuela. El activo ya existe; falta correr el backtest de los dos mainshocks con `centinela impact --backtest` |
+| G2 verde | ✅ cerrado el 24-ago-2026: los dos mainshocks reconstruidos, cifras congeladas, 35 pruebas golden sin una sola saltada |
 | Un reporte real publicado end-to-end **sin intervencion** | ⏳ el sistema ya opera; falta que ocurra un sismo |
 | Latencia medida y publicada | ⏳ la pagina esta publicada y espera datos reales |
 

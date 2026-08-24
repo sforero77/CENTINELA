@@ -30,10 +30,20 @@ class _JsonFormatter(logging.Formatter):
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Logger con salida JSON a stdout, idempotente entre llamadas."""
+    """Logger con salida JSON a **stderr**, idempotente entre llamadas.
+
+    A stderr y no a stdout a proposito: varios subcomandos imprimen JSON por
+    stdout para que otro proceso lo canalice —`centinela calibrar` alimenta un
+    script, `paises-candidatos` alimenta al workflow— y una linea de log en medio
+    lo vuelve imposible de parsear. Paso de verdad al recalibrar los diecinueve
+    manifests: "Extra data: line 2 column 1".
+
+    En GitHub Actions se ve igual, porque el runner mezcla los dos flujos en el
+    log de la corrida.
+    """
     logger = logging.getLogger(name)
     if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
+        handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(_JsonFormatter())
         logger.addHandler(handler)
         logger.setLevel(os.environ.get("CENTINELA_LOG_LEVEL", "INFO").upper())

@@ -19,7 +19,7 @@ referencia_oficial:
   poblacion_2025: 53000000
   fuente: "DANE, proyecciones de poblacion CNPV-2018 actualizadas (nota tecnica jul-2025)"
   tolerancia_pct: 1.0
-  medido_ghs_pop: 52601276
+  medido_ghs_pop: 52620466
   nota: >-
     La cifra medida vive en `medido_ghs_pop` y la fija cada build; la
     tolerancia sale de `centinela calibrar`, que la estrecha con lo medido y

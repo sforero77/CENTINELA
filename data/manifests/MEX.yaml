@@ -35,7 +35,7 @@ referencia_oficial:
   poblacion_2025: 131946900
   fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
   tolerancia_pct: 1.5
-  medido_ghs_pop: 131015556
+  medido_ghs_pop: 130288322
   nota: >-
     La cifra medida vive en `medido_ghs_pop` y la fija cada build; la
     tolerancia sale de `centinela calibrar`, que la estrecha con lo medido y
