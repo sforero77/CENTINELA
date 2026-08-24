@@ -80,6 +80,15 @@ def plan_build(iso3: str, *, manifests_dir: Path | None = None, out_dir: Path) -
 #: crosswalk: una celda sin edificios registrados es una celda con cero
 #: edificios, no una celda ausente. Y se descartan las celdas sin nada — no
 #: aportan al reporte y multiplicarian por tres el tamano del parquet.
+#:
+#: **"Sin nada" tiene que significar sin nada de las nueve capas.** El filtro
+#: miraba solo poblacion, edificaciones y vias, asi que una celda cuyo unico
+#: contenido fuera una escuela o un hospital se descartaba con el equipamiento
+#: dentro. Se detecto comparando dos corridas: al dejar de contar los senderos
+#: como via, 28 sedes educativas desaparecieron del activo — estaban en celdas
+#: que solo se salvaban por un sendero. Una escuela remota, sin poblacion
+#: censada alrededor y sin via mapeada, es justo el sitio que un reporte de
+#: exposicion no puede permitirse perder.
 SQL_EXPOSURE = """
 CREATE OR REPLACE TABLE exposure_h3 AS
 SELECT
@@ -118,7 +127,11 @@ LEFT JOIN edu_h3        e USING (h3_08)
 LEFT JOIN roads_h3      r USING (h3_08)
 WHERE COALESCE(p.pop_total, 0) > 0
    OR COALESCE(b.bld_count, 0) > 0
-   OR COALESCE(r.road_km_primary + r.road_km_secondary + r.road_km_other, 0) > 0
+   OR COALESCE(r.road_km_primary, 0) + COALESCE(r.road_km_secondary, 0)
+      + COALESCE(r.road_km_other, 0) > 0
+   OR COALESCE(h.health_count, 0) > 0
+   OR COALESCE(e.edu_count, 0) > 0
+   OR COALESCE(s.built_m2, 0) > 0
 """
 
 #: Banderas de calidad de §6.4. Se **publican**, no se ocultan: una celda con
