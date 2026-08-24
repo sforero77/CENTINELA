@@ -71,7 +71,7 @@ queda corto justo donde vive la poblacion mas expuesta.
 
 ## 3. Lo que puede salir mal y no lo parece
 
-Seis cosas que producen cifras plausibles y equivocadas. Cada una tiene ya su
+Siete cosas que producen cifras plausibles y equivocadas. Cada una tiene ya su
 guardia; estan aqui para que se reconozcan si alguna vez fallan.
 
 **Una capa vacia se publica como cero.** No hace falta un bug: basta con no
@@ -95,6 +95,13 @@ eso existe `hdx_resource`. De los 19 paises, solo Colombia lo necesita.
 republicar el activo hay una ventana. La vista de exposicion rellena las
 columnas que falten para que el reporte salga igual, con una **ausencia** y no
 un cero.
+
+**El rescate de frontera puede reclamar gente del pais vecino.** Es el sospechoso
+confirmado del sesgo de poblacion: en Paraguay el 6,1 % del total entra por
+celdas rescatadas y explica el 93 % de su desvio frente a la ONU. Cada build
+registra ahora `pop_rescatada_pct`; **si sube de un 1-2 % en un pais con costa, o
+de casi nada en uno interior, hay que mirarlo**. Pendiente de corregir acotando
+el rescate a celdas que no caigan dentro de otro pais.
 
 **Un NaN pasa por donde un cero no pasa.** `bool(float('nan'))` es `True`, asi
 que cualquier guardia escrita como `if not valor` lo deja pasar. Ecuador

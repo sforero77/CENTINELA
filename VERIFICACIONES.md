@@ -300,6 +300,53 @@ ahora que el valor sea finito, y la agregacion descarta longitudes infinitas o
 mayores de 2.000 km — Overture parte las vias en segmentos mucho mas cortos, asi
 que por encima de eso no hay carretera sino geometria rota.
 
+### El sesgo de poblacion era nuestro, no de GHS-POP
+
+Medidos los 18 paises, los desvios de GHS-POP frente a World Population
+Prospects van de **-0,80 % (Chile) a +6,59 % (Paraguay)**, y quince de dieciocho
+son positivos. Eso no es dispersion: es un sesgo con direccion.
+
+Dos explicaciones se propusieron y **las dos eran falsas**:
+
+1. *"Se desvian los paises sin censo reciente."* Uruguay censo en 2023 y se
+   desvia +6,28 %, casi lo mismo que Venezuela.
+2. *"GHS-POP sobrestima de forma sistematica."* Se formulo viendo quince
+   positivos seguidos; faltaban Chile, Mexico y Colombia —cuyas corridas se
+   lanzaron antes de que el workflow pusiera el ISO3 en el nombre— y los tres
+   resultaron ser los negativos.
+
+Lo que si ordena los datos es **cuanta frontera tiene cada pais en proporcion a
+su area**. Se instrumento el rescate de celdas fronterizas para medirlo, y
+Paraguay —interior, todo frontera— lo confirmo:
+
+| | |
+|---|---:|
+| Poblacion rescatada | 459.518 |
+| Total del activo | 7.474.922 |
+| **Fraccion rescatada** | **6,147 %** |
+| Desvio frente a la ONU | 6,585 % |
+| **Total descontando el rescate** | **7.015.404** |
+| Referencia de la ONU | 7.013.078 |
+| **Desvio corregido** | **+0,03 %** |
+
+**El rescate explica el 93 % del exceso.** Sin el, la cifra clava la referencia.
+
+La causa es geometrica y evidente una vez medida: la cota del rescate es 0,02°
+(~2,2 km), y en un pais interior **cada kilometro de perimetro es frontera**, de
+modo que se reclama una franja de 2,2 km de Brasil, Argentina y Bolivia
+alrededor de todo el pais. Chile y Mexico salen negativos porque su rescate es
+sobre todo **mar**, que es el caso para el que se diseno y donde es correcto.
+
+Es el mismo fallo que ya se corrigio una vez para Colombia —rescatar sin acotar
+llevo la poblacion nacional de 52,6 a 167 millones— pero en pequeno, dentro de
+la cota, y por eso invisible durante meses.
+
+**La correccion que se perfila:** rescatar una celda solo si su centro no cae
+dentro de otro pais. Una celda cuyo centro esta en tierra brasilena es de
+Brasil, por cerca que este de la linea. Se puede resolver con los poligonos de
+pais de `division_area` de Overture, los mismos ocho ficheros que se leyeron
+para medir las cajas envolventes.
+
 ### El COD-AB publica dos nomenclaturas, no una
 
 Ecuador fue el primer pais construido con el COD-AB como unica fuente
