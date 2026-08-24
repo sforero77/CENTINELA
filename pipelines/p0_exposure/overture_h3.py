@@ -236,12 +236,19 @@ def load_neighbours(
             WHERE subtype = '{COUNTRY_SUBTYPE}'
               AND country IS NOT NULL
               AND country <> '{iso2_propio}'
-              AND {bbox_predicate(bbox)}
+              AND {bbox_predicate(bbox, intersecta=True)}
             """
         )
     n: int = con.execute(f"SELECT count(*) FROM {tabla}").fetchone()[0]
-    _log.info(
-        "paises vecinos cargados para acotar el rescate",
+    # Cero vecinos casi nunca es la verdad. En LATAM solo Cuba no toca a nadie
+    # por tierra, y hasta su caja alcanza a Haiti y Jamaica. Si sale cero, lo
+    # normal es que el filtro este mal, no que el pais este aislado — asi se
+    # descubrio que la poda por contencion descartaba a Brasil entero.
+    registrar = _log.info if n else _log.warning
+    registrar(
+        "paises vecinos cargados para acotar el rescate"
+        if n
+        else "ningun pais vecino en la caja: el rescate sera tan generoso como antes",
         extra={"context": {"tabla": tabla, "poligonos": n, "excluido": iso2_propio}},
     )
     return n

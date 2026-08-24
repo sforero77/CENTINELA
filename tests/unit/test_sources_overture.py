@@ -148,3 +148,60 @@ def test_resolver_abre_un_item_por_fichero() -> None:
     urls = resolve_data_urls(fetcher, ficheros)
     assert len(urls) == len(ficheros)
     assert all(u.endswith(".parquet") for u in urls)
+
+
+# --- Podar por contencion vs por interseccion ------------------------------
+#
+# Medido contra la entrega 2026-08-19.0 de Overture, sobre la caja de Paraguay:
+#
+#   contencion    -> PY
+#   interseccion  -> AR, BO, BR, PY, FJ
+#
+# Los tres vecinos de Paraguay solo aparecen con interseccion. Como el pais
+# propio se excluye, con contencion la tabla de vecinos quedaba vacia y el
+# rescate seguia reclamando gente de Brasil sin que nada fallara.
+#
+# (FJ sale porque Fiji cruza el antimeridiano y su caja abarca el globo. No
+# estorba: ningun punto paraguayo cae dentro de un poligono fiyiano.)
+
+
+def _caja_de_prueba() -> BBox:
+    """Una caja pequena, como la de un pais mediano."""
+    return BBox(lon_min=-63.0, lat_min=-28.0, lon_max=-54.0, lat_max=-19.0)
+
+
+@pytest.mark.parametrize(
+    ("nombre", "caja_rasgo", "contiene", "interseca"),
+    [
+        # Un edificio dentro del pais: lo ven los dos.
+        ("edificio dentro", (-57.6, -25.3, -57.6, -25.3), True, True),
+        # El vecino grande: empieza fuera de la caja y ocupa media caja. Es el
+        # caso de Brasil frente a Paraguay, y el que la contencion pierde.
+        ("vecino grande", (-74.0, -34.0, -34.0, 5.3), False, True),
+        # Un pais lejano no lo ve ninguno de los dos.
+        ("pais lejano", (-118.4, 14.5, -86.7, 32.7), False, False),
+    ],
+)
+def test_contencion_pierde_los_rasgos_mas_grandes_que_la_caja(
+    nombre: str,
+    caja_rasgo: tuple[float, float, float, float],
+    contiene: bool,
+    interseca: bool,
+) -> None:
+    import duckdb
+
+    from pipelines.p0_exposure.sources.overture import bbox_predicate
+
+    con = duckdb.connect()
+    xmin, ymin, xmax, ymax = caja_rasgo
+    con.execute(
+        "CREATE TABLE rasgos AS SELECT "
+        f"{{'xmin': {xmin}, 'ymin': {ymin}, 'xmax': {xmax}, 'ymax': {ymax}}} AS bbox"
+    )
+    caja = _caja_de_prueba()
+
+    def cuenta(pred: str) -> int:
+        return int(con.execute(f"SELECT count(*) FROM rasgos WHERE {pred}").fetchone()[0])
+
+    assert bool(cuenta(bbox_predicate(caja))) is contiene, nombre
+    assert bool(cuenta(bbox_predicate(caja, intersecta=True))) is interseca, nombre

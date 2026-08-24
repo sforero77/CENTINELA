@@ -133,10 +133,34 @@ BBOX_PREDICATE = (
     "bbox.xmin BETWEEN {lon_min} AND {lon_max} AND bbox.ymin BETWEEN {lat_min} AND {lat_max}"
 )
 
+#: El mismo filtro, pero por **interseccion** en vez de contencion.
+#:
+#: :data:`BBOX_PREDICATE` mira solo la esquina inferior izquierda del rasgo, y
+#: eso vale mientras el rasgo sea pequeno frente a la caja: un edificio o un
+#: tramo de via que empieza dentro del pais, esta dentro del pais.
+#:
+#: **Deja de valer en cuanto el rasgo es mas grande que la caja.** Al cargar los
+#: paises limitrofes de Paraguay no devolvio ninguno: la esquina de Brasil esta
+#: en -73,99, muy al oeste de la caja paraguena, aunque Brasil ocupe media caja.
+#: La consulta corrio, devolvio cero filas y el build siguio sin avisar de nada
+#: —el modo de fallo que este proyecto persigue— hasta que el log de vecinos
+#: dijo ``poligonos: 0``.
+BBOX_INTERSECTS_PREDICATE = (
+    "bbox.xmin <= {lon_max} AND bbox.xmax >= {lon_min} "
+    "AND bbox.ymin <= {lat_max} AND bbox.ymax >= {lat_min}"
+)
 
-def bbox_predicate(bbox: BBox) -> str:
-    """Predicado SQL de poda para DuckDB."""
-    return BBOX_PREDICATE.format(
+
+def bbox_predicate(bbox: BBox, *, intersecta: bool = False) -> str:
+    """Predicado SQL de poda para DuckDB.
+
+    Args:
+        intersecta: usa interseccion en vez de contencion. Obligatorio cuando el
+            rasgo puede ser mayor que la caja —un pais, una region—; innecesario
+            y mas caro de podar para edificaciones y vias.
+    """
+    plantilla = BBOX_INTERSECTS_PREDICATE if intersecta else BBOX_PREDICATE
+    return plantilla.format(
         lon_min=bbox.lon_min,
         lon_max=bbox.lon_max,
         lat_min=bbox.lat_min,
