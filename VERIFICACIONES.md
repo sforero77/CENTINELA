@@ -281,6 +281,25 @@ principal del reporte.
 +6,30 %. Un mantenedor de pais con proyecciones del INE posteriores a 2011 puede
 sustituir la referencia y estrechar la tolerancia.
 
+### Una geometria rota deja el pais entero en NaN
+
+Ecuador construyo y publico un activo con `road_km: NaN`. La cadena entera:
+
+1. Overture trae una geometria degenerada cuya longitud esferoidal no es finita.
+2. El filtro `ST_Length_Spheroid(geometry) > 0` descarta el cero y el NaN, pero
+   **no el infinito**.
+3. `sum()` propaga: un solo segmento roto y el total nacional es NaN.
+4. `validate_layer_coverage` no lo detuvo porque comprobaba `if not valor`, y
+   **`bool(float('nan'))` es `True`**. Para la guardia, la capa "aportaba".
+
+Un NaN es peor que un cero: el cero es una afirmacion falsa pero acotada, y el
+NaN contamina toda operacion que lo toque hasta acabar impreso en el reporte.
+
+Corregido midiendo: Ecuador pasa de `NaN` a **133.385 km**. La guardia exige
+ahora que el valor sea finito, y la agregacion descarta longitudes infinitas o
+mayores de 2.000 km — Overture parte las vias en segmentos mucho mas cortos, asi
+que por encima de eso no hay carretera sino geometria rota.
+
 ### El COD-AB publica dos nomenclaturas, no una
 
 Ecuador fue el primer pais construido con el COD-AB como unica fuente

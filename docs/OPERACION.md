@@ -71,7 +71,7 @@ queda corto justo donde vive la poblacion mas expuesta.
 
 ## 3. Lo que puede salir mal y no lo parece
 
-Cinco cosas que producen cifras plausibles y equivocadas. Cada una tiene ya su
+Seis cosas que producen cifras plausibles y equivocadas. Cada una tiene ya su
 guardia; estan aqui para que se reconozcan si alguna vez fallan.
 
 **Una capa vacia se publica como cero.** No hace falta un bug: basta con no
@@ -95,6 +95,14 @@ eso existe `hdx_resource`. De los 19 paises, solo Colombia lo necesita.
 republicar el activo hay una ventana. La vista de exposicion rellena las
 columnas que falten para que el reporte salga igual, con una **ausencia** y no
 un cero.
+
+**Un NaN pasa por donde un cero no pasa.** `bool(float('nan'))` es `True`, asi
+que cualquier guardia escrita como `if not valor` lo deja pasar. Ecuador
+publico un activo con `road_km: NaN` por eso, y bastaba **una** geometria
+degenerada para envenenar el total del pais: la suma propaga el NaN a todo.
+`validate_layer_coverage` comprueba ahora que el valor sea finito, no solo que
+no sea cero, y la agregacion de vias descarta longitudes infinitas o mayores de
+2.000 km.
 
 **Un sismo fuera del pais del activo.** P1 vigila toda LATAM y el activo es por
 pais. Si se calcula un sismo peruano contra celdas colombianas, el join no
