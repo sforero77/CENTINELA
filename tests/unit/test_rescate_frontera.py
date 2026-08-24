@@ -151,3 +151,62 @@ def test_sin_tabla_de_vecinos_el_rescate_sigue_funcionando(escenario: Any) -> No
     _sembrar_celda(escenario, -0.005, 0.5, 800.0)
     rescue_unassigned(escenario, tabla_datos="pop_h3", max_grados=0.02)
     assert escenario.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0] == 1
+
+
+# --- El reparto tiene que ver las islas ------------------------------------
+
+
+@pytest.mark.geo
+def test_un_municipio_multipoligono_reparte_sus_dos_partes() -> None:
+    """`h3_polygon_wkt_to_cells` devuelve CERO celdas ante un MULTIPOLYGON.
+
+    No la primera parte: cero. Un municipio con una isla, un exclave o un trozo
+    separado por un rio es un MULTIPOLYGON, asi que sin `ST_Dump` no aportaba
+    una sola celda al reparto.
+
+    No se noto porque el rescate lo tapaba, y la cifra nacional salia bien por
+    un camino que no era el suyo. Lo delato Uruguay, rescatando el 48 % de su
+    poblacion.
+    """
+    from pipelines.p0_exposure.crosswalk import SQL_POLYFILL
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE TABLE admin_geom AS SELECT 'X' AS adm2_id, ST_GeomFromText("
+        "'MULTIPOLYGON(((0 0, 1 0, 1 1, 0 1, 0 0)), ((5 5, 6 5, 6 6, 5 6, 5 5)))'"
+        ") AS geom"
+    )
+    con.execute(SQL_POLYFILL.format(resolution=8))
+
+    def celdas_en(lon: float, lat: float) -> int:
+        return int(
+            con.execute(
+                "SELECT count(*) FROM crosswalk_h3_adm WHERE h3_08 = "
+                f"h3_latlng_to_cell({lat}, {lon}, 8)::UBIGINT"
+            ).fetchone()[0]
+        )
+
+    # Una celda de cada parte: las dos tienen que estar.
+    assert celdas_en(0.5, 0.5) == 1, "la primera parte no entro en el reparto"
+    assert celdas_en(5.5, 5.5) == 1, "la segunda parte no entro en el reparto"
+
+
+@pytest.mark.geo
+def test_el_reparto_no_marca_como_rescatado_lo_que_reparte() -> None:
+    """`rescatada = TRUE` significa "esto es una aproximacion, auditalo".
+
+    Puesto sobre medio pais no significa nada, y ese era el coste real del
+    fallo del MULTIPOLYGON.
+    """
+    from pipelines.p0_exposure.crosswalk import SQL_POLYFILL
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE TABLE admin_geom AS SELECT 'X' AS adm2_id, ST_GeomFromText("
+        "'MULTIPOLYGON(((0 0, 1 0, 1 1, 0 1, 0 0)), ((5 5, 6 5, 6 6, 5 6, 5 5)))'"
+        ") AS geom"
+    )
+    con.execute(SQL_POLYFILL.format(resolution=8))
+    assert con.execute("SELECT count(*) FROM crosswalk_h3_adm WHERE rescatada").fetchone()[0] == 0

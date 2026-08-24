@@ -169,14 +169,33 @@ def prorate(value: float, rows: Iterable[CrosswalkRow]) -> dict[str, float]:
 # --- SQL del reparto -------------------------------------------------------
 
 #: Paso 1: cada municipio reclama las celdas cuyo centro contiene.
+#:
+#: **``ST_Dump`` no es cosmetico.** ``h3_polygon_wkt_to_cells`` devuelve **cero**
+#: celdas ante un MULTIPOLYGON — no la primera parte: cero. Y un municipio con
+#: una isla, un exclave o un trozo separado por un rio es un MULTIPOLYGON, asi
+#: que sin descomponerlo no aportaba una sola celda al reparto.
+#:
+#: No se noto porque el paso 2 lo tapaba: esas celdas quedaban "sin asignar",
+#: caian dentro del pais, y el rescate las asignaba al municipio mas cercano —
+#: que para un punto dentro del municipio esta a distancia cero, o sea el
+#: correcto. La cifra nacional salia bien por un camino que no era el suyo.
+#:
+#: Lo delato Uruguay: rescataba el **48 % de su poblacion**, mas que Chile con
+#: sus 4.000 km de costa. No era costa, eran departamentos multipoligono
+#: entrando enteros por la puerta de atras. El coste real era el marcador:
+#: ``rescatada = TRUE`` quiere decir "esto es una aproximacion, auditalo", y
+#: puesto sobre medio pais no quiere decir nada.
+#:
+#: DISTINCT porque dos partes del mismo municipio no deben producir la celda
+#: dos veces si llegaran a tocarse.
 SQL_POLYFILL = """
 CREATE OR REPLACE TABLE crosswalk_h3_adm AS
-SELECT
-    unnest(h3_polygon_wkt_to_cells(ST_AsText(geom), {resolution})) AS h3_08,
+SELECT DISTINCT
+    unnest(h3_polygon_wkt_to_cells(ST_AsText(parte.geom), {resolution})) AS h3_08,
     adm2_id,
     1.0 AS frac_area,
     FALSE AS rescatada
-FROM admin_geom
+FROM admin_geom, unnest(ST_Dump(geom)) AS t(parte)
 """
 
 #: Diccionario administrativo que consume el reporte (§3.2).
