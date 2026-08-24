@@ -274,14 +274,30 @@ def validate_layer_coverage(con: Any) -> list[str]:
     esa ambiguedad se resuelve fallando: es preferible no publicar activo a
     publicar uno que informa cero donde no midio nada.
     """
+    import math
+
     columnas = ", ".join(expresion for expresion, _, _ in REQUIRED_COVERAGE)
     fila = con.execute(f"SELECT {columnas} FROM exposure_h3").fetchone()
-    problemas = [
-        f"La capa '{capa}' no aporto nada al activo: {nombre} suma 0. "
-        f"Se construyo vacia o no se construyo."
-        for (_, nombre, capa), valor in zip(REQUIRED_COVERAGE, fila, strict=True)
-        if not valor
-    ]
+
+    problemas: list[str] = []
+    for (_, nombre, capa), valor in zip(REQUIRED_COVERAGE, fila, strict=True):
+        numero = float(valor) if valor is not None else 0.0
+        if not math.isfinite(numero):
+            # `bool(float('nan'))` es True, asi que una comprobacion de
+            # veracidad deja pasar un NaN. Ecuador publico un activo con
+            # `road_km: NaN` justo por eso: la capa "aportaba" y la cifra era
+            # basura. Un NaN es peor que un cero — se propaga a todo lo que
+            # toca y el reporte publicaria "NaN km de via".
+            problemas.append(
+                f"La capa '{capa}' produjo un valor no finito: {nombre} = {numero}. "
+                f"Casi siempre viene de una geometria degenerada; un NaN se propaga "
+                f"y acabaria impreso en el reporte."
+            )
+        elif numero == 0.0:
+            problemas.append(
+                f"La capa '{capa}' no aporto nada al activo: {nombre} suma 0. "
+                f"Se construyo vacia o no se construyo."
+            )
     if not problemas:
         _log.info(
             "todas las capas requeridas aportan al activo",

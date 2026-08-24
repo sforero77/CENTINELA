@@ -33,8 +33,20 @@ CELDA_COMPLETA = {
 
 def _exposure(con: Any, **anulados: float) -> None:
     """Materializa ``exposure_h3`` con una fila, anulando las capas indicadas."""
+    import math
+
+    def literal(valor: float) -> str:
+        """SQL para el valor. DuckDB no acepta `nan` ni `inf` a secas."""
+        if isinstance(valor, float) and not math.isfinite(valor):
+            return (
+                "'NaN'::DOUBLE"
+                if math.isnan(valor)
+                else f"'{'-' if valor < 0 else ''}Infinity'::DOUBLE"
+            )
+        return str(valor)
+
     fila = {**CELDA_COMPLETA, **anulados}
-    columnas = ", ".join(f"{valor} AS {nombre}" for nombre, valor in fila.items())
+    columnas = ", ".join(f"{literal(valor)} AS {nombre}" for nombre, valor in fila.items())
     con.execute(f"CREATE OR REPLACE TABLE exposure_h3 AS SELECT {columnas}")
 
 
@@ -95,3 +107,35 @@ def test_todas_las_capas_requeridas_estan_cubiertas() -> None:
         f"'divisions' se exceptua porque sin ella no hay crosswalk y el build "
         f"ya falla antes de llegar aqui."
     )
+
+
+# --- Valores no finitos -----------------------------------------------------
+
+
+@pytest.mark.geo
+def test_un_nan_en_una_capa_detiene_el_build(con: Any) -> None:
+    """`bool(float('nan'))` es True, asi que una comprobacion de veracidad lo deja pasar.
+
+    Ecuador publico un activo con `road_km: NaN` exactamente por eso: la capa
+    "aportaba" y la cifra era basura. Un NaN es peor que un cero — se propaga y
+    el reporte acabaria imprimiendo "NaN km de via".
+    """
+    _exposure(con, road_km_primary=float("nan"))
+    problemas = validate_layer_coverage(con)
+    assert problemas and "no finito" in problemas[0]
+    assert "roads" in problemas[0]
+
+
+@pytest.mark.geo
+def test_un_infinito_tambien_detiene_el_build(con: Any) -> None:
+    """El filtro `> 0` descarta el NaN pero no el infinito."""
+    _exposure(con, built_m2=float("inf"))
+    problemas = validate_layer_coverage(con)
+    assert problemas and "no finito" in problemas[0]
+
+
+@pytest.mark.geo
+def test_el_mensaje_distingue_no_finito_de_vacio(con: Any) -> None:
+    """Son dos averias distintas y se arreglan en sitios distintos."""
+    _exposure(con, bld_count=0)
+    assert "no aporto nada" in validate_layer_coverage(con)[0]

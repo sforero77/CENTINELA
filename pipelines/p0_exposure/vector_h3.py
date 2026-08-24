@@ -35,6 +35,13 @@ LINE_STEP_KM = 0.2
 #: y unas pocas geometrias patologicas dominarian el coste de todo el build.
 MAX_POINTS_PER_LINE = 2000
 
+#: Longitud maxima creible de un segmento de via, en metros. La carretera mas
+#: larga de un tramo continuo en LATAM no llega a 2.000 km, y Overture parte las
+#: vias en segmentos mucho mas cortos: cualquier cosa por encima es una
+#: geometria rota, no una via. Se descarta en vez de dejarla contaminar el total
+#: del pais.
+MAX_LINE_LENGTH_M = 2_000_000.0
+
 
 @dataclass(frozen=True, slots=True)
 class VectorSum:
@@ -219,7 +226,14 @@ def aggregate_lines_to_h3(
             SELECT geometry, clase,
                    ST_Length_Spheroid(geometry) / 1000.0 AS km
             FROM ({consulta_fuente})
+            -- `> 0` descarta el cero y el NaN, pero **no el infinito**, y una
+            -- sola geometria degenerada envenena el total: inf o NaN se
+            -- propagan por la suma y el pais entero acaba con `road_km: NaN`.
+            -- Le paso a Ecuador. `isfinite` es la comprobacion que hacia falta;
+            -- el tope de longitud descarta lo que no puede ser una via real.
             WHERE ST_Length_Spheroid(geometry) > 0
+              AND isfinite(ST_Length_Spheroid(geometry))
+              AND ST_Length_Spheroid(geometry) < {MAX_LINE_LENGTH_M}
         ),
         con_paso AS (
             SELECT geometry, clase, km,

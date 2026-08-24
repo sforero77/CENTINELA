@@ -168,3 +168,27 @@ def test_las_clases_excluidas_son_solo_las_sin_vehiculo() -> None:
         assert clase not in NON_VEHICLE_CLASSES
     for clase in ("footway", "steps", "path"):
         assert clase in NON_VEHICLE_CLASSES
+
+
+@pytest.mark.geo
+def test_una_geometria_absurdamente_larga_no_envenena_el_total(con: Any, tmp_path: Path) -> None:
+    """Una sola via rota bastaba para dejar el pais entero en NaN.
+
+    `> 0` descarta el cero y el NaN pero no el infinito, y la suma propaga
+    cualquiera de los dos. Le paso a Ecuador: `road_km: NaN` en todo el activo.
+    """
+    from pipelines.p0_exposure.vector_h3 import MAX_LINE_LENGTH_M
+
+    rota = "LINESTRING(-179.9 0.0, 179.9 0.0)"  # da la vuelta al mundo
+    ruta = _parquet(
+        con,
+        tmp_path / "a.parquet",
+        [(TRONCAL, "road", "motorway"), (rota, "road", "motorway")],
+    )
+    caja_ancha = BBox(lon_min=-180.0, lat_min=-1.0, lon_max=180.0, lat_max=6.0)
+    resumen = aggregate_roads_to_h3(con, [ruta], bbox=caja_ancha, tabla="vias")
+
+    import math
+
+    assert math.isfinite(resumen.total), f"el total salio {resumen.total}"
+    assert resumen.total * 1000.0 < MAX_LINE_LENGTH_M
