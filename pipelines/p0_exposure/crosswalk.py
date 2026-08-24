@@ -299,41 +299,62 @@ RESCUE_MAX_DEGREES = 0.02
 #: paises tiene, por definicion, un municipio colombiano que es el mas cercano.
 #: La primera version de este paso rescato 832.506 celdas y la poblacion
 #: nacional paso de 52,6 a 167 millones.
+#: Paso 2a: las celdas con datos que el polyfill dejo fuera. Son todas las del
+#: recorte de GHS-POP, que cubre tambien a los vecinos: para Chile eso incluye
+#: media Argentina, Bolivia y Peru.
+SQL_CANDIDATAS = """
+CREATE OR REPLACE TEMP TABLE candidatas_rescate AS
+SELECT DISTINCT d.h3_08,
+       h3_cell_to_lng(d.h3_08) AS lng,
+       h3_cell_to_lat(d.h3_08) AS lat
+FROM {tabla_datos} d
+WHERE d.h3_08 NOT IN (SELECT h3_08 FROM crosswalk_h3_adm)
+"""
+
+#: Paso 2b: acotar a las que estan **junto al pais**, y materializar.
+#:
+#: El orden importa y costo dos builds de Chile. Rescatar por "municipio mas
+#: cercano" sin acotar antes reclama todo el continente: la primera version de
+#: este paso rescato 832.506 celdas y la poblacion de Colombia paso de 52,6 a
+#: 167 millones.
+#:
+#: **Y materializar importa igual.** Cuando el descarte de vecinos vivia en el
+#: mismo WHERE que esta cota, el planificador no garantizaba cual evaluaba
+#: primero, y probar millones de celdas argentinas contra un multipoligono
+#: continental mato al runner por memoria — dos veces, una con excepcion de
+#: DuckDB y otra llevandose el proceso entero por delante. Separado en dos
+#: pasos, al segundo solo llegan las que sobrevivieron al primero: de millones
+#: a decenas de miles.
+SQL_ACOTAR_AL_PAIS = """
+CREATE OR REPLACE TEMP TABLE junto_al_pais AS
+SELECT * FROM candidatas_rescate
+WHERE ST_DWithin(ST_Point(lng, lat), (SELECT geom FROM pais), {max_grados})
+"""
+
+#: Paso 2c: descartar las que caen dentro de otro pais.
+#:
+#: Sin esto el rescate reclama una franja del ancho de la cota alrededor de toda
+#: la frontera terrestre: medido, Paraguay —interior— se llevaba 459.518
+#: personas de Brasil, Argentina y Bolivia, el 93 % de su desvio frente a la ONU.
+#:
+#: La magnitud del rescate no distingue lo correcto de lo contaminado: Chile
+#: rescata el 31 % de su poblacion y esta bien, porque su rescate es mar. Lo que
+#: distingue es **sobre que esta la celda**.
+#:
+#: El COALESCE no es decorativo: sin vecinos `ST_Union_Agg` devuelve NULL,
+#: `ST_Within` devuelve NULL, y `DELETE ... WHERE NULL` no borra nada — que es
+#: justo lo que se quiere. Se deja explicito para que nadie lo "arregle".
+SQL_DESCARTAR_VECINOS = """
+DELETE FROM junto_al_pais
+WHERE COALESCE(
+    ST_Within(ST_Point(lng, lat), (SELECT geom FROM vecinos_union)),
+    FALSE
+)
+"""
+
+#: Paso 2d: a cada superviviente, el municipio mas cercano dentro de la cota.
 SQL_RESCATE = """
 INSERT INTO crosswalk_h3_adm
-WITH sin_asignar AS (
-    SELECT DISTINCT d.h3_08,
-           h3_cell_to_lng(d.h3_08) AS lng,
-           h3_cell_to_lat(d.h3_08) AS lat
-    FROM {tabla_datos} d
-    WHERE d.h3_08 NOT IN (SELECT h3_08 FROM crosswalk_h3_adm)
-),
-junto_al_pais AS (
-    SELECT s.*
-    FROM sin_asignar s
-    WHERE ST_DWithin(ST_Point(s.lng, s.lat), (SELECT geom FROM pais), {max_grados})
-      -- Y que no caiga dentro de otro pais. Sin esto el rescate reclama una
-      -- franja del ancho de la cota alrededor de toda la frontera terrestre:
-      -- medido, Paraguay —interior— se llevaba 459.518 personas de Brasil,
-      -- Argentina y Bolivia, el 93 % de su desvio frente a la ONU.
-      --
-      -- La magnitud del rescate no distingue lo correcto de lo contaminado:
-      -- Chile rescata el 31 % de su poblacion y esta bien, porque su rescate es
-      -- mar. Lo que distingue es **sobre que esta la celda**.
-      --
-      -- Se compara contra **una** geometria unida, igual que con `pais`, y no
-      -- con un EXISTS sobre la tabla: el EXISTS hace un bucle anidado de cada
-      -- celda candidata contra cada poligono de pais, y con Chile —59.179
-      -- celdas contra once multipoligonos— eso agoto los 12,4 GB del runner.
-      --
-      -- El COALESCE no es decorativo: sin vecinos `ST_Union_Agg` devuelve NULL,
-      -- `ST_Within` devuelve NULL y la fila se filtraria. O sea que sin vecinos
-      -- no se rescataria nada: el fallo opuesto, y peor.
-      AND NOT COALESCE(
-          ST_Within(ST_Point(s.lng, s.lat), (SELECT geom FROM vecinos_union)),
-          FALSE
-      )
-)
 SELECT j.h3_08, m.adm2_id, 1.0, TRUE
 FROM junto_al_pais j
 JOIN LATERAL (
@@ -384,7 +405,14 @@ def rescue_unassigned(
         """
     )
     antes: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
-    con.execute(SQL_RESCATE.format(tabla_datos=tabla_datos, max_grados=max_grados))
+
+    con.execute(SQL_CANDIDATAS.format(tabla_datos=tabla_datos))
+    candidatas: int = con.execute("SELECT count(*) FROM candidatas_rescate").fetchone()[0]
+    con.execute(SQL_ACOTAR_AL_PAIS.format(max_grados=max_grados))
+    junto: int = con.execute("SELECT count(*) FROM junto_al_pais").fetchone()[0]
+    con.execute(SQL_DESCARTAR_VECINOS)
+    tras_vecinos: int = con.execute("SELECT count(*) FROM junto_al_pais").fetchone()[0]
+    con.execute(SQL_RESCATE.format(max_grados=max_grados))
     despues: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
     rescatadas = despues - antes
 
@@ -401,6 +429,11 @@ def rescue_unassigned(
             "context": {
                 "celdas": rescatadas,
                 "max_grados": max_grados,
+                # El embudo, para que se vea de un vistazo si el descarte de
+                # vecinos hizo algo o paso de largo.
+                "candidatas": candidatas,
+                "junto_al_pais": junto,
+                "descartadas_por_vecino": junto - tras_vecinos,
                 **poblacion,
             }
         },

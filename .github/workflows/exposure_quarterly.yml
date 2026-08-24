@@ -22,6 +22,10 @@ permissions:
 jobs:
   construir:
     runs-on: ubuntu-latest
+    # Un build de un pais grande ronda los 45 min. Con dos horas hay margen de
+    # sobra, y una corrida colgada falla en un plazo conocido en vez de ocupar
+    # el runner seis horas: el default de GitHub son 360 min.
+    timeout-minutes: 120
     if: github.repository == 'sforero77/CENTINELA'
     env:
       # Fase 0 construye un solo pais. Cuando Fase 1 traiga los siete, esto

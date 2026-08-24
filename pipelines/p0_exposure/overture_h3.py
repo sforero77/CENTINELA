@@ -206,6 +206,15 @@ def aggregate_roads_to_h3(
 COUNTRY_SUBTYPE = "country"
 
 
+#: Tolerancia con la que se simplifican los poligonos de pais, en grados.
+#:
+#: 0,001 grados son unos 110 m: veinte veces mas fino que la cota del rescate
+#: (0,02 grados, ~2,2 km), asi que no cambia ninguna decision, y baja el numero
+#: de vertices en ordenes de magnitud. Una frontera puede desplazarse hasta
+#: 110 m — menos de una septima parte de una celda r8.
+SIMPLIFICACION_GRADOS = 0.001
+
+
 def load_neighbours(
     con: Any,
     urls: list[str],
@@ -237,6 +246,12 @@ def load_neighbours(
     caja del pais que se construye. Sin recortar, el rescate de Chile —59.179
     celdas candidatas contra once multipoligonos continentales— agoto los 12,4
     GB de memoria del runner.
+
+    **Y simplificados.** La tolerancia es 0,001 grados —unos 110 m— veinte veces
+    mas fina que la cota del rescate (0,02 grados, ~2,2 km), asi que no cambia
+    ninguna decision, y baja el numero de vertices en ordenes de magnitud. Una
+    frontera puede desplazarse hasta 110 m: menos de una septima parte de una
+    celda r8.
     """
     ensure_httpfs(con)
     con.execute(f"DROP TABLE IF EXISTS {tabla}")
@@ -246,10 +261,13 @@ def load_neighbours(
             f"""
             INSERT INTO {tabla}
             SELECT country,
-                   ST_Intersection(
-                       geometry,
-                       ST_MakeEnvelope({bbox.lon_min}, {bbox.lat_min},
-                                       {bbox.lon_max}, {bbox.lat_max})
+                   ST_SimplifyPreserveTopology(
+                       ST_Intersection(
+                           geometry,
+                           ST_MakeEnvelope({bbox.lon_min}, {bbox.lat_min},
+                                           {bbox.lon_max}, {bbox.lat_max})
+                       ),
+                       {SIMPLIFICACION_GRADOS}
                    )
             FROM read_parquet('{url}')
             WHERE subtype = '{COUNTRY_SUBTYPE}'
