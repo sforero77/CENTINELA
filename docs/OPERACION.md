@@ -20,6 +20,32 @@ Cuatro cosas caducan solas, sin avisar. Estan por orden de cercania.
 | **Trimestral** | El activo de exposicion | Los datos envejecen; no falla nada | `exposure_quarterly.yml` lo reconstruye solo |
 | **Anual** | Las epocas de GHS-POP y WorldPop | Las cifras se alejan de la realidad | Nadie. Revisar a mano si sale un release nuevo |
 
+**El reloj que no es un reloj: el cron.** `trigger.yml` declara `*/10` y no
+corre cada diez minutos. Medido el 24-ago-2026 sobre 22 corridas programadas en
+dieciseis horas seguidas:
+
+| | Minutos entre corridas |
+|---|---|
+| Declarado | 10 |
+| Real | min **25,0** · mediana **45,7** · p90 **56,9** · max **73,3** |
+
+Entre cuatro y siete veces lo declarado, y peor que el rango de 5-30 min que
+documenta GitHub. Importa porque el objetivo es p50 ≤ 60 min desde el origen del
+sismo hasta el reporte publicado: **la deteccion sola puede comerse la mitad del
+presupuesto, y en el peor caso todo**.
+
+Subir la frecuencia del cron no arregla nada — la demora la pone la cola de
+GitHub, no el intervalo. Las salidas reales son dos, y las dos son decisiones de
+quien opera, no del codigo:
+
+1. **Cron externo** que dispare `repository_dispatch`. Es la ruta limpia y ya
+   estaba anotada como upgrade path. Necesita un servicio fuera de GitHub.
+2. **Aceptar el objetivo como esta** y medirlo con el primer sismo real, que es
+   lo unico que dira si la cola se comporta distinto a las horas en punto.
+
+Mientras tanto el feed de respaldo `4.5_day` cubre la demora sin perder eventos:
+se detecta tarde, pero no se pierde nada.
+
 **El release de Overture es el mas urgente y el menos obvio.** Cuando la prueba
 nocturna abra el issue, hay que actualizar el `vintage` en los manifests de los
 paises construidos. No corre prisa para *operar* —el activo publicado sigue

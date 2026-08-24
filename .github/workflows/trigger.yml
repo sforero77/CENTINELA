@@ -1,8 +1,25 @@
 name: P1 · Trigger USGS
 
-# Cron best-effort: GitHub Actions documenta demoras normales de 5-30 min y el
-# intervalo minimo es 5 min. El SLO (O1) se define sobre lo controlable, no
-# sobre la puntualidad del cron. Mitigaciones activas:
+# Cron best-effort: GitHub Actions documenta demoras de 5-30 min y el intervalo
+# minimo es 5 min. El SLO (O1) se define sobre lo controlable, no sobre la
+# puntualidad del cron.
+#
+# MEDIDO EL 24-AGO-2026 sobre 22 corridas programadas en 16 horas seguidas:
+#
+#   declarado    cada 10 min
+#   real         min 25,0 · mediana 45,7 · p90 56,9 · max 73,3 min
+#
+# Es entre cuatro y siete veces el intervalo declarado, y peor que el rango que
+# documenta GitHub. Con el objetivo de p50 <= 60 min desde el origen hasta el
+# reporte publicado, **la deteccion sola puede comerse la mitad del presupuesto,
+# y en el peor caso todo**.
+#
+# No se toca aqui: subir la frecuencia del cron no cambia nada —la demora la
+# pone la cola de GitHub, no el intervalo— y un job de sondeo permanente es un
+# uso de Actions que conviene decidir a conciencia, no de tapadillo. La ruta
+# limpia es un cron externo que dispare `repository_dispatch`.
+#
+# Mitigaciones activas:
 #   * feed de respaldo 4.5_day, que cubre la demora sin perder eventos
 #   * workflow_dispatch, para disparar a mano en cualquier momento
 #   * keepalive.yml, contra la desactivacion automatica a los 60 dias
