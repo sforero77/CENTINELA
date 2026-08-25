@@ -316,3 +316,15 @@ footer p { margin: 0 0 0.35rem; }
 
 .cumple { color: #1a7f37; }
 .incumple { color: var(--acento); }
+
+.distintivo {
+  display: inline-block;
+  margin-top: 0.55rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--aviso-borde);
+  border-radius: 999px;
+  color: var(--aviso-borde);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  cursor: help;
+}

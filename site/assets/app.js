@@ -30,14 +30,10 @@ const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 3.2 };
 // y tiene que apartarse. Todo el contraste es para los municipios.
 const ESTILO_BASE = "https://tiles.openfreemap.org/styles/positron";
 
-// El estilo no declara atribucion en sus fuentes, asi que se pone a mano. La de
-// OpenFreeMap ellos la dan por opcional; se incluye igual.
-const ATRIBUCION =
-  '<a href="https://openfreemap.org">OpenFreeMap</a> · ' +
-  '<a href="https://openmaptiles.org">OpenMapTiles</a> · ' +
-  '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-
 const COLOR = { epicentro: "#c1440e" };
+
+// Azul apagado: se distingue de la tierra sin robarle contraste al dato.
+const AGUA = "#cfe0ea";
 
 // Rampa por intensidad maxima del municipio. Arranca en MMI 6 porque por debajo
 // el sistema no publica cifra municipal: no es una escala completa de Mercalli,
@@ -161,7 +157,6 @@ function filaEvento(evento) {
       ? `${comoTexto(evento.pop_mmi7p)} personas en MMI≥7`
       : null,
     evento.preliminar ? "preliminar" : null,
-    evento.backtest ? "reconstruccion retrospectiva" : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -172,13 +167,18 @@ function filaEvento(evento) {
   // la lista tiene que saberlo antes de leer las cifras. La poblacion puede ser
   // de la epoca del sismo —GHS-POP publica de 1975 a 2030— pero edificaciones,
   // vias y equipamiento son los de hoy: OSM y Overture no guardan el pasado.
+  // En la tarjeta va un distintivo, no el parrafo: los tres eventos publicados
+  // son reconstrucciones y el aviso repetido tres veces ocupaba mas que las
+  // cifras. El texto completo sigue estando en el panel del evento, que es
+  // donde alguien lee las cifras y donde el matiz cambia lo que significan.
   if (evento.backtest) {
-    const nota = document.createElement("p");
-    nota.className = "aviso-backtest";
-    nota.textContent =
+    const marca = document.createElement("span");
+    marca.className = "distintivo";
+    marca.title =
       "Reconstruido despues del evento. La poblacion es de la epoca; las " +
       "edificaciones, vias y equipamiento son los actuales.";
-    li.append(nota);
+    marca.textContent = "reconstruccion retrospectiva";
+    li.append(marca);
   }
   return li;
 }
@@ -460,14 +460,27 @@ function iniciarMapa() {
     attributionControl: false,
   });
 
-  mapa.addControl(
-    new maplibregl.AttributionControl({ compact: true, customAttribution: ATRIBUCION })
-  );
+  // Sin `customAttribution`: el estilo de OpenFreeMap ya declara la suya y
+  // anadirla la imprimia dos veces seguidas.
+  mapa.addControl(new maplibregl.AttributionControl({ compact: true }));
   mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
   // El aviso de carga se quita cuando el mapa dibuja algo, no cuando termina
   // de cargarlo todo: `idle` no llega mientras siguen entrando teselas, y
   // dejarlo puesto haria parecer roto un mapa que ya se ve.
+  // Positron pinta el agua casi del mismo gris que la tierra. Para un sistema
+  // cuya mitad de la exposicion es costera, la linea de costa tiene que verse:
+  // se tine el agua sin tocar el resto del estilo.
+  mapa.on("style.load", () => {
+    for (const capa of mapa.getStyle().layers) {
+      if (capa.id === "water" || capa.id.startsWith("water_")) {
+        try {
+          if (capa.type === "fill") mapa.setPaintProperty(capa.id, "fill-color", AGUA);
+        } catch (e) { /* el estilo puede cambiar; no es critico */ }
+      }
+    }
+  });
+
   const listo = () => {
     const aviso = document.getElementById("cargando");
     if (aviso) aviso.hidden = true;
