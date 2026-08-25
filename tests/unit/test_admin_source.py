@@ -336,11 +336,17 @@ def test_todas_las_rutas_de_descarga_saltan_lo_que_ya_esta(tmp_path: Path) -> No
     for funcion in (
         download.download_ghsl,
         download.download_worldpop_agesex,
-        download.download_zip_entries,
+        download.download_zip_completo,
         download.download_hdx,
     ):
         cuerpo = inspect.getsource(funcion)
-        assert "exists()" in cuerpo or "_hdx_en_disco" in cuerpo, (
+        # Cada ruta comprueba a su manera —un fichero con `exists()`, una
+        # carpeta extraida con `is_dir()`, HDX con su propio inventario— asi
+        # que se aceptan las tres. Exigir una sola forma haria fallar a codigo
+        # correcto, que es como esta prueba acabo apuntando a la funcion
+        # muerta: `download_zip_entries` decia `exists()` y la viva no.
+        sondas = ("exists()", "is_dir()", "_hdx_en_disco")
+        assert any(sonda in cuerpo for sonda in sondas), (
             f"{funcion.__name__} no comprueba si el archivo ya esta en disco"
         )
 

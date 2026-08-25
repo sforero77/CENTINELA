@@ -54,6 +54,26 @@ _log = get_logger(__name__)
 MMI_MIN_POLYFILL = 5.0
 
 
+class ExposureCountryMismatchError(ValueError):
+    """El activo descargado no es del pais donde ocurrio el sismo.
+
+    Se distingue del resto de errores porque **no es un fallo: es un descarte**.
+    P1 vigila toda la ventana LATAM y las cajas de los paises se solapan, asi
+    que `countries_for_point` devuelve varios candidatos y el llamador tiene que
+    probarlos en orden hasta que uno alcance celdas.
+
+    Que haga falta reintentar no es hipotetico. La caja de Chile mide 1.719
+    grados cuadrados por Rapa Nui y la de Argentina 671, asi que **un sismo en
+    Coquimbo se ordena como argentino antes que como chileno**. Sin reintento,
+    el evento se calcularia contra el activo de Argentina, el join quedaria
+    vacio y Chile —de los paises mas sismicos de la region— se quedaria sin
+    reporte cada vez.
+
+    Hereda de `ValueError` para no cambiar el comportamiento de quien ya
+    capturaba el error anterior.
+    """
+
+
 @dataclass(frozen=True, slots=True)
 class ImpactTotals:
     """Cifras nacionales del evento, tal como salen del join."""
@@ -298,11 +318,12 @@ def compute_impact(
     # visor publico. Es preferible no publicar nada.
     alcanzadas: int = con.execute("SELECT count(*) FROM impact_h3").fetchone()[0]
     if alcanzadas == 0:
-        raise ValueError(
+        raise ExposureCountryMismatchError(
             f"El ShakeMap de {products.usgs_id} no toca ninguna celda del activo "
-            f"({exposure_glob}). Casi siempre significa que el sismo cayo en un pais "
-            f"distinto al del activo descargado. Un reporte calculado asi saldria "
-            f"con ceros en todas las cifras, que es peor que no publicarlo."
+            f"({exposure_glob}). Significa que el sismo cayo en un pais distinto al "
+            f"del activo descargado. Un reporte calculado asi saldria con ceros en "
+            f"todas las cifras, que es peor que no publicarlo: hay que reintentar "
+            f"con el activo del siguiente pais candidato."
         )
     _log.info(
         "celdas alcanzadas por el ShakeMap",
@@ -411,15 +432,29 @@ def build_report(
     notas: tuple[str, ...] = (),
 ) -> Report:
     """Arma el ``Report`` a partir de lo ya calculado en la conexion."""
+    # SE ORDENA POR LA BANDA QUE ESTE EVENTO ALCANZO, NO SIEMPRE POR MMI≥7.
+    #
+    # Casi la mitad de los sismos reales de LATAM no llegan a MMI≥7 sobre
+    # poblacion —ocho de los primeros dieciocho reportes— porque son profundos
+    # o mar adentro. Para esos, `ORDER BY pop_mmi7p` ordenaba por una columna
+    # de ceros, o sea que la tabla "municipios mas expuestos" salia en orden
+    # alfabetico con quince ceros al lado. Tehuantepec 2017, un M8,2 con 98
+    # muertos, se publicaba asi.
+    banda = totales.to_totales().banda_titular
+    columna = f"pop_mmi{banda}p" if banda else "pop_mmi6p"
     top = [
         MunicipioTop(
-            adm2_id=str(r[0]), nombre=str(r[1]).title(), mmi_max=float(r[2]), pop_mmi7p=float(r[3])
+            adm2_id=str(r[0]),
+            nombre=str(r[1]).title(),
+            mmi_max=float(r[2]),
+            pop_mmi7p=float(r[3]),
+            pop_banda=float(r[4]),
         )
         for r in con.execute(
             f"""
-            SELECT i.adm2_id, a.nombre, i.mmi_max, i.pop_mmi7p
+            SELECT i.adm2_id, a.nombre, i.mmi_max, i.pop_mmi7p, i.{columna}
             FROM impact_adm2 i JOIN admin_lookup a USING (adm2_id)
-            ORDER BY i.pop_mmi7p DESC LIMIT {TOP_ADM2_COUNT}
+            ORDER BY i.{columna} DESC, i.mmi_max DESC LIMIT {TOP_ADM2_COUNT}
             """
         ).fetchall()
     ]

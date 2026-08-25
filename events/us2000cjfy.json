@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us2000cjfy",
+  "estado": "publicado",
+  "mag": 7.1,
+  "lon": -74.7092,
+  "lat": -15.7675,
+  "depth_km": 39.0,
+  "lugar": "37 km al O de Atiquipa, Perú",
+  "origen_utc": "2018-01-14T09:18:45Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T16:53:27Z",
+    "publicado": "2026-08-25T17:53:43Z",
+    "usgs_origen": "2018-01-14T09:18:45Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2018-01-14, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

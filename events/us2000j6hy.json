@@ -1,0 +1,28 @@
+{
+  "usgs_id": "us2000j6hy",
+  "estado": "publicado",
+  "mag": 6.7,
+  "lon": -71.3815,
+  "lat": -30.0404,
+  "depth_km": 63.0,
+  "lugar": "10 km al SSO de Coquimbo, Chile",
+  "origen_utc": "2019-01-20T01:32:52Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 2
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T16:41:57Z",
+    "publicado": "2026-08-25T17:40:13Z",
+    "usgs_origen": "2019-01-20T01:32:52Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2019-01-20, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

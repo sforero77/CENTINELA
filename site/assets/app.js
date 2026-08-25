@@ -6,6 +6,9 @@
 // baja. El visor no tiene una fuente propia, y esa es la idea.
 
 const INDICE_REPORTES = "reports/index.json";
+// Que paises puede atender el sistema. Sale de los manifests, asi que no
+// puede prometer mas paises de los que se construyeron de verdad.
+const COBERTURA = "cobertura.json";
 
 // Encuadre inicial: la ventana LATAM del sistema (RF-01).
 const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 3.1 };
@@ -201,6 +204,7 @@ const escapar = (s) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 const estado = {
+  paisFiltrado: "",
   mapa: null,
   eventos: [],
   seleccionado: null,
@@ -414,6 +418,11 @@ async function cargarEventos() {
     pintarPanorama(eventos);
     dibujarEpicentros(eventos);
 
+    // La cobertura primero: da los nombres de pais que necesita el filtro, y
+    // asi el mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica.
+    const nombres = await cargarCobertura(eventos);
+    pintarFiltroPaises(eventos, nombres);
+
     const url = leerUrl();
     if (url.capa) estado.capa = url.capa;
     if (url.evento && eventos.some((e) => e.usgs_id === url.evento)) seleccionar(url.evento);
@@ -439,6 +448,7 @@ function pintarPanorama(eventos) {
     return;
   }
   const mayor = eventos.reduce((a, b) => ((b.pop_mmi7p || 0) > (a.pop_mmi7p || 0) ? b : a));
+  const paises = new Set(eventos.map((e) => e.iso3).filter(Boolean)).size;
   const enVivo = eventos.filter((e) => !e.backtest).length;
 
   caja.innerHTML =
@@ -448,6 +458,10 @@ function pintarPanorama(eventos) {
     `<div class="metrica"><span class="valor">${comoTexto(mayor.pop_mmi7p)}</span>` +
     `<span class="etiqueta">mayor exposición registrada</span>` +
     `<span class="apunte">M${String(mayor.mag).replace(".", ",")} · ${escapar(mayor.lugar)}</span></div>` +
+    (paises > 1
+      ? `<div class="metrica"><span class="valor">${paises}</span>` +
+        `<span class="etiqueta">países con reporte</span></div>`
+      : "") +
     `</div>` +
     `<ul class="panorama-lista">` +
     eventos
@@ -455,24 +469,62 @@ function pintarPanorama(eventos) {
         (e) =>
           `<li><button type="button" data-usgs-id="${escapar(e.usgs_id)}">` +
           `<span class="titulo">M${String(e.mag).replace(".", ",")} — ${escapar(e.lugar)}</span>` +
-          `<span class="pie">${comoFecha(e.utc, false)} · ${comoTexto(e.pop_mmi7p)} en MMI≥7` +
-          `${e.backtest ? " · retrospectivo" : ""}</span></button></li>`
+          `<span class="pie">${comoFecha(e.utc, false)} · ${
+            bandaTitular(e).banda
+              ? `${comoTexto(bandaTitular(e).pop)} en MMI≥${bandaTitular(e).banda}`
+              : "sin población en MMI≥6"
+          }${e.backtest ? " · retrospectivo" : ""}</span></button></li>`
       )
       .join("") +
     `</ul>` +
     (enVivo === 0
-      ? `<p class="pista">Ninguno se emitió en vivo todavía: los tres son reconstrucciones ` +
-        `retrospectivas de sismos ya ocurridos, hechas para probar el sistema.</p>`
-      : "");
+      ? `<p class="pista">Ninguno se emitió en vivo todavía: ` +
+        `${eventos.length === 1 ? "es una reconstrucción retrospectiva" :
+          `los ${nf.format(eventos.length)} son reconstrucciones retrospectivas`} ` +
+        `de sismos ya ocurridos, con los productos que USGS publicó entonces. ` +
+        `Son la prueba de qué habría informado el sistema, y de que funciona en ` +
+        `cada país donde se corrieron.</p>`
+      : `<p class="pista">${nf.format(enVivo)} de ${nf.format(eventos.length)} se ` +
+        `emitieron en vivo; el resto son reconstrucciones retrospectivas.</p>`);
 
   for (const boton of caja.querySelectorAll("[data-usgs-id]")) {
     boton.addEventListener("click", () => seleccionar(boton.dataset.usgsId));
   }
 }
 
+
+// La banda con la que se titula un evento.
+//
+// El tablero titulaba siempre con MMI≥7 y hay sismos reales que no llegan ahi
+// sobre poblacion: Atiquipa 2018 —M7,1 a 37 km mar adentro— deja 36.933
+// personas en MMI≥6 y **cero** en MMI≥7. Un titular de "0 personas" es cierto
+// y se lee como que el sistema fallo, o como que el sismo no fue nada.
+//
+// Se titula con la banda mas alta que si alcanzo poblacion, diciendo cual es.
+function bandaDeTotales(t) {
+  if (!t) return 0;
+  if (t.pop_mmi8p > 0) return 8;
+  if (t.pop_mmi7p > 0) return 7;
+  if (t.pop_mmi6p > 0) return 6;
+  return 0;
+}
+
+function bandaTitular(evento) {
+  if (Number.isFinite(evento.pop_mmi7p) && evento.pop_mmi7p > 0) {
+    return { pop: evento.pop_mmi7p, banda: 7 };
+  }
+  if (Number.isFinite(evento.pop_mmi6p) && evento.pop_mmi6p > 0) {
+    return { pop: evento.pop_mmi6p, banda: 6 };
+  }
+  // Ni una ni otra: el evento entro por magnitud y su sacudida no alcanzo
+  // poblacion. Tambien es un resultado, y decirlo es mejor que un cero suelto.
+  return { pop: 0, banda: 0 };
+}
+
 function filaEvento(evento) {
   const li = document.createElement("li");
   li.dataset.usgsId = evento.usgs_id;
+  if (evento.iso3) li.dataset.iso3 = evento.iso3;
 
   const cabecera = document.createElement("div");
   cabecera.className = "evento-cabecera";
@@ -511,12 +563,13 @@ function filaEvento(evento) {
 
   // La cifra en grande y no perdida en una línea de metadatos: es lo que
   // alguien viene a buscar, y el resto de la tarjeta está para situarla.
-  if (Number.isFinite(evento.pop_mmi7p)) {
-    const cifra = document.createElement("span");
-    cifra.className = "evento-cifra";
-    cifra.innerHTML = `${comoTexto(evento.pop_mmi7p)}<small>personas en MMI≥7</small>`;
-    li.append(cifra);
-  }
+  const titular = bandaTitular(evento);
+  const cifra = document.createElement("span");
+  cifra.className = "evento-cifra";
+  cifra.innerHTML = titular.banda
+    ? `${comoTexto(titular.pop)}<small>personas en MMI≥${titular.banda}</small>`
+    : `<span class="sin-alcance">Sin población</span><small>en MMI≥6 o mayor</small>`;
+  li.append(cifra);
   li.addEventListener("click", (ev) => {
     if (ev.target.closest("a")) return;
     seleccionar(evento.usgs_id);
@@ -604,7 +657,12 @@ function pintarLateral(reporte, municipios) {
     `Reporte de M${String(ev.mag).replace(".", ",")} en ${ev.lugar}. ` +
     (reporte.preliminar
       ? "Preliminar, sin ShakeMap."
-      : `${comoTexto(t.pop_mmi7p)} personas expuestas a intensidad 7 o mayor.`)
+      : (() => {
+          const b = bandaDeTotales(t);
+          return b
+            ? `${comoTexto(t[`pop_mmi${b}p`])} personas expuestas a intensidad ${b} o mayor.`
+            : "Su sacudida no alcanzó intensidad 6 sobre población.";
+        })())
   );
 }
 
@@ -688,12 +746,25 @@ function pintarMetricas(reporte) {
     return;
   }
 
-  $("titulo-metricas").textContent = "Expuesto en MMI≥7";
+  // El resto de capas —edificaciones, vías, equipamiento— solo se calcula en
+  // MMI≥7, así que el título nombra esa banda. Lo que sí cambia es la cifra de
+  // personas: es la única que existe para las dos bandas, y con un evento que
+  // no llega a 7 poner un 0 ahí es la frase que este tablero evita.
+  const banda = bandaDeTotales(t);
+  $("titulo-metricas").textContent =
+    banda && banda !== 7 ? `Expuesto en MMI≥${banda} y MMI≥7` : "Expuesto en MMI≥7";
   const km2 = Number.isFinite(t.built_m2_mmi7p) ? t.built_m2_mmi7p / 1e6 : null;
   const principal = t.road_km_principal_mmi7p;
 
   const tarjetas = [
-    { valor: comoTexto(t.pop_mmi7p), etiqueta: "personas" },
+    banda && banda !== 7
+      ? {
+          valor: comoTexto(t[`pop_mmi${banda}p`]),
+          etiqueta: `personas en MMI≥${banda}`,
+          apunte: "La sacudida no alcanzó MMI 7 sobre población: ninguna de las cifras de abajo, que se cuentan en MMI≥7, aplica a este evento.",
+          ancha: true,
+        }
+      : { valor: comoTexto(t.pop_mmi7p), etiqueta: "personas" },
     { valor: comoTexto(t.pop_65p_mmi7p), etiqueta: "de 65 años o más" },
     { valor: comoTexto(t.bld_mmi7p), etiqueta: "edificaciones" },
     {
@@ -758,14 +829,16 @@ function pintarMunicipios(reporte, municipios) {
   const fuente = (reporte.top_municipios && reporte.top_municipios.length)
     ? reporte.top_municipios
     : municipios;
-  const top = [...fuente]
-    .sort((a, b) => (b.pop_mmi7p || 0) - (a.pop_mmi7p || 0))
-    .slice(0, 8);
-  const maximo = Math.max(...top.map((m) => m.pop_mmi7p || 0), 1);
+  // Se ordena por la banda que el evento alcanzó. Con `pop_mmi7p` a cero en
+  // todas las filas, el orden salía alfabético y las barras, todas vacías.
+  const banda = bandaDeTotales(reporte.totales);
+  const cifra = (m) => (banda && banda !== 7 ? (m.pop_banda ?? 0) : (m.pop_mmi7p || 0));
+  const top = [...fuente].sort((a, b) => cifra(b) - cifra(a)).slice(0, 8);
+  const maximo = Math.max(...top.map(cifra), 1);
 
   $("detalle-barras").innerHTML = top
     .map((m) => {
-      const pct = (100 * (m.pop_mmi7p || 0)) / maximo;
+      const pct = (100 * cifra(m)) / maximo;
       const banda = CAPAS.mmi.cortes.filter((c) => (m.mmi_max || 0) >= c).length - 1;
       const color = CAPAS.mmi.colores[Math.max(0, banda)];
       const nombre = escapar(capitalizar(m.nombre) || m.adm2_id);
@@ -778,7 +851,7 @@ function pintarMunicipios(reporte, municipios) {
         `<span class="ficha-mmi${oscuro ? " sobre-oscuro" : ""}" style="background:${color}" ` +
         `title="Intensidad máxima ${mmi}">${mmi}</span>` +
         `${nombre}</span>` +
-        `<span class="barra-valor">${comoTexto(m.pop_mmi7p)}</span></div>` +
+        `<span class="barra-valor">${comoTexto(cifra(m))}</span></div>` +
         `<div class="barra-pista"><div class="barra-relleno" ` +
         `style="width:${pct.toFixed(1)}%;background:${color}"></div></div></li>`
       );
@@ -1040,9 +1113,14 @@ function crearEstrella(m) {
   m.addImage("estrella", ctx.getImageData(0, 0, lado, lado), { pixelRatio: 2 });
 }
 
-// El círculo del epicentro escala con la población expuesta a MMI≥7, no con la
+// El círculo del epicentro escala con la población expuesta, no con la
 // magnitud: dos sismos de la misma magnitud sobre poblaciones distintas no son
 // el mismo evento para quien responde.
+//
+// Escala con la banda que **ese** evento alcanzó, la misma que titula su ficha.
+// Con `pop_mmi7p` fijo, los ocho eventos del catálogo que no llegan a MMI≥7
+// salían como un punto mínimo mientras el panel decía "761.000 personas" al
+// lado — Tehuantepec entre ellos.
 //
 // **Pero solo en la vista regional.** Un círculo centrado en el epicentro y
 // dimensionado por una cifra que no es espacial invita a leerse como un radio
@@ -1066,7 +1144,7 @@ function dibujarEpicentros(eventos) {
           geometry: { type: "Point", coordinates: [e.lon, e.lat] },
           properties: {
             usgs_id: e.usgs_id,
-            pop: e.pop_mmi7p || 0,
+            pop: bandaTitular(e).pop,
             etiqueta: `M${String(e.mag).replace(".", ",")}`,
           },
         })),
@@ -1172,6 +1250,153 @@ function iniciarMapa() {
 
   mapa.on("error", (e) => console.warn("mapa:", e && e.error && e.error.message));
   return mapa;
+}
+
+
+// --- Cobertura regional -----------------------------------------------------
+//
+// El tablero listaba eventos y nada mas, y con pocos reportes eso se lee como
+// una demo. Lo que hay detras no lo es: dieciocho paises con su activo de
+// exposicion construido y medido contra la cifra oficial de su instituto o de
+// la ONU. Ese hecho responde la pregunta que se hace quien llega —¿esto sirve
+// para mi pais?— y no aparecia en ninguna pantalla.
+
+function porcentaje(v) {
+  if (!Number.isFinite(v)) return "—";
+  const signo = v > 0 ? "+" : "";
+  return `${signo}${nf.format(Number(v.toFixed(2)))} %`;
+}
+
+function pintarResumenCobertura(datos, eventos) {
+  const { resumen } = datos;
+  const conReporte = new Set(eventos.map((e) => e.iso3).filter(Boolean)).size;
+
+  $("cobertura-resumen").innerHTML =
+    `<div class="metrica"><span class="valor">${resumen.paises_construidos}</span>` +
+    `<span class="etiqueta">países con activo publicado</span>` +
+    `<span class="apunte">de ${resumen.paises_con_manifest} con manifiesto escrito</span></div>` +
+    `<div class="metrica"><span class="valor">${comoTexto(resumen.poblacion_en_la_malla)}</span>` +
+    `<span class="etiqueta">personas en la malla hexagonal</span>` +
+    `<span class="apunte">precalculadas, antes de que ocurra nada</span></div>` +
+    `<div class="metrica"><span class="valor">${porcentaje(resumen.peor_desvio_pct)}</span>` +
+    `<span class="etiqueta">peor desvío vs. cifra oficial</span>` +
+    `<span class="apunte">el de Venezuela, y está explicado</span></div>` +
+    `<div class="metrica"><span class="valor">${conReporte}</span>` +
+    `<span class="etiqueta">países con reporte publicado</span></div>`;
+}
+
+function filaCobertura(pais, cuantos) {
+  const tr = document.createElement("tr");
+  if (!pais.construido) tr.className = "pendiente";
+
+  const nombre = document.createElement("th");
+  nombre.scope = "row";
+  nombre.textContent = pais.nombre;
+  if (!pais.construido) {
+    const marca = document.createElement("span");
+    marca.className = "mono marca-pendiente";
+    marca.textContent = "sin construir";
+    nombre.append(" ", marca);
+  }
+
+  const pob = document.createElement("td");
+  pob.className = "num";
+  pob.textContent = pais.construido ? comoTexto(pais.poblacion_medida) : "—";
+
+  const desvio = document.createElement("td");
+  desvio.className = "num";
+  desvio.textContent = pais.construido ? porcentaje(pais.desvio_pct) : "—";
+  if (pais.construido && pais.fuente_referencia) {
+    // La cifra sola no dice nada sin saber contra que se compara.
+    desvio.title = `Referencia: ${pais.fuente_referencia}`;
+  }
+
+  const reportes = document.createElement("td");
+  reportes.className = "num";
+  reportes.textContent = cuantos ? nf.format(cuantos) : "—";
+
+  tr.append(nombre, pob, desvio, reportes);
+  return tr;
+}
+
+async function cargarCobertura(eventos) {
+  const resumen = $("cobertura-resumen");
+  if (!resumen) return;
+  try {
+    const datos = await json(COBERTURA);
+    const porPais = new Map();
+    for (const e of eventos) {
+      if (e.iso3) porPais.set(e.iso3, (porPais.get(e.iso3) || 0) + 1);
+    }
+
+    pintarResumenCobertura(datos, eventos);
+
+    const tabla = $("tabla-cobertura");
+    const cuerpo = tabla.querySelector("tbody");
+    for (const pais of datos.paises) {
+      cuerpo.appendChild(filaCobertura(pais, porPais.get(pais.iso3) || 0));
+    }
+    tabla.hidden = false;
+
+    const faltan = datos.paises.filter((p) => !p.construido).map((p) => p.nombre);
+    $("cobertura-nota").textContent =
+      (faltan.length
+        ? `Falta construir ${faltan.join(", ")}. `
+        : "Todos los países cubiertos tienen su activo construido. ") +
+      "El desvío compara la población que mide el activo contra la cifra " +
+      "oficial de referencia del país. Se publica aunque incomode: una " +
+      "tolerancia que nadie ve no vigila nada.";
+
+    return new Map(datos.paises.map((p) => [p.iso3, p.nombre]));
+  } catch (error) {
+    resumen.innerHTML = `<p class="pista">No se pudo leer la cobertura regional.</p>`;
+    console.warn("cobertura.json:", error);
+    return new Map();
+  }
+}
+
+// --- Filtro por país --------------------------------------------------------
+
+function aplicarFiltro(iso3) {
+  estado.paisFiltrado = iso3;
+  let visibles = 0;
+  for (const li of document.querySelectorAll(".lista-eventos li")) {
+    const suyo = !iso3 || li.dataset.iso3 === iso3;
+    li.hidden = !suyo;
+    if (suyo) visibles += 1;
+  }
+  for (const boton of document.querySelectorAll("#filtro-paises button")) {
+    boton.setAttribute("aria-pressed", String((boton.dataset.iso3 || "") === (iso3 || "")));
+  }
+  const vacio = $("sin-resultados");
+  vacio.hidden = visibles > 0;
+  if (!visibles) vacio.textContent = "Ese país todavía no tiene reportes publicados.";
+  anunciar(`${visibles} ${visibles === 1 ? "reporte" : "reportes"} en la lista.`);
+}
+
+function pintarFiltroPaises(eventos, nombres) {
+  const caja = $("filtro-paises");
+  if (!caja) return;
+  const cuenta = new Map();
+  for (const e of eventos) {
+    if (e.iso3) cuenta.set(e.iso3, (cuenta.get(e.iso3) || 0) + 1);
+  }
+  // Con un solo pais el filtro no filtra nada: es ruido con aspecto de control.
+  if (cuenta.size < 2) return;
+
+  const orden = [...cuenta.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const boton = (iso3, texto, n) =>
+    `<button type="button" data-iso3="${escapar(iso3)}" aria-pressed="${iso3 === ""}">` +
+    `${escapar(texto)}<span class="cuenta">${nf.format(n)}</span></button>`;
+
+  caja.innerHTML =
+    boton("", "Todos", eventos.length) +
+    orden.map(([iso3, n]) => boton(iso3, nombres.get(iso3) || iso3, n)).join("");
+  caja.hidden = false;
+
+  for (const b of caja.querySelectorAll("button")) {
+    b.addEventListener("click", () => aplicarFiltro(b.dataset.iso3 || ""));
+  }
 }
 
 estado.mapa = iniciarMapa();

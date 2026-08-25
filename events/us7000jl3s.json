@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us7000jl3s",
+  "estado": "publicado",
+  "mag": 6.8,
+  "lon": -79.8518,
+  "lat": -2.7834,
+  "depth_km": 68.0,
+  "lugar": "14 km al NNO de Baláo, Ecuador",
+  "origen_utc": "2023-03-18T17:12:52Z",
+  "versiones_procesadas": {
+    "shakemap": 7,
+    "groundfailure": 9
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T16:55:44Z",
+    "publicado": "2026-08-25T17:41:05Z",
+    "usgs_origen": "2023-03-18T17:12:52Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2023-03-18, no una respuesta en vivo.",
+    "ShakeMap v0 -> v7",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

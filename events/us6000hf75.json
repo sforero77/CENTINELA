@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us6000hf75",
+  "estado": "publicado",
+  "mag": 6.6,
+  "lon": -86.9604,
+  "lat": 11.5537,
+  "depth_km": 27.0,
+  "lugar": "55 km al OSO de Masachapa, Nicaragua",
+  "origen_utc": "2022-04-21T07:42:46Z",
+  "versiones_procesadas": {
+    "shakemap": 6,
+    "groundfailure": 6
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T17:02:20Z",
+    "publicado": "2026-08-25T17:44:14Z",
+    "usgs_origen": "2022-04-21T07:42:46Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2022-04-21, no una respuesta en vivo.",
+    "ShakeMap v0 -> v6",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

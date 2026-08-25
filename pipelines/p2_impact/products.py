@@ -12,8 +12,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Self
 
-from ..common.http import Fetcher
-
 #: Nombres de producto que consume el sistema.
 SHAKEMAP = "shakemap"
 GROUND_FAILURE = "ground-failure"
@@ -186,8 +184,3 @@ def parse_products(detail: dict[str, Any]) -> ProductSet:
         ground_failure=pick(GROUND_FAILURE),
         losspager=pick(LOSSPAGER),
     )
-
-
-def fetch_products(fetcher: Fetcher, detail_url: str) -> ProductSet:
-    """Descarga el feed detail y extrae sus productos."""
-    return parse_products(fetcher.get_json(detail_url))

@@ -468,6 +468,13 @@ a:hover { color: var(--verde-vivo); }
 
 .metrica { padding: 0.8rem 0.9rem; background: var(--crema); }
 
+/* Con un numero impar de metricas, la rejilla de dos columnas deja un hueco que
+   se ve —el fondo del contenedor, que es la linea de 1px hecha con background—
+   y parece una tarjeta rota. La ultima ocupa el ancho.
+
+   Paso al anadir "paises con reporte" al panorama: tres metricas, un agujero. */
+.metrica:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
 .metrica .valor {
   display: block;
   font-family: var(--tipo-titulo);
@@ -749,4 +756,113 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   .marca-lema { display: none; }
   .aviso { flex-direction: column; gap: 0.3rem; }
   .metricas { grid-template-columns: 1fr; }
+}
+
+/* --- Cobertura regional ----------------------------------------------------
+
+   El tablero listaba eventos y nada mas. Con pocos reportes eso se lee como una
+   demo, y lo que hay detras —dieciocho paises con su activo construido y medido
+   contra la cifra oficial de cada uno— no aparecia en ninguna pantalla.
+
+   Se dibuja como una tabla y no como tarjetas a proposito: son cifras
+   comparables entre si, y una tabla es lo que deja compararlas. */
+
+.cobertura {
+  padding: clamp(3rem, 7vw, 5rem) 0;
+  background: var(--crema-alt);
+  border-top: 1px solid var(--borde);
+}
+
+.tabla-cobertura {
+  width: 100%;
+  margin-top: 2rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.tabla-cobertura th,
+.tabla-cobertura td {
+  padding: 0.62rem 0.75rem;
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+}
+
+.tabla-cobertura thead th {
+  font-family: var(--tipo-mono, monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tenue-mas);
+  border-bottom: 1px solid var(--borde-fuerte);
+}
+
+.tabla-cobertura .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla-cobertura tbody th { font-weight: 600; }
+.tabla-cobertura tbody tr:hover { background: var(--crema); }
+
+/* Un pais sin construir no se esconde: se marca. Ocultarlo daria una cobertura
+   del 100 % que no es cierta. */
+.tabla-cobertura tr.pendiente th,
+.tabla-cobertura tr.pendiente td { color: var(--tenue-mas); }
+
+.marca-pendiente {
+  font-size: 0.66rem;
+  padding: 0.1rem 0.42rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  color: var(--ambar-texto);
+  white-space: nowrap;
+}
+
+/* --- Filtro por pais ------------------------------------------------------ */
+
+.filtro-paises {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 1.4rem 0 0.4rem;
+}
+
+.filtro-paises button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.78rem;
+  font: inherit;
+  font-size: 0.84rem;
+  color: var(--bosque);
+  background: var(--crema);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-pastilla);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.filtro-paises button:hover { border-color: var(--verde); }
+
+.filtro-paises button[aria-pressed="true"] {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: var(--crema);
+}
+
+.filtro-paises .cuenta {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  opacity: 0.75;
+}
+
+@media (max-width: 620px) {
+  .tabla-cobertura { font-size: 0.84rem; }
+  .tabla-cobertura th,
+  .tabla-cobertura td { padding: 0.5rem 0.4rem; }
+}
+
+/* Un evento cuya sacudida no alcanzo poblacion en ninguna banda publicada. Es
+   un resultado, no un hueco: se rotula en vez de dejar un cero suelto, que se
+   lee como que el sistema fallo. */
+.evento-cifra .sin-alcance {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--tenue-mas);
 }

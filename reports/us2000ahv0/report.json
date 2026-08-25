@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us2000ahv0",
+    "mag": 8.2,
+    "depth_km": 47.39,
+    "utc": "2017-09-08T04:49:19Z",
+    "lugar": "Terremoto de Tehuantepec, México (2017)",
+    "pager_alert": "red",
+    "lon": -93.8993,
+    "lat": 15.0222
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 1,
+    "exposure_manifest": "mex-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 760856.2383539012,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 2061.6080413851887,
+    "pop_lq_alta": 360767.28644302784
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "MX20043",
+      "nombre": "Heroica Ciudad De Juchitán De Zaragoza",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 109669.97918312269
+    },
+    {
+      "adm2_id": "MX20079",
+      "nombre": "Salina Cruz",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 102644.90687105703
+    },
+    {
+      "adm2_id": "MX07097",
+      "nombre": "Tonalá",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 77304.43236512115
+    },
+    {
+      "adm2_id": "MX20515",
+      "nombre": "Santo Domingo Tehuantepec",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 71151.23822873516
+    },
+    {
+      "adm2_id": "MX07069",
+      "nombre": "Pijijiapan",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 64443.639377167914
+    },
+    {
+      "adm2_id": "MX07051",
+      "nombre": "Mapastepec",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 54492.09950208943
+    },
+    {
+      "adm2_id": "MX07009",
+      "nombre": "Arriaga",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 51136.6636810638
+    },
+    {
+      "adm2_id": "MX07003",
+      "nombre": "Acapetahua",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 37567.410551016685
+    },
+    {
+      "adm2_id": "MX20124",
+      "nombre": "San Blas Atempa",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 19976.17078799894
+    },
+    {
+      "adm2_id": "MX20248",
+      "nombre": "San Mateo Del Mar",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 18218.377668433823
+    },
+    {
+      "adm2_id": "MX20557",
+      "nombre": "Unión Hidalgo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 17354.592344975856
+    },
+    {
+      "adm2_id": "MX20327",
+      "nombre": "San Pedro Tapanatepec",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 17121.510841130046
+    },
+    {
+      "adm2_id": "MX20413",
+      "nombre": "Santa María Huatulco",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 14375.726882462623
+    },
+    {
+      "adm2_id": "MX20025",
+      "nombre": "Chahuites",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 13942.13852614304
+    },
+    {
+      "adm2_id": "MX20525",
+      "nombre": "Santo Domingo Zanatepec",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 13577.815242281882
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 12.1,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T18:33:28Z",
+  "pipeline_version": "0.1.0"
+}

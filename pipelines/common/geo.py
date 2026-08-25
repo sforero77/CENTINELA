@@ -8,11 +8,50 @@ punto-en-bbox.
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass
 from typing import Final
 
 #: Radio medio de la Tierra (m), esfera de referencia WGS84.
 EARTH_RADIUS_M: Final[float] = 6_371_008.8
+
+#: Variables con las que un PROJ del sistema se impone sobre el empaquetado.
+_PROJ_VARS: Final[tuple[str, ...]] = ("PROJ_LIB", "PROJ_DATA")
+
+#: Escape hatch: quien de verdad necesite el PROJ del sistema —rejillas
+#: geoidales nacionales, por ejemplo— lo declara y esto no toca nada.
+RESPETAR_PROJ_DEL_SISTEMA: Final[str] = "CENTINELA_RESPETA_PROJ"
+
+
+def ensure_bundled_proj() -> tuple[str, ...]:
+    """Aparta el PROJ del sistema para que cada rueda use el suyo.
+
+    `rasterio` y `pyproj` empaquetan cada una su propia base de datos de PROJ
+    —es la mitad del peso de sus ruedas— y la encuentran solas. Una variable
+    `PROJ_LIB` puesta en el sistema las tapa a las dos con una base que puede
+    ser de otra version, y entonces **cualquier CRS deja de resolverse**.
+
+    Pasa de verdad y sin que uno lo haya pedido: instalar PostgreSQL con
+    PostGIS en Windows deja `PROJ_LIB` apuntando a su propio PROJ. Medido en
+    una maquina asi: `proj.db contains DATABASE.LAYOUT.VERSION.MINOR = 2
+    whereas a number >= 6 is expected`, y con el la reproyeccion de GHS-POP
+    desde Mollweide. Es decir, `centinela country` inservible en un equipo
+    que por lo demas cumple todos los requisitos.
+
+    O4 dice que el sistema tiene que construir un pais desde un clon limpio
+    sin dependencias del sistema. Un PROJ del sistema **es** una dependencia
+    del sistema, y ademas una que nadie eligio.
+
+    Hay que llamarla **antes** de importar `rasterio` o `pyproj`: GDAL fija su
+    ruta de busqueda al inicializarse y despues ya no la relee. Por eso vive
+    en este modulo, que no arrastra nada geo, y no en uno que ya los importe.
+
+    Returns:
+        Las variables que se apartaron. Vacio es el caso normal.
+    """
+    if os.environ.get(RESPETAR_PROJ_DEL_SISTEMA):
+        return ()
+    return tuple(var for var in _PROJ_VARS if os.environ.pop(var, None) is not None)
 
 
 @dataclass(frozen=True, slots=True)

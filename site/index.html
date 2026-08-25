@@ -151,9 +151,44 @@
     <span class="paralelo" style="bottom: 4.5rem" aria-hidden="true">4°N</span>
     <div class="contenedor">
       <h2>Reportes publicados</h2>
-      <p class="seccion-lema">Cada uno se emitió solo, sin que nadie interviniera.</p>
+      <p class="seccion-lema" id="lema-reportes">Cada uno se emitió solo, sin que nadie interviniera.</p>
+
+      <div class="filtro-paises" id="filtro-paises" hidden role="group" aria-label="Filtrar reportes por país"></div>
+
       <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
       <ul class="lista-eventos" id="lista-eventos"></ul>
+      <p class="pista" id="sin-resultados" hidden></p>
+    </div>
+  </section>
+
+  <section id="cobertura" class="cobertura">
+    <div class="contenedor">
+      <h2>Cobertura regional</h2>
+      <p class="seccion-lema">
+        Un sismo no espera a que su país esté listo. El activo de exposición se
+        construye por adelantado, país por país, y se mide contra la cifra
+        oficial de su instituto de estadística o de la ONU antes de publicarse.
+      </p>
+
+      <div class="metricas" id="cobertura-resumen"></div>
+
+      <table class="tabla-cobertura" id="tabla-cobertura" hidden>
+        <caption class="oculto-visual">
+          Países cubiertos, con la población que mide su activo de exposición y
+          su desvío frente a la cifra oficial de referencia.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">País</th>
+            <th scope="col" class="num">Población en la malla</th>
+            <th scope="col" class="num">Desvío vs. oficial</th>
+            <th scope="col" class="num">Reportes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <p class="apostilla" id="cobertura-nota"></p>
     </div>
   </section>
 

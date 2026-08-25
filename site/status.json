@@ -1,12 +1,12 @@
 {
-  "generado_utc": "2026-08-23T18:27:44Z",
+  "generado_utc": "2026-08-25T18:44:16Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
   },
   "medido": {
     "eventos_publicados": 0,
-    "backtests_excluidos": 1,
+    "backtests_excluidos": 19,
     "p50_min": null,
     "p95_min": null,
     "peor_min": null
@@ -15,8 +15,134 @@
     {
       "usgs_id": "us6000tjl2",
       "origen_utc": "2026-08-10T12:34:28Z",
-      "publicado_utc": "2026-08-23T18:26:00Z",
-      "minutos": 19071.5,
+      "publicado_utc": "2026-08-25T17:40:39Z",
+      "minutos": 21906.2,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us6000t7zp",
+      "origen_utc": "2026-06-24T22:05:04Z",
+      "publicado_utc": "2026-08-25T17:54:22Z",
+      "minutos": 89029.3,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us6000t7zc",
+      "origen_utc": "2026-06-24T22:04:31Z",
+      "publicado_utc": "2026-08-25T17:54:35Z",
+      "minutos": 89030.1,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us7000nr0v",
+      "origen_utc": "2024-11-10T16:49:50Z",
+      "publicado_utc": "2026-08-25T17:40:54Z",
+      "minutos": 940371.1,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us7000jl3s",
+      "origen_utc": "2023-03-18T17:12:52Z",
+      "publicado_utc": "2026-08-25T17:41:05Z",
+      "minutos": 1808668.2,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us6000hf75",
+      "origen_utc": "2022-04-21T07:42:46Z",
+      "publicado_utc": "2026-08-25T17:44:14Z",
+      "minutos": 2285881.5,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us7000f93v",
+      "origen_utc": "2021-09-08T01:47:47Z",
+      "publicado_utc": "2026-08-25T18:32:00Z",
+      "minutos": 2610284.2,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us7000455l",
+      "origen_utc": "2019-06-26T05:23:51Z",
+      "publicado_utc": "2026-08-25T17:45:03Z",
+      "minutos": 3769221.2,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us70003t2n",
+      "origen_utc": "2019-05-30T09:03:32Z",
+      "publicado_utc": "2026-08-25T17:54:05Z",
+      "minutos": 3807890.5,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us60003sc0",
+      "origen_utc": "2019-05-26T07:41:15Z",
+      "publicado_utc": "2026-08-25T17:53:39Z",
+      "minutos": 3813732.4,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us2000j6hy",
+      "origen_utc": "2019-01-20T01:32:52Z",
+      "publicado_utc": "2026-08-25T17:40:13Z",
+      "minutos": 3995527.4,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us1000gez7",
+      "origen_utc": "2018-08-21T21:31:47Z",
+      "publicado_utc": "2026-08-25T18:40:57Z",
+      "minutos": 4213269.2,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us2000cjfy",
+      "origen_utc": "2018-01-14T09:18:45Z",
+      "publicado_utc": "2026-08-25T17:53:43Z",
+      "minutos": 4529315.0,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us1000c2zy",
+      "origen_utc": "2018-01-10T02:51:33Z",
+      "publicado_utc": "2026-08-25T17:41:57Z",
+      "minutos": 4535450.4,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us2000bmhe",
+      "origen_utc": "2017-11-13T02:28:23Z",
+      "publicado_utc": "2026-08-25T17:40:46Z",
+      "minutos": 4618992.4,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us2000ahv0",
+      "origen_utc": "2017-09-08T04:49:19Z",
+      "publicado_utc": "2026-08-25T18:33:28Z",
+      "minutos": 4713944.2,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us20009mbt",
+      "origen_utc": "2017-06-14T07:29:04Z",
+      "publicado_utc": "2026-08-25T17:41:54Z",
+      "minutos": 4837572.8,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us10007mn3",
+      "origen_utc": "2016-12-25T14:22:27Z",
+      "publicado_utc": "2026-08-25T17:40:17Z",
+      "minutos": 5083397.8,
+      "backtest": true
+    },
+    {
+      "usgs_id": "us20005j32",
+      "origen_utc": "2016-04-16T23:58:36Z",
+      "publicado_utc": "2026-08-25T17:41:50Z",
+      "minutos": 5447143.2,
       "backtest": true
     }
   ],

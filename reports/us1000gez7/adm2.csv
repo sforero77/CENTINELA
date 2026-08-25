@@ -1,0 +1,34 @@
+usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta,lq_pop_expuesta,flags_calidad
+#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide,#population+liquefaction,#meta+flags
+us1000gez7,1,VE0307,Independencia,-63.439804,8.478762,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us1000gez7,1,VE1606,Ezequiel Zamora,-63.673225,9.625087,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us1000gez7,1,VE1610,Punceres,-63.142484,9.996283,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1909.1243116892874,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional,construido_no_mapeado"
+us1000gez7,1,VE1605,Cedeño,-63.769525,9.849069,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us1000gez7,1,VE1909,Libertador,-63.003207,10.553539,6.0,946.3563499227166,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,31.124547377228737,discrepancia_poblacional
+us1000gez7,1,VE1603,Bolívar,-63.117814,10.112594,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1519.3499210067093,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us1000gez7,1,VE0701,Caroní,-62.755264,8.224816,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us1000gez7,1,VE1903,Arismendi,-62.773682,10.68543,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,35404.3417243585,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us1000gez7,1,VE1904,Benítez,-62.935048,10.316351,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,7.042920369654894,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us1000gez7,1,VE1907,Cajigal,-62.823306,10.610783,6.0,2469.6878992654383,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
+us1000gez7,1,VE1609,Piar,-63.429178,9.964687,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,34.627798080444336,discrepancia_poblacional
+us1000gez7,1,VE1915,Valdez,-62.242762,10.643296,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,173.78076123073697,181.95000663772225,"discrepancia_poblacional,construido_no_mapeado"
+us1000gez7,1,VE1601,Acosta,-63.730027,10.111061,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us1000gez7,1,VE1901,Andrés Eloy Blanco,-63.30841,10.330936,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,290.5466592311859,1261.7834230810404,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us1000gez7,1,VE1911,Mejía,-63.768946,10.387874,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,174.78848120570183,511.66214817762375,discrepancia_poblacional
+us1000gez7,1,VE1612,Sotillo,-62.4097,8.662016,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us1000gez7,1,VE1905,Bermúdez,-63.269219,10.631735,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,14604.936127278954,221.96224649995565,discrepancia_poblacional
+us1000gez7,1,VE0301,Anaco,-64.468291,9.358512,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us1000gez7,1,VE1910,Mariño,-62.569891,10.622061,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,2.6089836675673723,5.668190153315663,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
+us1000gez7,1,VE1711,Villalba,-63.943841,10.769809,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,32.113972425460815,32.113972425460815,discrepancia_poblacional
+us1000gez7,1,VE1003,Pedernales,-62.169149,9.729801,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,8.9905264377594,5826.94900803268,discrepancia_poblacional
+us1000gez7,1,VE1608,Maturín,-62.918902,9.492324,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,10818.446178544313,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us1000gez7,1,VE1611,Santa Babara,-63.543395,9.570331,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us1000gez7,1,VE0317,Santa Ana,-64.621415,9.253602,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us1000gez7,1,VE1912,Montes,-63.924139,10.221695,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us1000gez7,1,VE1913,Ribero,-63.579639,10.432151,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,103.4232357442379,1283.3047197964042,discrepancia_poblacional
+us1000gez7,1,VE1906,Bolívar,-63.939982,10.402649,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,576.9852916970849,576.9852916970849,discrepancia_poblacional
+us1000gez7,1,VE1908,Cruz Salmerón Acosta,-63.986571,10.600274,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,366.67536452785134,924.300897307694,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us1000gez7,1,VE0705,Angostura del Orinoco,-63.639745,7.887705,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us1000gez7,1,VE1902,Andrés Mata,-63.335586,10.524588,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,234.56813527271152,0.0,discrepancia_poblacional
+us1000gez7,1,VE1604,Caripe,-63.412026,10.178729,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us1000gez7,1,VE2501,Dependencias Federales,-65.496655,11.409894,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,285.80387230962515,117.64964293688536,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"

@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000f93v",
+    "mag": 7.0,
+    "depth_km": 20.0,
+    "utc": "2021-09-08T01:47:47Z",
+    "lugar": "Acapulco, México",
+    "pager_alert": "red",
+    "lon": -99.753,
+    "lat": 16.9465
+  },
+  "inputs": {
+    "shakemap_version": 7,
+    "groundfailure_version": 3,
+    "exposure_manifest": "mex-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 1115170.996424166,
+    "pop_mmi7p": 910714.4594508423,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 81266.60504518471,
+    "bld_mmi7p": 331809.0,
+    "built_m2_mmi7p": 46814341.0,
+    "health_mmi7p": 152.0,
+    "edu_mmi7p": 3132.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 2383.0424382408382,
+    "pop_lq_alta": 66511.65147162467
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "MX12001",
+      "nombre": "Acapulco De Juárez",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 876143.871341917,
+      "pop_banda": 876143.871341917
+    },
+    {
+      "adm2_id": "MX12021",
+      "nombre": "Coyuca De Benítez",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 29502.848212338053,
+      "pop_banda": 29502.848212338053
+    },
+    {
+      "adm2_id": "MX12053",
+      "nombre": "San Marcos",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 5063.2659500993905,
+      "pop_banda": 5063.2659500993905
+    },
+    {
+      "adm2_id": "MX12039",
+      "nombre": "Juan R. Escudero",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 4.473946487531066,
+      "pop_banda": 4.473946487531066
+    },
+    {
+      "adm2_id": "MX12056",
+      "nombre": "Tecoanapa",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12029",
+      "nombre": "Chilpancingo De Los Bravo",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12044",
+      "nombre": "Mochitlán",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12012",
+      "nombre": "Ayutla De Los Libres",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12014",
+      "nombre": "Benito Juárez",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12040",
+      "nombre": "Leonardo Bravo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12025",
+      "nombre": "Cuautepec",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12051",
+      "nombre": "Quechultenango",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12011",
+      "nombre": "Atoyac De Álvarez",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12030",
+      "nombre": "Florencio Villarreal",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12032",
+      "nombre": "General Heliodoro Castillo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 9.9,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T18:31:59Z",
+  "pipeline_version": "0.1.0"
+}

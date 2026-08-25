@@ -1,0 +1,220 @@
+{
+  "generado_utc": "2026-08-25T18:44:16Z",
+  "resumen": {
+    "paises_con_manifest": 19,
+    "paises_construidos": 18,
+    "poblacion_en_la_malla": 430910248,
+    "peor_desvio_pct": 4.94
+  },
+  "paises": [
+    {
+      "iso3": "ARG",
+      "nombre": "Argentina",
+      "construido": true,
+      "manifest_id": "arg-v0.1",
+      "poblacion_medida": 46282965,
+      "poblacion_referencia": 45851378,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 0.94,
+      "tolerancia_pct": 1.44
+    },
+    {
+      "iso3": "BOL",
+      "nombre": "Bolivia",
+      "construido": true,
+      "manifest_id": "bol-v0.1",
+      "poblacion_medida": 12804990,
+      "poblacion_referencia": 12581843,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 1.77,
+      "tolerancia_pct": 2.27
+    },
+    {
+      "iso3": "BRA",
+      "nombre": "Brasil",
+      "construido": false,
+      "manifest_id": "bra-v0.1",
+      "poblacion_medida": 0,
+      "poblacion_referencia": 212812405,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": null,
+      "tolerancia_pct": 25.0
+    },
+    {
+      "iso3": "CHL",
+      "nombre": "Chile",
+      "construido": true,
+      "manifest_id": "chl-v0.1",
+      "poblacion_medida": 19690592,
+      "poblacion_referencia": 19859921,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": -0.85,
+      "tolerancia_pct": 1.35
+    },
+    {
+      "iso3": "COL",
+      "nombre": "Colombia",
+      "construido": true,
+      "manifest_id": "col-v0.5",
+      "poblacion_medida": 52620466,
+      "poblacion_referencia": 53000000,
+      "fuente_referencia": "DANE, proyecciones de poblacion CNPV-2018 actualizadas (nota tecnica jul-2025)",
+      "desvio_pct": -0.72,
+      "tolerancia_pct": 1.0
+    },
+    {
+      "iso3": "CRI",
+      "nombre": "Costa Rica",
+      "construido": true,
+      "manifest_id": "cri-v0.1",
+      "poblacion_medida": 5280695,
+      "poblacion_referencia": 5152950,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 2.48,
+      "tolerancia_pct": 2.98
+    },
+    {
+      "iso3": "CUB",
+      "nombre": "Cuba",
+      "construido": true,
+      "manifest_id": "cub-v0.1",
+      "poblacion_medida": 11152627,
+      "poblacion_referencia": 10937203,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 1.97,
+      "tolerancia_pct": 2.47
+    },
+    {
+      "iso3": "ECU",
+      "nombre": "Ecuador",
+      "construido": true,
+      "manifest_id": "ecu-v0.1",
+      "poblacion_medida": 18571110,
+      "poblacion_referencia": 18289896,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 1.54,
+      "tolerancia_pct": 2.04
+    },
+    {
+      "iso3": "SLV",
+      "nombre": "El Salvador",
+      "construido": true,
+      "manifest_id": "slv-v0.1",
+      "poblacion_medida": 6442983,
+      "poblacion_referencia": 6365503,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 1.22,
+      "tolerancia_pct": 1.72
+    },
+    {
+      "iso3": "GTM",
+      "nombre": "Guatemala",
+      "construido": true,
+      "manifest_id": "gtm-v0.1",
+      "poblacion_medida": 18622441,
+      "poblacion_referencia": 18687881,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": -0.35,
+      "tolerancia_pct": 0.85
+    },
+    {
+      "iso3": "HND",
+      "nombre": "Honduras",
+      "construido": true,
+      "manifest_id": "hnd-v0.1",
+      "poblacion_medida": 10915014,
+      "poblacion_referencia": 11005850,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": -0.83,
+      "tolerancia_pct": 1.33
+    },
+    {
+      "iso3": "MEX",
+      "nombre": "México",
+      "construido": true,
+      "manifest_id": "mex-v0.1",
+      "poblacion_medida": 130288322,
+      "poblacion_referencia": 131946900,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": -1.26,
+      "tolerancia_pct": 1.5
+    },
+    {
+      "iso3": "NIC",
+      "nombre": "Nicaragua",
+      "construido": true,
+      "manifest_id": "nic-v0.1",
+      "poblacion_medida": 7240789,
+      "poblacion_referencia": 7007502,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 3.33,
+      "tolerancia_pct": 3.83
+    },
+    {
+      "iso3": "PAN",
+      "nombre": "Panamá",
+      "construido": true,
+      "manifest_id": "pan-v0.1",
+      "poblacion_medida": 4590423,
+      "poblacion_referencia": 4571189,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 0.42,
+      "tolerancia_pct": 0.92
+    },
+    {
+      "iso3": "PRY",
+      "nombre": "Paraguay",
+      "construido": true,
+      "manifest_id": "pry-v0.1",
+      "poblacion_medida": 7019481,
+      "poblacion_referencia": 7013078,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 0.09,
+      "tolerancia_pct": 0.59
+    },
+    {
+      "iso3": "PER",
+      "nombre": "Perú",
+      "construido": true,
+      "manifest_id": "per-v0.1",
+      "poblacion_medida": 34475278,
+      "poblacion_referencia": 34576665,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": -0.29,
+      "tolerancia_pct": 0.79
+    },
+    {
+      "iso3": "DOM",
+      "nombre": "República Dominicana",
+      "construido": true,
+      "manifest_id": "dom-v0.1",
+      "poblacion_medida": 11558381,
+      "poblacion_referencia": 11520487,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 0.33,
+      "tolerancia_pct": 0.83
+    },
+    {
+      "iso3": "URY",
+      "nombre": "Uruguay",
+      "construido": true,
+      "manifest_id": "ury-v0.1",
+      "poblacion_medida": 3429034,
+      "poblacion_referencia": 3384688,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 1.31,
+      "tolerancia_pct": 1.81
+    },
+    {
+      "iso3": "VEN",
+      "nombre": "Venezuela",
+      "construido": true,
+      "manifest_id": "ven-v0.1",
+      "poblacion_medida": 29924657,
+      "poblacion_referencia": 28516896,
+      "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
+      "desvio_pct": 4.94,
+      "tolerancia_pct": 5.44
+    }
+  ]
+}

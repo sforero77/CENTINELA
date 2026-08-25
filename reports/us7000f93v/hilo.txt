@@ -1,0 +1,7 @@
+1/4 Sismo M7.0 en Acapulco, México (2021-09-08T01:47:47Z UTC, 20 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
+
+2/4 Personas dentro de intensidad MMI≥6: 1,1 millones. Dentro de MMI≥7: 910 mil. Edificaciones en MMI≥7: 330 mil.
+
+3/4 Municipios mas expuestos: Acapulco De Juárez, Coyuca De Benítez, San Marcos.
+
+4/4 Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: ver el reporte completo.

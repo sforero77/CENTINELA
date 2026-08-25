@@ -12,7 +12,7 @@ Fuente               Global          Colombia
 ===================  ==============  ==========================
 GHS-POP              5,25 GB         93 MB (9 de 375 teselas)
 Overture buildings   277 GB          0 (se lee en remoto)
-MGN del DANE         3,39 GB         100 MB (5 entradas del ZIP)
+MGN del DANE         3,39 GB         68 MB (el municipal suelto)
 WorldPop age-sex     --              600 MB (10 de 62 rasters)
 ===================  ==============  ==========================
 
@@ -30,12 +30,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..common.geo import BBox
-from ..common.hdx import resolve_attempts
+from ..common.hdx import dataset_license, map_license, resolve_attempts
 from ..common.http import HttpFetcher
+from ..common.licensing import LicenseViolationError
 from ..common.logging import get_logger
 from ..common.manifest import Manifest, Source
 from .sources import ghsl, worldpop
-from .sources.zip_range import extract_entry, find_entries, list_entries
 
 _log = get_logger(__name__)
 
@@ -325,6 +325,50 @@ def _hdx_en_disco(source: Source, destino: Path) -> list[Path]:
     return sueltos
 
 
+def verificar_licencia_declarada(source: Source, *, fetcher: HttpFetcher) -> None:
+    """Contrasta la licencia que publica HDX con la que fija el manifest.
+
+    La docstring de `dataset_license` decia desde el principio que esto «se
+    consulta en cada build y se contrasta con lo que dice el manifest: si el
+    publicador cambia la licencia, queremos enterarnos por un fallo del lint y
+    no por un reclamo». **No se consultaba nunca**: ni `dataset_license` ni
+    `map_license` tenian un solo llamador en produccion.
+
+    Es el peor sitio donde tener ese hueco. La contaminacion entre cubos es el
+    riesgo que la espec clasifica de impacto alto (§7), el manifest fija la
+    licencia una vez y a mano, y un publicador que la cambie —de CC BY a
+    CC BY-NC, por ejemplo— dejaria el activo con una fuente que el reporte no
+    puede consumir, con todo pasando en verde.
+
+    **Falla el build, no avisa.** Descargar sabiendo que la licencia no es la
+    declarada es justo lo que no se puede hacer: el archivo entra al activo y
+    el activo se publica como Release.
+
+    Raises:
+        LicenseViolationError: si HDX declara una licencia distinta de la del
+            manifest, o una que el registro interno no sabe traducir.
+    """
+    declarada = dataset_license(fetcher, source.hdx_dataset)
+    if not declarada:
+        # HDX deja el campo vacio en algunos datasets. No es una licencia
+        # distinta: es ausencia de dato, y el manifest sigue mandando.
+        _log.warning(
+            "HDX no declara licencia para el dataset; se conserva la del manifest",
+            extra={"context": {"source": source.id, "manifest": source.license}},
+        )
+        return
+
+    traducida = map_license(declarada)  # lanza ante una licencia sin traduccion
+    if traducida != source.license:
+        raise LicenseViolationError(
+            f"[{source.id}] HDX publica {source.hdx_dataset!r} bajo {traducida} "
+            f"({declarada!r}) y el manifest fija {source.license}. El publicador "
+            f"cambio la licencia, o el manifest esta mal. Revisalo a mano antes "
+            f"de que este archivo entre al activo: la regla de los tres cubos "
+            f"depende de que esta cifra sea cierta (§2.4)."
+        )
+
+
 def download_hdx(source: Source, destino: Path, *, fetcher: HttpFetcher) -> list[Path]:
     """Descarga un recurso de HDX resolviendo su URL por la API.
 
@@ -349,6 +393,7 @@ def download_hdx(source: Source, destino: Path, *, fetcher: HttpFetcher) -> list
         return ya_estan
 
     destino.mkdir(parents=True, exist_ok=True)
+    verificar_licencia_declarada(source, fetcher=fetcher)
     intentos = resolve_attempts(fetcher, source.hdx_dataset, resource=source.hdx_resource)
 
     fallos: list[str] = []
@@ -411,8 +456,9 @@ def _extraer_zip(contenido: bytes, destino: Path) -> list[Path]:
 def download_zip_completo(url: str, destino: Path, *, fetcher: HttpFetcher) -> list[Path]:
     """Baja un ZIP entero y devuelve las capas que ``ST_Read`` sabe abrir.
 
-    Para archivos pequenos es mejor que :func:`download_zip_entries`: una
-    peticion en vez de muchas, y sin depender de que el servidor sirva rangos.
+    Una peticion en vez de muchas, y sin depender de que el servidor sirva
+    rangos. Es la unica ruta para ZIP desde que se retiro la extraccion
+    selectiva por rangos.
 
     Existe por una caida real. El geoportal del DANE dejo de servir rangos por
     encima de ~1,5 GB —responde 206 y cierra sin enviar nada—, y el nivel
@@ -431,42 +477,6 @@ def download_zip_completo(url: str, destino: Path, *, fetcher: HttpFetcher) -> l
     _log.info(
         "ZIP descargado y extraido",
         extra={"context": {"url": url, "capas": [p.name for p in rutas]}},
-    )
-    return rutas
-
-
-def download_zip_entries(
-    url: str, destino: Path, *, patron: str, fetcher: HttpFetcher
-) -> list[Path]:
-    """Extrae de un ZIP remoto solo las entradas cuyo nombre contiene ``patron``.
-
-    Pensado para el MGN del DANE: 3,39 GB de los que P0 necesita 100 MB.
-    """
-    destino.mkdir(parents=True, exist_ok=True)
-    entradas = list_entries(fetcher, url)
-    quiero = [
-        e
-        for e in find_entries(entradas, ".shp", ".shx", ".dbf", ".prj", ".cpg")
-        if patron in e.name
-    ]
-    if not quiero:
-        raise FileNotFoundError(f"El ZIP no contiene entradas con {patron!r}: {url}")
-
-    rutas: list[Path] = []
-    for entrada in quiero:
-        path = destino / Path(entrada.name).name
-        if not path.exists():
-            write_atomic(path, extract_entry(fetcher, url, entrada))
-        rutas.append(path)
-    _log.info(
-        "entradas extraidas de ZIP remoto",
-        extra={
-            "context": {
-                "url": url,
-                "entradas": len(rutas),
-                "bytes": sum(p.stat().st_size for p in rutas),
-            }
-        },
     )
     return rutas
 

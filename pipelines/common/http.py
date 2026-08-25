@@ -90,6 +90,15 @@ class HttpFetcher:
     def get_range(self, url: str, start: int, end: int) -> bytes:
         """Bytes ``[start, end]`` inclusive.
 
+        Sobrevive a `zip_range`, el modulo que la usaba: aquel parseaba el
+        directorio central de un ZIP remoto para bajar cinco ficheros del MGN
+        nacional de 3,39 GB, y se borro en la auditoria del 25-ago-2026 porque
+        el manifest paso al fichero municipal suelto de 68 MB y el geoportal
+        dejo de servir rangos sobre ~1,5 GB. Esto se queda porque es una
+        primitiva del cliente HTTP, no una estrategia de descarga, y sus dos
+        modos de fallo —206 con cuerpo vacio, 200 con el archivo entero— estan
+        medidos contra servidores reales y probados.
+
         Raises:
             RuntimeError: si el servidor ignora el ``Range`` y responde 200 con
                 el archivo entero —aceptarlo en silencio significaria bajar

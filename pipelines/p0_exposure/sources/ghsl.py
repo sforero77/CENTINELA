@@ -31,7 +31,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from ...common.geo import BBox
+from ...common.geo import BBox, ensure_bundled_proj
 
 #: Release global vigente. Verificado: R2023A sigue siendo el ultimo para el
 #: globo — el R2025A que aparece en el FTP del JRC es solo del Artico.
@@ -150,6 +150,10 @@ def tiles_for_bbox(
 
     Requiere el extra ``[geo]`` por la reproyeccion.
     """
+    # Antes de tocar GDAL/PROJ: un `PROJ_LIB` del sistema tapa la base que
+    # traen las ruedas y ningun CRS se resuelve. Ver `ensure_bundled_proj`.
+    ensure_bundled_proj()
+
     from pyproj import Transformer
 
     to_mw = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)

@@ -7,6 +7,7 @@ codigo puro y testeable sin red ni geo. El computo pesado se delega a
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
@@ -15,10 +16,14 @@ from typing import Any
 from ..common.constants import PRELIMINARY_MAX_HOURS, PRELIMINARY_RETRY_MINUTES
 from ..common.http import Fetcher
 from ..common.logging import get_logger
+from ..common.paths import REPORTS_DIR, validate_usgs_id
 from ..common.state import EventState, EventStatus, ProcessedVersions, utcnow_iso
+from ..common.toponimos import traducir_lugar
 from ..p1_trigger.feed import FeedContractError, epoch_ms_to_iso
+from ..p3_report.changelog import build_changelog
+from ..p3_report.model import Report
 from ..p3_report.run import write_report_bundle
-from .exposure_join import connect
+from .exposure_join import check_quality, connect
 from .products import ProductSet, parse_products
 
 _log = get_logger(__name__)
@@ -137,7 +142,7 @@ def reconstruct_backtest_state(detail: dict[str, Any]) -> EventState:
             raise FeedContractError(f"Evento sin magnitud: {detail.get('id')}")
         usgs_id = str(detail["id"])
         origen_utc = epoch_ms_to_iso(props["time"])
-        lugar = str(props.get("place") or "ubicacion no reportada")
+        lugar = traducir_lugar(str(props.get("place") or "")) or "ubicacion no reportada"
     except FeedContractError:
         raise
     except (KeyError, TypeError, ValueError, IndexError) as exc:
@@ -219,6 +224,9 @@ def run_impact(
             },
         )
 
+    else:
+        state = _refrescar_lugar(state, detail, events_dir)
+
     products = parse_products(detail)
     decision = decide(state, products, forzar=forzar)
     _log.info(
@@ -280,7 +288,34 @@ def run_impact(
         deslizamiento=deslizamiento,
         licuefaccion=licuefaccion,
     )
-    reporte = build_report(con, state, products, totales, manifest_id=manifest_id)
+    # §6.4 pide estos asserts "en P0 y P2". En P2 no corrian: vivian en una
+    # funcion sin llamador, llamada desde otra funcion sin llamador cuya
+    # docstring afirmaba que si. Van aqui, en la orquestacion, porque no
+    # preguntan si el calculo salio bien —de eso se ocupa `compute_impact`—
+    # sino si lo calculado se puede publicar.
+    calidad = check_quality(con)
+    calidad.raise_if_blocking()
+    if calidad.avisos:
+        _log.warning(
+            "el corte pasa los asserts bloqueantes pero no esta limpio",
+            extra={"context": {"usgs_id": usgs_id, "avisos": list(calidad.avisos)}},
+        )
+
+    reporte = build_report(
+        con, state, products, totales, manifest_id=manifest_id, notas=calidad.avisos
+    )
+
+    # RF-04: al re-emitir por un ShakeMap nuevo hay que decir **que cambio**.
+    # Un ShakeMap se revisa muchas veces —el de Venezuela llego a v14— y quien
+    # ya leyo la version anterior no puede tener que releerla entera durante una
+    # emergencia para encontrar la diferencia.
+    #
+    # La seccion se renderizaba desde el principio y no aparecio nunca en un
+    # reporte, porque nadie llenaba `Report.changelog`.
+    reporte = replace(
+        reporte,
+        changelog=build_changelog(_reporte_publicado(usgs_id, reports_root), reporte),
+    )
 
     columnas = [c[0] for c in con.execute("SELECT * FROM impact_adm2 LIMIT 0").description]
     filas = [
@@ -368,6 +403,61 @@ def _publicar_preliminar(
     )
 
 
+def _refrescar_lugar(
+    state: EventState, detail: dict[str, Any], events_dir: Path | None
+) -> EventState:
+    """Vuelve a leer el lugar del detail y lo guarda si cambio.
+
+    `lugar` es lo unico del `event_state` que es **descripcion y no medida**: no
+    identifica el evento ni entra en ningun calculo, solo se lee. Y depende del
+    pipeline, no solo de la fuente — desde RF-06 se traduce al espanol al
+    entrar.
+
+    Sin esto, los diecinueve eventos ya detectados conservaban para siempre el
+    lugar en ingles con que se guardaron, porque `reconstruct_backtest_state`
+    —el unico sitio que lo traducia— solo corre cuando el estado **no** existe.
+    Reemitir arreglaba las cifras y dejaba el titulo como estaba.
+
+    Lo demas no se refresca: `mag`, `origen_utc`, `lon` y `lat` son lo que el
+    sistema afirma haber visto, y reescribirlos en cada corrida borraria el
+    registro de que alguna vez dijo otra cosa.
+    """
+    try:
+        nuevo = traducir_lugar(str(detail["properties"].get("place") or ""))
+    except (KeyError, TypeError):
+        return state
+    if not nuevo or nuevo == state.lugar:
+        return state
+
+    _log.info(
+        "lugar actualizado desde el detail",
+        extra={"context": {"usgs_id": state.usgs_id, "antes": state.lugar, "ahora": nuevo}},
+    )
+    refrescado = replace(state, lugar=nuevo)
+    refrescado.save(events_dir)
+    return refrescado
+
+
+def _reporte_publicado(usgs_id: str, reports_root: Path | None) -> Report | None:
+    """El reporte que ya esta en disco para este evento, si lo hay.
+
+    Es el punto de comparacion del changelog de RF-04. Devuelve ``None`` en la
+    primera emision y tambien si el fichero esta ilegible: un changelog que no
+    se puede calcular no puede impedir que salga el reporte nuevo, que es lo
+    que de verdad hace falta durante el evento.
+    """
+    raiz = reports_root or REPORTS_DIR
+    origen = raiz / validate_usgs_id(usgs_id) / "report.json"
+    try:
+        return Report.from_dict(json.loads(origen.read_text(encoding="utf-8")))
+    except (OSError, ValueError, KeyError) as exc:
+        _log.info(
+            "sin reporte previo con el que comparar",
+            extra={"context": {"usgs_id": usgs_id, "motivo": str(exc)}},
+        )
+        return None
+
+
 def _cargar_admin_lookup(con: Any, exposure_glob: str, ruta: str | None) -> None:
     """Materializa ``admin_lookup``, que aporta nombre y centroide municipal."""
     candidata = ruta or str(Path(exposure_glob).parent / "admin_lookup.parquet")
@@ -376,10 +466,10 @@ def _cargar_admin_lookup(con: Any, exposure_glob: str, ruta: str | None) -> None
             f"CREATE OR REPLACE TABLE admin_lookup AS SELECT * FROM read_parquet('{candidata}')"
         )
         return
-    # Sin diccionario el reporte sigue saliendo, con el codigo DIVIPOLA como
+    # Sin diccionario el reporte sigue saliendo, con el codigo del municipio como
     # nombre. Es peor de leer, pero mejor que no publicar.
     _log.warning(
-        "sin admin_lookup: el reporte usara el codigo DIVIPOLA como nombre",
+        "sin admin_lookup: el reporte usara el codigo del municipio como nombre",
         extra={"context": {"buscado": candidata}},
     )
     con.execute(

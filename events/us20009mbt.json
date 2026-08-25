@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us20009mbt",
+  "estado": "publicado",
+  "mag": 6.9,
+  "lon": -92.0092,
+  "lat": 14.9091,
+  "depth_km": 93.0,
+  "lugar": "2 km al SSO de San Pablo, Guatemala",
+  "origen_utc": "2017-06-14T07:29:04Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T17:01:29Z",
+    "publicado": "2026-08-25T17:41:54Z",
+    "usgs_origen": "2017-06-14T07:29:04Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2017-06-14, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

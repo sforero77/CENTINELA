@@ -8,6 +8,7 @@ from typing import Any, Self
 
 from ..common.constants import USGS_FEED_BASE
 from ..common.http import Fetcher
+from ..common.toponimos import traducir_lugar
 
 
 class FeedContractError(Exception):
@@ -60,7 +61,7 @@ class EventCandidate:
                 lon=lon,
                 lat=lat,
                 depth_km=depth,
-                lugar=str(props.get("place") or "ubicacion no reportada"),
+                lugar=traducir_lugar(str(props.get("place") or "")) or "ubicacion no reportada",
                 origen_utc=epoch_ms_to_iso(props["time"]),
                 detail_url=str(props["detail"]),
                 tipo=str(props.get("type", "earthquake")),

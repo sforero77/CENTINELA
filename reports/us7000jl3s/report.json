@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000jl3s",
+    "mag": 6.8,
+    "depth_km": 68.0,
+    "utc": "2023-03-18T17:12:52Z",
+    "lugar": "14 km al NNO de Baláo, Ecuador",
+    "pager_alert": "orange",
+    "lon": -79.8518,
+    "lat": -2.7834
+  },
+  "inputs": {
+    "shakemap_version": 7,
+    "groundfailure_version": 9,
+    "exposure_manifest": "ecu-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 4750724.875813359,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 495964.05150999734
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "EC0901",
+      "nombre": "Guayaquil",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 3097690.9360329895
+    },
+    {
+      "adm2_id": "EC0907",
+      "nombre": "Durán",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 293068.93598122336
+    },
+    {
+      "adm2_id": "EC0701",
+      "nombre": "Machala",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 290022.6315193232
+    },
+    {
+      "adm2_id": "EC0910",
+      "nombre": "Milagro",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 206816.14947658777
+    },
+    {
+      "adm2_id": "EC0911",
+      "nombre": "Naranjal",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 88517.58366055228
+    },
+    {
+      "adm2_id": "EC0709",
+      "nombre": "Pasaje",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 82000.12141954899
+    },
+    {
+      "adm2_id": "EC0920",
+      "nombre": "San Jacinto De Yaguachi",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 74539.90179289039
+    },
+    {
+      "adm2_id": "EC0916",
+      "nombre": "Samborondón",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 74165.42159074545
+    },
+    {
+      "adm2_id": "EC0712",
+      "nombre": "Santa Rosa",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 74070.57189168502
+    },
+    {
+      "adm2_id": "EC0707",
+      "nombre": "Huaquillas",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 60443.76373657817
+    },
+    {
+      "adm2_id": "EC0909",
+      "nombre": "El Triunfo",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 60177.37784834951
+    },
+    {
+      "adm2_id": "EC0706",
+      "nombre": "El Guabo",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 57273.17647451069
+    },
+    {
+      "adm2_id": "EC0304",
+      "nombre": "La Troncal",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 55231.466600103304
+    },
+    {
+      "adm2_id": "EC0921",
+      "nombre": "Playas",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 54366.44140038453
+    },
+    {
+      "adm2_id": "EC0912",
+      "nombre": "Naranjito",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 45723.51596469898
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 0.4,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:41:04Z",
+  "pipeline_version": "0.1.0"
+}

@@ -70,7 +70,10 @@ def render_markdown(report: Report) -> str:
         )
 
     if report.top_municipios:
-        partes.append(f"## Municipios mas expuestos (top {TOP_ADM2_COUNT})")
+        partes.append(
+            f"## Municipios mas expuestos (top {TOP_ADM2_COUNT}), "
+            f"por poblacion en MMI≥{report.totales.banda_titular or 6}"
+        )
         partes.append(_tabla_municipios(report))
 
     partes.append(_seccion_ground_failure(report))
@@ -184,14 +187,33 @@ def _nota_superficie(report: Report) -> str:
 
 
 def _tabla_municipios(report: Report) -> str:
+    """Ranking municipal, rotulado con la banda que este evento alcanzo.
+
+    Dos cosas que la tabla daba por supuestas y no son ciertas fuera de
+    Colombia:
+
+    **La banda.** La columna decia siempre "Poblacion MMI≥7", y casi la mitad
+    de los sismos reales de LATAM no llegan ahi sobre poblacion: para ellos eran
+    quince ceros bajo un rotulo que prometia cifras. Tehuantepec 2017, M8,2, se
+    publicaba asi.
+
+    **El codigo.** Decia "DIVIPOLA", que es el codigo municipal **de
+    Colombia**. En el reporte de Tehuantepec rotulaba `MX20043` como DIVIPOLA.
+    El sistema cubre diecinueve paises y cada uno nombra el suyo: se rotula por
+    lo que es —un codigo de municipio— y el pais lo pone el manifest.
+    """
+    banda = report.totales.banda_titular or 6
     lineas = [
-        "| # | Municipio | DIVIPOLA | MMI max | Poblacion MMI≥7 |",
+        f"| # | Municipio | Codigo | MMI max | Poblacion MMI≥{banda} |",
         "|---:|---|---|---:|---:|",
     ]
     for i, m in enumerate(report.top_municipios[:TOP_ADM2_COUNT], start=1):
+        # `pop_banda` no existia en los reportes anteriores: para ellos la banda
+        # es 7 y la cifra publicada es la de siempre.
+        cifra = m.pop_mmi7p if banda == 7 else m.pop_banda
         lineas.append(
             f"| {i} | {m.nombre} | `{m.adm2_id}` | "
-            f"{format_number_es(m.mmi_max, 1)} | {format_count_prose(m.pop_mmi7p)} |"
+            f"{format_number_es(m.mmi_max, 1)} | {format_count_prose(cifra)} |"
         )
     return "\n".join(lineas)
 

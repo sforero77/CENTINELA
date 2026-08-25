@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us1000gez7",
+    "mag": 7.3,
+    "depth_km": 146.82,
+    "utc": "2018-08-21T21:31:47Z",
+    "lugar": "40 km al ENE de Carúpano, Venezuela",
+    "pager_alert": "yellow",
+    "lon": -62.9019,
+    "lat": 10.7731
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 1,
+    "exposure_manifest": "ven-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 3416.044249188155,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 31.124547377228737
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "VE1907",
+      "nombre": "Cajigal",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 2469.6878992654383
+    },
+    {
+      "adm2_id": "VE1909",
+      "nombre": "Libertador",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 946.3563499227166
+    },
+    {
+      "adm2_id": "VE1904",
+      "nombre": "Benítez",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1910",
+      "nombre": "Mariño",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1610",
+      "nombre": "Punceres",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1901",
+      "nombre": "Andrés Eloy Blanco",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1905",
+      "nombre": "Bermúdez",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1915",
+      "nombre": "Valdez",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1902",
+      "nombre": "Andrés Mata",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1608",
+      "nombre": "Maturín",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1603",
+      "nombre": "Bolívar",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1903",
+      "nombre": "Arismendi",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE2501",
+      "nombre": "Dependencias Federales",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1913",
+      "nombre": "Ribero",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1906",
+      "nombre": "Bolívar",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 416.9,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T18:40:56Z",
+  "pipeline_version": "0.1.0"
+}

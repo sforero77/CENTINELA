@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us2000bmhe",
+  "estado": "publicado",
+  "mag": 6.5,
+  "lon": -84.4865,
+  "lat": 9.5147,
+  "depth_km": 19.36,
+  "lugar": "18 km al O de Parrita, Costa Rica",
+  "origen_utc": "2017-11-13T02:28:23Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 2
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T17:01:40Z",
+    "publicado": "2026-08-25T17:40:46Z",
+    "usgs_origen": "2017-11-13T02:28:23Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2017-11-13, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

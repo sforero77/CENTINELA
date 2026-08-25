@@ -1,0 +1,7 @@
+1/4 Sismo M7.6 en 41 km al SO de Quellón, Chile (2016-12-25T14:22:27Z UTC, 38 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
+
+2/4 Personas dentro de intensidad MMI≥6: 200 mil. Dentro de MMI≥7: 57 mil. Edificaciones en MMI≥7: 45 mil.
+
+3/4 Municipios mas expuestos: Chiloe, Aysén, Palena.
+
+4/4 Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: ver el reporte completo.

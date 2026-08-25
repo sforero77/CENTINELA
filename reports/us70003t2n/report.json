@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us70003t2n",
+    "mag": 6.6,
+    "depth_km": 57.92,
+    "utc": "2019-05-30T09:03:32Z",
+    "lugar": "32 km al S de La Libertad, El Salvador",
+    "pager_alert": "yellow",
+    "lon": -89.3056,
+    "lat": 13.1994
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 6,
+    "exposure_manifest": "slv-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 66269.33582028653,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 1122.8564099725336,
+    "pop_lq_alta": 21098.49125910923
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "SV06003",
+      "nombre": "La Paz Oeste",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 45419.331734268926
+    },
+    {
+      "adm2_id": "SV05002",
+      "nombre": "La Libertad Costa",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 9970.592273000628
+    },
+    {
+      "adm2_id": "SV06001",
+      "nombre": "La Paz Centro",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 7390.775697121397
+    },
+    {
+      "adm2_id": "SV10005",
+      "nombre": "San Salvador Sur",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 3488.636115895584
+    },
+    {
+      "adm2_id": "SV04001",
+      "nombre": "Cuscatlán Norte",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV10002",
+      "nombre": "San Salvador Este",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV02002",
+      "nombre": "Cabañas Oeste",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV05006",
+      "nombre": "La Libertad Sur",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV06002",
+      "nombre": "La Paz Este",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV04002",
+      "nombre": "Cuscatlán Sur",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV05003",
+      "nombre": "La Libertad Este",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV10001",
+      "nombre": "San Salvador Centro",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV10899",
+      "nombre": "Lago De Llopango",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV11001",
+      "nombre": "San Vicente Norte",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV11002",
+      "nombre": "San Vicente Sur",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 13.1,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:54:04Z",
+  "pipeline_version": "0.1.0"
+}

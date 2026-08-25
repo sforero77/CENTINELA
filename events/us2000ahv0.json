@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us2000ahv0",
+  "estado": "publicado",
+  "mag": 8.2,
+  "lon": -93.8993,
+  "lat": 15.0222,
+  "depth_km": 47.39,
+  "lugar": "Terremoto de Tehuantepec, México (2017)",
+  "origen_utc": "2017-09-08T04:49:19Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 1
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T16:59:29Z",
+    "publicado": "2026-08-25T18:33:28Z",
+    "usgs_origen": "2017-09-08T04:49:19Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2017-09-08, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

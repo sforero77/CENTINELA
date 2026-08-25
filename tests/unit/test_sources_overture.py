@@ -17,7 +17,6 @@ from pipelines.p0_exposure.sources.overture import (
     collection_url,
     item_data_url,
     parse_collection,
-    pmtiles_url,
     resolve_data_urls,
     select_files,
 )
@@ -87,7 +86,6 @@ def test_selecciona_solo_lo_que_toca_colombia() -> None:
 def test_el_release_va_fijado_en_la_url() -> None:
     """Nunca 'latest': el catalogo tiene un alias que apunta al ultimo."""
     assert RELEASE in collection_url(RELEASE, "buildings", "building")
-    assert RELEASE in pmtiles_url(RELEASE, "buildings")
 
 
 # --- Resolucion del parquet detras de cada item ----------------------------

@@ -14,8 +14,19 @@ from typing import Any
 import pytest
 
 from pipelines.common.constants import USGS_FEED_BACKFILL, USGS_FEED_PRIMARY
+from pipelines.common.geo import ensure_bundled_proj
 from pipelines.common.http import FixtureFetcher
 from pipelines.p1_trigger.feed import feed_url
+
+# Antes de que ningun modulo de prueba importe rasterio o pyproj. En produccion
+# lo hace cada funcion antes de su propio import, pero las pruebas fabrican sus
+# GeoTIFF con rasterio directamente y ese import va primero.
+#
+# Sin esto, en una maquina con PostgreSQL/PostGIS instalado las pruebas de
+# raster fallaban sueltas y pasaban en la suite completa —porque para entonces
+# ya habia corrido codigo de produccion que lo arreglaba—, que es la clase de
+# verde que no significa nada.
+ensure_bundled_proj()
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

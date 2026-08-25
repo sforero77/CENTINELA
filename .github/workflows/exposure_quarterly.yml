@@ -2,7 +2,7 @@ name: P0 · Activo de exposicion (trimestral)
 
 # El pais va en el nombre de la corrida: con varios paises en paralelo, la
 # lista de Actions es indistinguible sin esto.
-run-name: "Activo de exposicion — ${{ inputs.iso3 || 'COL' }}"
+run-name: "Activo de exposicion — ${{ inputs.iso3 || 'todos los publicados' }}"
 
 on:
   schedule:
@@ -11,29 +11,92 @@ on:
   workflow_dispatch:
     inputs:
       iso3:
-        description: "Pais a reconstruir (ISO3)"
-        required: true
-        default: COL
+        description: "Pais a reconstruir (ISO3). Vacio = todos los publicados"
+        required: false
+        default: ""
         type: string
 
 permissions:
   contents: write
 
 jobs:
+  # LA CORRIDA PROGRAMADA RECONSTRUIA UN SOLO PAIS, Y HABIA DIECIOCHO.
+  #
+  # El workflow fijaba `ISO3: ${{ inputs.iso3 || 'COL' }}` desde cuando Fase 0
+  # construia solo Colombia. Fase 1 llego antes de que nadie volviera aqui: hay
+  # 18 activos publicados y el trimestral refrescaba uno.
+  #
+  # No era solo envejecimiento. Los 19 manifests fijan el mismo release de
+  # Overture y Overture conserva **dos** (~2 meses): pasado ese plazo, un pais
+  # que no se haya reconstruido no se puede reconstruir — la url del release
+  # fijado deja de existir. Diecisiete paises a un trimestre de quedarse sin
+  # camino de vuelta a sus propias fuentes.
+  elegir:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    outputs:
+      paises: ${{ steps.lista.outputs.paises }}
+    steps:
+      - name: Decidir que paises se reconstruyen
+        id: lista
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          # Via env y siempre citada: `inputs.iso3` es texto libre y no debe
+          # poder convertirse en comando al interpolarse en un `run`.
+          ISO3: ${{ inputs.iso3 }}
+        run: |
+          if [ -n "$ISO3" ]; then
+            echo "$ISO3" | grep -Eq '^[A-Z]{3}$' || {
+              echo "::error::ISO3 invalido: $ISO3"; exit 1;
+            }
+            PAISES=$(printf '["%s"]' "$ISO3")
+          else
+            # Se reconstruye lo que el sistema **sirve**: los paises con activo
+            # publicado. Un pais con manifest y sin Release no se ha construido
+            # nunca, y esa primera vez se pide a mano — es la corrida que hay
+            # que mirar, porque estrena la tolerancia y los toponimos.
+            PAISES=$(gh release list --limit 200 --json tagName --jq '
+              [ .[] | .tagName
+                | select(startswith("exposure-"))
+                | split("-")[1] | ascii_upcase
+              ] | unique')
+          fi
+
+          # Una matriz vacia no falla: se salta el job entero y la corrida sale
+          # verde sin haber reconstruido nada. Es justo el silencio que este
+          # repositorio persigue en todas partes.
+          #
+          # La comprobacion es textual y no con `jq` a proposito: `gh --jq` ya
+          # trae su interprete embebido, pero `jq` suelto es un binario mas del
+          # runner que este workflow no necesita.
+          if [ -z "$PAISES" ] || [ "$PAISES" = "[]" ]; then
+            echo "::error::No hay ningun activo publicado que reconstruir."
+            exit 1
+          fi
+
+          echo "paises=$PAISES" >> "$GITHUB_OUTPUT"
+          echo "se reconstruyen: $PAISES"
+
   construir:
+    needs: elegir
     runs-on: ubuntu-latest
     # Un build de un pais grande ronda los 45 min. Con dos horas hay margen de
     # sobra, y una corrida colgada falla en un plazo conocido en vez de ocupar
     # el runner seis horas: el default de GitHub son 360 min.
     timeout-minutes: 120
-    if: github.repository == 'sforero77/CENTINELA'
+    strategy:
+      # Un pais roto no puede impedir que se reconstruyan los demas: es
+      # exactamente el caso en que hay que reconstruir los demas.
+      fail-fast: false
+      # No es un limite de GitHub, es cortesia con las fuentes: HDX, WorldPop y
+      # el bucket de Overture son servicios publicos y gratuitos, y dieciocho
+      # descargas simultaneas de ~1 GB son un abuso que ademas acaba en 429.
+      max-parallel: 4
+      matrix:
+        iso3: ${{ fromJSON(needs.elegir.outputs.paises) }}
     env:
-      # Fase 0 construye un solo pais. Cuando Fase 1 traiga los siete, esto
-      # vuelve a ser una matriz con fail-fast: false, para que un pais roto no
-      # impida reconstruir los demas.
-      # Via env y siempre citada: `inputs.iso3` es texto libre y no debe poder
-      # convertirse en comando al interpolarse en un `run`.
-      ISO3: ${{ inputs.iso3 || 'COL' }}
+      ISO3: ${{ matrix.iso3 }}
     steps:
       - uses: actions/checkout@v4
 

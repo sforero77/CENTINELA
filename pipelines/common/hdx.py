@@ -20,8 +20,6 @@ resuelta se registra en el log del build para que quede en la trazabilidad.
 
 from __future__ import annotations
 
-from typing import Any
-
 from .http import Fetcher
 
 HDX_PACKAGE_SHOW = "https://data.humdata.org/api/3/action/package_show?id={dataset}"
@@ -105,68 +103,6 @@ def resolve_attempts(
             f"{dataset!r} no publica ninguno de {list(formats)}; tiene {disponibles}"
         )
     return intentos
-
-
-def resolve_resource(
-    fetcher: Fetcher,
-    dataset: str,
-    *,
-    formats: tuple[str, ...] = PREFERRED_FORMATS,
-    resource: str = "",
-) -> tuple[str, str]:
-    """Devuelve ``(formato, url)`` del recurso pedido de un dataset.
-
-    Sin ``resource`` se toma el primer recurso del formato mas preferido. Eso
-    basta para los extractos de HOTOSM, que publican una capa por dataset, y
-    **no** basta para los COD-AB: el de Colombia publica cuatro recursos SHP y
-    el primero son las secciones urbanas del MGN, no los municipios. Un pais
-    con varios recursos del mismo formato tiene que fijar cual, igual que fija
-    el vintage.
-
-    Args:
-        fetcher: cliente HTTP.
-        dataset: nombre estable del dataset en HDX, p. ej.
-            ``hotosm_col_health_facilities``.
-        formats: formatos aceptados, en orden de preferencia.
-        resource: fragmento del nombre del recurso. Si se da, manda sobre el
-            orden de preferencia de formatos.
-
-    Raises:
-        HdxResolutionError: si el dataset no existe, si no publica ninguno de
-            los formatos pedidos, o si ``resource`` no identifica exactamente
-            un recurso.
-    """
-    payload = fetcher.get_json(HDX_PACKAGE_SHOW.format(dataset=dataset))
-    if not payload.get("success"):
-        raise HdxResolutionError(f"HDX no reconoce el dataset {dataset!r}")
-
-    resultado: dict[str, Any] = payload["result"]
-    recursos = [r for r in (resultado.get("resources") or []) if r.get("url")]
-
-    if resource:
-        aguja = resource.lower()
-        elegidos = [r for r in recursos if aguja in str(r.get("name", "")).lower()]
-        if len(elegidos) != 1:
-            nombres = [str(r.get("name", "?")) for r in recursos]
-            raise HdxResolutionError(
-                f"{resource!r} identifica {len(elegidos)} recursos en {dataset!r}, "
-                f"y tiene que identificar exactamente uno. Disponibles: {nombres}"
-            )
-        return str(elegidos[0].get("format", "?")), str(elegidos[0]["url"])
-
-    por_formato = {
-        str(r.get("format", "")).lower(): str(r["url"])
-        for r in reversed(recursos)  # el primero de cada formato gana
-    }
-    for formato in formats:
-        url = por_formato.get(formato.lower())
-        if url:
-            return formato, url
-
-    disponibles = sorted({str(r.get("format", "?")) for r in recursos})
-    raise HdxResolutionError(
-        f"{dataset!r} no publica ninguno de {list(formats)}; tiene {disponibles}"
-    )
 
 
 def dataset_license(fetcher: Fetcher, dataset: str) -> str:

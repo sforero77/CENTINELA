@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us60003sc0",
+  "estado": "publicado",
+  "mag": 8.0,
+  "lon": -75.2697,
+  "lat": -5.8119,
+  "depth_km": 122.57,
+  "lugar": "78 km al NE de Navarro, Perú",
+  "origen_utc": "2019-05-26T07:41:15Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 8
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T16:47:11Z",
+    "publicado": "2026-08-25T17:53:39Z",
+    "usgs_origen": "2019-05-26T07:41:15Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2019-05-26, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

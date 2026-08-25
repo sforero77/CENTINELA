@@ -1,0 +1,112 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000455l",
+    "mag": 6.2,
+    "depth_km": 32.58,
+    "utc": "2019-06-26T05:23:51Z",
+    "lugar": "4 km al SE de Aserrío de Gariché, Panamá",
+    "pager_alert": "yellow",
+    "lon": -82.754,
+    "lat": 8.4612
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 8,
+    "exposure_manifest": "pan-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 55329.06562968716,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 20248.553711594082
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "PA0205",
+      "nombre": "Bugaba",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 26582.634998542257
+    },
+    {
+      "adm2_id": "PA0202",
+      "nombre": "Barú",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 23229.6368214041
+    },
+    {
+      "adm2_id": "PA0201",
+      "nombre": "Alanje",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 5244.770118801855
+    },
+    {
+      "adm2_id": "PA0210",
+      "nombre": "Renacimiento",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 272.0236909389496
+    },
+    {
+      "adm2_id": "PA0203",
+      "nombre": "Boquerón",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0206",
+      "nombre": "David",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0204",
+      "nombre": "Boquete",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0207",
+      "nombre": "Dolega",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 1.0,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:45:03Z",
+  "pipeline_version": "0.1.0"
+}

@@ -26,15 +26,16 @@ centinela impact us6000tjl2 \
 |---|---|
 | P1 trigger (feed, filtro, dedupe, estado) | ✅ **operando cada 10 min** |
 | Visor y `/status` publicados | ✅ https://sforero77.github.io/CENTINELA/ |
-| P0 activo de exposicion (descarga → parquet) | ✅ funcional, nueve capas |
+| P0 activo de exposicion (descarga → parquet) | ✅ **publicado en 18 de 19 paises** |
 | P2 impacto (contornos → celdas → GF → join) | ✅ funcional, con activo elegido por epicentro |
 | P3 reporte (json, md, csv, hilo, 2 mapas) | ✅ funcional |
 | Pagina `/status` con latencia real | ✅ funcional |
-| Golden G1 (Chocó) y G3 | ✅ corren |
+| Golden G1 (Chocó), G2 (Venezuela) y G3 | ✅ corren, ninguna saltada |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**431 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), `ruff` y
-`mypy --strict` limpios, arranque verificado desde clon vacio.
+**601 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), ninguna
+saltada, `ruff` y `mypy --strict` limpios, arranque verificado desde clon vacio.
+Medido el 25-ago-2026, tras la auditoria: eran 431.
 
 ### El cero silencioso que casi se publica
 
@@ -152,35 +153,59 @@ Dos arreglos:
 
 → `tests/unit/test_pais_del_evento.py`
 
-### 2.1 Cerrar G2: reporte de Venezuela · **falta correr el backtest**
+### 2.1 ✅ G2 cerrada · **los dos mainshocks de Venezuela, publicados**
 
-El codigo ya esta hecho: `data/manifests/VEN.yaml`, `COUNTRY_BBOX["VEN"]`
-—medida sobre el COD-AB, no estimada—, el mapeo de columnas del COD-AB y las
-aserciones de G2, que se saltan solas mientras no exista el reporte y se
-activan sin tocar nada cuando exista.
+Cerrado el 24-ago-2026. Los dos mainshocks del 24-jun-2026 —M7,5 en Catia La Mar
+y M7,2 en San Felipe, separados por 33 segundos y 145 km— estan reconstruidos,
+con sus cifras congeladas, y las 35 pruebas golden pasan sin una sola saltada.
 
-El activo ya esta construido y publicado (`exposure-ven-20260824`). Lo que
-falta es el **reporte** de los dos mainshocks del 24-jun-2026, que ademas
-estrena el camino P2→P3 en CI: hasta ahora `impact.yml` nunca ha calculado
-nada, solo ha devuelto `omitir: ya procesado`.
+De paso estreno el camino P2→P3 en CI, que hasta entonces solo habia devuelto
+`omitir: ya procesado`. Corrio entero en **27 segundos**.
 
-    gh workflow run impact.yml -f usgs_id=us6000t7zp -f backtest=true
-    gh workflow run impact.yml -f usgs_id=us6000t7zc -f backtest=true
+El activo se reconstruyo antes con el rescate de frontera corregido: el
+publicado hasta ese momento se habia construido con el rescate que invadia al
+vecino y desviaba +6,30 %. Congelar `POP_MMI7P_ESPERADO` contra un activo
+contaminado habria fijado el error.
 
-`--backtest` reconstruye el `event_state` que P1 nunca creo —el feed que vigila
-es el de la ultima hora— y lo marca como retrospectivo, para que su latencia de
-dos meses no entre en el p50/p95 y el reporte lleve el aviso de que las
-edificaciones y las vias son las de hoy.
+**La tolerancia quedo en 5,44 %**, estrechada desde 8,0 por `centinela calibrar`
+con lo medido: 29.924.657 contra los 28.516.896 de la ONU, +4,94 %. Sigue siendo
+una expectativa y no una verificacion — GHS-POP deriva de la ronda censal de
+2010 y no modela la emigracion venezolana. Que ese assert falle algun dia seria
+un hallazgo publicable, no un bug.
 
-**Antes hay que reconstruir el activo de VEN con el rescate corregido.** El
-publicado se construyo con el rescate que invadia al vecino, y Venezuela se
-desvia +6,30 % — el mismo orden que Paraguay antes del arreglo. Congelar
-`POP_MMI7P_ESPERADO` contra un activo contaminado seria fijar el error.
+### 2.1c El catalogo historico regional · **19 reportes en 13 paises**
 
-La tolerancia esta en 5 % contra la ONU (28.516.896 para 2025) y es una
-expectativa, no una verificacion: GHS-POP deriva de la ronda censal de 2010 y
-no modela la emigracion venezolana. Que el assert falle seria un hallazgo, no
-un bug. Procedimiento en [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md).
+Cerrado el 25-ago-2026. El sistema reconstruyo diecinueve sismos del catalogo
+real de USGS, cada uno contra el activo de su pais y con los productos que USGS
+publico entonces. El Choco deja de ser una demostracion aislada.
+
+Correrlo sobre la region entera encontro cuatro cosas que ninguna prueba
+sintetica habria dado. Detalle en [`docs/AUDITORIA.md`](docs/AUDITORIA.md):
+
+- **Chile no habria tenido reporte nunca** (A16). Su caja envolvente mide 1.719
+  grados cuadrados por Rapa Nui y la de Argentina 671, asi que un sismo en
+  Coquimbo se ordenaba como argentino. `impact.yml` se quedaba con el primer
+  candidato con Release y el join salia vacio. Ahora prueba los candidatos en
+  orden, que es lo que dos docstrings prometian desde el principio.
+- **Ocho de los diecinueve eventos no alcanzan MMI≥7 sobre poblacion** (A17).
+  El 44 %. El producto entero titulaba con MMI≥7, asi que para ellos publicaba
+  "0 personas" y una tabla municipal ordenada alfabeticamente. Tehuantepec 2017
+  —M8,2, 98 muertos— salia asi.
+- **Los toponimos salian en ingles** (A18), incumpliendo RF-06. Se veia poco
+  con un solo reporte, cuya fixture estaba escrita a mano en espanol.
+- **La tabla municipal rotulaba todo como DIVIPOLA** (A19), que es el codigo de
+  Colombia, tambien sobre municipios mexicanos.
+
+Lo unico que fallo del lote fue Bolivia, y por un motivo legitimo: el ShakeMap
+de su M6,8 de 2018 —a 559 km de profundidad— no publica `cont_mmi`. El sistema
+lo dijo en voz alta y no publico nada, que es lo correcto.
+
+Su `event_state` **no se conserva**. Quedaba en `detectado`, sin camino hacia
+`publicado` y sin nada que lo reintentara, porque P1 solo mira la ultima hora.
+Un estado asi no es un registro: es un evento aparentemente atascado que la
+proxima auditoria tendria que volver a investigar. Si algun dia USGS publica
+contornos para ese sismo, el backtest se corre otra vez y el estado se
+reconstruye solo.
 
 ### 2.1b Fuentes de LATAM: validadas las 19, manifests escritos
 
@@ -257,9 +282,11 @@ toponimos.
 Lo que cada pais nuevo necesita, en orden:
 
 1. `uv run centinela country <ISO3>` — unos 800 MB y una hora larga por pais.
-2. Anotar `medido_ghs_pop` en su manifest y **ajustar `tolerancia_pct`**: hoy
-   todos los nuevos llevan un 5 % provisional que no es una medicion. Colombia,
-   que si esta medida, usa 1 %.
+2. Anotar `medido_ghs_pop` en su manifest y **ajustar `tolerancia_pct`**.
+   Hecho ya para los dieciocho construidos: `centinela calibrar` las estrecho
+   con lo medido y hoy van de 0,59 % (Paraguay) a 5,44 % (Venezuela). Brasil
+   sigue con el 5 % provisional porque es el unico sin construir — su manifest
+   lleva 25 % y no tiene `medido_ghs_pop`.
 3. Validar los toponimos. (La codificacion de Venezuela estaba anotada como
    rota —«Falc?n»— y **no lo esta**: era la consola de Windows. Verificado
    byte a byte sobre el parquet publicado.)
@@ -388,6 +415,14 @@ asi que se corren sueltos:
 uv sync --python 3.12 --extra dev --extra geo --extra render
 uv run ruff check . ; uv run ruff format --check . ; uv run mypy ; uv run pytest -m "not network"
 ```
+
+**Y `print` de Python emite CRLF.** Si automatizas el CLI desde bash —un lote
+de backtests, por ejemplo— y lees ids con `mapfile -t`, cada id se queda con un
+`
+` pegado: `mapfile -t` quita el LF y no el CR. La URL del detail sale
+invalida y **falla en silencio, evento por evento**. Se arregla con
+`| tr -d '
+'` y costo dos intentos encontrarlo.
 
 Si `uv` no tiene Python 3.12 lo descarga solo, pero baja ~21 MB de GitHub y con
 una conexion lenta agota el tiempo de espera. `uv python install 3.12` por

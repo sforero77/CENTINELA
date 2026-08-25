@@ -5,7 +5,7 @@
     "mag": 7.4,
     "depth_km": 110.285,
     "utc": "2026-08-10T12:34:28Z",
-    "lugar": "5 km al S de San José del Palmar, Chocó, Colombia",
+    "lugar": "5 km al S de San José del Palmar, Colombia",
     "pager_alert": "red",
     "lon": -76.2422,
     "lat": 4.8436
@@ -19,16 +19,16 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 6960085.743641049,
+    "pop_mmi6p": 6960085.743641048,
     "pop_mmi7p": 2415793.4590726923,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 289256.92600052553,
+    "pop_65p_mmi7p": 289256.92600052594,
     "bld_mmi7p": 444424.0,
     "built_m2_mmi7p": 69814813.0,
     "health_mmi7p": 518.0,
     "edu_mmi7p": 998.0,
-    "road_km_mmi7p": 8502.889960662435,
-    "road_km_principal_mmi7p": 984.7368105680955,
+    "road_km_mmi7p": 8502.889960662429,
+    "road_km_principal_mmi7p": 984.736810568096,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 1600028.0208497662
   },
@@ -37,91 +37,106 @@
       "adm2_id": "66001",
       "nombre": "Pereira",
       "mmi_max": 7.5,
-      "pop_mmi7p": 498099.9250317244
+      "pop_mmi7p": 498099.9250317244,
+      "pop_banda": 498099.9250317244
     },
     {
       "adm2_id": "76109",
       "nombre": "Buenaventura",
       "mmi_max": 7.0,
-      "pop_mmi7p": 401081.3250222858
+      "pop_mmi7p": 401081.3250222858,
+      "pop_banda": 401081.3250222858
     },
     {
       "adm2_id": "63001",
       "nombre": "Armenia",
       "mmi_max": 7.0,
-      "pop_mmi7p": 339027.23267125804
+      "pop_mmi7p": 339027.23267125804,
+      "pop_banda": 339027.23267125804
     },
     {
       "adm2_id": "76834",
       "nombre": "Tuluá",
       "mmi_max": 7.0,
-      "pop_mmi7p": 256921.917987613
+      "pop_mmi7p": 256921.917987613,
+      "pop_banda": 256921.917987613
     },
     {
       "adm2_id": "66170",
       "nombre": "Dosquebradas",
       "mmi_max": 7.5,
-      "pop_mmi7p": 180620.49054662883
+      "pop_mmi7p": 180620.49054662883,
+      "pop_banda": 180620.49054662883
     },
     {
       "adm2_id": "76147",
       "nombre": "Cartago",
       "mmi_max": 7.5,
-      "pop_mmi7p": 129910.50064553693
+      "pop_mmi7p": 129910.50064553693,
+      "pop_banda": 129910.50064553693
     },
     {
       "adm2_id": "27001",
       "nombre": "Quibdó",
       "mmi_max": 7.0,
-      "pop_mmi7p": 111742.45586497057
+      "pop_mmi7p": 111742.45586497057,
+      "pop_banda": 111742.45586497057
     },
     {
       "adm2_id": "66682",
       "nombre": "Santa Rosa De Cabal",
       "mmi_max": 7.0,
-      "pop_mmi7p": 67775.61170557514
+      "pop_mmi7p": 67775.61170557514,
+      "pop_banda": 67775.61170557514
     },
     {
       "adm2_id": "63401",
       "nombre": "La Tebaida",
       "mmi_max": 7.0,
-      "pop_mmi7p": 54247.76072970964
+      "pop_mmi7p": 54247.76072970964,
+      "pop_banda": 54247.76072970964
     },
     {
       "adm2_id": "76895",
       "nombre": "Zarzal",
       "mmi_max": 7.5,
-      "pop_mmi7p": 39669.865389760584
+      "pop_mmi7p": 39669.865389760584,
+      "pop_banda": 39669.865389760584
     },
     {
       "adm2_id": "76020",
       "nombre": "Alcalá",
       "mmi_max": 7.0,
-      "pop_mmi7p": 37139.00253418367
+      "pop_mmi7p": 37139.00253418367,
+      "pop_banda": 37139.00253418367
     },
     {
       "adm2_id": "76400",
       "nombre": "La Unión",
       "mmi_max": 7.5,
-      "pop_mmi7p": 34735.664364411496
+      "pop_mmi7p": 34735.664364411496,
+      "pop_banda": 34735.664364411496
     },
     {
       "adm2_id": "63470",
       "nombre": "Montenegro",
       "mmi_max": 7.0,
-      "pop_mmi7p": 31681.55454718042
+      "pop_mmi7p": 31681.55454718042,
+      "pop_banda": 31681.55454718042
     },
     {
       "adm2_id": "63594",
       "nombre": "Quimbaya",
       "mmi_max": 7.0,
-      "pop_mmi7p": 31506.350372412242
+      "pop_mmi7p": 31506.350372412242,
+      "pop_banda": 31506.350372412242
     },
     {
       "adm2_id": "17174",
       "nombre": "Chinchiná",
       "mmi_max": 7.0,
-      "pop_mmi7p": 29454.54325528536
+      "pop_mmi7p": 29454.54325528536,
+      "pop_banda": 29454.54325528536
     }
   ],
   "incertidumbre": {
@@ -141,6 +156,6 @@
     "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
   ],
-  "generado_utc": "2026-08-25T03:23:16Z",
+  "generado_utc": "2026-08-25T17:40:39Z",
   "pipeline_version": "0.1.0"
 }

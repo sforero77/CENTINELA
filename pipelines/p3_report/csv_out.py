@@ -52,3 +52,21 @@ def write_adm2_csv(rows: Iterable[Mapping[str, Any]], path: Path) -> Path:
         for row in rows:
             writer.writerow({col: row.get(col, "") for col in columnas})
     return path
+
+
+def read_adm2_csv(path: Path) -> list[dict[str, str]]:
+    """Relee el CSV municipal, saltando la fila HXL.
+
+    Es la vuelta de :func:`write_adm2_csv` y vive a su lado a proposito: la
+    peculiaridad de este formato —que la **segunda** fila no son datos sino
+    etiquetas HXL— es conocimiento del formato, y tenerlo en dos sitios es como
+    se desincronizan las cosas. Quien regenere un derivado a partir del CSV
+    publicado lee por aqui.
+
+    Los valores salen como texto, tal cual estan en el fichero. Quien los
+    necesite numericos los convierte: el CSV es la cifra exacta publicada y
+    reinterpretarla al leerla seria cambiarla.
+    """
+    with path.open(encoding="utf-8", newline="") as fh:
+        filas = list(csv.DictReader(fh))
+    return [f for f in filas if not str(f.get("usgs_id", "")).startswith("#")]

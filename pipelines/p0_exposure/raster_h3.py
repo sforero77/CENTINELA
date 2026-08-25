@@ -25,6 +25,7 @@ import numpy as np
 import pyarrow as pa
 
 from ..common.constants import H3_RES_COMPUTE
+from ..common.geo import ensure_bundled_proj
 from ..common.logging import get_logger
 
 _log = get_logger(__name__)
@@ -55,6 +56,10 @@ def raster_to_arrow(
             defecto 0: un pixel sin gente no aporta nada y multiplicaria por
             veinte el volumen a procesar.
     """
+    # Antes de tocar GDAL/PROJ: un `PROJ_LIB` del sistema tapa la base que
+    # traen las ruedas y ningun CRS se resuelve. Ver `ensure_bundled_proj`.
+    ensure_bundled_proj()
+
     import rasterio
     from pyproj import Transformer
 

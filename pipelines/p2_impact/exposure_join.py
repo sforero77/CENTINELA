@@ -15,105 +15,54 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ..common.constants import GROUND_FAILURE_HIGH_PROB
-
 #: Extensiones que P0 y P2 requieren cargadas.
 DUCKDB_EXTENSIONS: tuple[str, ...] = ("spatial", "h3")
 
-#: Materializa ``impact_h3`` (§3.3): una fila por celda alcanzada, con TODAS
-#: las columnas de exposicion copiadas al momento del corte. La copia es
-#: deliberada: el reporte debe ser inmutable aunque el activo se reconstruya
-#: manana.
-SQL_IMPACT_H3 = """
-CREATE OR REPLACE TABLE impact_h3 AS
-SELECT
-    $usgs_id            AS usgs_id,
-    $shakemap_version   AS shakemap_version,
-    e.h3_08,
-    e.iso3, e.adm1_id, e.adm2_id,
-    m.mmi_mean, m.mmi_max,
-    COALESCE(g.ls_prob, 0.0) AS ls_prob,
-    COALESCE(g.lq_prob, 0.0) AS lq_prob,
-    e.pop_total, e.pop_0_14, e.pop_15_64, e.pop_65p, e.pop_alt_worldpop,
-    e.bld_count, e.bld_area_m2, e.built_m2,
-    e.health_count, e.edu_count,
-    e.road_km_primary, e.road_km_secondary, e.road_km_other,
-    e.src_manifest
-FROM read_parquet($exposure_glob) AS e
-JOIN mmi_cells AS m USING (h3_08)
-LEFT JOIN gf_cells AS g USING (h3_08)
-"""
-
-#: Agrega a municipio (§3.3). Es la tabla que consume el mundo: prensa, salas
-#: de crisis y ONG leen ``impact_adm2``, no las celdas.
-SQL_IMPACT_ADM2 = """
-CREATE OR REPLACE TABLE impact_adm2 AS
-SELECT
-    i.usgs_id,
-    i.shakemap_version,
-    i.adm2_id,
-    a.nombre,
-    MAX(i.mmi_max)                                              AS mmi_max,
-    SUM(CASE WHEN i.mmi_max >= 6 THEN i.pop_total ELSE 0 END)   AS pop_mmi6p,
-    SUM(CASE WHEN i.mmi_max >= 7 THEN i.pop_total ELSE 0 END)   AS pop_mmi7p,
-    SUM(CASE WHEN i.mmi_max >= 8 THEN i.pop_total ELSE 0 END)   AS pop_mmi8p,
-    SUM(CASE WHEN i.mmi_max >= 7 THEN i.pop_65p ELSE 0 END)     AS pop_65p_mmi7p,
-    SUM(CASE WHEN i.mmi_max >= 7 THEN i.bld_count ELSE 0 END)   AS bld_mmi7p,
-    SUM(CASE WHEN i.mmi_max >= 7 THEN i.built_m2 ELSE 0 END)    AS built_m2_mmi7p,
-    SUM(CASE WHEN i.mmi_max >= 7 THEN i.health_count ELSE 0 END) AS health_mmi7p,
-    SUM(CASE WHEN i.mmi_max >= 7 THEN i.edu_count ELSE 0 END)   AS edu_mmi7p,
-    SUM(CASE WHEN i.mmi_max >= 7
-             THEN i.road_km_primary + i.road_km_secondary + i.road_km_other
-             ELSE 0 END)                                        AS road_km_mmi7p,
-    SUM(CASE WHEN i.mmi_max >= 7
-             THEN i.road_km_primary + i.road_km_secondary
-             ELSE 0 END)                                        AS road_km_principal_mmi7p,
-    SUM(CASE WHEN i.ls_prob >= $gf_high THEN i.pop_total ELSE 0 END) AS ls_pop_expuesta,
-    SUM(CASE WHEN i.lq_prob >= $gf_high THEN i.pop_total ELSE 0 END) AS lq_pop_expuesta
-FROM impact_h3 AS i
-JOIN admin_lookup AS a USING (adm2_id)
-GROUP BY ALL
-ORDER BY pop_mmi7p DESC
-"""
-
-#: Asserts de calidad que corren en P0 y P2 (§6.4). Cada entrada es
-#: (nombre, consulta que debe devolver 0 filas).
-QUALITY_ASSERTIONS: tuple[tuple[str, str], ...] = (
+#: Asserts de calidad de P2 (§6.4). Cada entrada es
+#: ``(nombre, consulta que debe devolver 0 filas, bloqueante)``.
+#:
+#: **Van contra las tablas del corte, no contra el activo entero.** Preguntan
+#: por las cifras que se estan a punto de publicar, que es lo unico que este
+#: reporte afirma; el activo lo vigila `validate_layer_coverage` en P0, en su
+#: propio momento y con sus propias reglas.
+#:
+#: Y no todos pesan igual, asi que el tercer campo lo dice:
+#:
+#: * **Bloqueante** significa que las cifras serian falsas. Un reporte que no
+#:   sale es un problema; uno que publica poblacion negativa es una mentira, y
+#:   ademas creible.
+#: * **No bloqueante** significa que la cifra es correcta y esta incompleta.
+#:   Se publica como nota de incertidumbre, porque tumbar un reporte durante un
+#:   terremoto por un municipio sin nombre es peor que decir que falta.
+QUALITY_ASSERTIONS: tuple[tuple[str, str, bool], ...] = (
     (
         "pop_negativa",
-        "SELECT h3_08 FROM exposure_h3 WHERE pop_total < 0",
+        "SELECT h3_08 FROM impact_h3 WHERE pop_total < 0",
+        True,
     ),
     (
         "pop_nula",
-        "SELECT h3_08 FROM exposure_h3 WHERE pop_total IS NULL OR adm2_id IS NULL",
+        "SELECT h3_08 FROM impact_h3 WHERE pop_total IS NULL OR adm2_id IS NULL",
+        True,
     ),
     (
+        # Un municipio que llega a `impact_adm2` y no esta en `admin_lookup`
+        # **desaparece del reporte sin una palabra**: `build_report` cruza las
+        # dos con un JOIN interno para sacar el nombre. Puede ser el mas
+        # expuesto del evento. Los totales nacionales salen de `impact_h3` y
+        # siguen siendo correctos: lo que falta es la fila, no la cifra.
         "crosswalk_incompleto",
         "SELECT adm2_id FROM impact_adm2 WHERE mmi_max >= 6 "
         "AND adm2_id NOT IN (SELECT adm2_id FROM admin_lookup)",
+        False,
     ),
 )
 
-#: Condiciones que NO son error sino bandera publicada. La espec es explicita:
-#: "se publica el flag, no se oculta" (§6.4).
-QUALITY_FLAGS: tuple[tuple[str, str], ...] = (
-    (
-        "revisar_sin_edificios",
-        "bld_count = 0 AND pop_total > 500",
-    ),
-    (
-        # La version medible de la anterior: no "puede que falte mapeo" sino
-        # "el satelite ve 1.000 m² construidos donde no hay ninguna
-        # edificacion registrada".
-        "construido_no_mapeado",
-        "bld_count = 0 AND built_m2 > 1000",
-    ),
-    (
-        "discrepancia_poblacional",
-        "pop_alt_worldpop > 0 AND abs(pop_total - pop_alt_worldpop) "
-        "/ nullif(pop_alt_worldpop, 0) > 2.0",
-    ),
-)
+#: Las banderas de §6.4 —las condiciones que se publican en vez de fallar— se
+#: calculan al construir el activo, en `p0_exposure.build.SQL_FLAGS`, y viajan
+#: en la columna `flags_calidad` de cada celda. Aqui habia una segunda copia,
+#: identica y sin llamador: dos definiciones de la misma regla que solo pueden
+#: divergir. La que manda es la de P0.
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,34 +141,58 @@ def register_cells(con: Any, inputs: JoinInputs) -> None:
     con.unregister("gf_arrow")
 
 
-def run_join(inputs: JoinInputs, *, con: Any, gf_high: float = GROUND_FAILURE_HIGH_PROB) -> Any:
-    """Ejecuta el join completo y devuelve la conexion con las tablas creadas.
+class QualityAssertionError(Exception):
+    """Un assert bloqueante de §6.4 fallo: las cifras del corte no son fiables."""
 
-    Deja materializadas ``impact_h3`` e ``impact_adm2``, y corre los asserts de
-    calidad de §6.4 sobre el resultado.
+
+@dataclass(frozen=True, slots=True)
+class QualityReport:
+    """Resultado de correr los asserts de §6.4 sobre un corte."""
+
+    #: Fallos bloqueantes. Con uno solo, el reporte no debe publicarse.
+    bloqueantes: tuple[str, ...] = ()
+    #: Fallos que se publican como nota de incertidumbre en vez de detener.
+    avisos: tuple[str, ...] = ()
+
+    @property
+    def limpio(self) -> bool:
+        return not self.bloqueantes and not self.avisos
+
+    def raise_if_blocking(self) -> None:
+        """Detiene la publicacion si algun assert bloqueante fallo."""
+        if self.bloqueantes:
+            raise QualityAssertionError(
+                "Los asserts de calidad de §6.4 fallaron sobre el corte de este "
+                f"evento: {'; '.join(self.bloqueantes)}. Publicar estas cifras "
+                f"seria publicar numeros que el propio sistema sabe que estan mal."
+            )
+
+
+def check_quality(con: Any) -> QualityReport:
+    """Corre los asserts de §6.4 sobre las tablas del corte.
+
+    La espec pide que estos asserts corran **en P0 y en P2**. En P2 no corrian:
+    vivian en una funcion sin llamador, invocada desde otra funcion sin
+    llamador cuya docstring afirmaba que si. Un assert que no se ejecuta es
+    peor que no tenerlo, porque ocupa el sitio de la vigilancia que no existe.
+
+    Returns:
+        El parte de calidad. Quien llama decide: `raise_if_blocking` para no
+        publicar cifras falsas, y `avisos` para las notas del reporte.
     """
-    register_cells(con, inputs)
-    con.execute(
-        SQL_IMPACT_H3,
-        {
-            "usgs_id": inputs.usgs_id,
-            "shakemap_version": inputs.shakemap_version,
-            "exposure_glob": inputs.exposure_glob,
-        },
-    )
-    con.execute(SQL_IMPACT_ADM2, {"gf_high": gf_high})
-    return con
+    bloqueantes: list[str] = []
+    avisos: list[str] = []
 
-
-def check_quality(con: Any, *, tabla_exposicion: str = "exposure_h3") -> list[str]:
-    """Corre los asserts de §6.4. Devuelve la lista de fallos (vacia = limpio)."""
-    fallos: list[str] = []
-    for nombre, consulta in QUALITY_ASSERTIONS:
+    for nombre, consulta, bloquea in QUALITY_ASSERTIONS:
+        destino = bloqueantes if bloquea else avisos
         try:
-            filas = con.execute(consulta.replace("exposure_h3", tabla_exposicion)).fetchall()
-        except Exception as exc:  # tabla ausente en una corrida parcial
-            fallos.append(f"{nombre}: no se pudo evaluar ({exc})")
+            filas = con.execute(consulta).fetchall()
+        except Exception as exc:
+            # No poder evaluar un assert no es lo mismo que aprobarlo. Se
+            # reporta con la severidad del assert que no se pudo correr.
+            destino.append(f"{nombre}: no se pudo evaluar ({exc})")
             continue
         if filas:
-            fallos.append(f"{nombre}: {len(filas)} filas incumplen (ej. {filas[:3]})")
-    return fallos
+            destino.append(f"{nombre}: {len(filas)} filas incumplen (ej. {filas[:3]})")
+
+    return QualityReport(bloqueantes=tuple(bloqueantes), avisos=tuple(avisos))

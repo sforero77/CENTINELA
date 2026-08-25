@@ -70,12 +70,26 @@ abre un issue y te avisamos en la proxima activacion.
 
 ## Estilo
 
+Lo esencial cabe aqui; el detalle, con el caso real que justifica cada regla,
+esta en [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md).
+
 - **Codigo en ingles, dominio en espanol.** Los nombres de columnas, estados y
   campos del reporte estan en espanol porque son parte del producto; el resto
   sigue las convenciones de Python.
 - `ruff` y `mypy --strict` no son negociables. Si un tipo no cuadra, hablalo en
   el PR antes de silenciarlo con `# type: ignore`.
 - Los comentarios explican **por que**, no **que**. El codigo ya dice que hace.
+  Aqui la vara es mas alta que la habitual: casi todos los bugs de este
+  repositorio producen **cifras plausibles**, asi que un comentario justifica
+  una decision con la evidencia que la motivo, o sobra.
+- **Si escribes una funcion, conectala.** Es el fallo que este proyecto mas
+  veces ha tenido que cazar —el reporte preliminar, el epicentro del mapa, tres
+  capas del activo, los asserts de §6.4— y todas las veces la funcion estaba
+  probada. `tests/unit/test_funciones_conectadas.py` falla si una funcion
+  publica se queda sin llamador.
+- **Codigo muerto se borra**, no se comenta ni se guarda por si acaso. Git se
+  acuerda. Conservar algo sin llamador exige declararlo con su motivo, y «esta
+  probada» no es un motivo.
 
 ## Lo que no aceptamos
 

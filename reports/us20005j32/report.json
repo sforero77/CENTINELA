@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us20005j32",
+    "mag": 7.8,
+    "depth_km": 20.59,
+    "utc": "2016-04-16T23:58:36Z",
+    "lugar": "27 km al SSE de Muisne, Ecuador",
+    "pager_alert": "orange",
+    "lon": -79.9218,
+    "lat": 0.3819
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 1,
+    "exposure_manifest": "ecu-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 4311549.30783991,
+    "pop_mmi7p": 2283453.94845534,
+    "pop_mmi8p": 107904.13165850379,
+    "pop_65p_mmi7p": 173953.16509731745,
+    "bld_mmi7p": 1012045.0,
+    "built_m2_mmi7p": 131022681.0,
+    "health_mmi7p": 527.0,
+    "edu_mmi7p": 2412.0,
+    "road_km_mmi7p": 23966.11658556727,
+    "road_km_principal_mmi7p": 1712.7223893445444,
+    "pop_ls_alta": 206312.22301653633,
+    "pop_lq_alta": 1160483.191602271
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "EC1317",
+      "nombre": "Pedernales",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 65950.37720756885,
+      "pop_banda": 52795.91896647215
+    },
+    {
+      "adm2_id": "EC1320",
+      "nombre": "Jama",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 27162.78255407419,
+      "pop_banda": 24541.06603837665
+    },
+    {
+      "adm2_id": "EC0803",
+      "nombre": "Muisne",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 37782.30219740607,
+      "pop_banda": 8820.98200934846
+    },
+    {
+      "adm2_id": "EC0806",
+      "nombre": "Atacames",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 55224.02203127928,
+      "pop_banda": 8565.683931555599
+    },
+    {
+      "adm2_id": "EC1322",
+      "nombre": "San Vicente",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 26577.481548885815,
+      "pop_banda": 7353.572487015277
+    },
+    {
+      "adm2_id": "EC1314",
+      "nombre": "Sucre",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 68319.48796129227,
+      "pop_banda": 5826.9082257356495
+    },
+    {
+      "adm2_id": "EC0802",
+      "nombre": "Eloy Alfaro",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 6604.937012920156,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "EC0804",
+      "nombre": "Quinindé",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 164691.17179264408,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "EC0801",
+      "nombre": "Esmeraldas",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 297596.3180903783,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "EC1303",
+      "nombre": "Chone",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 150742.281617485,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "EC1301",
+      "nombre": "Portoviejo",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 333074.6068843431,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "EC1305",
+      "nombre": "Flavio Alfaro",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 29456.803168826737,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "EC1307",
+      "nombre": "Junín",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 23079.771811996587,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "EC0807",
+      "nombre": "Rioverde",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 32705.750614682212,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "EC1311",
+      "nombre": "Pichincha",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 35501.74925542157,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 3.2,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:41:50Z",
+  "pipeline_version": "0.1.0"
+}

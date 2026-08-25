@@ -1,4 +1,4 @@
-# Exposicion sismica — M7.5 20 km W of Catia La Mar, Venezuela
+# Exposicion sismica — M7.5 20 km al O de Catia La Mar, Venezuela
 
 **Evento USGS:** `us6000t7zp` · **Origen:** 2026-06-24T22:05:04Z UTC · **Profundidad:** 10,0 km
 
@@ -20,27 +20,27 @@
 | Vias locales en MMI≥7 | 4.300 km |
 | Superficie construida en MMI≥7 | 74,8 km² |
 
-De la poblacion en intensidad MMI≥7, alrededor de **230 mil** personas tienen 65 anos o mas.
+De la poblacion en intensidad MMI≥7, alrededor de **230 mil** personas tienen 65 años o más.
 
-## Municipios mas expuestos (top 15)
+## Municipios mas expuestos (top 15), por poblacion en MMI≥8
 
-| # | Municipio | DIVIPOLA | MMI max | Poblacion MMI≥7 |
+| # | Municipio | Codigo | MMI max | Poblacion MMI≥8 |
 |---:|---|---|---:|---:|
-| 1 | Libertador | `VE0101` | 7,5 | 650 mil |
-| 2 | Vargas | `VE2401` | 8,0 | 380 mil |
-| 3 | Sucre | `VE1519` | 7,5 | 350 mil |
-| 4 | Puerto Cabello | `VE0811` | 8,0 | 210 mil |
-| 5 | Plaza | `VE1517` | 7,0 | 170 mil |
-| 6 | San Felipe | `VE2211` | 8,0 | 140 mil |
-| 7 | Veroes | `VE2214` | 8,5 | 100 mil |
-| 8 | Chacao | `VE1507` | 7,5 | 83 mil |
-| 9 | Juan José Mora | `VE0805` | 8,5 | 58 mil |
-| 10 | Palmasola | `VE1116` | 7,5 | 31 mil |
-| 11 | Independencia | `VE2205` | 7,0 | 30 mil |
-| 12 | Cocorote | `VE2204` | 7,0 | 25 mil |
-| 13 | Manuel Monge | `VE2208` | 7,5 | 13 mil |
-| 14 | Ocumare De La Costa De Oro | `VE0518` | 8,0 | 11 mil |
-| 15 | Silva | `VE1120` | 8,0 | 10 mil |
+| 1 | Vargas | `VE2401` | 8,0 | 360 mil |
+| 2 | Puerto Cabello | `VE0811` | 8,0 | 160 mil |
+| 3 | Veroes | `VE2214` | 8,5 | 100 mil |
+| 4 | Juan José Mora | `VE0805` | 8,5 | 58 mil |
+| 5 | San Felipe | `VE2211` | 8,0 | 54 mil |
+| 6 | Silva | `VE1120` | 8,0 | 660 |
+| 7 | Ocumare De La Costa De Oro | `VE0518` | 8,0 | 58 |
+| 8 | Tovar | `VE0514` | 7,5 | 0 |
+| 9 | Girardot | `VE0503` | 7,5 | 0 |
+| 10 | Manuel Monge | `VE2208` | 7,5 | 0 |
+| 11 | Chacao | `VE1507` | 7,5 | 0 |
+| 12 | Bolívar | `VE2202` | 7,5 | 0 |
+| 13 | Palmasola | `VE1116` | 7,5 | 0 |
+| 14 | Bejuma | `VE0801` | 7,5 | 0 |
+| 15 | Libertador | `VE0101` | 7,5 | 0 |
 
 ## Deslizamiento y licuefaccion
 
@@ -57,6 +57,11 @@ PAGER (USGS) estima para este evento una alerta **red**. CENTINELA no estima vic
 
 Discrepancia entre GHS-POP y WorldPop en el area afectada: **11,8 %**.
 
+## Cambios frente a la version anterior
+
+- ShakeMap: v14 → v15
+- Ninguna cifra publicada cambia frente a la version anterior.
+
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -64,10 +69,10 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **11,8 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v14**
+- ShakeMap consumido: **v15**
 - Ground Failure consumido: **v12**
 - Manifest de exposicion: `ven-v0.1`
-- Pipeline: `0.1.0` · Generado: 2026-08-25T03:23:43Z
+- Pipeline: `0.1.0` · Generado: 2026-08-25T17:54:22Z
 
 ## Advertencias
 

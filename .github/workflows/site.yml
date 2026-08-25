@@ -6,6 +6,8 @@ on:
     paths:
       - "site/**"
       - "reports/**"
+      # Construir un pais cambia la cobertura que el visor publica.
+      - "data/manifests/**"
       - ".github/workflows/site.yml"
   workflow_dispatch:
 
@@ -26,6 +28,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # La cobertura regional es un derivado de los manifests: cuantos paises
+      # tienen activo construido y medido. Se recalcula aqui para que no pueda
+      # quedarse vieja — un tablero que promete mas paises de los que hay deja
+      # de ser un tablero.
+      - name: Recalcular la cobertura regional
+        run: |
+          uv sync --python 3.12 --no-dev
+          uv run centinela cobertura
 
       - name: Preparar sitio
         run: |

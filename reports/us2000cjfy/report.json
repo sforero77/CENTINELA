@@ -1,0 +1,98 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us2000cjfy",
+    "mag": 7.1,
+    "depth_km": 39.0,
+    "utc": "2018-01-14T09:18:45Z",
+    "lugar": "37 km al O de Atiquipa, Perú",
+    "pager_alert": "green",
+    "lon": -74.7092,
+    "lat": -15.7675
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 0,
+    "exposure_manifest": "per-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 36933.04225536436,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "PE0403",
+      "nombre": "Caraveli",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 24069.96234550327
+    },
+    {
+      "adm2_id": "PE1103",
+      "nombre": "Nasca",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 12863.079909861088
+    },
+    {
+      "adm2_id": "PE0506",
+      "nombre": "Lucanas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE0507",
+      "nombre": "Parinacochas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE1101",
+      "nombre": "Ica",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE1104",
+      "nombre": "Palpa",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 11.6,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:53:42Z",
+  "pipeline_version": "0.1.0"
+}

@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us70003t2n",
+  "estado": "publicado",
+  "mag": 6.6,
+  "lon": -89.3056,
+  "lat": 13.1994,
+  "depth_km": 57.92,
+  "lugar": "32 km al S de La Libertad, El Salvador",
+  "origen_utc": "2019-05-30T09:03:32Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 6
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T17:01:48Z",
+    "publicado": "2026-08-25T17:54:05Z",
+    "usgs_origen": "2019-05-30T09:03:32Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2019-05-30, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

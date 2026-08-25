@@ -16,9 +16,20 @@ from pipelines.common.hdx import (
     HdxResolutionError,
     dataset_license,
     map_license,
-    resolve_resource,
+    resolve_attempts,
 )
 from pipelines.common.http import FixtureFetcher
+
+
+def _elegido(fetcher: Any, dataset: str, **kwargs: Any) -> tuple[str, str]:
+    """Formato y url del **primer** intento de `resolve_attempts`.
+
+    `resolve_attempts` devuelve una lista de formas de obtener la capa, porque
+    algunos paises publican la suya partida por tipo de geometria. Estas
+    pruebas hablan de la eleccion, no del respaldo, asi que miran la primera.
+    """
+    formato, urls = resolve_attempts(fetcher, dataset, **kwargs)[0]
+    return formato, urls[0]
 
 
 def _paquete(nombre: str, recursos: list[dict[str, str]], licencia: str) -> dict[str, Any]:
@@ -47,20 +58,20 @@ def test_prefiere_geopackage() -> None:
             "hdx-odc-odbl",
         ),
     )
-    assert resolve_resource(fetcher, ds) == ("Geopackage", "https://x/gpkg.zip")
+    assert _elegido(fetcher, ds) == ("Geopackage", "https://x/gpkg.zip")
 
 
 def test_cae_al_siguiente_formato_disponible() -> None:
     ds = "cod-ab-ecu"
     fetcher = _fetcher(ds, _paquete(ds, [{"format": "SHP", "url": "https://x/s.zip"}], "cc-by-igo"))
-    assert resolve_resource(fetcher, ds) == ("SHP", "https://x/s.zip")
+    assert _elegido(fetcher, ds) == ("SHP", "https://x/s.zip")
 
 
 def test_dataset_inexistente() -> None:
     ds = "no_existe"
     fetcher = FixtureFetcher({HDX_PACKAGE_SHOW.format(dataset=ds): {"success": False}})
     with pytest.raises(HdxResolutionError, match="no reconoce"):
-        resolve_resource(fetcher, ds)
+        _elegido(fetcher, ds)
 
 
 def test_sin_formato_utilizable() -> None:
@@ -68,7 +79,7 @@ def test_sin_formato_utilizable() -> None:
     ds = "solo_csv"
     fetcher = _fetcher(ds, _paquete(ds, [{"format": "CSV", "url": "https://x/a.csv"}], "cc-by"))
     with pytest.raises(HdxResolutionError, match="CSV"):
-        resolve_resource(fetcher, ds)
+        _elegido(fetcher, ds)
 
 
 def test_lee_la_licencia_declarada() -> None:
@@ -123,13 +134,13 @@ def _fetcher_col() -> FixtureFetcher:
 
 def test_sin_recurso_se_toma_el_primero_del_formato() -> None:
     """El comportamiento heredado, que aqui elige el archivo equivocado."""
-    _, url = resolve_resource(_fetcher_col(), "cod-ab-col")
+    _, url = _elegido(_fetcher_col(), "cod-ab-col")
     assert url.endswith("urb.zip"), "secciones urbanas, no municipios"
 
 
 def test_con_recurso_se_toma_el_declarado() -> None:
     """Es la razon de existir de `hdx_resource` en el manifest."""
-    formato, url = resolve_resource(
+    formato, url = _elegido(
         _fetcher_col(), "cod-ab-col", resource="COL Administrative Divisions Shapefiles"
     )
     assert formato == "SHP"
@@ -137,26 +148,26 @@ def test_con_recurso_se_toma_el_declarado() -> None:
 
 
 def test_el_recurso_no_distingue_mayusculas() -> None:
-    _, url = resolve_resource(_fetcher_col(), "cod-ab-col", resource="administrative divisions")
+    _, url = _elegido(_fetcher_col(), "cod-ab-col", resource="administrative divisions")
     assert url.endswith("adm.zip")
 
 
 def test_un_recurso_ambiguo_es_error() -> None:
     """Elegir uno de dos en silencio es como no haberlo fijado."""
     with pytest.raises(HdxResolutionError, match="identifica 2 recursos"):
-        resolve_resource(_fetcher_col(), "cod-ab-col", resource="SECCION")
+        _elegido(_fetcher_col(), "cod-ab-col", resource="SECCION")
 
 
 def test_un_recurso_inexistente_es_error() -> None:
     """Si el publicador renombra, hay que enterarse en el build, no despues."""
     with pytest.raises(HdxResolutionError, match="identifica 0 recursos"):
-        resolve_resource(_fetcher_col(), "cod-ab-col", resource="no-existe")
+        _elegido(_fetcher_col(), "cod-ab-col", resource="no-existe")
 
 
 def test_el_error_lista_lo_que_si_hay() -> None:
     """El mensaje tiene que decir con que reemplazarlo."""
     with pytest.raises(HdxResolutionError, match="MGN2024_URB_SECCION"):
-        resolve_resource(_fetcher_col(), "cod-ab-col", resource="no-existe")
+        _elegido(_fetcher_col(), "cod-ab-col", resource="no-existe")
 
 
 # --- Una capa partida por tipo de geometria --------------------------------

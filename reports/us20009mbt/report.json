@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us20009mbt",
+    "mag": 6.9,
+    "depth_km": 93.0,
+    "utc": "2017-06-14T07:29:04Z",
+    "lugar": "2 km al SSO de San Pablo, Guatemala",
+    "pager_alert": "yellow",
+    "lon": -92.0092,
+    "lat": 14.9091
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 0,
+    "exposure_manifest": "gtm-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 1810851.642125658,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "GT0901",
+      "nombre": "Quetzaltenango",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 188347.90364283836
+    },
+    {
+      "adm2_id": "GT0920",
+      "nombre": "Coatepeque",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 165436.03240907192
+    },
+    {
+      "adm2_id": "GT1215",
+      "nombre": "Malacatán",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 130784.82469239086
+    },
+    {
+      "adm2_id": "GT1202",
+      "nombre": "San Pedro Sacatepéquez",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 69856.71024296992
+    },
+    {
+      "adm2_id": "GT1201",
+      "nombre": "San Marcos",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 63173.05020730384
+    },
+    {
+      "adm2_id": "GT1219",
+      "nombre": "San Pablo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 61898.43578879908
+    },
+    {
+      "adm2_id": "GT1204",
+      "nombre": "Comitancillo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 57152.62038189359
+    },
+    {
+      "adm2_id": "GT0909",
+      "nombre": "Ostuncalco",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 55241.00616754056
+    },
+    {
+      "adm2_id": "GT1109",
+      "nombre": "El Asintal",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 50873.552628465
+    },
+    {
+      "adm2_id": "GT1217",
+      "nombre": "Ayutla",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 49635.31031914381
+    },
+    {
+      "adm2_id": "GT0921",
+      "nombre": "Génova",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 48033.78787005134
+    },
+    {
+      "adm2_id": "GT0917",
+      "nombre": "Colomba",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 47861.419836286455
+    },
+    {
+      "adm2_id": "GT1216",
+      "nombre": "Catarina",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 47454.29046616331
+    },
+    {
+      "adm2_id": "GT1213",
+      "nombre": "El Tumbador",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 47395.407258725725
+    },
+    {
+      "adm2_id": "GT1230",
+      "nombre": "La Blanca",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 41313.258501784876
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 3.1,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:41:53Z",
+  "pipeline_version": "0.1.0"
+}

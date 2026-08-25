@@ -54,85 +54,154 @@ jobs:
       # versionado y esa copia es la que sostiene RNF-04, porque Overture
       # retira sus releases a los dos meses (ver docs/PUBLICAR_ACTIVO.md).
       #
-      # EL ACTIVO ES POR PAIS Y P1 VIGILA TODA LATAM. Antes este paso bajaba
-      # siempre el de Colombia: un sismo en Peru se calculaba contra celdas
-      # colombianas, el join no encontraba ninguna y el reporte salia con ceros
-      # en todas las cifras. Ahora el pais sale del epicentro del evento.
-      - name: Descargar activo de exposicion
-        id: activo
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p data/build
-          PAISES=$(uv run centinela paises-candidatos "$USGS_ID" --detail-url "$DETAIL_URL")
-          echo "candidatos por epicentro: $PAISES"
-
-          for ISO3 in $PAISES; do
-            PREFIJO="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-"
-            TAG=$(gh release list --limit 100 --json tagName \
-                   --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
-                         | sort_by(.tagName) | last | .tagName")
-            if [ -n "$TAG" ] && [ "$TAG" != "null" ]; then
-              gh release download "$TAG" --dir data/build --clobber
-              echo "tag=$TAG"   >> "$GITHUB_OUTPUT"
-              echo "iso3=$ISO3" >> "$GITHUB_OUTPUT"
-              echo "usando $TAG para $ISO3"
-              exit 0
-            fi
-            echo "sin activo publicado para $ISO3"
-          done
-
-          echo "::error::El sismo $USGS_ID cae en [$PAISES] y no hay activo de \
-          exposicion publicado para ninguno. Construyelo con: \
-          gh workflow run exposure_quarterly.yml -f iso3=<ISO3>"
-          exit 1
-
-      - name: Calcular impacto y emitir reporte
+      # EL ACTIVO ES POR PAIS Y P1 VIGILA TODA LATAM, ASI QUE HAY QUE ELEGIRLO —
+      # Y HAY QUE PODER EQUIVOCARSE AL ELEGIR.
+      #
+      # `countries_for_point` devuelve los paises cuya **caja envolvente**
+      # contiene el epicentro, ordenados por area. Las cajas se solapan y el
+      # area es un mal criterio: la de Chile mide 1.719 grados cuadrados porque
+      # llega a Rapa Nui, y la de Argentina 671. Medido: un M6,7 en Coquimbo
+      # sale como `[ARG, CHL, BRA]`.
+      #
+      # Este paso se quedaba con el primero que tuviera Release. O sea que un
+      # sismo chileno se calculaba contra el activo argentino, el join quedaba
+      # vacio y **Chile no habria tenido reporte nunca** — uno de los paises mas
+      # sismicos de la region.
+      #
+      # El desempate real lo da el join, como dicen desde el principio las
+      # docstrings de `countries_for_point` y de `paises-candidatos`. Aqui se
+      # implementa por fin: se prueban los candidatos en orden y el codigo de
+      # salida 3 significa "este activo no es de este sismo, sigue".
+      - name: Calcular impacto contra el activo del pais que corresponda
         id: impacto
         env:
-          ISO3: ${{ steps.activo.outputs.iso3 }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Solo por despacho manual. Un evento que llega por `repository_dispatch`
           # viene de P1, o sea que su estado existe y es en vivo por definicion.
           BACKTEST: ${{ inputs.backtest && '--backtest' || '' }}
           REPROCESAR: ${{ inputs.reprocesar && '--reprocesar' || '' }}
         run: |
-          uv run centinela impact "$USGS_ID" $BACKTEST $REPROCESAR \
-            --detail-url "$DETAIL_URL" \
-            --exposure "data/build/exposure_h3.parquet" \
-            --manifest "$(uv run python -c "
+          PAISES=$(uv run centinela paises-candidatos "$USGS_ID" --detail-url "$DETAIL_URL")
+          echo "candidatos por epicentro: $PAISES"
+
+          SIN_ACTIVO=""
+          DESCARTADOS=""
+          for ISO3 in $PAISES; do
+            PREFIJO="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-"
+            TAG=$(gh release list --limit 100 --json tagName \
+                   --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
+                         | sort_by(.tagName) | last | .tagName")
+            if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+              echo "sin activo publicado para $ISO3"
+              SIN_ACTIVO="$SIN_ACTIVO $ISO3"
+              continue
+            fi
+
+            echo "::group::probando $ISO3 con $TAG"
+            rm -rf data/build && mkdir -p data/build
+            gh release download "$TAG" --dir data/build --clobber
+            MANIFEST=$(ISO3="$ISO3" uv run python -c "
           import os
           from pipelines.common.manifest import Manifest
-          print(Manifest.load(os.environ['ISO3']).manifest_id)")"
+          print(Manifest.load(os.environ['ISO3']).manifest_id)")
+
+            set +e
+            uv run centinela impact "$USGS_ID" $BACKTEST $REPROCESAR \
+              --detail-url "$DETAIL_URL" \
+              --exposure "data/build/exposure_h3.parquet" \
+              --manifest "$MANIFEST"
+            CODIGO=$?
+            set -e
+            echo "::endgroup::"
+
+            if [ "$CODIGO" -eq 0 ]; then
+              echo "tag=$TAG"   >> "$GITHUB_OUTPUT"
+              echo "iso3=$ISO3" >> "$GITHUB_OUTPUT"
+              echo "::notice::$USGS_ID calculado con el activo de $ISO3 ($TAG)"
+              exit 0
+            fi
+            # Solo el 3 es "prueba el siguiente". Cualquier otro codigo es un
+            # fallo de verdad y tiene que abrir issue, no esconderse tras un
+            # reintento contra otro pais.
+            if [ "$CODIGO" -ne 3 ]; then
+              echo "::error::El impacto de $USGS_ID fallo con $ISO3 (codigo $CODIGO)."
+              exit "$CODIGO"
+            fi
+            echo "el activo de $ISO3 no alcanza ninguna celda; se prueba el siguiente"
+            DESCARTADOS="$DESCARTADOS $ISO3"
+          done
+
+          echo "::error::Ningun activo sirvio para $USGS_ID. Candidatos: [$PAISES].\
+          Descartados por no alcanzar celdas:[$DESCARTADOS]. Sin activo publicado:\
+          [$SIN_ACTIVO]. Si falta un pais, construyelo con: \
+          gh workflow run exposure_quarterly.yml -f iso3=<ISO3>"
+          exit 1
 
       - name: Publicar artefactos
         if: success()
         run: |
           git config user.name "centinela-bot"
           git config user.email "noreply@users.noreply.github.com"
-          git add events/ reports/
+
+          # La latencia se calcula sola a partir de los timestamps del
+          # `event_state`, pero hay que **recalcularla y publicarla**: este paso
+          # anadia `events/` y `reports/` y no `site/status.json`, asi que la
+          # pagina de estado se quedaba en la version anterior. Medido: tres
+          # reportes publicados el 25-ago y un status.json del 23-ago que
+          # listaba un solo evento.
+          #
+          # No es cosmetico. "Latencia medida y publicada" es uno de los dos
+          # requisitos que quedan para cerrar Fase 0, y no lo cerraba el primer
+          # sismo: lo bloqueaba este `git add`.
+          uv run centinela status
+
+          git add events/ reports/ site/status.json
           git diff --staged --quiet && exit 0
           git commit -m "P3: reporte de $USGS_ID"
 
           # Dos eventos simultaneos tienen concurrency groups distintos y
           # empujan a la misma rama. Con rebase basta para `events/` y para el
-          # directorio del evento, que son disjuntos — pero NO para
-          # `reports/index.json`, que los dos reescriben entero.
+          # directorio del evento, que son disjuntos — pero NO para los ficheros
+          # **derivados**, que los dos jobs reescriben enteros y que por tanto
+          # conflictan siempre.
           #
           # Paso de verdad al reemitir los dos mainshocks de Venezuela, que es
           # justo el caso para el que existe G2: el segundo murio con
           # "CONFLICT (content): Merge conflict in reports/index.json" y su
           # reporte, ya calculado, no llego a publicarse.
           #
-          # No se fusiona: el indice es un **derivado** de los report.json del
-          # directorio. Se regenera y se sigue.
+          # Un derivado no se fusiona: se regenera. El indice sale de los
+          # `report.json` del directorio y la pagina de estado de los
+          # `event_state`, asi que ninguno de los dos tiene contenido propio que
+          # una fusion pudiera salvar.
+          #
+          # La lista esta aqui una sola vez. Cuando entro `site/status.json`
+          # este manejador solo conocia `reports/index.json`, y el segundo
+          # derivado habria tumbado la publicacion del segundo evento
+          # exactamente igual que el primero.
+          DERIVADOS='reports/index.json site/status.json'
+
+          regenerar_derivados() {
+            local conflictos
+            conflictos=$(git diff --name-only --diff-filter=U)
+            [ -n "$conflictos" ] || return 1
+            # Un conflicto fuera de la lista es real y no se toca: regenerar
+            # a ciegas descartaria el trabajo del otro job.
+            if grep -qvE '^(reports/index\.json|site/status\.json)$' <<<"$conflictos"; then
+              return 1
+            fi
+            echo "::notice::derivados en conflicto; se regeneran en vez de fusionarse"
+            uv run centinela reindexar
+            uv run centinela status
+            # shellcheck disable=SC2086
+            git add $DERIVADOS
+            GIT_EDITOR=true git rebase --continue
+          }
+
           for intento in 1 2 3 4; do
             if git pull --rebase origin "${GITHUB_REF_NAME}"; then
               git push && exit 0
-            elif git status --porcelain | grep -q "^UU reports/index.json"; then
-              echo "::notice::indice en conflicto; se regenera en vez de fusionarse"
-              uv run centinela reindexar
-              git add reports/index.json
-              GIT_EDITOR=true git rebase --continue || git rebase --abort
+            elif regenerar_derivados; then
               git push && exit 0
             else
               git rebase --abort || true

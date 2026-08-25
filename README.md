@@ -65,34 +65,43 @@ https://sforero77.github.io/CENTINELA/. Lo que ya funciona y lo que falta:
 
 | Componente | Estado |
 |---|---|
-| P1 trigger (feed, filtro, dedupe, `event_state`) | ✅ funcional, con pruebas |
+| P1 trigger (feed, filtro, dedupe, `event_state`) | ✅ operando cada 10 min |
 | Contratos USGS (feed + productos) y su validacion | ✅ funcional |
 | Decision de impacto e idempotencia por version | ✅ funcional |
-| Modelo y render del reporte (json, md, CSV, hilo) | ✅ funcional |
+| Reporte preliminar sin ShakeMap (RF-03) | ✅ funcional |
+| Changelog de deltas al re-emitir (RF-04) | ✅ funcional |
+| Modelo y render del reporte (json, md, CSV, mapas, hilo) | ✅ funcional |
+| Asserts de calidad §6.4 sobre el corte, en P0 y en P2 | ✅ funcional |
 | Regla de los tres cubos y lint de manifests | ✅ funcional, corre en CI |
+| Deriva de licencia de la fuente, contrastada en cada build | ✅ funcional |
 | Golden tests G1/G2/G3 con productos reales congelados | ✅ corren |
-| Resolucion de descargas por la API de HDX | ✅ funcional |
-| P0 crosswalk DIVIPOLA (1.122 municipios, 1,5 M celdas) | ✅ funcional |
-| P0 agregacion raster→H3 y seleccion de fuentes | ✅ funcional |
-| P2 polyfill H3 de contornos MMI | ✅ funcional |
-| P2 muestreo de Ground Failure | ✅ funcional |
-| P2 join de impacto en DuckDB | ✅ funcional |
-| **Backtest del 10-ago-2026 end-to-end** | ✅ **reporte publicado** |
-| P0 capas de salud, educacion, vias y desglose etario | ✅ funcional |
-| P0 ensamblaje, validacion del total y escritura del activo | ✅ funcional |
-| P0 descarga guiada por manifest (`download.py`) | ✅ funcional |
-| P0 edificaciones y vias: Overture leido en remoto | ✅ funcional |
-| P0 desglose etario desde WorldPop age-sex | ✅ funcional |
-| P0 superficie construida (GHS-BUILT-S, satelite) | ✅ funcional |
-| Manifests de los 19 paises de LATAM | ✅ escritos, fuentes verificadas |
-| Mapa estatico del reporte (T0.8 resuelta) | ✅ funcional |
-| Golden G1: aserciones (b) y (c) sobre cifras publicadas | ✅ corren |
-| P0 `build_country`: encadenar todo en un solo comando | ✅ funcional |
+| P0 pipeline completo: descarga → crosswalk → nueve capas → parquet | ✅ funcional |
+| P2 contornos MMI → celdas → Ground Failure → join en DuckDB | ✅ funcional |
+| Enrutado del evento al activo del pais correcto | ✅ funcional, con reintento |
+| Toponimos en espanol (RF-06) | ✅ funcional |
+| **Catalogo historico regional** | ✅ **19 reportes en 13 paises** |
+| **Activo de exposicion construido y publicado** | ✅ **18 de 19 paises** |
+| Visor con cobertura regional y filtro por pais | ✅ funcional |
+| Visor y `/status`, con latido del trigger publicado | ✅ funcional |
+| Reconstruccion trimestral de todos los activos publicados | ✅ funcional |
+| Activo de Brasil | ⏳ el unico pais sin construir |
+| Coropletas r7/r6 del visor en PMTiles | ⏳ el resto del visor funciona |
 | P4 brigada de imagen | ⏳ Fase 2 |
+
+**601 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), ninguna
+saltada, `ruff` y `mypy --strict` limpios. Medido el 25-ago-2026.
 
 Las etapas pendientes fallan de forma ruidosa y explicita — nunca devuelven un
 cero que acabaria publicado como cifra. `tests/unit/test_pendientes.py` es el
 inventario vivo de esa deuda, y hoy esta vacio.
+
+Y hay una segunda guardia, de otra clase.
+`tests/unit/test_funciones_conectadas.py` recorre el grafo de llamadas y falla
+si una funcion publica se queda **sin llamador**. Existe porque el fallo que
+mas veces ha cazado este proyecto no es un calculo mal hecho sino una pieza
+correcta que nadie invoca: el reporte preliminar, el epicentro del mapa
+estatico, tres capas del activo, los asserts de §6.4. Todas estaban probadas —
+por eso la cobertura las daba por verdes— y ninguna estaba conectada.
 
 El cero silencioso tiene ademas su propia guardia. Una capa que no se construye
 entra vacia al ensamblaje, el `LEFT JOIN` la vuelve ceros y el activo se
@@ -111,26 +120,60 @@ sintetica habria encontrado — ver `tests/fixtures/golden/README.md`.
 `reports/us6000tjl2/` es la respuesta a la pregunta que motiva el proyecto:
 **esto es lo que el pais habria sabido el 10 de agosto**, en vez de esperar dias.
 
-| | |
+| Indicador | Cifra |
 |---|---|
 | Personas en MMI≥6 | **6.960.086** |
 | Personas en MMI≥7 | **2.415.793** |
-| De ellas, 65 anos o mas | **270 mil** |
-| Edificaciones en MMI≥7 | **444.281** |
-| Sedes de salud en MMI≥7 | **512** |
-| Sedes educativas en MMI≥7 | **997** |
-| Kilometros de via en MMI≥7 | **1.400** |
-| Personas en zona de licuefaccion alta | **1.660.190** |
+| De ellas, 65 anos o mas | **289.257** |
+| Edificaciones en MMI≥7 | **444.424** |
+| Sedes de salud en MMI≥7 | **518** |
+| Sedes educativas en MMI≥7 | **998** |
+| Kilometros de via en MMI≥7 | **8.503** |
+| De ellos, primarias y secundarias | **985** |
+| Personas en zona de licuefaccion alta | **1.600.028** |
 | Municipios alcanzados | **297** |
 
-El activo del que salen: **519.735 celdas**, 52,9 millones de habitantes, 15,4
-millones de edificaciones, 9.615 sedes de salud, 43.837 sedes educativas y
-44.919 km de via, en los 1.122 municipios del pais. 17,3 MB de GeoParquet.
+Las cifras salen de `reports/us6000tjl2/report.json`, y
+`tests/unit/test_cifras_del_readme.py` falla si esta tabla se separa de el.
+Cinco de estas filas estuvieron desactualizadas hasta el 25-ago-2026 —los km de
+via, por un factor de seis— porque se copiaron a mano y el activo se
+reconstruyo despues. Una tabla de cifras escrita a mano se desincroniza; una
+tabla con prueba, no.
+
+El activo del que salen es el Release `exposure-col-20260824` (manifest
+`col-v0.5`): **559.103 celdas**, 52.620.466 habitantes, 15,3 millones de
+edificaciones, 9.888 sedes de salud, 45.710 sedes educativas y 307.314 km de
+via, en los 1.122 municipios del pais. Su desvio contra la referencia del DANE
+es **−0,72 %**, y solo el 0,32 % de la poblacion entra por celdas rescatadas.
 
 Y el dato que cambia la conversacion: los municipios mas expuestos no estaban en
 Chocó sino en el Eje Cafetero y el Valle — Pereira, Buenaventura, Armenia,
 Tuluá, Dosquebradas. La unica evaluacion de dano con IA que existio cubrio una
 sola ciudad.
+
+### El catalogo historico regional
+
+El Chocó no es una demostracion aislada. El sistema reconstruyo **19 sismos de
+13 paises** del catalogo real de USGS, cada uno con los productos que USGS
+publico entonces, cada uno contra el activo de su pais:
+
+| | |
+|---|---|
+| Reportes publicados | **19**, en **13 paises** |
+| Paises con activo construido y medido | **18 de 19** (falta Brasil) |
+| Personas ya en la malla hexagonal | **430,9 millones** |
+| Peor desvio contra la cifra oficial de un pais | **+4,94 %** (Venezuela, y esta explicado) |
+
+Lo que ensena ese catalogo importa mas que su tamano: **ocho de los diecinueve
+eventos no alcanzan MMI≥7 sobre poblacion**. Son los profundos y los de mar
+adentro, que en esta region son la mitad. Tehuantepec 2017 —M8,2, 98 muertos—
+es uno de ellos: su maximo sobre poblacion mexicana es MMI 6,5.
+
+Hasta que se corrieron, el producto entero daba por supuesto que MMI≥7 era *la*
+banda, y para esos ocho publicaba un titular de "0 personas" con una tabla de
+municipios ordenada alfabeticamente. Ahora se titula con la banda que el evento
+alcanzo de verdad. Ninguna cantidad de pruebas sinteticas habria encontrado eso:
+hizo falta correr la region entera.
 
 ## Estructura
 
@@ -148,6 +191,8 @@ tests/           unit/, integration/, golden/, fixtures/
 
 - [`docs/OPERACION.md`](docs/OPERACION.md) — **que vigilar ahora que el sistema opera**
 - [`PENDIENTES.md`](PENDIENTES.md) — que falta, quien puede hacerlo y en que orden
+- [`docs/AUDITORIA.md`](docs/AUDITORIA.md) — la auditoria del 25-ago-2026: que se encontro y como se cerro
+- [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) — las reglas de codigo del proyecto, con el caso real de cada una
 - [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificacion tecnica v0.10
 - [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — como publicar el activo y por que no va en git
 - [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con metodo y hallazgos

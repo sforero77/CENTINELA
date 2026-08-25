@@ -86,6 +86,35 @@ class Totales:
     pop_ls_alta: float = 0.0
     pop_lq_alta: float = 0.0
 
+    @property
+    def banda_titular(self) -> int:
+        """La banda MMI mas alta que alcanzo poblacion. Cero si ninguna.
+
+        **Casi la mitad de los sismos reales no llegan a MMI≥7 sobre
+        poblacion.** Medido sobre los primeros dieciocho reportes del catalogo
+        LATAM: ocho, el 44 %. Son los profundos y los que ocurren mar adentro,
+        que en esta region son muchos — Tehuantepec 2017 fue un M8,2 y su
+        maximo sobre poblacion mexicana es MMI 6,5.
+
+        El producto titulaba siempre con MMI≥7, asi que para esos ocho la cifra
+        grande era **0** y la tabla de municipios salia ordenada por una
+        columna de ceros, o sea en orden alfabetico. Un cero es cierto y se lee
+        como que el sistema fallo, o como que el sismo no fue nada.
+
+        Se titula con la banda mas alta que si alcanzo gente, diciendo cual es.
+        """
+        if self.pop_mmi8p > 0:
+            return 8
+        if self.pop_mmi7p > 0:
+            return 7
+        if self.pop_mmi6p > 0:
+            return 6
+        return 0
+
+    def poblacion_en(self, banda: int) -> float:
+        """Poblacion de la banda pedida. Cero para una banda no publicada."""
+        return {6: self.pop_mmi6p, 7: self.pop_mmi7p, 8: self.pop_mmi8p}.get(banda, 0.0)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "pop_mmi6p": self.pop_mmi6p,
@@ -110,7 +139,14 @@ class MunicipioTop:
     adm2_id: str
     nombre: str
     mmi_max: float
+    #: Poblacion en MMI≥7. Se publica siempre y con el mismo significado,
+    #: porque es lo que hace comparables dos eventos distintos.
     pop_mmi7p: float
+    #: Poblacion en la banda por la que **este** reporte ordena
+    #: (:attr:`Totales.banda_titular`). Coincide con `pop_mmi7p` cuando el
+    #: evento alcanza MMI≥7, y es la cifra util cuando no: sin ella la tabla
+    #: sale ordenada por una columna de ceros.
+    pop_banda: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -118,6 +154,7 @@ class MunicipioTop:
             "nombre": self.nombre,
             "mmi_max": self.mmi_max,
             "pop_mmi7p": self.pop_mmi7p,
+            "pop_banda": self.pop_banda,
         }
 
 

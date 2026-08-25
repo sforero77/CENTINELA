@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us1000c2zy",
+  "estado": "publicado",
+  "mag": 7.5,
+  "lon": -83.52,
+  "lat": 17.4825,
+  "depth_km": 19.0,
+  "lugar": "203 km al NNE de Barra Patuca, Honduras",
+  "origen_utc": "2018-01-10T02:51:33Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T17:09:34Z",
+    "publicado": "2026-08-25T17:41:57Z",
+    "usgs_origen": "2018-01-10T02:51:33Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2018-01-10, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

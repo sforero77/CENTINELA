@@ -1,0 +1,7 @@
+1/4 Sismo M7.5 en 203 km al NNE de Barra Patuca, Honduras (2018-01-10T02:51:33Z UTC, 19 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
+
+2/4 Personas dentro de intensidad MMI≥6: 0. Dentro de MMI≥7: 0. Edificaciones en MMI≥7: 0.
+
+3/4 Municipios mas expuestos: Ahuas, Puerto Lempira, Brus Laguna.
+
+4/4 Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: ver el reporte completo.

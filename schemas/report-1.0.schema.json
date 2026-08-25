@@ -181,6 +181,11 @@
           "pop_mmi7p": {
             "type": "number",
             "minimum": 0
+          },
+          "pop_banda": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Poblacion en la banda por la que este reporte ordena (totales.banda_titular). Igual a pop_mmi7p cuando el evento alcanza MMI>=7."
           }
         }
       }

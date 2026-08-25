@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..common.constants import GROUND_FAILURE_HIGH_PROB
+from ..common.geo import ensure_bundled_proj
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +71,10 @@ def sample_rasters(
     """
     if not cells:
         return {}
+
+    # Antes de tocar GDAL/PROJ: un `PROJ_LIB` del sistema tapa la base que
+    # traen las ruedas y ningun CRS se resuelve. Ver `ensure_bundled_proj`.
+    ensure_bundled_proj()
 
     import h3
     import numpy as np

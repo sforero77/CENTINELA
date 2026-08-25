@@ -181,12 +181,14 @@ publicado para X", eso es el sistema funcionando**: construye el pais con
 
 ## 4. Deuda por pais
 
-Los 19 manifests estan escritos y sus fuentes verificadas, pero **solo Colombia
-esta medida**. Lo que arrastra cada pais no construido:
+Los 19 manifests estan escritos y sus fuentes verificadas, y **18 paises estan
+construidos, publicados y medidos**. El unico sin activo es **Brasil**.
 
-- **`tolerancia_pct` es 5 % y es una expectativa, no una medicion.** Colombia,
-  medida, usa 1 %. Al construir un pais hay que anotar `medido_ghs_pop` y
-  ajustar la tolerancia, explicando el cambio en el PR.
+- **Las tolerancias ya no son expectativas.** `centinela calibrar` las estrecho
+  con lo que midio cada build: van de 0,59 % (Paraguay) a 5,44 % (Venezuela).
+  Brasil conserva el 25 % provisional y no tiene `medido_ghs_pop`, porque no se
+  ha construido. Al construirlo hay que anotar los dos, explicando el cambio en
+  el PR.
 - **Los toponimos hay que validarlos.** En Venezuela el COD-AB los devuelve mal
   codificados («Falc?n» por «Falcón») y esos nombres se imprimen en el reporte y
   en el hilo.
@@ -240,9 +242,13 @@ En Windows no hay `make`; los objetivos del Makefile son atajos de una linea.
 Los dos ultimos no dependen de nadie: llegan con el primer M≥5.5 en la region.
 
 Lo demas abierto, sin bloquear: **T0.7** (benchmark de `exactextract`),
-**T0.10** (la cifra exacta del DANE en vez del redondeo), **PMTiles del visor**
-(hoy el mapa esta vacio; las capas de contexto no hay que generarlas, Overture
-publica las suyas) y **RF-03** (el reporte preliminar sin ShakeMap: se calcula
-por radios pero no se emite).
+**T0.10** (la cifra exacta del DANE en vez del redondeo), las **coropletas
+r7/r6 del visor** en PMTiles —el mapa base y la malla por celda ya dibujan; lo
+que falta son las teselas propias, que si necesitan `tippecanoe`— y el **activo
+de Brasil**.
+
+**RF-03 y RF-04 estan cerradas.** El reporte preliminar sin ShakeMap se emite
+desde el 24-ago-2026, y el changelog de deltas al re-emitir por una version
+nueva, desde el 25-ago. Las dos estaban escritas y sin conectar.
 
 Detalle y orden en [`PENDIENTES.md`](../PENDIENTES.md).

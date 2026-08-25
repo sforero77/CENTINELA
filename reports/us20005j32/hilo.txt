@@ -1,0 +1,7 @@
+1/4 Sismo M7.8 en 27 km al SSE de Muisne, Ecuador (2016-04-16T23:58:36Z UTC, 21 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
+
+2/4 Personas dentro de intensidad MMI≥6: 4,3 millones. Dentro de MMI≥7: 2,3 millones. Edificaciones en MMI≥7: 1 millon.
+
+3/4 Municipios mas expuestos: Pedernales, Jama, Muisne.
+
+4/4 Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: ver el reporte completo.

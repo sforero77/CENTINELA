@@ -1,0 +1,91 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us10007mn3",
+    "mag": 7.6,
+    "depth_km": 38.0,
+    "utc": "2016-12-25T14:22:27Z",
+    "lugar": "41 km al SO de Quellón, Chile",
+    "pager_alert": "yellow",
+    "lon": -73.9413,
+    "lat": -43.4064
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 0,
+    "exposure_manifest": "chl-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 198283.5895812628,
+    "pop_mmi7p": 56588.415672381874,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 4165.429000651532,
+    "bld_mmi7p": 45056.0,
+    "built_m2_mmi7p": 4202947.0,
+    "health_mmi7p": 23.0,
+    "edu_mmi7p": 50.0,
+    "road_km_mmi7p": 1745.6635305456987,
+    "road_km_principal_mmi7p": 86.96700513822115,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "CL102",
+      "nombre": "Chiloe",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 54311.665505310055,
+      "pop_banda": 54311.665505310055
+    },
+    {
+      "adm2_id": "CL112",
+      "nombre": "Aysén",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 2276.7501670718193,
+      "pop_banda": 2276.7501670718193
+    },
+    {
+      "adm2_id": "CL104",
+      "nombre": "Palena",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CL101",
+      "nombre": "Llanquihue",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CL111",
+      "nombre": "Coyhaique",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 36.2,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:40:16Z",
+  "pipeline_version": "0.1.0"
+}

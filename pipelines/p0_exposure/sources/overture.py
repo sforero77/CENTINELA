@@ -62,17 +62,6 @@ def collection_url(release: str, theme: str, type_: str) -> str:
     return f"{STAC_ROOT}/{release}/{theme}/{type_}/collection.json"
 
 
-def pmtiles_url(release: str, theme: str) -> str:
-    """PMTiles que Overture publica por release y tema.
-
-    Hallazgo de la validacion: no hace falta generar estas teselas con
-    ``tippecanoe`` para las capas de contexto del visor — Overture ya las
-    publica. Las de CENTINELA (coropletas de exposicion e impacto) si son
-    propias, porque son datos nuestros.
-    """
-    return f"https://tiles.overturemaps.org/{release}/{theme}.pmtiles"
-
-
 def parse_collection(payload: dict[str, Any]) -> list[ParquetFile]:
     """Extrae los ficheros y su bbox de un ``collection.json``.
 

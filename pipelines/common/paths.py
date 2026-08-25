@@ -47,14 +47,3 @@ def validate_usgs_id(usgs_id: str) -> str:
 def event_state_path(usgs_id: str) -> Path:
     """Ruta del ``event_state`` de un evento (§3.3)."""
     return EVENTS_DIR / f"{validate_usgs_id(usgs_id)}.json"
-
-
-def report_dir(usgs_id: str) -> Path:
-    """Directorio de salidas publicadas de un evento (§4.3)."""
-    return REPORTS_DIR / validate_usgs_id(usgs_id)
-
-
-def ensure_workspace() -> None:
-    """Crea los directorios efimeros si no existen."""
-    for path in (WORK_DIR, CACHE_DIR, BUILD_DIR):
-        path.mkdir(parents=True, exist_ok=True)

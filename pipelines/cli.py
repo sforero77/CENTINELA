@@ -53,17 +53,46 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
     return 0
 
 
+#: Codigo de salida de "el activo no es de este pais; prueba el siguiente".
+#:
+#: Tiene el suyo porque **no es un fallo, es un descarte**, y quien orquesta
+#: necesita distinguirlos: ante un fallo hay que abrir un issue, ante un
+#: descarte hay que reintentar con el siguiente candidato. Misma convencion que
+#: `contraste` y `calibrar`, que ya usan el 2 para "esto no es un error, es algo
+#: que mirar".
+EXIT_ACTIVO_DE_OTRO_PAIS = 3
+
+
 def _cmd_impact(args: argparse.Namespace) -> int:
     """P2/P3: procesa un evento ya detectado y publica su reporte."""
-    decision = run_impact(
-        args.usgs_id,
-        HttpFetcher(timeout_s=300.0),
-        detail_url=args.detail_url,
-        exposure_glob=args.exposure,
-        manifest_id=args.manifest,
-        backtest=args.backtest,
-        forzar=args.reprocesar,
-    )
+    from .p2_impact.pipeline import ExposureCountryMismatchError
+
+    try:
+        decision = run_impact(
+            args.usgs_id,
+            HttpFetcher(timeout_s=300.0),
+            detail_url=args.detail_url,
+            exposure_glob=args.exposure,
+            manifest_id=args.manifest,
+            backtest=args.backtest,
+            forzar=args.reprocesar,
+        )
+    except ExposureCountryMismatchError as exc:
+        # Las cajas envolventes de los paises se solapan y ordenarlas por area
+        # no basta: la de Chile mide 1.719 grados cuadrados por Rapa Nui y la de
+        # Argentina 671, asi que un sismo en Coquimbo sale como argentino
+        # primero. El desempate real lo da el join, y para eso hay que poder
+        # reintentar.
+        _log.warning(
+            "el activo no corresponde al pais del sismo",
+            extra={
+                "context": {"usgs_id": args.usgs_id, "activo": args.exposure, "detalle": str(exc)}
+            },
+        )
+        print(json.dumps({"accion": "otro_pais", "razon": str(exc)}, ensure_ascii=False))
+        _emit_github_output("accion", "otro_pais")
+        return EXIT_ACTIVO_DE_OTRO_PAIS
+
     print(json.dumps({"accion": decision.action.value, "razon": decision.razon}))
     _emit_github_output("accion", decision.action.value)
     return 0
@@ -107,6 +136,19 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_cobertura(args: argparse.Namespace) -> int:
+    """Recalcula `site/cobertura.json` a partir de los manifests.
+
+    Es lo que responde en el visor la pregunta de quien llega: *¿esto sirve
+    para mi pais?*. Sale de los manifests y no de un listado aparte, para que
+    no pueda afirmar mas paises de los que el sistema construyo de verdad.
+    """
+    from .common.cobertura import write_cobertura
+
+    print(write_cobertura())
+    return 0
+
+
 def _cmd_contraste(args: argparse.Namespace) -> int:
     """Compara el activo contra una evaluacion de dano externa (Fase 2)."""
     from .p0_exposure.overture_h3 import ensure_httpfs
@@ -141,6 +183,27 @@ def _cmd_reindexar(args: argparse.Namespace) -> int:
     from .p3_report.run import rebuild_index
 
     print(rebuild_index(Path(args.reports) if args.reports else None))
+    return 0
+
+
+def _cmd_regenerar_mapas(args: argparse.Namespace) -> int:
+    """Rehace los PNG de un reporte ya publicado, o de todos.
+
+    Los mapas son derivados del `report.json` y del `adm2.csv`, asi que se
+    pueden rehacer sin recomputar el impacto. Hace falta cada vez que cambia la
+    simbologia — y hasta ahora se hacia con un script de usar y tirar.
+    """
+    from .p3_report.run import regenerate_maps
+
+    escritos = regenerate_maps(
+        args.usgs_id or "",
+        reports_root=Path(args.reports) if args.reports else None,
+    )
+    if not escritos:
+        print("No se regenero ningun mapa.", file=sys.stderr)
+        return 1
+    for nombre in sorted(escritos):
+        print(escritos[nombre])
     return 0
 
 
@@ -308,6 +371,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_status = sub.add_parser("status", help="recalcula site/status.json")
     p_status.set_defaults(func=_cmd_status)
 
+    p_cobertura = sub.add_parser(
+        "cobertura", help="recalcula site/cobertura.json desde los manifests"
+    )
+    p_cobertura.set_defaults(func=_cmd_cobertura)
+
     p_contraste = sub.add_parser(
         "contraste", help="compara el activo con una evaluacion de dano externa"
     )
@@ -323,6 +391,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_reindexar.add_argument("--reports", help="raiz de reports/")
     p_reindexar.set_defaults(func=_cmd_reindexar)
+
+    p_mapas = sub.add_parser(
+        "regenerar-mapas", help="rehace los PNG de un reporte publicado, o de todos"
+    )
+    p_mapas.add_argument("usgs_id", nargs="?", default="", help="vacio = todos los publicados")
+    p_mapas.add_argument("--reports", help="raiz de reports/")
+    p_mapas.set_defaults(func=_cmd_regenerar_mapas)
 
     p_calibrar = sub.add_parser(
         "calibrar", help="reajusta la tolerancia de los manifests con lo medido"

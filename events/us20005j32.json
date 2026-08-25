@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us20005j32",
+  "estado": "publicado",
+  "mag": 7.8,
+  "lon": -79.9218,
+  "lat": 0.3819,
+  "depth_km": 20.59,
+  "lugar": "27 km al SSE de Muisne, Ecuador",
+  "origen_utc": "2016-04-16T23:58:36Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 1
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T16:54:53Z",
+    "publicado": "2026-08-25T17:41:50Z",
+    "usgs_origen": "2016-04-16T23:58:36Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2016-04-16, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

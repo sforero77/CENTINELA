@@ -1,0 +1,154 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us2000bmhe",
+    "mag": 6.5,
+    "depth_km": 19.36,
+    "utc": "2017-11-13T02:28:23Z",
+    "lugar": "18 km al O de Parrita, Costa Rica",
+    "pager_alert": "green",
+    "lon": -84.4865,
+    "lat": 9.5147
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 2,
+    "exposure_manifest": "cri-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 28246.993986844085,
+    "pop_mmi7p": 7400.7181151825935,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 705.2786429717235,
+    "bld_mmi7p": 4431.0,
+    "built_m2_mmi7p": 859920.0,
+    "health_mmi7p": 4.0,
+    "edu_mmi7p": 8.0,
+    "road_km_mmi7p": 72.01752344429543,
+    "road_km_principal_mmi7p": 8.51970250136977,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 13254.762669994496
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "CR609",
+      "nombre": "Parrita",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 7400.7181151825935,
+      "pop_banda": 7400.7181151825935
+    },
+    {
+      "adm2_id": "CR104",
+      "nombre": "Puriscal",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR116",
+      "nombre": "Turrubares",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR112",
+      "nombre": "Acosta",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR606",
+      "nombre": "Quepos",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR611",
+      "nombre": "Garabito",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR106",
+      "nombre": "Aserrí",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR209",
+      "nombre": "Orotina",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR301",
+      "nombre": "Cartago",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR103",
+      "nombre": "Desamparados",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR308",
+      "nombre": "El Guarco",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR105",
+      "nombre": "Tarrazú",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR120",
+      "nombre": "León Cortés Castro",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR602",
+      "nombre": "Esparza",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 1.8,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:40:45Z",
+  "pipeline_version": "0.1.0"
+}

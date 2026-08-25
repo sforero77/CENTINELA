@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000nr0v",
+    "mag": 6.8,
+    "depth_km": 14.0,
+    "utc": "2024-11-10T16:49:50Z",
+    "lugar": "42 km al SSO de Bartolomé Masó, Cuba",
+    "pager_alert": "yellow",
+    "lon": -77.0506,
+    "lat": 19.7974
+  },
+  "inputs": {
+    "shakemap_version": 9,
+    "groundfailure_version": 9,
+    "exposure_manifest": "cub-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 173017.51925783232,
+    "pop_mmi7p": 3291.1863567195833,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 378.8150591921194,
+    "bld_mmi7p": 2013.0,
+    "built_m2_mmi7p": 149238.0,
+    "health_mmi7p": 1.0,
+    "edu_mmi7p": 7.0,
+    "road_km_mmi7p": 55.79957599672415,
+    "road_km_principal_mmi7p": 27.61889909998247,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 36844.000733979046
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "CU0511",
+      "nombre": "Pilón",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 2960.987789724022,
+      "pop_banda": 2960.987789724022
+    },
+    {
+      "adm2_id": "CU1502",
+      "nombre": "Guamá",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 275.445321418345,
+      "pop_banda": 275.445321418345
+    },
+    {
+      "adm2_id": "CU0501",
+      "nombre": "Bartolomé Masó",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 54.75324557721615,
+      "pop_banda": 54.75324557721615
+    },
+    {
+      "adm2_id": "CU0504",
+      "nombre": "Campechuela",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0509",
+      "nombre": "Media Luna",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0513",
+      "nombre": "Yara",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0508",
+      "nombre": "Manzanillo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0503",
+      "nombre": "Buey Arriba",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0510",
+      "nombre": "Niquero",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0502",
+      "nombre": "Bayamo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0505",
+      "nombre": "Cauto Cristo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0507",
+      "nombre": "Jiguaní",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0512",
+      "nombre": "Río Cauto",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0506",
+      "nombre": "Guisa",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0705",
+      "nombre": "Calixto García",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 0.8,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T17:40:54Z",
+  "pipeline_version": "0.1.0"
+}

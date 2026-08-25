@@ -1,7 +1,7 @@
-1/4 Sismo M7.2 en 20 km E of San Felipe, Venezuela (2026-06-24T22:04:31Z UTC, 10 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
+1/4 Sismo M7.2 en 20 km al E de San Felipe, Venezuela (2026-06-24T22:04:31Z UTC, 10 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
 
 2/4 Personas dentro de intensidad MMI≥6: 2,8 millones. Dentro de MMI≥7: 490 mil. Edificaciones en MMI≥7: 190 mil.
 
-3/4 Municipios mas expuestos: San Felipe, Veroes, Juan José Mora.
+3/4 Municipios mas expuestos: San Felipe, Veroes, Independencia.
 
 4/4 Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: ver el reporte completo.

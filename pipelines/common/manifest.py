@@ -20,7 +20,13 @@ from typing import Any, Self
 import yaml
 from jsonschema import Draft202012Validator
 
-from .licensing import Bucket, LicenseViolationError, bucket_for, resolve_bucket
+from .licensing import (
+    Bucket,
+    LicenseViolationError,
+    assert_publishable_in_report,
+    bucket_for,
+    resolve_bucket,
+)
 from .paths import MANIFESTS_DIR, SCHEMAS_DIR
 
 #: Valores prohibidos como "vintage": no fijan nada.
@@ -152,6 +158,7 @@ def lint_manifest(manifest: Manifest) -> list[str]:
     """
     problems: list[str] = []
     seen: set[str] = set()
+    hay_fuente_nc = False
 
     for source in manifest.sources:
         if source.id in seen:
@@ -178,6 +185,7 @@ def lint_manifest(manifest: Manifest) -> list[str]:
                 f"se resuelve por la API en cada build"
             )
         if bucket is Bucket.NC:
+            hay_fuente_nc = True
             problems.append(
                 f"[{source.id}] fuente NC ({source.license}) en el manifest de exposicion: "
                 f"pertenece al cubo 'nc/', no al activo que consume el reporte (§2.4)"
@@ -187,4 +195,27 @@ def lint_manifest(manifest: Manifest) -> list[str]:
 
     if not manifest.sources:
         problems.append("El manifest no declara ninguna fuente")
+        return problems
+
+    # LA REGLA DE LOS TRES CUBOS TAMBIEN ES UNA PROPIEDAD DEL CONJUNTO.
+    #
+    # El bucle de arriba mira fuente por fuente, y hay una violacion que ninguna
+    # fuente individual delata: **dos share-alike incompatibles**. ODbL y
+    # CC BY-SA 4.0 exigen cada una que el derivado se publique bajo ella, y no
+    # hay licencia que cumpla las dos. Por separado las dos son legitimas.
+    #
+    # Esto se comprobaba de rebote, al evaluar `manifest.bucket` dentro del
+    # f-string que imprime el cubo en `centinela lint-manifests`. O sea que la
+    # violacion salia como traceback en vez de como problema del lint — y solo
+    # si no habia ningun otro error antes, porque ese f-string no se evalua
+    # cuando ya los hay.
+    #
+    # Se salta si ya hay una fuente NC: el mensaje de arriba nombra cual, que es
+    # lo accionable, y repetirlo aqui sin el nombre solo anade ruido.
+    if not hay_fuente_nc:
+        try:
+            assert_publishable_in_report(s.license for s in manifest.sources)
+        except LicenseViolationError as exc:
+            problems.append(str(exc))
+
     return problems

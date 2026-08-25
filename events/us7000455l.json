@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us7000455l",
+  "estado": "publicado",
+  "mag": 6.2,
+  "lon": -82.754,
+  "lat": 8.4612,
+  "depth_km": 32.58,
+  "lugar": "4 km al SE de Aserrío de Gariché, Panamá",
+  "origen_utc": "2019-06-26T05:23:51Z",
+  "versiones_procesadas": {
+    "shakemap": 1,
+    "groundfailure": 8
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T17:03:05Z",
+    "publicado": "2026-08-25T17:45:03Z",
+    "usgs_origen": "2019-06-26T05:23:51Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2019-06-26, no una respuesta en vivo.",
+    "ShakeMap v0 -> v1",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

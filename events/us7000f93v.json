@@ -1,0 +1,27 @@
+{
+  "usgs_id": "us7000f93v",
+  "estado": "publicado",
+  "mag": 7.0,
+  "lon": -99.753,
+  "lat": 16.9465,
+  "depth_km": 20.0,
+  "lugar": "Acapulco, México",
+  "origen_utc": "2021-09-08T01:47:47Z",
+  "versiones_procesadas": {
+    "shakemap": 7,
+    "groundfailure": 3
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T17:00:12Z",
+    "publicado": "2026-08-25T18:32:00Z",
+    "usgs_origen": "2021-09-08T01:47:47Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2021-09-08, no una respuesta en vivo.",
+    "ShakeMap v0 -> v7",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

@@ -147,6 +147,15 @@ def validate_fractions(rows: Iterable[CrosswalkRow]) -> list[str]:
     Devuelve la lista de celdas problematicas. Una celda cuyas fracciones no
     suman 1 significa que parte de su poblacion se perderia o se contaria dos
     veces al prorratear: es un error de construccion, no un aviso.
+
+    **No esta en el camino del build, y es deliberado.** Junto con
+    :func:`prorate` forma la mitad fraccionaria del reparto que este modulo
+    documenta y no toma: hoy cada celda pertenece a un municipio con
+    ``frac_area = 1.0``, y el invariante equivalente lo verifica
+    :data:`SQL_ASSERT_SIN_DUPLICADOS` en SQL, sobre la tabla entera, sin traer
+    1,5 millones de filas a Python. Las dos se conservan porque son la puerta
+    de entrada al reparto exacto si alguna vez hace falta — no porque el build
+    las llame.
     """
     totals: dict[int, float] = {}
     for row in rows:
@@ -162,7 +171,12 @@ def validate_fractions(rows: Iterable[CrosswalkRow]) -> list[str]:
 
 
 def prorate(value: float, rows: Iterable[CrosswalkRow]) -> dict[str, float]:
-    """Reparte el valor de una celda entre municipios segun ``frac_area``."""
+    """Reparte el valor de una celda entre municipios segun ``frac_area``.
+
+    Reserva del reparto fraccionario, como :func:`validate_fractions`. Con el
+    reparto por contencion que usa el build, ``frac_area`` vale siempre 1,0 y
+    esto seria la identidad.
+    """
     return {row.adm2_id: value * row.frac_area for row in rows}
 
 
