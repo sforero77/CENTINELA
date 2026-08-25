@@ -377,11 +377,23 @@ def _cargar_admin_lookup(con: Any, exposure_glob: str, ruta: str | None) -> None
 def _enriquecer_con_admin(con: Any, filas: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Anade nombre y centroide a las filas municipales, para CSV y mapa."""
     extra = {
-        str(r[0]): (str(r[1]), str(r[2]))
-        for r in con.execute("SELECT adm2_id, nombre, centroide FROM admin_lookup").fetchall()
+        str(r[0]): (str(r[1]), float(r[2]), float(r[3]))
+        for r in con.execute(
+            """
+            SELECT adm2_id, nombre,
+                   ST_X(ST_GeomFromText(centroide)) AS lon,
+                   ST_Y(ST_GeomFromText(centroide)) AS lat
+            FROM admin_lookup
+            """
+        ).fetchall()
     }
     for fila in filas:
-        nombre, centroide = extra.get(str(fila.get("adm2_id")), ("", ""))
+        nombre, lon, lat = extra.get(str(fila.get("adm2_id")), ("", 0.0, 0.0))
         fila.setdefault("nombre", nombre)
-        fila["centroide"] = centroide
+        # El centroide se descompone en dos columnas numericas y no viaja como
+        # WKT: asi el CSV se puede pintar en un mapa sin parsear geometria, que
+        # es la diferencia entre una tabla que alguien usa y una que alguien
+        # tiene que preparar antes de usar.
+        fila["lon"] = round(lon, 6)
+        fila["lat"] = round(lat, 6)
     return filas

@@ -31,7 +31,39 @@
   <main>
     <section id="mapa-seccion">
       <div id="mapa" role="application" aria-label="Mapa de exposicion sismica"></div>
-      <div class="leyenda" id="leyenda" hidden></div>
+      <div class="leyenda" id="leyenda" hidden>
+        <p class="leyenda-titulo">Poblacion en MMI&ge;7</p>
+        <ul class="leyenda-escala" id="leyenda-escala"></ul>
+        <p class="leyenda-nota">Cada circulo es un municipio. El area crece con
+          la poblacion expuesta; el color, con la intensidad maxima.</p>
+      </div>
+    </section>
+
+    <section id="detalle" hidden aria-live="polite">
+      <div class="detalle-cabecera">
+        <div>
+          <h2 id="detalle-titulo"></h2>
+          <p class="cargando" id="detalle-meta"></p>
+        </div>
+        <button type="button" id="cerrar-detalle" class="boton-tenue">Cerrar</button>
+      </div>
+      <p class="aviso-backtest" id="detalle-aviso" hidden></p>
+      <div class="metricas" id="detalle-metricas"></div>
+      <div class="tabla-scroll">
+        <table id="detalle-tabla">
+          <caption>Municipios mas expuestos</caption>
+          <thead>
+            <tr>
+              <th scope="col">Municipio</th>
+              <th scope="col" class="num">MMI max</th>
+              <th scope="col" class="num">Poblacion MMI&ge;7</th>
+              <th scope="col" class="num">Edificaciones</th>
+            </tr>
+          </thead>
+          <tbody id="detalle-filas"></tbody>
+        </table>
+      </div>
+      <p class="nota" id="detalle-descargas"></p>
     </section>
 
     <section id="eventos">

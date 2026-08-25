@@ -19,6 +19,11 @@ HXL_HEADERS: dict[str, str] = {
     "shakemap_version": "#meta+version",
     "adm2_id": "#adm2+code",
     "nombre": "#adm2+name",
+    # Centroide del municipio. Sin esto la tabla no se puede pintar en un mapa
+    # sin cruzarla antes contra otra fuente, que es justo la friccion que hace
+    # que un CSV humanitario se quede sin usar.
+    "lon": "#geo+lon",
+    "lat": "#geo+lat",
     "mmi_max": "#indicator+mmi+max",
     "pop_mmi6p": "#population+mmi6",
     "pop_mmi7p": "#population+mmi7",
