@@ -290,14 +290,32 @@ decidir que una isla habitada no cuenta.
 
 ## 3. Fases siguientes
 
-**Fase 2 — Brigada de imagen.** Solo existe el contrato (`p4_brigada/`) con el
-esquema del GeoPackage y las guardias de publicacion: umbral de 0,75 en
-precision y recall, y la separacion entre pesos limpios y pesos contaminados por
-xBD. Pendientes T2.1–T2.4.
+**Fase 2 — Brigada de imagen.** T2.1, T2.2 y T2.3 cerradas el 24-ago-2026 con
+las licencias citadas literalmente: Copernicus EMS permite reproducir, adaptar y
+combinar sin restriccion comercial; Umbra y Capella publican SAR en CC BY 4.0
+desde buckets sin credenciales.
 
-**Fase 3 — Institucional.** Presentar el sistema a la UNGRD y pares regionales
-como insumo abierto. La arquitectura ya admite columnas de embedding por celda
-sin refactor (T3.1).
+Y el orden de la fase cambio. Buscando el GeoPackage de Cali aparecieron
+evaluaciones de dano abiertas de **los dos sismos golden**, del Microsoft AI for
+Good Lab y usando huellas de Overture — la misma fuente de este proyecto. Asi
+que el primer hito no es entrenar un modelo, es **contrastar**, y ya esta hecho:
+`centinela contraste` compara sobre las mismas celdas H3 y hay un workflow que
+lo corre en CI. Medido, la cobertura del activo es completa en los dos eventos
+y la fraccion danada va de 0,27 % a 3,69 %.
+
+Queda T2.4: la rama de pesos limpia, que ya tiene de que alimentarse (EMS para
+etiquetas, Umbra y Capella para imagen, todas CC BY) pero no esta construida.
+
+**Fase 3 — Institucional.** T3.1 cerrada: AlphaEarth Foundations es CC-BY 4.0 y
+puede agregarse al activo con su atribucion; Major TOM es CC-BY-SA 4.0 y no
+puede sin arrastrar el cubo entero. El contrato de esquema declara la extension
+y **ahora hay una prueba que lo compara contra el activo real**, porque no lo
+miraba nadie y habia derivado.
+
+Queda lo que no es codigo: presentar el sistema. Para eso esta
+[`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md), escrito con las
+cifras medidas y con los limites publicados al lado de lo que el sistema hace
+bien.
 
 ---
 
