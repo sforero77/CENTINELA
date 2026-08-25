@@ -258,7 +258,11 @@ function pintarDetalle(reporte, municipios) {
         ["Edificaciones en MMI≥7", comoTexto(t.bld_mmi7p)],
         ["Sedes de salud en MMI≥7", numero(t.health_mmi7p)],
         ["Sedes educativas en MMI≥7", numero(t.edu_mmi7p)],
-        ["Vias en MMI≥7", `${comoTexto(t.road_km_mmi7p)} km`],
+        // Los kilometros no se redondean como la poblacion: 8.503 km
+        // convertidos en "9000 km" pierden justo la cifra que interesa a
+        // quien tiene que decidir por donde entra la ayuda.
+        ["Vias en MMI≥7", `${numero(t.road_km_mmi7p)} km`],
+        ["De ellas, primarias y secundarias", `${numero(t.road_km_principal_mmi7p)} km`],
       ];
 
   document.getElementById("detalle-metricas").innerHTML = metricas

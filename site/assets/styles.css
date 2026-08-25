@@ -118,12 +118,17 @@ th { font-weight: 600; color: var(--tenue); }
 }
 
 .metrica .valor {
+  /* En bloque, o la etiqueta se pega al numero y se lee
+     "7,0 millonesPOBLACION EN MMI>=6". La pagina de estado usa estos mismos
+     estilos con una sola metrica por caja y ahi no se notaba. */
+  display: block;
   font-size: 1.7rem;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
 
 .metrica .etiqueta {
+  display: block;
   font-size: 0.78rem;
   color: var(--tenue);
   text-transform: uppercase;
