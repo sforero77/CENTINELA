@@ -15,7 +15,7 @@ on:
         required: true
         type: string
       fuente:
-        description: "URL del vector de dano (se lee por rangos con /vsicurl/)"
+        description: "URL del vector de dano (https://... ; se lee por rangos)"
         required: true
         type: string
       crs:
@@ -80,6 +80,9 @@ jobs:
       - name: Contrastar
         id: contraste
         run: |
+          # `| tee` devuelve el codigo de tee, no el del comando: la primera
+          # corrida de este workflow salio "success" con un traceback dentro.
+          set -o pipefail
           uv run centinela contraste "${{ inputs.fuente }}" \
             --exposure data/build/exposure_h3.parquet \
             --etiqueta "${{ inputs.etiqueta }}" \

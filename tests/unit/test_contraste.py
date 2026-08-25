@@ -93,3 +93,25 @@ def test_una_celda_evaluada_que_el_activo_no_tiene_se_cuenta(tmp_path: Any) -> N
 def test_contrastar_es_importable_sin_red() -> None:
     """El import no puede arrastrar httpfs ni GDAL: P2 corre en el camino critico."""
     assert callable(contrastar)
+
+
+def test_una_url_normal_se_convierte_en_ruta_gdal() -> None:
+    """Pedir el `/vsicurl/` escrito a mano resulto una trampa.
+
+    Una ruta que empieza por barra la convierte Git Bash a ruta de Windows antes
+    de que salga de la maquina, asi que el workflow recibio
+    "C:/Program Files/Git/vsicurl/https;//..." y fallo. Con la URL a secas no
+    hay nada que convertir.
+    """
+    from pipelines.p2_impact.contraste import VSI_HTTP, ruta_gdal
+
+    assert ruta_gdal("https://x/y.gpkg") == f"{VSI_HTTP}https://x/y.gpkg"
+    assert ruta_gdal("http://x/y.gpkg") == f"{VSI_HTTP}http://x/y.gpkg"
+
+
+def test_no_se_duplica_el_prefijo_ni_se_toca_una_ruta_local() -> None:
+    from pipelines.p2_impact.contraste import ruta_gdal
+
+    assert ruta_gdal("/vsicurl/https://x/y.gpkg") == "/vsicurl/https://x/y.gpkg"
+    assert ruta_gdal("/datos/local.gpkg") == "/datos/local.gpkg"
+    assert ruta_gdal("C:/datos/local.gpkg") == "C:/datos/local.gpkg"

@@ -98,6 +98,24 @@ GROUP BY 1
 """
 
 
+#: Prefijo de GDAL para leer un fichero remoto por rangos.
+VSI_HTTP = "/vsicurl/"
+
+
+def ruta_gdal(fuente: str) -> str:
+    """Normaliza la fuente a algo que ``ST_Read`` sepa abrir.
+
+    Acepta una URL normal y le pone el prefijo. Pedirlo ya escrito parecia mas
+    explicito y resulto una trampa: una ruta que empieza por barra la convierte
+    Git Bash a ruta de Windows antes de que salga de la maquina, asi que el
+    workflow recibio algo como "C:/Program Files/Git/vsicurl/https;//..." y
+    fallo. Con la URL a secas no hay nada que convertir.
+    """
+    if fuente.startswith(VSI_HTTP) or not fuente.lower().startswith(("http://", "https://")):
+        return fuente
+    return f"{VSI_HTTP}{fuente}"
+
+
 def contrastar(
     con: Any,
     *,
@@ -111,8 +129,8 @@ def contrastar(
     """Compara una evaluacion de dano externa con el activo, celda a celda.
 
     Args:
-        fuente: ruta o URL GDAL del vector de dano. Un `/vsicurl/https://...`
-            se lee por rangos y no baja el fichero entero.
+        fuente: ruta local o URL del vector de dano. Una URL http(s) se lee
+            por rangos con `/vsicurl/`, sin bajar el fichero entero.
         exposure_glob: activo de exposicion del pais.
         crs_origen: EPSG del vector de dano. Los productos de Microsoft en HDX
             vienen proyectados en la zona UTM del area.
@@ -125,7 +143,7 @@ def contrastar(
             columna_danado=columna_danado,
             crs_origen=crs_origen,
             crs_destino=CRS_ACTIVO,
-            fuente=fuente,
+            fuente=ruta_gdal(fuente),
             resolution=resolution,
         )
     )
