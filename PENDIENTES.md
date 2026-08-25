@@ -207,22 +207,22 @@ cumple, se documenta y se cierra; si no, se cambia el metodo.
 
 ### 2.3 PMTiles del visor · **mapa base hecho, faltan las coropletas**
 
-**Hecho el 24-ago-2026:** el mapa ya dibuja. Tierra, agua, fronteras y vias
-principales salen de las PMTiles que Overture publica por release, sin generar
-nada ni servir nada desde Pages. Las fronteras en disputa van punteadas y en
-otro color en vez de elegir un lado. Los epicentros de los reportes publicados
-se dibujan como circulos que escalan con la **poblacion expuesta a MMI≥7**, no
-con la magnitud: dos sismos de la misma magnitud sobre poblaciones distintas no
-son el mismo evento para quien responde.
+**Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salio primero de las
+PMTiles que Overture publica por release y **se cambio a OpenFreeMap (estilo
+Positron)** el mismo dia: una tesela de Overture a zoom 4 pesa 4,3 MB y no trae
+una sola etiqueta; una de OpenFreeMap a zoom 6 pesa 101 KB y trae toponimos,
+vias y agua. Sigue sin llaves ni cuota (D6). Ya no hay `OVERTURE_RELEASE` en
+`site/assets/app.js` y no hay nada que subir cada trimestre por el lado del
+mapa base.
+
+Los epicentros de los reportes publicados se dibujan como circulos que escalan
+con la **poblacion expuesta a MMI≥7**, no con la magnitud: dos sismos de la
+misma magnitud sobre poblaciones distintas no son el mismo evento para quien
+responde.
 
 Para eso hubo que meter `lon`/`lat` en `report.json`: estaban en el
 `event_state` y se quedaban ahi, asi que el artefacto publico no decia donde
 fue el sismo y ni el propio visor podia situarlo.
-
-**Ojo con el release.** `OVERTURE_RELEASE` en `site/assets/app.js` esta fijado
-a mano y hay que subirlo cada trimestre con el activo: Overture solo conserva
-dos releases. Cuando caduque, el mapa se queda gris y los reportes siguen bien,
-porque las cifras no dependen de las teselas — pero hay que verlo venir.
 
 **Falta:** las coropletas r7/r6 de exposicion e impacto, que si son datos
 nuestros y necesitan `tippecanoe`.
@@ -270,6 +270,45 @@ Mexico a 118,6°O por Guadalupe y Revillagigedo, Ecuador a 92,3°O por Galapagos
 Son muchas teselas de GHS-POP por poca poblacion, pero el sistema no puede
 decidir que una isla habitada no cuenta.
 
+### 2.4b El mapa estatico se publicaba vacio · **cerrado el 25-ago-2026**
+
+Los seis PNG de los tres reportes publicados no dibujaban nada: la estrella del
+epicentro clavada en (0, 0) y ni un municipio. Dos desconexiones, ninguna de
+calculo:
+
+* El epicentro salia de `_EPICENTRO`, un registro de modulo que se rellenaba con
+  `set_epicenter()` — **una funcion que no llamaba nadie**. Registro siempre
+  vacio, `.get` cayendo en su valor por defecto. Mismo patron que 2.4 y que las
+  capas del activo: una funcion escrita no es una funcion conectada.
+* Los municipios se leian de un `centroide` en WKT que ninguna fila trae. El CSV
+  publica `lon` y `lat`.
+
+`static_map.py` **no tenia ni una prueba**, y por eso el PNG vacio sobrevivio a
+tres publicaciones. Ahora tiene nueve, ocho de ellas sin matplotlib.
+
+**Falta:** no hay comando para regenerar los mapas de reportes ya publicados.
+Los de ahora se rehicieron con un script de usar y tirar. Un
+`centinela regenerar-mapas [USGS_ID]` evitaria que la proxima correccion de
+simbologia dependa de que alguien recuerde como se hacia.
+
+### 2.4c Simbologia del visor · **revisada el 25-ago-2026, quedan dos cosas**
+
+Hecho: la rampa de intensidad del visor es ya la misma que la del mapa estatico
+—se habia introducido la de ShakeMap sin ver que el proyecto tenia una decidida
+y argumentada, y el mismo evento salia de dos colores segun donde se mirara—, la
+leyenda se construye con las clases que trae el evento en vez de rotular siempre
+las seis, el epicentro es una estrella en vez de un circulo proporcional que se
+leia como radio de afectacion, y `salud` y `edu` son capas del selector: estaban
+en `celdas.json` desde el principio y solo se veian abriendo celda por celda.
+
+**Falta:**
+
+* A zoom continental, dos eventos del mismo dia a 150 km comparten sitio y
+  MapLibre oculta una de las dos etiquetas. Se ve en los dos de Venezuela.
+* Los cortes de `salud` y `edu` estan medidos sobre 1.691 celdas de tres eventos
+  en dos paises. Cuando entre un pais con mas equipamiento mapeado hay que
+  volver a medirlos, igual que se hizo con los de poblacion y vias.
+
 ### 2.6 Deuda menor
 
 - `data/manifests/COL.yaml` tiene los `sha256` vacios. Se llenan solos en la
@@ -285,6 +324,19 @@ decidir que una isla habitada no cuenta.
   haria que el assert compare contra un numero y no contra un redondeo.
 - `admin_lookup` guarda el centroide como WKT en texto. Funciona, pero
   `GEOMETRY` seria mas limpio.
+- **Ortografia del generador de reportes.** El visor se acentuo entero en la
+  auditoria de UX/UI; `pipelines/p3_report/` sigue escribiendo sin tildes
+  ("Exposicion estimada", "Municipios mas expuestos"). Solo se corrigio ahi una
+  palabra: decia "65 anos o mas", que no es lo mismo que "65 años o mas" y salia
+  en un documento publico. Acentuar el resto cambia todos los `report.md` ya
+  emitidos y es una decision editorial, no una correccion tecnica: esta sin
+  tomar.
+- **El mapa base tarda 8-10 s en pintar teselas desde frio.** Ninguna cifra
+  depende de ellas y el tablero es usable antes, pero la primera pantalla se
+  siente lenta. Precargar el estilo o servir un encuadre estatico mientras
+  llegan las teselas son las dos salidas obvias.
+- Las etiquetas largas del mapa estatico se pisan entre si: la separacion minima
+  es de 0,25° y "Ocumare De La Costa De Oro" mide bastante mas.
 
 ---
 
