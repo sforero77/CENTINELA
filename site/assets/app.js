@@ -14,39 +14,30 @@ const INDICE_REPORTES = "reports/index.json";
 // Encuadre inicial: la ventana LATAM del sistema (RF-01).
 const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 3.2 };
 
-// Release de Overture del que salen las teselas de contexto.
+// Mapa base: estilo Positron de OpenFreeMap.
 //
-// **Hay que subirlo cada trimestre, con el activo.** Overture solo conserva dos
-// releases: cuando este caduque, el mapa se queda gris y los reportes siguen
-// bien, porque las cifras no dependen de las teselas. Es la degradacion que se
-// prefiere, pero hay que verla venir. Debe coincidir con el release que fijan
-// los manifests.
-const OVERTURE_RELEASE = "2026-08-19.0";
+// **Por que este y no las teselas de Overture.** Overture tesela para el
+// detalle: medido, una tesela de `base` a zoom 4 pesa 4,3 MB y no trae una sola
+// etiqueta. Una de OpenFreeMap a zoom 6 pesa 101 KB y trae toponimos, vias,
+// agua y relieve sombreado. Cuarenta veces mas ligera y con nombres, que es lo
+// que convierte un mapa en algo que se puede leer.
+//
+// Sigue sin llaves de API ni cuota (D6): OpenFreeMap sirve ficheros estaticos
+// sin registro ni limite. Y si el servicio cae, el mapa se queda gris y **los
+// reportes siguen bien**, porque ninguna cifra depende de las teselas.
+//
+// Positron y no un estilo de colores a proposito: el mapa es el fondo del dato
+// y tiene que apartarse. Todo el contraste es para los municipios.
+const ESTILO_BASE = "https://tiles.openfreemap.org/styles/positron";
 
-// Zoom a partir del cual entran las teselas de Overture.
-//
-// **Medido, y por eso existe el contorno propio.** Una tesela de `base` a zoom 4
-// pesa 4,3 MB y una de `divisions` a zoom 3 pesa 1,7 MB: la vista regional pedia
-// unos 6 MB para dibujar cuatro rayas. Overture tesela para el detalle, que es
-// lo correcto para lo que ella hace y desproporcionado para un continente
-// entero en mil pixeles.
-//
-// Por debajo de este zoom se dibuja `assets/latam.geojson` — 615 KB, generado
-// con `centinela contorno-latam` desde los mismos poligonos. Por encima entran
-// las teselas, que es donde su detalle vale lo que pesa.
-const ZOOM_TESELAS = 6;
-const teselas = (tema) =>
-  `pmtiles://https://tiles.overturemaps.org/${OVERTURE_RELEASE}/${tema}.pmtiles`;
+// El estilo no declara atribucion en sus fuentes, asi que se pone a mano. La de
+// OpenFreeMap ellos la dan por opcional; se incluye igual.
+const ATRIBUCION =
+  '<a href="https://openfreemap.org">OpenFreeMap</a> · ' +
+  '<a href="https://openmaptiles.org">OpenMapTiles</a> · ' +
+  '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
-// Paleta sobria: el mapa es el fondo de una cifra, no el protagonista.
-const COLOR = {
-  agua: "#a8c4d4",
-  tierra: "#e8e4dd",
-  frontera: "#9a938a",
-  fronteraDisputada: "#b9a06a",
-  via: "#d3cec6",
-  epicentro: "#c1440e",
-};
+const COLOR = { epicentro: "#c1440e" };
 
 // Rampa por intensidad maxima del municipio. Arranca en MMI 6 porque por debajo
 // el sistema no publica cifra municipal: no es una escala completa de Mercalli,
@@ -162,7 +153,7 @@ function filaEvento(evento) {
   });
 
   const meta = document.createElement("p");
-  meta.className = "cargando";
+  meta.className = "evento-meta";
   meta.textContent = [
     evento.utc,
     `ShakeMap v${evento.shakemap_version}`,
@@ -462,118 +453,30 @@ function iniciarMapa() {
   const contenedor = document.getElementById("mapa");
   if (!contenedor || typeof maplibregl === "undefined") return null;
 
-  // Registrar el protocolo pmtiles:// antes de crear el mapa.
-  if (typeof pmtiles !== "undefined") {
-    const protocolo = new pmtiles.Protocol();
-    maplibregl.addProtocol("pmtiles", protocolo.tile);
-  }
-
   const mapa = new maplibregl.Map({
     container: "mapa",
-    style: {
-      version: 8,
-      // Overture publica sus propias teselas por release, asi que el contexto
-      // del mapa no hay que generarlo con tippecanoe ni servirlo desde aqui.
-      // Las coropletas de exposicion si son nuestras: son datos nuestros.
-      sources: {
-        // Contorno propio para la vista regional. Ver ZOOM_TESELAS.
-        contorno: {
-          type: "geojson",
-          data: "assets/latam.geojson",
-          attribution:
-            '<a href="https://overturemaps.org">Overture Maps</a> (ODbL · OpenStreetMap)',
-        },
-        base: { type: "vector", url: teselas("base") },
-        divisiones: { type: "vector", url: teselas("divisions") },
-        vias: { type: "vector", url: teselas("transportation") },
-      },
-      layers: [
-        { id: "fondo", type: "background", paint: { "background-color": COLOR.agua } },
-        {
-          id: "contorno-tierra",
-          type: "fill",
-          source: "contorno",
-          maxzoom: ZOOM_TESELAS,
-          paint: { "fill-color": COLOR.tierra },
-        },
-        {
-          id: "contorno-borde",
-          type: "line",
-          source: "contorno",
-          maxzoom: ZOOM_TESELAS,
-          paint: {
-            "line-color": COLOR.frontera,
-            "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 6, 1.0],
-          },
-        },
-        {
-          id: "tierra",
-          type: "fill",
-          source: "base",
-          "source-layer": "land",
-          minzoom: ZOOM_TESELAS,
-          paint: { "fill-color": COLOR.tierra },
-        },
-        {
-          id: "agua",
-          type: "fill",
-          source: "base",
-          "source-layer": "water",
-          minzoom: ZOOM_TESELAS,
-          paint: { "fill-color": COLOR.agua },
-        },
-        {
-          id: "vias-principales",
-          type: "line",
-          source: "vias",
-          "source-layer": "segment",
-          minzoom: 5,
-          // De 671.295 km de via en Chile, 60 % son calles residenciales. A la
-          // escala de este mapa solo estorban.
-          filter: ["in", ["get", "class"], ["literal", ["motorway", "trunk", "primary"]]],
-          paint: {
-            "line-color": COLOR.via,
-            "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.4, 12, 1.6],
-          },
-        },
-        // Una frontera en disputa se dibuja distinto en vez de elegir un lado:
-        // el sistema no tiene por que tener una opinion territorial.
-        //
-        // Son dos capas y no una con un `case` porque `line-dasharray` no admite
-        // expresiones por dato en MapLibre, y una propiedad invalida no degrada
-        // esa capa: invalida el estilo entero y el mapa sale en negro.
-        {
-          id: "fronteras",
-          type: "line",
-          source: "divisiones",
-          "source-layer": "division_boundary",
-          minzoom: ZOOM_TESELAS,
-          filter: ["!=", ["get", "is_disputed"], true],
-          paint: {
-            "line-color": COLOR.frontera,
-            "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 8, 1.2],
-          },
-        },
-        {
-          id: "fronteras-en-disputa",
-          type: "line",
-          source: "divisiones",
-          "source-layer": "division_boundary",
-          minzoom: ZOOM_TESELAS,
-          filter: ["==", ["get", "is_disputed"], true],
-          paint: {
-            "line-color": COLOR.fronteraDisputada,
-            "line-dasharray": [2, 2],
-            "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 8, 1.2],
-          },
-        },
-      ],
-    },
+    style: ESTILO_BASE,
     ...VISTA_INICIAL,
-    attributionControl: { compact: true },
+    attributionControl: false,
   });
 
+  mapa.addControl(
+    new maplibregl.AttributionControl({ compact: true, customAttribution: ATRIBUCION })
+  );
   mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+  // El aviso de carga se quita cuando el mapa dibuja algo, no cuando termina
+  // de cargarlo todo: `idle` no llega mientras siguen entrando teselas, y
+  // dejarlo puesto haria parecer roto un mapa que ya se ve.
+  const listo = () => {
+    const aviso = document.getElementById("cargando");
+    if (aviso) aviso.hidden = true;
+  };
+  mapa.once("load", listo);
+  // Y una red de seguridad: si el estilo no carga, el aviso no se queda para
+  // siempre. Mejor un mapa gris que un "cargando" eterno.
+  setTimeout(listo, 8000);
+
   mapa.on("error", (e) => console.warn("mapa:", e && e.error && e.error.message));
   return mapa;
 }

@@ -12,8 +12,10 @@
 </head>
 <body>
   <header class="barra">
-    <h1>CENTINELA</h1>
-    <p class="lema">Exposicion sismica estimada · America Latina</p>
+    <a class="marca" href="./">
+      <span class="marca-nombre">CENTINELA</span>
+      <span class="marca-lema">Exposicion sismica &middot; America Latina</span>
+    </a>
     <nav>
       <a href="#eventos">Eventos</a>
       <a href="status.html">Estado</a>
@@ -21,21 +23,28 @@
     </nav>
   </header>
 
-  <aside class="aviso" role="note">
-    <strong>Exposicion no es dano.</strong> Este sistema no es una alerta
-    temprana, no estima victimas y no dictamina habitabilidad. Informa cuanta
-    poblacion e infraestructura quedo <em>dentro</em> de cada franja de
-    intensidad.
-  </aside>
-
   <main>
-    <section id="mapa-seccion">
+    <p class="aviso" role="note">
+      <strong>Exposicion no es dano.</strong> No es una alerta temprana, no
+      estima victimas y no dictamina habitabilidad. Informa cuanta poblacion e
+      infraestructura quedo <em>dentro</em> de cada franja de intensidad.
+    </p>
+
+    <section class="lienzo">
       <div id="mapa" role="application" aria-label="Mapa de exposicion sismica"></div>
+
+      <div class="panel-mapa" id="cargando">
+        <span class="giro" aria-hidden="true"></span>
+        <span>Cargando el mapa&hellip;</span>
+      </div>
+
       <div class="leyenda" id="leyenda" hidden>
-        <p class="leyenda-titulo">Poblacion en MMI&ge;7</p>
+        <p class="leyenda-titulo">Intensidad maxima del municipio</p>
         <ul class="leyenda-escala" id="leyenda-escala"></ul>
-        <p class="leyenda-nota">Cada circulo es un municipio. El area crece con
-          la poblacion expuesta; el color, con la intensidad maxima.</p>
+        <p class="leyenda-nota">
+          Cada circulo es un municipio. El <strong>area</strong> crece con la
+          poblacion en MMI&ge;7.
+        </p>
       </div>
     </section>
 
@@ -43,50 +52,52 @@
       <div class="detalle-cabecera">
         <div>
           <h2 id="detalle-titulo"></h2>
-          <p class="cargando" id="detalle-meta"></p>
+          <p class="detalle-meta" id="detalle-meta"></p>
         </div>
         <button type="button" id="cerrar-detalle" class="boton-tenue">Cerrar</button>
       </div>
+
       <p class="aviso-backtest" id="detalle-aviso" hidden></p>
+
       <div class="metricas" id="detalle-metricas"></div>
-      <div class="tabla-scroll">
-        <table id="detalle-tabla">
-          <caption>Municipios mas expuestos</caption>
-          <thead>
-            <tr>
-              <th scope="col">Municipio</th>
-              <th scope="col" class="num">MMI max</th>
-              <th scope="col" class="num">Poblacion MMI&ge;7</th>
-              <th scope="col" class="num">Edificaciones</th>
-            </tr>
-          </thead>
-          <tbody id="detalle-filas"></tbody>
-        </table>
+
+      <div class="tarjeta">
+        <h3>Municipios mas expuestos</h3>
+        <div class="tabla-scroll">
+          <table id="detalle-tabla">
+            <thead>
+              <tr>
+                <th scope="col">Municipio</th>
+                <th scope="col" class="num">MMI max</th>
+                <th scope="col" class="num">Poblacion MMI&ge;7</th>
+                <th scope="col" class="num">Edificaciones</th>
+              </tr>
+            </thead>
+            <tbody id="detalle-filas"></tbody>
+          </table>
+        </div>
       </div>
-      <p class="nota" id="detalle-descargas"></p>
+
+      <p class="descargas" id="detalle-descargas"></p>
     </section>
 
     <section id="eventos">
       <h2>Reportes publicados</h2>
-      <p class="cargando" id="estado-lista">Cargando eventos…</p>
+      <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
       <ul class="lista-eventos" id="lista-eventos"></ul>
     </section>
   </main>
 
   <footer>
     <p>
-      Intensidad: USGS ShakeMap (dominio publico) ·
-      Poblacion: GHS-POP, JRC/Comision Europea ·
-      Edificaciones y vias: Overture Maps, © OpenStreetMap contributors (ODbL)
+      Intensidad: USGS ShakeMap (dominio publico) &middot;
+      Poblacion: GHS-POP, JRC/Comision Europea &middot;
+      Edificaciones y vias: Overture Maps, &copy; OpenStreetMap contributors (ODbL)
     </p>
-    <p>Codigo bajo Apache-2.0 · Datos del nucleo bajo CC BY 4.0</p>
+    <p>Codigo bajo Apache-2.0 &middot; Datos del nucleo bajo CC BY 4.0</p>
   </footer>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <!-- pmtiles 4.x es la linea alineada con maplibre-gl 4/5. La 3.0.6 tambien
-       funciona: ya implementaba la firma (params, AbortController) que MapLibre 4
-       espera. Se sube por estar en la version corriente, no por un fallo. -->
-  <script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
   <script src="assets/app.js" type="module"></script>
 </body>
 </html>

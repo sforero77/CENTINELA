@@ -1,25 +1,40 @@
-/* Presupuesto de carga inicial: < 3 MB (RNF-05). Sin frameworks, sin fuentes
-   remotas: el visor debe abrir en un movil con mala conexion. */
+/* Visor de CENTINELA.
+ *
+ * Sin frameworks y sin fuentes remotas: el visor tiene que abrir en un movil
+ * con mala conexion, y una fuente que tarda deja la pagina sin texto mientras
+ * llega. La jerarquia se hace con tamano, peso y espacio, que no cuestan una
+ * peticion.
+ *
+ * El mapa base es claro y la interfaz oscura, a proposito: el dato va sobre el
+ * mapa y necesita todo el contraste; el resto de la pagina se aparta. */
 
 :root {
-  --fondo: #fbfaf8;
-  --texto: #1c1b1a;
-  --tenue: #55524e;
-  --borde: #dedad4;
-  --acento: #8a3324;
-  --aviso-fondo: #fdf4e3;
+  color-scheme: light dark;
+
+  --fondo: #ffffff;
+  --superficie: #f7f6f4;
+  --texto: #16151a;
+  --tenue: #5b5760;
+  --borde: #e2ded8;
+  --borde-suave: #efece7;
+  --acento: #b8371f;
+  --aviso-fondo: #fdf6e6;
   --aviso-borde: #d9a441;
+  --sombra: 0 1px 2px rgba(20, 18, 24, 0.06), 0 8px 24px rgba(20, 18, 24, 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fondo: #17161a;
-    --texto: #ecebe8;
-    --tenue: #a7a29b;
-    --borde: #333039;
-    --acento: #e08060;
+    --fondo: #121116;
+    --superficie: #1b1a20;
+    --texto: #f0eeea;
+    --tenue: #a29daa;
+    --borde: #2e2c36;
+    --borde-suave: #24232b;
+    --acento: #ef7a5a;
     --aviso-fondo: #2a2317;
     --aviso-borde: #8a6a2a;
+    --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -30,179 +45,150 @@ body {
   background: var(--fondo);
   color: var(--texto);
   font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+a { color: var(--acento); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+/* --- Barra ---------------------------------------------------------------- */
 
 .barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.75rem 1.5rem;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--borde);
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.85rem 1.5rem;
+  background: color-mix(in srgb, var(--fondo) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--borde-suave);
 }
 
-.barra h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.08em; }
-.lema { margin: 0; color: var(--tenue); font-size: 0.9rem; }
-.barra nav { margin-left: auto; display: flex; gap: 1rem; }
+.marca { display: flex; flex-direction: column; gap: 0.1rem; text-decoration: none; color: inherit; }
+.marca-nombre { font-size: 1.05rem; font-weight: 650; letter-spacing: 0.14em; }
+.marca-lema { font-size: 0.78rem; color: var(--tenue); letter-spacing: 0.02em; }
 
-a { color: var(--acento); }
+.barra nav { margin-left: auto; display: flex; gap: 1.4rem; font-size: 0.9rem; }
+.barra nav a { color: var(--tenue); text-decoration: none; }
+.barra nav a:hover { color: var(--texto); }
+
+main { padding: 1.5rem 1.5rem 4rem; max-width: 78rem; margin: 0 auto; }
+
+/* --- Aviso permanente ------------------------------------------------------ */
 
 .aviso {
-  margin: 1rem 1.5rem;
-  padding: 0.85rem 1.1rem;
+  margin: 0 0 1.25rem;
+  padding: 0.8rem 1.05rem;
   background: var(--aviso-fondo);
   border-left: 3px solid var(--aviso-borde);
-  border-radius: 3px;
-  font-size: 0.94rem;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
-main { padding: 0 1.5rem 3rem; max-width: 70rem; margin: 0 auto; }
+/* --- Mapa ------------------------------------------------------------------ */
 
-#mapa {
-  height: min(60vh, 520px);
+.lienzo {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
   border: 1px solid var(--borde);
-  border-radius: 4px;
-  background: var(--borde);
+  box-shadow: var(--sombra);
 }
 
-h2 { margin-top: 2.5rem; font-size: 1.1rem; }
+#mapa { height: clamp(22rem, 58vh, 40rem); }
 
-.lista-eventos { list-style: none; padding: 0; }
+/* El lienzo del mapa siempre es claro: el basemap lo es, y heredar el tema
+   oscuro de la pagina dejaria un borde negro alrededor mientras carga. */
+.maplibregl-canvas-container { background: #eef1f4; }
 
-.lista-eventos li {
-  padding: 0.85rem 0;
-  border-bottom: 1px solid var(--borde);
-}
-
-.cargando, .nota { color: var(--tenue); font-size: 0.92rem; }
-
-footer {
-  padding: 1.5rem;
-  border-top: 1px solid var(--borde);
-  color: var(--tenue);
-  font-size: 0.82rem;
-}
-
-footer p { margin: 0.35rem 0; }
-
-@media (max-width: 40rem) {
-  .barra nav { margin-left: 0; width: 100%; }
-}
-
-
-/* --- Pagina de estado --- */
-
-.tabla-scroll { overflow-x: auto; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.88rem;
-}
-
-th, td {
-  padding: 0.45rem 0.7rem;
-  border-bottom: 1px solid var(--borde);
-  text-align: left;
-  white-space: nowrap;
-}
-
-th { font-weight: 600; color: var(--tenue); }
-.num { text-align: right; }
-
-.metricas {
+.panel-mapa {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem 2.5rem;
-  margin: 1rem 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: #eef1f4;
+  color: #5b5760;
+  font-size: 0.9rem;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
 }
 
-.metrica .valor {
-  /* En bloque, o la etiqueta se pega al numero y se lee
-     "7,0 millonesPOBLACION EN MMI>=6". La pagina de estado usa estos mismos
-     estilos con una sola metrica por caja y ahi no se notaba. */
-  display: block;
-  font-size: 1.7rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
+.panel-mapa[hidden] { display: none; }
+
+.giro {
+  width: 0.95rem;
+  height: 0.95rem;
+  border: 2px solid #c8ccd2;
+  border-top-color: #5b5760;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
 }
 
-.metrica .etiqueta {
-  display: block;
-  font-size: 0.78rem;
-  color: var(--tenue);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+@keyframes girar { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .giro { animation: none; }
 }
-
-.cumple { color: #1a7f37; }
-.incumple { color: var(--acento); }
-
-/* Aviso de reconstruccion retrospectiva en la lista de eventos.
-   Un historico no afirma lo mismo que un reporte en vivo: la poblacion puede
-   ser de la epoca del sismo, pero la infraestructura es la de hoy. */
-.aviso-backtest {
-  margin: 0.25rem 0 0;
-  padding: 0.4rem 0.6rem;
-  border-left: 3px solid #b8860b;
-  background: #fdf6e3;
-  color: #6b5200;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-/* --- Panel de detalle del evento ---------------------------------------- */
-
-#mapa-seccion { position: relative; }
 
 .leyenda {
   position: absolute;
-  right: 0.75rem;
-  bottom: 2.5rem;
-  max-width: 15rem;
-  padding: 0.7rem 0.85rem;
-  background: var(--fondo);
-  border: 1px solid var(--borde);
-  border-radius: 6px;
-  font-size: 0.8rem;
-  line-height: 1.35;
+  right: 0.85rem;
+  bottom: 2.2rem;
+  max-width: 15.5rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255, 255, 255, 0.94);
+  color: #16151a;
+  border: 1px solid rgba(20, 18, 24, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(20, 18, 24, 0.12);
+  font-size: 0.79rem;
+  line-height: 1.4;
 }
 
-.leyenda-titulo { margin: 0 0 0.45rem; font-weight: 600; }
-.leyenda-escala { list-style: none; margin: 0 0 0.5rem; padding: 0; }
+.leyenda-titulo { margin: 0 0 0.5rem; font-weight: 650; font-size: 0.78rem; }
+.leyenda-escala { list-style: none; margin: 0 0 0.55rem; padding: 0; }
 
 .leyenda-escala li {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.22rem;
+  margin-bottom: 0.24rem;
 }
 
 .leyenda-escala .muestra {
-  width: 0.85rem;
-  height: 0.85rem;
+  width: 0.8rem;
+  height: 0.8rem;
   border-radius: 50%;
   flex: 0 0 auto;
-  border: 1px solid rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.28);
 }
 
-.leyenda-nota { margin: 0; color: var(--tenue); font-size: 0.74rem; }
+.leyenda-nota { margin: 0; color: #5b5760; font-size: 0.73rem; }
 
-.detalle-cabecera {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+@media (max-width: 34rem) {
+  .leyenda { position: static; max-width: none; margin-top: 0.75rem; border-radius: 8px; }
 }
 
-.detalle-cabecera h2 { margin: 0 0 0.2rem; }
+/* --- Detalle del evento ---------------------------------------------------- */
+
+#detalle { margin-top: 1.75rem; }
+
+.detalle-cabecera { display: flex; align-items: flex-start; gap: 1rem; }
+.detalle-cabecera h2 { margin: 0 0 0.25rem; font-size: 1.45rem; line-height: 1.25; }
+.detalle-meta { margin: 0; color: var(--tenue); font-size: 0.85rem; }
 
 .boton-tenue {
   margin-left: auto;
+  flex: 0 0 auto;
   background: none;
   border: 1px solid var(--borde);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--tenue);
-  padding: 0.3rem 0.7rem;
+  padding: 0.35rem 0.8rem;
   cursor: pointer;
   font: inherit;
   font-size: 0.85rem;
@@ -210,16 +196,123 @@ th { font-weight: 600; color: var(--tenue); }
 
 .boton-tenue:hover { color: var(--texto); border-color: var(--tenue); }
 
-/* Un evento seleccionado se marca en la lista: el mapa y el panel hablan de
-   el, y sin esta pista no se sabe cual. */
-.lista-eventos li.activo {
-  border-left: 3px solid var(--acento);
-  padding-left: 0.65rem;
+.aviso-backtest {
+  margin: 0.9rem 0 0;
+  padding: 0.65rem 0.9rem;
+  background: var(--aviso-fondo);
+  border-left: 3px solid var(--aviso-borde);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 
-.lista-eventos li { cursor: pointer; }
+/* Las cifras van en rejilla y no en fila: con ocho metricas una fila las
+   aprieta hasta que la etiqueta se parte en tres lineas. */
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 1px;
+  margin: 1.25rem 0;
+  background: var(--borde-suave);
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.metrica { padding: 0.9rem 1rem; background: var(--fondo); }
+
+.metrica .valor {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.metrica .etiqueta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.73rem;
+  color: var(--tenue);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+}
+
+.tarjeta {
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
+  background: var(--superficie);
+}
+
+.tarjeta h3 { margin: 0 0 0.75rem; font-size: 0.9rem; color: var(--tenue); font-weight: 650; }
+
+.tabla-scroll { overflow-x: auto; }
 
 #detalle table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-#detalle caption { text-align: left; color: var(--tenue); padding-bottom: 0.4rem; }
-#detalle th, #detalle td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--borde); }
-#detalle th { text-align: left; color: var(--tenue); font-weight: 600; }
+#detalle th, #detalle td { padding: 0.42rem 0.6rem; border-bottom: 1px solid var(--borde-suave); }
+#detalle tbody tr:last-child td { border-bottom: none; }
+#detalle th { text-align: left; color: var(--tenue); font-weight: 600; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; }
+#detalle td { font-variant-numeric: tabular-nums; }
+.num { text-align: right; }
+
+.descargas { margin: 1rem 0 0; font-size: 0.86rem; color: var(--tenue); }
+
+/* --- Lista de eventos ------------------------------------------------------ */
+
+#eventos { margin-top: 2.5rem; }
+#eventos h2 { font-size: 1.1rem; margin: 0 0 0.9rem; }
+
+.lista-eventos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 0.75rem;
+}
+
+.lista-eventos li {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--borde-suave);
+  border-radius: 10px;
+  background: var(--superficie);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.lista-eventos li:hover { border-color: var(--borde); transform: translateY(-1px); }
+.lista-eventos li.activo { border-color: var(--acento); }
+
+.lista-eventos a { font-weight: 600; text-decoration: none; }
+.lista-eventos a:hover { text-decoration: underline; }
+
+.evento-meta {
+  margin: 0.35rem 0 0;
+  color: var(--tenue);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.cargando, .nota { color: var(--tenue); font-size: 0.9rem; }
+
+/* --- Pie ------------------------------------------------------------------- */
+
+footer {
+  border-top: 1px solid var(--borde-suave);
+  padding: 1.5rem;
+  color: var(--tenue);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  max-width: 78rem;
+  margin: 0 auto;
+}
+
+footer p { margin: 0 0 0.35rem; }
+
+/* --- Pagina de estado (comparte tokens) ------------------------------------ */
+
+.cumple { color: #1a7f37; }
+.incumple { color: var(--acento); }
