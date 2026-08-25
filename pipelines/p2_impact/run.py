@@ -290,6 +290,21 @@ def run_impact(
     filas = _enriquecer_con_admin(con, filas)
     escritos = write_report_bundle(reporte, filas, reports_root=reports_root)
 
+    # La malla del evento, para que el visor dibuje el dato donde esta y no un
+    # circulo en el centroide del municipio. Se escribe junto al resto del
+    # paquete; si falla, el reporte ya esta publicado y eso es lo que importa.
+    try:
+        from ..p3_report.celdas import write_cells_json
+
+        escritos["celdas_json"] = write_cells_json(
+            con, escritos["report_json"].parent / "celdas.json"
+        )
+    except Exception as exc:
+        _log.warning(
+            "no se pudo escribir la malla del evento",
+            extra={"context": {"usgs_id": usgs_id, "error": str(exc)}},
+        )
+
     versiones = ProcessedVersions(
         shakemap=products.shakemap_version, groundfailure=products.groundfailure_version
     )
