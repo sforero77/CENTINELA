@@ -208,3 +208,25 @@ def test_el_reparto_no_marca_como_rescatado_lo_que_reparte() -> None:
     """
     con = _con_isla()
     assert con.execute("SELECT count(*) FROM crosswalk_h3_adm WHERE rescatada").fetchone()[0] == 0
+
+
+@pytest.mark.geo
+def test_las_teselas_cubren_la_caja_sin_huecos() -> None:
+    """El troceado no puede perder area: eso serian celdas sin municipio."""
+    from pipelines.p0_exposure.crosswalk import _teselas
+
+    t = _teselas(-70.0, -56.0, -66.0, -52.0, paso=0.5)
+    assert len(t) == 64
+    assert min(x0 for x0, _, _, _ in t) == pytest.approx(-70.0)
+    assert max(x1 for _, _, x1, _ in t) == pytest.approx(-66.0)
+    assert min(y0 for _, y0, _, _ in t) == pytest.approx(-56.0)
+    assert max(y1 for _, _, _, y1 in t) == pytest.approx(-52.0)
+    area = sum((x1 - x0) * (y1 - y0) for x0, y0, x1, y1 in t)
+    assert area == pytest.approx(16.0)
+
+
+@pytest.mark.geo
+def test_un_municipio_menor_que_una_tesela_no_se_trocea() -> None:
+    from pipelines.p0_exposure.crosswalk import _teselas
+
+    assert _teselas(-74.1, 4.5, -74.0, 4.6) == [(-74.1, 4.5, -74.0, 4.6)]

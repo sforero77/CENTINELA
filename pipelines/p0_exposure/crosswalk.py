@@ -194,59 +194,54 @@ CREATE OR REPLACE TABLE crosswalk_h3_adm (
 )
 """
 
-#: Las partes de cada municipio, numeradas. Un municipio con islas o exclaves es
-#: un MULTIPOLYGON, y `h3_polygon_wkt_to_cells` devuelve **cero** celdas ante uno
-#: —no la primera parte: cero— asi que hay que descomponerlo.
-SQL_PARTES_VACIO = """
-CREATE OR REPLACE TABLE partes_admin (adm2_id VARCHAR, geom GEOMETRY, i BIGINT)
+#: Lado de la tesela con la que se trocea cada municipio, en grados.
+#:
+#: 0,5 grados son unos 55 km. No es un ajuste fino: es lo que hace el paso
+#: posible. Ver :data:`SQL_POLYFILL_TESELA`.
+TESELA_GRADOS = 0.5
+
+#: Cajas de los municipios, para saber que teselas tocar.
+SQL_CAJAS = """
+SELECT adm2_id,
+       ST_XMin(geom), ST_YMin(geom), ST_XMax(geom), ST_YMax(geom)
+FROM admin_geom ORDER BY adm2_id
 """
 
-#: Y se descompone **un municipio por consulta**.
+#: Rellena **un trozo de un municipio por consulta**, recortado a una tesela.
 #:
-#: `ST_Dump` de los 56 municipios de Chile a la vez agoto los 12,4 GB del runner
-#: en once segundos, antes de tocar una sola celda: DuckDB ejecuta por vectores y
-#: mantiene a la vez las listas de partes de varias provincias patagonicas, cada
-#: una con miles de islas. Uno a uno la memoria queda acotada al mayor.
-SQL_PARTES_MUNICIPIO = """
-INSERT INTO partes_admin
-SELECT adm2_id, t.p.geom, NULL
-FROM admin_geom, unnest(ST_Dump(geom)) AS t(p)
-WHERE adm2_id = ?
-"""
-
-#: Numerar despues, en una pasada barata sobre geometrias ya materializadas.
-SQL_NUMERAR_PARTES = """
-CREATE OR REPLACE TABLE partes_admin AS
-SELECT adm2_id, geom, row_number() OVER () AS i FROM partes_admin
-"""
-
-#: Se rellena **por lotes de partes**, no el pais de golpe ni el municipio
-#: entero.
+#: Tres cosas que costaron cinco intentos de Chile, todas por memoria.
 #:
-#: `h3_polygon_wkt_to_cells` recibe la geometria como **texto**, y DuckDB procesa
-#: en vectores: con miles de partes en vuelo, los `ST_AsText` de todas ellas
-#: coexisten en memoria. El COD-AB de Chile pesa mas de 182 MB —la costa de
-#: Magallanes tiene millones de vertices— y una sola provincia agoto los 12,4 GB
-#: del runner.
+#: 1. `h3_polygon_wkb_to_cells` no digiere un MULTIPOLYGON, asi que hay que
+#:    descomponer. Y un municipio con islas, exclave o un trozo al otro lado de
+#:    un rio es un MULTIPOLYGON.
+#: 2. `ST_Dump` del municipio entero materializa la lista de **todas** sus
+#:    partes a la vez, y una sola provincia patagonica agoto los 12,4 GB del
+#:    runner. Recortando primero a una tesela, la lista es la de esa tesela.
+#: 3. La geometria viaja a la funcion como **bytes** y no como texto. El COD-AB
+#:    de Chile pesa mas de 182 MB; su representacion en WKT es aun mayor y hay
+#:    que construirla y parsearla entera.
 #:
-#: Por lotes la memoria queda acotada al lote, y **sin perder un vertice**. La
-#: alternativa era simplificar la geometria, y se probo: simplificar cada
-#: municipio por su cuenta descuadra los bordes compartidos con sus vecinos y
-#: produjo 23 celdas reclamadas por dos municipios en Uruguay. La asercion de
-#: duplicados lo cazo. Trocear no tiene ese coste.
-SQL_POLYFILL_LOTE = """
+#: Y hay una cuarta razon para preferir WKB que no es de memoria: ante un
+#: MULTIPOLYGON, `h3_polygon_wkt_to_cells` devuelve **cero celdas en silencio**
+#: y `h3_polygon_wkb_to_cells` lanza un error. El fallo de las islas —que estuvo
+#: escondido meses— se habria visto el primer dia con la version binaria.
+#:
+#: El filtro por tipo descarta lo que sale de recortar un poligono por una
+#: linea: puntos y segmentos en el borde exacto de la tesela, que no son area.
+SQL_POLYFILL_TESELA = """
 INSERT INTO crosswalk_h3_adm
 SELECT DISTINCT
-    unnest(h3_polygon_wkt_to_cells(ST_AsText(geom), {resolution})) AS h3_08,
-    adm2_id,
-    1.0 AS frac_area,
-    FALSE AS rescatada
-FROM partes_admin
-WHERE i BETWEEN ? AND ?
+    unnest(h3_polygon_wkb_to_cells(ST_AsWKB(d.p.geom), {resolution})) AS h3_08,
+    t.adm2_id,
+    1.0,
+    FALSE
+FROM (
+    SELECT adm2_id,
+           ST_Intersection(geom, ST_MakeEnvelope(?, ?, ?, ?)) AS recorte
+    FROM admin_geom WHERE adm2_id = ?
+) t, unnest(ST_Dump(t.recorte)) AS d(p)
+WHERE ST_GeometryType(d.p.geom) = 'POLYGON'
 """
-
-#: Cuantas partes se rellenan por consulta.
-LOTE_PARTES = 100
 
 SQL_ADMIN_LOOKUP = """
 CREATE OR REPLACE TABLE admin_lookup AS
@@ -319,6 +314,25 @@ def load_admin_geometry(
     return n
 
 
+def _teselas(
+    xmin: float, ymin: float, xmax: float, ymax: float, paso: float = TESELA_GRADOS
+) -> list[tuple[float, float, float, float]]:
+    """Cuadricula que cubre la caja, en teselas de lado ``paso``.
+
+    Un municipio pequenio cabe en una sola. Los grandes se trocean, y es ahi
+    donde esto importa: la caja de Magallanes mide unos ocho grados por seis.
+    """
+    salida: list[tuple[float, float, float, float]] = []
+    y = ymin
+    while y < ymax:
+        x = xmin
+        while x < xmax:
+            salida.append((x, y, min(x + paso, xmax), min(y + paso, ymax)))
+            x += paso
+        y += paso
+    return salida or [(xmin, ymin, xmax, ymax)]
+
+
 def build_crosswalk(
     con: Any,
     *,
@@ -335,26 +349,24 @@ def build_crosswalk(
             doble conteo de poblacion, y es preferible fallar el build.
     """
     con.execute(SQL_CROSSWALK_VACIO)
-    con.execute(SQL_PARTES_VACIO)
-    ids = [str(f[0]) for f in con.execute("SELECT adm2_id FROM admin_geom").fetchall()]
-    for adm2_id in ids:
-        con.execute(SQL_PARTES_MUNICIPIO, [adm2_id])
-    con.execute(SQL_NUMERAR_PARTES)
-    partes: int = con.execute("SELECT count(*) FROM partes_admin").fetchone()[0]
-    _log.info(
-        "geometrias descompuestas",
-        extra={"context": {"iso3": iso3, "municipios": len(ids), "partes": partes}},
-    )
-    sql = SQL_POLYFILL_LOTE.format(resolution=resolution)
-    for desde in range(1, partes + 1, LOTE_PARTES):
-        hasta = min(desde + LOTE_PARTES - 1, partes)
-        con.execute(sql, [desde, hasta])
-        if hasta == partes or (desde - 1) % (LOTE_PARTES * 20) == 0:
+    cajas = con.execute(SQL_CAJAS).fetchall()
+    sql = SQL_POLYFILL_TESELA.format(resolution=resolution)
+    teselas = 0
+    for hechos, (adm2_id, xmin, ymin, xmax, ymax) in enumerate(cajas, start=1):
+        for x0, y0, x1, y1 in _teselas(xmin, ymin, xmax, ymax):
+            con.execute(sql, [x0, y0, x1, y1, str(adm2_id)])
+            teselas += 1
+        if hechos % 200 == 0 or hechos == len(cajas):
             _log.info(
                 "reparto en curso",
-                extra={"context": {"iso3": iso3, "partes": f"{hasta}/{partes}"}},
+                extra={
+                    "context": {
+                        "iso3": iso3,
+                        "municipios": f"{hechos}/{len(cajas)}",
+                        "teselas": teselas,
+                    }
+                },
             )
-    con.execute("DROP TABLE partes_admin")
     con.execute(SQL_ADMIN_LOOKUP.format(iso3=iso3))
 
     duplicadas = con.execute(SQL_ASSERT_SIN_DUPLICADOS).fetchall()
