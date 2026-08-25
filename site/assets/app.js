@@ -205,6 +205,7 @@ const escapar = (s) =>
 
 const estado = {
   paisFiltrado: "",
+  epicentro: null,
   mapa: null,
   eventos: [],
   seleccionado: null,
@@ -288,10 +289,13 @@ function celdasAGeoJson(datos) {
   return {
     type: "FeatureCollection",
     features: datos.celdas.map((c) => {
+      // El índice H3 **sí** viaja. Se excluía, y con él se iba la única forma
+      // de cruzar lo que se ve en el mapa con el `celdas.json` que se ofrece
+      // para descargar: quince caracteres por celda a cambio de que la ficha
+      // sea citable y verificable. Para quien trabaja con SIG, un dato que no
+      // se puede referenciar es un dato que no se puede usar.
       const props = {};
-      for (const [nombre, i] of Object.entries(idx)) {
-        if (nombre !== "h3") props[nombre] = c[i];
-      }
+      for (const [nombre, i] of Object.entries(idx)) props[nombre] = c[i];
       return {
         type: "Feature",
         // `true` devuelve [lng, lat], que es el orden de GeoJSON. Sin él, los
@@ -666,8 +670,48 @@ function pintarLateral(reporte, municipios) {
   );
 }
 
+// LA PROFUNDIDAD ES UNA VARIABLE DE PRIMER ORDEN, Y ESTABA EN UNA LINEA DE
+// METADATOS ENTRE LA FECHA Y LA VERSION DEL SHAKEMAP.
+//
+// A igual magnitud, la profundidad decide cuanto se siente en superficie. Es
+// literalmente lo que explica los casos raros del catalogo: Tehuantepec fue un
+// M8,2 y su maximo sobre poblacion mexicana es MMI 6,5; los veintidos sismos
+// bolivianos estan entre 359 y 596 km y ninguno produce una sola celda. Un
+// lector que ve "M8,2" y "0 personas en MMI≥7" sin ver "47 km" o "559 km" no
+// tiene con que entenderlo.
+//
+// Los cortes son los estandar en sismologia, no elegidos aqui: someros hasta
+// 70 km, intermedios hasta 300, profundos por encima.
+function claseDeProfundidad(km) {
+  if (!Number.isFinite(km)) return null;
+  if (km < 70) {
+    return {
+      texto: `${numero(km)} km · superficial`,
+      titulo:
+        "Menos de 70 km. A igual magnitud es el caso que más sacude en superficie, " +
+        "porque la energía recorre menos camino hasta la gente.",
+    };
+  }
+  if (km <= 300) {
+    return {
+      texto: `${numero(km)} km · intermedio`,
+      titulo:
+        "Entre 70 y 300 km. La sacudida se reparte sobre un área más ancha y llega " +
+        "más suave: un sismo grande puede no alcanzar intensidades altas en ningún sitio.",
+    };
+  }
+  return {
+    texto: `${numero(km)} km · profundo`,
+    titulo:
+      "Más de 300 km. Se siente lejos y débil. En esta región son los del Nazca bajo " +
+      "Bolivia y el occidente de Brasil, que casi nunca producen intensidad publicable.",
+  };
+}
+
 function pintarDistintivos(reporte) {
   const marcas = [];
+  const prof = claseDeProfundidad(Number(reporte.event.depth_km));
+  if (prof) marcas.push(prof);
   if (reporte.preliminar) {
     marcas.push({
       texto: "preliminar, sin ShakeMap",
@@ -929,9 +973,32 @@ function pintarDescargas(usgsId) {
 // los epicentros: `load` no llega hasta que el estilo esta completo, mientras
 // que `styledata` puede haber pasado ya y no volver, dejando la malla sin
 // dibujar para siempre.
+// `once("load")` dispara **una sola vez**, la primera que el mapa carga. Si ya
+// disparó y `isStyleLoaded()` sigue devolviendo false —pasa mientras una fuente
+// está en vuelo— el callback se registra para un evento que no volverá, y la
+// malla no se dibuja nunca.
+//
+// Reproducido: abrir `?evento=us7000nr0v` con la caché fría deja el mapa en
+// blanco, sin base, sin malla, sin leyenda y sin un error en consola. Con la
+// caché caliente el mismo enlace funciona, así que es una carrera — y le toca
+// justo a quien abre por primera vez un enlace que alguien le compartió, que es
+// el único público que este visor tiene todavía.
+//
+// `styledata` se emite cada vez que el estilo cambia e `idle` cuando todo se
+// asienta: entre los dos no hay ventana en la que el aviso se pierda.
 function cuandoElEstiloEsteListo(m, fn) {
-  if (m.isStyleLoaded()) fn();
-  else m.once("load", fn);
+  if (m.isStyleLoaded()) {
+    fn();
+    return;
+  }
+  const reintentar = () => {
+    if (!m.isStyleLoaded()) return;
+    m.off("styledata", reintentar);
+    m.off("idle", reintentar);
+    fn();
+  };
+  m.on("styledata", reintentar);
+  m.on("idle", reintentar);
 }
 
 // El circulo proporcional se apaga en cuanto hay malla en pantalla: la
@@ -1032,6 +1099,26 @@ function dibujarCeldas(m, datos, reporte) {
 
   const lons = geo.features.flatMap((f) => f.geometry.coordinates[0].map((c) => c[0]));
   const lats = geo.features.flatMap((f) => f.geometry.coordinates[0].map((c) => c[1]));
+
+  // EL EPICENTRO ENTRA EN EL ENCUADRE.
+  //
+  // Encuadrar solo la malla deja fuera la estrella en cuanto el sismo ocurre
+  // mar adentro, que en esta región es la mitad del catálogo. Medido sobre los
+  // 18 eventos con malla: en tres —Carúpano, La Libertad y Bartolomé Masó— el
+  // epicentro cae fuera de la caja de la malla, y en Cuba sale cortado por el
+  // borde inferior de la pantalla.
+  //
+  // Ver la afectación *desde el epicentro* empieza por ver el epicentro.
+  const epiLon = Number(reporte.event.lon);
+  const epiLat = Number(reporte.event.lat);
+  if (Number.isFinite(epiLon) && Number.isFinite(epiLat) && (epiLon || epiLat)) {
+    lons.push(epiLon);
+    lats.push(epiLat);
+    estado.epicentro = [epiLon, epiLat];
+  } else {
+    estado.epicentro = null;
+  }
+
   m.fitBounds(
     [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
     { padding: 48, maxZoom: 10, duration: VUELO }
@@ -1041,6 +1128,22 @@ function dibujarCeldas(m, datos, reporte) {
 // Los manejadores se registran una sola vez. Antes se añadían dentro de
 // `pintarCeldas`, así que cambiar de evento tres veces dejaba tres oyentes de
 // clic y abría tres ventanitas de una vez.
+
+// Distancia en km sobre la esfera, con el mismo radio que usa el pipeline
+// (`pipelines/common/geo.py`). Dos numeros distintos para la misma distancia,
+// uno en el mapa y otro en el reporte, seria el peor tipo de discrepancia.
+const RADIO_TIERRA_KM = 6371.0088;
+
+function distanciaKm(lon1, lat1, lon2, lat2) {
+  const rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad;
+  const dLon = (lon2 - lon1) * rad;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * RADIO_TIERRA_KM * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
 function engancharCeldas(m) {
   if (estado.ganchosCeldas) return;
   estado.ganchosCeldas = true;
@@ -1054,8 +1157,21 @@ function engancharCeldas(m) {
     new maplibregl.Popup({ closeButton: false, maxWidth: "18rem" })
       .setLngLat(ev.lngLat)
       .setHTML(
-        `<p class="mono" style="margin:0 0 .45rem">Celda H3 · r7 · 5,2 km²</p>` +
+        // El indice es la clave con la que esta celda se encuentra en el
+        // `celdas.json` descargable, y en el parquet del activo. Sin el, lo
+        // que se lee en pantalla no se puede citar ni comprobar.
+        `<p class="mono" style="margin:0 0 .15rem">Celda H3 · r7 · 5,2 km²</p>` +
+        `<p class="mono ficha-h3" style="margin:0 0 .45rem">${escapar(String(p.h3 ?? ""))}</p>` +
         fila("Intensidad", numero(Number(p.mmi), 1)) +
+        // La distancia al epicentro es lo primero que se pregunta ante una
+        // celda sacudida, y es lo que separa "esta cerca" de "esta lejos y aun
+        // asi le llego". No estaba en ninguna parte del visor.
+        (estado.epicentro
+          ? fila(
+              "Al epicentro",
+              `${numero(distanciaKm(estado.epicentro[0], estado.epicentro[1], ev.lngLat.lng, ev.lngLat.lat))} km`
+            )
+          : "") +
         fila("Personas", comoTexto(Number(p.pop))) +
         fila("Edificaciones", comoTexto(Number(p.bld))) +
         fila("Construido", `${numero(Number(p.built_m2) / 1e6, 2)} km²`) +

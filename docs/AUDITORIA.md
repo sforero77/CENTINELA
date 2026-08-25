@@ -455,6 +455,102 @@ construido con reportes, construido y en silencio, y sin construir.
 
 ---
 
+# Tercera tanda: auditoria de UX/UI y cartografia
+
+Hecha **abriendo el visor publicado con los 21 reportes reales**, no leyendo su
+codigo. Los cinco hallazgos siguen ese orden: primero lo que se ve, luego por
+que.
+
+## A22 · El mapa se quedaba en blanco al abrir un enlace compartido
+
+**Severidad:** alta · **Estado:** ✅ cerrada
+
+`?evento=us7000nr0v` con la cache fria dejaba el mapa **completamente vacio**:
+sin base, sin malla, sin leyenda, sin selector de capas y **sin un solo error en
+consola**. El panel lateral cargaba entero, asi que ni siquiera parecia roto:
+parecia un mapa que no tiene nada que ensenar.
+
+El mismo enlace con la cache caliente funciona. Es una carrera, y le toca justo
+a **quien abre por primera vez un enlace que alguien le compartio** — el unico
+publico que este visor tiene hasta que ocurra el primer sismo en vivo.
+
+La causa: `cuandoElEstiloEsteListo` usaba `m.once("load", fn)`. Ese evento
+dispara **una sola vez**. Si ya disparo y `isStyleLoaded()` sigue devolviendo
+false —cosa que pasa mientras una fuente esta en vuelo— el callback queda
+registrado para algo que no volvera a ocurrir. Se cambia por `styledata` +
+`idle`, que entre los dos no dejan ventana.
+
+## A23 · El epicentro se salia del encuadre
+
+**Severidad:** media-alta · **Estado:** ✅ cerrada
+
+`fitBounds` se calculaba sobre la malla y nada mas. La malla llega hasta donde
+hay algo expuesto, asi que **en un sismo mar adentro el epicentro queda fuera**.
+Medido sobre los 18 eventos con malla: en Carupano, La Libertad y Bartolome Maso
+cae fuera de la caja, y en Cuba la estrella salia cortada por el borde inferior
+de la pantalla.
+
+Ver la afectacion *desde el epicentro* empieza por ver el epicentro.
+
+## A24 · La celda no se podia citar
+
+**Severidad:** media · **Estado:** ✅ cerrada
+
+`celdasAGeoJson` excluia explicitamente el indice H3 de las propiedades del
+hexagono (`if (nombre !== "h3")`), asi que la ficha ensenaba siete cifras y
+ninguna forma de saber **de que celda**.
+
+Con eso se iba la unica manera de cruzar lo que se ve en el mapa con el
+`celdas.json` que el propio visor ofrece para descargar dos paneles mas abajo, y
+con el parquet del activo. Para quien trabaja con SIG, un dato que no se puede
+referenciar es un dato que no se puede usar. Quince caracteres por celda.
+
+## A25 · La ficha no decia a que distancia del epicentro estaba la celda
+
+**Severidad:** media · **Estado:** ✅ cerrada
+
+Es la primera pregunta ante una celda sacudida, y la que separa «esta cerca» de
+«esta lejos y aun asi le llego». No estaba en ninguna parte del visor.
+
+Se calcula con **el mismo radio terrestre que usa el pipeline**
+(`pipelines/common/geo.py`). Dos numeros distintos para la misma distancia, uno
+en el mapa y otro en el reporte, es la clase de discrepancia que destruye la
+confianza en todo lo demas — y hay una prueba que compara las dos formulas.
+
+## A26 · La profundidad estaba enterrada, y es lo que explica el catalogo
+
+**Severidad:** media · **Estado:** ✅ cerrada
+
+Vivia en una linea de metadatos, entre la fecha y la version del ShakeMap. A
+igual magnitud, la profundidad decide cuanto se siente en superficie — o sea que
+es **exactamente lo que explica los casos raros del catalogo**: Tehuantepec fue
+un M8,2 y su maximo sobre poblacion mexicana es MMI 6,5; los veintidos sismos
+bolivianos estan entre 359 y 596 km y ninguno produce una sola celda.
+
+Un lector que ve «M8,2» y «0 personas en MMI≥7» sin ver «47 km» no tiene con que
+entenderlo. Ahora es el primer distintivo, clasificado con los cortes estandar
+de sismologia: superficial hasta 70 km, intermedio hasta 300, profundo por
+encima.
+
+## Lo que se reviso y estaba bien
+
+Conviene decirlo, porque son decisiones que costaron y que la auditoria
+confirma:
+
+* **La rampa de intensidad** es secuencial naranja-rojo, no el arcoiris de
+  ShakeMap, con luminosidad estrictamente descendente: sobrevive al daltonismo
+  rojo-verde y a la impresion en blanco y negro.
+* **La leyenda rotula solo las clases que el evento alcanza.** El Choco no pasa
+  de 7,5 y su leyenda tiene cuatro muestras, no seis.
+* **La coropleta va debajo de los toponimos.** Quibdo, Pereira y Cali se leen
+  sobre el dato.
+* **Los cortes estan medidos** sobre la distribucion real, con clases
+  geometricas, y cada capa declara su fuente y su unidad en la propia leyenda.
+* **La barra de escala** acompana el zoom, y el borde del hexagono aparece solo
+  cuando la celda mide lo bastante como para que su contorno signifique algo.
+
+---
+
 ## A10 · Clean Code aplicado al repositorio
 
 **Estado:** ✅ cerrada

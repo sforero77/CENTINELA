@@ -866,3 +866,13 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   font-weight: 600;
   color: var(--tenue-mas);
 }
+
+/* El indice H3 de la celda, en la ficha. Es la clave con la que esa celda se
+   encuentra en el `celdas.json` descargable y en el parquet del activo: se
+   escribe para poder copiarla, no para adornar. */
+.ficha-h3 {
+  font-size: 0.68rem;
+  color: var(--tenue-mas);
+  user-select: all;
+  cursor: text;
+}
