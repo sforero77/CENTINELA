@@ -22,14 +22,42 @@ exposure_h3:
        nota: "Solo alimenta la banda de discrepancia publicada."}
     - {nombre: bld_count,         tipo: INTEGER, nulo: false, fuente: Overture buildings}
     - {nombre: bld_area_m2,       tipo: DOUBLE,  nulo: false, fuente: Overture buildings}
-    - {nombre: health_count,      tipo: INTEGER, nulo: false, fuente: "OSM + REPS"}
-    - {nombre: edu_count,         tipo: INTEGER, nulo: false, fuente: "MEN + OSM"}
+    - {nombre: built_m2,          tipo: DOUBLE,  nulo: false, fuente: GHS-BUILT-S 2025,
+       nota: "Superficie construida vista por satelite. Contrasta a bld_count: donde OSM
+              no mapeo el barrio, esta columna si lo ve. El reporte avisa cuando la razon
+              entre las dos pasa de 1,5."}
+    - {nombre: health_count,      tipo: INTEGER, nulo: false, fuente: "HOTOSM (HDX)",
+       nota: "REPS quedo descartada (T0.5): sin geometria utilizable. healthsites.io se
+              descarto por solape del 96,6 % con HOTOSM."}
+    - {nombre: edu_count,         tipo: INTEGER, nulo: false, fuente: "HOTOSM (HDX)",
+       nota: "El directorio del MEN quedo descartado (T0.6)."}
     - {nombre: road_km_primary,   tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
     - {nombre: road_km_secondary, tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
     - {nombre: road_km_other,     tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
     - {nombre: flags_calidad,     tipo: VARCHAR, nulo: true,  fuente: asserts §6.4,
        nota: "Banderas separadas por coma. Se publican, no se ocultan."}
     - {nombre: src_manifest,      tipo: VARCHAR, nulo: false, fuente: "-"}
+
+  # Puerta a embeddings (Fase 3, T3.1). Las columnas no existen todavia; se
+  # declaran aqui porque la decision de **cual fuente** ya esta tomada y es una
+  # decision de licencia, no de calidad.
+  #
+  #   AlphaEarth Foundations (Google / Google DeepMind) — CC-BY 4.0.
+  #     Permisiva: se puede agregar al activo con su atribucion.
+  #     "The AlphaEarth Foundations Satellite Embedding dataset is produced by
+  #      Google and Google DeepMind."
+  #     64 canales, anual 2017-2025, en gs://alphaearth_foundations.
+  #
+  #   Major TOM (ESA Phi-lab) — CC-BY-SA 4.0.
+  #     Share-alike: **no puede entrar en el activo** sin arrastrar el cubo
+  #     entero. Se consume como referencia externa, igual que el dato de
+  #     escombros de UNEP/OCHA.
+  #
+  # Anadirlas es anadir columnas a este contrato y al SELECT de ensamblaje. No
+  # hay refactor: la clave sigue siendo la celda y el particionado no cambia.
+  extension_embeddings:
+    - {nombre: emb_alphaearth, tipo: "DOUBLE[64]", nulo: true, fuente: "AlphaEarth (CC-BY 4.0)"}
+    - {nombre: emb_epoca,      tipo: VARCHAR,      nulo: true, fuente: "-"}
 
 crosswalk_h3_adm:
   descripcion: Fracciones de area para prorrateo exacto en frontera municipal.

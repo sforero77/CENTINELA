@@ -930,6 +930,43 @@ existe en ningun sitio y el join devuelve cero filas sin quejarse.
 
 Hay una prueba que lo fija.
 
+### T3.1 — Embeddings: la eleccion es de licencia, no de calidad
+
+| Fuente | Publica | Licencia | ¿Puede entrar al activo? |
+|---|---|---|---|
+| **AlphaEarth Foundations** | Google / Google DeepMind | **CC-BY 4.0** | **Si**, con su atribucion |
+| **Major TOM** | ESA Φ-lab | **CC-BY-SA 4.0** | **No**: share-alike, arrastraria el cubo entero |
+
+AlphaEarth publica 64 canales anuales de 2017 a 2025 en `gs://alphaearth_foundations`,
+y exige la cadena literal: «The AlphaEarth Foundations Satellite Embedding
+dataset is produced by Google and Google DeepMind».
+
+Major TOM es mas rico —incluye embeddings derivados de Sentinel-1 y Sentinel-2
+con varios modelos, y hasta una version del propio AlphaEarth— pero su CC-BY-SA
+lo deja fuera del activo por la misma regla que deja fuera el dato de escombros
+de UNEP/OCHA. Se consume como referencia externa o no se consume.
+
+**Que la eleccion sea de licencia y no de calidad conviene tenerlo escrito**,
+porque el dia que alguien compare las dos por su rendimiento y elija Major TOM,
+la decision correcta seguira siendo la otra.
+
+#### Y el contrato de esquema no lo comprobaba nadie
+
+`schemas/parquet/tables.yaml` declara las columnas del activo, sus tipos y su
+procedencia. **Ni una linea de codigo lo referenciaba**, asi que habia derivado:
+
+* no declaraba `built_m2`, anadida al meter GHS-BUILT-S;
+* seguia atribuyendo salud a **REPS** y educacion al directorio del **MEN**,
+  dos fuentes resueltas en contra en T0.5 y T0.6.
+
+Lo segundo es peor que lo primero. Un contrato incompleto se nota; un contrato
+que nombra una fuente que no se usa **parece trazabilidad** y no lo es.
+
+Corregido, y con una prueba que construye el activo minimo y compara sus
+columnas reales contra las declaradas. Es el mismo patron que el calculo del
+preliminar escrito y nunca llamado: un artefacto correcto que nadie ejecuta deja
+de ser correcto sin avisar.
+
 ### T2.4 — La rama de pesos, sin cambios
 
 Sigue en pie tal como esta escrito en `p4_brigada/protocol.py`: un modelo
@@ -952,4 +989,4 @@ ser una aspiracion y pasa a ser una ruta con fuentes nombradas.
 | T1.3 | Plantillas HDX y validacion de las cabeceras HXL |
 | T2.1–T2.3 | ✅ resueltas el 24-ago-2026 (ronda 5) |
 | T2.4 | La rama de pesos limpia ya tiene fuentes; falta construirla |
-| T3.1 | Redistribucion de embeddings (Fase 3) |
+| T3.1 | ✅ resuelta el 24-ago-2026: AlphaEarth CC-BY 4.0 entra; Major TOM CC-BY-SA no |
