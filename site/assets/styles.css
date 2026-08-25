@@ -1,8 +1,9 @@
 /* Visor de CENTINELA.
  *
  * La identidad es la de GeoAI LATAM: arena calida, verde bosque, acento
- * esmeralda, y monoespaciada para lo cartografico. Los valores estan tomados
- * del sitio de la comunidad, no aproximados a ojo.
+ * esmeralda, monoespaciada para lo cartografico y una reticula de coordenadas
+ * de fondo. Los valores estan medidos sobre el sitio de la comunidad
+ * (geoai-latam.inspow.tech), no aproximados a ojo.
  *
  * Las fuentes se cargan de Google Fonts con `display=swap` y una pila de
  * respaldo completa: el texto aparece de inmediato con la fuente del sistema y
@@ -10,6 +11,8 @@
  * conexion, lo que no se puede es quedarse en blanco esperando. */
 
 :root {
+  color-scheme: light;
+
   /* --- Identidad GeoAI LATAM ------------------------------------------- */
   --arena: #e6e4d8;        /* fondo */
   --crema: #f4f2ea;        /* superficie elevada */
@@ -19,12 +22,18 @@
   --verde-vivo: #157049;
   --esmeralda: #2eb479;
   --ambar: #c8941a;
+  --ambar-texto: #6f4f0c;  /* el ambar de marca sobre arena da 2,1:1; este da 5,4:1 */
   --teal: #2f6e78;
+  --alarma: #8f2c14;
 
-  --tenue: rgba(28, 51, 40, 0.68);
-  --tenue-mas: rgba(28, 51, 40, 0.45);
+  /* Los dos grises de texto estan fijados por contraste, no por gusto: sobre
+     arena dan 6,5:1 y 4,9:1. Los anteriores (0.68 y 0.45 de alfa) daban 4,4:1 y
+     2,3:1 — el segundo rotulaba todas las metricas del tablero. */
+  --tenue: rgba(28, 51, 40, 0.82);
+  --tenue-mas: rgba(28, 51, 40, 0.72);
   --borde: rgba(28, 51, 40, 0.15);
   --borde-fuerte: rgba(28, 51, 40, 0.28);
+  --reticula: rgba(28, 51, 40, 0.07);
 
   --radio-pastilla: 9999px;
   --radio-grande: 24px;
@@ -32,10 +41,14 @@
   --radio-chico: 10px;
 
   --sombra: 0 1px 2px rgba(28, 51, 40, 0.05), 0 12px 32px rgba(28, 51, 40, 0.08);
+  --sombra-corta: 0 1px 2px rgba(28, 51, 40, 0.06), 0 4px 12px rgba(28, 51, 40, 0.07);
 
   --tipo-titulo: "Familjen Grotesk", "DM Sans", system-ui, -apple-system, sans-serif;
   --tipo-texto: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --tipo-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ancho-panel: 25rem;
+  --ancho-texto: 82rem;
 }
 
 * { box-sizing: border-box; }
@@ -59,14 +72,71 @@ h1, h2, h3 {
 a { color: var(--verde); text-underline-offset: 3px; }
 a:hover { color: var(--verde-vivo); }
 
+/* Un foco visible y de marca. Antes no habia ninguno: el visor era navegable
+   con teclado y no se veia donde estaba uno. */
+:where(a, button, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--verde);
+  outline-offset: 2px;
+  border-radius: var(--radio-chico);
+}
+
+.salto-contenido {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 60;
+  padding: 0.55rem 1rem;
+  background: var(--bosque);
+  color: var(--crema);
+  border-radius: var(--radio-pastilla);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: top 0.16s ease;
+}
+
+.salto-contenido:focus { top: 0.75rem; color: var(--crema); }
+
+.oculto-visual {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 /* Etiqueta micro en monoespaciada: es el gesto cartografico de la identidad,
-   el mismo que rotula las lineas de latitud en el sitio de la comunidad. */
+   el mismo que rotula las lineas de latitud en el sitio de la comunidad.
+   0.7rem y no 0.66: a 10 px la JetBrains Mono en versalitas con 0.13em de
+   espaciado deja de leerse de un vistazo, que es justamente para lo que esta. */
 .mono {
   font-family: var(--tipo-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.13em;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--tenue-mas);
+}
+
+/* Reticula de coordenadas: el fondo del sitio de la comunidad. Decorativa, va
+   detras del contenido y no cambia con el zoom del dato. */
+.graticula {
+  position: relative;
+  background-image:
+    linear-gradient(to right, var(--reticula) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--reticula) 1px, transparent 1px);
+  background-size: 12.5rem 12.5rem;
+  background-position: center top;
+}
+
+.paralelo {
+  position: absolute;
+  left: 0.85rem;
+  font-family: var(--tipo-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: rgba(28, 51, 40, 0.3);
+  pointer-events: none;
+  user-select: none;
 }
 
 /* --- Barra ---------------------------------------------------------------- */
@@ -74,37 +144,50 @@ a:hover { color: var(--verde-vivo); }
 .barra {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  padding: 0.9rem 1.75rem;
+  gap: 1.1rem;
+  padding: 0.75rem 1.75rem;
   border-bottom: 1px solid var(--borde);
-  background: rgba(244, 242, 234, 0.82);
+  background: rgba(244, 242, 234, 0.85);
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
   z-index: 20;
 }
 
-.marca { display: flex; align-items: baseline; gap: 0.45rem; text-decoration: none; color: inherit; }
-.marca-nombre { font-family: var(--tipo-titulo); font-size: 1.06rem; font-weight: 600; letter-spacing: 0.02em; }
-.marca-lema { font-family: var(--tipo-titulo); font-size: 1.06rem; font-style: italic; color: var(--verde); }
+.marca { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: inherit; }
+.marca-sello { width: 1.75rem; height: 1.75rem; flex: 0 0 auto; display: block; }
+.marca-texto { display: flex; align-items: baseline; gap: 0.42rem; }
+.marca-nombre { font-family: var(--tipo-titulo); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.03em; }
+.marca-lema { font-family: var(--tipo-titulo); font-size: 1.1rem; font-style: italic; color: var(--verde); }
 
-.selector { display: flex; align-items: center; gap: 0.6rem; margin-left: 1.25rem; min-width: 0; }
+.selector { display: flex; align-items: center; gap: 0.55rem; margin-left: 0.9rem; min-width: 0; }
 
+/* El chevron nativo del `select` rompe el lenguaje de pastillas del resto de
+   la barra; se dibuja uno propio y se apaga el del sistema. */
 .selector select {
   font: inherit;
   font-size: 0.88rem;
   color: var(--bosque);
-  background: var(--crema);
+  background-color: var(--crema);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%231c3328' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  appearance: none;
   border: 1px solid var(--borde-fuerte);
   border-radius: var(--radio-pastilla);
-  padding: 0.42rem 0.95rem;
-  max-width: 24rem;
+  padding: 0.44rem 2.3rem 0.44rem 1rem;
+  max-width: 26rem;
+  /* `min-width: 0` es lo que impide el scroll horizontal: un select no se
+     encoge por debajo del ancho de su opcion mas larga, y la del Choco mide
+     media pantalla. */
+  min-width: 0;
+  text-overflow: ellipsis;
   cursor: pointer;
 }
 
 .selector select:hover { border-color: var(--verde); }
 
-.barra nav { margin-left: auto; display: flex; align-items: center; gap: 1.4rem; font-size: 0.87rem; }
+.barra nav { margin-left: auto; display: flex; align-items: center; gap: 1.15rem; font-size: 0.87rem; }
 .barra nav a { color: var(--tenue); text-decoration: none; }
 .barra nav a:hover { color: var(--bosque); }
 
@@ -118,51 +201,89 @@ a:hover { color: var(--verde-vivo); }
 
 .boton-pastilla:hover { background: var(--verde); }
 
+/* Endoso de la comunidad: el mismo bloqueo que usa su sitio — el globo y
+   "GeoAI" en bosque con "LATAM" en verde cursiva. */
+.endoso {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-left: 1.15rem;
+  border-left: 1px solid var(--borde);
+  font-family: var(--tipo-titulo);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--bosque) !important;
+  white-space: nowrap;
+}
+
+.endoso .globo { font-size: 1rem; line-height: 1; }
+.endoso em { font-style: italic; color: var(--verde); font-weight: 600; }
+.endoso:hover em { color: var(--verde-vivo); }
+
 /* --- Aviso permanente ------------------------------------------------------ */
 
 .aviso {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
   margin: 0;
-  padding: 0.7rem 1.75rem;
-  background: rgba(200, 148, 26, 0.11);
-  border-bottom: 1px solid rgba(200, 148, 26, 0.3);
+  padding: 0.65rem 1.75rem;
+  background: rgba(200, 148, 26, 0.13);
+  border-bottom: 1px solid rgba(200, 148, 26, 0.32);
   font-size: 0.85rem;
   line-height: 1.5;
 }
 
+.aviso .mono { color: var(--ambar-texto); flex: 0 0 auto; }
+
 /* --- Tablero -------------------------------------------------------------- */
 
+/* La primera pantalla es el tablero entero y nada mas: barra, aviso y el par
+   mapa/panel ocupando lo que sobre. Antes el mapa tenia una altura fija mas
+   alta que la ventana y la leyenda quedaba cortada por debajo del pliegue. */
+.pantalla {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* `grid-template-rows: minmax(0, 1fr)` no es decorativo: sin el, la fila se
+   estira hasta la altura del panel lateral —que es larguisimo— y arrastra
+   consigo el mapa y la pantalla entera. Con la fila acotada, el panel scrollea
+   dentro de si mismo y la leyenda del mapa queda donde se ve. */
 .tablero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 24rem;
+  grid-template-columns: minmax(0, 1fr) var(--ancho-panel);
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 24rem;
   border-bottom: 1px solid var(--borde);
 }
 
-.lienzo { position: relative; min-height: 32rem; }
+.lienzo { position: relative; min-height: 0; }
 #mapa { position: absolute; inset: 0; }
 
 /* El lienzo arranca del color del mapa base, no del de la pagina: heredar el
    fondo dejaria un salto de color mientras cargan las teselas. */
-.maplibregl-canvas-container { background: #e9e7dc; }
+.maplibregl-canvas-container { background: #ece9de; }
+.maplibregl-popup-content {
+  font-family: var(--tipo-texto);
+  border-radius: var(--radio-medio);
+  padding: 0.8rem 0.95rem;
+  box-shadow: var(--sombra);
+}
 
 .lateral {
   border-left: 1px solid var(--borde);
   background: var(--crema);
-  padding: 1.4rem 1.5rem 2.5rem;
+  padding: 1.35rem 1.5rem 2.5rem;
   overflow-y: auto;
-  max-height: calc(100vh - 8.5rem);
+  min-height: 0;
 }
 
-@media (max-width: 64rem) {
-  .tablero { grid-template-columns: 1fr; }
-  .lienzo { min-height: 24rem; }
-  .lateral { border-left: none; border-top: 1px solid var(--borde); max-height: none; }
-  .barra { flex-wrap: wrap; }
-  .selector { margin-left: 0; width: 100%; }
-  .selector select { max-width: none; flex: 1; }
-}
-
-.vacio { color: var(--tenue); font-size: 0.9rem; padding-top: 1.5rem; }
-.vacio p { margin: 0 0 0.6rem; }
+.vacio p { margin: 0 0 0.75rem; }
+.vacio .pista { color: var(--tenue); font-size: 0.86rem; }
 
 /* --- Controles sobre el mapa ---------------------------------------------- */
 
@@ -170,16 +291,25 @@ a:hover { color: var(--verde-vivo); }
   position: absolute;
   top: 0.9rem;
   left: 0.9rem;
+  right: 4.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.28rem;
+  width: fit-content;
+  max-width: calc(100% - 5.4rem);
   background: rgba(244, 242, 234, 0.95);
   border: 1px solid var(--borde-fuerte);
   border-radius: var(--radio-pastilla);
-  box-shadow: var(--sombra);
+  box-shadow: var(--sombra-corta);
   z-index: 3;
 }
+
+/* `display: flex` de autor le gana al `display: none` que el navegador aplica
+   por `[hidden]`. Sin esta regla la barra de capas seguia dibujada —vacia, como
+   una pastilla suelta en la esquina— antes de elegir evento y despues de
+   cerrarlo. */
+.capas[hidden] { display: none; }
 
 .capas button {
   font: inherit;
@@ -190,11 +320,12 @@ a:hover { color: var(--verde-vivo); }
   background: transparent;
   color: var(--tenue);
   cursor: pointer;
+  white-space: nowrap;
   transition: background 0.14s ease, color 0.14s ease;
 }
 
 .capas button:hover { background: rgba(28, 51, 40, 0.07); color: var(--bosque); }
-.capas button[aria-pressed="true"] { background: var(--bosque); color: var(--crema); }
+.capas button[aria-selected="true"] { background: var(--bosque); color: var(--crema); }
 
 .panel-mapa {
   position: absolute;
@@ -203,7 +334,7 @@ a:hover { color: var(--verde-vivo); }
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
-  background: #e9e7dc;
+  background: #ece9de;
   color: var(--tenue);
   font-size: 0.88rem;
   pointer-events: none;
@@ -226,61 +357,109 @@ a:hover { color: var(--verde-vivo); }
 .leyenda {
   position: absolute;
   right: 0.9rem;
-  bottom: 2.2rem;
-  width: 13.5rem;
+  bottom: 2.4rem;
+  width: 14rem;
   padding: 0.85rem 0.95rem;
   background: rgba(244, 242, 234, 0.96);
   border: 1px solid var(--borde-fuerte);
   border-radius: var(--radio-medio);
-  box-shadow: var(--sombra);
-  font-size: 0.76rem;
+  box-shadow: var(--sombra-corta);
+  font-size: 0.78rem;
   line-height: 1.45;
   z-index: 3;
 }
 
-.leyenda-titulo { margin: 0 0 0.5rem; }
+.leyenda[hidden] { display: none; }
+
+.leyenda-titulo { margin: 0 0 0.5rem; color: var(--bosque); }
 .leyenda-escala { list-style: none; margin: 0 0 0.55rem; padding: 0; }
 .leyenda-escala li { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.18rem; }
 
 .leyenda-escala .muestra {
-  width: 1.6rem; height: 0.6rem;
+  width: 1.6rem; height: 0.65rem;
   flex: 0 0 auto;
   border-radius: 2px;
-  border: 1px solid rgba(28, 51, 40, 0.18);
+  border: 1px solid rgba(28, 51, 40, 0.2);
 }
 
-.leyenda-valor { font-family: var(--tipo-mono); font-size: 0.7rem; }
-.leyenda-nota { margin: 0; color: var(--tenue-mas); font-size: 0.7rem; line-height: 1.4; }
+.leyenda-valor { font-family: var(--tipo-mono); font-size: 0.72rem; }
+.leyenda-nota { margin: 0; color: var(--tenue-mas); font-size: 0.72rem; line-height: 1.45; }
 
 @media (max-width: 34rem) {
-  .leyenda { width: auto; left: 0.9rem; right: 0.9rem; bottom: 1.9rem; }
-  .capas { left: 0.9rem; right: 0.9rem; justify-content: center; }
+  .leyenda { width: auto; left: 0.9rem; right: 0.9rem; bottom: 2rem; }
+  .capas { right: 4.2rem; max-width: none; width: auto; justify-content: flex-start; }
 }
 
 /* --- Panel lateral --------------------------------------------------------- */
 
-#lateral h2 { font-size: 1.32rem; line-height: 1.22; margin-bottom: 0.4rem; }
-.detalle-meta { margin: 0; color: var(--tenue); font-size: 0.76rem; line-height: 1.55; font-family: var(--tipo-mono); letter-spacing: 0.01em; }
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+  font-family: var(--tipo-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--verde);
+}
 
-.distintivo-linea { margin: 0.7rem 0 0; }
+.eyebrow::before {
+  content: "";
+  width: 0.85rem;
+  height: 1px;
+  flex: 0 0 auto;
+  background: var(--verde);
+}
+
+#lateral h2 { font-size: 1.3rem; line-height: 1.22; margin-bottom: 0.45rem; }
+.detalle-meta { margin: 0; color: var(--tenue); font-size: 0.76rem; line-height: 1.6; font-family: var(--tipo-mono); overflow-wrap: anywhere; }
+
+.distintivos { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.75rem 0 0; padding: 0; list-style: none; }
 
 .distintivo {
   display: inline-block;
-  padding: 0.2rem 0.7rem;
+  padding: 0.22rem 0.7rem;
   border: 1px solid rgba(200, 148, 26, 0.55);
   border-radius: var(--radio-pastilla);
-  color: #8a6510;
-  background: rgba(200, 148, 26, 0.12);
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+  color: var(--ambar-texto);
+  background: rgba(200, 148, 26, 0.14);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
   cursor: help;
 }
+
+.distintivo.alarma { border-color: rgba(143, 44, 20, 0.45); background: rgba(143, 44, 20, 0.1); color: var(--alarma); }
+
+.bloque { margin-top: 1.7rem; }
+.bloque:first-of-type { margin-top: 1.5rem; }
+
+/* Franjas de intensidad: las tres que calcula el sistema, no solo MMI>=7.
+   Publicar una sola franja obliga a quien lee a suponer las otras dos. */
+.franjas { list-style: none; margin: 0; padding: 0; }
+
+.franja {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.42rem 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.franja:last-child { border-bottom: none; }
+.franja-nombre { font-family: var(--tipo-mono); font-size: 0.72rem; color: var(--tenue); }
+.franja-valor { font-family: var(--tipo-titulo); font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.franja-pista { height: 0.4rem; background: rgba(28, 51, 40, 0.08); border-radius: var(--radio-pastilla); overflow: hidden; }
+/* `display: block` obligatorio: es un span dentro de un span, no un hijo de
+   grid, y en `inline` ignoraba el ancho — las tres franjas salian vacias. */
+.franja-relleno { display: block; height: 100%; border-radius: var(--radio-pastilla); }
 
 .metricas {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1px;
-  margin: 1.25rem 0 1.6rem;
   background: var(--borde);
   border: 1px solid var(--borde);
   border-radius: var(--radio-medio);
@@ -292,7 +471,7 @@ a:hover { color: var(--verde-vivo); }
 .metrica .valor {
   display: block;
   font-family: var(--tipo-titulo);
-  font-size: 1.42rem;
+  font-size: 1.4rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1.12;
@@ -301,32 +480,72 @@ a:hover { color: var(--verde-vivo); }
 
 .metrica .etiqueta {
   display: block;
-  margin-top: 0.22rem;
+  margin-top: 0.24rem;
   font-family: var(--tipo-mono);
-  font-size: 0.62rem;
+  font-size: 0.66rem;
   color: var(--tenue-mas);
   text-transform: uppercase;
-  letter-spacing: 0.09em;
-  line-height: 1.35;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
 }
 
-.bloque { margin-bottom: 1.6rem; }
-.bloque h3 { margin-bottom: 0.7rem; font-family: var(--tipo-mono); font-size: 0.64rem; font-weight: 500; color: var(--tenue-mas); text-transform: uppercase; letter-spacing: 0.11em; }
+.metrica .apunte { display: block; margin-top: 0.3rem; font-size: 0.72rem; color: var(--tenue); line-height: 1.4; }
+
+/* Siete metricas en una rejilla de dos columnas dejan una huerfana; la de vias,
+   que es la que lleva apunte, ocupa la fila entera. */
+.metrica.ancha { grid-column: 1 / -1; }
+
+/* Terreno: licuefaccion y deslizamiento. El pipeline los calcula y el visor no
+   los ensenaba — 1,6 M de personas sobre suelo licuable no caben en una nota. */
+.terreno { list-style: none; margin: 0; padding: 0; }
+
+.terreno li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.3rem;
+  background: var(--crema-alt);
+  border-radius: var(--radio-chico);
+  font-size: 0.82rem;
+}
+
+.terreno .cifra { font-family: var(--tipo-titulo); font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.terreno .cero { color: var(--tenue-mas); }
 
 /* Barras en CSS puro: una libreria de graficos para ocho barras horizontales
    es una dependencia que mantener y una peticion mas en una pagina que promete
    abrir con mala conexion. */
 .barras { list-style: none; margin: 0; padding: 0; }
-.barras li { margin-bottom: 0.6rem; font-size: 0.81rem; }
+.barras li { margin-bottom: 0.62rem; font-size: 0.82rem; }
 
-.barra-fila { display: flex; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.2rem; }
+.barra-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin-bottom: 0.22rem; }
 .barra-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .barra-valor { color: var(--tenue); font-family: var(--tipo-mono); font-size: 0.74rem; flex: 0 0 auto; }
 
-.barra-pista { height: 0.32rem; background: rgba(28, 51, 40, 0.09); border-radius: var(--radio-pastilla); overflow: hidden; }
+.barra-pista { height: 0.34rem; background: rgba(28, 51, 40, 0.09); border-radius: var(--radio-pastilla); overflow: hidden; }
 .barra-relleno { height: 100%; border-radius: var(--radio-pastilla); }
 
-.contraste {
+.ficha-mmi {
+  display: inline-block;
+  min-width: 1.85rem;
+  margin-right: 0.4rem;
+  padding: 0.04rem 0.3rem;
+  border-radius: 4px;
+  border: 1px solid rgba(28, 51, 40, 0.2);
+  font-family: var(--tipo-mono);
+  font-size: 0.64rem;
+  text-align: center;
+  color: var(--bosque);
+  vertical-align: 0.06em;
+}
+
+/* Sobre los tres rojos altos de la rampa, el verde bosque de la ficha daba
+   menos de 2:1: la intensidad, que es el dato de la ficha, no se leia. */
+.ficha-mmi.sobre-oscuro { color: #fff; border-color: rgba(255, 255, 255, 0.35); }
+
+.contraste, .apostilla {
   margin: 0;
   padding: 0.85rem 0.95rem;
   background: var(--crema-alt);
@@ -339,13 +558,38 @@ a:hover { color: var(--verde-vivo); }
 
 .contraste strong { color: var(--bosque); font-weight: 600; }
 
-.descargas { margin: 0; font-size: 0.79rem; color: var(--tenue); line-height: 1.9; }
+.descargas { margin: 0; font-size: 0.8rem; color: var(--tenue); line-height: 2; overflow-wrap: anywhere; }
+.descargas a { white-space: nowrap; }
+
+/* Panorama del estado vacio: el tablero sin evento seleccionado ensenaba un
+   panel en blanco. La superficie principal del producto no puede estar vacia
+   en su estado por defecto. */
+.panorama-lista { list-style: none; margin: 0.9rem 0 0; padding: 0; }
+
+.panorama-lista button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.4rem;
+  background: var(--crema-alt);
+  border: 1px solid transparent;
+  border-radius: var(--radio-chico);
+  cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.panorama-lista button:hover { border-color: var(--borde-fuerte); background: var(--crema); }
+.panorama-lista .titulo { display: block; font-family: var(--tipo-titulo); font-weight: 600; font-size: 0.92rem; letter-spacing: -0.015em; }
+.panorama-lista .pie { display: block; margin-top: 0.2rem; font-family: var(--tipo-mono); font-size: 0.68rem; color: var(--tenue-mas); }
 
 /* --- Lista de eventos ------------------------------------------------------ */
 
-#eventos { padding: 2.5rem 1.75rem; max-width: 82rem; margin: 0 auto; }
-#eventos h2 { font-size: 1.5rem; margin-bottom: 0.3rem; }
-.seccion-lema { margin: 0 0 1.3rem; color: var(--tenue); font-size: 0.9rem; }
+#eventos { padding: 3rem 1.75rem 2.5rem; }
+.contenedor { max-width: var(--ancho-texto); margin: 0 auto; }
+#eventos h2 { font-size: 1.55rem; margin-bottom: 0.3rem; }
+.seccion-lema { margin: 0 0 1.4rem; color: var(--tenue); font-size: 0.9rem; }
 
 .lista-eventos {
   list-style: none;
@@ -357,6 +601,8 @@ a:hover { color: var(--verde-vivo); }
 }
 
 .lista-eventos li {
+  display: flex;
+  flex-direction: column;
   padding: 1.05rem 1.15rem;
   border: 1px solid var(--borde);
   border-radius: var(--radio-grande);
@@ -371,14 +617,30 @@ a:hover { color: var(--verde-vivo); }
   box-shadow: var(--sombra);
 }
 
+@media (prefers-reduced-motion: reduce) { .lista-eventos li:hover { transform: none; } }
+
 .lista-eventos li.activo { border-color: var(--verde); box-shadow: 0 0 0 1px var(--verde); }
+
+.evento-cabecera { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.evento-mag {
+  flex: 0 0 auto;
+  font-family: var(--tipo-titulo);
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--crema);
+  background: var(--bosque);
+  border-radius: var(--radio-pastilla);
+  padding: 0.1rem 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
 
 .lista-eventos a { font-family: var(--tipo-titulo); font-weight: 600; font-size: 1rem; text-decoration: none; color: var(--bosque); letter-spacing: -0.015em; }
 .lista-eventos a:hover { color: var(--verde); }
 
-.evento-meta { margin: 0.4rem 0 0; color: var(--tenue); font-size: 0.75rem; line-height: 1.5; font-family: var(--tipo-mono); }
-.evento-cifra { display: block; margin-top: 0.55rem; font-family: var(--tipo-titulo); font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; }
-.evento-cifra small { font-family: var(--tipo-mono); font-size: 0.62rem; font-weight: 400; color: var(--tenue-mas); text-transform: uppercase; letter-spacing: 0.09em; margin-left: 0.35rem; }
+.evento-meta { margin: 0.45rem 0 0; color: var(--tenue-mas); font-size: 0.72rem; line-height: 1.5; font-family: var(--tipo-mono); }
+.evento-cifra { display: block; margin-top: auto; padding-top: 0.6rem; font-family: var(--tipo-titulo); font-size: 1.3rem; font-weight: 600; letter-spacing: -0.02em; }
+.evento-cifra small { font-family: var(--tipo-mono); font-size: 0.64rem; font-weight: 400; color: var(--tenue-mas); text-transform: uppercase; letter-spacing: 0.08em; margin-left: 0.4rem; }
 
 .cargando, .nota { color: var(--tenue); font-size: 0.88rem; }
 
@@ -388,18 +650,103 @@ footer {
   border-top: 1px solid var(--borde);
   padding: 1.75rem;
   color: var(--tenue-mas);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   line-height: 1.7;
-  max-width: 82rem;
-  margin: 0 auto;
 }
 
-footer p { margin: 0 0 0.35rem; }
+footer .contenedor { display: grid; gap: 0.5rem; }
+footer p { margin: 0; }
 footer a { color: var(--tenue); }
+.pie-marca { display: flex; align-items: center; gap: 0.4rem; font-family: var(--tipo-titulo); font-weight: 600; color: var(--bosque); text-decoration: none; }
+.pie-marca em { font-style: italic; color: var(--verde); }
 
-/* --- Pagina de estado (comparte tokens) ------------------------------------ */
+/* --- Pagina de estado ------------------------------------------------------ */
 
-.tabla-scroll { overflow-x: auto; }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Antes esta pagina no tenia ni una regla propia: heredaba los tokens y salia
+   con el texto de borde a borde y la tabla en crudo. */
+.hoja { max-width: 58rem; margin: 0 auto; padding: 2.5rem 1.75rem 3rem; }
+.hoja h2 { font-size: 1.35rem; margin: 2.2rem 0 0.6rem; }
+.hoja h2:first-of-type { margin-top: 1.6rem; }
+.hoja p { margin: 0 0 0.75rem; }
+.hoja > .entradilla { font-size: 1.02rem; line-height: 1.65; color: var(--tenue); max-width: 46rem; }
+
+.objetivo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.6rem;
+  margin: 0 0 0.9rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--crema);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-medio);
+}
+
+.objetivo div { display: flex; align-items: baseline; gap: 0.5rem; }
+.objetivo .valor { font-family: var(--tipo-titulo); font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.tabla-scroll { overflow-x: auto; margin-bottom: 0.75rem; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+thead th {
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--borde-fuerte);
+  font-family: var(--tipo-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--tenue-mas);
+  white-space: nowrap;
+}
+
+tbody td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--borde); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
+
+.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--tipo-mono); font-size: 0.8rem; }
 .cumple { color: var(--verde-vivo); }
-.incumple { color: #a8331c; }
+.incumple { color: var(--alarma); }
+
+.latidos { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+
+.latidos li {
+  padding: 0.5rem 0.8rem;
+  background: var(--crema);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-chico);
+  font-family: var(--tipo-mono);
+  font-size: 0.74rem;
+  color: var(--tenue);
+}
+
+/* --- Adaptacion a pantallas estrechas -------------------------------------- */
+
+@media (max-width: 64rem) {
+  .pantalla { height: auto; }
+  .tablero { grid-template-columns: 1fr; grid-template-rows: auto auto; min-height: 0; }
+  .lienzo { min-height: 26rem; height: 60vh; }
+  .lateral { border-left: none; border-top: 1px solid var(--borde); overflow: visible; }
+  .barra { flex-wrap: wrap; gap: 0.75rem 1rem; padding: 0.7rem 1.1rem; }
+  .selector { order: 3; margin-left: 0; width: 100%; }
+  .selector select { max-width: none; flex: 1; }
+  .barra nav { gap: 0.9rem; }
+  .aviso { padding: 0.65rem 1.1rem; }
+  #eventos { padding: 2.25rem 1.1rem 2rem; }
+  footer { padding: 1.5rem 1.1rem; }
+  .hoja { padding: 2rem 1.1rem 2.5rem; }
+}
+
+/* Por debajo de 30rem el endoso de la comunidad y el aviso compiten por la
+   misma linea; el endoso baja al pie, donde la atribucion ya vive. */
+@media (max-width: 30rem) {
+  .endoso { display: none; }
+  .marca-lema { display: none; }
+  .aviso { flex-direction: column; gap: 0.3rem; }
+  .metricas { grid-template-columns: 1fr; }
+}

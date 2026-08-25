@@ -66,7 +66,7 @@ def render_markdown(report: Report) -> str:
     if tot.pop_65p_mmi7p and not report.preliminar:
         partes.append(
             f"De la poblacion en intensidad MMI≥7, alrededor de "
-            f"**{format_count_prose(tot.pop_65p_mmi7p)}** personas tienen 65 anos o mas."
+            f"**{format_count_prose(tot.pop_65p_mmi7p)}** personas tienen 65 años o más."
         )
 
     if report.top_municipios:

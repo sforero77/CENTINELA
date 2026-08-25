@@ -3,115 +3,178 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CENTINELA — exposicion sismica en America Latina</title>
-  <meta name="description" content="Reportes automaticos de exposicion sismica por celda H3 y por municipio para America Latina. Datos abiertos, sin backend." />
+  <title>CENTINELA — exposición sísmica en América Latina</title>
+  <meta name="description" content="Reportes automáticos de exposición sísmica por celda H3 y por municipio para América Latina. Datos abiertos, sin backend. Un proyecto de GeoAI LATAM." />
+  <meta name="color-scheme" content="light" />
 
-  <!-- Tipografias de la identidad de GeoAI LATAM. `display=swap` y una pila de
+  <!-- El sello va en SVG embebido: un hexágono H3 con el epicentro y dos
+       frentes de onda. Sin petición extra y nítido a cualquier tamaño. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e6e4d8'/%3E%3Cpath d='M16 4.2 26.2 10v12L16 27.8 5.8 22V10z' fill='none' stroke='%230f5636' stroke-width='2.1' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%230f5636'/%3E%3Cpath d='M11.2 20.8a6.8 6.8 0 0 1 0-9.6M20.8 11.2a6.8 6.8 0 0 1 0 9.6' fill='none' stroke='%232eb479' stroke-width='1.9' stroke-linecap='round'/%3E%3C/svg%3E" />
+
+  <meta property="og:title" content="CENTINELA — exposición sísmica en América Latina" />
+  <meta property="og:description" content="Cuánta población e infraestructura quedó dentro de cada franja de intensidad, celda a celda. Datos abiertos, sin backend." />
+  <meta property="og:type" content="website" />
+
+  <!-- Tipografías de la identidad de GeoAI LATAM. `display=swap` y una pila de
        respaldo completa: el texto sale de inmediato con la fuente del sistema y
-       cambia al llegar la buena. Una pagina que promete abrir con mala conexion
+       cambia al llegar la buena. Una página que promete abrir con mala conexión
        no se puede quedar en blanco esperando una fuente. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Familjen+Grotesk:ital,wght@0,400;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="assets/styles.css" />
-  <!-- Sin llaves de API en el camino critico (D6). -->
+  <!-- Sin llaves de API en el camino crítico (D6). -->
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
 </head>
 <body>
-  <header class="barra">
-    <a class="marca" href="./">
-      <span class="marca-nombre">CENTINELA</span>
-      <span class="marca-lema">exposicion</span>
-    </a>
+  <a class="salto-contenido" href="#lateral">Saltar al panel de datos</a>
 
-    <label class="selector" for="selector-evento">
-      <span class="mono">Evento</span>
-      <select id="selector-evento" aria-label="Evento a mostrar">
-        <option value="">Todos los eventos</option>
-      </select>
-    </label>
+  <div class="pantalla">
+    <header class="barra">
+      <a class="marca" href="./" aria-label="CENTINELA, inicio">
+        <svg class="marca-sello" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <path d="M16 4.2 26.2 10v12L16 27.8 5.8 22V10z" fill="none" stroke="#0f5636" stroke-width="2.1" stroke-linejoin="round" />
+          <circle cx="16" cy="16" r="2.5" fill="#0f5636" />
+          <path d="M11.2 20.8a6.8 6.8 0 0 1 0-9.6M20.8 11.2a6.8 6.8 0 0 1 0 9.6" fill="none" stroke="#2eb479" stroke-width="1.9" stroke-linecap="round" />
+        </svg>
+        <span class="marca-texto">
+          <span class="marca-nombre">CENTINELA</span>
+          <span class="marca-lema">exposición</span>
+        </span>
+      </a>
 
-    <nav>
-      <a href="status.html">Estado</a>
-      <a class="boton-pastilla" href="https://github.com/sforero77/CENTINELA">Codigo</a>
-    </nav>
-  </header>
+      <h1 class="oculto-visual">CENTINELA — exposición sísmica en América Latina</h1>
 
-  <p class="aviso" role="note">
-    <strong>Exposicion no es dano.</strong> No es una alerta temprana, no estima
-    victimas y no dictamina habitabilidad. Informa cuanta poblacion e
-    infraestructura quedo <em>dentro</em> de cada franja de intensidad.
-  </p>
+      <label class="selector" for="selector-evento">
+        <span class="mono">Evento</span>
+        <select id="selector-evento" aria-label="Evento a mostrar en el tablero">
+          <option value="">Todos los eventos</option>
+        </select>
+      </label>
 
-  <main class="tablero">
-    <section class="lienzo">
-      <div id="mapa" role="application" aria-label="Mapa de exposicion sismica"></div>
+      <nav aria-label="Secciones">
+        <a href="status.html">Estado</a>
+        <a class="boton-pastilla" href="https://github.com/sforero77/CENTINELA">Código</a>
+        <a class="endoso" href="https://geoai-latam.inspow.tech/" rel="noopener">
+          <span class="globo" aria-hidden="true">🌎</span>
+          <span>GeoAI <em>LATAM</em></span>
+        </a>
+      </nav>
+    </header>
 
-      <div class="panel-mapa" id="cargando">
-        <span class="giro" aria-hidden="true"></span>
-        <span class="mono">Cargando el mapa</span>
-      </div>
+    <p class="aviso" role="note">
+      <span class="mono">Léase así</span>
+      <span>
+        <strong>Exposición no es daño.</strong> No es una alerta temprana, no
+        estima víctimas y no dictamina habitabilidad. Informa cuánta población e
+        infraestructura quedó <em>dentro</em> de cada franja de intensidad.
+      </span>
+    </p>
 
-      <div class="capas" id="capas" hidden role="group" aria-label="Capa a dibujar"></div>
+    <main class="tablero">
+      <section class="lienzo" aria-label="Mapa de exposición">
+        <div id="mapa" role="region" aria-label="Mapa de exposición sísmica. Use los controles de capa para cambiar la variable dibujada." tabindex="0"></div>
 
-      <div class="leyenda" id="leyenda" hidden>
-        <p class="leyenda-titulo mono" id="leyenda-titulo"></p>
-        <ul class="leyenda-escala" id="leyenda-escala"></ul>
-        <p class="leyenda-nota" id="leyenda-nota"></p>
-      </div>
-    </section>
+        <div class="panel-mapa" id="cargando">
+          <span class="giro" aria-hidden="true"></span>
+          <span class="mono">Cargando el mapa</span>
+        </div>
 
-    <aside class="lateral" id="lateral">
-      <div class="vacio" id="lateral-vacio">
-        <p class="mono">Sin evento seleccionado</p>
-        <p>
-          Elige uno arriba o pulsa un epicentro en el mapa. Cada evento se dibuja
-          sobre la malla hexagonal de 5,2 km&sup2; con la que se calcula.
-        </p>
-      </div>
+        <div class="capas" id="capas" hidden role="tablist" aria-label="Variable a dibujar en la malla"></div>
 
-      <div id="lateral-detalle" hidden>
-        <h2 id="detalle-titulo"></h2>
-        <p class="detalle-meta" id="detalle-meta"></p>
-        <p class="distintivo-linea"><span class="distintivo" id="detalle-distintivo" hidden></span></p>
+        <div class="leyenda" id="leyenda" hidden>
+          <p class="leyenda-titulo mono" id="leyenda-titulo"></p>
+          <ul class="leyenda-escala" id="leyenda-escala"></ul>
+          <p class="leyenda-nota" id="leyenda-nota"></p>
+        </div>
+      </section>
 
-        <div class="metricas" id="detalle-metricas"></div>
+      <aside class="lateral" id="lateral" aria-label="Datos del evento seleccionado">
+        <div class="vacio" id="lateral-vacio">
+          <p class="eyebrow">Panorama</p>
+          <div id="panorama"></div>
+          <p class="pista">
+            Elige un evento arriba, pulsa un epicentro en el mapa o abre uno de
+            la lista. Cada evento se dibuja sobre la malla hexagonal de 5,2&nbsp;km²
+            con la que se calcula.
+          </p>
+        </div>
 
-        <section class="bloque">
-          <h3>Municipios mas expuestos</h3>
-          <ol class="barras" id="detalle-barras"></ol>
-        </section>
+        <div id="lateral-detalle" hidden>
+          <p class="eyebrow" id="detalle-eyebrow">Reporte</p>
+          <h2 id="detalle-titulo"></h2>
+          <p class="detalle-meta" id="detalle-meta"></p>
+          <ul class="distintivos" id="detalle-distintivos"></ul>
 
-        <section class="bloque" id="bloque-contraste" hidden>
-          <h3>Contraste con evaluacion de dano</h3>
-          <p class="contraste" id="detalle-contraste"></p>
-        </section>
+          <section class="bloque" id="bloque-franjas">
+            <h3 class="eyebrow">Población por franja de intensidad</h3>
+            <ul class="franjas" id="detalle-franjas"></ul>
+          </section>
 
-        <section class="bloque">
-          <h3>Descargas</h3>
-          <p class="descargas" id="detalle-descargas"></p>
-        </section>
-      </div>
-    </aside>
-  </main>
+          <section class="bloque">
+            <h3 class="eyebrow" id="titulo-metricas">Expuesto en MMI≥7</h3>
+            <div class="metricas" id="detalle-metricas"></div>
+          </section>
 
-  <section id="eventos">
-    <h2>Reportes publicados</h2>
-    <p class="seccion-lema">Cada uno se emitio solo, sin que nadie interviniera.</p>
-    <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
-    <ul class="lista-eventos" id="lista-eventos"></ul>
+          <section class="bloque" id="bloque-terreno" hidden>
+            <h3 class="eyebrow">Terreno: peligros secundarios</h3>
+            <ul class="terreno" id="detalle-terreno"></ul>
+          </section>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Municipios más expuestos</h3>
+            <ol class="barras" id="detalle-barras"></ol>
+          </section>
+
+          <section class="bloque" id="bloque-contraste" hidden>
+            <h3 class="eyebrow">Contraste con evaluación de daño</h3>
+            <p class="contraste" id="detalle-contraste"></p>
+          </section>
+
+          <section class="bloque" id="bloque-incertidumbre" hidden>
+            <h3 class="eyebrow">Incertidumbre</h3>
+            <p class="apostilla" id="detalle-incertidumbre"></p>
+          </section>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Descargas</h3>
+            <p class="descargas" id="detalle-descargas"></p>
+          </section>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <section id="eventos" class="graticula">
+    <span class="paralelo" style="top: 4.5rem" aria-hidden="true">12°N</span>
+    <span class="paralelo" style="bottom: 4.5rem" aria-hidden="true">4°N</span>
+    <div class="contenedor">
+      <h2>Reportes publicados</h2>
+      <p class="seccion-lema">Cada uno se emitió solo, sin que nadie interviniera.</p>
+      <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
+      <ul class="lista-eventos" id="lista-eventos"></ul>
+    </div>
   </section>
 
   <footer>
-    <p>
-      Intensidad: USGS ShakeMap (dominio publico) &middot;
-      Poblacion: GHS-POP y GHS-BUILT-S, JRC/Comision Europea &middot;
-      Edificaciones y vias: Overture Maps, &copy; OpenStreetMap contributors (ODbL) &middot;
-      Mapa base: <a href="https://openfreemap.org">OpenFreeMap</a>
-    </p>
-    <p>Codigo bajo Apache-2.0 &middot; Datos del nucleo bajo CC BY 4.0 &middot; Un proyecto de GeoAI LATAM</p>
+    <div class="contenedor">
+      <p>
+        Intensidad: USGS ShakeMap (dominio público) &middot;
+        Población: GHS-POP y GHS-BUILT-S, JRC/Comisión Europea &middot;
+        Edificaciones y vías: Overture Maps, &copy; OpenStreetMap contributors (ODbL) &middot;
+        Mapa base: <a href="https://openfreemap.org">OpenFreeMap</a>
+      </p>
+      <p>Código bajo Apache-2.0 &middot; Datos del núcleo bajo CC BY 4.0</p>
+      <p>
+        <a class="pie-marca" href="https://geoai-latam.inspow.tech/" rel="noopener">
+          <span aria-hidden="true">🌎</span> Un proyecto de GeoAI <em>LATAM</em>
+        </a>
+      </p>
+    </div>
   </footer>
+
+  <p class="oculto-visual" id="anuncio" role="status" aria-live="polite"></p>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/h3-js@4.1.0/dist/h3-js.umd.js"></script>
