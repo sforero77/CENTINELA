@@ -12,7 +12,7 @@
     "groundfailure": 7
   },
   "timestamps": {
-    "publicado": "2026-08-24T21:01:13Z",
+    "publicado": "2026-08-25T00:25:54Z",
     "usgs_origen": "2026-08-10T12:34:28Z"
   },
   "hashes": {},
@@ -20,6 +20,7 @@
   "backtest": true,
   "notas": [
     "Backtest: reconstruccion retrospectiva del 10-ago-2026, no una respuesta en vivo.",
+    "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }
