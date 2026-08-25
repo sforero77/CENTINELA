@@ -77,25 +77,37 @@ jobs:
           echo "::error::Sin activo publicado para el pais de $USGS_ID"
           exit 1
 
+      # Se baja en vez de leerlo por rangos. `/vsicurl/` funciona contra un
+      # fichero servido directo, pero HDX redirige a una URL de S3 firmada y
+      # GDAL no siempre la sigue: "Could not open GDAL dataset". En CI el ancho
+      # de banda es gratis, asi que se baja y se acaba la clase de problema.
+      # Para explorar en local, el comando sigue aceptando la URL.
+      - name: Descargar la evaluacion de dano
+        run: |
+          curl -fsSL "${{ inputs.fuente }}" -o dano.gpkg
+          ls -lh dano.gpkg
+
       - name: Contrastar
         id: contraste
         run: |
-          # `| tee` devuelve el codigo de tee, no el del comando: la primera
-          # corrida de este workflow salio "success" con un traceback dentro.
-          set -o pipefail
-          uv run centinela contraste "${{ inputs.fuente }}" \
-            --exposure data/build/exposure_h3.parquet \
-            --etiqueta "${{ inputs.etiqueta }}" \
-            --crs "${{ inputs.crs }}" \
-            --columna "${{ inputs.columna }}" | tee contraste.json
+          set +e
+          uv run centinela contraste dano.gpkg             --exposure data/build/exposure_h3.parquet             --etiqueta "${{ inputs.etiqueta }}"             --crs "${{ inputs.crs }}"             --columna "${{ inputs.columna }}" | tee contraste.json
+          CODIGO=${PIPESTATUS[0]}
+          # `| tee` devuelve el codigo de tee y no el del comando: la primera
+          # corrida salio "success" con un traceback dentro. De ahi PIPESTATUS.
+          #
+          # Y el 2 no es un fallo: es "hay celdas evaluadas que el activo no
+          # cubre", que es un hallazgo. Distinguirlo importa porque la version
+          # anterior avisaba de un hueco de cobertura cada vez que fallaba
+          # cualquier cosa — incluido no poder abrir el fichero, que es justo lo
+          # que estaba pasando.
+          if [ "$CODIGO" = "2" ]; then
+            echo "::warning::Hay celdas evaluadas que el activo no cubre. Ver contraste.json"
+            exit 0
+          fi
+          exit "$CODIGO"
 
-      # Una celda evaluada que el activo no tiene es un hueco de cobertura y el
-      # comando sale con codigo 2. Se avisa sin tumbar la corrida: el contraste
-      # ya esta calculado y su valor es justamente ese numero.
-      - name: Avisar de huecos de cobertura
-        if: failure()
-        run: |
-          echo "::warning::Hay celdas evaluadas que el activo no cubre. Ver contraste.json"
+
 
       - uses: actions/upload-artifact@v4
         if: always()
