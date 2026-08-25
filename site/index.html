@@ -5,20 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CENTINELA — exposicion sismica en America Latina</title>
   <meta name="description" content="Reportes automaticos de exposicion sismica por celda H3 y por municipio para America Latina. Datos abiertos, sin backend." />
+
+  <!-- Tipografias de la identidad de GeoAI LATAM. `display=swap` y una pila de
+       respaldo completa: el texto sale de inmediato con la fuente del sistema y
+       cambia al llegar la buena. Una pagina que promete abrir con mala conexion
+       no se puede quedar en blanco esperando una fuente. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Familjen+Grotesk:ital,wght@0,400;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="assets/styles.css" />
-  <!-- Sin llaves de API en el camino critico (D6). Las librerias se sirven
-       desde CDN publica; el visor funciona sin backend propio. -->
+  <!-- Sin llaves de API en el camino critico (D6). -->
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
 </head>
 <body>
   <header class="barra">
     <a class="marca" href="./">
       <span class="marca-nombre">CENTINELA</span>
-      <span class="marca-lema">Exposicion sismica &middot; America Latina</span>
+      <span class="marca-lema">exposicion</span>
     </a>
 
     <label class="selector" for="selector-evento">
-      <span class="selector-etiqueta">Evento</span>
+      <span class="mono">Evento</span>
       <select id="selector-evento" aria-label="Evento a mostrar">
         <option value="">Todos los eventos</option>
       </select>
@@ -26,7 +34,7 @@
 
     <nav>
       <a href="status.html">Estado</a>
-      <a href="https://github.com/sforero77/CENTINELA">Codigo</a>
+      <a class="boton-pastilla" href="https://github.com/sforero77/CENTINELA">Codigo</a>
     </nav>
   </header>
 
@@ -42,13 +50,13 @@
 
       <div class="panel-mapa" id="cargando">
         <span class="giro" aria-hidden="true"></span>
-        <span>Cargando el mapa&hellip;</span>
+        <span class="mono">Cargando el mapa</span>
       </div>
 
       <div class="capas" id="capas" hidden role="group" aria-label="Capa a dibujar"></div>
 
       <div class="leyenda" id="leyenda" hidden>
-        <p class="leyenda-titulo" id="leyenda-titulo"></p>
+        <p class="leyenda-titulo mono" id="leyenda-titulo"></p>
         <ul class="leyenda-escala" id="leyenda-escala"></ul>
         <p class="leyenda-nota" id="leyenda-nota"></p>
       </div>
@@ -56,7 +64,11 @@
 
     <aside class="lateral" id="lateral">
       <div class="vacio" id="lateral-vacio">
-        <p>Elige un evento arriba o pulsa un epicentro en el mapa.</p>
+        <p class="mono">Sin evento seleccionado</p>
+        <p>
+          Elige uno arriba o pulsa un epicentro en el mapa. Cada evento se dibuja
+          sobre la malla hexagonal de 5,2 km&sup2; con la que se calcula.
+        </p>
       </div>
 
       <div id="lateral-detalle" hidden>
@@ -76,13 +88,17 @@
           <p class="contraste" id="detalle-contraste"></p>
         </section>
 
-        <p class="descargas" id="detalle-descargas"></p>
+        <section class="bloque">
+          <h3>Descargas</h3>
+          <p class="descargas" id="detalle-descargas"></p>
+        </section>
       </div>
     </aside>
   </main>
 
   <section id="eventos">
     <h2>Reportes publicados</h2>
+    <p class="seccion-lema">Cada uno se emitio solo, sin que nadie interviniera.</p>
     <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
     <ul class="lista-eventos" id="lista-eventos"></ul>
   </section>
@@ -91,9 +107,10 @@
     <p>
       Intensidad: USGS ShakeMap (dominio publico) &middot;
       Poblacion: GHS-POP y GHS-BUILT-S, JRC/Comision Europea &middot;
-      Edificaciones y vias: Overture Maps, &copy; OpenStreetMap contributors (ODbL)
+      Edificaciones y vias: Overture Maps, &copy; OpenStreetMap contributors (ODbL) &middot;
+      Mapa base: <a href="https://openfreemap.org">OpenFreeMap</a>
     </p>
-    <p>Codigo bajo Apache-2.0 &middot; Datos del nucleo bajo CC BY 4.0</p>
+    <p>Codigo bajo Apache-2.0 &middot; Datos del nucleo bajo CC BY 4.0 &middot; Un proyecto de GeoAI LATAM</p>
   </footer>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>

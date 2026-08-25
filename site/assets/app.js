@@ -25,55 +25,70 @@ const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 3.1 };
 // Positron y no un estilo de colores a proposito: el mapa es el fondo del dato.
 const ESTILO_BASE = "https://tiles.openfreemap.org/styles/positron";
 
-// Azul apagado: distingue la costa sin robarle contraste al dato.
-const AGUA = "#cfe0ea";
-const EPICENTRO = "#c1440e";
+// El mapa base se retinta a la paleta de la identidad: Positron viene en gris
+// neutro y sobre un fondo de arena calida canta. Se cambian tres colores, no el
+// estilo entero.
+const BASE_TIERRA = "#e9e7dc";
+const BASE_AGUA = "#cdd9d4";
+const EPICENTRO = "#8a3520";
 
 // --- Capas que el visor sabe pintar ----------------------------------------
 //
-// Cada una es una columna de `celdas.json`, que es una columna del activo. El
+// Cada una es una columna de `celdas.json`, que es una columna del activo: el
 // selector no ofrece nada que el dato no tenga.
 //
-// Los cortes son escalonados y no una rampa continua: una rampa insinua una
-// precision por celda que la fuente no tiene, y ademas no se puede leer en una
-// leyenda. Los de poblacion y edificaciones van por decadas porque el rango va
-// de una unidad a decenas de miles.
+// **Los cortes estan medidos, no elegidos a ojo.** Sobre las 11.574 celdas de
+// los tres eventos publicados, con clases geometricas —la practica recomendada
+// para datos sesgados; los intervalos iguales dejarian clases vacias— y seis
+// clases, que es el rango util para el ojo. Reparto resultante:
+//
+//   poblacion   17 / 30 / 31 / 15 / 6 / 1 %
+//   edificacion 28 / 28 / 23 / 12 / 7 / 2 %
+//   construido  18 / 27 / 30 / 15 / 8 / 3 %
+//   vias        21 / 31 / 28 / 11 / 4 / 0,2 %
+//
+// La primera version tenia el corte superior de construido en 5 M y el de vias
+// en 150 km, y los maximos reales son 2,49 M y 140: **dos colores que no se
+// usaban nunca** y dos bandas de leyenda que no correspondian a nada.
+//
+// MMI no lleva rangos sino un color por valor: el ShakeMap da 6, 6,5, 7, 7,5, 8
+// y 8,5, y escribir "6 – 6,5" sugiere un continuo que no existe.
 const CAPAS = {
   mmi: {
     titulo: "Intensidad",
     columna: "mmi",
-    decimal: true,
-    cortes: [6, 6.5, 7, 7.5, 8],
-    colores: ["#fde3a7", "#f6c177", "#e89b52", "#cf6b3c", "#a33222"],
-    nota: "Mercalli modificada. Por debajo de 6 el sistema no publica cifra.",
+    exacto: true,
+    cortes: [6, 6.5, 7, 7.5, 8, 8.5],
+    colores: ["#f2e6c4", "#e8c98d", "#d9a25c", "#c47a41", "#a8542e", "#7d3320"],
+    nota: "Mercalli modificada, en pasos de media. Por debajo de 6 no se publica.",
   },
   pop: {
     titulo: "Poblacion",
     columna: "pop",
-    cortes: [1, 10, 100, 1000, 10000],
-    colores: ["#e8eef2", "#bcd2de", "#8ab3c9", "#5b8fae", "#2f6485"],
-    nota: "Celda H3 r7, unos 5,2 km². GHS-POP epoca 2025.",
+    cortes: [1, 10, 100, 1000, 10000, 50000],
+    colores: ["#e4e6da", "#c3cfc6", "#9bb5b3", "#71979f", "#4a7885", "#2f5a67"],
+    nota: "Personas por celda de 5,2 km². GHS-POP epoca 2025.",
   },
   bld: {
     titulo: "Edificaciones",
     columna: "bld",
-    cortes: [1, 10, 100, 1000, 10000],
-    colores: ["#efeae4", "#d8cbbc", "#bfa88f", "#9c8264", "#6f5a41"],
+    cortes: [1, 10, 50, 250, 1000, 5000],
+    colores: ["#e6e6d6", "#c7d2bd", "#a2bb9f", "#7aa17f", "#4f8460", "#2c6244"],
     nota: "Overture sobre OpenStreetMap. Donde OSM no mapeo, se queda corto.",
   },
   built_m2: {
     titulo: "Superficie construida",
     columna: "built_m2",
-    cortes: [1000, 10000, 100000, 1000000, 5000000],
-    colores: ["#f0ebe6", "#dcd0c2", "#c3ab90", "#a2825f", "#75563a"],
-    nota: "GHS-BUILT-S, vista por satelite: ve el barrio que OSM no mapeo.",
+    cortes: [1, 500, 5000, 50000, 250000, 1000000],
+    colores: ["#e9e5d6", "#dbd2b8", "#c9b894", "#b29a70", "#94794f", "#6f5836"],
+    nota: "GHS-BUILT-S, m² vistos por satelite: ve el barrio que OSM no mapeo.",
   },
   vias_km: {
     titulo: "Vias",
     columna: "vias_km",
-    cortes: [1, 5, 20, 60, 150],
-    colores: ["#eeeae6", "#d5cdc4", "#b6a99b", "#8f7f6e", "#655749"],
-    nota: "Overture transportation, en km por celda. Incluye calle residencial.",
+    cortes: [0.5, 2, 5, 15, 40, 90],
+    colores: ["#e7e5dc", "#cfccc0", "#b3afa1", "#928d7f", "#6f6a5d", "#4b473d"],
+    nota: "Kilometros por celda, Overture. Incluye calle residencial.",
   },
 };
 
@@ -175,9 +190,17 @@ function pintarLeyenda(capa) {
   document.getElementById("leyenda-escala").innerHTML = capa.cortes
     .map((corte, i) => {
       const sig = capa.cortes[i + 1];
-      const fmt = (v) => (capa.decimal ? numero(v, 1) : comoTexto(v));
-      const texto = sig ? `${fmt(corte)} – ${fmt(sig)}` : `${fmt(corte)} o mas`;
-      return `<li><span class="muestra" style="background:${capa.colores[i]}"></span>${texto}</li>`;
+      // MMI no lleva rangos: el ShakeMap da valores exactos en pasos de media,
+      // y escribir "6 – 6,5" sugiere un continuo que no existe.
+      const texto = capa.exacto
+        ? numero(corte, 1)
+        : sig
+          ? `${comoTexto(corte)} – ${comoTexto(sig)}`
+          : `${comoTexto(corte)} o mas`;
+      return (
+        `<li><span class="muestra" style="background:${capa.colores[i]}"></span>` +
+        `<span class="leyenda-valor">${texto}</span></li>`
+      );
     })
     .join("");
 }
@@ -263,13 +286,21 @@ function filaEvento(evento) {
   const meta = document.createElement("p");
   meta.className = "evento-meta";
   meta.textContent = [
-    evento.utc,
+    evento.utc.slice(0, 10),
     `ShakeMap v${evento.shakemap_version}`,
-    Number.isFinite(evento.pop_mmi7p) ? `${comoTexto(evento.pop_mmi7p)} en MMI≥7` : null,
     evento.preliminar ? "preliminar" : null,
   ].filter(Boolean).join(" · ");
 
   li.append(enlace, meta);
+
+  // La cifra en grande y no perdida en una linea de metadatos: es lo que
+  // alguien viene a buscar, y el resto de la tarjeta esta para situarla.
+  if (Number.isFinite(evento.pop_mmi7p)) {
+    const cifra = document.createElement("span");
+    cifra.className = "evento-cifra";
+    cifra.innerHTML = `${comoTexto(evento.pop_mmi7p)}<small>personas en MMI≥7</small>`;
+    li.append(cifra);
+  }
   if (evento.backtest) {
     const marca = document.createElement("span");
     marca.className = "distintivo";
@@ -507,7 +538,7 @@ function dibujarEpicentros(eventos) {
           "interpolate", ["linear"], ["sqrt", ["max", ["get", "pop"], 1]], 1, 5, 2000, 20,
         ],
         "circle-color": EPICENTRO,
-        "circle-opacity": 0.25,
+        "circle-opacity": 0.22,
         "circle-stroke-color": EPICENTRO,
         "circle-stroke-width": 1.5,
       },
@@ -536,16 +567,22 @@ function iniciarMapa() {
   mapa.addControl(new maplibregl.AttributionControl({ compact: true }));
   mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
-  // Positron pinta el agua casi del mismo gris que la tierra. Para un sistema
-  // cuya mitad de la exposicion es costera, la linea de costa tiene que verse.
+  // Positron viene en gris neutro. Sobre un fondo de arena calida canta, y su
+  // agua es casi del mismo tono que su tierra — inservible para un sistema
+  // cuya mitad de la exposicion es costera. Se retintan tierra y agua a la
+  // paleta de la identidad, sin tocar el resto del estilo.
   mapa.on("style.load", () => {
     for (const capa of mapa.getStyle().layers) {
-      if (capa.type === "fill" && (capa.id === "water" || capa.id.startsWith("water_"))) {
-        try {
-          mapa.setPaintProperty(capa.id, "fill-color", AGUA);
-        } catch (e) {
-          /* el estilo puede cambiar; no es critico */
-        }
+      if (capa.type !== "fill" && capa.type !== "background") continue;
+      const agua = capa.id === "water" || capa.id.startsWith("water_");
+      const tierra = capa.id === "background" || capa.id === "landcover" ||
+                     capa.id.startsWith("landuse") || capa.id.startsWith("landcover");
+      if (!agua && !tierra) continue;
+      const prop = capa.type === "background" ? "background-color" : "fill-color";
+      try {
+        mapa.setPaintProperty(capa.id, prop, agua ? BASE_AGUA : BASE_TIERRA);
+      } catch (e) {
+        /* el estilo puede cambiar; no es critico */
       }
     }
   });
