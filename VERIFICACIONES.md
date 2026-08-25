@@ -885,34 +885,43 @@ centroide, igual que hace el activo, y compara sobre **las mismas celdas**. Asi
 la unica diferencia entre las dos cifras es lo que cada fuente metio en la
 celda, no como se recorto el mapa.
 
-Medido sobre La Guaira (`us6000t7zp`, Catia La Mar), con el activo `ven-v0.1`
-reconstruido y la evaluacion de Microsoft leida por rangos con `/vsicurl/`:
+Medido sobre **los dos eventos golden**, con los activos reconstruidos:
 
-| La Guaira · 74 celdas H3 r8 | |
-|---|---:|
-| Microsoft: edificaciones evaluadas | 26.143 |
-| **con dano detectado** | **965 (3,69 %)** |
-| CENTINELA: edificaciones Overture | 35.611 |
-| CENTINELA: poblacion | 166.989 |
-| **celdas evaluadas que el activo no cubre** | **0** |
-| Razon de conteo CENTINELA/Microsoft | 1,36 |
+| | Cali (`us6000tjl2`) | La Guaira (`us6000t7zp`) |
+|---|---:|---:|
+| Celdas H3 r8 comparadas | 328 | 74 |
+| Microsoft: edificaciones evaluadas | 97.351 | 26.143 |
+| **con dano detectado** | **266 (0,273 %)** | **965 (3,69 %)** |
+| CENTINELA: edificaciones Overture | 107.252 | 35.611 |
+| CENTINELA: poblacion | 1.995.749 | 166.989 |
+| Razon de conteo CENTINELA/Microsoft | 1,10 | 1,36 |
+| **celdas evaluadas que el activo no cubre** | **0** | **0** |
 
 Tres lecturas.
 
-**La cobertura del activo es completa ahi.** Ni una sola celda evaluada por
-Microsoft falta del activo. Es la comprobacion mas dura que se le ha hecho a la
-cobertura hasta ahora, porque la lista de celdas la puso otro.
+**La cobertura del activo es completa en los dos.** Ni una sola de las 402
+celdas evaluadas por Microsoft falta del activo, en dos paises distintos y dos
+sismos distintos. Es la comprobacion mas dura que se le ha hecho a la cobertura,
+porque la lista de celdas la puso otro.
 
-**La razon de conteo 1,36 no es un descuadre.** La evaluacion externa se recorta
-a su mascara de area valida —29,7 km² donde la imagen servia— y 74 celdas r8
-cubren unos 55 km². Una celda que queda medio dentro aporta todas sus
-edificaciones a un lado y solo parte al otro. Sirve para detectar un orden de
+**Las razones de conteo, 1,10 y 1,36, no son descuadres.** La evaluacion externa
+se recorta a su mascara de area valida —donde la imagen servia— y una celda r8
+puede quedar medio dentro, aportando todas sus edificaciones a un lado y solo
+parte al otro. Que Cali salga en 1,10 y La Guaira en 1,36 es consistente con
+eso: la mascara de Cali cubre 328 celdas y la de La Guaira solo 74, asi que el
+efecto de borde pesa el doble en la segunda. Sirve para detectar un orden de
 magnitud raro, no para calibrar.
 
-**Y la cifra que importa: 3,69 %.** El reporte de ese evento publica 504.955
-edificaciones en MMI≥7 para todo el pais. En la franja costera peor golpeada,
-una evaluacion independiente detecta dano en el 3,69 % de lo que miro. Son dos
-preguntas distintas y ahora se pueden ensenar juntas en vez de explicarlas.
+**Y las cifras que importan: 0,27 % y 3,69 %.** Los reportes de esos eventos
+publican 444.424 y 504.955 edificaciones en MMI≥7 para todo el pais. En las
+zonas evaluadas, una fuente independiente detecta dano en menos del 4 % de lo
+que miro, y en Cali en menos del 0,3 %. Son dos preguntas distintas y ahora se
+pueden ensenar juntas en vez de explicarlas.
+
+El contraste entre los dos tambien dice algo: Cali quedo en MMI 7-7,5 y La
+Guaira mucho mas cerca del epicentro. Un factor de trece en la fraccion danada
+entre dos zonas de un mismo rango de exposicion es exactamente por que exposicion
+no se puede leer como dano.
 
 Un matiz sobre el dato de Microsoft que conviene no perder: `damage_pct_0m` no
 pasa de 1,0 y promedia 0,4 % en las edificaciones marcadas. Su `damaged` es una
