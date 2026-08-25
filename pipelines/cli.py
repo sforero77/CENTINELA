@@ -107,6 +107,18 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_contorno(args: argparse.Namespace) -> int:
+    """Genera el contorno ligero de LATAM que usa el visor en la vista regional."""
+    from .p0_exposure.build import OVERTURE_RELEASE_POR_DEFECTO
+    from .p0_exposure.contorno import build_contorno
+
+    destino = build_contorno(
+        Path(args.destino), release=args.release or OVERTURE_RELEASE_POR_DEFECTO
+    )
+    print(destino)
+    return 0
+
+
 def _cmd_contraste(args: argparse.Namespace) -> int:
     """Compara el activo contra una evaluacion de dano externa (Fase 2)."""
     from .p0_exposure.overture_h3 import ensure_httpfs
@@ -307,6 +319,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_status = sub.add_parser("status", help="recalcula site/status.json")
     p_status.set_defaults(func=_cmd_status)
+
+    p_contorno = sub.add_parser(
+        "contorno-latam", help="genera el contorno ligero de LATAM para el visor"
+    )
+    p_contorno.add_argument(
+        "--destino", default="site/assets/latam.geojson", help="ruta del GeoJSON"
+    )
+    p_contorno.add_argument("--release", help="release de Overture")
+    p_contorno.set_defaults(func=_cmd_contorno)
 
     p_contraste = sub.add_parser(
         "contraste", help="compara el activo con una evaluacion de dano externa"
