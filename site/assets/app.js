@@ -103,6 +103,10 @@ function comoTexto(v) {
   if (!Number.isFinite(v) || v <= 0) return "0";
   if (v >= 1e6) return `${(v / 1e6).toFixed(1).replace(".", ",")} M`;
   if (v >= 1e3) return numero(Math.round(v / 1e3) * 1e3);
+  // Por debajo de 10 se conserva el decimal: el primer corte de vias es 0,5 km
+  // y redondeado salia "1" en la leyenda, que ademas coincidia con el segundo
+  // corte. Una leyenda con dos clases rotuladas igual no es una leyenda.
+  if (v < 10) return numero(v, v % 1 === 0 ? 0 : 1);
   return numero(Math.round(v));
 }
 
