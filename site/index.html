@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CENTINELA — exposicion sismica en America Latina</title>
-  <meta name="description" content="Reportes automaticos de exposicion sismica por municipio y celda H3 para America Latina. Datos abiertos, sin backend." />
+  <meta name="description" content="Reportes automaticos de exposicion sismica por celda H3 y por municipio para America Latina. Datos abiertos, sin backend." />
   <link rel="stylesheet" href="assets/styles.css" />
   <!-- Sin llaves de API en el camino critico (D6). Las librerias se sirven
        desde CDN publica; el visor funciona sin backend propio. -->
@@ -16,20 +16,27 @@
       <span class="marca-nombre">CENTINELA</span>
       <span class="marca-lema">Exposicion sismica &middot; America Latina</span>
     </a>
+
+    <label class="selector" for="selector-evento">
+      <span class="selector-etiqueta">Evento</span>
+      <select id="selector-evento" aria-label="Evento a mostrar">
+        <option value="">Todos los eventos</option>
+      </select>
+    </label>
+
     <nav>
-      <a href="#eventos">Eventos</a>
       <a href="status.html">Estado</a>
       <a href="https://github.com/sforero77/CENTINELA">Codigo</a>
     </nav>
   </header>
 
-  <main>
-    <p class="aviso" role="note">
-      <strong>Exposicion no es dano.</strong> No es una alerta temprana, no
-      estima victimas y no dictamina habitabilidad. Informa cuanta poblacion e
-      infraestructura quedo <em>dentro</em> de cada franja de intensidad.
-    </p>
+  <p class="aviso" role="note">
+    <strong>Exposicion no es dano.</strong> No es una alerta temprana, no estima
+    victimas y no dictamina habitabilidad. Informa cuanta poblacion e
+    infraestructura quedo <em>dentro</em> de cada franja de intensidad.
+  </p>
 
+  <main class="tablero">
     <section class="lienzo">
       <div id="mapa" role="application" aria-label="Mapa de exposicion sismica"></div>
 
@@ -38,66 +45,59 @@
         <span>Cargando el mapa&hellip;</span>
       </div>
 
+      <div class="capas" id="capas" hidden role="group" aria-label="Capa a dibujar"></div>
+
       <div class="leyenda" id="leyenda" hidden>
-        <p class="leyenda-titulo">Intensidad maxima del municipio</p>
+        <p class="leyenda-titulo" id="leyenda-titulo"></p>
         <ul class="leyenda-escala" id="leyenda-escala"></ul>
-        <p class="leyenda-nota">
-          Cada circulo es un municipio. El <strong>area</strong> crece con la
-          poblacion en MMI&ge;7.
-        </p>
+        <p class="leyenda-nota" id="leyenda-nota"></p>
       </div>
     </section>
 
-    <section id="detalle" hidden aria-live="polite">
-      <div class="detalle-cabecera">
-        <div>
-          <h2 id="detalle-titulo"></h2>
-          <p class="detalle-meta" id="detalle-meta"></p>
-        </div>
-        <button type="button" id="cerrar-detalle" class="boton-tenue">Cerrar</button>
+    <aside class="lateral" id="lateral">
+      <div class="vacio" id="lateral-vacio">
+        <p>Elige un evento arriba o pulsa un epicentro en el mapa.</p>
       </div>
 
-      <p class="aviso-backtest" id="detalle-aviso" hidden></p>
+      <div id="lateral-detalle" hidden>
+        <h2 id="detalle-titulo"></h2>
+        <p class="detalle-meta" id="detalle-meta"></p>
+        <p class="distintivo-linea"><span class="distintivo" id="detalle-distintivo" hidden></span></p>
 
-      <div class="metricas" id="detalle-metricas"></div>
+        <div class="metricas" id="detalle-metricas"></div>
 
-      <div class="tarjeta">
-        <h3>Municipios mas expuestos</h3>
-        <div class="tabla-scroll">
-          <table id="detalle-tabla">
-            <thead>
-              <tr>
-                <th scope="col">Municipio</th>
-                <th scope="col" class="num">MMI max</th>
-                <th scope="col" class="num">Poblacion MMI&ge;7</th>
-                <th scope="col" class="num">Edificaciones</th>
-              </tr>
-            </thead>
-            <tbody id="detalle-filas"></tbody>
-          </table>
-        </div>
+        <section class="bloque">
+          <h3>Municipios mas expuestos</h3>
+          <ol class="barras" id="detalle-barras"></ol>
+        </section>
+
+        <section class="bloque" id="bloque-contraste" hidden>
+          <h3>Contraste con evaluacion de dano</h3>
+          <p class="contraste" id="detalle-contraste"></p>
+        </section>
+
+        <p class="descargas" id="detalle-descargas"></p>
       </div>
-
-      <p class="descargas" id="detalle-descargas"></p>
-    </section>
-
-    <section id="eventos">
-      <h2>Reportes publicados</h2>
-      <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
-      <ul class="lista-eventos" id="lista-eventos"></ul>
-    </section>
+    </aside>
   </main>
+
+  <section id="eventos">
+    <h2>Reportes publicados</h2>
+    <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
+    <ul class="lista-eventos" id="lista-eventos"></ul>
+  </section>
 
   <footer>
     <p>
       Intensidad: USGS ShakeMap (dominio publico) &middot;
-      Poblacion: GHS-POP, JRC/Comision Europea &middot;
+      Poblacion: GHS-POP y GHS-BUILT-S, JRC/Comision Europea &middot;
       Edificaciones y vias: Overture Maps, &copy; OpenStreetMap contributors (ODbL)
     </p>
     <p>Codigo bajo Apache-2.0 &middot; Datos del nucleo bajo CC BY 4.0</p>
   </footer>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/h3-js@4.1.0/dist/h3-js.umd.js"></script>
   <script src="assets/app.js" type="module"></script>
 </body>
 </html>
