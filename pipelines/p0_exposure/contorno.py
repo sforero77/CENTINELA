@@ -29,26 +29,61 @@ _log = get_logger(__name__)
 #: escala en la que se dibuja este contorno.
 SIMPLIFICACION_GRADOS = 0.02
 
+#: Superficie minima de un poligono para entrar al contorno, en km2.
+#:
+#: **Es una decision de dibujo, no de datos.** El activo de exposicion cuenta
+#: hasta la ultima isla habitada y eso no se toca; esto solo decide que se pinta
+#: en el fondo gris de detras. Medido: de los 10.536 poligonos de la ventana
+#: LATAM, **8.361 miden menos de 1 km2**, sobre todo islotes del Caribe. A la
+#: escala en que se dibuja este contorno un pixel son unos 80 km2, asi que cada
+#: uno ocupa menos de una centesima de pixel y pesa lo mismo que uno visible.
+AREA_MINIMA_KM2 = 1.0
+
+#: Decimales de las coordenadas. Cuatro son ~11 m, muy por debajo del pixel.
+#: `ST_AsGeoJSON` emite quince, que pesan y no dibujan nada.
+DECIMALES = 4
+
 #: Solo tierra. El poligono de aguas territoriales de cada pais duplicaria el
 #: peso y no dibuja nada que se vea.
+#:
+#: Se descompone con `ST_Dump` para poder descartar por superficie: un pais es
+#: un MULTIPOLYGON y su area total no dice nada de sus partes.
 SQL_CONTORNO = """
-SELECT country,
-       ST_AsGeoJSON(
+WITH recorte AS (
+    SELECT country,
            ST_SimplifyPreserveTopology(
                ST_Intersection(
                    geometry,
                    ST_MakeEnvelope({lon_min}, {lat_min}, {lon_max}, {lat_max})
                ),
                {tolerancia}
-           )
-       ) AS geojson
-FROM read_parquet('{url}')
-WHERE subtype = 'country'
-  AND country IS NOT NULL
-  AND is_land
-  AND bbox.xmin <= {lon_max} AND bbox.xmax >= {lon_min}
-  AND bbox.ymin <= {lat_max} AND bbox.ymax >= {lat_min}
+           ) AS geom
+    FROM read_parquet('{url}')
+    WHERE subtype = 'country'
+      AND country IS NOT NULL
+      AND is_land
+      AND bbox.xmin <= {lon_max} AND bbox.xmax >= {lon_min}
+      AND bbox.ymin <= {lat_max} AND bbox.ymax >= {lat_min}
+)
+SELECT country, ST_AsGeoJSON(ST_Collect(list(g))) AS geojson
+FROM (
+    SELECT country, t.p.geom AS g
+    FROM recorte, unnest(ST_Dump(geom)) AS t(p)
+    WHERE ST_Area_Spheroid(t.p.geom) / 1e6 >= {area_minima}
+)
+GROUP BY country
 """
+
+
+def _recortar(obj: Any, decimales: int) -> Any:
+    """Redondea las coordenadas. Quince decimales pesan y no dibujan nada."""
+    if isinstance(obj, float):
+        return round(obj, decimales)
+    if isinstance(obj, list):
+        return [_recortar(x, decimales) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _recortar(v, decimales) for k, v in obj.items()}
+    return obj
 
 
 def build_contorno(destino: Path, *, release: str, fetcher: Any = None) -> Path:
@@ -78,6 +113,7 @@ def build_contorno(destino: Path, *, release: str, fetcher: Any = None) -> Path:
                 lon_max=LATAM_BBOX.lon_max,
                 lat_max=LATAM_BBOX.lat_max,
                 tolerancia=SIMPLIFICACION_GRADOS,
+                area_minima=AREA_MINIMA_KM2,
             )
         ).fetchall()
         for pais, geojson in filas:
@@ -86,7 +122,13 @@ def build_contorno(destino: Path, *, release: str, fetcher: Any = None) -> Path:
             # geometria sin coordenadas: no aporta y solo pesa.
             if not geom.get("coordinates"):
                 continue
-            rasgos.append({"type": "Feature", "geometry": geom, "properties": {"country": pais}})
+            rasgos.append(
+                {
+                    "type": "Feature",
+                    "geometry": _recortar(geom, DECIMALES),
+                    "properties": {"country": pais},
+                }
+            )
 
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(
