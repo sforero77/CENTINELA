@@ -69,7 +69,7 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **3,1 %**.
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v7**
 - Manifest de exposicion: `col-v0.5`
-- Pipeline: `0.1.0` · Generado: 2026-08-25T00:25:51Z
+- Pipeline: `0.1.0` · Generado: 2026-08-25T03:23:16Z
 
 ## Advertencias
 

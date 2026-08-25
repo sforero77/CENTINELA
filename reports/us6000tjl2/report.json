@@ -22,13 +22,13 @@
     "pop_mmi6p": 6960085.743641049,
     "pop_mmi7p": 2415793.4590726923,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 289256.9260005253,
+    "pop_65p_mmi7p": 289256.92600052553,
     "bld_mmi7p": 444424.0,
     "built_m2_mmi7p": 69814813.0,
     "health_mmi7p": 518.0,
     "edu_mmi7p": 998.0,
-    "road_km_mmi7p": 8502.889960662438,
-    "road_km_principal_mmi7p": 984.7368105680964,
+    "road_km_mmi7p": 8502.889960662435,
+    "road_km_principal_mmi7p": 984.7368105680955,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 1600028.0208497662
   },
@@ -141,6 +141,6 @@
     "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
   ],
-  "generado_utc": "2026-08-25T00:25:51Z",
+  "generado_utc": "2026-08-25T03:23:16Z",
   "pipeline_version": "0.1.0"
 }
