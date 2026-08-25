@@ -40,7 +40,7 @@ es la fuente de verdad del código DIVIPOLA.
 
 | | |
 |---|---|
-| Activos de exposición publicados | 18 de 19 |
+| Activos de exposición publicados | 19 de 19 |
 | Reportes emitidos de punta a punta | 3 (reconstrucciones históricas) |
 | Tiempo de cálculo, evento completo | **27 segundos** |
 | Latencia objetivo, sismo → reporte | p50 ≤ 60 min |
@@ -56,6 +56,7 @@ mantenedor de país puede sustituirla — Colombia ya usa las proyecciones del D
 |---|---:|---:|---:|
 | México | 130.288.322 | 131.946.900 | −1,26 % |
 | Honduras | 10.915.014 | 11.005.850 | −0,83 % |
+| Chile | 19.690.592 | 19.859.921 | −0,85 % |
 | Colombia | 52.620.466 | 53.000.000 (DANE) | −0,72 % |
 | Guatemala | 18.622.441 | 18.687.881 | −0,35 % |
 | Perú | 34.475.278 | 34.576.665 | −0,29 % |
@@ -72,8 +73,8 @@ mantenedor de país puede sustituirla — Colombia ya usa las proyecciones del D
 | Nicaragua | 7.240.789 | 7.007.502 | +3,33 % |
 | Venezuela | 29.924.657 | 28.516.896 | +4,94 % |
 
-*Chile y Brasil pendientes de reconstrucción; sus cifras se publicarán medidas,
-no estimadas.*
+*Brasil pendiente de reconstrucción; su cifra se publicará medida, no
+estimada.*
 
 **Venezuela es el caso que conviene mirar de frente.** Su desvío de +4,94 % es
 el mayor de la región y tiene una causa conocida: GHS-POP desagrega la ronda

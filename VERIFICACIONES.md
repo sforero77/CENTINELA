@@ -478,6 +478,32 @@ al reparto dependiendo de que el rescate exista, que es correccion por
 accidente: acotar mas el rescate —cosa que se hizo dos veces esta semana— se
 habria llevado medio pais por delante sin avisar.
 
+#### Chile responde la pregunta que quedaba abierta
+
+Se afirmo, viendo que Chile rescataba el 31 % de su poblacion con un desvio
+correcto, que ese rescate era **mar** y que por eso la magnitud del rescate no
+distinguia lo correcto de lo contaminado. La primera mitad era falsa.
+
+Reconstruido con el reparto viendo los multipoligonos:
+
+| Chile | Antes | Despues |
+|---|---:|---:|
+| Poblacion rescatada | 6.126.336 | **145.195** |
+| Fraccion rescatada | 31,097 % | **0,737 %** |
+| Desvio frente a la ONU | -0,80 % | -0,85 % |
+
+Aquel 31 % **no era mar**: eran comunas multipoligono entrando enteras por la
+puerta de atras, igual que en Uruguay. Y el desvio apenas se mueve —cinco
+centesimas— porque la poblacion ya estaba llegando, solo que por un camino que
+no era el suyo.
+
+La conclusion de fondo aguanta y sale reforzada: lo que distingue un rescate
+correcto de uno contaminado no es cuanto se rescata sino **sobre que esta la
+celda**. Lo que no aguantaba era el ejemplo con el que se ilustro.
+
+(El reparto de Chile necesito 1.201 teselas para sus 56 provincias, y seis
+intentos: cuatro OutOfMemory, uno por duplicados al simplificar mal, y este.)
+
 #### No era solo el marcador: se perdian datos
 
 El rescate solo mira celdas **con poblacion** (`FROM pop_h3`). Una celda dentro
