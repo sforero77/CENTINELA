@@ -224,6 +224,41 @@ Dos irregularidades que conviene saber antes de Fase 1:
   ahora `hdx_resource` en el manifest: un dataset con varios recursos del mismo
   formato tiene que fijar cual, igual que fija el vintage.
 
+### 2.1d Brasil: medido, y bloqueado por una razon concreta
+
+Es el unico de los diecinueve sin activo, y no por falta de intento. Medido el
+25-ago-2026 corriendo `centinela country BRA`:
+
+| | Colombia | Brasil |
+|---|---|---|
+| Teselas GHS-POP | 9 | **36** |
+| Serie age-sex de WorldPop | ~600 MB | **9,1 GB** (20 rasters de 453 MB) |
+
+GHSL bajo entero sin problema —317 MB de poblacion y 102 de superficie
+construida, en unos setenta minutos de conexion domestica— y el build se detuvo
+en WorldPop.
+
+**Dos cosas lo bloquean, y las dos son del sistema, no de la maquina:**
+
+1. **`download_worldpop_agesex` usa `get_bytes`**, que carga cada raster
+   **completo en memoria** antes de volcarlo. Con los 60 MB de Colombia no se
+   nota; con 453 MB por fichero, veinte veces, si.
+2. **`exposure_quarterly.yml` tiene `timeout-minutes: 120`.** Bajar 9,1 GB mas
+   los 419 MB de GHSL en dos horas exige sostener ~1,3 MB/s durante las dos
+   horas enteras. Puede que el runner de GitHub lo consiga; puede que no, y
+   fallaria al final, con la hora larga de descarga ya pagada.
+
+Lo que hace falta antes de volver a intentarlo: **descarga por streaming** en
+esa ruta (escribir a `.parcial` a medida que llegan los bytes, que es lo que
+`write_atomic` ya hace para todo lo demas) y subir el timeout de ese job para
+Brasil. Con eso se intenta en CI, que es donde este build pertenece.
+
+Y conviene saberlo aunque se construya: **Brasil no puede producir un reporte**
+con el pipeline actual. Sus doce sismos M≥5,5 desde 2000 estan entre 534 y
+603 km de profundidad y USGS no publica contornos MMI para ninguno. Se
+construye por preparacion —un somero raro en la costa cambiaria eso en un dia—
+no para obtener un backtest.
+
 ### 2.2 T0.7: benchmark de `exactextract` · **bajo esfuerzo**
 
 Comparar el muestreo actual (suma de pixeles por celda) contra `exactextract`.
