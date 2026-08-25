@@ -1,0 +1,20 @@
+usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta,lq_pop_expuesta,flags_calidad
+#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide,#population+liquefaction,#meta+flags
+us7000d18q,8,AR070014,Angaco,-68.131963,-31.192219,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000d18q,8,AR070126,25 de Mayo,-67.827404,-31.98962,6.0,671.9175411388278,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us7000d18q,8,AR050056,Lavalle,-67.889073,-32.582585,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us7000d18q,8,AR070098,Santa Lucía,-68.463412,-31.532717,6.0,51343.15113552939,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us7000d18q,8,AR050049,Las Heras,-69.267176,-32.524767,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us7000d18q,8,AR070028,Capital,-68.534286,-31.533075,6.0,122508.8541828692,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us7000d18q,8,AR070070,Pocito,-68.584208,-31.745956,6.0,64987.575408427045,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000d18q,8,AR070063,9 de julio,-68.389053,-31.645805,6.0,7463.2202634187415,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000d18q,8,AR070035,Caucete,-67.545859,-31.506382,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000d18q,8,AR070077,Rawson,-68.467563,-31.686586,6.0,123675.77555274963,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000d18q,8,AR070105,Sarmiento,-68.691136,-32.073542,6.5,20898.23771486897,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us7000d18q,8,AR070021,Calingasta,-69.8338,-31.453365,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000d18q,8,AR070042,Chimbas,-68.523929,-31.48742,6.0,95694.02289914805,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us7000d18q,8,AR070007,Albardón,-68.451981,-31.209634,6.0,4.8950633481144905,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us7000d18q,8,AR070112,Ullum,-68.881582,-31.090465,6.0,9.705695120152086,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us7000d18q,8,AR070091,San Martín,-68.207293,-31.528541,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us7000d18q,8,AR070084,Rivadavia,-68.641623,-31.554233,6.0,95172.8727248921,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000d18q,8,AR070133,Zonda,-68.955571,-31.638198,6.5,652.3880682764575,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado

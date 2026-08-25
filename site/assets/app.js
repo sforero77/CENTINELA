@@ -1261,6 +1261,11 @@ function iniciarMapa() {
 // la ONU. Ese hecho responde la pregunta que se hace quien llega —¿esto sirve
 // para mi pais?— y no aparecia en ninguna pantalla.
 
+function listar(nombres) {
+  if (nombres.length <= 1) return nombres.join("");
+  return `${nombres.slice(0, -1).join(", ")} y ${nombres[nombres.length - 1]}`;
+}
+
 function porcentaje(v) {
   if (!Number.isFinite(v)) return "—";
   const signo = v > 0 ? "+" : "";
@@ -1338,14 +1343,33 @@ async function cargarCobertura(eventos) {
     }
     tabla.hidden = false;
 
+    // Un país con activo y sin reportes se lee como un hueco del sistema, y casi
+    // siempre es lo contrario: el activo está hecho y **no ha ocurrido nada**.
+    // Paraguay y Uruguay no registran un solo sismo M≥5,5 desde el año 2000.
+    // Decirlo distingue "no cubierto" de "cubierto y en silencio", que para un
+    // sistema de preparación no son lo mismo en absoluto.
     const faltan = datos.paises.filter((p) => !p.construido).map((p) => p.nombre);
-    $("cobertura-nota").textContent =
-      (faltan.length
-        ? `Falta construir ${faltan.join(", ")}. `
-        : "Todos los países cubiertos tienen su activo construido. ") +
+    const esperando = datos.paises
+      .filter((p) => p.construido && !porPais.get(p.iso3))
+      .map((p) => p.nombre);
+
+    const frases = [];
+    if (esperando.length) {
+      frases.push(
+        `${listar(esperando)} ${esperando.length === 1 ? "tiene" : "tienen"} su activo ` +
+        `construido y todavía sin reporte: ninguno ha registrado un sismo que lo ` +
+        `amerite. El activo está hecho por adelantado, que es de lo que se trata.`
+      );
+    }
+    if (faltan.length) {
+      frases.push(`Falta construir el activo de ${listar(faltan)}.`);
+    }
+    frases.push(
       "El desvío compara la población que mide el activo contra la cifra " +
       "oficial de referencia del país. Se publica aunque incomode: una " +
-      "tolerancia que nadie ve no vigila nada.";
+      "tolerancia que nadie ve no vigila nada."
+    );
+    $("cobertura-nota").textContent = frases.join(" ");
 
     return new Map(datos.paises.map((p) => [p.iso3, p.nombre]));
   } catch (error) {

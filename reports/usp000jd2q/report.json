@@ -1,0 +1,63 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "usp000jd2q",
+    "mag": 5.5,
+    "depth_km": 39.8,
+    "utc": "2012-01-05T09:35:32Z",
+    "lugar": "5 km al NNO de Baní, República Dominicana",
+    "pager_alert": "",
+    "lon": -70.361,
+    "lat": 18.325
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 0,
+    "exposure_manifest": "dom-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 0.0,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "DO0902",
+      "nombre": "Provincia Peravia",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 0.0,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T19:06:00Z",
+  "pipeline_version": "0.1.0"
+}

@@ -79,7 +79,7 @@ https://sforero77.github.io/CENTINELA/. Lo que ya funciona y lo que falta:
 | P2 contornos MMI → celdas → Ground Failure → join en DuckDB | ✅ funcional |
 | Enrutado del evento al activo del pais correcto | ✅ funcional, con reintento |
 | Toponimos en espanol (RF-06) | ✅ funcional |
-| **Catalogo historico regional** | ✅ **19 reportes en 13 paises** |
+| **Catalogo historico regional** | ✅ **21 reportes en 15 paises** |
 | **Activo de exposicion construido y publicado** | ✅ **18 de 19 paises** |
 | Visor con cobertura regional y filtro por pais | ✅ funcional |
 | Visor y `/status`, con latido del trigger publicado | ✅ funcional |
@@ -153,16 +153,29 @@ sola ciudad.
 
 ### El catalogo historico regional
 
-El Chocó no es una demostracion aislada. El sistema reconstruyo **19 sismos de
-13 paises** del catalogo real de USGS, cada uno con los productos que USGS
+El Chocó no es una demostracion aislada. El sistema reconstruyo **21 sismos de
+15 paises** del catalogo real de USGS, cada uno con los productos que USGS
 publico entonces, cada uno contra el activo de su pais:
 
 | | |
 |---|---|
-| Reportes publicados | **19**, en **13 paises** |
+| Reportes publicados | **21**, en **15 paises** |
 | Paises con activo construido y medido | **18 de 19** (falta Brasil) |
 | Personas ya en la malla hexagonal | **430,9 millones** |
 | Peor desvio contra la cifra oficial de un pais | **+4,94 %** (Venezuela, y esta explicado) |
+
+Los cuatro paises sin reporte —Bolivia, Brasil, Paraguay y Uruguay— **no son
+huecos del sistema, y no lo son por el mismo motivo**. Se busco para los cuatro:
+
+* **Paraguay y Uruguay** no registran un solo sismo M≥5,5 desde el ano 2000.
+  Su activo esta construido y esperando, que para un sistema de preparacion es
+  el estado que se persigue, no una carencia.
+* **Bolivia y Brasil** si tienen sismos —22 y 12 desde 2000— pero **todos entre
+  359 y 603 km de profundidad**. A esa profundidad la sacudida no alcanza MMI 5
+  en superficie: USGS no publica contornos para los brasilenos, y los bolivianos
+  que si los traen no producen una sola celda. Un sistema que calcula sobre
+  `cont_mmi` no tiene ahi nada que calcular, y decirlo es mas util que forzar un
+  reporte de ceros.
 
 Lo que ensena ese catalogo importa mas que su tamano: **ocho de los diecinueve
 eventos no alcanzan MMI≥7 sobre poblacion**. Son los profundos y los de mar

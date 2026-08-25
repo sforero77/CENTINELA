@@ -105,6 +105,21 @@
     "generado_utc": "2026-08-25T18:31:59Z"
   },
   {
+    "usgs_id": "us7000d18q",
+    "mag": 6.4,
+    "lugar": "26 km al SO de Pocito, Argentina",
+    "iso3": "ARG",
+    "lon": -68.7992,
+    "lat": -31.8334,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 583082.6162497867,
+    "utc": "2021-01-19T02:46:22Z",
+    "shakemap_version": 8,
+    "preliminar": false,
+    "backtest": true,
+    "generado_utc": "2026-08-25T19:03:50Z"
+  },
+  {
     "usgs_id": "us7000455l",
     "mag": 6.2,
     "lugar": "4 km al SE de Aserrío de Gariché, Panamá",
@@ -283,5 +298,20 @@
     "preliminar": false,
     "backtest": true,
     "generado_utc": "2026-08-25T17:41:50Z"
+  },
+  {
+    "usgs_id": "usp000jd2q",
+    "mag": 5.5,
+    "lugar": "5 km al NNO de Baní, República Dominicana",
+    "iso3": "DOM",
+    "lon": -70.361,
+    "lat": 18.325,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2012-01-05T09:35:32Z",
+    "shakemap_version": 1,
+    "preliminar": false,
+    "backtest": true,
+    "generado_utc": "2026-08-25T19:06:00Z"
   }
 ]

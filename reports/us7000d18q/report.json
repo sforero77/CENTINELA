@@ -1,0 +1,161 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000d18q",
+    "mag": 6.4,
+    "depth_km": 20.81,
+    "utc": "2021-01-19T02:46:22Z",
+    "lugar": "26 km al SO de Pocito, Argentina",
+    "pager_alert": "yellow",
+    "lon": -68.7992,
+    "lat": -31.8334
+  },
+  "inputs": {
+    "shakemap_version": 8,
+    "groundfailure_version": 4,
+    "exposure_manifest": "arg-v0.1"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 583082.6162497867,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "AR070077",
+      "nombre": "Rawson",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 123675.77555274963
+    },
+    {
+      "adm2_id": "AR070028",
+      "nombre": "Capital",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 122508.8541828692
+    },
+    {
+      "adm2_id": "AR070042",
+      "nombre": "Chimbas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 95694.02289914805
+    },
+    {
+      "adm2_id": "AR070084",
+      "nombre": "Rivadavia",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 95172.8727248921
+    },
+    {
+      "adm2_id": "AR070070",
+      "nombre": "Pocito",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 64987.575408427045
+    },
+    {
+      "adm2_id": "AR070098",
+      "nombre": "Santa Lucía",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 51343.15113552939
+    },
+    {
+      "adm2_id": "AR070105",
+      "nombre": "Sarmiento",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 20898.23771486897
+    },
+    {
+      "adm2_id": "AR070063",
+      "nombre": "9 De Julio",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 7463.2202634187415
+    },
+    {
+      "adm2_id": "AR070126",
+      "nombre": "25 De Mayo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 671.9175411388278
+    },
+    {
+      "adm2_id": "AR070133",
+      "nombre": "Zonda",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 652.3880682764575
+    },
+    {
+      "adm2_id": "AR070112",
+      "nombre": "Ullum",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 9.705695120152086
+    },
+    {
+      "adm2_id": "AR070007",
+      "nombre": "Albardón",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 4.8950633481144905
+    },
+    {
+      "adm2_id": "AR070091",
+      "nombre": "San Martín",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "AR070014",
+      "nombre": "Angaco",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "AR050049",
+      "nombre": "Las Heras",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 2.9,
+    "notas": []
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposicion estimada, no dano observado.",
+    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
+    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  ],
+  "generado_utc": "2026-08-25T19:03:50Z",
+  "pipeline_version": "0.1.0"
+}

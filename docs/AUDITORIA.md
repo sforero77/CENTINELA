@@ -414,6 +414,45 @@ por omision, era que no.
 a un pais construido es su `medido_ghs_pop`, que solo escribe un build de
 verdad. Brasil aparece marcado como pendiente en vez de esconderse.
 
+## A21 · Que un pais no tenga reporte no significa lo mismo en todos
+
+**Severidad:** media · **Estado:** ✅ cerrada
+
+Al buscar historicos para los seis paises que no tenian ninguno, la respuesta
+resulto ser distinta en cada caso — y el tablero los mostraba igual, como un
+hueco.
+
+**Paraguay y Uruguay no han tenido un solo sismo M≥5,5 desde el ano 2000.**
+Ninguno. Su activo esta construido, medido y esperando. Para un sistema cuyo
+proposito es estar listo por adelantado, eso no es una carencia: es exactamente
+el estado que se persigue, y presentarlo como un vacio lo cuenta al reves.
+
+**Brasil no puede tener reporte, y no es por el activo.** Sus doce sismos
+M≥5,5 desde 2000 estan todos entre 534 y 603 km de profundidad, en Acre, y
+**USGS no publica contornos MMI para ninguno**. Un sistema que calcula sobre
+`cont_mmi` no tiene nada que calcular ahi. Construir su activo sigue teniendo
+sentido —un sismo somero raro en la costa cambiaria eso en un dia— pero
+conviene decir por que su casilla de reportes esta vacia.
+
+**Argentina y Republica Dominicana si tenian eventos**, y no aparecian porque
+el primer lote se busco con umbral M6,3 —el sistema dispara a M5,5— y porque
+las cajas envolventes de Argentina y Bolivia se llenan de sismos chilenos, que
+tapaban a los suyos al ordenar por relevancia. Ya tienen reporte: Pocito 2021
+(M6,4, San Juan) y Bani 2012 (M5,5).
+
+**Bolivia resulto ser el caso de Brasil.** Sus veintidos sismos M≥5,5 desde
+2000 estan entre 359 y 596 km, y el unico con contornos publicados no produjo
+una sola celda por encima de MMI 5. No es un hueco de cobertura: es que a esa
+profundidad no hay intensidad de superficie que medir.
+
+**Y el descarte por pais se estreno en real.** De los tres eventos dominicanos
+probados, dos —ambos frente a Punta Cana, a 77 y 102 km mar adentro— salieron
+con codigo 3: el activo dominicano no los alcanza. Con el comportamiento
+anterior habrian publicado un reporte de ceros.
+
+La nota de la seccion de cobertura del visor ahora distingue los tres estados:
+construido con reportes, construido y en silencio, y sin construir.
+
 ---
 
 ## A10 · Clean Code aplicado al repositorio

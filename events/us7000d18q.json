@@ -1,0 +1,26 @@
+{
+  "usgs_id": "us7000d18q",
+  "estado": "publicado",
+  "mag": 6.4,
+  "lon": -68.7992,
+  "lat": -31.8334,
+  "depth_km": 20.81,
+  "lugar": "26 km al SO de Pocito, Argentina",
+  "origen_utc": "2021-01-19T02:46:22Z",
+  "versiones_procesadas": {
+    "shakemap": 8,
+    "groundfailure": 4
+  },
+  "timestamps": {
+    "detectado": "2026-08-25T19:02:22Z",
+    "publicado": "2026-08-25T19:03:51Z",
+    "usgs_origen": "2021-01-19T02:46:22Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2021-01-19, no una respuesta en vivo.",
+    "ShakeMap v0 -> v8"
+  ]
+}
