@@ -22,6 +22,19 @@ const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 3.2 };
 // prefiere, pero hay que verla venir. Debe coincidir con el release que fijan
 // los manifests.
 const OVERTURE_RELEASE = "2026-08-19.0";
+
+// Zoom a partir del cual entran las teselas de Overture.
+//
+// **Medido, y por eso existe el contorno propio.** Una tesela de `base` a zoom 4
+// pesa 4,3 MB y una de `divisions` a zoom 3 pesa 1,7 MB: la vista regional pedia
+// unos 6 MB para dibujar cuatro rayas. Overture tesela para el detalle, que es
+// lo correcto para lo que ella hace y desproporcionado para un continente
+// entero en mil pixeles.
+//
+// Por debajo de este zoom se dibuja `assets/latam.geojson` — 615 KB, generado
+// con `centinela contorno-latam` desde los mismos poligonos. Por encima entran
+// las teselas, que es donde su detalle vale lo que pesa.
+const ZOOM_TESELAS = 6;
 const teselas = (tema) =>
   `pmtiles://https://tiles.overturemaps.org/${OVERTURE_RELEASE}/${tema}.pmtiles`;
 
@@ -463,22 +476,42 @@ function iniciarMapa() {
       // del mapa no hay que generarlo con tippecanoe ni servirlo desde aqui.
       // Las coropletas de exposicion si son nuestras: son datos nuestros.
       sources: {
-        base: {
-          type: "vector",
-          url: teselas("base"),
+        // Contorno propio para la vista regional. Ver ZOOM_TESELAS.
+        contorno: {
+          type: "geojson",
+          data: "assets/latam.geojson",
           attribution:
             '<a href="https://overturemaps.org">Overture Maps</a> (ODbL · OpenStreetMap)',
         },
+        base: { type: "vector", url: teselas("base") },
         divisiones: { type: "vector", url: teselas("divisions") },
         vias: { type: "vector", url: teselas("transportation") },
       },
       layers: [
         { id: "fondo", type: "background", paint: { "background-color": COLOR.agua } },
         {
+          id: "contorno-tierra",
+          type: "fill",
+          source: "contorno",
+          maxzoom: ZOOM_TESELAS,
+          paint: { "fill-color": COLOR.tierra },
+        },
+        {
+          id: "contorno-borde",
+          type: "line",
+          source: "contorno",
+          maxzoom: ZOOM_TESELAS,
+          paint: {
+            "line-color": COLOR.frontera,
+            "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 6, 1.0],
+          },
+        },
+        {
           id: "tierra",
           type: "fill",
           source: "base",
           "source-layer": "land",
+          minzoom: ZOOM_TESELAS,
           paint: { "fill-color": COLOR.tierra },
         },
         {
@@ -486,6 +519,7 @@ function iniciarMapa() {
           type: "fill",
           source: "base",
           "source-layer": "water",
+          minzoom: ZOOM_TESELAS,
           paint: { "fill-color": COLOR.agua },
         },
         {
@@ -513,6 +547,7 @@ function iniciarMapa() {
           type: "line",
           source: "divisiones",
           "source-layer": "division_boundary",
+          minzoom: ZOOM_TESELAS,
           filter: ["!=", ["get", "is_disputed"], true],
           paint: {
             "line-color": COLOR.frontera,
@@ -524,6 +559,7 @@ function iniciarMapa() {
           type: "line",
           source: "divisiones",
           "source-layer": "division_boundary",
+          minzoom: ZOOM_TESELAS,
           filter: ["==", ["get", "is_disputed"], true],
           paint: {
             "line-color": COLOR.fronteraDisputada,
