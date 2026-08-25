@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-08-25T19:07:21Z",
+  "generado_utc": "2026-08-25T20:29:13Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -160,6 +160,12 @@
       "backtest": true
     }
   ],
-  "latidos": [],
+  "latidos": [
+    {
+      "utc": "2026-08-25T20:29:13Z",
+      "revisados": 14,
+      "relevantes": 0
+    }
+  ],
   "nota": "La latencia incluye la demora del cron de GitHub Actions, que el proyecto no controla y que su documentacion situa entre 5 y 30 minutos. El objetivo se define sobre lo controlable; esta cifra es el total real, sin descontar nada."
 }
