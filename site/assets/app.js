@@ -80,9 +80,11 @@ const CAPAS = {
     cortes: [6, 6.5, 7, 7.5, 8, 8.5],
     colores: ["#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#b30000", "#7f0000"],
     nota:
-      "Mercalli modificada, en pasos de media. La malla llega hasta donde hay " +
-      "algo expuesto: el hueco no es ausencia de sacudida, es ausencia de gente " +
-      "y de infraestructura.",
+      "Mercalli modificada, en pasos de media. Los hexágonos llegan hasta donde " +
+      "hay algo expuesto: el hueco no es ausencia de sacudida, es ausencia de " +
+      "gente y de infraestructura. Las líneas son los contornos del ShakeMap y " +
+      "sí marcan hasta dónde llegó el sismo, sobre tierra y sobre mar; en gris, " +
+      "los niveles por debajo de 6, que se sienten y que este sistema no cuantifica.",
   },
   pop: {
     titulo: "Población",
@@ -594,17 +596,20 @@ async function seleccionar(usgsId) {
   escribirUrl();
 
   try {
-    const [reporte, csv, celdas] = await Promise.all([
+    const [reporte, csv, celdas, contornos] = await Promise.all([
       json(`reports/${usgsId}/report.json`),
       fetch(`reports/${usgsId}/adm2.csv`).then((r) => (r.ok ? r.text() : "")),
       fetch(`reports/${usgsId}/celdas.json`).then((r) => (r.ok ? r.json() : null)),
+      // Los reportes emitidos antes de que existiera este fichero no lo traen:
+      // el tablero sigue igual, solo sin el área de afectación dibujada.
+      fetch(`reports/${usgsId}/contornos.json`).then((r) => (r.ok ? r.json() : null)),
     ]);
     pintarLateral(reporte, parsearCsv(csv));
     // El mapa va en su propio try: las cifras y las barras salen del reporte y
     // no dependen de que la malla se pueda dibujar. Antes un fallo aqui
     // borraba el titulo de un panel que ya estaba entero.
     try {
-      pintarCeldas(celdas, reporte);
+      pintarCeldas(celdas, reporte, contornos);
     } catch (errorMapa) {
       $("capas").hidden = true;
       $("leyenda").hidden = true;
@@ -952,6 +957,7 @@ function pintarDescargas(usgsId) {
     ["JSON", `${base}/report.json`],
     ["CSV municipal (HXL)", `${base}/adm2.csv`],
     ["Malla H3", `${base}/celdas.json`],
+    ["Área de afectación", `${base}/contornos.json`],
     ["Mapa PNG", `${base}/mapa_general.png`],
     ["Mapa para prensa", `${base}/mapa_prensa.png`],
     ["Hilo para redes", `${base}/hilo.txt`],
@@ -1028,14 +1034,84 @@ function quitarCapa(id) {
   m.removeSource(id);
 }
 
-function pintarCeldas(datos, reporte) {
-  const m = estado.mapa;
-  if (!m) return;
-  cuandoElEstiloEsteListo(m, () => dibujarCeldas(m, datos, reporte));
+
+// --- Area de afectacion -----------------------------------------------------
+//
+// La malla H3 dibuja donde hay **gente**: llega hasta donde hay algo expuesto y
+// se corta ahi, con huecos que son ausencia de poblacion y no de sacudida. Su
+// propia nota lo admitia, y aun asi era lo unico que el tablero enseñaba: quien
+// preguntaba "¿hasta dónde llegó el terremoto?" no tenía dónde mirarlo.
+//
+// Los contornos del ShakeMap sí son eso — la isolínea de cada nivel de
+// intensidad, sobre tierra y sobre mar, con gente o sin ella.
+//
+// Van **debajo** de la malla: donde hay hexágonos, el dato manda; fuera de
+// ellos, la línea es lo único, y es justo donde hace falta.
+
+//: Color de cada isolínea. De 6 para arriba, la rampa del sistema — la misma
+//: del mapa estático del reporte. Por debajo, un tono neutro: son niveles que
+//: se sienten y que este sistema **no cuantifica**, y pintarlos con la rampa de
+//: intensidad sugeriría que sí.
+const COLOR_CONTORNO_BAJO = "#9a8f7d";
+
+function colorDeContorno() {
+  const pasos = ["step", ["coalesce", ["get", "mmi"], 0], COLOR_CONTORNO_BAJO];
+  CAPAS.mmi.cortes.forEach((corte, i) => pasos.push(corte, CAPAS.mmi.colores[i]));
+  return pasos;
 }
 
-function dibujarCeldas(m, datos, reporte) {
+function dibujarContornos(m, datos, antes) {
+  if (!datos || !datos.features || !datos.features.length) return;
+
+  m.addSource("contornos", { type: "geojson", data: datos });
+  m.addLayer({
+    id: "contornos",
+    type: "line",
+    source: "contornos",
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: {
+      "line-color": colorDeContorno(),
+      // La isolínea de MMI 6 va más gruesa: es el umbral desde el que este
+      // sistema publica cifras, así que es la frontera que de verdad separa
+      // "aquí hay algo que contar" de "aquí no".
+      "line-width": [
+        "interpolate", ["linear"], ["zoom"],
+        4, ["case", [">=", ["get", "mmi"], 6], 1.6, 0.7],
+        9, ["case", [">=", ["get", "mmi"], 6], 3.2, 1.4],
+      ],
+      "line-opacity": ["case", [">=", ["get", "mmi"], 6], 0.95, 0.6],
+    },
+  }, antes);
+}
+
+// El area que el sistema **cuantifica**: la isolinea de MMI 6. Es la que acota
+// el encuadre, no la de MMI 4 —que en un M8 abarca medio continente y dejaria
+// la malla del tamano de un sello— ni la malla sola, que se corta donde se
+// acaba la gente.
+function extremosDeContorno(datos, minimo) {
+  const lons = [];
+  const lats = [];
+  for (const f of (datos && datos.features) || []) {
+    if (Number(f.properties.mmi) < minimo) continue;
+    for (const linea of f.geometry.coordinates) {
+      for (const [lon, lat] of linea) {
+        lons.push(lon);
+        lats.push(lat);
+      }
+    }
+  }
+  return { lons, lats };
+}
+
+function pintarCeldas(datos, reporte, contornos) {
+  const m = estado.mapa;
+  if (!m) return;
+  cuandoElEstiloEsteListo(m, () => dibujarCeldas(m, datos, reporte, contornos));
+}
+
+function dibujarCeldas(m, datos, reporte, contornos) {
   quitarCapa("celdas");
+  quitarCapa("contornos");
 
   estado.presentes = datos
     ? new Set(datos.celdas.map((c) => c[datos.columnas.indexOf("mmi")]))
@@ -1059,6 +1135,7 @@ function dibujarCeldas(m, datos, reporte) {
   m.addSource("celdas", { type: "geojson", data: geo, generateId: true });
 
   const antes = primeraEtiqueta(m);
+  dibujarContornos(m, contornos, antes);
   m.addLayer(
     {
       id: "celdas",
@@ -1118,6 +1195,13 @@ function dibujarCeldas(m, datos, reporte) {
   } else {
     estado.epicentro = null;
   }
+
+  // Y el área que el sistema cuantifica, que se sale de la malla en cuanto la
+  // sacudida cruza agua o despoblado: Guayaquil llega al golfo, y encuadrar
+  // solo los hexágonos dejaba fuera la mitad del contorno de MMI 6.
+  const borde = extremosDeContorno(contornos, 6);
+  lons.push(...borde.lons);
+  lats.push(...borde.lats);
 
   m.fitBounds(
     [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],

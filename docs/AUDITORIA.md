@@ -532,6 +532,43 @@ entenderlo. Ahora es el primer distintivo, clasificado con los cortes estandar
 de sismologia: superficial hasta 70 km, intermedio hasta 300, profundo por
 encima.
 
+## A27 · El tablero enseñaba la exposicion y la llamaba afectacion
+
+**Severidad:** alta · **Estado:** ✅ cerrada
+
+Lo pidio quien lo usa, mirando el evento de Balao: «me gustaria ver el area de
+afectacion del terremoto». No estaba.
+
+La malla H3 llega **hasta donde hay algo expuesto** y se corta ahi, con huecos
+que son ausencia de poblacion y no de sacudida. La nota de la leyenda lo
+admitia —«el hueco no es ausencia de sacudida, es ausencia de gente y de
+infraestructura»— y aun asi era lo unico que el visor dibujaba. Enseñaba **la
+forma de la poblacion recortada por el sismo**, y quien preguntaba hasta donde
+llego el terremoto no tenia donde mirarlo.
+
+Medido sobre Balao 2023: el area sentida (MMI 4) mide unos 410 km de lado y la
+que el sistema cuantifica (MMI≥6) unos 180. **Cuatro veces mas ancha**, y toda
+esa diferencia quedaba fuera del tablero.
+
+Lo mas incomodo: **el pipeline ya descargaba los contornos en cada evento** —son
+la entrada del polyfill que produce la malla— y los tiraba al terminar. El dato
+estaba, pasaba por las manos del sistema y no llegaba a ninguna pantalla.
+
+Ahora `contornos.json` viaja con cada reporte (unos 20 kB) y el visor dibuja las
+isolineas **debajo** de la malla: donde hay hexagonos manda el dato, y fuera de
+ellos la linea es lo unico — que es justo donde hacia falta. La de MMI 6 va mas
+gruesa, porque es la frontera desde la que este sistema publica cifras. Por
+debajo de 6 van en gris: son niveles que se sienten y que el sistema **no
+cuantifica**, y pintarlos con la rampa de intensidad sugeriria que si.
+
+El encuadre pasa a cubrir el contorno de MMI 6 ademas de la malla y el
+epicentro. No el de MMI 4: en un M8 abarca medio continente y dejaria la malla
+del tamaño de un sello.
+
+Los 21 reportes ya publicados se rellenaron con `centinela contornos`, que los
+trae de USGS sin recomputar el impacto — un comando y no un script de usar y
+tirar, por lo mismo que existe `regenerar-mapas`.
+
 ## Lo que se reviso y estaba bien
 
 Conviene decirlo, porque son decisiones que costaron y que la auditoria

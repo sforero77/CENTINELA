@@ -340,6 +340,22 @@ def run_impact(
             extra={"context": {"usgs_id": usgs_id, "error": str(exc)}},
         )
 
+    # El area de afectacion, que no es la de la exposicion. La malla llega hasta
+    # donde hay gente; los contornos del ShakeMap llegan hasta donde llego el
+    # sismo, sobre tierra y sobre mar. Se descargan en cada evento para el
+    # polyfill y se tiraban al terminar.
+    try:
+        from ..p3_report.contornos import write_contours_json
+
+        escritos["contornos_json"] = write_contours_json(
+            contornos, escritos["report_json"].parent / "contornos.json"
+        )
+    except Exception as exc:
+        _log.warning(
+            "no se pudieron escribir los contornos del evento",
+            extra={"context": {"usgs_id": usgs_id, "error": str(exc)}},
+        )
+
     versiones = ProcessedVersions(
         shakemap=products.shakemap_version, groundfailure=products.groundfailure_version
     )

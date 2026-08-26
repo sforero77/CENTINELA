@@ -207,6 +207,25 @@ def _cmd_regenerar_mapas(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_contornos(args: argparse.Namespace) -> int:
+    """Trae de USGS el area de afectacion de un reporte publicado, o de todos.
+
+    Los emitidos antes de que el fichero existiera no lo traen, y recomputar su
+    impacto entero para obtenerlo costaria bajar el activo de su pais.
+    """
+    from .p3_report.contornos import backfill_contours
+
+    escritos = backfill_contours(
+        args.usgs_id or "", reports_root=Path(args.reports) if args.reports else None
+    )
+    if not escritos:
+        print("No se escribio ningun contorno.", file=sys.stderr)
+        return 1
+    for evento in sorted(escritos):
+        print(escritos[evento])
+    return 0
+
+
 def _cmd_calibrar(args: argparse.Namespace) -> int:
     """Reajusta la tolerancia de los manifests con lo que midio el ultimo build.
 
@@ -398,6 +417,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_mapas.add_argument("usgs_id", nargs="?", default="", help="vacio = todos los publicados")
     p_mapas.add_argument("--reports", help="raiz de reports/")
     p_mapas.set_defaults(func=_cmd_regenerar_mapas)
+
+    p_contornos = sub.add_parser(
+        "contornos", help="trae de USGS el area de afectacion de reportes ya publicados"
+    )
+    p_contornos.add_argument("usgs_id", nargs="?", default="", help="vacio = todos")
+    p_contornos.add_argument("--reports", help="raiz de reports/")
+    p_contornos.set_defaults(func=_cmd_contornos)
 
     p_calibrar = sub.add_parser(
         "calibrar", help="reajusta la tolerancia de los manifests con lo medido"
