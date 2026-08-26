@@ -210,7 +210,7 @@ def test_nadie_espera_al_estilo_por_su_cuenta() -> None:
     lineas = [
         linea.strip()
         for linea in APP.splitlines()
-        if ('m.on("load"' in linea or "m.once(\"load\"" in linea)
+        if ('m.on("load"' in linea or 'm.once("load"' in linea)
         and not linea.strip().startswith("//")
     ]
     fuera_del_ayudante = [linea for linea in lineas if "listo" not in linea]
