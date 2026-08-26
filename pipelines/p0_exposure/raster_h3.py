@@ -17,6 +17,7 @@ de calidad de §6.4 marcaria como corruptos unos datos que estan perfectos.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -40,58 +41,94 @@ class RasterSum:
     total: float
 
 
-def raster_to_arrow(
+#: Cuantos pixeles se leen de golpe. A float32 son unos 128 MB por lectura, mas
+#: la mascara: cabe de sobra en cualquier runner y es bastante grande como para
+#: que el coste por bloque no se note.
+PIXELES_POR_BLOQUE = 32 << 20
+
+
+def _tabla_vacia() -> pa.Table:
+    """Tipada a proposito: sin tipos, DuckDB no puede unirla con las demas."""
+    return pa.table(
+        {
+            "lon": pa.array([], pa.float64()),
+            "lat": pa.array([], pa.float64()),
+            "valor": pa.array([], pa.float64()),
+        }
+    )
+
+
+def raster_blocks_to_arrow(
     path: Path,
     *,
     nodata: float | None = None,
     min_value: float = 0.0,
-) -> pa.Table:
-    """Pixeles con dato de un raster, como tabla ``(lon, lat, valor)``.
+    pixeles_por_bloque: int = PIXELES_POR_BLOQUE,
+) -> Iterator[pa.Table]:
+    """Los pixeles con dato de un raster, en bloques de filas.
 
-    Args:
-        path: GeoTIFF a leer.
-        nodata: valor de nodata. Si es ``None`` se usa el declarado en el
-            archivo; si el archivo tampoco lo declara, no se enmascara nada.
-        min_value: se descartan los pixeles por debajo de este umbral. Por
-            defecto 0: un pixel sin gente no aporta nada y multiplicaria por
-            veinte el volumen a procesar.
+    **Leer el raster entero no escala con el tamano del pais.** `src.read(1)`
+    trae toda la banda a memoria de una vez, y eso es lineal en el area:
+
+    ======  ==============  ==================
+    Pais    Pixeles         Banda + mascara
+    ======  ==============  ==================
+    COL     0,39 G          1,9 GB
+    MEX     0,86 G          4,3 GB
+    BRA     **2,57 G**      **12,8 GB**
+    ======  ==============  ==================
+
+    Un runner de GitHub tiene 16 GB. El build de Brasil murio dos veces en el
+    mismo punto —treinta y ocho segundos despues de terminar `pop_h3`, que es
+    justo cuando empieza `pop_alt_h3` con el WorldPop total del pais— y lo que
+    lo mataba era esa sola linea.
+
+    Por bloques, el pico no depende del pais: son los mismos ~128 MB para
+    Colombia que para Brasil. Y de paso abarata los diecisiete restantes.
+
+    Yields:
+        Una tabla ``(lon, lat, valor)`` por bloque con algo dentro. Los bloques
+        vacios —oceano, desierto— no se emiten.
     """
-    # Antes de tocar GDAL/PROJ: un `PROJ_LIB` del sistema tapa la base que
-    # traen las ruedas y ningun CRS se resuelve. Ver `ensure_bundled_proj`.
     ensure_bundled_proj()
 
     import rasterio
     from pyproj import Transformer
 
     with rasterio.open(path) as src:
-        banda = src.read(1)
         sin_dato = src.nodata if nodata is None else nodata
-        mascara = banda > min_value
-        if sin_dato is not None:
-            mascara &= banda != sin_dato
+        a_wgs84 = (
+            Transformer.from_crs(src.crs, "EPSG:4326", always_xy=True)
+            if src.crs and src.crs.to_string() != "EPSG:4326"
+            else None
+        )
+        filas_por_bloque = max(1, pixeles_por_bloque // max(1, src.width))
 
-        filas, columnas = np.nonzero(mascara)
-        if filas.size == 0:
-            return pa.table(
-                {
-                    "lon": pa.array([], pa.float64()),
-                    "lat": pa.array([], pa.float64()),
-                    "valor": pa.array([], pa.float64()),
-                }
-            )
+        for inicio in range(0, src.height, filas_por_bloque):
+            alto = min(filas_por_bloque, src.height - inicio)
+            ventana = rasterio.windows.Window(0, inicio, src.width, alto)
+            banda = src.read(1, window=ventana)
 
-        valores = banda[filas, columnas].astype("float64")
-        # Centro del pixel, no su esquina: desplazar media celda evita un sesgo
-        # sistematico de 50 m que a r8 puede cambiar de hexagono.
-        xs, ys = src.xy(filas, columnas)
-        xs = np.asarray(xs, dtype="float64")
-        ys = np.asarray(ys, dtype="float64")
+            mascara = banda > min_value
+            if sin_dato is not None:
+                mascara &= banda != sin_dato
 
-        if src.crs and src.crs.to_string() != "EPSG:4326":
-            a_wgs84 = Transformer.from_crs(src.crs, "EPSG:4326", always_xy=True)
-            xs, ys = a_wgs84.transform(xs, ys)
+            filas, columnas = np.nonzero(mascara)
+            if filas.size == 0:
+                continue
 
-    return pa.table({"lon": pa.array(xs), "lat": pa.array(ys), "valor": pa.array(valores)})
+            valores = banda[filas, columnas].astype("float64")
+            # Centro del pixel, no su esquina: desplazar media celda evita un
+            # sesgo sistematico de 50 m que a r8 puede cambiar de hexagono.
+            # `filas` es relativa a la ventana, asi que se le suma el origen.
+            xs, ys = src.xy(filas + inicio, columnas)
+            xs = np.asarray(xs, dtype="float64")
+            ys = np.asarray(ys, dtype="float64")
+
+            if a_wgs84 is not None:
+                xs, ys = a_wgs84.transform(xs, ys)
+
+            yield pa.table({"lon": pa.array(xs), "lat": pa.array(ys), "valor": pa.array(valores)})
 
 
 def espacio_libre_mb(ruta: Path) -> int:
@@ -141,23 +178,31 @@ def aggregate_rasters_to_h3(
     con.execute(f"CREATE TABLE {tabla} (h3_08 UBIGINT, {columna} DOUBLE)")
 
     for raster in rasters:
-        tabla_pixeles = raster_to_arrow(raster, nodata=nodata)
-        if tabla_pixeles.num_rows == 0:
+        # POR BLOQUES, NO EL RASTER ENTERO.
+        #
+        # `raster_to_arrow` traia la banda completa a memoria, y eso es lineal
+        # en el area del pais: 1,9 GB para Colombia y **12,8 GB para Brasil**,
+        # sobre un runner de 16. El build de Brasil murio dos veces por esta
+        # linea. Ver `raster_blocks_to_arrow`.
+        pixeles = 0
+        for bloque in raster_blocks_to_arrow(raster, nodata=nodata):
+            con.register("pixeles", bloque)
+            con.execute(
+                f"""
+                INSERT INTO {tabla}
+                SELECT h3_latlng_to_cell(lat, lon, {resolution}) AS h3_08,
+                       sum(valor) AS {columna}
+                FROM pixeles GROUP BY 1
+                """
+            )
+            con.unregister("pixeles")
+            pixeles += bloque.num_rows
+
+        if pixeles == 0:
             _log.info("raster sin pixeles con dato", extra={"context": {"raster": raster.name}})
+            if liberar:
+                raster.unlink(missing_ok=True)
             continue
-        con.register("pixeles", tabla_pixeles)
-        con.execute(
-            f"""
-            INSERT INTO {tabla}
-            SELECT h3_latlng_to_cell(lat, lon, {resolution}) AS h3_08,
-                   sum(valor) AS {columna}
-            FROM pixeles GROUP BY 1
-            """
-        )
-        con.unregister("pixeles")
-        # La tabla Arrow deja de hacer falta en cuanto DuckDB la copio, y con
-        # una tesela densa son cientos de megas.
-        del tabla_pixeles
 
         if liberar:
             raster.unlink(missing_ok=True)
@@ -167,6 +212,7 @@ def aggregate_rasters_to_h3(
             extra={
                 "context": {
                     "raster": raster.name,
+                    "pixeles": pixeles,
                     "liberado": liberar,
                     "disco_libre_mb": espacio_libre_mb(raster.parent),
                 }

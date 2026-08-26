@@ -149,29 +149,38 @@ O sea que **no fallo la descarga ni el timeout** —quedaban 16 minutos de los
 120— sino que el runner se murio durante el computo, tres minutos despues de
 terminar de bajar.
 
-**Confirmado el 26-ago-2026: es el disco.** La segunda corrida, con 300 minutos
-en vez de 120, murio **en el mismo sitio**: 4.293.218 celdas, 401.451.273
-habitantes, y treinta y ocho segundos despues el mismo mensaje. La anterior
-tardo 36. Determinista, y con 194 minutos de margen sin usar.
+**Era la memoria, y costo tres diagnosticos llegar.** La segunda corrida, con
+300 minutos en vez de 120, murio **en el mismo sitio**: 4.293.218 celdas,
+401.451.273 habitantes, y treinta y ocho segundos despues el mismo mensaje. La
+anterior tardo 36. Determinista, con 194 minutos de margen sin usar.
 
-El build no libera un solo raster segun los agrega —el unico `unlink` de
-`download.py` era el del ZIP de una tesela GHSL— asi que a esa altura el runner
-tenia 9,1 GB de WorldPop mas 437 MB de GHSL puestos, y DuckDB necesitaba
-derramar una tabla de 4,29 millones de celdas encima. Un runner de GitHub trae
-~14 GB libres.
+Justo despues de `pop_h3` viene `pop_alt_h3` — el WorldPop **total** del pais, un
+unico fichero— y `raster_to_arrow` hacia `src.read(1)`, que trae la banda entera
+a memoria. Eso es lineal en el area:
 
-**Cerrado con dos cosas:**
+| Pais | Pixeles | Banda + mascara en RAM | ¿Construye? |
+|---|---|---|---|
+| Colombia | 0,39 G | 1,9 GB | ✅ |
+| Mexico | 0,86 G | 4,3 GB | ✅ |
+| **Brasil** | **2,57 G** | **12,8 GB** | ❌ |
 
-- `--liberar-rasters` borra cada raster en cuanto esta agregado a H3. Un raster
-  ya sumado no se vuelve a leer. **Solo en CI**, donde el runner arranca vacio y
-  no hay reanudado que abaratar; en local sigue sin liberar, porque conservarlos
-  es lo que hace barato reanudar un build de una hora, y esa es regla dura.
-- **Se registra el disco libre** en cada raster agregado y al cerrar cada capa.
-  Costo dos corridas deducir esto porque el mensaje con que GitHub mata un
-  runner sin recursos no distingue disco de memoria. La proxima vez sera un dato.
+Un runner de GitHub tiene **16 GB**. No habia forma de que Brasil cupiera.
 
-**Queda volver a lanzarlo.** Con el arreglo, el pico de disco pasa de 9,6 GB a
-poco mas de un raster:
+**Cerrado leyendo por ventanas de filas** (`raster_blocks_to_arrow`): el pico
+deja de depender del pais —son los mismos ~128 MB para Colombia que para
+Brasil— y de paso abarata los diecisiete restantes. Una prueba comprueba sobre
+el AST que ninguna lectura vuelva a ser sin `window`, y otra que partir en
+bloques no mueva un solo pixel: `filas` es relativa a la ventana y sin sumarle
+el origen cada bloque caeria sobre el anterior.
+
+**Los dos arreglos anteriores se quedan**, aunque no fueran el bloqueo:
+`--liberar-rasters` en CI, que evita tener 9,6 GB de rasters puestos cuando
+DuckDB derrama; el `timeout-minutes` en 300; y el registro del **disco libre**
+en cada paso, que es lo que faltaba para no tener que deducir esto tres veces
+—el mensaje con que GitHub mata un runner sin recursos no distingue disco de
+memoria.
+
+**Queda volver a lanzarlo:**
 
     gh workflow run exposure_quarterly.yml -f iso3=BRA
 

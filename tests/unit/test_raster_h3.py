@@ -17,9 +17,10 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pyarrow as pa
 import pytest
 
-from pipelines.p0_exposure.raster_h3 import aggregate_rasters_to_h3, raster_to_arrow
+from pipelines.p0_exposure.raster_h3 import aggregate_rasters_to_h3, raster_blocks_to_arrow
 
 pytestmark = pytest.mark.geo
 
@@ -28,6 +29,28 @@ LON_ORIGEN, LAT_ORIGEN = -76.70, 5.72
 
 #: Lado del pixel en grados. 0,001° son unos 111 m, del orden de GHS-POP.
 PASO = 0.001
+
+
+def raster_to_arrow(path: Path, **kwargs: object) -> pa.Table:
+    """Todos los bloques de un raster en una tabla.
+
+    El pipeline **no** hace esto: consume bloque a bloque, porque juntar la
+    banda entera es lo que mataba el build de Brasil con 12,8 GB. Aqui se
+    concatena porque los rasters de prueba miden cuatro pixeles y comparar una
+    tabla es mas claro que comparar un iterador.
+    """
+    bloques = list(raster_blocks_to_arrow(path, **kwargs))  # type: ignore[arg-type]
+    return pa.concat_tables(bloques) if bloques else raster_blocks_vacio()
+
+
+def raster_blocks_vacio() -> pa.Table:
+    return pa.table(
+        {
+            "lon": pa.array([], pa.float64()),
+            "lat": pa.array([], pa.float64()),
+            "valor": pa.array([], pa.float64()),
+        }
+    )
 
 
 def _escribir_raster(

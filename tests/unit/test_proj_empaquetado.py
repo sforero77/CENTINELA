@@ -101,11 +101,11 @@ def test_toda_ruta_que_importa_gdal_aparta_el_proj_antes() -> None:
     """
     import inspect
 
-    from pipelines.p0_exposure.raster_h3 import raster_to_arrow
+    from pipelines.p0_exposure.raster_h3 import raster_blocks_to_arrow
     from pipelines.p0_exposure.sources.ghsl import tiles_for_bbox
     from pipelines.p2_impact.ground_failure import sample_rasters
 
-    for funcion in (raster_to_arrow, sample_rasters, tiles_for_bbox):
+    for funcion in (raster_blocks_to_arrow, sample_rasters, tiles_for_bbox):
         lineas = [
             linea.strip()
             for linea in inspect.getsource(funcion).splitlines()
