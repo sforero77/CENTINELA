@@ -1,17 +1,20 @@
-"""Liberar cada raster en cuanto esta agregado, y medir el disco.
+"""Que el build de un pais grande quepa: ni en memoria ni en disco.
 
-**El disco es el limite del build de un pais grande, no el tiempo.** Brasil
-murio dos veces en el mismo punto —a 1 h 43 m con un timeout de 120 min, y a
-1 h 46 m con uno de 300— treinta y ocho segundos despues de materializar
-`pop_h3` con 4.293.218 celdas. A esa altura el runner tenia 9,1 GB de WorldPop y
-437 MB de GHSL en disco, que nadie libera, y DuckDB necesitaba derramar encima.
-Un runner de GitHub trae ~14 GB libres.
+**Brasil se cayo tres veces y hubo tres diagnosticos.** Los dos primeros —el
+tiempo, y luego el disco— eran mejoras reales pero no el bloqueo. El tercero es
+la memoria: `src.read(1)` traia la banda entera de WorldPop, y eso es lineal en
+el area del pais —1,9 GB Colombia, 4,3 Mexico, **12,8 Brasil**— sobre un runner
+de 16 GB. Se lee por ventanas de filas y el pico deja de depender del pais.
 
-Costo dos corridas deducirlo porque el mensaje con que GitHub mata un runner sin
-recursos —«The runner has received a shutdown signal»— **no distingue disco de
-memoria**. Por eso aqui hay dos cosas y no una: liberar, y dejar medido cuanto
-disco quedaba en cada paso para que la proxima vez sea un dato y no una
-conjetura.
+Costo tres corridas deducirlo porque el mensaje con que GitHub mata un runner
+sin recursos —«The runner has received a shutdown signal»— **no distingue disco
+de memoria**. De ahi que aqui convivan tres cosas: liberar cada raster en cuanto
+esta agregado, dejar medido cuanto disco quedaba en cada paso, y fijar que
+ninguna lectura vuelva a traerse la banda completa.
+
+Las dos primeras se quedan aunque no fueran la causa. Veinte rasters de 453 MB
+son 9,1 GB puestos justo cuando DuckDB necesita derramar, y un runner de GitHub
+trae ~14 GB libres: sigue siendo cierto, y sigue sin sobrar.
 """
 
 from __future__ import annotations
