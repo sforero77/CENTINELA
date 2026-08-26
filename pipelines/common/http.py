@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import time
+from pathlib import Path
 from typing import Any, Protocol
 
 import httpx
@@ -22,6 +23,19 @@ USER_AGENT = "centinela/0.1 (+https://github.com/sforero77/CENTINELA) comunidad 
 
 DEFAULT_TIMEOUT_S = 30.0
 DEFAULT_RETRIES = 3
+
+#: Sufijo del archivo a medio bajar. Un corte de red, o un Ctrl+C, no puede
+#: dejar en su sitio un raster truncado: la siguiente corrida lo daria por bueno
+#: y el activo saldria sin filas al sur del pais, cuadrando todo.
+PARTIAL_SUFFIX = ".parcial"
+
+#: Trozos por delante del fichero, para no cerrar el hueco por el que se
+#: reanuda. `iter_bytes(N)` **acumula hasta N antes de ceder**, asi que un corte
+#: por debajo de N pierde todo lo que ya habia llegado; sin argumento cede lo que
+#: hay en cuanto hay algo. Lo cazo la prueba del corte a mitad.
+#:
+#: El coste de escribir a menudo lo absorbe el buffer del sistema de archivos, y
+#: el beneficio es que un corte a 300 MB de un fichero de 453 conserva los 300.
 
 
 class Fetcher(Protocol):
@@ -148,6 +162,118 @@ class HttpFetcher:
         response.raise_for_status()
         return int(response.headers.get("content-length", 0))
 
+    def download_to(self, url: str, destino: Path) -> Path:
+        """Descarga a disco **sin cargar el fichero en memoria**, y reanudable.
+
+        `get_bytes` sirve para un feed de USGS y no para un raster. La serie
+        age-sex de WorldPop de Brasil son **9,1 GB en veinte ficheros de 453 MB**
+        —la de Colombia son 600 MB— y bajarlos con `get_bytes` significa tener
+        453 MB en RAM por fichero, veinte veces, ademas de no escribir un solo
+        byte hasta que el ultimo llega. Medido: el build de Brasil paso 55
+        minutos sin tocar el disco y sin decir nada.
+
+        Tres cosas que hacen esto viable en una conexion real:
+
+        **Se escribe segun llega**, a un `.parcial`, y solo se renombra al
+        destino cuando el fichero esta entero. Es la misma garantia de
+        `write_atomic` —un corte no deja un raster truncado que la siguiente
+        corrida de por bueno— sostenida sin pasar por memoria.
+
+        **Se reanuda.** Si el `.parcial` de una corrida anterior sigue ahi, se
+        pide el resto con `Range` en vez de volver a empezar. El proyecto ya
+        dice que reanudar tiene que ser barato porque un build falla tarde; con
+        ficheros de 453 MB eso deja de valer a nivel de fichero y tiene que
+        valer dentro de el.
+
+        **Se comprueba el tamano final** contra `Content-Length`. Un servidor
+        que ignora el `Range` y responde 200 con el archivo entero produciria,
+        anadiendo, un fichero con el principio duplicado: pesa mas de la cuenta
+        y GDAL lo abre igual. Es justo la clase de fallo que este repositorio
+        persigue — plausible y equivocado.
+
+        Raises:
+            RuntimeError: si tras los reintentos no se pudo completar, o si el
+                tamano final no coincide con el declarado.
+        """
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        parcial = destino.with_name(destino.name + PARTIAL_SUFFIX)
+        esperado = 0
+        last: Exception | None = None
+
+        for attempt in range(self._retries):
+            try:
+                desde = parcial.stat().st_size if parcial.exists() else 0
+                cabeceras = {"User-Agent": USER_AGENT}
+                if desde:
+                    cabeceras["Range"] = f"bytes={desde}-"
+
+                with httpx.stream(
+                    "GET",
+                    url,
+                    timeout=self._timeout_s,
+                    follow_redirects=True,
+                    headers=cabeceras,
+                ) as respuesta:
+                    respuesta.raise_for_status()
+                    # El servidor puede ignorar el Range: entonces manda el
+                    # archivo entero y hay que empezar de cero, no anadir.
+                    reanuda = desde > 0 and respuesta.status_code == 206
+                    if desde and not reanuda:
+                        desde = 0
+                    esperado = desde + int(respuesta.headers.get("content-length", 0))
+
+                    modo = "ab" if reanuda else "wb"
+                    with parcial.open(modo) as fh:
+                        for trozo in respuesta.iter_bytes():
+                            fh.write(trozo)
+
+                escrito = parcial.stat().st_size
+                if esperado and escrito != esperado:
+                    # Un corte deja **menos** bytes de los anunciados, y esos
+                    # bytes son un prefijo valido: se conservan y el reintento
+                    # sigue desde ahi. Borrarlos —como hacia la primera version
+                    # de esto, y lo cazo su prueba— deja el reanudado inservible
+                    # justo en los ficheros de 453 MB que lo motivan.
+                    #
+                    # De **mas** bytes no se puede reanudar: lo que hay en disco
+                    # ya no es prefijo de nada conocido, asi que se descarta.
+                    if escrito > esperado:
+                        parcial.unlink(missing_ok=True)
+                    raise RuntimeError(f"{url} llego incompleto: {escrito} bytes de {esperado}.")
+                parcial.replace(destino)
+                _log.info(
+                    "descarga completa",
+                    extra={
+                        "context": {
+                            "destino": destino.name,
+                            "mb": round(escrito / 1e6, 1),
+                            "reanudada_desde_mb": round(desde / 1e6, 1) if desde else 0,
+                        }
+                    },
+                )
+                return destino
+
+            except (httpx.HTTPError, httpx.StreamError, RuntimeError) as exc:  # pragma: no cover
+                last = exc
+                delay = self._sleep * (2**attempt)
+                _log.warning(
+                    "reintento de descarga",
+                    extra={
+                        "context": {
+                            "url": url,
+                            "intento": attempt + 1,
+                            "espera_s": delay,
+                            # Lo ya bajado se conserva: el reintento sigue desde ahi.
+                            "bajado_mb": round(parcial.stat().st_size / 1e6, 1)
+                            if parcial.exists()
+                            else 0,
+                        }
+                    },
+                )
+                time.sleep(delay)
+
+        raise RuntimeError(f"No se pudo descargar {url} tras {self._retries} intentos") from last
+
 
 class FixtureFetcher:
     """Fetcher de pruebas: sirve respuestas grabadas por URL.
@@ -184,3 +310,16 @@ class FixtureFetcher:
 
     def content_length(self, url: str) -> int:
         return len(self.get_bytes(url))
+
+    def download_to(self, url: str, destino: Path) -> Path:
+        """Vuelca el contenido grabado, con el mismo contrato que el real.
+
+        Pasa por `.parcial` a proposito, aunque aqui no haya red que se corte:
+        una fixture que escribe directo al destino no ejercitaria la garantia
+        que hace segura la ruta real, y la prueba estaria mirando otra cosa.
+        """
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        parcial = destino.with_name(destino.name + PARTIAL_SUFFIX)
+        parcial.write_bytes(self.get_bytes(url))
+        parcial.replace(destino)
+        return destino

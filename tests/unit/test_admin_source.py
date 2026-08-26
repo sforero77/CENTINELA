@@ -151,7 +151,8 @@ def test_una_descarga_completa_deja_el_archivo(tmp_path: Path) -> None:
 
 
 def test_no_queda_rastro_del_parcial(tmp_path: Path) -> None:
-    from pipelines.p0_exposure.download import PARTIAL_SUFFIX, write_atomic
+    from pipelines.common.http import PARTIAL_SUFFIX
+    from pipelines.p0_exposure.download import write_atomic
 
     destino = tmp_path / "raster.tif"
     write_atomic(destino, b"contenido")
@@ -167,7 +168,8 @@ def test_una_descarga_cortada_no_ocupa_el_destino(tmp_path: Path) -> None:
     daria por bueno: un raster de poblacion a medias se abre sin error, solo le
     faltan filas.
     """
-    from pipelines.p0_exposure.download import PARTIAL_SUFFIX, write_atomic
+    from pipelines.common.http import PARTIAL_SUFFIX
+    from pipelines.p0_exposure.download import write_atomic
 
     destino = tmp_path / "raster.tif"
     parcial = tmp_path / f"raster.tif{PARTIAL_SUFFIX}"
@@ -302,7 +304,8 @@ def test_se_reconoce_un_archivo_suelto(tmp_path: Path) -> None:
 
 def test_un_parcial_no_cuenta_como_descargado(tmp_path: Path) -> None:
     """Justo lo que write_atomic existe para evitar: dar por bueno lo truncado."""
-    from pipelines.p0_exposure.download import PARTIAL_SUFFIX, _hdx_en_disco
+    from pipelines.common.http import PARTIAL_SUFFIX
+    from pipelines.p0_exposure.download import _hdx_en_disco
 
     (tmp_path / f"cod_ab_col.gpkg{PARTIAL_SUFFIX}").write_bytes(b"a medias")
     assert _hdx_en_disco(_source(), tmp_path) == []  # type: ignore[arg-type]

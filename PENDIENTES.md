@@ -238,20 +238,26 @@ GHSL bajo entero sin problema —317 MB de poblacion y 102 de superficie
 construida, en unos setenta minutos de conexion domestica— y el build se detuvo
 en WorldPop.
 
-**Dos cosas lo bloquean, y las dos son del sistema, no de la maquina:**
+Lo bloqueaban dos cosas, las dos del sistema y no de la maquina, y **las dos
+estan cerradas** desde el 25-ago-2026:
 
-1. **`download_worldpop_agesex` usa `get_bytes`**, que carga cada raster
-   **completo en memoria** antes de volcarlo. Con los 60 MB de Colombia no se
-   nota; con 453 MB por fichero, veinte veces, si.
-2. **`exposure_quarterly.yml` tiene `timeout-minutes: 120`.** Bajar 9,1 GB mas
-   los 419 MB de GHSL en dos horas exige sostener ~1,3 MB/s durante las dos
-   horas enteras. Puede que el runner de GitHub lo consiga; puede que no, y
-   fallaria al final, con la hora larga de descarga ya pagada.
+1. **`download_worldpop_agesex` usaba `get_bytes`**, que carga cada raster
+   completo en memoria antes de volcarlo. Con los 60 MB de Colombia no se nota;
+   con 453 MB por fichero, veinte veces, si. Ahora baja por **streaming y
+   reanudable** (`HttpFetcher.download_to`): escribe segun llega y, si se corta,
+   el siguiente intento sigue desde donde quedo en vez de volver al byte cero.
+2. **`exposure_quarterly.yml` tenia `timeout-minutes: 120`**, que exigiria
+   sostener 1,3 MB/s durante las dos horas enteras. Subido a 300 — cinco horas,
+   no seis: una corrida colgada tiene que seguir fallando en un plazo conocido.
 
-Lo que hace falta antes de volver a intentarlo: **descarga por streaming** en
-esa ruta (escribir a `.parcial` a medida que llegan los bytes, que es lo que
-`write_atomic` ya hace para todo lo demas) y subir el timeout de ese job para
-Brasil. Con eso se intenta en CI, que es donde este build pertenece.
+**Queda intentarlo en CI**, que es donde este build pertenece:
+
+    gh workflow run exposure_quarterly.yml -f iso3=BRA
+
+No entra solo en la corrida trimestral: esa matriz sale de los Releases
+publicados y Brasil no tiene ninguno todavia. La primera construccion de un
+pais se pide a mano a proposito — es la corrida que estrena su tolerancia y sus
+toponimos, y hay que mirarla.
 
 Y conviene saberlo aunque se construya: **Brasil no puede producir un reporte**
 con el pipeline actual. Sus doce sismos M≥5,5 desde 2000 estan entre 534 y

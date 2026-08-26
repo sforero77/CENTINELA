@@ -84,7 +84,7 @@ https://sforero77.github.io/CENTINELA/. Lo que ya funciona y lo que falta:
 | Visor con cobertura regional y filtro por pais | ✅ funcional |
 | Visor y `/status`, con latido del trigger publicado | ✅ funcional |
 | Reconstruccion trimestral de todos los activos publicados | ✅ funcional |
-| Activo de Brasil | ⏳ medido y bloqueado: 9,1 GB de WorldPop, ver `PENDIENTES.md` §2.1d |
+| Activo de Brasil | ⏳ desbloqueado; falta correrlo en CI (`PENDIENTES.md` §2.1d) |
 | Coropletas r7/r6 del visor en PMTiles | ⏳ el resto del visor funciona |
 | P4 brigada de imagen | ⏳ Fase 2 |
 

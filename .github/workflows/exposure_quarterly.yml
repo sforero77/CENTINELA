@@ -81,10 +81,20 @@ jobs:
   construir:
     needs: elegir
     runs-on: ubuntu-latest
-    # Un build de un pais grande ronda los 45 min. Con dos horas hay margen de
-    # sobra, y una corrida colgada falla en un plazo conocido en vez de ocupar
-    # el runner seis horas: el default de GitHub son 360 min.
-    timeout-minutes: 120
+    # Un build de un pais mediano ronda los 45 min y con dos horas sobraba.
+    # **Brasil no cabe en dos horas.** Medido el 25-ago-2026: 36 teselas de
+    # GHS-POP y otras 29 de superficie construida son 419 MB, y su serie age-sex
+    # de WorldPop son **9,1 GB** en veinte ficheros de 453 MB. Terminar en 120
+    # min exigiria sostener 1,3 MB/s durante las dos horas enteras, y el fallo
+    # llegaria al final, con la descarga larga ya pagada.
+    #
+    # Cinco horas, no seis: una corrida colgada tiene que seguir fallando en un
+    # plazo conocido, que es para lo que existe este limite. El default de
+    # GitHub —360 min— seria no poner ninguno.
+    #
+    # Con la descarga por streaming y reanudable, un timeout ya no tira lo
+    # bajado: el `.parcial` sobrevive y el siguiente intento sigue desde ahi.
+    timeout-minutes: 300
     strategy:
       # Un pais roto no puede impedir que se reconstruyan los demas: es
       # exactamente el caso en que hay que reconstruir los demas.

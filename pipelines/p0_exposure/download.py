@@ -31,7 +31,7 @@ from pathlib import Path
 
 from ..common.geo import BBox
 from ..common.hdx import dataset_license, map_license, resolve_attempts
-from ..common.http import HttpFetcher
+from ..common.http import PARTIAL_SUFFIX, HttpFetcher
 from ..common.licensing import LicenseViolationError
 from ..common.logging import get_logger
 from ..common.manifest import Manifest, Source
@@ -156,10 +156,6 @@ def _registrar(source: Source, path: Path) -> Descargado:
     )
 
 
-#: Sufijo del archivo a medio bajar.
-PARTIAL_SUFFIX = ".parcial"
-
-
 def write_atomic(path: Path, contenido: bytes) -> Path:
     """Escribe en un temporal y renombra al final.
 
@@ -169,6 +165,9 @@ def write_atomic(path: Path, contenido: bytes) -> Path:
     siguiente corrida da por bueno: un raster de poblacion a medias no falla al
     abrirse, simplemente le faltan filas al sur del pais. El rename solo ocurre
     cuando el contenido esta entero.
+
+    Para lo que ya esta en memoria. Un fichero que llega de la red se baja con
+    `HttpFetcher.download_to`, que da la misma garantia sin pasar por RAM.
     """
     parcial = path.with_name(path.name + PARTIAL_SUFFIX)
     parcial.write_bytes(contenido)
@@ -197,7 +196,7 @@ def download_ghsl(
             continue
         zip_path = destino / f"{tesela.name}.zip"
         try:
-            write_atomic(zip_path, fetcher.get_bytes(tesela.url))
+            fetcher.download_to(tesela.url, zip_path)
         except RuntimeError:
             _log.info(
                 "tesela ausente, probablemente solo oceano",
@@ -271,7 +270,9 @@ def download_worldpop_agesex(
         for nombre in ficheros:
             path = destino / nombre
             if not path.exists():
-                write_atomic(path, fetcher.get_bytes(worldpop.raster_url(url_directorio, nombre)))
+                # Por streaming y reanudable: los rasters de un pais grande
+                # pasan de 450 MB cada uno, y son veinte.
+                fetcher.download_to(worldpop.raster_url(url_directorio, nombre), path)
             rutas.append(path)
         _log.info(
             "banda etaria descargada",
@@ -527,7 +528,7 @@ def download_manifest(
             # Como el resto de rutas: lo que ya esta no se vuelve a pedir. Aqui
             # son 60 MB de WorldPop y 12,7 de OurAirports en cada reintento.
             if not path.exists():
-                write_atomic(path, cliente.get_bytes(source.url))
+                cliente.download_to(source.url, path)
             inventario.append(_registrar(source, path))
         else:
             _log.warning(
