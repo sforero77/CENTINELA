@@ -1313,8 +1313,15 @@ function dibujarEpicentros(eventos) {
     }
   };
 
-  if (m.isStyleLoaded()) pintar();
-  else m.on("load", pintar);
+  // Por el mismo ayudante que la malla. Tenía su propio `m.on("load", pintar)`,
+  // que es la misma carrera: si el mapa ya cargó y `isStyleLoaded()` sigue en
+  // false —mientras una fuente está en vuelo— el aviso no vuelve y los
+  // epicentros no se dibujan nunca. Visto en el sitio publicado con la caché
+  // fría: mapa base entero y ni una estrella encima.
+  //
+  // Se arregló `cuandoElEstiloEsteListo` y no se miró quién más resolvía lo
+  // mismo por su cuenta, que es el patrón que esta auditoría persigue.
+  cuandoElEstiloEsteListo(m, pintar);
 }
 
 function iniciarMapa() {

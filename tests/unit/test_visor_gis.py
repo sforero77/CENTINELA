@@ -190,3 +190,32 @@ def test_la_puerta_se_desengancha_cuando_termina() -> None:
     """Un oyente que no se quita se acumula en cada evento abierto."""
     assert 'm.off("styledata"' in APP
     assert 'm.off("idle"' in APP
+
+
+def test_nadie_espera_al_estilo_por_su_cuenta() -> None:
+    """La prueba que habria cazado el segundo sitio con el mismo fallo.
+
+    Se arreglo `cuandoElEstiloEsteListo` y no se miro quien mas resolvia lo
+    mismo a mano: `dibujarEpicentros` tenia su propio `m.on("load", pintar)` y
+    seguia perdiendose el aviso. En el sitio publicado, con la cache fria, salia
+    el mapa base entero y ni una estrella encima.
+
+    Es exactamente el patron que esta auditoria persigue —arreglar la funcion y
+    no revisar a los llamadores— cometido dentro de la propia auditoria.
+
+    La unica excepcion es el aviso de "cargando", que ademas lleva su propio
+    `setTimeout` de red de seguridad: si el mapa no carga, hay que quitarlo
+    igual.
+    """
+    lineas = [
+        linea.strip()
+        for linea in APP.splitlines()
+        if ('m.on("load"' in linea or "m.once(\"load\"" in linea)
+        and not linea.strip().startswith("//")
+    ]
+    fuera_del_ayudante = [linea for linea in lineas if "listo" not in linea]
+
+    assert fuera_del_ayudante == [], (
+        f"Estas esperan al estilo por su cuenta en vez de usar "
+        f"`cuandoElEstiloEsteListo`: {fuera_del_ayudante}"
+    )
