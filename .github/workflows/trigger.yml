@@ -46,6 +46,10 @@ concurrency:
 jobs:
   vigilar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # Para republicar el visor tras el push. Ver "Republicar el visor".
+      actions: write
     # Los forks no deben disparar reportes: es el comportamiento por defecto de
     # GitHub para schedules, y aqui es exactamente lo que queremos (RNF-07).
     if: github.repository == 'sforero77/CENTINELA'
@@ -83,6 +87,7 @@ jobs:
       # escritura, y dos pushes con rebase compitiendo por la misma rama es el
       # problema que este paso ya resuelve una vez.
       - name: Publicar estado y latido
+        id: publicar
         if: ${{ !inputs.dry_run }}
         env:
           # Via env, no por interpolacion en el shell: los ids vienen de un
@@ -120,10 +125,36 @@ jobs:
           # P2 empuja a la misma rama; sin rebase, dos jobs concurrentes se
           # rechazan mutuamente y se pierde el estado del evento.
           for intento in 1 2 3 4; do
-            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+            if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then
+              echo "publicado=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
             sleep $((2 ** intento))
           done
           exit 1
+
+      # UN PUSH HECHO CON `GITHUB_TOKEN` NO DISPARA OTROS WORKFLOWS.
+      #
+      # Es una regla de GitHub para evitar bucles infinitos, y aqui rompia la
+      # cadena entera sin que nada fallara: `site.yml` escucha `push` sobre
+      # `site/**`, el latido commitea `site/status.json` cada hora, y aun asi el
+      # visor llevaba desde las 04:03 del 26-ago sin republicar — diecisiete
+      # latidos commiteados que la pagina publica no enseñaba. `/status` en vivo
+      # se quedo en el latido de las 02:53.
+      #
+      # Todo verde en los dos workflows. El fallo estaba en el hueco entre
+      # ellos, que es donde esta auditoria lleva encontrandolos desde el primer
+      # dia: escrito no es conectado.
+      #
+      # `workflow_dispatch` es la excepcion documentada a esa regla, y es el
+      # mismo mecanismo con el que este workflow ya dispara P2 unas lineas mas
+      # abajo. No hace falta un PAT.
+      - name: Republicar el visor
+        if: steps.publicar.outputs.publicado == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run site.yml
 
       # Latido para el monitor externo. Si deja de llegar, el equipo recibe
       # alerta en 30 min (§6.5) — la desactivacion silenciosa del cron es el

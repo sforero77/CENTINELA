@@ -22,6 +22,8 @@ on:
 
 permissions:
   contents: write
+  # Para republicar el visor tras el push. Ver "Republicar el visor".
+  actions: write
   # Sin esto el manejador de fallos no puede abrir el issue, que es toda su
   # razon de ser. No estaba.
   issues: write
@@ -138,6 +140,7 @@ jobs:
           exit 1
 
       - name: Publicar artefactos
+        id: publicar
         if: success()
         run: |
           git config user.name "centinela-bot"
@@ -198,17 +201,49 @@ jobs:
             GIT_EDITOR=true git rebase --continue
           }
 
+          # El push es la unica salida buena, y hay dos caminos que llegan a
+          # el. Que los dos avisen de lo mismo, en vez de que uno se olvide.
+          publicado() {
+            echo "publicado=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
           for intento in 1 2 3 4; do
             if git pull --rebase origin "${GITHUB_REF_NAME}"; then
-              git push && exit 0
+              git push && publicado
             elif regenerar_derivados; then
-              git push && exit 0
+              git push && publicado
             else
               git rebase --abort || true
             fi
             sleep $((2 ** intento))
           done
           exit 1
+
+      # UN PUSH HECHO CON `GITHUB_TOKEN` NO DISPARA OTROS WORKFLOWS.
+      #
+      # Regla de GitHub contra los bucles infinitos, y aqui era el fallo mas
+      # caro del sistema: este paso commitea `reports/`, `site.yml` escucha
+      # `reports/**`, y el visor no se enteraba. **Un reporte de un sismo real
+      # se habria publicado en el repositorio y no habria aparecido nunca en la
+      # pagina.**
+      #
+      # Nada fallaba: los dos workflows en verde y el reporte correcto en su
+      # sitio. El fallo vivia en el hueco entre ellos.
+      #
+      # Se descubrio el 26-ago-2026 tirando del hilo de por que un M4,9 sentido
+      # en Colombia no se veia en el visor. `/status` en vivo llevaba diecisiete
+      # horas congelado y nadie lo habia notado, porque hasta hoy ningun sismo
+      # habia llegado a reporte por esta via.
+      #
+      # `workflow_dispatch` es la excepcion documentada a la regla, y es el
+      # mismo mecanismo con el que P1 dispara este workflow.
+      - name: Republicar el visor
+        if: steps.publicar.outputs.publicado == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run site.yml
 
 
       # RNF-03: si el contrato USGS se rompe, el pipeline degrada y deja

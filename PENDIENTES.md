@@ -384,6 +384,35 @@ Bajar de 4,5 obliga a `all_hour` y multiplica el volumen; no se hace ahora.
 
 ---
 
+### 3.y El visor llevaba 17 horas congelado · cerrado el 26-ago-2026
+
+Salio de tirar del hilo de por que el M4,9 de Jordan no se veia. **Un push hecho
+con `GITHUB_TOKEN` no dispara otros workflows** — regla de GitHub contra los
+bucles infinitos.
+
+`site.yml` escucha `push` sobre `site/**`, `reports/**` y `data/manifests/**`.
+Los dos workflows que escriben ahi empujan con ese token. Resultado: el ultimo
+despliegue del visor era de las **04:03**, con siete latidos posteriores ya
+commiteados, y `/status` en vivo mostrando el de las **02:53**.
+
+**Lo caro no era el latido.** P2 commitea `reports/` con el mismo token: **un
+reporte de un sismo real se habria publicado en el repositorio sin llegar nunca
+a la pagina**. No se habia notado porque ningun sismo habia llegado a reporte por
+esa via — los veintiuno del catalogo se reconstruyeron a mano.
+
+Los dos workflows en verde, el artefacto correcto en su sitio, y el fallo
+viviendo en el hueco entre ellos: la misma forma que el resto de esta auditoria.
+
+Cerrado con `gh workflow run site.yml` tras el push —`workflow_dispatch` es la
+excepcion documentada a la regla, y es el mismo mecanismo con el que P1 ya
+dispara P2— mas `actions: write` en los dos jobs. Sin PAT.
+
+El guardia esta en `tests/unit/test_el_visor_se_republica.py`, y **deriva las
+rutas del propio `site.yml`**: escritas a mano se quedan viejas, y un guardia con
+la lista desactualizada da un verde peor que no tener guardia.
+
+---
+
 ## 4. Fases siguientes
 
 **Fase 2 — Brigada de imagen.** T2.1, T2.2 y T2.3 cerradas el 24-ago-2026 con
