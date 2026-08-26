@@ -123,9 +123,9 @@ cosa, porque este documento es la lista de trabajo y no el registro de lo hecho.
 
 ### 2.1 Brasil, el pais 19
 
-Es el unico de los diecinueve sin activo, y no por falta de intento. **El
-26-ago-2026 hay una corrida en marcha**; lo que sigue es lo que se sabe de la
-anterior.
+Es el unico de los diecinueve sin activo, y no por falta de intento: fallo dos
+veces, el 25 y el 26 de agosto. **La causa esta confirmada y arreglada; falta
+volver a lanzarlo.**
 
 **Brasil es el pais mas caro con diferencia:**
 
@@ -149,27 +149,31 @@ O sea que **no fallo la descarga ni el timeout** —quedaban 16 minutos de los
 120— sino que el runner se murio durante el computo, tres minutos despues de
 terminar de bajar.
 
-**La causa mas probable es el disco.** El build no libera un solo raster segun
-los agrega: el unico `unlink` de `download.py` es el del ZIP de una tesela GHSL.
-A esa altura tenia 9,1 GB de WorldPop mas 437 MB de GHSL en disco, y un runner
-de GitHub trae ~14 GB libres — con DuckDB derramando encima para una tabla de
-4,29 millones de celdas.
+**Confirmado el 26-ago-2026: es el disco.** La segunda corrida, con 300 minutos
+en vez de 120, murio **en el mismo sitio**: 4.293.218 celdas, 401.451.273
+habitantes, y treinta y ocho segundos despues el mismo mensaje. La anterior
+tardo 36. Determinista, y con 194 minutos de margen sin usar.
 
-Es una hipotesis, no una medicion: el mensaje de GitHub no distingue disco de
-memoria. **La corrida en curso la confirma o la descarta**, porque lleva el
-mismo codigo con 300 minutos en vez de 120: si muere en el mismo sitio, es
-recurso.
+El build no libera un solo raster segun los agrega —el unico `unlink` de
+`download.py` era el del ZIP de una tesela GHSL— asi que a esa altura el runner
+tenia 9,1 GB de WorldPop mas 437 MB de GHSL puestos, y DuckDB necesitaba
+derramar una tabla de 4,29 millones de celdas encima. Un runner de GitHub trae
+~14 GB libres.
 
-**Si se confirma**, el arreglo es liberar cada raster en cuanto esta agregado en
-H3. En CI no cuesta nada —el runner arranca vacio cada vez— y en local conviene
-conservarlos para que reanudar siga siendo barato, asi que va como opcion que CI
-activa y el uso local no.
+**Cerrado con dos cosas:**
 
-**Lo que ya se arreglo pensando que era el bloqueo**, y que sigue siendo bueno
-aunque no lo fuera: `download_worldpop_agesex` cargaba cada raster **completo en
-memoria** antes de volcarlo, y ahora baja por streaming y reanudable
-(`HttpFetcher.download_to`); y el `timeout-minutes` del job paso de 120 a 300,
-que era justo lo que dejaba solo 19 minutos para el computo.
+- `--liberar-rasters` borra cada raster en cuanto esta agregado a H3. Un raster
+  ya sumado no se vuelve a leer. **Solo en CI**, donde el runner arranca vacio y
+  no hay reanudado que abaratar; en local sigue sin liberar, porque conservarlos
+  es lo que hace barato reanudar un build de una hora, y esa es regla dura.
+- **Se registra el disco libre** en cada raster agregado y al cerrar cada capa.
+  Costo dos corridas deducir esto porque el mensaje con que GitHub mata un
+  runner sin recursos no distingue disco de memoria. La proxima vez sera un dato.
+
+**Queda volver a lanzarlo.** Con el arreglo, el pico de disco pasa de 9,6 GB a
+poco mas de un raster:
+
+    gh workflow run exposure_quarterly.yml -f iso3=BRA
 
 **Y aunque se construya, Brasil no puede producir un reporte** con el pipeline
 actual. Sus doce sismos M≥5,5 desde 2000 estan entre 534 y 603 km de

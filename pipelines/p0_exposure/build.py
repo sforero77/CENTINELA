@@ -664,6 +664,7 @@ def build_country(
     manifests_dir: Path | None = None,
     out_dir: Path,
     con: Any | None = None,
+    liberar_rasters: bool = False,
 ) -> Path:
     """Construye el activo completo de un pais, de la descarga al parquet.
 
@@ -725,7 +726,9 @@ def build_country(
     for tabla, (capa, columna) in RASTER_LAYERS.items():
         rasters = [p for p in por_capa.get(capa, []) if p.suffix in (".tif", ".tiff")]
         if rasters:
-            aggregate_rasters_to_h3(conexion, rasters, tabla=tabla, columna=columna)
+            aggregate_rasters_to_h3(
+                conexion, rasters, tabla=tabla, columna=columna, liberar=liberar_rasters
+            )
 
     for tabla, (capa, columna) in POINT_LAYERS.items():
         fuentes = [str(p) for p in por_capa.get(capa, [])]
@@ -733,7 +736,9 @@ def build_country(
             aggregate_points_to_h3(conexion, fuentes, tabla=tabla, columna=columna)
 
     for columna, rutas in age_rasters_by_column(por_capa.get(AGESEX_LAYER, [])).items():
-        aggregate_rasters_to_h3(conexion, rutas, tabla=f"{columna}_h3", columna=columna)
+        aggregate_rasters_to_h3(
+            conexion, rutas, tabla=f"{columna}_h3", columna=columna, liberar=liberar_rasters
+        )
 
     # Overture no pasa por disco: son 277 GB de los que Colombia usa once
     # ficheros, y DuckDB los lee por HTTPS podando por la columna `bbox`.

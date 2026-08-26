@@ -100,7 +100,11 @@ def _cmd_impact(args: argparse.Namespace) -> int:
 
 def _cmd_country(args: argparse.Namespace) -> int:
     """P0: reconstruye el activo de exposicion de un pais."""
-    out = build_country(args.iso3, out_dir=Path(args.out or BUILD_DIR))
+    out = build_country(
+        args.iso3,
+        out_dir=Path(args.out or BUILD_DIR),
+        liberar_rasters=args.liberar_rasters,
+    )
     print(out)
     return 0
 
@@ -381,6 +385,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_country = sub.add_parser("country", help="P0: construye exposure_h3 de un pais")
     p_country.add_argument("iso3")
     p_country.add_argument("--out", help="directorio de salida")
+    p_country.add_argument(
+        "--liberar-rasters",
+        action="store_true",
+        help=(
+            "borra cada raster en cuanto esta agregado a H3. Para CI, donde el "
+            "runner arranca vacio y el disco es el limite; en local conviene no "
+            "usarlo, porque conservarlos es lo que hace barato reanudar"
+        ),
+    )
     p_country.set_defaults(func=_cmd_country)
 
     p_lint = sub.add_parser("lint-manifests", help="valida licencias y vintages")

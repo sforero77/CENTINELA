@@ -126,8 +126,20 @@ jobs:
             echo "::error::ISO3 invalido: $ISO3"; exit 1;
           }
 
+      # `--liberar-rasters` borra cada raster en cuanto esta agregado a H3.
+      #
+      # EL DISCO ES EL LIMITE DE ESTE JOB, NO EL TIEMPO. Brasil murio dos veces
+      # en el mismo punto —a 1h43m y a 1h46m, con timeouts de 120 y 300 min— 38
+      # segundos despues de materializar `pop_h3` con 4,29 millones de celdas.
+      # A esa altura el runner tenia 9,1 GB de WorldPop y 437 MB de GHSL en
+      # disco, que nadie libera, y DuckDB necesitaba derramar encima. Un runner
+      # de GitHub trae ~14 GB.
+      #
+      # Aqui no se pierde nada al borrarlos: el runner arranca vacio en cada
+      # corrida, asi que no hay reanudado que abaratar. En local es al reves y
+      # por eso la opcion no viene puesta por defecto.
       - name: Construir exposure_h3
-        run: uv run centinela country "$ISO3"
+        run: uv run centinela country "$ISO3" --liberar-rasters
 
       - name: Publicar Release versionado
         env:

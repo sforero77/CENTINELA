@@ -94,6 +94,22 @@ def raster_to_arrow(
     return pa.table({"lon": pa.array(xs), "lat": pa.array(ys), "valor": pa.array(valores)})
 
 
+def espacio_libre_mb(ruta: Path) -> int:
+    """Megabytes libres en el disco donde vive `ruta`.
+
+    Existe porque el mensaje con que GitHub mata un runner sin recursos
+    —«The runner has received a shutdown signal»— **no distingue disco de
+    memoria**, y sin esa distincion el diagnostico de un build caido es una
+    conjetura. Brasil se cayo dos veces en el mismo punto y hubo que deducirlo.
+    """
+    import shutil
+
+    try:
+        return shutil.disk_usage(ruta).free // (1 << 20)
+    except OSError:  # pragma: no cover - depende del sistema de archivos
+        return -1
+
+
 def aggregate_rasters_to_h3(
     con: Any,
     rasters: list[Path],
@@ -102,11 +118,24 @@ def aggregate_rasters_to_h3(
     columna: str,
     resolution: int = H3_RES_COMPUTE,
     nodata: float | None = None,
+    liberar: bool = False,
 ) -> RasterSum:
     """Suma varios rasters a celdas H3 y materializa ``tabla(h3_08, columna)``.
 
     Los rasters se procesan de uno en uno: nueve teselas de 100 millones de
     pixeles no caben simultaneamente en memoria de un runner.
+
+    Args:
+        liberar: borra cada raster **en cuanto esta agregado**. Un raster ya
+            sumado a la tabla H3 no se vuelve a leer, asi que conservarlo solo
+            ocupa disco — y en Brasil eso son 9,1 GB de WorldPop mas 437 MB de
+            GHSL que siguen ahi cuando DuckDB necesita derramar una tabla de
+            4,29 millones de celdas, sobre un runner con ~14 GB libres.
+
+            Por defecto **no** libera: en local, conservarlos es lo que hace
+            que reanudar un build de una hora sea barato, que es una regla dura
+            del proyecto. En CI el runner arranca vacio cada vez y no hay nada
+            que reanudar, asi que ahi si conviene.
     """
     con.execute(f"DROP TABLE IF EXISTS {tabla}")
     con.execute(f"CREATE TABLE {tabla} (h3_08 UBIGINT, {columna} DOUBLE)")
@@ -126,9 +155,22 @@ def aggregate_rasters_to_h3(
             """
         )
         con.unregister("pixeles")
+        # La tabla Arrow deja de hacer falta en cuanto DuckDB la copio, y con
+        # una tesela densa son cientos de megas.
+        del tabla_pixeles
+
+        if liberar:
+            raster.unlink(missing_ok=True)
+
         _log.info(
             "raster agregado",
-            extra={"context": {"raster": raster.name, "pixeles": tabla_pixeles.num_rows}},
+            extra={
+                "context": {
+                    "raster": raster.name,
+                    "liberado": liberar,
+                    "disco_libre_mb": espacio_libre_mb(raster.parent),
+                }
+            },
         )
 
     # Una celda puede recibir pixeles de dos teselas vecinas: consolidar.
@@ -141,6 +183,13 @@ def aggregate_rasters_to_h3(
     celdas, total = con.execute(f"SELECT count(*), sum({columna}) FROM {tabla}").fetchone()
     _log.info(
         "agregacion completa",
-        extra={"context": {"tabla": tabla, "celdas": celdas, "total": total}},
+        extra={
+            "context": {
+                "tabla": tabla,
+                "celdas": celdas,
+                "total": total,
+                "disco_libre_mb": espacio_libre_mb(rasters[0].parent if rasters else Path()),
+            }
+        },
     )
     return RasterSum(tabla=tabla, celdas=int(celdas), total=float(total or 0.0))
