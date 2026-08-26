@@ -9,6 +9,8 @@ const INDICE_REPORTES = "reports/index.json";
 // Que paises puede atender el sistema. Sale de los manifests, asi que no
 // puede prometer mas paises de los que se construyeron de verdad.
 const COBERTURA = "cobertura.json";
+//: Sismos vistos y no despachados, ventana movil de cinco dias.
+const OBSERVADOS = "observados.json";
 
 // Encuadre inicial: la ventana LATAM del sistema (RF-01).
 const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 3.1 };
@@ -35,6 +37,10 @@ const ESTILO_BASE = "https://tiles.openfreemap.org/styles/positron";
 const BASE_TIERRA = "#ece9de";
 const BASE_AGUA = "#b7cdc9";
 const EPICENTRO = "#8f2c14";
+// Gris de tinta, deliberadamente fuera de la rampa de MMI. Esa rampa
+// significa «impacto medido»; prestarsela a un sismo que nadie midio la
+// vaciaria de sentido.
+const OBSERVADO = "#6b6660";
 
 const REDUCIR_MOVIMIENTO =
   window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -423,6 +429,7 @@ async function cargarEventos() {
     });
     pintarPanorama(eventos);
     dibujarEpicentros(eventos);
+    cargarObservados();
 
     // La cobertura primero: da los nombres de pais que necesita el filtro, y
     // asi el mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica.
@@ -1632,3 +1639,111 @@ function pintarFiltroPaises(eventos, nombres) {
 
 estado.mapa = iniciarMapa();
 cargarEventos();
+
+
+// --- Sismos vistos y no despachados ----------------------------------------
+//
+// El 26-ago-2026 un M4,9 bajo Jordan, Santander, se sintio en media Colombia.
+// El sistema lo vio a los doce minutos y decidio bien —`M4.9 < umbral M5.5`—
+// pero esa decision solo existia en un log de CI. Desde el visor, «lo vi y es
+// inofensivo» y «estoy roto» se veian exactamente igual.
+//
+// Esta capa no baja el umbral. Enseña lo que hay por debajo, y su trabajo de
+// diseño es **no parecer una alarma**: un punto en un mapa se lee como alarma
+// diga lo que diga el pie. De ahi que sea gris, hueca, pequeña, sin halo, sin
+// etiqueta, y apagada de entrada.
+async function cargarObservados() {
+  let datos;
+  try {
+    datos = await json(OBSERVADOS);
+  } catch (error) {
+    // Todavia no hay latido que lo haya escrito. No es un fallo del visor.
+    console.info("observados:", error);
+    return;
+  }
+  const eventos = (datos && datos.eventos) || [];
+  if (!eventos.length) return;
+
+  dibujarObservados(eventos);
+  pintarInterruptorObservados(eventos, datos.ventana_dias);
+}
+
+function dibujarObservados(eventos) {
+  const m = estado.mapa;
+  if (!m) return;
+
+  const pintar = () => {
+    if (m.getSource("observados")) return;
+    m.addSource("observados", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: eventos.map((e) => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [e.lon, e.lat] },
+          properties: {
+            usgs_id: e.usgs_id,
+            mag: e.mag,
+            lugar: e.lugar,
+            depth_km: e.depth_km,
+            origen_utc: e.origen_utc,
+            razon: e.razon,
+          },
+        })),
+      },
+    });
+    m.addLayer({
+      id: "observados",
+      type: "circle",
+      source: "observados",
+      layout: { visibility: "none" },
+      paint: {
+        // Hueco y pequeño: crece con la magnitud, pero dentro de un rango tan
+        // estrecho que ningun punto puede competir con una estrella.
+        "circle-radius": ["interpolate", ["linear"], ["get", "mag"], 4.5, 3.5, 5.4, 6],
+        "circle-color": "transparent",
+        "circle-stroke-color": OBSERVADO,
+        "circle-stroke-width": 1.4,
+        "circle-stroke-opacity": 0.75,
+      },
+    });
+
+    m.on("mouseenter", "observados", () => (m.getCanvas().style.cursor = "help"));
+    m.on("mouseleave", "observados", () => (m.getCanvas().style.cursor = ""));
+    m.on("click", "observados", (ev) => {
+      const p = ev.features[0].properties;
+      new maplibregl.Popup({ closeButton: true, maxWidth: "300px" })
+        .setLngLat(ev.lngLat)
+        .setHTML(
+          `<div class="popup-observado">` +
+            `<strong>M${String(p.mag).replace(".", ",")}</strong> · ${escapar(p.lugar)}<br>` +
+            `<span class="menor">${comoFecha(p.origen_utc)} · ${numero(p.depth_km)} km de profundidad</span>` +
+            `<p class="nota-observado">No se midió su impacto. ${escapar(p.razon)}.</p>` +
+          `</div>`
+        )
+        .addTo(m);
+    });
+  };
+
+  cuandoElEstiloEsteListo(m, pintar);
+}
+
+function pintarInterruptorObservados(eventos, ventanaDias) {
+  const anfitrion = $("controles-mapa") || $("leyenda") || $("mapa");
+  if (!anfitrion || $("interruptor-observados")) return;
+
+  const caja = document.createElement("label");
+  caja.className = "interruptor-observados";
+  caja.id = "interruptor-observados";
+  caja.innerHTML =
+    `<input type="checkbox"> ` +
+    `<span>Sismos menores vistos <span class="menor">` +
+    `(${eventos.length} en ${ventanaDias || 5} días, sin reporte)</span></span>`;
+  anfitrion.appendChild(caja);
+
+  caja.querySelector("input").addEventListener("change", (ev) => {
+    const m = estado.mapa;
+    if (!m || !m.getLayer("observados")) return;
+    m.setLayoutProperty("observados", "visibility", ev.target.checked ? "visible" : "none");
+  });
+}

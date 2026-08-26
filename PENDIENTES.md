@@ -282,6 +282,23 @@ cumple, se documenta y se cierra; si no, se cambia el metodo.
 
 ---
 
+### 2.7 Haiti no existe en este proyecto
+
+**No tiene manifiesto, no estaba en esta lista, y no aparecia en la auditoria.**
+Se cayo de la lista de los veinte en algun momento y nadie lo noto — yo tampoco,
+en toda la auditoria del 25-ago.
+
+Y es la omision mas grave posible en esta region. Puerto Principe 2010, M7,0:
+entre 100.000 y 300.000 muertos, el terremoto mas letal de la historia de
+America. Nippes 2021, M7,2: 2.200 mas. Haiti esta sobre la falla de
+Enriquillo-Plantain Garden y comparte isla con Republica Dominicana, que **si**
+tenemos. Un sistema de exposicion sismica para LATAM que cubre la mitad de La
+Espanola es dificil de defender.
+
+Hace falta `data/manifests/HTI.yaml` y una corrida de `exposure_quarterly`.
+
+---
+
 ## 3. Cerrado, y donde esta el detalle
 
 Lo que este documento listaba como pendiente y ya no lo esta. Cada linea tiene
@@ -322,6 +339,48 @@ que nadie lo vuelva a abrir por costumbre.
 - La celda no se podia citar: el indice H3 no llegaba a la ficha.
 - El tablero enseñaba la exposicion y la llamaba afectacion; los contornos del
   ShakeMap se descargaban en cada evento y se tiraban.
+
+---
+
+### 3.x Sismos vistos y no despachados · cerrado el 26-ago-2026
+
+El caso que lo motivo fue real: un **M4,9 a 160 km bajo Jordan, Santander**, el
+26-ago a las 16:45 UTC, sentido en media Colombia. El sistema lo vio a las
+16:57:38 —**doce minutos y cuarenta y un segundos despues**— lo evaluo, y
+decidio bien: `M4.9 < umbral M5.5`.
+
+Pero esa decision solo existia en un log de CI. Desde el visor, **«lo vi y es
+inofensivo» y «estoy roto» se veian exactamente igual**. Un vigia que no puede
+demostrar que estuvo mirando no se distingue de uno apagado.
+
+**El umbral no se toco.** M5.5 sigue siendo lo que dispara un reporte. Lo que
+cambia es que por debajo se *registra* en vez de *olvidar*: `site/observados.json`,
+ventana movil de **5 dias**, y una capa gris apagable en el visor.
+
+Tres reglas lo sostienen, y cada una tiene pruebas:
+
+1. **Esquema aparte, no un reporte degradado.** `EventoObservado` no tiene un
+   solo campo de impacto, y una prueba lo comprueba campo por campo. Publicar
+   `pop_mmi7p: 0` seria un falso negativo con aspecto de dato: ausencia de
+   medicion no es medicion de cero.
+2. **Peso visual de «esto no es una alarma».** Gris fuera de la rampa de MMI,
+   hueco, pequeno, sin etiqueta, sin halo, y apagado de entrada. La rampa
+   significa «impacto medido»; prestarsela lo vaciaria de sentido — es el riesgo
+   §7 en su forma visual.
+3. **Solo LATAM, y caduca.** Los feeds del USGS son mundiales: sin filtro, la
+   capa seria un sismografo global. Se registran solo los sismos que el filtro
+   descarto **unicamente por tamano**, preguntandole otra vez con el umbral en
+   cero.
+
+Medido antes de decidir: **277 sismos M4,5-5,5 en LATAM en 90 dias** (~3,1/dia,
+~15 puntos a la vez con la ventana de 5 dias) frente a 23 M≥5,5 — de los cuales
+**los 23 tuvieron ShakeMap**, asi que el caso «pasa el umbral y no hay producto»
+que RF-03 ya cubre por radios es raro de verdad.
+
+**Limite conocido, escrito para no descubrirlo despues:** el piso real es
+**M4,5**, porque es lo que dan `4.5_hour` y `4.5_day`. Un M4,2 superficial bajo
+una ciudad hace mas dano que el M4,9 a 160 km de Jordan, y ese no se veria.
+Bajar de 4,5 obliga a `all_hour` y multiplica el volumen; no se hace ahora.
 
 ---
 

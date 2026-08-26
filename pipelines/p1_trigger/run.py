@@ -17,6 +17,7 @@ from ..common.logging import get_logger
 from ..common.state import EventState, EventStatus, utcnow_iso
 from .feed import EventCandidate, fetch_feed
 from .filters import evaluate
+from .observados import EventoObservado
 
 _log = get_logger(__name__)
 
@@ -32,6 +33,10 @@ class TriggerResult:
     #: Eventos ya conocidos, re-verificados por si hay nueva version de
     #: producto. P2 decide si hay trabajo real (RF-04).
     revisitados: list[str] = field(default_factory=list)
+    #: Sismos de LATAM vistos y no despachados por quedar bajo el umbral. No se
+    #: despachan, pero se publican: el vigia tiene que poder demostrar que
+    #: estuvo mirando.
+    observados: list[EventoObservado] = field(default_factory=list)
     latido_utc: str = field(default_factory=utcnow_iso)
 
     @property
@@ -79,6 +84,10 @@ def run_trigger(
                     "evento descartado",
                     extra={"context": {"usgs_id": candidate.usgs_id, "razon": decision.razon}},
                 )
+                if _solo_le_falto_magnitud(candidate, bbox):
+                    result.observados.append(
+                        EventoObservado.desde_candidato(candidate, decision.razon)
+                    )
                 continue
             result.relevantes += 1
             _classify(candidate, result, events_dir=events_dir, dry_run=dry_run)
@@ -89,12 +98,28 @@ def run_trigger(
             "context": {
                 "revisados": result.revisados,
                 "relevantes": result.relevantes,
+                "observados": len(result.observados),
                 "nuevos": result.nuevos,
                 "revisitados": result.revisitados,
             }
         },
     )
     return result
+
+
+def _solo_le_falto_magnitud(candidate: EventCandidate, bbox: BBox) -> bool:
+    """¿Es un sismo de LATAM que solo se descarto por ser pequeno?
+
+    Los feeds del USGS son **mundiales**: de los catorce candidatos de una
+    corrida tipica, la mayoria se descartan por caer fuera del bbox. Publicar
+    esos convertiria la capa en un sismografo global y taparia lo unico que le
+    importa a este sistema.
+
+    Se resuelve volviendo a preguntarle al filtro con el umbral en cero. Si asi
+    pasa, lo unico que le sobraba era el tamano. Preferible a inspeccionar el
+    texto de la razon, que es prosa para un log y puede cambiar.
+    """
+    return bool(evaluate(candidate, bbox=bbox, min_magnitude=0.0))
 
 
 def _classify(

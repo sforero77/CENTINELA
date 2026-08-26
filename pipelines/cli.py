@@ -20,6 +20,7 @@ from .common.paths import BUILD_DIR, MANIFESTS_DIR
 from .common.state import EventState
 from .common.status import write_status
 from .p0_exposure.build import build_country
+from .p1_trigger.observados import fusionar, leer, podar, write_observados
 from .p1_trigger.run import run_trigger
 from .p2_impact.run import run_impact
 
@@ -34,6 +35,7 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
         "revisitados": result.revisitados,
         "a_despachar": result.a_despachar,
         "revisados": result.revisados,
+        "observados": len(result.observados),
         "latido_utc": result.latido_utc,
     }
     print(json.dumps(payload, ensure_ascii=False))
@@ -50,6 +52,23 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
             "relevantes": result.relevantes,
         }
     )
+
+    # Y la ventana de cinco dias de lo que se vio y no se despacho. Se
+    # reescribe en cada latido aunque no haya nada nuevo, porque la poda
+    # depende del reloj y no de que llegue un sismo: sin esto, un evento
+    # caducado se quedaria en el mapa hasta el siguiente temblor.
+    if not args.dry_run:
+        previos = leer()
+        vigentes = podar(fusionar(previos, result.observados))
+        # Que la *lista* cambie, no que el archivo cambie: `generado_utc` es
+        # distinto en cada corrida y haria que esto fuera siempre `true`.
+        cambio = [e.usgs_id for e in vigentes] != [e.usgs_id for e in previos]
+        write_observados(vigentes)
+        # El latido solo se publica una vez por hora para no llenar el
+        # historial. Sin este aviso, un sismo pequeno esperaria hasta sesenta
+        # minutos para aparecer en el mapa — y quien acaba de sentirlo lo esta
+        # buscando ahora.
+        _emit_github_output("observados_cambio", "true" if cambio else "false")
     return 0
 
 

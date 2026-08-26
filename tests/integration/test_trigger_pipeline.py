@@ -79,3 +79,56 @@ def test_el_estado_valida_contra_su_schema(fetcher: FixtureFetcher, events_dir: 
         data = json.loads(path.read_text(encoding="utf-8"))
         errores = [e.message for e in validador.iter_errors(data)]
         assert errores == [], f"{path.name}: {errores}"
+
+
+# --- La capa de lo visto y no despachado ------------------------------------
+
+
+def test_lo_pequeno_de_latam_se_registra_sin_despacharse(
+    fetcher: FixtureFetcher, events_dir: Path
+) -> None:
+    """El caso de Jordan, en fixture: M4,8 en Popayan.
+
+    Ni se despacha ni se olvida. Es la tercera opcion que hasta ahora no
+    existia, y la que hace que el vigia pueda demostrar que estuvo mirando.
+    """
+    resultado = run_trigger(fetcher, events_dir=events_dir)
+
+    observados = [e.usgs_id for e in resultado.observados]
+    assert observados == ["us7000small"]
+    assert "us7000small" not in resultado.a_despachar
+
+
+def test_lo_que_se_despacha_no_aparece_ademas_como_visto(
+    fetcher: FixtureFetcher, events_dir: Path
+) -> None:
+    """Contarlo dos veces seria inflar la actividad sismica de la region."""
+    resultado = run_trigger(fetcher, events_dir=events_dir)
+
+    assert not set(resultado.a_despachar) & {e.usgs_id for e in resultado.observados}
+
+
+def test_la_capa_no_es_un_sismografo_mundial(fetcher: FixtureFetcher, events_dir: Path) -> None:
+    """Los feeds del USGS son globales, y esto es un sistema para LATAM.
+
+    Kermadec es un M6,1 legitimo y ajeno; la voladura de Nevada no es ni un
+    sismo. Ninguno de los dos tiene sitio en un mapa de exposicion de LATAM.
+    """
+    resultado = run_trigger(fetcher, events_dir=events_dir)
+
+    vistos = {e.usgs_id for e in resultado.observados}
+    assert "us7000faraway" not in vistos, "un sismo de Kermadec no es de LATAM"
+    assert "us7000quarry" not in vistos, "una voladura de cantera no es un sismo"
+
+
+def test_un_evento_registrado_no_crea_event_state(
+    fetcher: FixtureFetcher, events_dir: Path
+) -> None:
+    """`events/` es la cola de trabajo de P2; esto no es trabajo.
+
+    Escribir ahi un evento que nadie va a procesar ensuciaria la cola y le daria
+    entrada al pipeline de impacto por la puerta de atras.
+    """
+    run_trigger(fetcher, events_dir=events_dir)
+
+    assert not (events_dir / "us7000small.json").exists()

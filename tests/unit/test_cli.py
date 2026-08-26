@@ -134,6 +134,7 @@ def test_trigger_publica_el_latido_aunque_no_haya_eventos(
         a_despachar=[],
         revisados=18,
         relevantes=0,
+        observados=[],
         latido_utc="2026-08-25T15:00:00Z",
     )
 
@@ -162,12 +163,17 @@ def test_el_json_del_trigger_sale_limpio_por_stdout(
         a_despachar=["us1"],
         revisados=3,
         relevantes=1,
+        observados=[],
         latido_utc="2026-08-25T15:00:00Z",
     )
 
     monkeypatch.setattr(cli, "run_trigger", lambda *_a, **_k: resultado)
     monkeypatch.setattr(cli, "HttpFetcher", lambda *_a, **_k: object())
     monkeypatch.setattr(cli, "write_status", lambda **_k: Path("x"))
+    # Sin `--dry-run` esto publica de verdad, y una prueba no puede reescribir
+    # el `site/` del repo.
+    monkeypatch.setattr(cli, "leer", lambda *_a, **_k: [])
+    monkeypatch.setattr(cli, "write_observados", lambda *_a, **_k: Path("x"))
 
     cli.main(["trigger"])
     assert json.loads(capsys.readouterr().out) == {
@@ -175,6 +181,7 @@ def test_el_json_del_trigger_sale_limpio_por_stdout(
         "revisitados": [],
         "a_despachar": ["us1"],
         "revisados": 3,
+        "observados": 0,
         "latido_utc": "2026-08-25T15:00:00Z",
     }
 

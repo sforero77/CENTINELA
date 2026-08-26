@@ -219,3 +219,62 @@ def test_nadie_espera_al_estilo_por_su_cuenta() -> None:
         f"Estas esperan al estilo por su cuenta en vez de usar "
         f"`cuandoElEstiloEsteListo`: {fuera_del_ayudante}"
     )
+
+
+# --- La capa de sismos vistos y no despachados ------------------------------
+
+
+def test_los_observados_no_usan_la_rampa_de_mmi() -> None:
+    """La rampa significa «impacto medido». Prestarsela la vaciaria de sentido.
+
+    Es el riesgo §7 —«cifra alarmista»— en su forma visual: un punto pintado
+    con los colores de la intensidad se lee como una intensidad medida, diga lo
+    que diga el pie.
+    """
+    js = APP
+    capa = js[js.index('id: "observados"') : js.index('id: "observados"') + 900]
+
+    assert "OBSERVADO" in capa, "no usa el gris reservado para esta capa"
+    for color in ("BANDAS", "RAMPA", "CAPAS[", "EPICENTRO"):
+        assert color not in capa, f"la capa de observados toma color de {color}"
+
+
+def test_los_observados_arrancan_apagados() -> None:
+    """Quien abre el visor viene a ver impacto, no ruido sismico de fondo."""
+    js = APP
+    capa = js[js.index('id: "observados"') : js.index('id: "observados"') + 400]
+
+    assert 'visibility: "none"' in capa
+
+
+def test_el_popup_dice_que_no_hay_medicion() -> None:
+    """Sin esta frase, un punto en el mapa se lee como impacto cero medido."""
+    js = APP
+
+    assert "No se midió su impacto" in js
+
+
+def test_los_observados_no_llevan_etiqueta_de_magnitud() -> None:
+    """Las etiquetas son de los eventos con reporte.
+
+    Poner «M4,9» flotando junto a un punto gris lo equipara visualmente a una
+    estrella con reporte, que es justo la jerarquia que hay que mantener.
+    """
+    js = APP
+    capa = js[js.index('id: "observados"') : js.index('id: "observados"') + 900]
+
+    assert "text-field" not in capa
+
+
+def test_la_capa_se_carga_de_verdad() -> None:
+    """Escrita y no llamada seria el patron que esta auditoria persigue."""
+    js = APP
+
+    assert "cargarObservados();" in js, "cargarObservados esta definida y nadie la llama"
+
+
+def test_el_interruptor_solo_aparece_si_hay_algo() -> None:
+    """Un control siempre vacio ensena a ignorar los controles."""
+    js = APP
+
+    assert "if (!eventos.length) return;" in js

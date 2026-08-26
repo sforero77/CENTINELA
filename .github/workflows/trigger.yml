@@ -89,6 +89,7 @@ jobs:
           # tercero y no deben poder convertirse en comandos.
           EVENTOS: ${{ steps.trigger.outputs.eventos }}
           HAY_TRABAJO: ${{ steps.trigger.outputs.hay_trabajo }}
+          OBSERVADOS_CAMBIO: ${{ steps.trigger.outputs.observados_cambio }}
         run: |
           git config user.name "centinela-bot"
           git config user.email "noreply@users.noreply.github.com"
@@ -98,14 +99,18 @@ jobs:
           # legible. Con un evento se publica siempre; sin el, como mucho uno
           # por hora. El latido saltado no se pierde para nada que importe:
           # basta uno cada hora para responder "el cron sigue vivo".
+          #
+          # Un sismo pequeno nuevo tambien publica, aunque el latido sea
+          # reciente: quien acaba de sentirlo lo esta buscando ahora, no dentro
+          # de una hora. Son ~3 al dia, asi que no cambia el orden de magnitud.
           ULTIMO=$(git log -1 --format=%ct -- site/status.json || echo 0)
           EDAD=$(( $(date -u +%s) - ${ULTIMO:-0} ))
-          if [ "$HAY_TRABAJO" != "true" ] && [ "$EDAD" -lt 3600 ]; then
-            echo "latido reciente (hace ${EDAD}s); no se publica"
+          if [ "$HAY_TRABAJO" != "true" ] && [ "$OBSERVADOS_CAMBIO" != "true" ] && [ "$EDAD" -lt 3600 ]; then
+            echo "latido reciente (hace ${EDAD}s) y sin sismos nuevos; no se publica"
             exit 0
           fi
 
-          git add events/ site/status.json
+          git add events/ site/status.json site/observados.json
           git diff --staged --quiet && exit 0
           if [ "$HAY_TRABAJO" = "true" ]; then
             git commit -m "P1: eventos detectados $EVENTOS"
