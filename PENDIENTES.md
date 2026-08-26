@@ -16,26 +16,33 @@ sistema ya operando, la referencia es
 El sistema **funciona de punta a punta y corre solo**:
 
 ```bash
-centinela impact us6000tjl2 \
-  --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000tjl2&format=geojson" \
-  --exposure data/build/exposure_h3.parquet --manifest col-v0.4
+centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000tjl2&format=geojson"   --exposure data/build/exposure_h3.parquet --manifest col-v0.5
 # 24,7 s -> 2.415.793 personas en MMI>=7, reporte publicado en reports/
 ```
 
 | Componente | Estado |
 |---|---|
-| P1 trigger (feed, filtro, dedupe, estado) | ✅ **operando cada 10 min** |
+| P1 trigger (feed, filtro, dedupe, estado) | ✅ operando, y publicando su latido |
 | Visor y `/status` publicados | ✅ https://sforero77.github.io/CENTINELA/ |
 | P0 activo de exposicion (descarga → parquet) | ✅ **publicado en 18 de 19 paises** |
-| P2 impacto (contornos → celdas → GF → join) | ✅ funcional, con activo elegido por epicentro |
-| P3 reporte (json, md, csv, hilo, 2 mapas) | ✅ funcional |
-| Pagina `/status` con latencia real | ✅ funcional |
+| P2 impacto (contornos → celdas → GF → join) | ✅ funcional, con reintento por pais |
+| P3 reporte (json, md, csv, hilo, 2 mapas, malla, contornos) | ✅ funcional |
+| **Catalogo historico** | ✅ **21 reportes en 15 paises** |
+| Asserts de calidad §6.4, en P0 y en P2 | ✅ funcional |
+| Toponimos en espanol (RF-06) y changelog de deltas (RF-04) | ✅ funcional |
 | Golden G1 (Chocó), G2 (Venezuela) y G3 | ✅ corren, ninguna saltada |
+| Activo de Brasil | ⏳ en curso · §2.1 |
+| Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**601 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), ninguna
+**686 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), ninguna
 saltada, `ruff` y `mypy --strict` limpios, arranque verificado desde clon vacio.
-Medido el 25-ago-2026, tras la auditoria: eran 431.
+Medido el 26-ago-2026. Eran 431 antes de la auditoria y 523 al empezarla.
+
+**El cron declara `*/10` y no corre cada diez minutos.** Medido sobre 22
+corridas: mediana 45,7 min, maximo 73,3. La demora la pone la cola de GitHub y
+no el intervalo, asi que subir la frecuencia no arregla nada — ver
+[`docs/OPERACION.md`](docs/OPERACION.md) §1.
 
 ### El cero silencioso que casi se publica
 
@@ -65,14 +72,20 @@ La puerta de salida de la espec pide cuatro cosas:
 | Requisito | Estado |
 |---|---|
 | G1 verde | ✅ |
-| G2 verde | ✅ cerrado el 24-ago-2026: los dos mainshocks reconstruidos, cifras congeladas, 35 pruebas golden sin una sola saltada |
-| Un reporte real publicado end-to-end **sin intervencion** | ⏳ el sistema ya opera; falta que ocurra un sismo |
-| Latencia medida y publicada | ⏳ la pagina esta publicada y espera datos reales |
+| G2 verde | ✅ cerrado el 24-ago-2026: los dos mainshocks reconstruidos, cifras congeladas |
+| Un reporte real publicado end-to-end **sin intervencion** | ⏳ falta que ocurra un sismo |
+| Latencia medida y publicada | ⏳ falta que ocurra un sismo |
 
-Desde el 24-ago-2026 el sistema **esta encendido**: el trigger vigila el feed
-cada 10 minutos y el visor esta en linea. Las dos que faltan ya no dependen de
-nadie — las cierra el primer sismo M≥5.5 en LATAM, que con la sismicidad normal
-de la region es cuestion de dias.
+**Las dos que quedan esperan lo mismo, y hasta el 25-ago no era asi.** La de
+latencia estaba bloqueada por un bug, no por la sismicidad: `impact.yml`
+publicaba `events/` y `reports/` y **no** `site/status.json`, de modo que el
+sistema calculaba la latencia correctamente y no la publicaba nunca. Un `git
+add` incompleto llevaba semanas haciendo pasar por «esperando un sismo» algo que
+no dependia de ningun sismo.
+
+Cerrado eso, las dos las cierra el primer M≥5,5 en LATAM. El camino esta probado
+sobre 21 eventos historicos en 15 paises: cuando ocurra, lo unico manual sera
+publicar el hilo.
 
 ---
 
@@ -103,175 +116,68 @@ repetirlo, sigue en
 
 ---
 
-## 2. Codigo — cualquiera puede tomarlo
+## 2. Lo que falta
 
-Ordenado por lo que mas desbloquea.
+Ordenado por lo que mas desbloquea. Lo ya cerrado esta en §3, en una linea cada
+cosa, porque este documento es la lista de trabajo y no el registro de lo hecho.
 
-### 2.0 🔴 La ventana del disparador cortaba paises cubiertos
+### 2.1 Brasil, el pais 19
 
-Corregido, pero conviene saberlo. `LATAM_BBOX` —el filtro de RF-01— iba de
-118,0°O a 34,0°O y de 56,0°S a 33,0°N. Al medir las cajas de los 19 paises
-salio que **no cubria territorio de paises que el sistema dice cubrir**:
+Es el unico de los diecinueve sin activo, y no por falta de intento. **El
+26-ago-2026 hay una corrida en marcha**; lo que sigue es lo que se sabe de la
+anterior.
 
-| | Llega a | La ventana cortaba en |
-|---|---|---|
-| Mexico (Isla Guadalupe, Revillagigedo) | 118,65°O | 118,0°O |
-| Chile (Cabo de Hornos, Diego Ramirez) | 56,78°S | 56,0°S |
-| Brasil (Fernando de Noronha, ~3.000 hab.) | 32,42°O | 34,0°O |
-
-Un sismo relevante ahi no habria fallado: **habria dejado de existir para el
-sistema**. Chile importa especialmente, porque la zona de fractura de
-Shackleton produce sismos justo en ese margen.
-
-Nueva ventana: `lon -119,0..-32,0 / lat -57,5..33,0`. El limite este llega a
-Fernando de Noronha y se detiene antes del archipielago de San Pedro y San
-Pablo, que se asienta sobre la dorsal mesoatlantica: estirarlo hasta alli
-compraria sismicidad oceanica frecuente y sin poblacion a cambio de una
-estacion cientifica.
-→ `tests/unit/test_cobertura_latam.py`
-
-### 2.0b 🔴 El impacto usaba el activo de Colombia para toda LATAM
-
-Corregido, y era el peor de los ceros silenciosos. P1 vigila **toda** la ventana
-LATAM; `impact.yml` tenia Colombia fija en dos sitios. Un M6.8 en Peru: el
-trigger lo detecta, dispara el impacto, baja el activo **colombiano**, el join
-no encuentra una sola celda H3, `SQL_TOTALES` devuelve NULL en cada columna,
-`float(v or 0.0)` los convierte en ceros — y se publica un reporte diciendo que
-**no hay nadie expuesto**, en el visor publico, durante un terremoto real.
-
-Los demas ceros silenciosos salian en un build repetible. Este salia en el peor
-momento posible y decia exactamente lo contrario de la verdad.
-
-Dos arreglos:
-
-- **Guardia.** Si el join no produce ninguna celda, `compute_impact` falla. Un
-  reporte que no sale es un problema; uno que dice "0 personas" es una mentira.
-- **Enrutado por pais.** `centinela paises-candidatos <usgs_id>` resuelve el
-  pais desde el epicentro y el workflow busca el Release de ese pais. Si no hay
-  activo, falla con el comando exacto para construirlo y abre un issue. El
-  hueco se vuelve una tarea visible en vez de una cifra falsa.
-
-→ `tests/unit/test_pais_del_evento.py`
-
-### 2.1 ✅ G2 cerrada · **los dos mainshocks de Venezuela, publicados**
-
-Cerrado el 24-ago-2026. Los dos mainshocks del 24-jun-2026 —M7,5 en Catia La Mar
-y M7,2 en San Felipe, separados por 33 segundos y 145 km— estan reconstruidos,
-con sus cifras congeladas, y las 35 pruebas golden pasan sin una sola saltada.
-
-De paso estreno el camino P2→P3 en CI, que hasta entonces solo habia devuelto
-`omitir: ya procesado`. Corrio entero en **27 segundos**.
-
-El activo se reconstruyo antes con el rescate de frontera corregido: el
-publicado hasta ese momento se habia construido con el rescate que invadia al
-vecino y desviaba +6,30 %. Congelar `POP_MMI7P_ESPERADO` contra un activo
-contaminado habria fijado el error.
-
-**La tolerancia quedo en 5,44 %**, estrechada desde 8,0 por `centinela calibrar`
-con lo medido: 29.924.657 contra los 28.516.896 de la ONU, +4,94 %. Sigue siendo
-una expectativa y no una verificacion — GHS-POP deriva de la ronda censal de
-2010 y no modela la emigracion venezolana. Que ese assert falle algun dia seria
-un hallazgo publicable, no un bug.
-
-### 2.1c El catalogo historico regional · **19 reportes en 13 paises**
-
-Cerrado el 25-ago-2026. El sistema reconstruyo diecinueve sismos del catalogo
-real de USGS, cada uno contra el activo de su pais y con los productos que USGS
-publico entonces. El Choco deja de ser una demostracion aislada.
-
-Correrlo sobre la region entera encontro cuatro cosas que ninguna prueba
-sintetica habria dado. Detalle en [`docs/AUDITORIA.md`](docs/AUDITORIA.md):
-
-- **Chile no habria tenido reporte nunca** (A16). Su caja envolvente mide 1.719
-  grados cuadrados por Rapa Nui y la de Argentina 671, asi que un sismo en
-  Coquimbo se ordenaba como argentino. `impact.yml` se quedaba con el primer
-  candidato con Release y el join salia vacio. Ahora prueba los candidatos en
-  orden, que es lo que dos docstrings prometian desde el principio.
-- **Ocho de los diecinueve eventos no alcanzan MMI≥7 sobre poblacion** (A17).
-  El 44 %. El producto entero titulaba con MMI≥7, asi que para ellos publicaba
-  "0 personas" y una tabla municipal ordenada alfabeticamente. Tehuantepec 2017
-  —M8,2, 98 muertos— salia asi.
-- **Los toponimos salian en ingles** (A18), incumpliendo RF-06. Se veia poco
-  con un solo reporte, cuya fixture estaba escrita a mano en espanol.
-- **La tabla municipal rotulaba todo como DIVIPOLA** (A19), que es el codigo de
-  Colombia, tambien sobre municipios mexicanos.
-
-Lo unico que fallo del lote fue Bolivia, y por un motivo legitimo: el ShakeMap
-de su M6,8 de 2018 —a 559 km de profundidad— no publica `cont_mmi`. El sistema
-lo dijo en voz alta y no publico nada, que es lo correcto.
-
-Su `event_state` **no se conserva**. Quedaba en `detectado`, sin camino hacia
-`publicado` y sin nada que lo reintentara, porque P1 solo mira la ultima hora.
-Un estado asi no es un registro: es un evento aparentemente atascado que la
-proxima auditoria tendria que volver a investigar. Si algun dia USGS publica
-contornos para ese sismo, el backtest se corre otra vez y el estado se
-reconstruye solo.
-
-### 2.1b Fuentes de LATAM: validadas las 19, manifests escritos
-
-Revisado el 23-ago-2026 con una peticion real por fuente y pais. **Los 19
-paises de LATAM hispanohablante mas Brasil tienen las cuatro fuentes
-nacionales**: WorldPop age-sex (20 bandas cada uno), WorldPop total,
-`cod-ab-<iso3>` (CC BY-IGO) y los extractos `hotosm_<iso>_health_facilities` y
-`hotosm_<iso>_education_facilities` (ODbL). No hay ningun pais sin camino.
-
-Dos irregularidades que conviene saber antes de Fase 1:
-
-- **Cinco paises no publican GeoJSON** en su COD-AB y caen a SHP: COL, ARG,
-  BRA, PRY, URY.
-- **Colombia publica cuatro recursos SHP** y el resolutor tomaba el primero,
-  que son secciones urbanas del MGN (48 MB), no municipios. Por eso existe
-  ahora `hdx_resource` en el manifest: un dataset con varios recursos del mismo
-  formato tiene que fijar cual, igual que fija el vintage.
-
-### 2.1d Brasil: medido, y bloqueado por una razon concreta
-
-Es el unico de los diecinueve sin activo, y no por falta de intento. Medido el
-25-ago-2026 corriendo `centinela country BRA`:
+**Brasil es el pais mas caro con diferencia:**
 
 | | Colombia | Brasil |
 |---|---|---|
 | Teselas GHS-POP | 9 | **36** |
 | Serie age-sex de WorldPop | ~600 MB | **9,1 GB** (20 rasters de 453 MB) |
+| Celdas H3 con poblacion | 519.735 | **4.293.218** |
 
-GHSL bajo entero sin problema —317 MB de poblacion y 102 de superficie
-construida, en unos setenta minutos de conexion domestica— y el build se detuvo
-en WorldPop.
+**Lo que dice el log de la corrida del 25-ago**, que fallo tras 1 h 43 m:
 
-Lo bloqueaban dos cosas, las dos del sistema y no de la maquina, y **las dos
-estan cerradas** desde el 25-ago-2026:
+| | |
+|---|---|
+| 00:59 · 01:02 | GHS-POP y GHS-BUILT-S descargados (437 MB) |
+| 02:26 | WorldPop age-sex descargado — los 9,1 GB, en 90 min |
+| 02:36 | HDX descargado. **Todo bajado, sin un fallo** |
+| 02:38 | Poblacion agregada a H3: 4.293.218 celdas, 401 M habitantes |
+| **02:39** | `The runner has received a shutdown signal` |
 
-1. **`download_worldpop_agesex` usaba `get_bytes`**, que carga cada raster
-   completo en memoria antes de volcarlo. Con los 60 MB de Colombia no se nota;
-   con 453 MB por fichero, veinte veces, si. Ahora baja por **streaming y
-   reanudable** (`HttpFetcher.download_to`): escribe segun llega y, si se corta,
-   el siguiente intento sigue desde donde quedo en vez de volver al byte cero.
-2. **`exposure_quarterly.yml` tenia `timeout-minutes: 120`**, que exigiria
-   sostener 1,3 MB/s durante las dos horas enteras. Subido a 300 — cinco horas,
-   no seis: una corrida colgada tiene que seguir fallando en un plazo conocido.
+O sea que **no fallo la descarga ni el timeout** —quedaban 16 minutos de los
+120— sino que el runner se murio durante el computo, tres minutos despues de
+terminar de bajar.
 
-**Queda intentarlo en CI**, que es donde este build pertenece:
+**La causa mas probable es el disco.** El build no libera un solo raster segun
+los agrega: el unico `unlink` de `download.py` es el del ZIP de una tesela GHSL.
+A esa altura tenia 9,1 GB de WorldPop mas 437 MB de GHSL en disco, y un runner
+de GitHub trae ~14 GB libres — con DuckDB derramando encima para una tabla de
+4,29 millones de celdas.
 
-    gh workflow run exposure_quarterly.yml -f iso3=BRA
+Es una hipotesis, no una medicion: el mensaje de GitHub no distingue disco de
+memoria. **La corrida en curso la confirma o la descarta**, porque lleva el
+mismo codigo con 300 minutos en vez de 120: si muere en el mismo sitio, es
+recurso.
 
-No entra solo en la corrida trimestral: esa matriz sale de los Releases
-publicados y Brasil no tiene ninguno todavia. La primera construccion de un
-pais se pide a mano a proposito — es la corrida que estrena su tolerancia y sus
-toponimos, y hay que mirarla.
+**Si se confirma**, el arreglo es liberar cada raster en cuanto esta agregado en
+H3. En CI no cuesta nada —el runner arranca vacio cada vez— y en local conviene
+conservarlos para que reanudar siga siendo barato, asi que va como opcion que CI
+activa y el uso local no.
 
-Y conviene saberlo aunque se construya: **Brasil no puede producir un reporte**
-con el pipeline actual. Sus doce sismos M≥5,5 desde 2000 estan entre 534 y
-603 km de profundidad y USGS no publica contornos MMI para ninguno. Se
-construye por preparacion —un somero raro en la costa cambiaria eso en un dia—
-no para obtener un backtest.
+**Lo que ya se arreglo pensando que era el bloqueo**, y que sigue siendo bueno
+aunque no lo fuera: `download_worldpop_agesex` cargaba cada raster **completo en
+memoria** antes de volcarlo, y ahora baja por streaming y reanudable
+(`HttpFetcher.download_to`); y el `timeout-minutes` del job paso de 120 a 300,
+que era justo lo que dejaba solo 19 minutos para el computo.
 
-### 2.2 T0.7: benchmark de `exactextract` · **bajo esfuerzo**
+**Y aunque se construya, Brasil no puede producir un reporte** con el pipeline
+actual. Sus doce sismos M≥5,5 desde 2000 estan entre 534 y 603 km de
+profundidad, y USGS no publica contornos MMI para ninguno. Se construye por
+preparacion —un somero raro en la costa cambiaria eso en un dia— no para obtener
+un backtest.
 
-Comparar el muestreo actual (suma de pixeles por celda) contra `exactextract`.
-Criterio de la espec: menos de 1 % de diferencia en la poblacion nacional. Si
-cumple, se documenta y se cierra; si no, se cambia el metodo.
-
-### 2.3 PMTiles del visor · **mapa base hecho, faltan las coropletas**
+### 2.2 Coropletas r7/r6 del visor
 
 **Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salio primero de las
 PMTiles que Overture publica por release y **se cambio a OpenFreeMap (estilo
@@ -281,39 +187,30 @@ vias y agua. Sigue sin llaves ni cuota (D6). Ya no hay `OVERTURE_RELEASE` en
 `site/assets/app.js` y no hay nada que subir cada trimestre por el lado del
 mapa base.
 
-Los epicentros de los reportes publicados se dibujan como circulos que escalan
-con la **poblacion expuesta a MMI≥7**, no con la magnitud: dos sismos de la
-misma magnitud sobre poblaciones distintas no son el mismo evento para quien
-responde.
+**Falta:** las coropletas r7/r6 de exposicion e impacto. Son datos nuestros y
+necesitan `tippecanoe`, y son la ultima pieza de RF-09 — el resto del visor
+(lista de eventos, ficha municipal, descargas, malla por celda, area de
+afectacion y filtro por pais) ya funciona.
 
-Para eso hubo que meter `lon`/`lat` en `report.json`: estaban en el
-`event_state` y se quedaban ahi, asi que el artefacto publico no decia donde
-fue el sismo y ni el propio visor podia situarlo.
+### 2.3 Simbologia del visor · quedan dos cosas
 
-**Falta:** las coropletas r7/r6 de exposicion e impacto, que si son datos
-nuestros y necesitan `tippecanoe`.
+Hecho: la rampa de intensidad del visor es ya la misma que la del mapa estatico
+—se habia introducido la de ShakeMap sin ver que el proyecto tenia una decidida
+y argumentada, y el mismo evento salia de dos colores segun donde se mirara—, la
+leyenda se construye con las clases que trae el evento en vez de rotular siempre
+las seis, el epicentro es una estrella en vez de un circulo proporcional que se
+leia como radio de afectacion, y `salud` y `edu` son capas del selector: estaban
+en `celdas.json` desde el principio y solo se veian abriendo celda por celda.
 
-### 2.4 ✅ Reporte preliminar sin ShakeMap (RF-03) · cerrado el 24-ago-2026
+**Falta:**
 
-`compute_preliminary()` estaba escrita, comentada y probada desde el principio,
-y **no la llamaba nadie**: el evento pasaba a estado `preliminar`, se guardaba
-el estado y no se publicaba nada. Durante las primeras horas —las unicas en que
-un preliminar sirve— el sistema callaba.
+* A zoom continental, dos eventos del mismo dia a 150 km comparten sitio y
+  MapLibre oculta una de las dos etiquetas. Se ve en los dos de Venezuela.
+* Los cortes de `salud` y `edu` estan medidos sobre 1.691 celdas de tres eventos
+  en dos paises. Cuando entre un pais con mas equipamiento mapeado hay que
+  volver a medirlos, igual que se hizo con los de poblacion y vias.
 
-Mismo patron que las tres capas del activo que se agregaban a tablas que nadie
-leia: una funcion escrita no es una funcion conectada, y ninguna prueba lo veia
-porque todas probaban la funcion, no el camino.
-
-El preliminar publica la tabla por radios **en lugar** de la de intensidad, no
-ademas. Sin ShakeMap todas las cifras por MMI valen cero, y "poblacion en
-MMI≥7: 0" bajo el titulo "Exposicion estimada" es una respuesta falsa y
-creible. Lleva ademas su propia advertencia: un radio no es una banda de
-intensidad —un M6 superficial y uno a 200 km tienen el mismo circulo de 50 km—
-y la cifra sirve para dimensionar, no para priorizar.
-
-→ `tests/unit/test_reporte_preliminar.py`
-
-### 2.5 Fase 1: construir los paises · **el camino ya esta hecho**
+### 2.4 Los paises que quedan por medir
 
 Los **19 manifests estan escritos** y sus cajas envolventes medidas sobre
 `division_area` de Overture con un solo criterio. Por pais ya no hace falta
@@ -338,44 +235,11 @@ Mexico a 118,6°O por Guadalupe y Revillagigedo, Ecuador a 92,3°O por Galapagos
 Son muchas teselas de GHS-POP por poca poblacion, pero el sistema no puede
 decidir que una isla habitada no cuenta.
 
-### 2.4b El mapa estatico se publicaba vacio · **cerrado el 25-ago-2026**
+### 2.5 T0.7: benchmark de `exactextract` · bajo esfuerzo
 
-Los seis PNG de los tres reportes publicados no dibujaban nada: la estrella del
-epicentro clavada en (0, 0) y ni un municipio. Dos desconexiones, ninguna de
-calculo:
-
-* El epicentro salia de `_EPICENTRO`, un registro de modulo que se rellenaba con
-  `set_epicenter()` — **una funcion que no llamaba nadie**. Registro siempre
-  vacio, `.get` cayendo en su valor por defecto. Mismo patron que 2.4 y que las
-  capas del activo: una funcion escrita no es una funcion conectada.
-* Los municipios se leian de un `centroide` en WKT que ninguna fila trae. El CSV
-  publica `lon` y `lat`.
-
-`static_map.py` **no tenia ni una prueba**, y por eso el PNG vacio sobrevivio a
-tres publicaciones. Ahora tiene nueve, ocho de ellas sin matplotlib.
-
-**Falta:** no hay comando para regenerar los mapas de reportes ya publicados.
-Los de ahora se rehicieron con un script de usar y tirar. Un
-`centinela regenerar-mapas [USGS_ID]` evitaria que la proxima correccion de
-simbologia dependa de que alguien recuerde como se hacia.
-
-### 2.4c Simbologia del visor · **revisada el 25-ago-2026, quedan dos cosas**
-
-Hecho: la rampa de intensidad del visor es ya la misma que la del mapa estatico
-—se habia introducido la de ShakeMap sin ver que el proyecto tenia una decidida
-y argumentada, y el mismo evento salia de dos colores segun donde se mirara—, la
-leyenda se construye con las clases que trae el evento en vez de rotular siempre
-las seis, el epicentro es una estrella en vez de un circulo proporcional que se
-leia como radio de afectacion, y `salud` y `edu` son capas del selector: estaban
-en `celdas.json` desde el principio y solo se veian abriendo celda por celda.
-
-**Falta:**
-
-* A zoom continental, dos eventos del mismo dia a 150 km comparten sitio y
-  MapLibre oculta una de las dos etiquetas. Se ve en los dos de Venezuela.
-* Los cortes de `salud` y `edu` estan medidos sobre 1.691 celdas de tres eventos
-  en dos paises. Cuando entre un pais con mas equipamiento mapeado hay que
-  volver a medirlos, igual que se hizo con los de poblacion y vias.
+Comparar el muestreo actual (suma de pixeles por celda) contra `exactextract`.
+Criterio de la espec: menos de 1 % de diferencia en la poblacion nacional. Si
+cumple, se documenta y se cierra; si no, se cambia el metodo.
 
 ### 2.6 Deuda menor
 
@@ -384,9 +248,6 @@ en `celdas.json` desde el principio y solo se veian abriendo celda por celda.
 - `overture_divisions` esta declarado en `COL.yaml` y no se usa: la geometria
   sale del MGN. No cuesta nada (las fuentes `s3://` no se descargan) pero
   induce a pensar que participa.
-- **T0.7** sigue abierta: falta comparar el muestreo actual contra
-  `exactextract`. Criterio de la espec: menos de 1 % de diferencia en la
-  poblacion nacional.
 - **T0.10**: la referencia de poblacion del DANE es la cifra redondeada de su
   nota tecnica (53.000.000). Sustituirla por el valor exacto del anexo en Excel
   haria que el assert compare contra un numero y no contra un redondeo.
@@ -408,7 +269,50 @@ en `celdas.json` desde el principio y solo se veian abriendo celda por celda.
 
 ---
 
-## 3. Fases siguientes
+## 3. Cerrado, y donde esta el detalle
+
+Lo que este documento listaba como pendiente y ya no lo esta. Cada linea tiene
+su historia completa —evidencia, criterio de aceptacion y como se cerro— en
+[`docs/AUDITORIA.md`](docs/AUDITORIA.md); aqui solo quedan los titulares para
+que nadie lo vuelva a abrir por costumbre.
+
+**Cerrado el 24-ago-2026**
+
+- La ventana del disparador cortaba territorio de Mexico, Chile y Brasil.
+- El impacto usaba el activo de Colombia para toda LATAM.
+- G2: los dos mainshocks de Venezuela, publicados.
+- RF-03: el reporte preliminar sin ShakeMap, que estaba escrito y sin llamador.
+
+**Cerrado el 25-ago-2026, en la auditoria** — A1 a A21
+
+- El latido de `/status` no se publicaba nunca, y la latencia se calculaba sin
+  guardarse: dos requisitos de Fase 0 bloqueados por un `git add`.
+- El trimestral reconstruia un pais de dieciocho.
+- El README publicaba cifras de un activo anterior; los km de via, por un
+  factor de seis.
+- `cli.py`, `raster_h3.py` y `celdas.py` no tenian ni una prueba.
+- Los asserts de §6.4 no corrian en P2, y la licencia de la fuente no se
+  contrastaba nunca.
+- RF-04 renderizaba un changelog que nadie calculaba.
+- Un PROJ del sistema —el que instala PostGIS— dejaba inservible el pipeline geo.
+- Chile no habria tenido reporte nunca: su caja mide 1.719 grados cuadrados por
+  Rapa Nui y un sismo en Coquimbo se ordenaba como argentino.
+- El 44 % de los sismos reales no llega a MMI≥7 sobre poblacion, y el producto
+  entero titulaba con MMI≥7. Tehuantepec salia con «0 personas».
+- Los toponimos salian en ingles, incumpliendo RF-06.
+
+**Cerrado el 26-ago-2026, auditando el visor** — A22 a A27
+
+- El mapa se quedaba en blanco al abrir un enlace compartido con la cache fria.
+- Los epicentros no se dibujaban: el mismo fallo, en un segundo sitio.
+- El epicentro se salia del encuadre en los sismos mar adentro.
+- La celda no se podia citar: el indice H3 no llegaba a la ficha.
+- El tablero enseñaba la exposicion y la llamaba afectacion; los contornos del
+  ShakeMap se descargaban en cada evento y se tiraban.
+
+---
+
+## 4. Fases siguientes
 
 **Fase 2 — Brigada de imagen.** T2.1, T2.2 y T2.3 cerradas el 24-ago-2026 con
 las licencias citadas literalmente: Copernicus EMS permite reproducir, adaptar y
@@ -439,7 +343,7 @@ bien.
 
 ---
 
-## 4. Trabajar en local
+## 5. Trabajar en local
 
 ```bash
 git clone https://github.com/sforero77/CENTINELA
@@ -492,9 +396,36 @@ uv run centinela status  # recalcula site/status.json
 
 ---
 
-## 5. Lo que no hay que romper
+## 6. Lo que no hay que romper
 
-Cuatro invariantes que costaron encontrar. Cada uno tiene su prueba de regresion.
+Invariantes que costaron encontrar. Cada uno tiene su prueba de regresion, y
+casi todos comparten forma: **producen una cifra plausible y equivocada**, que
+es el unico modo de fallo que este sistema no puede permitirse.
+
+**Una funcion escrita no es una funcion conectada.** Es la causa raiz de
+veintitantos hallazgos de la auditoria, repetida: el latido, la latencia, los
+asserts de §6.4, la licencia de la fuente, el changelog de RF-04, el enrutado
+por pais, los epicentros del visor, los contornos del ShakeMap. **Todas estaban
+probadas**, por eso la cobertura las daba por verdes: una prueba llama a la
+funcion y eso no dice nada sobre si la llama alguien mas.
+→ `tests/unit/test_funciones_conectadas.py`, sobre el grafo de llamadas
+
+**Casi la mitad de los sismos reales no llega a MMI≥7 sobre poblacion.** Ocho de
+los veintiuno del catalogo, y son los profundos y los de mar adentro, que en
+esta region son la mitad. Fijar MMI≥7 como *la* banda publica «0 personas» para
+ellos y ordena la tabla municipal por una columna de ceros.
+→ `tests/unit/test_banda_titular.py`, `Totales.banda_titular`
+
+**El area de afectacion no es el area de exposicion.** La malla H3 llega hasta
+donde hay gente; los contornos del ShakeMap, hasta donde llego el sismo. En
+Balao el area sentida mide cuatro veces mas que la cuantificada.
+→ `tests/unit/test_contornos.py`
+
+**Ordenar los paises candidatos por area de su caja no acierta siempre.** La de
+Chile mide 1.719 grados cuadrados por Rapa Nui y la de Argentina 671, asi que un
+sismo en Coquimbo sale como argentino. El desempate lo da el join, y por eso
+hace falta poder reintentar con el siguiente candidato.
+→ `tests/unit/test_enrutado_latam.py`, codigo de salida 3
 
 **`preferredWeight` desempata contribuyentes, no versiones.** Ordenar por peso
 elige un ShakeMap obsoleto sin que nada falle.
@@ -579,11 +510,13 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
 ---
 
-## 6. Documentos
+## 7. Documentos
 
 | | |
 |---|---|
 | [`docs/OPERACION.md`](docs/OPERACION.md) | **Que vigilar ahora que el sistema corre: relojes, fallos silenciosos, deuda por pais** |
+| [`docs/AUDITORIA.md`](docs/AUDITORIA.md) | **La auditoria del 25 y 26 de agosto: los 27 hallazgos, con evidencia y criterio de aceptacion** |
+| [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) | Las reglas de codigo del proyecto, con el caso real que justifica cada una |
 | [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md) | Los pasos de arranque, por si hay que repetirlos |
 | [`ESPECIFICACION.md`](ESPECIFICACION.md) | Espec tecnica v0.10 |
 | [`VERIFICACIONES.md`](VERIFICACIONES.md) | Como se verifico cada fuente, con evidencia |
