@@ -1,17 +1,24 @@
 {
-  "generado_utc": "2026-08-26T19:46:23Z",
+  "generado_utc": "2026-08-26T20:11:03Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
   },
   "medido": {
-    "eventos_publicados": 0,
+    "eventos_publicados": 1,
     "backtests_excluidos": 21,
     "p50_min": null,
     "p95_min": null,
     "peor_min": null
   },
   "eventos": [
+    {
+      "usgs_id": "us7000abcd",
+      "origen_utc": "2026-08-26T19:50:00Z",
+      "publicado_utc": "2026-08-26T20:10:00Z",
+      "minutos": 20.0,
+      "backtest": false
+    },
     {
       "usgs_id": "us6000tjl2",
       "origen_utc": "2026-08-10T12:34:28Z",
