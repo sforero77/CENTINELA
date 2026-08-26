@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-08-26T06:50:24Z",
+  "generado_utc": "2026-08-26T08:25:39Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -194,6 +194,11 @@
     {
       "utc": "2026-08-26T06:50:23Z",
       "revisados": 14,
+      "relevantes": 0
+    },
+    {
+      "utc": "2026-08-26T08:25:38Z",
+      "revisados": 15,
       "relevantes": 0
     }
   ],
