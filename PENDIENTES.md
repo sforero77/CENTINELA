@@ -425,6 +425,30 @@ la lista desactualizada da un verde peor que no tener guardia.
 
 ---
 
+### 3.z El vigilante del vigilante · cerrado el 26-ago-2026
+
+Lo pidio el usuario y es la regla del proyecto: **el sistema tiene que demostrar
+que funciona por si mismo, no porque alguien note algo y pregunte.**
+
+El visor congelado diecisiete horas salio a la luz porque una persona sintio un
+sismo y fue a mirar. Eso no puede ser el mecanismo de deteccion de un sistema de
+vigilancia.
+
+`frescura.yml` corre cada tres horas, compara la pagina **publicada** contra el
+repositorio y abre issue si se quedo atras. Detecta un desfase real como mucho
+seis horas despues, frente a las diecisiete que costo la primera vez.
+
+**Vigila una cosa sola**: que el repositorio avance y la pagina no. Si el vigia
+muriera, los dos se quedarian quietos a la vez y esto pasaria — de eso se ocupa
+el latido al monitor externo (§6.5). Son dos fallos distintos y merecen dos
+alarmas distintas: una que no sabe decir cual se rompio obliga a investigar
+desde cero.
+
+El caso bueno **tambien se imprime**. Un vigilante callado cuando todo va bien
+es indistinguible de uno apagado, que es como estaba el sistema esa manana.
+
+---
+
 ## 4. Fases siguientes
 
 **Fase 2 — Brigada de imagen.** T2.1, T2.2 y T2.3 cerradas el 24-ago-2026 con

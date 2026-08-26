@@ -1,0 +1,79 @@
+name: Frescura del visor
+
+# EL VISOR LLEGO A ESTAR DIECISIETE HORAS CONGELADO CON TODO EN VERDE.
+#
+# Un push hecho con `GITHUB_TOKEN` no dispara otros workflows, asi que
+# `site.yml` no corria: los dos workflows en verde, el artefacto correcto ya
+# commiteado, y la pagina sirviendo el latido de las 02:53. Salio a la luz
+# porque una persona sintio un sismo, fue a mirar y pregunto.
+#
+# Eso no puede volver a ser el mecanismo de deteccion. Este workflow compara la
+# pagina *publicada* contra el repositorio y abre issue si se quedo atras.
+#
+# Vigila una cosa sola: que el repositorio avance y la pagina no. Si el vigia
+# se muriera, los dos se quedarian quietos a la vez y esto pasaria — de eso se
+# ocupa el latido al monitor externo (§6.5). Son dos fallos distintos y merecen
+# dos alarmas distintas, porque una alarma que no sabe decir que se rompio
+# obliga a investigar desde cero.
+
+on:
+  schedule:
+    # Cada tres horas. El margen de gracia es de tres, asi que un desfase real
+    # se detecta como mucho seis horas despues — frente a las diecisiete que
+    # costo la primera vez, y sin gastar una corrida cada diez minutos en algo
+    # que cambia despacio.
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: frescura
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo
+        run: uv sync --python 3.12 --no-dev
+
+      - name: Comparar la pagina publicada con el repositorio
+        id: revisar
+        run: uv run centinela frescura
+
+      # Un fallo aqui no es un fallo del pipeline: es que lo publicado no llego
+      # a la gente. Merece issue, no solo una corrida en rojo que nadie mira.
+      - name: Avisar si el visor quedo atras
+        if: failure() && steps.revisar.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+          CUERPO=$(cat <<'TXT'
+          La pagina publicada quedo detras del repositorio: hay datos
+          commiteados que el visor no esta sirviendo.
+
+          Causa mas probable: algo commiteo en `site/` o `reports/` y no
+          republico el visor. Un push con `GITHUB_TOKEN` **no** dispara
+          `site.yml`; hace falta `gh workflow run site.yml` tras el push.
+
+          Reparacion inmediata: lanzar `site.yml` a mano.
+          TXT
+          )
+          CUERPO="$CUERPO
+
+          Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh issue create --title "El visor publicado quedo desactualizado" \
+                          --label "pipeline,automatico" --body "$CUERPO" \
+            || gh issue create --title "El visor publicado quedo desactualizado" --body "$CUERPO"

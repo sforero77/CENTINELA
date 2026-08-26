@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .common.frescura import SITIO_PUBLICADO
 from .common.http import HttpFetcher
 from .common.logging import get_logger
 from .common.manifest import Manifest, lint_manifest_file
@@ -276,6 +277,20 @@ def _cmd_observados(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_frescura(args: argparse.Namespace) -> int:
+    """Comprueba que la pagina publicada sirve lo que hay en el repositorio.
+
+    El visor llego a estar diecisiete horas congelado con todo en verde. Este
+    comando existe para que la proxima vez lo diga una alarma y no una persona.
+    """
+    from .common.frescura import raise_if_stale, resumen, revisar
+
+    desfases = revisar(HttpFetcher(), sitio=args.sitio)
+    print(resumen(desfases))
+    raise_if_stale(desfases)
+    return 0
+
+
 def _cmd_calibrar(args: argparse.Namespace) -> int:
     """Reajusta la tolerancia de los manifests con lo que midio el ultimo build.
 
@@ -495,6 +510,12 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"ancho de la ventana (por defecto {DIAS_OBSERVADOS})",
     )
     p_observados.set_defaults(func=_cmd_observados)
+
+    p_frescura = sub.add_parser(
+        "frescura", help="comprueba que la pagina publicada no quedo detras del repositorio"
+    )
+    p_frescura.add_argument("--sitio", default=SITIO_PUBLICADO, help="raiz de la pagina publicada")
+    p_frescura.set_defaults(func=_cmd_frescura)
 
     p_calibrar = sub.add_parser(
         "calibrar", help="reajusta la tolerancia de los manifests con lo medido"
