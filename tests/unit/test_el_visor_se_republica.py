@@ -43,6 +43,28 @@ def _texto(ruta: Path) -> str:
     return ruta.read_text(encoding="utf-8")
 
 
+#: El comando que republica el visor, tal como se escribe en un paso.
+REPUBLICAR = "gh workflow run site.yml"
+
+
+def republica(ruta: Path) -> bool:
+    """¿Este workflow *ejecuta* el comando, o solo lo menciona?
+
+    La primera version emparejaba texto plano y dio un falso positivo el mismo
+    dia: `frescura.yml` cita el comando **en el cuerpo del issue**, como la
+    reparacion que debe intentar quien lea la alarma. Un guardia que confunde la
+    prosa con el codigo exige permisos a quien no los necesita, y de paso ensena
+    a desactivarlo.
+
+    Se pide que sea el comando entero de una linea —con o sin el `run:` del
+    paso delante— y no una frase que lo nombra entre comillas.
+    """
+    return any(
+        linea.strip().removeprefix("run:").strip() == REPUBLICAR
+        for linea in _texto(ruta).splitlines()
+    )
+
+
 def rutas_del_visor() -> tuple[str, ...]:
     """Los directorios cuyo cambio republica la pagina, **leidos de site.yml**.
 
@@ -88,7 +110,7 @@ def test_quien_commitea_para_el_visor_lo_republica(workflow: Path) -> None:
     if "git push" not in texto or not escribe:
         pytest.skip("no publica nada que el visor lea")
 
-    assert "gh workflow run site.yml" in texto, (
+    assert republica(workflow), (
         f"{workflow.name} commitea {escribe} y empuja con GITHUB_TOKEN, que **no** "
         "dispara site.yml. Lo que publique no llegara nunca a la pagina. "
         'Anade un paso "Republicar el visor" con `gh workflow run site.yml`.'
@@ -103,9 +125,9 @@ def test_republicar_necesita_permiso_para_hacerlo(workflow: Path) -> None:
     sale en rojo aunque su trabajo salio bien, y quien lo mire buscara el error
     en el sitio equivocado.
     """
-    texto = _texto(workflow)
-    if "gh workflow run site.yml" not in texto:
+    if not republica(workflow):
         pytest.skip("no republica el visor")
+    texto = _texto(workflow)
 
     assert "actions: write" in texto, (
         f"{workflow.name} republica el visor sin `permissions: actions: write`"
@@ -119,10 +141,23 @@ def test_solo_se_republica_si_hubo_push(workflow: Path) -> None:
     Y peor: enmascara el caso que importa. Si la pagina se reconstruye siempre,
     que se reconstruya deja de ser senal de que algo se publico.
     """
-    texto = _texto(workflow)
-    if "gh workflow run site.yml" not in texto:
+    if not republica(workflow):
         pytest.skip("no republica el visor")
+    texto = _texto(workflow)
 
     assert "outputs.publicado == 'true'" in texto, (
         f"{workflow.name} republica el visor sin condicionarlo a que el push ocurriera"
     )
+
+
+def test_mencionar_el_comando_no_es_ejecutarlo() -> None:
+    """El falso positivo que este guardia tuvo el primer dia.
+
+    `frescura.yml` cita `gh workflow run site.yml` en el cuerpo del issue, como
+    la reparacion que debe intentar quien lea la alarma. No lo ejecuta, no
+    commitea nada, y no necesita `actions: write`.
+    """
+    frescura = WORKFLOWS / "frescura.yml"
+
+    assert REPUBLICAR in _texto(frescura), "ya no explica como repararlo"
+    assert not republica(frescura), "el guardia volvio a confundir la prosa con el codigo"
