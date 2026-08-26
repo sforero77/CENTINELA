@@ -20,7 +20,13 @@ from .common.paths import BUILD_DIR, MANIFESTS_DIR
 from .common.state import EventState
 from .common.status import write_status
 from .p0_exposure.build import build_country
-from .p1_trigger.observados import fusionar, leer, podar, write_observados
+from .p1_trigger.observados import (
+    DIAS_OBSERVADOS,
+    fusionar,
+    leer,
+    podar,
+    write_observados,
+)
 from .p1_trigger.run import run_trigger
 from .p2_impact.run import run_impact
 
@@ -249,6 +255,27 @@ def _cmd_contornos(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_observados(args: argparse.Namespace) -> int:
+    """Rellena desde el catalogo historico la ventana de sismos vistos.
+
+    La capa solo sabe lo que vio desde que se encendio, y recien activada su
+    etiqueta miente: decia "1 en 5 dias" cuando en LATAM habia habido nueve.
+    Tambien repara la ventana si el vigia estuvo caido mas de un dia, que es lo
+    que cubre el feed en vivo.
+    """
+    from .p1_trigger.observados import rellenar
+
+    previos = leer()
+    vigentes = podar(fusionar(previos, rellenar(HttpFetcher(), dias=args.dias)), dias=args.dias)
+    write_observados(vigentes)
+
+    nuevos = len(vigentes) - len(previos)
+    print(f"{len(vigentes)} sismos en la ventana de {args.dias} dias ({nuevos:+d}).")
+    for evento in vigentes:
+        print(f"  {evento.origen_utc}  M{evento.mag}  {evento.lugar}")
+    return 0
+
+
 def _cmd_calibrar(args: argparse.Namespace) -> int:
     """Reajusta la tolerancia de los manifests con lo que midio el ultimo build.
 
@@ -456,6 +483,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_contornos.add_argument("usgs_id", nargs="?", default="", help="vacio = todos")
     p_contornos.add_argument("--reports", help="raiz de reports/")
     p_contornos.set_defaults(func=_cmd_contornos)
+
+    p_observados = sub.add_parser(
+        "observados",
+        help="rellena desde el catalogo historico la ventana de sismos vistos y no despachados",
+    )
+    p_observados.add_argument(
+        "--dias",
+        type=int,
+        default=DIAS_OBSERVADOS,
+        help=f"ancho de la ventana (por defecto {DIAS_OBSERVADOS})",
+    )
+    p_observados.set_defaults(func=_cmd_observados)
 
     p_calibrar = sub.add_parser(
         "calibrar", help="reajusta la tolerancia de los manifests con lo medido"

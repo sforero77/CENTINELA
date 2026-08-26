@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-26T19:48:14Z",
+  "generado_utc": "2026-08-26T20:11:58Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -13,6 +13,86 @@
       "lugar": "4 km al E de Jordán, Colombia",
       "origen_utc": "2026-08-26T16:45:14Z",
       "razon": "M4.9 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us6000tn2j",
+      "mag": 4.9,
+      "lon": -83.9132,
+      "lat": 9.9853,
+      "depth_km": 10.0,
+      "lugar": "10 km al NNO de Cot, Costa Rica",
+      "origen_utc": "2026-08-24T07:37:17Z",
+      "razon": "M4.9 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us6000tn29",
+      "mag": 4.5,
+      "lon": -67.1543,
+      "lat": -28.143,
+      "depth_km": 129.5,
+      "lugar": "41 km al ESE de Tinogasta, Argentina",
+      "origen_utc": "2026-08-24T05:04:04Z",
+      "razon": "M4.5 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us6000tn0n",
+      "mag": 4.5,
+      "lon": -71.6087,
+      "lat": -36.7356,
+      "depth_km": 102.5,
+      "lugar": "23 km al ESE de Coihueco, Chile",
+      "origen_utc": "2026-08-23T20:38:14Z",
+      "razon": "M4.5 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us6000tmzy",
+      "mag": 4.5,
+      "lon": -66.457,
+      "lat": -23.1294,
+      "depth_km": 224.8,
+      "lugar": "80 km al O de El Aguilar, Argentina",
+      "origen_utc": "2026-08-23T17:56:30Z",
+      "razon": "M4.5 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us6000tmuq",
+      "mag": 4.5,
+      "lon": -93.3288,
+      "lat": 14.1261,
+      "depth_km": 10.0,
+      "lugar": "117 km al SO de Puerto Madero, México",
+      "origen_utc": "2026-08-22T21:53:41Z",
+      "razon": "M4.5 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us6000tmtm",
+      "mag": 4.6,
+      "lon": -68.793,
+      "lat": -22.1927,
+      "depth_km": 105.5,
+      "lugar": "32 km al NNE de Calama, Chile",
+      "origen_utc": "2026-08-22T18:46:27Z",
+      "razon": "M4.6 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us6000tmri",
+      "mag": 4.9,
+      "lon": -44.6327,
+      "lat": 12.5208,
+      "depth_km": 10.0,
+      "lugar": "northern Mid-Atlantic Ridge",
+      "origen_utc": "2026-08-22T07:21:25Z",
+      "razon": "M4.9 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us6000tmnz",
+      "mag": 4.7,
+      "lon": -68.8817,
+      "lat": -25.5675,
+      "depth_km": 102.4,
+      "lugar": "147 km al NE de Diego de Almagro, Chile",
+      "origen_utc": "2026-08-21T22:26:03Z",
+      "razon": "M4.7 < umbral M5.5"
     }
   ]
 }

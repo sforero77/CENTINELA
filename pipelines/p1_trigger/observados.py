@@ -24,6 +24,9 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Final
 
+from ..common.constants import MIN_MAGNITUDE, USGS_FDSN_EVENT
+from ..common.geo import LATAM_BBOX, BBox
+from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.paths import SITE_DIR
 from ..common.state import utcnow_iso
@@ -154,3 +157,59 @@ def write_observados(
     destino.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     _log.info("observados publicados", extra={"context": {"eventos": len(vigentes)}})
     return destino
+
+
+# --- Rellenar la ventana ----------------------------------------------------
+
+
+def rellenar(
+    fetcher: Fetcher,
+    *,
+    dias: int = DIAS_OBSERVADOS,
+    bbox: BBox = LATAM_BBOX,
+    ahora: datetime | None = None,
+) -> list[EventoObservado]:
+    """Reconstruye la ventana desde el catalogo historico de USGS.
+
+    La capa solo sabe lo que vio desde que se encendio, y eso hace que su
+    etiqueta mienta: el 26-ago-2026, recien activada, decia «1 en 5 dias»
+    cuando en LATAM habia habido **nueve**. Un numero falso sobre el mundo es
+    peor que no dar ninguno.
+
+    Tambien es la reparacion si el vigia se cae mas de un dia: el feed
+    `4.5_day` cubre veinticuatro horas, asi que una parada mas larga pierde
+    eventos para siempre.
+
+    Usa FDSN, que este proyecto reserva para historicos y backtests y prohibe
+    en el camino critico (D7). Esto es exactamente un historico: se llama a
+    mano, no desde el cron.
+    """
+    desde = (ahora or datetime.now(UTC)) - timedelta(days=dias)
+    url = (
+        f"{USGS_FDSN_EVENT}?format=geojson"
+        f"&starttime={desde.strftime('%Y-%m-%dT%H:%M:%S')}"
+        f"&minmagnitude=4.5&maxmagnitude={MIN_MAGNITUDE - 0.01:.2f}"
+        f"&minlatitude={bbox.lat_min}&maxlatitude={bbox.lat_max}"
+        f"&minlongitude={bbox.lon_min}&maxlongitude={bbox.lon_max}"
+    )
+
+    # Import diferido: `filters` importa de `feed`, y `feed` no debe depender
+    # de este modulo. Arriba seria un ciclo.
+    from .feed import parse_feed
+    from .filters import evaluate
+
+    encontrados = []
+    for candidato in parse_feed(fetcher.get_json(url)):
+        # FDSN ya acota magnitud y caja, pero el filtro es quien decide que es
+        # un sismo: la consulta no distingue una voladura de cantera.
+        decision = evaluate(candidato, bbox=bbox, min_magnitude=0.0)
+        if not decision:
+            continue
+        razon = f"M{candidato.mag} < umbral M{MIN_MAGNITUDE}"
+        encontrados.append(EventoObservado.desde_candidato(candidato, razon))
+
+    _log.info(
+        "ventana rellenada desde FDSN",
+        extra={"context": {"dias": dias, "encontrados": len(encontrados)}},
+    )
+    return encontrados

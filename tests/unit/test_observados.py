@@ -198,3 +198,113 @@ def test_el_sismo_de_jordan_habria_quedado_registrado() -> None:
     assert not decision.relevante, "el umbral de M5.5 no se toca"
     assert observado.razon == "M4.9 < umbral M5.5"
     assert (observado.mag, observado.depth_km) == (4.9, 160.0)
+
+
+# --- Rellenar la ventana desde el historico ---------------------------------
+
+
+class _FdsnFalso:
+    """Devuelve lo que se le diga y recuerda la URL que le pidieron."""
+
+    def __init__(self, features: list[dict[str, object]]) -> None:
+        self.features = features
+        self.url = ""
+
+    def get_json(self, url: str) -> dict[str, object]:
+        self.url = url
+        return {"type": "FeatureCollection", "features": self.features}
+
+    def get_bytes(self, url: str) -> bytes:  # pragma: no cover - no se usa
+        raise NotImplementedError
+
+
+def _feature(
+    usgs_id: str = "us7000tbzn",
+    *,
+    mag: float = 4.9,
+    lon: float = -73.05,
+    lat: float = 6.80,
+    tipo: str = "earthquake",
+) -> dict[str, object]:
+    return {
+        "id": usgs_id,
+        "geometry": {"type": "Point", "coordinates": [lon, lat, 160.0]},
+        "properties": {
+            "mag": mag,
+            "place": "4 km E of Jordan, Colombia",
+            "time": 1787762714000,
+            "updated": 1787762714000,
+            "detail": "",
+            "type": tipo,
+            "status": "reviewed",
+        },
+    }
+
+
+def test_rellenar_trae_lo_que_la_capa_no_llego_a_ver() -> None:
+    """Recien encendida, la capa decia «1 en 5 dias» y habian sido nueve.
+
+    Un numero falso sobre el mundo es peor que no dar ninguno: quien lo lea
+    concluye que la region estuvo tranquila.
+    """
+    from pipelines.p1_trigger.observados import rellenar
+
+    encontrados = rellenar(_FdsnFalso([_feature()]))
+
+    assert [e.usgs_id for e in encontrados] == ["us7000tbzn"]
+
+
+def test_rellenar_pide_solo_lo_que_esta_bajo_el_umbral() -> None:
+    """Traer tambien los M≥5.5 mezclaria reportes con no-reportes.
+
+    Los que pasan el umbral tienen su propio sitio; aparecer ademas aqui los
+    contaria dos veces.
+    """
+    from pipelines.common.constants import MIN_MAGNITUDE
+    from pipelines.p1_trigger.observados import rellenar
+
+    fdsn = _FdsnFalso([])
+    rellenar(fdsn)
+
+    assert f"maxmagnitude={MIN_MAGNITUDE - 0.01:.2f}" in fdsn.url
+    assert "minmagnitude=4.5" in fdsn.url
+
+
+def test_rellenar_acota_la_consulta_a_latam() -> None:
+    """Sin la caja, FDSN devolveria el planeta entero."""
+    from pipelines.common.geo import LATAM_BBOX
+    from pipelines.p1_trigger.observados import rellenar
+
+    fdsn = _FdsnFalso([])
+    rellenar(fdsn)
+
+    assert f"minlatitude={LATAM_BBOX.lat_min}" in fdsn.url
+    assert f"maxlongitude={LATAM_BBOX.lon_max}" in fdsn.url
+
+
+def test_rellenar_sigue_filtrando_lo_que_no_es_un_sismo() -> None:
+    """FDSN acota magnitud y caja, pero no sabe de voladuras de cantera.
+
+    Delegar el criterio a la consulta dejaria dos definiciones de «sismo
+    relevante» en el sistema, y la del filtro es la que manda.
+    """
+    from pipelines.p1_trigger.observados import rellenar
+
+    encontrados = rellenar(_FdsnFalso([_feature(tipo="quarry blast")]))
+
+    assert encontrados == []
+
+
+def test_rellenar_usa_fdsn_y_no_el_feed_en_vivo() -> None:
+    """D7 reserva FDSN para historicos y lo prohibe en el camino critico.
+
+    Esto es un historico —se llama a mano, no desde el cron— y ademas el feed
+    en vivo no llega a cinco dias atras.
+    """
+    from pipelines.common.constants import USGS_FDSN_EVENT
+    from pipelines.p1_trigger.observados import rellenar
+
+    fdsn = _FdsnFalso([])
+    rellenar(fdsn)
+
+    assert fdsn.url.startswith(USGS_FDSN_EVENT)

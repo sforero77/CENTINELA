@@ -377,6 +377,18 @@ Medido antes de decidir: **277 sismos M4,5-5,5 en LATAM en 90 dias** (~3,1/dia,
 **los 23 tuvieron ShakeMap**, asi que el caso «pasa el umbral y no hay producto»
 que RF-03 ya cubre por radios es raro de verdad.
 
+**La ventana se rellena desde el historico.** Recien encendida solo sabia lo que
+habia visto —un sismo— y su etiqueta decia «1 en 5 dias» cuando en LATAM habia
+habido **nueve**. Un numero falso sobre el mundo es peor que no dar ninguno.
+`centinela observados` reconstruye la ventana desde FDSN, que D7 reserva para
+historicos: se llama a mano, no desde el cron. Sirve tambien de reparacion si el
+vigia se cae mas de un dia, que es lo que cubre el feed en vivo.
+
+**Rareza que se ve en el mapa:** `LATAM_BBOX` es un rectangulo, asi que se cuela
+oceano abierto — en la primera ventana entro un M4,9 en la dorsal
+medioatlantica. Es el mismo bbox que gobierna el despacho, asi que no se toca
+aqui, pero explica un punto gris en medio del Atlantico.
+
 **Limite conocido, escrito para no descubrirlo despues:** el piso real es
 **M4,5**, porque es lo que dan `4.5_hour` y `4.5_day`. Un M4,2 superficial bajo
 una ciudad hace mas dano que el M4,9 a 160 km de Jordan, y ese no se veria.
