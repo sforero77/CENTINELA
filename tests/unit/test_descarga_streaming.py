@@ -37,6 +37,9 @@ class _Servidor(BaseHTTPRequestHandler):
     honra_rangos = True
     #: Corta la respuesta tras estos bytes, simulando una caida.
     corta_en: int | None = None
+    #: Sirve el cuerpo comprimido, anunciando el tamano **comprimido** en
+    #: `Content-Length` — que es lo que hace cualquier servidor con gzip.
+    comprime = False
 
     def log_message(self, *_: object) -> None:  # silencio en la salida del test
         pass
@@ -52,6 +55,16 @@ class _Servidor(BaseHTTPRequestHandler):
             self.send_response(200)
 
         trozo = CUERPO[desde:]
+        if self.comprime:
+            import gzip
+
+            empaquetado = gzip.compress(trozo)
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(empaquetado)))
+            self.end_headers()
+            self.wfile.write(empaquetado)
+            return
+
         if self.corta_en is not None:
             # Se anuncia el tamano completo y se envia menos: es como se ve un
             # corte de red desde el cliente.
@@ -69,6 +82,7 @@ class _Servidor(BaseHTTPRequestHandler):
 def servidor() -> Iterator[type[_Servidor]]:
     _Servidor.honra_rangos = True
     _Servidor.corta_en = None
+    _Servidor.comprime = False
     httpd = HTTPServer(("127.0.0.1", 0), _Servidor)
     hilo = threading.Thread(target=httpd.serve_forever, daemon=True)
     hilo.start()
@@ -262,3 +276,44 @@ def test_las_rutas_pesadas_bajan_por_streaming() -> None:
         assert "download_to" in inspect.getsource(funcion), (
             f"{funcion.__name__} sigue bajando con get_bytes"
         )
+
+
+def test_una_respuesta_comprimida_no_se_toma_por_truncada(
+    servidor: type[_Servidor], tmp_path: Path
+) -> None:
+    """`Content-Length` cuenta bytes **en la red**, no en disco.
+
+    Si el servidor comprime, httpx descomprime al vuelo y lo escrito es mayor
+    que lo anunciado sin que nada haya ido mal. El 27-ago-2026 esto tumbo diez
+    de diecinueve builds de pais:
+
+        airports.csv llego incompleto: 12707477 bytes de 3882778
+
+    que es exactamente el ratio de un CSV gzipado. Un guardia de integridad
+    convertido en el fallo — y peor que no tenerlo, porque parecia un problema
+    de red y mandaba a mirar al sitio equivocado.
+    """
+    servidor.comprime = True
+    destino = tmp_path / "airports.csv"
+
+    _cliente().download_to(_url(servidor), destino)
+
+    assert destino.read_bytes() == CUERPO
+    assert not destino.with_suffix(destino.suffix + PARTIAL_SUFFIX).exists()
+
+
+def test_sin_compresion_el_guardia_sigue_vivo(servidor: type[_Servidor], tmp_path: Path) -> None:
+    """El arreglo no puede desactivar la comprobacion en el caso normal.
+
+    Sin `Content-Encoding`, el tamano anunciado si describe lo que se escribe, y
+    una descarga corta sigue siendo una descarga corta.
+    """
+    servidor.corta_en = 1024
+    destino = tmp_path / "raster.tif"
+
+    # El mensaje final es el del envoltorio de reintentos; el "llego incompleto"
+    # queda dentro, encadenado. Lo que importa aqui es que **falle**.
+    with pytest.raises(RuntimeError, match="No se pudo descargar"):
+        _cliente_de_un_intento().download_to(_url(servidor), destino)
+
+    assert not destino.exists(), "un fichero corto no puede quedar en su sitio"

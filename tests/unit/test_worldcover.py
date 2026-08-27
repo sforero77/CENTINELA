@@ -212,3 +212,42 @@ def test_nadie_puede_sumar_codigos_de_clase() -> None:
 
     assert "sum(pixeles)" in fuente
     assert "GROUP BY 1, 2" in fuente, "la clase tiene que estar en el agrupamiento"
+
+
+def test_una_tesela_que_no_existe_no_tumba_el_build() -> None:
+    """Tumbo diez de diecinueve builds el 27-ago-2026.
+
+    El proveedor solo publica las teselas que contienen tierra, y
+    `tiles_for_bbox` genera la rejilla completa: la caja de Chile son 210
+    teselas y la mayoria es Pacifico abierto. GDAL responde 404 y rasterio lo
+    convierte en excepcion.
+
+    `download_ghsl` ya trataba este caso —"tesela ausente, probablemente solo
+    oceano"— y aqui falto: copie la forma del modulo sin copiar su leccion.
+    """
+    import inspect
+
+    from pipelines.p0_exposure.raster_categorico_h3 import aggregate_categorical_to_h3
+
+    fuente = inspect.getsource(aggregate_categorical_to_h3)
+
+    assert '"404" not in str(error)' in fuente, "un 404 de tesela sigue tumbando el build"
+    assert "raise" in fuente, "y cualquier otro error si tiene que propagarse"
+
+
+def test_saltarse_una_tesela_no_materializa_la_siguiente() -> None:
+    """El arreglo no puede costar la lectura por bloques.
+
+    Envolver `list(clases_por_celda(...))` en el try seria mas corto y traeria
+    la tesela entera a memoria — 20 M de pixeles— justo lo que el diseno evita.
+    El 404 salta al abrir el fichero, que es lo primero que hace el generador,
+    asi que el try puede envolver el bucle sin riesgo de inserciones a medias.
+    """
+    import inspect
+
+    from pipelines.p0_exposure.raster_categorico_h3 import aggregate_categorical_to_h3
+
+    fuente = inspect.getsource(aggregate_categorical_to_h3)
+
+    assert "list(clases_por_celda" not in fuente
+    assert "for bloque in clases_por_celda(" in fuente

@@ -151,22 +151,39 @@ def aggregate_categorical_to_h3(
     con.execute(f"CREATE TABLE {tabla} (h3_08 UBIGINT, clase VARCHAR, pixeles BIGINT)")
 
     pixeles = 0
+    ausentes = 0
     for fuente in fuentes:
-        for bloque in clases_por_celda(
-            fuente,
-            overview=overview,
-            nodata=nodata,
-            agrupacion=agrupacion,
-            resolution=resolution,
-        ):
-            pixeles += bloque.num_rows
-            con.register("_bloque_clases", bloque)
-            con.execute(
-                f"INSERT INTO {tabla} "
-                f"SELECT h3_latlng_to_cell(lat, lon, {resolution}) AS h3_08, "
-                "clase, count(*) FROM _bloque_clases GROUP BY 1, 2"
-            )
-            con.unregister("_bloque_clases")
+        # UNA TESELA QUE NO EXISTE NO ES UN FALLO.
+        #
+        # El proveedor solo publica las que contienen tierra, y `tiles_for_bbox`
+        # genera la rejilla completa: la caja de Chile son 210 teselas y la
+        # mayoria son Pacifico abierto. Es el mismo criterio que `download_ghsl`
+        # ya aplicaba —"tesela ausente, probablemente solo oceano"— y que aqui
+        # falto: tumbo diez de diecinueve builds con un 404 de GDAL.
+        #
+        # El try envuelve el bucle y no una lista materializada, para no perder
+        # la lectura por bloques: el 404 salta al abrir el fichero, que es lo
+        # primero que hace el generador, asi que nunca hay inserciones a medias.
+        try:
+            for bloque in clases_por_celda(
+                fuente,
+                overview=overview,
+                nodata=nodata,
+                agrupacion=agrupacion,
+                resolution=resolution,
+            ):
+                pixeles += bloque.num_rows
+                con.register("_bloque_clases", bloque)
+                con.execute(
+                    f"INSERT INTO {tabla} "
+                    f"SELECT h3_latlng_to_cell(lat, lon, {resolution}) AS h3_08, "
+                    "clase, count(*) FROM _bloque_clases GROUP BY 1, 2"
+                )
+                con.unregister("_bloque_clases")
+        except Exception as error:
+            if "404" not in str(error):
+                raise
+            ausentes += 1
 
     con.execute(
         f"CREATE OR REPLACE TABLE {tabla} AS "
@@ -176,7 +193,14 @@ def aggregate_categorical_to_h3(
 
     _log.info(
         "capa categorica agregada",
-        extra={"context": {"tabla": tabla, "celdas": celdas, "pixeles": pixeles}},
+        extra={
+            "context": {
+                "tabla": tabla,
+                "celdas": celdas,
+                "pixeles": pixeles,
+                "teselas_ausentes": ausentes,
+            }
+        },
     )
     return ClaseSum(tabla=tabla, celdas=int(celdas), pixeles=pixeles)
 

@@ -220,7 +220,18 @@ class HttpFetcher:
                     reanuda = desde > 0 and respuesta.status_code == 206
                     if desde and not reanuda:
                         desde = 0
-                    esperado = desde + int(respuesta.headers.get("content-length", 0))
+                    # `Content-Length` cuenta bytes **en la red**. Si el
+                    # servidor comprime, httpx descomprime al vuelo y lo que
+                    # acaba en disco es mayor — sin que nada haya ido mal.
+                    #
+                    # Tumbo diez de diecinueve builds el 27-ago-2026:
+                    # "airports.csv llego incompleto: 12707477 bytes de
+                    # 3882778", que es exactamente el ratio de un CSV gzipado.
+                    # El guardia de integridad convertido en el fallo.
+                    comprimido = respuesta.headers.get("content-encoding", "")
+                    esperado = (
+                        0 if comprimido else desde + int(respuesta.headers.get("content-length", 0))
+                    )
 
                     modo = "ab" if reanuda else "wb"
                     with parcial.open(modo) as fh:
