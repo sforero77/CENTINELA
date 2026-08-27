@@ -889,9 +889,15 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   position: absolute;
   left: 12px;
   bottom: 12px;
-  z-index: 2;
+  z-index: 3;
   display: flex;
+  /* En columna y no en fila: dos etiquetas con sus conteos —"Focos activos
+     (14.984 celdas en 24 h)"— no caben una al lado de otra en un movil, y en
+     fila se salian del mapa. Apiladas caben siempre. */
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
+  max-width: calc(100% - 24px);
 }
 
 .controles-mapa:empty {
@@ -1027,9 +1033,62 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
  * vez —una es regional y continua, la otra es de un evento— y compartir caja
  * obligaria a decidir cual gana. */
 .leyenda-fuego {
-  top: auto;
-  bottom: 58px;
-  left: 12px;
+  /* Sin posicion propia: vive dentro de `.controles-mapa` y se apila con los
+     interruptores. La version anterior la clavaba a `bottom: 58px`, que solo
+     era cierto mientras los controles midieran una linea. */
+  position: static;
+  order: -1;
+  width: 14rem;
+  max-width: 100%;
+  bottom: auto;
   right: auto;
-  max-width: 224px;
+}
+
+
+/* Una cifra que lleva a verla. Hereda de `.metrica` y solo anade lo que la
+ * convierte en control: area de pulsacion, foco visible y la pista de que
+ * pasa al pulsar. */
+.metrica-viva {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.metrica-viva:hover {
+  background: rgba(31, 111, 74, 0.07);
+}
+
+.metrica-viva:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 1px;
+}
+
+.metrica-viva .ver {
+  margin-top: 5px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1f6f4a;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.metrica-viva:hover .ver,
+.metrica-viva:focus-visible .ver {
+  opacity: 1;
+}
+
+/* Sin hover —tactil— la pista se queda puesta: si no, no hay forma de saber
+ * que la cifra hace algo. */
+@media (hover: none) {
+  .metrica-viva .ver { opacity: 1; }
 }

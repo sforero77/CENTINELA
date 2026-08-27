@@ -1983,7 +1983,11 @@ function pintarLeyendaFuego() {
     `<p class="leyenda-nota">Suma de la energía que los sensores midieron en la ` +
     `celda durante 24 h. Es lo más cercano a una intensidad que da este ` +
     `producto — y aun así depende del ángulo de vista. No es área quemada.</p>`;
-  ($("lienzo") || $("mapa").parentElement).appendChild(caja);
+  // Va en el mismo contenedor que los interruptores y no suelta sobre el
+  // mapa: asi apilan solos. Posicionar la leyenda con un `bottom` fijo obliga
+  // a saber cuanto miden los controles, y eso deja de ser cierto en cuanto una
+  // etiqueta se parte en dos lineas — que es lo que pasa en un movil.
+  ($("controles-mapa") || $("lienzo")).appendChild(caja);
 }
 
 function pintarInterruptorIncendios(datos) {
@@ -2028,20 +2032,31 @@ function pintarEnVivo() {
   const v = estado.vivo;
   if (!caja || (!v.incendios && v.observados === undefined)) return;
 
+  // Cada cifra es el interruptor de su propia capa. Es lo que cierra la
+  // distancia entre la afirmacion y la evidencia: un numero que dice "569.538
+  // personas en celdas con fuego" y no lleva a verlas es una nota al pie.
+  //
+  // `<button>` y no `<div>` con `onclick`: sale en el orden de tabulacion, se
+  // activa con Enter, y un lector de pantalla lo anuncia como algo que hace
+  // algo. Ese es todo el motivo.
   const partes = [];
   if (v.incendios && v.incendios.celdas) {
     partes.push(
-      `<div class="metrica"><span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span>` +
+      `<button type="button" class="metrica metrica-viva" data-capa="incendios">` +
+        `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span>` +
         `<span class="etiqueta">personas en celdas con fuego activo</span>` +
         `<span class="apunte">${numero(v.incendios.celdas)} celdas · ` +
-        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h</span></div>`
+        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h</span>` +
+        `<span class="ver">Ver en el mapa</span></button>`
     );
   }
   if (v.observados !== undefined) {
     partes.push(
-      `<div class="metrica"><span class="valor">${numero(v.observados)}</span>` +
+      `<button type="button" class="metrica metrica-viva" data-capa="observados">` +
+        `<span class="valor">${numero(v.observados)}</span>` +
         `<span class="etiqueta">sismos vistos y no despachados</span>` +
-        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos} días</span></div>`
+        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos} días</span>` +
+        `<span class="ver">Ver en el mapa</span></button>`
     );
   }
   if (!partes.length) return;
@@ -2050,4 +2065,20 @@ function pintarEnVivo() {
     `<p class="eyebrow eyebrow-vivo"><span class="pulso" aria-hidden="true"></span>Ahora mismo</p>` +
     `<div class="metricas">${partes.join("")}</div>`;
   caja.hidden = false;
+
+  for (const boton of caja.querySelectorAll(".metrica-viva")) {
+    boton.addEventListener("click", () => encenderCapaViva(boton.dataset.capa));
+  }
+}
+
+//: Enciende la capa desde su cifra, sin duplicar la logica del interruptor.
+//
+// Se pulsa el checkbox en vez de tocar el mapa directamente: asi el estado del
+// control y el del mapa no pueden separarse. Tenerlos en dos sitios es como se
+// acaba con una capa encendida y su casilla vacia.
+function encenderCapaViva(capa) {
+  const casilla = document.querySelector(`#interruptor-${capa} input`);
+  if (!casilla) return;
+  if (!casilla.checked) casilla.click();
+  $("mapa")?.scrollIntoView({ behavior: REDUCIR_MOVIMIENTO ? "auto" : "smooth", block: "nearest" });
 }

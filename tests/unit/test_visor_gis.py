@@ -20,6 +20,25 @@ import pytest
 
 RAIZ = Path(__file__).parent.parent.parent
 APP = (RAIZ / "site" / "assets" / "app.js").read_text(encoding="utf-8")
+
+
+def sin_comentarios(css: str) -> str:
+    """El CSS sin sus comentarios, para que un guardia mire el codigo.
+
+    Cuarta vez en dos dias que una prueba de este repositorio empareja texto y
+    encuentra la explicacion en vez de la regla: paso con `src.read(1)` citado
+    en un docstring, con `gh workflow run site.yml` en el cuerpo de un issue,
+    con `WHERE` en un comentario de SQL, y aqui con `bottom: 58px` en el
+    comentario que explica por que ya no esta.
+
+    El patron es siempre el mismo y la leccion tambien: un guardia de texto
+    tiene que quitar los comentarios del medio que inspecciona **antes** de
+    buscar. Si no, cuanto mejor se documenta un arreglo, mas probable es que su
+    propia prueba lo de por roto.
+    """
+    return re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+
+
 REPORTS = RAIZ / "reports"
 
 
@@ -475,3 +494,81 @@ def test_el_latido_respeta_a_quien_pidio_menos_movimiento() -> None:
 
     assert "prefers-reduced-motion: reduce" in css[desde:], "el latido no se puede desactivar"
     assert ".pulso { animation: none; }" in css[desde:]
+
+
+def test_la_cifra_en_vivo_lleva_a_verla() -> None:
+    """Un numero que dice "569.538 personas bajo fuego" y no lleva a verlas
+    es una nota al pie.
+
+    Cerrar la distancia entre la afirmacion y la evidencia es lo que separa un
+    tablero de un informe: aqui la cifra **es** el control.
+    """
+    bloque = APP[APP.index("function pintarEnVivo") :][:2200]
+
+    assert 'data-capa="incendios"' in bloque
+    assert 'data-capa="observados"' in bloque
+    assert "encenderCapaViva" in APP
+
+
+def test_la_cifra_viva_es_un_boton_de_verdad() -> None:
+    """`<div>` con `onclick` no sale en el orden de tabulacion, no responde a
+    Enter y un lector de pantalla no lo anuncia como algo que hace algo.
+
+    Es la diferencia entre parecer interactivo y serlo.
+    """
+    bloque = APP[APP.index("function pintarEnVivo") :][:2200]
+
+    assert '<button type="button" class="metrica metrica-viva"' in bloque
+
+
+def test_encender_desde_la_cifra_pasa_por_el_interruptor() -> None:
+    """Tocar el mapa directamente separaria el estado del control del real.
+
+    Asi es como se acaba con una capa encendida y su casilla vacia — y con un
+    usuario que pulsa la casilla para encender y la apaga.
+    """
+    bloque = APP[APP.index("function encenderCapaViva") :][:500]
+
+    assert "casilla.click()" in bloque
+    assert "setLayoutProperty" not in bloque, "no puede tocar el mapa por su cuenta"
+
+
+def test_en_tactil_la_pista_no_depende_del_hover() -> None:
+    """Sin hover no hay forma de saber que la cifra hace algo."""
+    css = (RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8")
+
+    assert "@media (hover: none)" in css
+
+
+def test_los_controles_del_mapa_se_apilan_y_no_se_desbordan() -> None:
+    """Dos etiquetas con sus conteos no caben en fila en un movil.
+
+    "Focos activos (14.984 celdas en 24 h)" y "Sismos menores vistos (8 en 5
+    dias, sin reporte)" una al lado de otra se salian del mapa.
+    """
+    css = sin_comentarios((RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8"))
+    bloque = css[css.index(".controles-mapa {") :][:500]
+
+    assert "flex-direction: column" in bloque
+    assert "max-width: calc(100% - 24px)" in bloque
+
+
+def test_la_leyenda_del_fuego_no_se_clava_a_una_altura() -> None:
+    """`bottom: 58px` solo es cierto mientras los controles midan una linea.
+
+    En cuanto una etiqueta se parte en dos —un movil— la leyenda los pisa. Se
+    resuelve apilandola con ellos en vez de calcular la altura.
+    """
+    css = sin_comentarios((RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8"))
+    bloque = css[css.index(".leyenda-fuego {") :][:400]
+
+    assert "position: static" in bloque
+    assert "bottom: 58px" not in bloque
+
+    # La funcion entera, hasta su llave de cierre: recortar por caracteres se
+    # queda corto en cuanto el `innerHTML` crece, y el test pasaria a comprobar
+    # el hueco en vez del codigo.
+    ini = APP.index("function pintarLeyendaFuego")
+    cuerpo = APP[ini : APP.index(chr(10) + "}", ini)]
+
+    assert '$("controles-mapa")' in cuerpo, "la leyenda no se apila con los controles"
