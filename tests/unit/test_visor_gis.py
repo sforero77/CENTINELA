@@ -657,3 +657,67 @@ def test_las_rampas_se_distinguen_en_escala_de_grises() -> None:
         sube = all(a < b for a, b in pairwise(ls))
         baja = all(a > b for a, b in pairwise(ls))
         assert sube or baja, f"la rampa de {nombre} no es monotona en luminancia"
+
+
+def test_ninguna_clase_se_confunde_con_el_suelo_del_mapa() -> None:
+    """El error que este repositorio ya corrigio una vez, y que repeti.
+
+    El 25-ago se arreglo que "la coropleta era del color del suelo del mapa". El
+    27 elegi inferno para la capa de fuego —una rampa pensada para fondo
+    **negro**— y sus dos primeras clases quedaron a 1,2:1 y 1,3:1 sobre
+    `BASE_TIERRA`. Invisibles. Y ahi cae la mayoria de las celdas.
+
+    Sobre un suelo de luminancia 0,81 ningun color claro llega a 3:1, asi que el
+    umbral realista es 1,6 — y lo que sostiene la legibilidad de las clases
+    bajas es el contorno oscuro, no el relleno.
+    """
+
+    def luminancia(hexa: str) -> float:
+        canales = [int(hexa.lstrip("#")[i : i + 2], 16) / 255 for i in (0, 2, 4)]
+        lineal = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in canales]
+        return 0.2126 * lineal[0] + 0.7152 * lineal[1] + 0.0722 * lineal[2]
+
+    def contraste(a: str, b: str) -> float:
+        alta, baja = sorted((luminancia(a), luminancia(b)), reverse=True)
+        return (alta + 0.05) / (baja + 0.05)
+
+    suelo = re.search(r'const BASE_TIERRA = "(#[0-9a-fA-F]{6})"', APP).group(1)
+    fuego = re.findall(r"#[0-9a-fA-F]{6}", APP.split("const FUEGO_COLORES", 1)[1].split("]", 1)[0])
+
+    peor = min(contraste(c, suelo) for c in fuego)
+    assert peor >= 1.6, f"la clase mas floja da {peor:.2f}:1 contra el suelo {suelo}"
+
+
+def test_los_simbolos_de_fuego_llevan_contorno_oscuro() -> None:
+    """Sin el, las clases bajas no se separan del fondo por mucho que se sature.
+
+    Es figura-fondo: sobre un mapa base claro, el borde es lo que hace simbolo a
+    una mancha de color.
+    """
+    bloque = APP[APP.index('id: "incendios-punto"') :][:1200]
+
+    assert '"circle-stroke-color": FUEGO_CONTORNO' in bloque
+    assert '"circle-stroke-width": 1' in bloque
+
+
+def test_el_encuadre_inicial_muestra_toda_latam() -> None:
+    """`zoom: 3.1` centrado en Colombia dejaba fuera media region.
+
+    Chile, Argentina, Bolivia, Paraguay, Uruguay y el sur de Peru y Brasil
+    quedaban fuera de pantalla — y ahi es donde esta la temporada de quemas, asi
+    que la capa de fuego se encendia sobre territorio invisible.
+    """
+    assert "ENCUADRE_LATAM" in APP
+    assert "fitBounds(ENCUADRE_LATAM" in APP, "se declara el encuadre y no se aplica"
+
+    caja = re.search(r"const ENCUADRE_LATAM = \[(.*?)\];", APP, re.S).group(1)
+    numeros = [float(n) for n in re.findall(r"-?\d+\.?\d*", caja)]
+    assert min(numeros) <= -57, "el encuadre no llega al sur del continente"
+
+
+def test_el_encuadre_no_pisa_un_evento_seleccionado() -> None:
+    """Entrar por un enlace a un sismo y que el mapa se vaya a LATAM seria peor
+    que no encuadrar: la URL dice a donde ir."""
+    bloque = APP[APP.index("fitBounds(ENCUADRE_LATAM") - 200 :][:300]
+
+    assert "!estado.evento" in bloque

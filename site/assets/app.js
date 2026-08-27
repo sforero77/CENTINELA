@@ -15,7 +15,20 @@ const OBSERVADOS = "observados.json";
 const INCENDIOS = "incendios.json";
 
 // Encuadre inicial: la ventana LATAM del sistema (RF-01).
-const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 3.1 };
+// Encuadre inicial: **la caja de LATAM, no un zoom fijo**.
+//
+// `zoom: 3.1` centrado en Colombia dejaba fuera Chile, Argentina, Bolivia,
+// Paraguay, Uruguay y el sur de Peru y Brasil — la mitad de los diecinueve
+// paises que el sistema dice cubrir. Y encima ahi es donde esta la temporada de
+// quemas, asi que la capa de fuego se encendia sobre territorio invisible.
+//
+// `fitBounds` se adapta a la ventana; un zoom fijo solo es correcto para el
+// tamano de pantalla en que se eligio.
+const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 2.6 };
+const ENCUADRE_LATAM = [
+  [-119.0, -57.5],
+  [-32.0, 33.0],
+];
 
 // Mapa base: estilo Positron de OpenFreeMap.
 //
@@ -65,7 +78,21 @@ const OBSERVADO = "#6b6660";
 const FUEGO_ZOOM_HEX = 9;
 
 const FUEGO_CORTES = [10, 50, 150, 400, 1000];
-const FUEGO_COLORES = ["#fcffa4", "#fac228", "#f57d15", "#d44842", "#9f2a63", "#5d177f"];
+// Medido contra `BASE_TIERRA` (#ece9de), que es sobre lo que se dibuja:
+//
+//     antes  1,2 : 1   1,3 : 1   2,2 : 1   3,6   5,8   9,1
+//     ahora  1,7 : 1   2,4 : 1   3,3 : 1   4,7   7,0  10,7
+//
+// Las dos primeras clases eran **invisibles** sobre el suelo del mapa, y ahi
+// cae la mayoria de las celdas. Es el mismo error que este repositorio ya
+// corrigio una vez —"la coropleta era del color del suelo del mapa"— y lo
+// repeti eligiendo inferno, que es una rampa pensada para fondo negro.
+//
+// Sobre un suelo de luminancia 0,81 ningun color claro llega a 3:1, asi que el
+// relleno no basta: cada simbolo lleva contorno oscuro. Es lo que la
+// cartografia llama figura-fondo, y es la unica salida sin cambiar el mapa base.
+const FUEGO_COLORES = ["#f4a621", "#ef7215", "#e14b28", "#c02a4a", "#8c1d64", "#4a1370"];
+const FUEGO_CONTORNO = "#3d0f52";
 
 const REDUCIR_MOVIMIENTO =
   window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1418,11 +1445,17 @@ function dibujarEpicentros(eventos) {
         "circle-radius": [
           "interpolate", ["linear"], ["sqrt", ["max", ["get", "pop"], 1]], 1, 6, 2000, 22,
         ],
+        // Estaba al 16 % de opacidad: color efectivo #ddcabd sobre un suelo
+        // #ece9de, o sea **1,30 : 1**. El circulo que dice cuanta poblacion
+        // quedo expuesta —la cifra de portada del panorama— no se veia.
+        //
+        // Sube el relleno y el contorno pasa a ser del color del epicentro en
+        // vez de blanco: un halo blanco sobre fondo casi blanco no separa nada.
         "circle-color": EPICENTRO,
-        "circle-opacity": 0.16,
-        "circle-stroke-color": "#ffffff",
-        "circle-stroke-width": 1.5,
-        "circle-stroke-opacity": 0.9,
+        "circle-opacity": 0.28,
+        "circle-stroke-color": EPICENTRO,
+        "circle-stroke-width": 1.2,
+        "circle-stroke-opacity": 0.55,
       },
     });
     crearEstrella(m);
@@ -1476,6 +1509,16 @@ function iniciarMapa() {
     style: ESTILO_BASE,
     ...VISTA_INICIAL,
     attributionControl: false,
+  });
+
+  // El encuadre real se calcula sobre la ventana ya medida. `VISTA_INICIAL`
+  // solo evita el parpadeo del primer cuadro.
+  //
+  // Por `cuandoElEstiloEsteListo` y no por `once("load")`: es la misma carrera
+  // que dejo el mapa sin epicentros con la cache fria, y este fichero ya la
+  // resolvio una vez. Repetirla aqui seria reabrirla.
+  cuandoElEstiloEsteListo(mapa, () => {
+    if (!estado.evento) mapa.fitBounds(ENCUADRE_LATAM, { padding: 24, animate: false });
   });
 
   // Sin `customAttribution`: el estilo de OpenFreeMap ya declara la suya y
@@ -1893,16 +1936,18 @@ function dibujarIncendios(datos) {
         paint: {
           // El radio va en pixeles de pantalla, asi que no se encoge con el
           // zoom: es lo que hace la capa visible a escala continental.
+          // Radio minimo de 3 px: por debajo el contorno se come el relleno y
+          // el simbolo deja de tener color, que es justo lo que lo hacia legible.
           "circle-radius": [
             "interpolate", ["linear"], ["zoom"],
-            3, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 1.6, 500, 4],
-            8, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 4, 500, 11],
+            3, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 3, 500, 6],
+            8, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 5, 500, 13],
           ],
           "circle-color": colorDeFuego(),
-          "circle-opacity": 0.85,
-          "circle-stroke-color": "#3d0f52",
-          "circle-stroke-width": 0.4,
-          "circle-stroke-opacity": 0.5,
+          "circle-opacity": 0.9,
+          "circle-stroke-color": FUEGO_CONTORNO,
+          "circle-stroke-width": 1,
+          "circle-stroke-opacity": 0.85,
         },
       },
       antes
@@ -1925,7 +1970,7 @@ function dibujarIncendios(datos) {
         source: "incendios",
         minzoom: FUEGO_ZOOM_HEX,
         layout: { visibility: "none" },
-        paint: { "line-color": "#5d177f", "line-width": 0.4, "line-opacity": 0.35 },
+        paint: { "line-color": FUEGO_CONTORNO, "line-width": 0.6, "line-opacity": 0.55 },
       },
       antes
     );
@@ -2005,9 +2050,7 @@ function pintarLeyendaFuego() {
   caja.innerHTML =
     `<p class="leyenda-titulo mono">Potencia radiativa · MW</p>` +
     `<ul class="leyenda-escala">${rangos}</ul>` +
-    `<p class="leyenda-nota">Suma de la energía que los sensores midieron en la ` +
-    `celda durante 24 h. Es lo más cercano a una intensidad que da este ` +
-    `producto — y aun así depende del ángulo de vista. No es área quemada.</p>`;
+    `<p class="leyenda-nota">Energía medida en 24 h. <strong>No es área quemada.</strong></p>`;
   // Va en el mismo contenedor que los interruptores y no suelta sobre el
   // mapa: asi apilan solos. Posicionar la leyenda con un `bottom` fijo obliga
   // a saber cuanto miden los controles, y eso deja de ser cierto en cuanto una
