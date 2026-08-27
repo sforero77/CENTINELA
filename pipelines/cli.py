@@ -308,11 +308,26 @@ def _cmd_frescura(args: argparse.Namespace) -> int:
     El visor llego a estar diecisiete horas congelado con todo en verde. Este
     comando existe para que la proxima vez lo diga una alarma y no una persona.
     """
-    from .common.frescura import raise_if_stale, resumen, revisar
+    from .common.frescura import (
+        Ausentes,
+        Desfase,
+        raise_if_stale,
+        resumen,
+        revisar,
+        revisar_colecciones,
+    )
 
-    desfases = revisar(HttpFetcher(), sitio=args.sitio)
-    print(resumen(desfases))
-    raise_if_stale(desfases)
+    cliente = HttpFetcher()
+    # Dos preguntas distintas contra la misma pagina: "¿cuanto hace?" para lo
+    # que lleva fecha, y "¿estan los mismos?" para lo que es una coleccion. Un
+    # indice de reportes recien generado que no lista un reporte publicado esta
+    # fresco y roto a la vez.
+    revisiones: list[Desfase | Ausentes] = [
+        *revisar(cliente, sitio=args.sitio),
+        *revisar_colecciones(cliente, sitio=args.sitio),
+    ]
+    print(resumen(revisiones))
+    raise_if_stale(revisiones)
     return 0
 
 

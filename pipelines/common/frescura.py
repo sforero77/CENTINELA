@@ -38,12 +38,46 @@ SITIO_PUBLICADO: Final[str] = "https://sforero77.github.io/CENTINELA"
 #: da margen para una demora del cron sin tolerar un dia congelado.
 HORAS_DE_GRACIA: Final[float] = 3.0
 
+#: Colecciones que el visor lee y que **no llevan fecha**: se comparan por su
+#: contenido. `fichero -> clave que identifica cada elemento`.
+#:
+#: `reports/index.json` es lo mas importante que publica este sistema y hasta el
+#: 27-ago-2026 nadie lo vigilaba. Estaba cubierto de rebote —P2 toca
+#: `status.json` en el mismo commit, asi que un desfase de reportes desfasaba
+#: tambien el latido— pero de rebote no es lo mismo que de frente: el dia que P2
+#: deje de tocar `status.json`, la cobertura desaparece sin que nadie se entere.
+#:
+#: Y para un indice la pregunta correcta no es "cuanto hace" sino "¿estan los
+#: mismos eventos?". Un reporte publicado que la pagina no lista es el fallo,
+#: aunque el fichero se haya generado hace un minuto.
+COLECCIONES: Final[dict[str, str]] = {"reports/index.json": "usgs_id"}
+
 #: Los ficheros que el visor lee y que tienen fecha propia dentro.
 FICHEROS_CON_FECHA: Final[tuple[str, ...]] = (
     "status.json",
     "observados.json",
     "incendios.json",
 )
+
+
+@dataclass(frozen=True, slots=True)
+class Ausentes:
+    """Elementos que estan en el repositorio y no en la pagina."""
+
+    fichero: str
+    faltan: tuple[str, ...]
+    en_el_repo: int
+    en_la_pagina: int
+
+    @property
+    def preocupa(self) -> bool:
+        return bool(self.faltan)
+
+    def __str__(self) -> str:
+        muestra = ", ".join(self.faltan[:4]) + ("…" if len(self.faltan) > 4 else "")
+        return f"{self.fichero}: repo {self.en_el_repo} · pagina {self.en_la_pagina}" + (
+            f" · no publicados: {muestra}" if self.faltan else ""
+        )
 
 
 class PaginaDesactualizadaError(Exception):
@@ -140,7 +174,55 @@ def revisar(
     return desfases
 
 
-def raise_if_stale(desfases: list[Desfase]) -> None:
+def _elementos(datos: Any, clave: str) -> set[str]:
+    """Ids de una coleccion, venga como lista o envuelta en un objeto."""
+    filas = datos if isinstance(datos, list) else (datos or {}).get("eventos", [])
+    return {str(f[clave]) for f in filas if isinstance(f, dict) and clave in f}
+
+
+def revisar_colecciones(
+    fetcher: Any,
+    *,
+    raiz: Path | None = None,
+    sitio: str = SITIO_PUBLICADO,
+) -> list[Ausentes]:
+    """Compara, elemento a elemento, lo que el repositorio tiene y la pagina sirve.
+
+    Solo mira en una direccion: lo que esta en el repositorio y **no** en la
+    pagina. Al reves no es un fallo sino el estado normal justo despues de
+    retirar un reporte, mientras el despliegue esta en vuelo.
+    """
+    base = raiz or SITE_DIR.parent
+    ausentes = []
+
+    for fichero, clave in COLECCIONES.items():
+        local = base / fichero
+        if not local.exists():
+            continue
+        try:
+            publicado = fetcher.get_json(f"{sitio.rstrip('/')}/{fichero}")
+        except Exception as error:
+            _log.warning(
+                "no se pudo leer la coleccion publicada",
+                extra={"context": {"fichero": fichero, "error": str(error)}},
+            )
+            continue
+
+        aqui = _elementos(json.loads(local.read_text(encoding="utf-8")), clave)
+        alla = _elementos(publicado, clave)
+        ausentes.append(
+            Ausentes(
+                fichero=fichero,
+                faltan=tuple(sorted(aqui - alla)),
+                en_el_repo=len(aqui),
+                en_la_pagina=len(alla),
+            )
+        )
+
+    return ausentes
+
+
+def raise_if_stale(desfases: list[Desfase | Ausentes]) -> None:
     """Levanta si alguna copia publicada quedo demasiado atras.
 
     Es lo que convierte la medicion en una alarma. Medir y no levantar seria el
@@ -161,7 +243,7 @@ def raise_if_stale(desfases: list[Desfase]) -> None:
     )
 
 
-def resumen(desfases: list[Desfase]) -> str:
+def resumen(desfases: list[Desfase | Ausentes]) -> str:
     """Linea por fichero, tambien cuando todo esta bien.
 
     Publicar el resultado del caso bueno es lo que permite distinguir "esta

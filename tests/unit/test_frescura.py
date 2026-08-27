@@ -215,3 +215,91 @@ def test_hay_un_workflow_que_lo_ejecuta() -> None:
     assert "centinela frescura" in texto
     assert "schedule" in texto, "sin cron, solo corre cuando alguien se acuerda"
     assert "gh issue create" in texto, "una corrida en rojo que nadie mira no es una alarma"
+
+
+# --- Lo que no lleva fecha: colecciones --------------------------------------
+
+
+def _coleccion(raiz: Path, ids: list[str]) -> None:
+    destino = raiz / "reports"
+    destino.mkdir(parents=True, exist_ok=True)
+    (destino / "index.json").write_text(
+        json.dumps([{"usgs_id": i, "mag": 6.0} for i in ids]), encoding="utf-8"
+    )
+
+
+def test_un_reporte_publicado_que_la_pagina_no_lista(tmp_path: Path) -> None:
+    """El artefacto mas importante del sistema, y hasta hoy nadie lo vigilaba.
+
+    Estaba cubierto de rebote —P2 toca `status.json` en el mismo commit— pero de
+    rebote no es de frente: el dia que P2 deje de tocarlo, la cobertura
+    desaparece sin que nadie se entere.
+    """
+    from pipelines.common.frescura import raise_if_stale, revisar_colecciones
+
+    _coleccion(tmp_path, ["us1", "us2", "us3"])
+    pagina = _PaginaFalsa({"reports/index.json": [{"usgs_id": "us1"}, {"usgs_id": "us2"}]})
+
+    ausentes = revisar_colecciones(pagina, raiz=tmp_path, sitio="https://ejemplo/")
+
+    assert ausentes[0].faltan == ("us3",)
+    assert ausentes[0].preocupa
+    with pytest.raises(PaginaDesactualizadaError, match="us3"):
+        raise_if_stale(list(ausentes))
+
+
+def test_para_un_indice_la_pregunta_no_es_cuanto_hace(tmp_path: Path) -> None:
+    """Un indice recien generado que no lista un reporte esta fresco y roto.
+
+    Por eso las colecciones se comparan por contenido y no por fecha: la unica
+    respuesta util es "¿estan los mismos?".
+    """
+    from pipelines.common.frescura import revisar_colecciones
+
+    _coleccion(tmp_path, ["us1"])
+    pagina = _PaginaFalsa({"reports/index.json": [{"usgs_id": "us1"}]})
+
+    assert not revisar_colecciones(pagina, raiz=tmp_path, sitio="https://ejemplo/")[0].preocupa
+
+
+def test_un_reporte_retirado_no_es_un_fallo(tmp_path: Path) -> None:
+    """Sobra en la pagina y falta en el repo: es el estado normal justo despues
+    de retirar un reporte, mientras el despliegue esta en vuelo.
+
+    Tratarlo como fallo daria una alarma cada vez que se corrige algo.
+    """
+    from pipelines.common.frescura import revisar_colecciones
+
+    _coleccion(tmp_path, ["us1"])
+    pagina = _PaginaFalsa({"reports/index.json": [{"usgs_id": "us1"}, {"usgs_id": "viejo"}]})
+
+    assert not revisar_colecciones(pagina, raiz=tmp_path, sitio="https://ejemplo/")[0].preocupa
+
+
+def test_una_caida_de_red_tampoco_inventa_reportes_ausentes(tmp_path: Path) -> None:
+    """Misma regla que con las fechas: no poder comprobar no es estar roto."""
+    from pipelines.common.frescura import revisar_colecciones
+
+    _coleccion(tmp_path, ["us1"])
+    pagina = _PaginaFalsa(error=TimeoutError("la red"))
+
+    assert revisar_colecciones(pagina, raiz=tmp_path, sitio="https://ejemplo/") == []
+
+
+def test_el_indice_de_reportes_esta_vigilado() -> None:
+    """Escrito y no conectado seria especialmente ironico en este modulo."""
+    from pipelines.common.frescura import COLECCIONES
+
+    assert "reports/index.json" in COLECCIONES
+
+
+def test_el_comando_frescura_pregunta_las_dos_cosas() -> None:
+    """Fechas y colecciones son preguntas distintas contra la misma pagina."""
+    import inspect
+
+    from pipelines.cli import _cmd_frescura
+
+    fuente = inspect.getsource(_cmd_frescura)
+
+    assert "revisar(" in fuente
+    assert "revisar_colecciones(" in fuente
