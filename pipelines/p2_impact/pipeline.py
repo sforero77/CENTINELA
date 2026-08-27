@@ -174,7 +174,26 @@ def download_products(
 #: el reporte sale sin la fila de superficie construida, que es una ausencia
 #: honesta y no un cero: `_nota_superficie` y la tabla de totales omiten la
 #: cifra cuando vale 0 en vez de publicar "0 km² construidos".
-COLUMNAS_OPCIONALES: dict[str, str] = {"built_m2": "0.0"}
+#: Columnas que un activo viejo puede no traer, con el valor que las sustituye.
+#:
+#: Los diecinueve activos publicados se construyeron antes de que existiera la
+#: capa de cobertura del suelo, y reconstruirlos cuesta horas de CI. Sin esto,
+#: P2 y P5 reventarian con "column not found" contra cualquier activo anterior
+#: a la Fase 1 — un fallo total por una columna que solo describe el terreno.
+#:
+#: El cero no miente aqui porque `register_exposure_view` devuelve la lista de
+#: sustituidas y deja aviso: quien lo lea sabe que es "no medido", no "medido y
+#: da cero". Es la misma distincion que sostiene toda la capa de observados.
+COLUMNAS_OPCIONALES: dict[str, str] = {
+    "built_m2": "0.0",
+    "lulc_arbolado_pct": "0.0",
+    "lulc_arbustos_pct": "0.0",
+    "lulc_pastizal_pct": "0.0",
+    "lulc_cultivo_pct": "0.0",
+    "lulc_construido_pct": "0.0",
+    "lulc_humedal_pct": "0.0",
+    "lulc_px": "0",
+}
 
 
 def register_exposure_view(con: Any, exposure_glob: str) -> list[str]:

@@ -39,7 +39,11 @@ SITIO_PUBLICADO: Final[str] = "https://sforero77.github.io/CENTINELA"
 HORAS_DE_GRACIA: Final[float] = 3.0
 
 #: Los ficheros que el visor lee y que tienen fecha propia dentro.
-FICHEROS_CON_FECHA: Final[tuple[str, ...]] = ("status.json", "observados.json")
+FICHEROS_CON_FECHA: Final[tuple[str, ...]] = (
+    "status.json",
+    "observados.json",
+    "incendios.json",
+)
 
 
 class PaginaDesactualizadaError(Exception):

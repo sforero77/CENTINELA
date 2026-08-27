@@ -277,6 +277,31 @@ def _cmd_observados(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_incendios(args: argparse.Namespace) -> int:
+    """Publica la capa de focos activos cruzada con la exposicion.
+
+    Se llama desde `incendios.yml` cada seis horas: FIRMS tarda unas tres en
+    publicar, asi que mas frecuencia no traeria dato nuevo, y menos dejaria la
+    capa vieja delante de quien la mira.
+    """
+    from .p5_incendios.run import run_incendios
+
+    resultado = run_incendios(HttpFetcher(), exposure_glob=args.exposure or "")
+    print(
+        json.dumps(
+            {
+                "leidos": resultado.leidos,
+                "en_latam": resultado.en_latam,
+                "celdas": resultado.celdas,
+                "publicado": str(resultado.publicado) if resultado.publicado else None,
+            },
+            ensure_ascii=False,
+        )
+    )
+    _emit_github_output("celdas", str(resultado.celdas))
+    return 0
+
+
 def _cmd_frescura(args: argparse.Namespace) -> int:
     """Comprueba que la pagina publicada sirve lo que hay en el repositorio.
 
@@ -516,6 +541,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_frescura.add_argument("--sitio", default=SITIO_PUBLICADO, help="raiz de la pagina publicada")
     p_frescura.set_defaults(func=_cmd_frescura)
+
+    p_incendios = sub.add_parser(
+        "incendios", help="publica la capa de focos activos cruzada con la exposicion"
+    )
+    p_incendios.add_argument(
+        "--exposure",
+        default="",
+        help="patron de los parquet de exposicion; vacio publica el fuego sin cruzar",
+    )
+    p_incendios.set_defaults(func=_cmd_incendios)
 
     p_calibrar = sub.add_parser(
         "calibrar", help="reajusta la tolerancia de los manifests con lo medido"

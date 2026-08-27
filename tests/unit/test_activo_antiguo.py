@@ -32,8 +32,20 @@ def con() -> Any:
     return connect()
 
 
-def _activo(con: Any, tmp_path: Path, columnas: str, *, built: bool) -> str:
+def _activo(con: Any, tmp_path: Path, columnas: str, *, built: bool, al_dia: bool = False) -> str:
+    """Escribe un parquet con la forma de un activo publicado.
+
+    Las columnas que el activo "al dia" tiene de mas se anaden en el COPY y no
+    en la tabla, igual que `built_m2`: asi la fila de ejemplo sigue siendo una
+    sola y anadir una columna opcional no obliga a reescribirla.
+    """
     extra = ", 1500.0 AS built_m2" if built else ""
+    if al_dia:
+        extra += "".join(
+            f", {'0' if c == 'lulc_px' else '0.0'} AS {c}"
+            for c in COLUMNAS_OPCIONALES
+            if c != "built_m2"
+        )
     con.execute(f"CREATE OR REPLACE TABLE _tmp ({columnas})")
     con.execute(
         "INSERT INTO _tmp SELECT 1::UBIGINT, 'COL', '05', '05001', 100.0, 20.0, 70.0, 10.0, "
@@ -46,7 +58,9 @@ def _activo(con: Any, tmp_path: Path, columnas: str, *, built: bool) -> str:
 
 @pytest.mark.geo
 def test_un_activo_al_dia_no_sustituye_nada(con: Any, tmp_path: Path) -> None:
-    ruta = _activo(con, tmp_path, COLUMNAS_V04, built=True)
+    """Un activo con todas las columnas del contrato no necesita relleno."""
+    ruta = _activo(con, tmp_path, COLUMNAS_V04, built=True, al_dia=True)
+
     assert register_exposure_view(con, ruta) == []
     assert con.execute("SELECT built_m2 FROM exposure").fetchone()[0] == 1500.0
 
@@ -55,8 +69,10 @@ def test_un_activo_al_dia_no_sustituye_nada(con: Any, tmp_path: Path) -> None:
 def test_un_activo_v04_sigue_sirviendo(con: Any, tmp_path: Path) -> None:
     """Sin esto, el primer sismo tras actualizar el codigo se queda sin reporte."""
     ruta = _activo(con, tmp_path, COLUMNAS_V04, built=False)
-    assert register_exposure_view(con, ruta) == ["built_m2"]
+
+    assert register_exposure_view(con, ruta) == sorted(COLUMNAS_OPCIONALES)
     assert con.execute("SELECT built_m2 FROM exposure").fetchone()[0] == 0.0
+    assert con.execute("SELECT lulc_arbolado_pct FROM exposure").fetchone()[0] == 0.0
 
 
 @pytest.mark.geo
@@ -72,6 +88,10 @@ def test_el_sustituto_es_cero_y_eso_es_deliberado() -> None:
     """Cero aqui no se publica como cifra.
 
     La tabla de totales y la nota de superficie omiten el dato cuando vale 0,
-    asi que el reporte muestra una **ausencia**, no "0 km² construidos".
+    asi que el reporte muestra una **ausencia**, no "0 km² construidos". Lo
+    mismo vale para la cobertura del suelo, que llego el 27-ago-2026: los
+    diecinueve activos publicados son anteriores y no la traen.
     """
-    assert COLUMNAS_OPCIONALES == {"built_m2": "0.0"}
+    assert set(COLUMNAS_OPCIONALES.values()) <= {"0.0", "0"}, "ningun sustituto puede ser inventado"
+    assert "built_m2" in COLUMNAS_OPCIONALES
+    assert all(c.startswith("lulc_") for c in COLUMNAS_OPCIONALES if c != "built_m2")
