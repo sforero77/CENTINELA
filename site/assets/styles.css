@@ -1092,3 +1092,12 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
 @media (hover: none) {
   .metrica-viva .ver { opacity: 1; }
 }
+
+
+/* El foco del selector de capas. Con `tabindex` rotatorio el foco se mueve
+ * dentro del grupo sin tabular, asi que **tiene** que verse: si no, quien
+ * navega con teclado no sabe donde esta. */
+.capas button:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 2px;
+}

@@ -398,14 +398,34 @@ function pintarLeyenda(capa) {
 function pintarSelectorCapas() {
   const caja = $("capas");
   caja.hidden = false;
+  // `tabindex` rotatorio: solo el tab seleccionado entra en el orden de
+  // tabulacion, y dentro del grupo se navega con flechas. Es lo que ARIA exige
+  // de un `tablist`, y no estaba: con siete capas, llegar al mapa con el
+  // teclado costaba siete tabulaciones que ademas no cambiaban nada.
   caja.innerHTML = ORDEN_CAPAS.map(
     (id) =>
       `<button type="button" role="tab" data-capa="${id}" ` +
-      `aria-selected="${id === estado.capa}" title="${escapar(CAPAS[id].nota)}">` +
-      `${CAPAS[id].titulo}</button>`
+      `aria-selected="${id === estado.capa}" aria-controls="mapa" ` +
+      `tabindex="${id === estado.capa ? 0 : -1}" ` +
+      `title="${escapar(CAPAS[id].nota)}">${CAPAS[id].titulo}</button>`
   ).join("");
-  for (const boton of caja.querySelectorAll("button")) {
+
+  const botones = [...caja.querySelectorAll("button")];
+  for (const [i, boton] of botones.entries()) {
     boton.addEventListener("click", () => cambiarCapa(boton.dataset.capa));
+    boton.addEventListener("keydown", (ev) => {
+      const salto = { ArrowRight: 1, ArrowLeft: -1 }[ev.key];
+      const destino = salto
+        ? botones[(i + salto + botones.length) % botones.length]
+        : { Home: botones[0], End: botones[botones.length - 1] }[ev.key];
+      if (!destino) return;
+      ev.preventDefault();
+      // Se mueve **y se selecciona**: en un tablist que cambia una vista, tener
+      // que confirmar con Enter deja al usuario mirando una capa que no es la
+      // que tiene el foco.
+      destino.focus();
+      cambiarCapa(destino.dataset.capa);
+    });
   }
 }
 
@@ -422,6 +442,11 @@ function cambiarCapa(id) {
     // está vacía, y pintarla del primer color la haría parecer un valor bajo en
     // vez de una ausencia.
     m.setFilter("celdas", [">", ["coalesce", ["get", capa.columna], 0], 0]);
+  }
+  for (const boton of document.querySelectorAll("#capas button")) {
+    const suya = boton.dataset.capa === id;
+    boton.setAttribute("aria-selected", String(suya));
+    boton.tabIndex = suya ? 0 : -1;
   }
   pintarLeyenda(capa);
   anunciar(`Capa ${capa.titulo}. ${capa.nota}`);

@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import math
 import re
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
@@ -572,3 +573,87 @@ def test_la_leyenda_del_fuego_no_se_clava_a_una_altura() -> None:
     cuerpo = APP[ini : APP.index(chr(10) + "}", ini)]
 
     assert '$("controles-mapa")' in cuerpo, "la leyenda no se apila con los controles"
+
+
+# --- Accesibilidad ----------------------------------------------------------
+
+
+def test_el_selector_de_capas_se_navega_con_flechas() -> None:
+    """`role="tab"` no es una etiqueta: es un contrato.
+
+    ARIA exige que un `tablist` se recorra con flechas y que solo el
+    seleccionado este en el orden de tabulacion. Sin eso, llegar al mapa con el
+    teclado costaba siete tabulaciones por siete capas — y ninguna hacia nada.
+    """
+    bloque = APP[APP.index("function pintarSelectorCapas") :][:1800]
+
+    assert "ArrowRight" in bloque and "ArrowLeft" in bloque
+    assert "Home" in bloque and "End" in bloque, "faltan los extremos del grupo"
+
+
+def test_solo_la_capa_activa_entra_en_el_orden_de_tabulacion() -> None:
+    """`tabindex` rotatorio: el grupo es una parada, no siete."""
+    bloque = APP[APP.index("function pintarSelectorCapas") :][:1800]
+
+    assert 'tabindex="${id === estado.capa ? 0 : -1}"' in bloque
+
+
+def test_moverse_con_el_teclado_cambia_la_capa() -> None:
+    """En un tablist que cambia una vista, seleccionar aparte no vale.
+
+    Tener que confirmar con Enter deja al usuario mirando una capa que no es la
+    que tiene el foco — y como el mapa esta al lado, se nota.
+    """
+    bloque = APP[APP.index("function pintarSelectorCapas") :][:1800]
+
+    assert "destino.focus();" in bloque
+    assert "cambiarCapa(destino.dataset.capa);" in bloque
+
+
+def test_cambiar_de_capa_mueve_el_tabindex() -> None:
+    """Si no, tras un clic el orden de tabulacion apunta a la capa anterior."""
+    bloque = APP[APP.index("function cambiarCapa") :][:900]
+
+    assert "aria-selected" in bloque
+    assert "tabIndex" in bloque
+
+
+def test_el_foco_del_selector_se_ve() -> None:
+    """Con `tabindex` rotatorio el foco se mueve sin tabular.
+
+    Si no se ve, quien navega con teclado no sabe donde esta.
+    """
+    css = sin_comentarios((RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8"))
+
+    assert ".capas button:focus-visible" in css
+
+
+def test_las_rampas_se_distinguen_en_escala_de_grises() -> None:
+    """Un mapa tematico que solo funciona en color excluye al 8 % de los hombres.
+
+    La comprobacion es que la luminancia sea **monotona**: si sube o baja sin
+    dar marcha atras, las clases se distinguen tambien en gris, impresas, o con
+    cualquier daltonismo.
+    """
+
+    def luminancia(hexa: str) -> float:
+        canales = [int(hexa.lstrip("#")[i : i + 2], 16) / 255 for i in (0, 2, 4)]
+        lineal = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in canales]
+        return 0.2126 * lineal[0] + 0.7152 * lineal[1] + 0.0722 * lineal[2]
+
+    def colores(marcador: str, tras: str = "") -> list[str]:
+        trozo = APP.split(marcador, 1)[1]
+        if tras:
+            trozo = trozo.split(tras, 1)[1]
+        return re.findall(r"#[0-9a-fA-F]{6}", trozo[: trozo.index("]")])
+
+    for nombre, marcador, tras in (
+        ("MMI", "  mmi: {", "colores:"),
+        ("poblacion", "  pop: {", "colores:"),
+        ("fuego", "const FUEGO_COLORES", ""),
+    ):
+        ls = [luminancia(c) for c in colores(marcador, tras)]
+        assert len(ls) == 6, f"la rampa de {nombre} no tiene seis clases"
+        sube = all(a < b for a, b in pairwise(ls))
+        baja = all(a > b for a, b in pairwise(ls))
+        assert sube or baja, f"la rampa de {nombre} no es monotona en luminancia"
