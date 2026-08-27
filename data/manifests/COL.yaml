@@ -8,7 +8,7 @@
 # con una peticion real. Los `sha256` se llenan en la primera corrida de P0; el
 # lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.5
+manifest_id: col-v0.6
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
 

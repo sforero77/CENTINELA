@@ -8,7 +8,7 @@
 # probo con una peticion real, y las columnas del COD-AB se leyeron abriendo el
 # shapefile, no la documentacion. Los `sha256` se llenan en la primera corrida.
 
-manifest_id: ven-v0.1
+manifest_id: ven-v0.2
 iso3: VEN
 generated_utc: "2026-08-23T00:00:00Z"
 

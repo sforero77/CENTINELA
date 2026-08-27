@@ -9,7 +9,7 @@
 # corrida de `centinela country MEX`, y hasta entonces este manifest declara
 # de donde saldrian los datos, no que ya se hayan medido.
 
-manifest_id: mex-v0.1
+manifest_id: mex-v0.2
 iso3: MEX
 generated_utc: "2026-08-23T00:00:00Z"
 

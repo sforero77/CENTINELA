@@ -9,7 +9,7 @@
 # corrida de `centinela country SLV`, y hasta entonces este manifest declara
 # de donde saldrian los datos, no que ya se hayan medido.
 
-manifest_id: slv-v0.1
+manifest_id: slv-v0.2
 iso3: SLV
 generated_utc: "2026-08-23T00:00:00Z"
 

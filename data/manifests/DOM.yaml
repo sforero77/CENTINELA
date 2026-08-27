@@ -9,7 +9,7 @@
 # corrida de `centinela country DOM`, y hasta entonces este manifest declara
 # de donde saldrian los datos, no que ya se hayan medido.
 
-manifest_id: dom-v0.1
+manifest_id: dom-v0.2
 iso3: DOM
 generated_utc: "2026-08-23T00:00:00Z"
 
