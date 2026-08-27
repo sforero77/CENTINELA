@@ -943,14 +943,23 @@ function pintarMetricas(reporte) {
         }
       : { valor: comoTexto(t.pop_mmi7p), etiqueta: "personas" },
     { valor: comoTexto(t.pop_65p_mmi7p), etiqueta: "de 65 años o más" },
+    // Salud y educacion **antes** que edificaciones y superficie.
+    //
+    // El orden anterior iba por tamano del numero: 444.000 edificaciones y 69,8
+    // km² antes que 518 sedes de salud. Pero quien responde no decide con la
+    // superficie construida: decide con cuantos hospitales quedaron dentro y
+    // cuantos colegios pueden servir de refugio. En una pantalla de portatil
+    // esas dos cifras caian por debajo del pliegue.
+    //
+    // El orden de un tablero lo fija para que sirve, no cuanto abulta.
+    { valor: numero(t.health_mmi7p), etiqueta: "sedes de salud" },
+    { valor: numero(t.edu_mmi7p), etiqueta: "sedes educativas" },
     { valor: comoTexto(t.bld_mmi7p), etiqueta: "edificaciones" },
     {
       valor: km2 === null ? "—" : `${numero(km2, 1)} km²`,
       etiqueta: "superficie construida",
       apunte: "Vista por satélite: incluye lo que OSM no mapeó.",
     },
-    { valor: numero(t.health_mmi7p), etiqueta: "sedes de salud" },
-    { valor: numero(t.edu_mmi7p), etiqueta: "sedes educativas" },
     {
       valor: `${numero(t.road_km_mmi7p)} km`,
       etiqueta: "de vía",

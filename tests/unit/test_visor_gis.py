@@ -39,6 +39,25 @@ def cuerpo(nombre: str) -> str:
     return APP[ini : APP.index(chr(10) + "}", ini)]
 
 
+def sin_comentarios_js(js: str) -> str:
+    """JavaScript sin sus comentarios, para que un guardia mire el codigo.
+
+    La sexta ocasion del mismo patron en dos dias, y la que decidio generalizar
+    el ayudante: el comentario que explicaba por que salud y educacion suben de
+    posicion decia "518 sedes de salud", y la prueba del orden encontraba esa
+    linea antes que la del codigo.
+
+    Solo quita comentarios de linea completa. Uno al final de una linea de
+    codigo se queda, porque quitarlo bien exige saber si el `//` esta dentro de
+    una cadena o de una expresion regular — y este fichero no tiene ninguno que
+    estorbe.
+    """
+    limpio = re.sub(r"/\*.*?\*/", "", js, flags=re.S)
+    return chr(10).join(
+        linea for linea in limpio.splitlines() if not linea.lstrip().startswith("//")
+    )
+
+
 def sin_comentarios(css: str) -> str:
     """El CSS sin sus comentarios, para que un guardia mire el codigo.
 
@@ -1000,3 +1019,24 @@ def test_la_nota_de_la_capa_se_puede_plegar() -> None:
     assert "leyenda-detalle" in html
     assert "<summary>Cómo leer esta capa</summary>" in html
     assert 'id="leyenda-nota"' in html, "la nota sigue teniendo que existir"
+
+
+def test_salud_y_educacion_van_antes_que_la_superficie() -> None:
+    """El orden de un tablero lo fija para que sirve, no cuanto abulta.
+
+    Iba por tamano del numero: 444.000 edificaciones y 69,8 km² antes que 518
+    sedes de salud. Pero quien responde no decide con la superficie construida
+    —decide con cuantos hospitales quedaron dentro y cuantos colegios pueden
+    servir de refugio—, y en una pantalla de portatil esas dos cifras caian por
+    debajo del pliegue.
+    """
+    bloque = sin_comentarios_js(cuerpo("pintarMetricas"))
+    etiquetas = (
+        "sedes de salud",
+        "sedes educativas",
+        "edificaciones",
+        "superficie construida",
+    )
+    orden = [bloque.index(e) for e in etiquetas]
+
+    assert orden == sorted(orden), "salud y educacion volvieron a quedar detras"
