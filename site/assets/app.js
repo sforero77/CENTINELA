@@ -239,6 +239,8 @@ const escapar = (s) =>
 const estado = {
   paisFiltrado: "",
   epicentro: null,
+  //: Lo que el sistema esta viendo ahora mismo, para el bloque "en vivo".
+  vivo: {},
   mapa: null,
   eventos: [],
   seleccionado: null,
@@ -1692,6 +1694,9 @@ async function cargarObservados() {
 
   dibujarObservados(eventos);
   pintarInterruptorObservados(eventos, datos.ventana_dias);
+  estado.vivo.observados = eventos.length;
+  estado.vivo.ventanaSismos = datos.ventana_dias || 5;
+  pintarEnVivo();
 }
 
 function dibujarObservados(eventos) {
@@ -1797,7 +1802,11 @@ async function cargarIncendios() {
   if (!celdas.length) return;
 
   dibujarIncendios(datos);
+  pintarLeyendaFuego();
   pintarInterruptorIncendios(datos);
+  estado.vivo.incendios = datos.totales || {};
+  estado.vivo.ventanaFuego = datos.ventana_horas || 24;
+  pintarEnVivo();
 }
 
 function incendiosAGeoJson(celdas) {
@@ -1952,6 +1961,31 @@ function cuadroDeIncendio(p) {
   );
 }
 
+//: Rotulos de la rampa. Sin esto la capa tiene seis colores y ninguna forma de
+//: saber que significan — que es peor que no tener color: invita a interpretar.
+function pintarLeyendaFuego() {
+  if ($("leyenda-fuego")) return;
+  const caja = document.createElement("div");
+  caja.className = "leyenda leyenda-fuego";
+  caja.id = "leyenda-fuego";
+  caja.hidden = true;
+
+  const rangos = FUEGO_COLORES.map((color, i) => {
+    const desde = i === 0 ? 0 : FUEGO_CORTES[i - 1];
+    const hasta = FUEGO_CORTES[i];
+    const texto = hasta ? `${numero(desde)}–${numero(hasta)}` : `${numero(desde)}+`;
+    return `<li><span class="muestra" style="background:${color}"></span>${texto}</li>`;
+  }).join("");
+
+  caja.innerHTML =
+    `<p class="leyenda-titulo mono">Potencia radiativa · MW</p>` +
+    `<ul class="leyenda-escala">${rangos}</ul>` +
+    `<p class="leyenda-nota">Suma de la energía que los sensores midieron en la ` +
+    `celda durante 24 h. Es lo más cercano a una intensidad que da este ` +
+    `producto — y aun así depende del ángulo de vista. No es área quemada.</p>`;
+  ($("lienzo") || $("mapa").parentElement).appendChild(caja);
+}
+
 function pintarInterruptorIncendios(datos) {
   const anfitrion = $("controles-mapa") || $("leyenda") || $("mapa");
   if (!anfitrion || $("interruptor-incendios")) return;
@@ -1972,6 +2006,48 @@ function pintarInterruptorIncendios(datos) {
     for (const capa of ["incendios", "incendios-borde", "incendios-punto"]) {
       if (m.getLayer(capa)) m.setLayoutProperty(capa, "visibility", visible);
     }
+    const leyenda = $("leyenda-fuego");
+    if (leyenda) leyenda.hidden = !ev.target.checked;
     if (ev.target.checked) anunciar(`Focos activos: ${numero(t.celdas)} celdas.`);
   });
+}
+
+
+// --- Lo que el sistema esta viendo ahora ------------------------------------
+//
+// El panorama contaba el archivo: veintiun reportes, quince paises. Cierto y
+// muerto. Un sistema de vigilancia que solo enseña su historial se lee como un
+// archivo historico, y lo que separa a este de un PDF es que **esta mirando
+// ahora mismo**.
+//
+// Las cifras de aqui son las unicas del visor que cambian entre una visita y la
+// siguiente. Por eso van arriba y por eso llevan la hora de la ultima revision:
+// sin ella, "14.984 celdas con fuego" podria ser de hace un mes.
+function pintarEnVivo() {
+  const caja = $("en-vivo");
+  const v = estado.vivo;
+  if (!caja || (!v.incendios && v.observados === undefined)) return;
+
+  const partes = [];
+  if (v.incendios && v.incendios.celdas) {
+    partes.push(
+      `<div class="metrica"><span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span>` +
+        `<span class="etiqueta">personas en celdas con fuego activo</span>` +
+        `<span class="apunte">${numero(v.incendios.celdas)} celdas · ` +
+        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h</span></div>`
+    );
+  }
+  if (v.observados !== undefined) {
+    partes.push(
+      `<div class="metrica"><span class="valor">${numero(v.observados)}</span>` +
+        `<span class="etiqueta">sismos vistos y no despachados</span>` +
+        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos} días</span></div>`
+    );
+  }
+  if (!partes.length) return;
+
+  caja.innerHTML =
+    `<p class="eyebrow eyebrow-vivo"><span class="pulso" aria-hidden="true"></span>Ahora mismo</p>` +
+    `<div class="metricas">${partes.join("")}</div>`;
+  caja.hidden = false;
 }

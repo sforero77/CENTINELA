@@ -404,3 +404,74 @@ def test_el_interruptor_apaga_las_tres_capas() -> None:
 
     for capa in ("incendios", "incendios-borde", "incendios-punto"):
         assert f'"{capa}"' in bloque
+
+
+# --- UX: que el visor diga lo que sabe --------------------------------------
+
+
+def test_la_rampa_del_fuego_tiene_leyenda() -> None:
+    """Seis colores sin rotulos es peor que no tener color: invita a interpretar.
+
+    La capa se publico el 27-ago-2026 con la rampa inferno y **sin leyenda**.
+    Quien viera una celda violeta no tenia forma de saber si eso era mucho o
+    poco, ni en que unidad.
+    """
+    assert "function pintarLeyendaFuego" in APP
+    assert "pintarLeyendaFuego();" in APP, "la leyenda existe y nadie la llama"
+
+    bloque = APP[APP.index("function pintarLeyendaFuego") :][:900]
+    assert "Potencia radiativa" in bloque, "la leyenda no dice que mide"
+    assert "MW" in bloque, "ni en que unidad"
+
+
+def test_la_leyenda_del_fuego_repite_lo_que_no_afirma() -> None:
+    """La nota del JSON la lee una maquina; esta la lee una persona.
+
+    Y la lee justo cuando esta mirando los colores, que es cuando la tentacion
+    de leerlos como area quemada es mayor.
+    """
+    bloque = APP[APP.index("function pintarLeyendaFuego") :][:1200]
+
+    assert "No es área quemada" in bloque
+
+
+def test_la_leyenda_del_fuego_sigue_al_interruptor() -> None:
+    """Una leyenda de una capa apagada explica algo que no se ve."""
+    bloque = APP[APP.index("function pintarInterruptorIncendios") :][:1400]
+
+    assert "leyenda-fuego" in bloque
+    assert "hidden = !ev.target.checked" in bloque
+
+
+def test_el_visor_dice_lo_que_esta_pasando_ahora() -> None:
+    """El panorama contaba el archivo: veintiun reportes, quince paises.
+
+    Cierto y muerto. Un sistema de vigilancia que solo ensena su historial se
+    lee como un archivo historico, y lo que separa a este de un PDF es que esta
+    mirando **ahora**.
+    """
+    assert "function pintarEnVivo" in APP
+    assert "pintarEnVivo();" in APP, "el bloque existe y nadie lo llama"
+    assert 'id="en-vivo"' in (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
+
+
+def test_el_bloque_en_vivo_no_aparece_vacio() -> None:
+    """Un panel que dice "Ahora mismo" sin cifras ensena a ignorarlo."""
+    bloque = APP[APP.index("function pintarEnVivo") :][:1600]
+
+    assert "if (!partes.length) return;" in bloque
+
+
+def test_el_latido_respeta_a_quien_pidio_menos_movimiento() -> None:
+    """La unica animacion del visor, y no puede imponerse.
+
+    Quieto sigue significando lo mismo: un punto verde junto a "Ahora mismo".
+    """
+    css = (RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8")
+
+    # Buscando **desde** los keyframes: el visor ya tenia otra regla de
+    # movimiento reducido mas arriba, y `index` habria encontrado esa.
+    desde = css.index("@keyframes latido")
+
+    assert "prefers-reduced-motion: reduce" in css[desde:], "el latido no se puede desactivar"
+    assert ".pulso { animation: none; }" in css[desde:]

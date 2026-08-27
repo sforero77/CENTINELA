@@ -979,3 +979,57 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   color: #6b6660;
   font-size: 0.76rem;
 }
+
+
+/* --- Lo que esta pasando ahora --------------------------------------------
+ *
+ * El punto que late es la unica animacion del visor, y esta ahi por una razon:
+ * separa "el sistema tiene un archivo" de "el sistema esta mirando". Respeta
+ * `prefers-reduced-motion`, donde se queda quieto sin perder el significado
+ * —sigue siendo un punto verde junto a "Ahora mismo"—.
+ */
+.en-vivo {
+  margin: 0 0 18px;
+  padding: 14px 16px 4px;
+  border: 1px solid rgba(28, 27, 26, 0.1);
+  border-left: 3px solid #1f6f4a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(31, 111, 74, 0.05), transparent 70%);
+}
+
+.eyebrow-vivo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #1f6f4a;
+}
+
+.pulso {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1f6f4a;
+  box-shadow: 0 0 0 0 rgba(31, 111, 74, 0.5);
+  animation: latido 2.4s ease-out infinite;
+}
+
+@keyframes latido {
+  0% { box-shadow: 0 0 0 0 rgba(31, 111, 74, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(31, 111, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(31, 111, 74, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulso { animation: none; }
+}
+
+/* La leyenda del fuego vive aparte de la de intensidad: nunca se miran a la
+ * vez —una es regional y continua, la otra es de un evento— y compartir caja
+ * obligaria a decidir cual gana. */
+.leyenda-fuego {
+  top: auto;
+  bottom: 58px;
+  left: 12px;
+  right: auto;
+  max-width: 224px;
+}

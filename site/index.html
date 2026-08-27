@@ -73,7 +73,7 @@
     </p>
 
     <main class="tablero">
-      <section class="lienzo" aria-label="Mapa de exposición">
+      <section class="lienzo" id="lienzo" aria-label="Mapa de exposición">
         <div id="mapa" role="region" aria-label="Mapa de exposición sísmica. Use los controles de capa para cambiar la variable dibujada." tabindex="0"></div>
 
         <div class="panel-mapa" id="cargando">
@@ -97,6 +97,11 @@
 
       <aside class="lateral" id="lateral" aria-label="Datos del evento seleccionado">
         <div class="vacio" id="lateral-vacio">
+          <!-- Lo unico del visor que cambia entre una visita y la siguiente.
+               Va antes del panorama a proposito: el archivo importa, pero lo
+               que distingue a esto de un PDF es que esta mirando ahora. -->
+          <div class="en-vivo" id="en-vivo" hidden aria-live="polite"></div>
+
           <p class="eyebrow">Panorama</p>
           <div id="panorama"></div>
           <p class="pista">
