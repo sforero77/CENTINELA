@@ -24,7 +24,23 @@ const INCENDIOS = "incendios.json";
 //
 // `fitBounds` se adapta a la ventana; un zoom fijo solo es correcto para el
 // tamano de pantalla en que se eligio.
-const VISTA_INICIAL = { center: [-72.0, -14.0], zoom: 2.35 };
+// Que se ve al abrir. Medido, no elegido a ojo.
+//
+// El tablero da un mapa de unos 954x468 px en un portatil, que es **apaisado**,
+// y LATAM es una region **vertical**: ocupa 0,24 del mundo a lo ancho y 0,29 a
+// lo alto. Para que quepa entera harian falta zoom 1,64, y a ese zoom se verian
+// 206 grados de longitud — casi todo oceano vacio alrededor de una franja fina.
+//
+// Asi que hay que recortar algo, y conviene decir que. A `[-72, -10]` con zoom
+// 2,0 se ve **de lat 29,7 a -45,5**: entra desde el centro de Mexico hasta
+// Chubut, con toda la cordillera sismica y toda la temporada de quemas dentro.
+// Quedan fuera el norte de Mexico y la Patagonia austral, que es donde menos
+// gente y menos actividad hay de los diecinueve paises.
+//
+// `zoom: 3.1` centrado en Colombia —lo anterior— dejaba fuera Chile, Argentina,
+// Bolivia, Paraguay, Uruguay y el sur de Brasil. Media region, y justo la mitad
+// donde arde.
+const VISTA_INICIAL = { center: [-72.0, -10.0], zoom: 2.0 };
 
 //: La caja que el encuadre tiene que cubrir. Es la misma `LATAM_BBOX` del
 //: pipeline, y esta aqui para que una prueba pueda comprobar que la vista

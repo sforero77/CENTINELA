@@ -709,27 +709,42 @@ def test_el_encuadre_inicial_muestra_toda_latam() -> None:
     """
     import math
 
-    caja = re.search(r"const ENCUADRE_LATAM = \[(.*?)\];", APP, re.S).group(1)
-    oeste, sur, este, norte = (float(n) for n in re.findall(r"-?\d+\.?\d*", caja))
     vista = re.search(
         r"const VISTA_INICIAL = \{ center: \[(-?[\d.]+), (-?[\d.]+)\], zoom: ([\d.]+)", APP
     )
-    lon, lat, zoom = (float(g) for g in vista.groups())
+    _lon, lat, zoom = (float(g) for g in vista.groups())
 
-    # Grados visibles a ese zoom en una ventana de 1.100 px de ancho, que es lo
-    # que da el tablero en un portatil. Si no cabe la caja, medio continente se
-    # queda fuera — y ahi es donde esta la temporada de quemas.
-    grados_a_lo_ancho = 360.0 / (2**zoom) * (1100 / 512)
+    # El limite real es la ALTURA, no la anchura: el mapa del tablero es
+    # apaisado (~954x468) y LATAM es vertical. La primera version de esta prueba
+    # solo miraba el ancho y daba por bueno un encuadre que cortaba el sur.
+    def latitudes_visibles(alto: int = 468) -> tuple[float, float]:
+        centro = math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+        media = alto / (512 * 2**zoom) * math.pi
+        return (
+            math.degrees(2 * math.atan(math.exp(centro - media)) - math.pi / 2),
+            math.degrees(2 * math.atan(math.exp(centro + media)) - math.pi / 2),
+        )
 
-    assert grados_a_lo_ancho >= (este - oeste), (
-        f"a zoom {zoom} caben {grados_a_lo_ancho:.0f}° y LATAM mide {este - oeste:.0f}°"
-    )
-    assert oeste < lon < este, "el centro no esta dentro de la caja"
-    assert sur < lat < norte
-    # Centrado en el norte, el sur del continente se pierde. La latitud media de
-    # la caja es -12,25: el centro no puede alejarse mucho de ahi.
-    assert abs(lat - (sur + norte) / 2) < 12, "el centro esta descolgado hacia un extremo"
-    assert math.isfinite(zoom)
+    sur_visible, norte_visible = latitudes_visibles()
+
+    # Lo que se garantiza, y por que: dentro tiene que caber toda la cordillera
+    # sismica poblada y toda la franja de quemas. Fuera quedan el norte de
+    # Mexico y la Patagonia austral, que es donde menos gente y menos actividad
+    # hay — el recorte es una decision, no un descuido.
+    for ciudad, latitud in (
+        ("Ciudad de Mexico", 19.4),
+        ("Bogota", 4.7),
+        ("Lima", -12.0),
+        ("Santiago", -33.5),
+        ("Bahia Blanca", -38.7),
+    ):
+        assert sur_visible <= latitud <= norte_visible, (
+            f"{ciudad} ({latitud}) queda fuera del encuadre inicial "
+            f"({sur_visible:.1f} a {norte_visible:.1f})"
+        )
+
+    grados_a_lo_ancho = 360.0 / (2**zoom) * (954 / 512)
+    assert grados_a_lo_ancho >= 87, "a lo ancho no cabe la region"
 
 
 def test_el_encuadre_no_se_calcula_al_vuelo() -> None:
