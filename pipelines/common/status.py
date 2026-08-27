@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from .logging import get_logger
-from .paths import EVENTS_DIR, SITE_DIR
+from .paths import EVENTS_DIR, REPORTS_DIR, SITE_DIR
 from .state import EventState, EventStatus, utcnow_iso
 
 _log = get_logger(__name__)
@@ -52,9 +52,29 @@ def _parse(ts: str) -> datetime | None:
         return None
 
 
-def event_latencies(events_dir: Path | None = None) -> list[EventLatency]:
-    """Minutos entre el origen del sismo y la publicacion del reporte."""
+def event_latencies(
+    events_dir: Path | None = None, *, reports_root: Path | None = None
+) -> list[EventLatency]:
+    """Minutos entre el origen del sismo y la publicacion del reporte.
+
+    **Solo cuentan los eventos cuyo reporte existe de verdad.** Un `event_state`
+    en estado PUBLICADO es una afirmacion; el directorio en `reports/` es la
+    prueba. Cuando se separan, gana la prueba.
+
+    No es paranoia de esquema: el 26-ago-2026 la pagina publica llego a servir
+    un evento `us7000abcd` —inexistente en USGS, HTTP 404— con
+    `"backtest": false` y una latencia de 20,0 minutos, contando como el unico
+    evento real publicado por el sistema. Salio de un `event_state` de prueba
+    que existio un rato y se borro despues; `status.json` ya lo habia
+    absorbido.
+
+    Publicar una latencia inventada es el peor fallo posible de esta pagina en
+    concreto, porque su unica razon de existir es que la latencia sea
+    verificable: si el numero puede salir de la nada, la pagina deja de probar
+    nada.
+    """
     base = events_dir or EVENTS_DIR
+    reportes = reports_root or REPORTS_DIR
     latencias: list[EventLatency] = []
     for path in sorted(base.glob("*.json")):
         try:
@@ -66,6 +86,12 @@ def event_latencies(events_dir: Path | None = None) -> list[EventLatency]:
         publicado = estado.timestamps.get("publicado", "")
         inicio, fin = _parse(estado.origen_utc), _parse(publicado)
         if inicio is None or fin is None:
+            continue
+        if not (reportes / estado.usgs_id / "report.json").is_file():
+            _log.warning(
+                "event_state dice PUBLICADO pero no hay reporte; no se publica su latencia",
+                extra={"context": {"usgs_id": estado.usgs_id}},
+            )
             continue
         latencias.append(
             EventLatency(
@@ -94,10 +120,13 @@ def percentil(valores: list[float], p: float) -> float | None:
 
 
 def build_status(
-    *, events_dir: Path | None = None, latidos: list[dict[str, Any]] | None = None
+    *,
+    events_dir: Path | None = None,
+    latidos: list[dict[str, Any]] | None = None,
+    reports_root: Path | None = None,
 ) -> dict[str, Any]:
     """Construye el ``status.json`` que consume la pagina."""
-    latencias = event_latencies(events_dir)
+    latencias = event_latencies(events_dir, reports_root=reports_root)
     # Los backtests se listan pero no entran en la estadistica: se publican
     # dias despues del sismo y su "latencia" no mide nada del sistema.
     en_vivo = [e for e in latencias if not e.backtest]
@@ -137,6 +166,7 @@ def write_status(
     events_dir: Path | None = None,
     site_dir: Path | None = None,
     latido: dict[str, Any] | None = None,
+    reports_root: Path | None = None,
 ) -> Path:
     """Escribe ``site/status.json``, conservando el historial de latidos."""
     destino = (site_dir or SITE_DIR) / STATUS_FILENAME
@@ -150,7 +180,7 @@ def write_status(
         previos.append(latido)
 
     destino.parent.mkdir(parents=True, exist_ok=True)
-    datos = build_status(events_dir=events_dir, latidos=previos)
+    datos = build_status(events_dir=events_dir, reports_root=reports_root, latidos=previos)
     destino.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     _log.info(
         "estado publicado",
