@@ -14,10 +14,33 @@ name: P1 · Trigger USGS
 # reporte publicado, **la deteccion sola puede comerse la mitad del presupuesto,
 # y en el peor caso todo**.
 #
-# No se toca aqui: subir la frecuencia del cron no cambia nada —la demora la
-# pone la cola de GitHub, no el intervalo— y un job de sondeo permanente es un
-# uso de Actions que conviene decidir a conciencia, no de tapadillo. La ruta
-# limpia es un cron externo que dispare `repository_dispatch`.
+# MEDIDO OTRA VEZ EL 27-AGO-2026, y esta vez sobre el repositorio entero:
+#
+#   dia        turnos de cron concedidos   otras corridas
+#   24-ago              12                      82
+#   25-ago              35                      56
+#   26-ago              22                      21
+#   27-ago               5                      67
+#
+# GitHub no reparte un turno por workflow: reparte **unos pocos por
+# repositorio**, y aqui hay cinco programados compitiendo. Los huecos entre
+# corridas de cualquiera de ellos, ese dia: 63, 49, 82, 51, 133, 178, 161, 148,
+# 658, 5, 247 minutos.
+#
+# Este cron pedia 144 turnos al dia y conseguia unos 19. Los otros cuatro
+# workflows se repartian las sobras, y `incendios.yml` —que pide cuatro— no
+# llego a correr **ni una vez** en las siete horas siguientes a su creacion.
+#
+# Baja a cada 30 minutos, y no es una rendicion: 48 peticiones al dia siguen
+# siendo mas de las que este repositorio recibe. Lo que cambia es que deja de
+# acaparar una cola que no puede ganar. GitHub documenta ademas que los
+# intervalos cortos son los primeros en descartarse, asi que pedir menos puede
+# perfectamente conseguir mas.
+#
+# Lo que NO cambia: la demora la pone la cola, no el intervalo. Un cron externo
+# que dispare `repository_dispatch` sigue siendo la unica ruta que arregla la
+# latencia de verdad — pero conviene medir esto unos dias antes de montar
+# infraestructura externa sobre un dia malo.
 #
 # Mitigaciones activas:
 #   * feed de respaldo 4.5_day, que cubre la demora sin perder eventos
@@ -28,7 +51,7 @@ name: P1 · Trigger USGS
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:

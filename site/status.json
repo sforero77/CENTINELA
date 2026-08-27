@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-08-27T14:20:25Z",
+  "generado_utc": "2026-08-27T21:22:54Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -160,6 +160,13 @@
       "backtest": true
     }
   ],
+  "cadencia": {
+    "declarado_min": 30,
+    "p50_min": 95.3,
+    "p90_min": 358.5,
+    "peor_min": 663.1,
+    "revisiones": 16
+  },
   "latidos": [
     {
       "utc": "2026-08-25T20:29:13Z",

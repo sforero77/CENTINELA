@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -119,6 +120,44 @@ def percentil(valores: list[float], p: float) -> float | None:
     return round(valor, 1)
 
 
+def cadencia_del_vigia(latidos: list[dict[str, Any]]) -> dict[str, Any]:
+    """Cuanto tarda de verdad el cron entre una revision y la siguiente.
+
+    Es la unica cifra de este sistema que mide **la infraestructura y no el
+    sismo**, y hasta el 27-ago-2026 no se publicaba: habia que deducirla a mano
+    de `gh run list` cada vez que alguien sospechaba.
+
+    Y hace falta. Ese dia se midio que GitHub no concede un turno por workflow
+    sino unos pocos por repositorio: cinco en veinticuatro horas, con cinco
+    workflows programados pidiendo. El cron del vigia se bajo de diez a treinta
+    minutos para dejar de acaparar una cola que no podia ganar, y la unica forma
+    honesta de saber si eso sirvio es tener la serie delante.
+
+    Se salta el hueco cuando pasa de un dia: es una parada, no una cadencia, y
+    meterla en la mediana la ahogaria.
+    """
+    instantes = sorted(
+        filtrado
+        for latido in latidos
+        if (filtrado := _parse(str(latido.get("utc", "")))) is not None
+    )
+    huecos = [
+        minutos
+        for antes, despues in pairwise(instantes)
+        if 0 < (minutos := (despues - antes).total_seconds() / 60) <= 24 * 60
+    ]
+    if not huecos:
+        return {}
+
+    return {
+        "declarado_min": 30,
+        "p50_min": percentil(huecos, 0.50),
+        "p90_min": percentil(huecos, 0.90),
+        "peor_min": round(max(huecos), 1),
+        "revisiones": len(huecos) + 1,
+    }
+
+
 def build_status(
     *,
     events_dir: Path | None = None,
@@ -151,7 +190,8 @@ def build_status(
             }
             for e in latencias[:50]
         ],
-        "latidos": (latidos or [])[-MAX_LATIDOS:],
+        "cadencia": cadencia_del_vigia(previos_y_nuevo := (latidos or [])),
+        "latidos": previos_y_nuevo[-MAX_LATIDOS:],
         "nota": (
             "La latencia incluye la demora del cron de GitHub Actions, que el "
             "proyecto no controla y que su documentacion situa entre 5 y 30 "

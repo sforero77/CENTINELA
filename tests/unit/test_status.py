@@ -136,3 +136,89 @@ def test_un_evento_fantasma_no_infla_la_cuenta_publicada(tmp_path: Path) -> None
 
     assert datos["medido"]["eventos_publicados"] == 0
     assert datos["eventos"] == []
+
+
+# --- La cadencia del vigia: medir la infraestructura, no el sismo -----------
+
+
+def _latidos(*horas: str) -> list[dict[str, object]]:
+    return [{"utc": h, "revisados": 10, "relevantes": 0} for h in horas]
+
+
+def test_se_mide_el_hueco_real_entre_revisiones() -> None:
+    """Hasta el 27-ago habia que deducirlo a mano de `gh run list`.
+
+    Es la unica cifra del sistema que mide la infraestructura y no el sismo, y
+    es la que decide si bajar el cron de diez a treinta minutos sirvio de algo.
+    """
+    from pipelines.common.status import cadencia_del_vigia
+
+    c = cadencia_del_vigia(
+        _latidos(
+            "2026-08-27T00:00:00Z",
+            "2026-08-27T01:00:00Z",
+            "2026-08-27T03:00:00Z",
+        )
+    )
+
+    assert c["p50_min"] == 90.0
+    assert c["peor_min"] == 120.0
+    assert c["revisiones"] == 3
+
+
+def test_una_parada_larga_no_se_cuenta_como_cadencia() -> None:
+    """Un hueco de dias es una parada, no un ritmo.
+
+    Meterlo en la mediana la ahogaria y el numero dejaria de decir como se
+    comporta el cron cuando funciona.
+    """
+    from pipelines.common.status import cadencia_del_vigia
+
+    c = cadencia_del_vigia(
+        _latidos(
+            "2026-08-20T00:00:00Z",
+            "2026-08-27T00:00:00Z",  # siete dias parado
+            "2026-08-27T01:00:00Z",
+        )
+    )
+
+    assert c["peor_min"] == 60.0, "la parada de siete dias no puede ser el peor caso"
+
+
+def test_sin_suficientes_latidos_no_se_inventa_una_cadencia() -> None:
+    """Con un solo latido no hay hueco que medir.
+
+    Publicar un cero seria decir "corre instantaneamente", que es lo contrario
+    de lo que pasa.
+    """
+    from pipelines.common.status import cadencia_del_vigia
+
+    assert cadencia_del_vigia(_latidos("2026-08-27T00:00:00Z")) == {}
+    assert cadencia_del_vigia([]) == {}
+
+
+def test_la_cadencia_se_publica_en_status() -> None:
+    """Medida y no publicada seria el patron que esta auditoria persigue."""
+    from pipelines.common.status import build_status
+
+    datos = build_status(
+        events_dir=None,
+        latidos=_latidos("2026-08-27T00:00:00Z", "2026-08-27T00:45:00Z"),
+    )
+
+    assert datos["cadencia"]["p50_min"] == 45.0
+    assert datos["cadencia"]["declarado_min"] == 30
+
+
+def test_lo_declarado_coincide_con_el_cron_del_workflow() -> None:
+    """Publicar "declarado: 10 min" con un cron de 30 seria mentir con precision."""
+    from pathlib import Path
+
+    from pipelines.common.status import cadencia_del_vigia
+
+    workflow = (
+        Path(__file__).parent.parent.parent / ".github" / "workflows" / "trigger.yml"
+    ).read_text(encoding="utf-8")
+    c = cadencia_del_vigia(_latidos("2026-08-27T00:00:00Z", "2026-08-27T00:30:00Z"))
+
+    assert f'cron: "*/{c["declarado_min"]} * * * *"' in workflow
