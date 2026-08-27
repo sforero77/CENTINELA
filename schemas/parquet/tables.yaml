@@ -34,6 +34,18 @@ exposure_h3:
     - {nombre: road_km_primary,   tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
     - {nombre: road_km_secondary, tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
     - {nombre: road_km_other,     tipo: DOUBLE,  nulo: false, fuente: Overture transportation}
+    # Cobertura del suelo: que hay debajo de la exposicion. Porcentaje de la
+    # celda por clase, sobre los pixeles **clasificados** — en la costa media
+    # celda es mar y el mar no cuenta. `lulc_px` dice cuanta evidencia hay
+    # detras: una celda con nueve pixeles y otra con ciento cuarenta no merecen
+    # la misma confianza. Los porcentajes suman <= 100 salvo redondeo.
+    - {nombre: lulc_arbolado_pct, tipo: DOUBLE,  nulo: false, fuente: ESA WorldCover 2021}
+    - {nombre: lulc_arbustos_pct, tipo: DOUBLE,  nulo: false, fuente: ESA WorldCover 2021}
+    - {nombre: lulc_pastizal_pct, tipo: DOUBLE,  nulo: false, fuente: ESA WorldCover 2021}
+    - {nombre: lulc_cultivo_pct,  tipo: DOUBLE,  nulo: false, fuente: ESA WorldCover 2021}
+    - {nombre: lulc_construido_pct, tipo: DOUBLE, nulo: false, fuente: ESA WorldCover 2021}
+    - {nombre: lulc_humedal_pct,  tipo: DOUBLE,  nulo: false, fuente: ESA WorldCover 2021}
+    - {nombre: lulc_px,           tipo: BIGINT,  nulo: false, fuente: ESA WorldCover 2021}
     - {nombre: flags_calidad,     tipo: VARCHAR, nulo: true,  fuente: asserts §6.4,
        nota: "Banderas separadas por coma. Se publican, no se ocultan."}
     - {nombre: src_manifest,      tipo: VARCHAR, nulo: false, fuente: "-"}

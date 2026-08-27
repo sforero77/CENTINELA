@@ -88,9 +88,25 @@ def test_una_celda_del_todo_vacia_si_se_descarta(con: Any) -> None:
     assert con.execute("SELECT count(*) FROM exposure_h3").fetchone()[0] == 0
 
 
+def _clausula_where(sql: str) -> str:
+    """El WHERE de verdad, sin los comentarios que hablan de el.
+
+    Partir el texto crudo por "WHERE" se rompio en cuanto un comentario explico
+    **por que** la cobertura del suelo no entra en el filtro: la palabra aparece
+    antes en la prosa que en la clausula. Es la tercera vez en dos dias que un
+    guardia de texto de este repo confunde la explicacion con el codigo — antes
+    fue `src.read(1)` citado en un docstring y `gh workflow run site.yml` citado
+    en el cuerpo de un issue.
+    """
+    sin_comentarios = chr(10).join(
+        linea for linea in sql.splitlines() if not linea.lstrip().startswith("--")
+    )
+    return sin_comentarios.split("WHERE")[1]
+
+
 def test_el_filtro_menciona_las_seis_capas_de_contenido() -> None:
     """Guardia de texto: anadir una capa obliga a revisar este filtro."""
-    where = SQL_EXPOSURE.format(iso3="COL", manifest="m", flags=SQL_FLAGS).split("WHERE")[1]
+    where = _clausula_where(SQL_EXPOSURE.format(iso3="COL", manifest="m", flags=SQL_FLAGS))
     for columna in (
         "pop_total",
         "bld_count",
@@ -114,3 +130,14 @@ def test_una_celda_con_solo_via_primaria_se_conserva(con: Any) -> None:
     assemble_exposure(con, iso3="COL", manifest_id="test")
     fila = con.execute("SELECT count(*), sum(road_km_primary) FROM exposure_h3").fetchone()
     assert fila == (1, 2.5)
+
+
+def test_la_cobertura_del_suelo_no_sostiene_una_celda() -> None:
+    """Cubre toda la tierra, asi que en el filtro lo llenaria todo.
+
+    Brasil pasaria de 4,5 millones de celdas a mas de once sin una sola cifra
+    nueva de exposicion. Describe lo que se publica, no decide que se publica.
+    """
+    where = _clausula_where(SQL_EXPOSURE.format(iso3="COL", manifest="m", flags=SQL_FLAGS))
+
+    assert "lulc" not in where

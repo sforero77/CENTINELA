@@ -118,6 +118,13 @@ SELECT
     COALESCE(r.road_km_primary, 0.0)                  AS road_km_primary,
     COALESCE(r.road_km_secondary, 0.0)                AS road_km_secondary,
     COALESCE(r.road_km_other, 0.0)                    AS road_km_other,
+    COALESCE(l.lulc_arbolado_pct, 0.0)                AS lulc_arbolado_pct,
+    COALESCE(l.lulc_arbustos_pct, 0.0)                AS lulc_arbustos_pct,
+    COALESCE(l.lulc_pastizal_pct, 0.0)                AS lulc_pastizal_pct,
+    COALESCE(l.lulc_cultivo_pct, 0.0)                 AS lulc_cultivo_pct,
+    COALESCE(l.lulc_construido_pct, 0.0)              AS lulc_construido_pct,
+    COALESCE(l.lulc_humedal_pct, 0.0)                 AS lulc_humedal_pct,
+    COALESCE(l.lulc_px, 0)                            AS lulc_px,
     {flags}                                           AS flags_calidad,
     '{manifest}'                                      AS src_manifest
 FROM crosswalk_h3_adm c
@@ -131,6 +138,15 @@ LEFT JOIN built_h3      s USING (h3_08)
 LEFT JOIN health_h3     h USING (h3_08)
 LEFT JOIN edu_h3        e USING (h3_08)
 LEFT JOIN roads_h3      r USING (h3_08)
+LEFT JOIN lulc_pct_h3   l USING (h3_08)
+-- La cobertura del suelo NO entra en este WHERE, y es deliberado.
+--
+-- Las otras ocho capas son escasas: filtran a las celdas que tienen algo. El
+-- uso del suelo cubre **toda la tierra**, asi que anadirlo aqui convertiria el
+-- activo de "celdas con contenido" a "todas las celdas terrestres del pais" —
+-- Brasil pasaria de 4,5 millones de celdas a mas de once, sin una sola cifra
+-- nueva de exposicion. Entra en el SELECT para describir lo que ya se publica,
+-- no para decidir que se publica.
 WHERE COALESCE(p.pop_total, 0) > 0
    OR COALESCE(b.bld_count, 0) > 0
    OR COALESCE(r.road_km_primary, 0) + COALESCE(r.road_km_secondary, 0)
@@ -205,6 +221,11 @@ LAYER_TABLES: dict[str, str] = {
     "edu_h3": "h3_08 UBIGINT, edu_count BIGINT",
     "roads_h3": (
         "h3_08 UBIGINT, road_km_primary DOUBLE, road_km_secondary DOUBLE, road_km_other DOUBLE"
+    ),
+    "lulc_pct_h3": (
+        "h3_08 UBIGINT, lulc_arbolado_pct DOUBLE, lulc_arbustos_pct DOUBLE, "
+        "lulc_pastizal_pct DOUBLE, lulc_cultivo_pct DOUBLE, lulc_construido_pct DOUBLE, "
+        "lulc_humedal_pct DOUBLE, lulc_px BIGINT"
     ),
 }
 
@@ -658,6 +679,42 @@ def write_measurement(
     return destino
 
 
+def build_landcover_layer(con: Any, *, bbox: BBox) -> int:
+    """Cobertura del suelo de un pais, leida en remoto y agregada a H3.
+
+    No se registra en `RASTER_LAYERS` porque no es una suma: aquello materializa
+    una columna DOUBLE con `sum(valor)`, y sumar codigos de clase da un numero
+    creible y sin sentido. Ver `raster_categorico_h3`.
+
+    Tampoco se declara en el manifest como fuente descargable: no se descarga
+    nada. La licencia CC-BY-4.0 se declara igual, porque el contrato del
+    proyecto es que toda cifra publicada tenga fuente y licencia — que el
+    fichero nunca toque el disco no cambia de quien es el dato.
+    """
+    from .raster_categorico_h3 import aggregate_categorical_to_h3, fracciones_por_celda
+    from .sources import worldcover
+
+    teselas = worldcover.tiles_for_bbox(bbox)
+    if not teselas:
+        _log.warning("el pais cae fuera de la cobertura de WorldCover", extra={"context": {}})
+        return 0
+
+    aggregate_categorical_to_h3(
+        con,
+        [t.vsicurl for t in teselas],
+        tabla="lulc_h3",
+        overview=worldcover.OVERVIEW,
+        nodata=worldcover.NODATA,
+        agrupacion=worldcover.AGRUPACION,
+    )
+    return fracciones_por_celda(
+        con,
+        origen="lulc_h3",
+        destino="lulc_pct_h3",
+        clases=tuple(c.nombre for c in worldcover.CLASES),
+    )
+
+
 def build_country(
     iso3: str,
     *,
@@ -743,6 +800,13 @@ def build_country(
     # Overture no pasa por disco: son 277 GB de los que Colombia usa once
     # ficheros, y DuckDB los lee por HTTPS podando por la columna `bbox`.
     build_overture_layers(conexion, plan.manifest, bbox=caja, fetcher=fetcher)
+
+    # La cobertura del suelo tampoco pasa por disco, por la misma razon y con
+    # mas motivo: 858 teselas a 96 MB son 82 GB para los diecinueve paises, y un
+    # runner de CI tiene ~14 GB libres. Se leen las overviews del COG por rangos
+    # HTTP, asi que el pico de memoria es el mismo para Colombia que para
+    # Brasil — que es la leccion que costo tres intentos de build.
+    build_landcover_layer(conexion, bbox=caja)
 
     # El rescate de costa necesita saber que celdas tienen dato, asi que va
     # despues de la poblacion y antes del ensamblaje.
