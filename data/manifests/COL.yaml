@@ -272,3 +272,17 @@ sources:
       la intencion no admite otra lectura.
       El repositorio pide expresamente no abrir pull requests: las correcciones
       se hacen con una cuenta en ourairports.com y entran en el volcado diario.
+  - id: worldcover-esa-2021
+    layer: landcover
+    url: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/
+    license: CC-BY-4.0
+    vintage: "2021"
+    sha256: ""
+    notes: >-
+      ESA WorldCover 10 m v200. Cobertura del suelo en once clases, de las que se
+      publican seis: arbolado, matorral, pastizal, cultivo, construido y humedal.
+      Agua, nieve, suelo desnudo y musgo se omiten porque no arden y serian
+      columnas siempre a cero. No se descarga: son COG con overviews y se leen
+      por rangos HTTP a /8 (~80 m), unos 140 pixeles por celda r8. Los
+      porcentajes son sobre pixeles clasificados, no sobre la superficie de la
+      celda, asi que en la costa el denominador excluye el mar.

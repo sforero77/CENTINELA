@@ -183,3 +183,17 @@ sources:
     vintage: "2026-08-06"
     sha256: ""
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
+  - id: worldcover-esa-2021
+    layer: landcover
+    url: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/
+    license: CC-BY-4.0
+    vintage: "2021"
+    sha256: ""
+    notes: >-
+      ESA WorldCover 10 m v200. Cobertura del suelo en once clases, de las que se
+      publican seis: arbolado, matorral, pastizal, cultivo, construido y humedal.
+      Agua, nieve, suelo desnudo y musgo se omiten porque no arden y serian
+      columnas siempre a cero. No se descarga: son COG con overviews y se leen
+      por rangos HTTP a /8 (~80 m), unos 140 pixeles por celda r8. Los
+      porcentajes son sobre pixeles clasificados, no sobre la superficie de la
+      celda, asi que en la costa el denominador excluye el mar.

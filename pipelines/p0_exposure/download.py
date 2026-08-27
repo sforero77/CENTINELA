@@ -236,6 +236,7 @@ def _producto_ghsl(url: str) -> str | None:
 
 
 #: Capa cuyo manifest apunta a un directorio de release, no a un fichero.
+LANDCOVER_LAYER = "landcover"
 WORLDPOP_AGESEX_LAYER = "pop_worldpop_agesex"
 
 
@@ -509,6 +510,19 @@ def download_manifest(
                 inventario.append(_registrar(source, path))
         elif source.url.startswith("s3://"):
             # Overture no se descarga: DuckDB lo lee remoto con poda por bbox.
+            _log.info(
+                "fuente leida en remoto, sin descarga",
+                extra={"context": {"source": source.id, "url": source.url}},
+            )
+        elif source.layer == LANDCOVER_LAYER:
+            # Tampoco se descarga, y por la misma razon que Overture con mas
+            # motivo: 858 teselas a 96 MB son 82 GB para los diecinueve paises
+            # y un runner tiene ~14 GB libres. Se leen las overviews del COG por
+            # rangos HTTP en `build_landcover_layer`.
+            #
+            # Se declara en el manifest de todas formas porque el contrato del
+            # proyecto es que toda cifra publicada tenga fuente y licencia. Que
+            # el fichero nunca toque el disco no cambia de quien es el dato.
             _log.info(
                 "fuente leida en remoto, sin descarga",
                 extra={"context": {"source": source.id, "url": source.url}},
