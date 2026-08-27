@@ -649,6 +649,10 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
 ## 7. Documentos
 
+- [docs/FAMILIAS_DE_FALLO.md](docs/FAMILIAS_DE_FALLO.md) — las siete formas en
+  que este sistema se rompe sin ponerse rojo, con sus casos reales y la regla
+  que cierra cada una. Es el resumen util de tres dias de auditoria.
+
 | | |
 |---|---|
 | [`docs/OPERACION.md`](docs/OPERACION.md) | **Que vigilar ahora que el sistema corre: relojes, fallos silenciosos, deuda por pais** |

@@ -101,3 +101,19 @@ def test_el_readme_nombra_el_release_del_que_salen_las_cifras(readme: str) -> No
     que un lector compruebe estas cifras es sabiendo **que** Release describen.
     """
     assert "exposure-col-2" in readme, "el README no dice de que Release salen las cifras"
+
+
+def test_las_familias_de_fallo_siguen_enlazadas() -> None:
+    """Un documento al que no se llega desde ninguna parte no lo lee nadie.
+
+    Es la version documental de "escrito no es conectado", que es justo la
+    primera de las siete familias que ese fichero describe.
+    """
+    raiz = Path(__file__).parent.parent.parent
+    familias = raiz / "docs" / "FAMILIAS_DE_FALLO.md"
+
+    assert familias.exists()
+    for puerta in (raiz / "docs" / "AUDITORIA.md", raiz / "PENDIENTES.md"):
+        assert "FAMILIAS_DE_FALLO" in puerta.read_text(encoding="utf-8"), (
+            f"{puerta.name} no lleva a las familias de fallo"
+        )

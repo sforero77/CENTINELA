@@ -8,6 +8,11 @@ No es un documento vivo. Cuando todas las tareas cierren, lo que quede abierto
 se muda a [`../PENDIENTES.md`](../PENDIENTES.md) y esto se queda como registro
 de que se audito y con que metodo.
 
+> **Los fallos agrupados por causa estan en
+> [FAMILIAS_DE_FALLO.md](FAMILIAS_DE_FALLO.md).** Este fichero los lista uno a
+> uno; aquel los reduce a siete familias, que es lo que sirve para reconocer el
+> siguiente antes de que muerda.
+
 ## Estado medido, no declarado
 
 | | |
