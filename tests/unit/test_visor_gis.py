@@ -898,6 +898,19 @@ def test_la_leyenda_de_simbolos_esta_siempre() -> None:
     assert "hidden = true" not in bloque
 
 
+def test_en_un_movil_la_leyenda_de_simbolos_arranca_plegada() -> None:
+    """En 390 px de ancho medía 248 —el 64 %— y tapaba medio continente.
+
+    Plegada ocupa una linea. Abierta en pantalla ancha, donde sobra sitio y la
+    pregunta merece respuesta sin pedirla.
+    """
+    bloque = cuerpo("pintarLeyendaSimbolos")
+
+    assert 'createElement("details")' in bloque
+    assert 'matchMedia("(min-width: 48rem)")' in bloque
+    assert "<summary" in bloque
+
+
 def test_el_visor_dice_sobre_que_esta_ardiendo() -> None:
     """Es lo que convierte "hay fuego" en informacion.
 

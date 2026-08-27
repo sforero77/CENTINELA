@@ -1932,11 +1932,18 @@ function pintarLeyendaSimbolos() {
   const anfitrion = $("controles-mapa") || $("lienzo");
   if (!anfitrion) return;
 
-  const caja = document.createElement("div");
+  // `<details>` y no `<div>`: en un movil de 390 px esta caja medía 248 —el
+  // 64 % del ancho— y tapaba Colombia, Ecuador y Peru. Plegada ocupa una linea.
+  //
+  // Abierta en pantalla ancha, donde sobra sitio y la pregunta "¿que es esto?"
+  // merece respuesta sin pedirla. El `open` se decide en JS porque CSS no puede
+  // ponerlo ni quitarlo.
+  const caja = document.createElement("details");
   caja.className = "leyenda leyenda-simbolos";
   caja.id = "leyenda-simbolos";
+  caja.open = window.matchMedia("(min-width: 48rem)").matches;
   caja.innerHTML =
-    `<p class="leyenda-titulo mono">Qué hay en el mapa</p>` +
+    `<summary class="leyenda-titulo mono">Qué hay en el mapa</summary>` +
     `<ul class="leyenda-simbolos-lista">` +
     `<li><span class="sim sim-epicentro" aria-hidden="true"></span>` +
     `<span><strong>Sismo con reporte</strong><br>` +

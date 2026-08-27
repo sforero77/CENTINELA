@@ -1277,3 +1277,37 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
 @media (prefers-reduced-motion: reduce) {
   .leyenda-detalle > summary::before { transition: none; }
 }
+
+
+/* La caja de simbolos, plegable. En movil arranca cerrada: 248 px de leyenda
+ * sobre 390 de pantalla no dejan ver el mapa que la leyenda explica. */
+.leyenda-simbolos > summary {
+  cursor: pointer;
+  list-style: none;
+  margin: 0;
+}
+
+.leyenda-simbolos > summary::-webkit-details-marker {
+  display: none;
+}
+
+.leyenda-simbolos > summary::after {
+  content: " ▸";
+  color: #6b6660;
+}
+
+.leyenda-simbolos[open] > summary::after {
+  content: " ▾";
+}
+
+.leyenda-simbolos > summary:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 2px;
+}
+
+@media (max-width: 34rem) {
+  .leyenda-simbolos,
+  .leyenda-fuego {
+    width: 13rem;
+  }
+}
