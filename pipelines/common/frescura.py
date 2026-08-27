@@ -52,6 +52,28 @@ HORAS_DE_GRACIA: Final[float] = 3.0
 #: aunque el fichero se haya generado hace un minuto.
 COLECCIONES: Final[dict[str, str]] = {"reports/index.json": "usgs_id"}
 
+#: Cuantas horas puede llevar un fichero sin regenerarse antes de que sea un
+#: problema. `fichero -> horas`.
+#:
+#: Esto detecta que algo se **congelo**, no que llegue tarde. Es una distincion
+#: cara: `frescura` comparaba repositorio contra pagina y nada mas, asi que un
+#: fichero de hace tres dias pasaba la revision sin protestar — los dos lados
+#: viejos, cero desfase entre ellos.
+#:
+#: Fue exactamente lo que oculto que `incendios.yml` no se disparara nunca. El
+#: workflow figuraba activo, el fichero estaba sincronizado, y la capa llevaba
+#: horas sin actualizarse sin que nada lo dijera.
+#:
+#: Los umbrales son deliberadamente holgados —del orden de tres o cuatro veces
+#: la cadencia buscada— porque GitHub estrangula los crones de este repositorio
+#: y una alarma que salta por un retraso normal se aprende a ignorar. Lo que se
+#: persigue aqui es el silencio de un dia, no el de una hora.
+MAX_HORAS_SIN_REGENERAR: Final[dict[str, float]] = {
+    "status.json": 12.0,
+    "observados.json": 12.0,
+    "incendios.json": 24.0,
+}
+
 #: Los ficheros que el visor lee y que tienen fecha propia dentro.
 FICHEROS_CON_FECHA: Final[tuple[str, ...]] = (
     "status.json",
@@ -77,6 +99,26 @@ class Ausentes:
         muestra = ", ".join(self.faltan[:4]) + ("…" if len(self.faltan) > 4 else "")
         return f"{self.fichero}: repo {self.en_el_repo} · pagina {self.en_la_pagina}" + (
             f" · no publicados: {muestra}" if self.faltan else ""
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class Congelado:
+    """Un fichero que lleva demasiado tiempo sin regenerarse."""
+
+    fichero: str
+    generado_utc: str
+    horas: float
+    limite: float
+
+    @property
+    def preocupa(self) -> bool:
+        return self.horas > self.limite
+
+    def __str__(self) -> str:
+        return (
+            f"{self.fichero}: generado hace {self.horas:.1f} h "
+            f"(limite {self.limite:.0f} h) · {self.generado_utc}"
         )
 
 
@@ -222,7 +264,47 @@ def revisar_colecciones(
     return ausentes
 
 
-def raise_if_stale(desfases: list[Desfase | Ausentes]) -> None:
+def revisar_vejez(
+    *,
+    site_dir: Path | None = None,
+    ahora: datetime | None = None,
+) -> list[Congelado]:
+    """Cuanto lleva cada fichero sin regenerarse, contra su propio limite.
+
+    Mira **solo el repositorio**: si un fichero esta congelado ahi, la pagina
+    tampoco tiene nada mejor que servir. Y no necesita red, asi que responde
+    aunque el sitio publicado no conteste.
+    """
+    raiz = site_dir or SITE_DIR
+    referencia = ahora or datetime.now(UTC)
+    congelados = []
+
+    for fichero, limite in MAX_HORAS_SIN_REGENERAR.items():
+        local = raiz / fichero
+        if not local.exists():
+            continue
+        try:
+            datos = json.loads(local.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+
+        generado = _fecha(datos)
+        cuando = _parse(generado)
+        if cuando is None:
+            continue
+        congelados.append(
+            Congelado(
+                fichero=fichero,
+                generado_utc=generado,
+                horas=max(0.0, (referencia - cuando).total_seconds() / 3600),
+                limite=limite,
+            )
+        )
+
+    return congelados
+
+
+def raise_if_stale(desfases: list[Desfase | Ausentes | Congelado]) -> None:
     """Levanta si alguna copia publicada quedo demasiado atras.
 
     Es lo que convierte la medicion en una alarma. Medir y no levantar seria el
@@ -237,13 +319,16 @@ def raise_if_stale(desfases: list[Desfase | Ausentes]) -> None:
     raise PaginaDesactualizadaError(
         "La pagina publicada quedo detras del repositorio:\n"
         f"{detalle}\n\n"
-        "Causa mas probable: algo commiteo en site/ o reports/ y no republico "
-        "el visor. Un push con GITHUB_TOKEN no dispara site.yml; hace falta "
-        "`gh workflow run site.yml` tras el push."
+        "Si el desfase es entre repositorio y pagina: algo commiteo en site/ o "
+        "reports/ y no republico el visor — un push con GITHUB_TOKEN no dispara "
+        "site.yml, hace falta `gh workflow run site.yml` tras el push. "
+        "Si un fichero lleva horas sin regenerarse: su workflow no se esta "
+        "disparando. Comprueba `gh run list --workflow=<el suyo>` y lanzalo a "
+        "mano con `gh workflow run` mientras se investiga."
     )
 
 
-def resumen(desfases: list[Desfase | Ausentes]) -> str:
+def resumen(desfases: list[Desfase | Ausentes | Congelado]) -> str:
     """Linea por fichero, tambien cuando todo esta bien.
 
     Publicar el resultado del caso bueno es lo que permite distinguir "esta

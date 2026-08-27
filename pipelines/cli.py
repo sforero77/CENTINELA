@@ -310,11 +310,13 @@ def _cmd_frescura(args: argparse.Namespace) -> int:
     """
     from .common.frescura import (
         Ausentes,
+        Congelado,
         Desfase,
         raise_if_stale,
         resumen,
         revisar,
         revisar_colecciones,
+        revisar_vejez,
     )
 
     cliente = HttpFetcher()
@@ -322,9 +324,14 @@ def _cmd_frescura(args: argparse.Namespace) -> int:
     # que lleva fecha, y "¿estan los mismos?" para lo que es una coleccion. Un
     # indice de reportes recien generado que no lista un reporte publicado esta
     # fresco y roto a la vez.
-    revisiones: list[Desfase | Ausentes] = [
+    # Tres preguntas distintas, y la tercera es la que faltaba: "¿cuanto hace
+    # que esto no se regenera?". Las dos primeras comparan repositorio y pagina,
+    # y un fichero congelado las pasa las dos — porque los dos lados estan
+    # igual de viejos.
+    revisiones: list[Desfase | Ausentes | Congelado] = [
         *revisar(cliente, sitio=args.sitio),
         *revisar_colecciones(cliente, sitio=args.sitio),
+        *revisar_vejez(),
     ]
     print(resumen(revisiones))
     raise_if_stale(revisiones)

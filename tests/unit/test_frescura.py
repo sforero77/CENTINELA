@@ -13,6 +13,7 @@ ausencia de vigilante.
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -303,3 +304,63 @@ def test_el_comando_frescura_pregunta_las_dos_cosas() -> None:
 
     assert "revisar(" in fuente
     assert "revisar_colecciones(" in fuente
+
+
+# --- Lo que faltaba: que un fichero se congele ------------------------------
+
+
+def test_un_fichero_congelado_no_desfasa_y_aun_asi_esta_mal(tmp_path: Path) -> None:
+    """El agujero que oculto que `incendios.yml` no se disparara nunca.
+
+    `frescura` comparaba repositorio contra pagina y nada mas. Un fichero de
+    hace tres dias pasaba la revision sin protestar: los dos lados igual de
+    viejos, cero desfase entre ellos. El workflow figuraba activo, el fichero
+    sincronizado, y la capa llevaba horas sin actualizarse.
+    """
+    from pipelines.common.frescura import comparar, revisar_vejez
+
+    viejo = {"generado_utc": "2026-08-24T00:00:00Z"}
+    desfase = comparar("incendios.json", viejo, viejo)
+
+    assert desfase is not None
+    assert not desfase.preocupa, "por eso hacia falta otra pregunta"
+
+    _escribir(tmp_path, "incendios.json", "2026-08-24T00:00:00Z")
+    congelados = revisar_vejez(site_dir=tmp_path, ahora=datetime(2026, 8, 27, tzinfo=UTC))
+
+    assert congelados[0].preocupa
+    assert congelados[0].horas == pytest.approx(72.0)
+
+
+def test_un_retraso_normal_no_dispara_la_alarma(tmp_path: Path) -> None:
+    """GitHub estrangula los crones de este repositorio: siete horas de hueco
+    es lo corriente.
+
+    Una alarma que salta por eso se aprende a ignorar, y entonces no avisa del
+    dia que de verdad importa. Los limites persiguen el silencio de un dia, no
+    el de una hora.
+    """
+    from pipelines.common.frescura import raise_if_stale, revisar_vejez
+
+    _escribir(tmp_path, "status.json", "2026-08-27T00:00:00Z")
+    congelados = revisar_vejez(site_dir=tmp_path, ahora=datetime(2026, 8, 27, 7, tzinfo=UTC))
+
+    assert not congelados[0].preocupa
+    raise_if_stale(list(congelados))
+
+
+def test_cada_fichero_publicado_tiene_su_limite() -> None:
+    """Uno sin limite no lo vigila nadie, que es como estabamos."""
+    from pipelines.common.frescura import FICHEROS_CON_FECHA, MAX_HORAS_SIN_REGENERAR
+
+    assert set(FICHEROS_CON_FECHA) <= set(MAX_HORAS_SIN_REGENERAR)
+
+
+def test_el_aviso_dice_que_mirar_si_algo_se_congelo() -> None:
+    """Quien lea la alarma no deberia deducir que workflow no se disparo."""
+    from pipelines.common.frescura import Congelado, raise_if_stale
+
+    with pytest.raises(PaginaDesactualizadaError) as excinfo:
+        raise_if_stale([Congelado("incendios.json", "2026-08-24T00:00:00Z", 72.0, 24.0)])
+
+    assert "gh run list --workflow=" in str(excinfo.value)
