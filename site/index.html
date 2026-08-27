@@ -112,6 +112,12 @@
         </div>
 
         <div id="lateral-detalle" hidden>
+          <!-- La unica salida de un evento era el desplegable de la cabecera, y
+               no se lee como "salir". Quien llegaba desde el mapa o la lista se
+               quedaba dentro. -->
+          <button type="button" class="volver" id="volver">
+            <span aria-hidden="true">&larr;</span> Volver al panorama
+          </button>
           <p class="eyebrow" id="detalle-eyebrow">Reporte</p>
           <h2 id="detalle-titulo"></h2>
           <p class="detalle-meta" id="detalle-meta"></p>

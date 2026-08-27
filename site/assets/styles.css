@@ -1101,3 +1101,94 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   outline: 2px solid #1f6f4a;
   outline-offset: 2px;
 }
+
+
+/* La salida de un evento. Arriba del todo del panel y con flecha: es lo primero
+ * que se busca cuando uno quiere volver, y hasta ahora no existia. */
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  color: #4a4640;
+  cursor: pointer;
+}
+
+.volver:hover {
+  border-color: var(--borde-fuerte);
+  background: rgba(31, 111, 74, 0.06);
+}
+
+.volver:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 2px;
+}
+
+
+/* Que es cada cosa en el mapa. Siempre visible: es la pregunta que se hace
+ * quien llega, y no deberia haber que buscarla. */
+.leyenda-simbolos {
+  position: static;
+  order: -2;
+  width: 15.5rem;
+  max-width: 100%;
+}
+
+.leyenda-simbolos-lista {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.leyenda-simbolos-lista li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  line-height: 1.35;
+}
+
+.sim {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* Las estrellas se dibujan con `clip-path` y no con una imagen: el simbolo del
+ * mapa se genera en un canvas, y duplicarlo como PNG seria dos fuentes de
+ * verdad para la misma forma. */
+.sim-epicentro,
+.sim-observado {
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%,
+    50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
+  );
+}
+
+.sim-epicentro {
+  background: #1c1b1a;
+}
+
+.sim-observado {
+  background: #6b6660;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+}
+
+.sim-fuego {
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f4a621, #c02a4a 55%, #4a1370);
+  border: 1px solid #3d0f52;
+}

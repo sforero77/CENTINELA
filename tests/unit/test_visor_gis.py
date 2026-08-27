@@ -246,18 +246,51 @@ def test_nadie_espera_al_estilo_por_su_cuenta() -> None:
 
 
 def test_los_observados_no_usan_la_rampa_de_mmi() -> None:
-    """La rampa significa «impacto medido». Prestarsela la vaciaria de sentido.
+    """La rampa significa "impacto medido". Prestarsela la vaciaria de sentido.
 
-    Es el riesgo §7 —«cifra alarmista»— en su forma visual: un punto pintado
+    Es el riesgo §7 —"cifra alarmista"— en su forma visual: un simbolo pintado
     con los colores de la intensidad se lee como una intensidad medida, diga lo
     que diga el pie.
     """
-    js = APP
-    capa = js[js.index('id: "observados"') : js.index('id: "observados"') + 900]
+    ini = APP.index('id: "observados",')
+    capa = APP[ini : APP.index("});", ini)]
 
-    assert "OBSERVADO" in capa, "no usa el gris reservado para esta capa"
     for color in ("BANDAS", "RAMPA", "CAPAS[", "EPICENTRO"):
         assert color not in capa, f"la capa de observados toma color de {color}"
+
+    # El gris vive en la estrella que la capa usa, no en su `paint`: la imagen
+    # no es SDF y no se puede tintar desde la capa.
+    assert '"estrella-gris"' in capa
+    assert 'crearEstrella(m, "estrella-gris", OBSERVADO' in APP
+
+
+def test_un_sismo_menor_se_dibuja_como_un_sismo() -> None:
+    """Un circulo no dice "sismo": dice "punto".
+
+    En simbologia la **forma** codifica que es la cosa, y el tamano y el color
+    codifican su importancia. Con un circulo para los menores y una estrella
+    para los que tienen reporte, el mapa afirmaba que son dos fenomenos
+    distintos. Son el mismo, en dos escalas.
+    """
+    ini = APP.index('id: "observados",')
+    capa = APP[ini : APP.index("});", ini)]
+
+    assert 'type: "symbol"' in capa, "sigue siendo un circulo generico"
+    assert '"icon-image": "estrella-gris"' in capa
+
+
+def test_la_estrella_del_menor_es_mas_pequena_que_la_del_reporte() -> None:
+    """Misma familia, distinta jerarquia. Si midieran igual, competirian."""
+    # Solo el array de `icon-size`: un corte por caracteres se llevaba tambien
+    # el 0,9 de `icon-opacity` y daba rojo por un numero que no era un tamano.
+    ini = APP.index('"icon-image": "estrella-gris"')
+    desde = APP.index('"icon-size"', ini)
+    # La linea entera: el primer `]` cierra `["linear"]` y dejaba el corte sin
+    # un solo numero, con lo que la prueba fallaba por vacia y no por grande.
+    linea = APP[desde : APP.index(chr(10), desde)]
+    tamanos = [float(n) for n in re.findall(r"0\.\d+", linea)]
+
+    assert tamanos and max(tamanos) < 0.5, f"la estrella gris es demasiado grande: {tamanos}"
 
 
 def test_los_observados_arrancan_apagados() -> None:
@@ -789,3 +822,57 @@ def test_el_sobrante_del_encuadre_cae_sobre_el_oceano() -> None:
     lon = float(vista.group(1))
 
     assert lon <= -80, f"el centro en {lon} deja Africa dentro del encuadre"
+
+
+# --- Poder salir, y saber que se esta mirando -------------------------------
+
+
+def test_hay_forma_de_salir_de_un_evento() -> None:
+    """La unica salida era el desplegable de la cabecera, y no se lee como salir.
+
+    Quien entraba pulsando un epicentro en el mapa o una fila de la lista —que
+    es como se entra— se quedaba dentro sin ruta de vuelta.
+    """
+    html = (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
+
+    assert 'id="volver"' in html, "no hay boton de volver"
+    assert "Volver al panorama" in html
+    assert '$("volver")?.addEventListener("click", cerrarDetalle)' in APP
+
+
+def test_escape_tambien_sale() -> None:
+    """Es lo que prueba cualquiera antes de buscar un boton."""
+    bloque = APP[APP.index("function engancharSalidas") :][:600]
+
+    assert '"Escape"' in bloque
+    assert "estado.seleccionado" in bloque, "Escape no puede cerrar lo que ya esta cerrado"
+
+
+def test_al_salir_el_desplegable_vuelve_a_vacio() -> None:
+    """Si no, la cabecera sigue diciendo el evento del que acabas de salir."""
+    bloque = APP[APP.index("function cerrarDetalle") :][:900]
+
+    assert 'selector.value = ""' in bloque
+
+
+def test_el_mapa_dice_que_es_cada_simbolo() -> None:
+    """Habia leyenda de la coropleta y de la rampa de fuego, y ninguna de los
+    simbolos que estan **siempre** en pantalla.
+
+    Quien abria el visor veia estrellas de dos tamanos y circulos rosados sin
+    nada que dijera que eran.
+    """
+    assert "function pintarLeyendaSimbolos" in APP
+    assert "pintarLeyendaSimbolos();" in APP, "la leyenda existe y nadie la llama"
+
+    bloque = APP[APP.index("function pintarLeyendaSimbolos") :][:1600]
+    for concepto in ("Sismo con reporte", "Sismo visto, sin reporte", "Foco activo"):
+        assert concepto in bloque, f"la leyenda no explica: {concepto}"
+
+
+def test_la_leyenda_de_simbolos_esta_siempre() -> None:
+    """A diferencia de la del fuego, no se apaga: la pregunta "¿que es esto?"
+    no depende de que capa este encendida."""
+    bloque = APP[APP.index("function pintarLeyendaSimbolos") :][:1600]
+
+    assert "hidden = true" not in bloque

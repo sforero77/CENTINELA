@@ -533,6 +533,7 @@ async function cargarEventos() {
     });
     pintarPanorama(eventos);
     dibujarEpicentros(eventos);
+    pintarLeyendaSimbolos();
     cargarObservados();
     cargarIncendios();
 
@@ -746,7 +747,22 @@ function cerrarDetalle() {
   verHaloProporcional(true);
   escribirUrl();
   anunciar("Sin evento seleccionado. El panel muestra el panorama de los reportes publicados.");
+  const selector = $("selector-evento");
+  if (selector) selector.value = "";
   if (estado.mapa) estado.mapa.easeTo({ ...VISTA_INICIAL, duration: VUELO });
+}
+
+// Tres formas de salir, porque hasta ahora habia media.
+//
+// El desplegable de la cabecera llamaba a `cerrarDetalle` al elegir la opcion
+// vacia, y nada mas. Quien entraba pulsando un epicentro en el mapa o una fila
+// de la lista —que es como se entra— no tenia forma de volver: el desplegable
+// no se lee como "salir", y ademas se quedaba mostrando el evento elegido.
+function engancharSalidas() {
+  $("volver")?.addEventListener("click", cerrarDetalle);
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && estado.seleccionado) cerrarDetalle();
+  });
 }
 
 // --- Panel lateral ----------------------------------------------------------
@@ -1397,8 +1413,14 @@ function engancharCeldas(m) {
 // mapa estático del reporte. Se dibuja en un canvas y se registra como imagen
 // del estilo porque el glifo ★ no está garantizado en los rangos de fuente que
 // sirve OpenFreeMap: si faltara, la capa se quedaría muda.
-function crearEstrella(m) {
-  if (m.hasImage("estrella")) return;
+// Genera una estrella como mapa de bits. Va con nombre y colores porque hay
+// dos: la del epicentro con reporte y la del sismo visto y no despachado.
+//
+// No se tinta con `icon-color` porque la imagen no es SDF — MapLibre solo tinta
+// las que lo son, y convertirla obligaria a perder el contorno de dos tonos que
+// es lo que la hace legible sobre cualquier fondo.
+function crearEstrella(m, nombre = "estrella", relleno = "#1c1b1a", borde = "#ffffff") {
+  if (m.hasImage(nombre)) return;
   const lado = 48;
   const lienzo = document.createElement("canvas");
   lienzo.width = lienzo.height = lado;
@@ -1417,12 +1439,12 @@ function crearEstrella(m) {
     else ctx.lineTo(x, y);
   }
   ctx.closePath();
-  ctx.fillStyle = "#1c1b1a";
-  ctx.strokeStyle = "#ffffff";
+  ctx.fillStyle = relleno;
+  ctx.strokeStyle = borde;
   ctx.lineWidth = lado * 0.075;
   ctx.stroke();
   ctx.fill();
-  m.addImage("estrella", ctx.getImageData(0, 0, lado, lado), { pixelRatio: 2 });
+  m.addImage(nombre, ctx.getImageData(0, 0, lado, lado), { pixelRatio: 2 });
 }
 
 // El círculo del epicentro escala con la población expuesta, no con la
@@ -1760,6 +1782,7 @@ function pintarFiltroPaises(eventos, nombres) {
 }
 
 estado.mapa = iniciarMapa();
+engancharSalidas();
 cargarEventos();
 
 
@@ -1817,20 +1840,28 @@ function dibujarObservados(eventos) {
         })),
       },
     });
+    crearEstrella(m, "estrella-gris", OBSERVADO, "#ffffff");
+    // La MISMA estrella que los epicentros, en gris y pequena.
+    //
+    // Antes era un circulo hueco, y un circulo no dice "sismo": dice "punto".
+    // En simbologia la **forma** codifica que es la cosa y el tamano y el color
+    // codifican su importancia. Con dos formas distintas para el mismo
+    // fenomeno, el mapa afirmaba que son dos fenomenos.
+    //
+    // Ahora se lee de un vistazo: estrella grande y roja = sismo con reporte;
+    // estrella pequena y gris = sismo visto y no despachado. Misma familia,
+    // distinta jerarquia — que es exactamente lo que son.
     m.addLayer({
       id: "observados",
-      type: "circle",
+      type: "symbol",
       source: "observados",
-      layout: { visibility: "none" },
-      paint: {
-        // Hueco y pequeño: crece con la magnitud, pero dentro de un rango tan
-        // estrecho que ningun punto puede competir con una estrella.
-        "circle-radius": ["interpolate", ["linear"], ["get", "mag"], 4.5, 3.5, 5.4, 6],
-        "circle-color": "transparent",
-        "circle-stroke-color": OBSERVADO,
-        "circle-stroke-width": 1.4,
-        "circle-stroke-opacity": 0.75,
+      layout: {
+        visibility: "none",
+        "icon-image": "estrella-gris",
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 3, 0.3, 8, 0.46],
+        "icon-allow-overlap": true,
       },
+      paint: { "icon-opacity": 0.9 },
     });
 
     m.on("mouseenter", "observados", () => (m.getCanvas().style.cursor = "help"));
@@ -1851,6 +1882,39 @@ function dibujarObservados(eventos) {
   };
 
   cuandoElEstiloEsteListo(m, pintar);
+}
+
+//: Que significa cada simbolo del mapa. Una sola caja, no tres.
+//
+// Habia leyenda para la coropleta de un evento y para la rampa de fuego, y
+// ninguna para los epicentros ni para los sismos menores — que son los simbolos
+// que estan siempre en pantalla. Quien abria el visor veia estrellas de dos
+// tamanos y circulos rosados sin nada que dijera que eran.
+//
+// Va junta porque la pregunta que se hace quien mira es una sola: "¿que es
+// esto?". Tres cajas separadas obligan a buscar en cual esta la respuesta.
+function pintarLeyendaSimbolos() {
+  if ($("leyenda-simbolos")) return;
+  const anfitrion = $("controles-mapa") || $("lienzo");
+  if (!anfitrion) return;
+
+  const caja = document.createElement("div");
+  caja.className = "leyenda leyenda-simbolos";
+  caja.id = "leyenda-simbolos";
+  caja.innerHTML =
+    `<p class="leyenda-titulo mono">Qué hay en el mapa</p>` +
+    `<ul class="leyenda-simbolos-lista">` +
+    `<li><span class="sim sim-epicentro" aria-hidden="true"></span>` +
+    `<span><strong>Sismo con reporte</strong><br>` +
+    `<span class="menor">El círculo crece con la población expuesta</span></span></li>` +
+    `<li><span class="sim sim-observado" aria-hidden="true"></span>` +
+    `<span><strong>Sismo visto, sin reporte</strong><br>` +
+    `<span class="menor">Por debajo de M5,5. Se vio y no se midió su impacto</span></span></li>` +
+    `<li><span class="sim sim-fuego" aria-hidden="true"></span>` +
+    `<span><strong>Foco activo</strong><br>` +
+    `<span class="menor">Detección de satélite en 24 h. El color es la energía</span></span></li>` +
+    `</ul>`;
+  anfitrion.appendChild(caja);
 }
 
 function pintarInterruptorObservados(eventos, ventanaDias) {
