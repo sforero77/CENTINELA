@@ -978,10 +978,14 @@ def test_la_barra_de_escala_no_queda_debajo_de_las_leyendas() -> None:
     cubierto. Y este sistema publica distancias —"41 km al SO de"—, asi que
     poder juzgarlas en el mapa no es decorativo.
     """
-    bloque = APP[APP.index("ScaleControl") - 300 :][:600]
+    linea = APP[APP.index("mapa.addControl(new maplibregl.ScaleControl") :][:200]
 
-    assert '"bottom-right"' in bloque
-    assert '"bottom-left"' not in bloque
+    # Las tres esquinas ocupadas, probadas una a una: abajo-izquierda son las
+    # leyendas y los interruptores; abajo-derecha la leyenda de intensidad y la
+    # atribucion; arriba-izquierda las pestañas de capa.
+    for ocupada in ('"bottom-left"', '"bottom-right"', '"top-left"'):
+        assert ocupada not in linea, f"la escala vuelve a una esquina ocupada: {ocupada}"
+    assert '"top-right"' in linea
 
 
 def test_la_nota_de_la_capa_se_puede_plegar() -> None:

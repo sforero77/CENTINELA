@@ -1600,14 +1600,21 @@ function iniciarMapa() {
   // añadirla la imprimía dos veces seguidas.
   mapa.addControl(new maplibregl.AttributionControl({ compact: true }));
   mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-  // Abajo a la DERECHA, sobre la atribucion. La esquina de abajo a la
-  // izquierda es de las leyendas desde que se apilaron ahi, y una barra de
-  // escala tapada no mide nada — que es peor que no tenerla, porque el hueco se
-  // da por cubierto.
-  mapa.addControl(
-    new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }),
-    "bottom-right"
-  );
+  // ARRIBA A LA DERECHA, bajo los controles de zoom. Es la unica esquina libre,
+  // y lo se porque probe las otras tres:
+  //
+  //   abajo-izquierda  las leyendas de simbolos y fuego, y los interruptores
+  //   abajo-derecha    la leyenda de intensidad y la atribucion
+  //   arriba-izquierda las pestañas de capa
+  //
+  // Estuvo abajo a la izquierda desde siempre y la tape esta tarde al apilar
+  // ahi las leyendas; la movi a la derecha y la tapo la leyenda de intensidad
+  // en cuanto se selecciona un evento. Una barra de escala tapada es peor que
+  // no tenerla: el hueco se da por cubierto.
+  //
+  // Y hace falta: este sistema publica distancias —"41 km al SO de Quellon", "a
+  // 27 km del epicentro" en cada celda— y sin escala no hay como juzgarlas.
+  mapa.addControl(new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }), "top-right");
 
   // Positron viene en gris neutro. Sobre un fondo de arena cálida canta, y su
   // agua es casi del mismo tono que su tierra — inservible para un sistema
