@@ -40,7 +40,12 @@ const INCENDIOS = "incendios.json";
 // `zoom: 3.1` centrado en Colombia —lo anterior— dejaba fuera Chile, Argentina,
 // Bolivia, Paraguay, Uruguay y el sur de Brasil. Media region, y justo la mitad
 // donde arde.
-const VISTA_INICIAL = { center: [-72.0, -10.0], zoom: 2.0 };
+// El centro va **al oeste** del centroide de la region a proposito. A este
+// zoom sobran 80 grados de longitud, y con el centro en -72 ese sobrante caia
+// sobre Africa occidental: Senegal, Mali, Nigeria y sus etiquetas ocupaban un
+// cuarto del mapa util. Desplazado a -84 el sobrante cae sobre el Pacifico, que
+// esta vacio y no compite con nada.
+const VISTA_INICIAL = { center: [-84.0, -10.0], zoom: 2.0 };
 
 //: La caja que el encuadre tiene que cubrir. Es la misma `LATAM_BBOX` del
 //: pipeline, y esta aqui para que una prueba pueda comprobar que la vista
@@ -1946,7 +1951,10 @@ function dibujarIncendios(datos) {
     m.addSource("incendios", { type: "geojson", data: geo, tolerance: 0 });
     m.addSource("incendios-puntos", { type: "geojson", data: puntos });
 
-    const antes = primeraEtiqueta(m);
+    // Debajo de los epicentros, no encima. El fuego son miles de simbolos y
+    // los sismos son veintiuno: sin este orden, la capa continental entierra
+    // justo lo que este sistema existe para publicar.
+    const antes = m.getLayer("epicentros-halo") ? "epicentros-halo" : primeraEtiqueta(m);
     m.addLayer(
       {
         id: "incendios-punto",
@@ -1959,9 +1967,14 @@ function dibujarIncendios(datos) {
           // zoom: es lo que hace la capa visible a escala continental.
           // Radio minimo de 3 px: por debajo el contorno se come el relleno y
           // el simbolo deja de tener color, que es justo lo que lo hacia legible.
+          // Tres paradas y no dos. Con solo la de zoom 3, a escala continental
+          // los cuatro mil puntos se amontonaban en una mancha uniforme:
+          // legible como "aqui arde" e ilegible como dato. Mas pequenos, la
+          // misma nube se lee como densidad.
           "circle-radius": [
             "interpolate", ["linear"], ["zoom"],
-            3, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 3, 500, 6],
+            2, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 2, 500, 4.5],
+            4, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 3, 500, 7],
             8, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 5, 500, 13],
           ],
           "circle-color": colorDeFuego(),

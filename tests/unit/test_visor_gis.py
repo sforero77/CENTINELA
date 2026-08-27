@@ -694,7 +694,11 @@ def test_los_simbolos_de_fuego_llevan_contorno_oscuro() -> None:
     Es figura-fondo: sobre un mapa base claro, el borde es lo que hace simbolo a
     una mancha de color.
     """
-    bloque = APP[APP.index('id: "incendios-punto"') :][:1200]
+    # Delimitado por la capa siguiente y no por un numero de caracteres: el
+    # bloque crecio al anadir una parada de zoom y el corte fijo dejo las
+    # aserciones fuera, dando verde sobre codigo que ya no miraba.
+    ini = APP.index('id: "incendios-punto"')
+    bloque = APP[ini : APP.index('id: "incendios",', ini)]
 
     assert '"circle-stroke-color": FUEGO_CONTORNO' in bloque
     assert '"circle-stroke-width": 1' in bloque
@@ -760,3 +764,28 @@ def test_el_encuadre_no_se_calcula_al_vuelo() -> None:
     Menos elegante y siempre correcto.
     """
     assert "fitBounds(ENCUADRE_LATAM" not in APP
+
+
+def test_el_fuego_va_debajo_de_los_epicentros() -> None:
+    """Miles de simbolos no pueden enterrar a veintiuno.
+
+    La capa de fuego es continental y densa; los sismos con reporte son
+    veintiuno y son lo que este sistema existe para publicar. Sin orden
+    explicito, la que se dibuja despues gana — y es el fuego.
+    """
+    bloque = APP[APP.index("function dibujarIncendios") :][:1600]
+
+    assert 'm.getLayer("epicentros-halo") ? "epicentros-halo"' in bloque
+
+
+def test_el_sobrante_del_encuadre_cae_sobre_el_oceano() -> None:
+    """A zoom 2 sobran ~80 grados de longitud, y algo tienen que mostrar.
+
+    Con el centro en el centroide de la region ese sobrante caia sobre Africa
+    occidental, con sus etiquetas compitiendo por la atencion en un cuarto del
+    mapa. Desplazado al oeste cae sobre el Pacifico, que esta vacio.
+    """
+    vista = re.search(r"const VISTA_INICIAL = \{ center: \[(-?[\d.]+)", APP)
+    lon = float(vista.group(1))
+
+    assert lon <= -80, f"el centro en {lon} deja Africa dentro del encuadre"
