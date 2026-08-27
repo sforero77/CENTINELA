@@ -43,6 +43,25 @@ NOTA: Final[str] = (
 )
 
 
+def _prioridad(celdas: list[CeldaConFuego], max_celdas: int) -> list[CeldaConFuego]:
+    """Las que se publican: **primero todas las que tienen gente**.
+
+    Ordenar solo por potencia radiativa parecia lo natural y estaba al reves.
+    Medido el 27-ago-2026 sobre los diecinueve activos: de 14.984 celdas con
+    fuego, 3.760 tenian poblacion, y con el corte por FRP solo **636**
+    sobrevivian. Los 3.124 restantes eran celdas con gente y fuego moderado,
+    desplazadas por incendios enormes en Amazonia deshabitada.
+
+    Este es un sistema de exposicion. Un fuego sin nadie cerca es informacion;
+    un fuego con tres mil personas debajo es la razon de que el sistema exista,
+    y no puede caerse de la lista porque arda menos.
+    """
+    con_gente = [c for c in celdas if c.pop > 0]
+    sin_gente = [c for c in celdas if c.pop <= 0]
+    con_gente.sort(key=lambda c: (-c.pop, -c.frp_suma))
+    return [*con_gente, *sin_gente][:max_celdas]
+
+
 def build_incendios(
     celdas: list[CeldaConFuego],
     *,
@@ -55,7 +74,7 @@ def build_incendios(
     Recortar la lista para que quepa es razonable; recortar la suma nacional
     para que cuadre con la lista seria publicar una cifra falsa por comodidad.
     """
-    publicadas = celdas[:max_celdas]
+    publicadas = _prioridad(celdas, max_celdas)
     return {
         "schema": INCENDIOS_SCHEMA_ID,
         "generado_utc": utcnow_iso(),

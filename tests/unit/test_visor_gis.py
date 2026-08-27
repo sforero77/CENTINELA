@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from pathlib import Path
 
 import pytest
@@ -278,3 +279,74 @@ def test_el_interruptor_solo_aparece_si_hay_algo() -> None:
     js = APP
 
     assert "if (!eventos.length) return;" in js
+
+
+# --- La capa de focos activos -----------------------------------------------
+
+
+def test_el_fuego_no_toma_prestada_la_rampa_de_mmi() -> None:
+    """Dos amenazas distintas con el mismo codigo de color se leen igual.
+
+    La rampa de intensidad va de naranja a rojo oscuro, que es tambien la paleta
+    natural del fuego. Inferno acaba en violeta y no se parece a nada mas del
+    visor, ademas de ser la convencion en teledeteccion de potencia radiativa.
+    """
+
+    def colores_tras(marcador: str) -> set[str]:
+        """Los colores del array `colores:` que sigue al marcador.
+
+        Hay que saltar el array de `cortes:`, que va antes y no lleva ninguno.
+        """
+        trozo = APP.split(marcador, 1)[1].split("colores:", 1)[1]
+        return set(re.findall(r"#[0-9a-fA-F]{6}", trozo[: trozo.index("]")]))
+
+    mmi = colores_tras("  mmi: {")
+    fuego = set(
+        re.findall(
+            r"#[0-9a-fA-F]{6}",
+            APP.split("const FUEGO_COLORES", 1)[1].split("]", 1)[0],
+        )
+    )
+
+    assert len(mmi) == 6, f"no se leyo la rampa de MMI: {mmi}"
+    assert len(fuego) == 6, f"no se leyo la rampa del fuego: {fuego}"
+    assert not (mmi & fuego), f"comparten color: {mmi & fuego}"
+
+
+def test_los_focos_se_dibujan_como_hexagonos_h3() -> None:
+    """Son celdas del mismo activo, no puntos.
+
+    Y con `true` en `cellToBoundary`, que devuelve [lng, lat]: sin el, los
+    hexagonos aparecen en el oceano Indico.
+    """
+    bloque = APP[APP.index("function incendiosAGeoJson") :][:600]
+
+    assert "h3.cellToBoundary(c.h3, true)" in bloque
+
+
+def test_la_capa_de_fuego_arranca_apagada() -> None:
+    """Quien abre el visor viene a ver un sismo, no la temporada de quemas."""
+    bloque = APP[APP.index('id: "incendios",') :][:500]
+
+    assert 'visibility: "none"' in bloque
+
+
+def test_el_popup_del_fuego_dice_que_no_es_area_quemada() -> None:
+    """Sin esa linea, "celda con fuego" se lee como "hectareas quemadas"."""
+    assert "no área quemada" in APP
+
+
+def test_una_poblacion_de_cero_no_se_imprime() -> None:
+    """Puede ser que no haya nadie, o que el pais no tenga activo cargado.
+
+    Un cero ahi se leeria como medicion, y es justo la confusion que este
+    sistema lleva dos dias persiguiendo.
+    """
+    bloque = APP[APP.index("function cuadroDeIncendio") :][:900]
+
+    assert "p.pop > 0 ?" in bloque
+
+
+def test_la_capa_de_fuego_se_carga_de_verdad() -> None:
+    """Escrita y no llamada seria el patron que esta auditoria persigue."""
+    assert "cargarIncendios();" in APP

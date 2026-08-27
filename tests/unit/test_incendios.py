@@ -341,3 +341,31 @@ def test_incendios_json_lo_vigila_frescura() -> None:
     from pipelines.common.frescura import FICHEROS_CON_FECHA
 
     assert "incendios.json" in FICHEROS_CON_FECHA
+
+
+def test_ninguna_celda_con_gente_se_cae_del_recorte() -> None:
+    """El fallo que solo aparecio al correr los diecinueve activos.
+
+    Ordenando solo por potencia radiativa, de 14.984 celdas con fuego solo 636
+    de las 3.760 con poblacion llegaban a publicarse: las desplazaban incendios
+    enormes en Amazonia deshabitada. Este es un sistema de **exposicion**; un
+    fuego con tres mil personas debajo no puede caerse de la lista porque arda
+    menos que otro sin nadie.
+    """
+    con_gente = [_celda(f"88{i:013x}", pop=10.0, frp=1.0) for i in range(50)]
+    sin_gente = [_celda(f"89{i:013x}", pop=0.0, frp=9999.0) for i in range(MAX_CELDAS)]
+
+    datos = build_incendios([*sin_gente, *con_gente])
+    publicadas = {c["h3"] for c in datos["celdas"]}
+
+    assert all(c.h3 in publicadas for c in con_gente), "se perdio una celda con poblacion"
+
+
+def test_entre_celdas_con_gente_manda_la_poblacion() -> None:
+    """Si hay que cortar, se corta por quien tiene menos gente detras."""
+    datos = build_incendios(
+        [_celda("88a", pop=5.0, frp=900.0), _celda("88b", pop=500.0, frp=1.0)],
+        max_celdas=1,
+    )
+
+    assert [c["h3"] for c in datos["celdas"]] == ["88b"]

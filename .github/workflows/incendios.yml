@@ -1,0 +1,97 @@
+name: P5 · Focos activos
+
+# Cada seis horas, y el numero no es arbitrario: FIRMS tarda unas tres en
+# publicar sus detecciones, asi que mas frecuencia no traeria dato nuevo, y
+# menos dejaria la capa vieja delante de quien la mira.
+#
+# Un cron de seis horas se estrangula ademas mucho menos que el `*/10` del
+# vigia sismico, que el 26-ago-2026 llego a 309 minutos de hueco despues de un
+# dia de builds pesados. Aqui esa demora no duele: el fichero de FIRMS es una
+# ventana movil de 24 h y un retraso de una hora no pierde nada.
+
+on:
+  schedule:
+    - cron: "40 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  # Para republicar el visor tras el push. Ver "Republicar el visor".
+  actions: write
+
+concurrency:
+  group: incendios
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Hace falta `geo`: la agregacion a H3 va por DuckDB con su extension.
+      - name: Instalar nucleo + geo
+        run: uv sync --python 3.12 --extra geo
+
+      # El fuego no respeta fronteras y hay diecinueve activos, asi que se
+      # cargan todos los publicados y se cruza contra el conjunto. Son ~19 MB
+      # por pais; bajarlos cuesta menos que decidir cuales hacen falta.
+      - name: Bajar los activos publicados
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p data/activos
+          gh release list --limit 200 --json tagName \
+            --jq '[.[] | .tagName | select(startswith("exposure-"))]
+                  | group_by(split("-")[1]) | map(sort | last) | .[]' \
+          | while read -r TAG; do
+              ISO=$(echo "$TAG" | cut -d- -f2)
+              mkdir -p "data/activos/$ISO"
+              gh release download "$TAG" --dir "data/activos/$ISO" --clobber \
+                --pattern "exposure_h3.parquet" || echo "::warning::sin activo para $ISO"
+            done
+          echo "activos: $(find data/activos -name '*.parquet' | wc -l)"
+
+      - name: Leer FIRMS y publicar la capa
+        id: incendios
+        run: uv run centinela incendios --exposure 'data/activos/*/exposure_h3.parquet'
+
+      - name: Publicar
+        id: publicar
+        env:
+          CELDAS: ${{ steps.incendios.outputs.celdas }}
+        run: |
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+
+          git add site/incendios.json
+          git diff --staged --quiet && exit 0
+          git commit -m "P5: focos activos ($CELDAS celdas)"
+
+          for intento in 1 2 3 4; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}"; then
+              git push && { echo "publicado=true" >> "$GITHUB_OUTPUT"; exit 0; }
+            else
+              # `incendios.json` se reescribe entero en cada corrida: no se
+              # fusiona, se regenera. Y sin abortar, el rebase a medias envenena
+              # los tres reintentos siguientes.
+              git checkout --theirs site/incendios.json 2>/dev/null || true
+              git rebase --abort || true
+            fi
+            sleep $((2 ** intento))
+          done
+          exit 1
+
+      # Un push con GITHUB_TOKEN no dispara site.yml. Ver trigger.yml.
+      - name: Republicar el visor
+        if: steps.publicar.outputs.publicado == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run site.yml

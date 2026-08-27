@@ -11,6 +11,8 @@ const INDICE_REPORTES = "reports/index.json";
 const COBERTURA = "cobertura.json";
 //: Sismos vistos y no despachados, ventana movil de cinco dias.
 const OBSERVADOS = "observados.json";
+//: Focos activos de las ultimas 24 h, cruzados con la exposicion.
+const INCENDIOS = "incendios.json";
 
 // Encuadre inicial: la ventana LATAM del sistema (RF-01).
 const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 3.1 };
@@ -41,6 +43,16 @@ const EPICENTRO = "#8f2c14";
 // significa «impacto medido»; prestarsela a un sismo que nadie midio la
 // vaciaria de sentido.
 const OBSERVADO = "#6b6660";
+
+// Rampa del fuego, por potencia radiativa acumulada en la celda (MW).
+//
+// **Inferno, no la rampa de MMI.** La de intensidad va de naranja a rojo oscuro
+// —`#fdbb84` a `#7f0000`— que es tambien la paleta natural del fuego, y ahi
+// esta el problema: dos amenazas distintas con el mismo codigo de color se leen
+// como la misma cosa. Inferno acaba en violeta, es la convencion en
+// teledeteccion de FRP, y no se parece a nada mas del visor.
+const FUEGO_CORTES = [10, 50, 150, 400, 1000];
+const FUEGO_COLORES = ["#fcffa4", "#fac228", "#f57d15", "#d44842", "#9f2a63", "#5d177f"];
 
 const REDUCIR_MOVIMIENTO =
   window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -430,6 +442,7 @@ async function cargarEventos() {
     pintarPanorama(eventos);
     dibujarEpicentros(eventos);
     cargarObservados();
+    cargarIncendios();
 
     // La cobertura primero: da los nombres de pais que necesita el filtro, y
     // asi el mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica.
@@ -1745,5 +1758,160 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
     const m = estado.mapa;
     if (!m || !m.getLayer("observados")) return;
     m.setLayoutProperty("observados", "visibility", ev.target.checked ? "visible" : "none");
+  });
+}
+
+
+// --- Focos activos ----------------------------------------------------------
+//
+// La otra amenaza. El activo de exposicion es agnostico: las mismas celdas que
+// dicen cuanta gente hay bajo un MMI 7 dicen cuanta hay bajo fuego activo.
+//
+// Lo que cambia es lo que se puede afirmar, y por eso esta capa se dibuja
+// distinto: un incendio no tiene un campo de intensidad publicado como el
+// ShakeMap, asi que aqui no hay bandas con significado fisico — hay potencia
+// radiativa medida y detecciones contadas. La leyenda lo dice y el popup lo
+// repite.
+async function cargarIncendios() {
+  let datos;
+  try {
+    datos = await json(INCENDIOS);
+  } catch (error) {
+    console.info("incendios:", error);
+    return;
+  }
+  const celdas = (datos && datos.celdas) || [];
+  if (!celdas.length) return;
+
+  dibujarIncendios(datos);
+  pintarInterruptorIncendios(datos);
+}
+
+function incendiosAGeoJson(celdas) {
+  if (typeof h3 === "undefined") return null;
+  return {
+    type: "FeatureCollection",
+    features: celdas.map((c) => ({
+      type: "Feature",
+      // El `true` devuelve [lng, lat]. Sin el, los hexagonos aparecen en el
+      // oceano Indico — mismo motivo que en `celdasAGeoJson`.
+      geometry: { type: "Polygon", coordinates: [h3.cellToBoundary(c.h3, true)] },
+      properties: c,
+    })),
+  };
+}
+
+function dibujarIncendios(datos) {
+  const m = estado.mapa;
+  const geo = incendiosAGeoJson(datos.celdas);
+  if (!m || !geo) return;
+
+  const pintar = () => {
+    if (m.getSource("incendios")) return;
+    m.addSource("incendios", { type: "geojson", data: geo });
+
+    const antes = primeraEtiqueta(m);
+    m.addLayer(
+      {
+        id: "incendios",
+        type: "fill",
+        source: "incendios",
+        layout: { visibility: "none" },
+        paint: {
+          "fill-color": [
+            "step",
+            ["coalesce", ["get", "frp_suma"], 0],
+            FUEGO_COLORES[0],
+            ...FUEGO_CORTES.flatMap((corte, i) => [corte, FUEGO_COLORES[i + 1]]),
+          ],
+          "fill-opacity": 0.75,
+        },
+      },
+      antes
+    );
+    m.addLayer(
+      {
+        id: "incendios-borde",
+        type: "line",
+        source: "incendios",
+        layout: { visibility: "none" },
+        paint: { "line-color": "#5d177f", "line-width": 0.4, "line-opacity": 0.35 },
+      },
+      antes
+    );
+
+    m.on("mouseenter", "incendios", () => (m.getCanvas().style.cursor = "pointer"));
+    m.on("mouseleave", "incendios", () => (m.getCanvas().style.cursor = ""));
+    m.on("click", "incendios", (ev) => {
+      const p = ev.features[0].properties;
+      new maplibregl.Popup({ closeButton: true, maxWidth: "320px" })
+        .setLngLat(ev.lngLat)
+        .setHTML(cuadroDeIncendio(p))
+        .addTo(m);
+    });
+  };
+
+  cuandoElEstiloEsteListo(m, pintar);
+}
+
+function cuadroDeIncendio(p) {
+  const suelo = [
+    ["arbolado", p.arbolado_pct],
+    ["pastizal", p.pastizal_pct],
+    ["cultivo", p.cultivo_pct],
+    ["humedal", p.humedal_pct],
+  ]
+    .filter(([, v]) => Number(v) >= 5)
+    .map(([n, v]) => `${n} ${numero(Number(v))}&nbsp;%`)
+    .join(" · ");
+
+  // La poblacion se omite si es cero en vez de imprimir "0 personas": puede ser
+  // que no haya nadie, o que la celda caiga en un pais sin activo cargado. Un
+  // cero ahi se leeria como medicion, y no lo es.
+  const filas = [
+    ["Detecciones (24 h)", numero(p.detecciones)],
+    ["Potencia radiativa", `${numero(p.frp_suma)}&nbsp;MW`],
+    p.pop > 0 ? ["Población", numero(p.pop)] : null,
+    p.bld > 0 ? ["Edificios", numero(p.bld)] : null,
+    p.salud > 0 ? ["Salud", numero(p.salud)] : null,
+    p.edu > 0 ? ["Educación", numero(p.edu)] : null,
+    suelo ? ["Suelo", suelo] : null,
+  ].filter(Boolean);
+
+  return (
+    `<div class="popup-incendio">` +
+    `<p class="eyebrow">Celda con fuego activo</p>` +
+    `<table>${filas
+      .map(([k, v]) => `<tr><th>${escapar(k)}</th><td>${v}</td></tr>`)
+      .join("")}</table>` +
+    `<p class="mono menor">${escapar(p.h3)}</p>` +
+    `<p class="nota-incendio">Detecciones de satélite, no área quemada. ` +
+    `${p.detecciones_baja > 0 ? `${numero(p.detecciones_baja)} de baja confianza no contadas. ` : ""}` +
+    `Último paso: ${escapar(comoFecha(p.ultima_utc))}.</p>` +
+    `</div>`
+  );
+}
+
+function pintarInterruptorIncendios(datos) {
+  const anfitrion = $("controles-mapa") || $("leyenda") || $("mapa");
+  if (!anfitrion || $("interruptor-incendios")) return;
+
+  const t = datos.totales || {};
+  const caja = document.createElement("label");
+  caja.className = "interruptor-observados";
+  caja.id = "interruptor-incendios";
+  caja.innerHTML =
+    `<input type="checkbox"> <span>Focos activos ` +
+    `<span class="menor">(${numero(t.celdas)} celdas en ${datos.ventana_horas || 24} h)</span></span>`;
+  anfitrion.appendChild(caja);
+
+  caja.querySelector("input").addEventListener("change", (ev) => {
+    const m = estado.mapa;
+    if (!m || !m.getLayer("incendios")) return;
+    const visible = ev.target.checked ? "visible" : "none";
+    for (const capa of ["incendios", "incendios-borde"]) {
+      m.setLayoutProperty(capa, "visibility", visible);
+    }
+    if (ev.target.checked) anunciar(`Focos activos: ${numero(t.celdas)} celdas.`);
   });
 }
