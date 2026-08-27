@@ -235,6 +235,20 @@ FROM admin_geom ORDER BY adm2_id
 #:    de Chile pesa mas de 182 MB; su representacion en WKT es aun mayor y hay
 #:    que construirla y parsearla entera.
 #:
+#: Y una cuarta, de Argentina, el 27-ago-2026: `ST_Force2D` **no es opcional**.
+#:
+#: El COD-AB de Argentina se republico con coordenada Z —a cero en todas
+#: partes, ruido puro—, y eso cambia el codigo de tipo del WKB de 3 a 1003.
+#: `h3_polygon_wkb_to_cells` responde "Invalid WKB: expected polygon at 5", que
+#: es justo el byte donde vive ese codigo.
+#:
+#: Lo peligroso es que el `WHERE` de abajo **no puede verlo**: `ST_GeometryType`
+#: devuelve `POLYGON` tanto para 3 como para 1003, porque borra la dimension al
+#: contestar. El filtro parece cubrir el caso y no lo cubre.
+#:
+#: Se aplica a todos los paises y no solo a Argentina: cualquier fuente puede
+#: republicarse con Z manana, y aplanar una Z que vale cero no pierde nada.
+#:
 #: Y hay una cuarta razon para preferir WKB que no es de memoria: ante un
 #: MULTIPOLYGON, `h3_polygon_wkt_to_cells` devuelve **cero celdas en silencio**
 #: y `h3_polygon_wkb_to_cells` lanza un error. El fallo de las islas —que estuvo
@@ -245,7 +259,7 @@ FROM admin_geom ORDER BY adm2_id
 SQL_POLYFILL_TESELA = """
 INSERT INTO crosswalk_h3_adm
 SELECT DISTINCT
-    unnest(h3_polygon_wkb_to_cells(ST_AsWKB(d.p.geom), {resolution})) AS h3_08,
+    unnest(h3_polygon_wkb_to_cells(ST_AsWKB(ST_Force2D(d.p.geom)), {resolution})) AS h3_08,
     t.adm2_id,
     1.0,
     FALSE
@@ -347,6 +361,56 @@ def _teselas(
     return salida or [(xmin, ymin, xmax, ymax)]
 
 
+#: Devuelve a cada unidad el territorio que otra le habia tragado.
+#:
+#: Las unidades adm2 **parten** el territorio: no se anidan. Cuando el poligono
+#: de A contiene entero al de B, o el dato esta mal o B es un enclave — y en los
+#: dos casos la respuesta es la misma, porque el territorio de B es de B. Por eso
+#: `ST_Difference` no inventa geometria: aplica la definicion de una particion
+#: administrativa.
+#:
+#: Encontrado en Argentina el 27-ago-2026, cuando el COD-AB republicado dibujo
+#: Itati (0,3152) englobando a San Luis del Palmar (0,2357) al completo, que son
+#: departamentos vecinos de Corrientes. Sin esto, 4.197 celdas quedaban
+#: reclamadas por dos municipios y el guardia de doble conteo —con razon—
+#: tumbaba el build entero.
+SQL_RECORTAR_CONTENIDOS = """
+UPDATE admin_geom AS g
+SET geom = (
+    SELECT ST_Difference(g.geom, ST_Union_Agg(d.geom))
+    FROM admin_geom AS d
+    WHERE d.adm2_id <> g.adm2_id AND ST_CoveredBy(d.geom, g.geom)
+)
+WHERE EXISTS (
+    SELECT 1 FROM admin_geom AS d
+    WHERE d.adm2_id <> g.adm2_id AND ST_CoveredBy(d.geom, g.geom)
+)
+"""
+
+
+def recortar_contenidos(con: Any) -> int:
+    """Resta de cada unidad las que su poligono contiene enteras.
+
+    Returns:
+        Cuantas unidades hubo que recortar. Cero con un dato sano, que es lo
+        normal en dieciocho de los diecinueve paises.
+    """
+    afectadas: int = con.execute(
+        "SELECT count(*) FROM admin_geom g WHERE EXISTS ("
+        " SELECT 1 FROM admin_geom d"
+        " WHERE d.adm2_id <> g.adm2_id AND ST_CoveredBy(d.geom, g.geom))"
+    ).fetchone()[0]
+    if not afectadas:
+        return 0
+
+    con.execute(SQL_RECORTAR_CONTENIDOS)
+    _log.warning(
+        "unidades que contenian a otras enteras; se les resto el territorio ajeno",
+        extra={"context": {"unidades": afectadas}},
+    )
+    return afectadas
+
+
 def build_crosswalk(
     con: Any,
     *,
@@ -363,6 +427,7 @@ def build_crosswalk(
             doble conteo de poblacion, y es preferible fallar el build.
     """
     con.execute(SQL_CROSSWALK_VACIO)
+    recortar_contenidos(con)
     cajas = con.execute(SQL_CAJAS).fetchall()
     sql = SQL_POLYFILL_TESELA.format(resolution=resolution)
     teselas = 0
