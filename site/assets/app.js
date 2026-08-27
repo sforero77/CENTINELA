@@ -51,6 +51,19 @@ const OBSERVADO = "#6b6660";
 // esta el problema: dos amenazas distintas con el mismo codigo de color se leen
 // como la misma cosa. Inferno acaba en violeta, es la convencion en
 // teledeteccion de FRP, y no se parece a nada mas del visor.
+//: Zoom a partir del cual el hexagono real es visible.
+//
+// Una celda H3 r8 mide 1.063 m de lado a lado. En pantalla:
+//
+//     zoom  3   ->  0,05 px      zoom  9  ->   3,5 px
+//     zoom  6   ->  0,43 px      zoom 11  ->  13,9 px
+//
+// A la escala continental con la que abre el visor son **una vigesima parte de
+// un pixel**: la capa funcionaba y era fisicamente invisible. Por debajo de
+// este zoom se dibuja un punto, que es una marca de posicion y no finge una
+// huella; por encima, el hexagono de verdad.
+const FUEGO_ZOOM_HEX = 9;
+
 const FUEGO_CORTES = [10, 50, 150, 400, 1000];
 const FUEGO_COLORES = ["#fcffa4", "#fac228", "#f57d15", "#d44842", "#9f2a63", "#5d177f"];
 
@@ -1801,31 +1814,73 @@ function incendiosAGeoJson(celdas) {
   };
 }
 
+function incendiosAPuntos(celdas) {
+  if (typeof h3 === "undefined") return null;
+  return {
+    type: "FeatureCollection",
+    features: celdas.map((c) => {
+      const [lat, lng] = h3.cellToLatLng(c.h3);
+      return { type: "Feature", geometry: { type: "Point", coordinates: [lng, lat] }, properties: c };
+    }),
+  };
+}
+
+function colorDeFuego() {
+  return [
+    "step",
+    ["coalesce", ["get", "frp_suma"], 0],
+    FUEGO_COLORES[0],
+    ...FUEGO_CORTES.flatMap((corte, i) => [corte, FUEGO_COLORES[i + 1]]),
+  ];
+}
+
 function dibujarIncendios(datos) {
   const m = estado.mapa;
   const geo = incendiosAGeoJson(datos.celdas);
-  if (!m || !geo) return;
+  const puntos = incendiosAPuntos(datos.celdas);
+  if (!m || !geo || !puntos) return;
 
   const pintar = () => {
     if (m.getSource("incendios")) return;
-    m.addSource("incendios", { type: "geojson", data: geo });
+    // `tolerance: 0` desactiva la simplificacion de la fuente GeoJSON. Con el
+    // valor por defecto (0,375) los hexagonos —que a zoom bajo son subpixel—
+    // se colapsan y desaparecen antes incluso de llegar a dibujarse.
+    m.addSource("incendios", { type: "geojson", data: geo, tolerance: 0 });
+    m.addSource("incendios-puntos", { type: "geojson", data: puntos });
 
     const antes = primeraEtiqueta(m);
+    m.addLayer(
+      {
+        id: "incendios-punto",
+        type: "circle",
+        source: "incendios-puntos",
+        maxzoom: FUEGO_ZOOM_HEX,
+        layout: { visibility: "none" },
+        paint: {
+          // El radio va en pixeles de pantalla, asi que no se encoge con el
+          // zoom: es lo que hace la capa visible a escala continental.
+          "circle-radius": [
+            "interpolate", ["linear"], ["zoom"],
+            3, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 1.6, 500, 4],
+            8, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 4, 500, 11],
+          ],
+          "circle-color": colorDeFuego(),
+          "circle-opacity": 0.85,
+          "circle-stroke-color": "#3d0f52",
+          "circle-stroke-width": 0.4,
+          "circle-stroke-opacity": 0.5,
+        },
+      },
+      antes
+    );
     m.addLayer(
       {
         id: "incendios",
         type: "fill",
         source: "incendios",
+        minzoom: FUEGO_ZOOM_HEX,
         layout: { visibility: "none" },
-        paint: {
-          "fill-color": [
-            "step",
-            ["coalesce", ["get", "frp_suma"], 0],
-            FUEGO_COLORES[0],
-            ...FUEGO_CORTES.flatMap((corte, i) => [corte, FUEGO_COLORES[i + 1]]),
-          ],
-          "fill-opacity": 0.75,
-        },
+        paint: { "fill-color": colorDeFuego(), "fill-opacity": 0.75 },
       },
       antes
     );
@@ -1834,21 +1889,26 @@ function dibujarIncendios(datos) {
         id: "incendios-borde",
         type: "line",
         source: "incendios",
+        minzoom: FUEGO_ZOOM_HEX,
         layout: { visibility: "none" },
         paint: { "line-color": "#5d177f", "line-width": 0.4, "line-opacity": 0.35 },
       },
       antes
     );
 
-    m.on("mouseenter", "incendios", () => (m.getCanvas().style.cursor = "pointer"));
-    m.on("mouseleave", "incendios", () => (m.getCanvas().style.cursor = ""));
-    m.on("click", "incendios", (ev) => {
-      const p = ev.features[0].properties;
-      new maplibregl.Popup({ closeButton: true, maxWidth: "320px" })
-        .setLngLat(ev.lngLat)
-        .setHTML(cuadroDeIncendio(p))
-        .addTo(m);
-    });
+    // Las dos representaciones son clicables: si solo lo fuera el hexagono, a
+    // escala continental —que es donde se mira esta capa— no se podria abrir
+    // ninguna celda.
+    for (const capa of ["incendios", "incendios-punto"]) {
+      m.on("mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
+      m.on("mouseleave", capa, () => (m.getCanvas().style.cursor = ""));
+      m.on("click", capa, (ev) => {
+        new maplibregl.Popup({ closeButton: true, maxWidth: "320px" })
+          .setLngLat(ev.lngLat)
+          .setHTML(cuadroDeIncendio(ev.features[0].properties))
+          .addTo(m);
+      });
+    }
   };
 
   cuandoElEstiloEsteListo(m, pintar);
@@ -1909,8 +1969,8 @@ function pintarInterruptorIncendios(datos) {
     const m = estado.mapa;
     if (!m || !m.getLayer("incendios")) return;
     const visible = ev.target.checked ? "visible" : "none";
-    for (const capa of ["incendios", "incendios-borde"]) {
-      m.setLayoutProperty(capa, "visibility", visible);
+    for (const capa of ["incendios", "incendios-borde", "incendios-punto"]) {
+      if (m.getLayer(capa)) m.setLayoutProperty(capa, "visibility", visible);
     }
     if (ev.target.checked) anunciar(`Focos activos: ${numero(t.celdas)} celdas.`);
   });

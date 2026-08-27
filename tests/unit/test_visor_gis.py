@@ -350,3 +350,57 @@ def test_una_poblacion_de_cero_no_se_imprime() -> None:
 def test_la_capa_de_fuego_se_carga_de_verdad() -> None:
     """Escrita y no llamada seria el patron que esta auditoria persigue."""
     assert "cargarIncendios();" in APP
+
+
+def test_los_focos_se_ven_a_escala_continental() -> None:
+    """El fallo que reporto el usuario: "al alejar no se ven los incendios".
+
+    No era intermitente, era aritmetica. Una celda H3 r8 mide 1.063 m de lado a
+    lado, y a la escala con la que abre el visor eso son **0,05 pixeles**:
+
+        zoom 3  ->  0,05 px       zoom 9  ->  3,5 px
+        zoom 6  ->  0,43 px       zoom 11 -> 13,9 px
+
+    La capa funcionaba perfectamente y era fisicamente invisible por debajo de
+    zoom 9. Se arregla con un punto —radio en pixeles de pantalla, que no se
+    encoge— por debajo, y el hexagono real por encima.
+    """
+    assert "const FUEGO_ZOOM_HEX" in APP
+    hex_capa = APP[APP.index('id: "incendios",') :][:400]
+    punto = APP[APP.index('id: "incendios-punto"') :][:900]
+
+    assert "minzoom: FUEGO_ZOOM_HEX" in hex_capa, "el hexagono se dibuja donde no se ve"
+    assert "maxzoom: FUEGO_ZOOM_HEX" in punto, "el punto no cede el sitio al hexagono"
+    assert '"circle-radius"' in punto, "el punto tiene que medirse en pixeles de pantalla"
+
+
+def test_la_fuente_de_hexagonos_no_se_simplifica() -> None:
+    """`tolerance` por defecto (0,375) colapsa geometria subpixel.
+
+    Los hexagonos a zoom bajo lo son, asi que desaparecerian antes incluso de
+    llegar a dibujarse — y el sintoma seria el mismo que el de arriba, con otra
+    causa. Dos causas del mismo sintoma es como se arregla solo una y se cree
+    haber terminado.
+    """
+    bloque = APP[APP.index('m.addSource("incendios",') :][:200]
+
+    assert "tolerance: 0" in bloque
+
+
+def test_el_punto_tambien_abre_el_popup() -> None:
+    """A escala continental solo existe el punto.
+
+    Si solo el hexagono fuera clicable, la capa seria consultable unicamente en
+    el zoom en el que casi nadie la mira.
+    """
+    bloque = APP[APP.index("// Las dos representaciones son clicables") :][:400]
+
+    assert '"incendios-punto"' in bloque
+
+
+def test_el_interruptor_apaga_las_tres_capas() -> None:
+    """Punto, relleno y borde. Dejarse una deja fuego encendido al apagar."""
+    bloque = APP[APP.index("function pintarInterruptorIncendios") :][:900]
+
+    for capa in ("incendios", "incendios-borde", "incendios-punto"):
+        assert f'"{capa}"' in bloque
