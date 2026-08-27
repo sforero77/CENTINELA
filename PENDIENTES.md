@@ -649,6 +649,9 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
 ## 7. Documentos
 
+- [docs/GARANTIAS.md](docs/GARANTIAS.md) — que garantiza este sistema y que no,
+  separando lo probado de lo supuesto. Es el documento que hay que leer antes de
+  decir que esto esta en produccion.
 - [docs/FAMILIAS_DE_FALLO.md](docs/FAMILIAS_DE_FALLO.md) — las siete formas en
   que este sistema se rompe sin ponerse rojo, con sus casos reales y la regla
   que cierra cada una. Es el resumen util de tres dias de auditoria.

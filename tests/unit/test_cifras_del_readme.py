@@ -117,3 +117,19 @@ def test_las_familias_de_fallo_siguen_enlazadas() -> None:
         assert "FAMILIAS_DE_FALLO" in puerta.read_text(encoding="utf-8"), (
             f"{puerta.name} no lleva a las familias de fallo"
         )
+
+
+def test_las_garantias_siguen_enlazadas() -> None:
+    """El documento que dice que esta probado y que no.
+
+    Si no se llega a el desde ninguna parte, alguien dara por buena una garantia
+    que este fichero marca como sin demostrar.
+    """
+    raiz = Path(__file__).parent.parent.parent
+    garantias = raiz / "docs" / "GARANTIAS.md"
+
+    assert garantias.exists()
+    assert "GARANTIAS" in (raiz / "PENDIENTES.md").read_text(encoding="utf-8")
+
+    texto = garantias.read_text(encoding="utf-8")
+    assert "Lo que NO está garantizado" in texto, "un documento de garantias sin la mitad incomoda"
