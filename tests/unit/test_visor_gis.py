@@ -1040,3 +1040,31 @@ def test_salud_y_educacion_van_antes_que_la_superficie() -> None:
     orden = [bloque.index(e) for e in etiquetas]
 
     assert orden == sorted(orden), "salud y educacion volvieron a quedar detras"
+
+
+def test_cada_bloque_del_panel_dice_de_que_va() -> None:
+    """Los titulos eran correctos y opacos.
+
+    "Expuesto en MMI≥7", "Terreno: peligros secundarios", "Contraste con
+    evaluacion de dano": quien no trae el vocabulario puesto veia cifras sin
+    saber que preguntaban. Cada bloque lleva ahora una linea que lo explica en
+    lenguaje llano.
+    """
+    html = (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
+    bloques = re.findall(
+        r'<h3 class="eyebrow"[^>]*>(.*?)</h3>\s*(<p class="subtitulo-bloque">)?', html
+    )
+
+    sin_explicar = [titulo for titulo, sub in bloques if not sub and titulo != "Descargas"]
+    assert not sin_explicar, f"bloques sin explicar: {sin_explicar}"
+
+
+def test_se_explica_que_es_mmi_donde_se_usa() -> None:
+    """Es el termino que sostiene todo el sistema y el que nadie conoce.
+
+    La leyenda del mapa lo explicaba; el panel lo daba por sabido y es donde
+    estan las cifras.
+    """
+    html = (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
+
+    assert "MMI 7 es la sacudida" in html

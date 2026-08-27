@@ -1311,3 +1311,19 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
     width: 13rem;
   }
 }
+
+
+/* Una linea bajo cada titulo que dice de que va el bloque.
+ *
+ * Los titulos eran correctos y opacos: "Expuesto en MMI≥7", "Terreno: peligros
+ * secundarios", "Contraste con evaluacion de dano". Quien no trae el vocabulario
+ * puesto veia cifras sin saber que preguntaban.
+ *
+ * En cuerpo pequeno y color apagado: acompana, no compite con la cifra. */
+.subtitulo-bloque {
+  margin: 0.1rem 0 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #6b6660;
+  max-width: 34rem;
+}
