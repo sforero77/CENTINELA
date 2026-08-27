@@ -23,6 +23,22 @@ RAIZ = Path(__file__).parent.parent.parent
 APP = (RAIZ / "site" / "assets" / "app.js").read_text(encoding="utf-8")
 
 
+def cuerpo(nombre: str) -> str:
+    """El cuerpo entero de una funcion de `app.js`, hasta su llave de cierre.
+
+    Cortar N caracteres desde el nombre es lo que se hacia antes, y fallo cinco
+    veces en un dia: cada vez que una funcion crecia, las aserciones del final
+    quedaban fuera del corte y la prueba pasaba a comprobar el hueco. Una vez
+    dio rojo sin motivo y cuatro veces habria dado **verde sobre codigo que ya
+    no miraba**, que es lo peligroso.
+
+    La llave de cierre a principio de linea delimita la funcion sin ambiguedad
+    en este fichero, donde todo va indentado con dos espacios.
+    """
+    ini = APP.index(f"function {nombre}")
+    return APP[ini : APP.index(chr(10) + "}", ini)]
+
+
 def sin_comentarios(css: str) -> str:
     """El CSS sin sus comentarios, para que un guardia mire el codigo.
 
@@ -372,7 +388,7 @@ def test_los_focos_se_dibujan_como_hexagonos_h3() -> None:
     Y con `true` en `cellToBoundary`, que devuelve [lng, lat]: sin el, los
     hexagonos aparecen en el oceano Indico.
     """
-    bloque = APP[APP.index("function incendiosAGeoJson") :][:600]
+    bloque = cuerpo("incendiosAGeoJson")
 
     assert "h3.cellToBoundary(c.h3, true)" in bloque
 
@@ -395,7 +411,7 @@ def test_una_poblacion_de_cero_no_se_imprime() -> None:
     Un cero ahi se leeria como medicion, y es justo la confusion que este
     sistema lleva dos dias persiguiendo.
     """
-    bloque = APP[APP.index("function cuadroDeIncendio") :][:900]
+    bloque = cuerpo("cuadroDeIncendio")
 
     assert "p.pop > 0 ?" in bloque
 
@@ -453,7 +469,7 @@ def test_el_punto_tambien_abre_el_popup() -> None:
 
 def test_el_interruptor_apaga_las_tres_capas() -> None:
     """Punto, relleno y borde. Dejarse una deja fuego encendido al apagar."""
-    bloque = APP[APP.index("function pintarInterruptorIncendios") :][:900]
+    bloque = cuerpo("pintarInterruptorIncendios")
 
     for capa in ("incendios", "incendios-borde", "incendios-punto"):
         assert f'"{capa}"' in bloque
@@ -472,7 +488,7 @@ def test_la_rampa_del_fuego_tiene_leyenda() -> None:
     assert "function pintarLeyendaFuego" in APP
     assert "pintarLeyendaFuego();" in APP, "la leyenda existe y nadie la llama"
 
-    bloque = APP[APP.index("function pintarLeyendaFuego") :][:900]
+    bloque = cuerpo("pintarLeyendaFuego")
     assert "Potencia radiativa" in bloque, "la leyenda no dice que mide"
     assert "MW" in bloque, "ni en que unidad"
 
@@ -483,14 +499,14 @@ def test_la_leyenda_del_fuego_repite_lo_que_no_afirma() -> None:
     Y la lee justo cuando esta mirando los colores, que es cuando la tentacion
     de leerlos como area quemada es mayor.
     """
-    bloque = APP[APP.index("function pintarLeyendaFuego") :][:1200]
+    bloque = cuerpo("pintarLeyendaFuego")
 
     assert "No es área quemada" in bloque
 
 
 def test_la_leyenda_del_fuego_sigue_al_interruptor() -> None:
     """Una leyenda de una capa apagada explica algo que no se ve."""
-    bloque = APP[APP.index("function pintarInterruptorIncendios") :][:1400]
+    bloque = cuerpo("pintarInterruptorIncendios")
 
     assert "leyenda-fuego" in bloque
     assert "hidden = !ev.target.checked" in bloque
@@ -510,7 +526,7 @@ def test_el_visor_dice_lo_que_esta_pasando_ahora() -> None:
 
 def test_el_bloque_en_vivo_no_aparece_vacio() -> None:
     """Un panel que dice "Ahora mismo" sin cifras ensena a ignorarlo."""
-    bloque = APP[APP.index("function pintarEnVivo") :][:1600]
+    bloque = cuerpo("pintarEnVivo")
 
     assert "if (!partes.length) return;" in bloque
 
@@ -537,7 +553,7 @@ def test_la_cifra_en_vivo_lleva_a_verla() -> None:
     Cerrar la distancia entre la afirmacion y la evidencia es lo que separa un
     tablero de un informe: aqui la cifra **es** el control.
     """
-    bloque = APP[APP.index("function pintarEnVivo") :][:2200]
+    bloque = cuerpo("pintarEnVivo")
 
     assert 'data-capa="incendios"' in bloque
     assert 'data-capa="observados"' in bloque
@@ -550,7 +566,7 @@ def test_la_cifra_viva_es_un_boton_de_verdad() -> None:
 
     Es la diferencia entre parecer interactivo y serlo.
     """
-    bloque = APP[APP.index("function pintarEnVivo") :][:2200]
+    bloque = cuerpo("pintarEnVivo")
 
     assert '<button type="button" class="metrica metrica-viva"' in bloque
 
@@ -561,7 +577,7 @@ def test_encender_desde_la_cifra_pasa_por_el_interruptor() -> None:
     Asi es como se acaba con una capa encendida y su casilla vacia — y con un
     usuario que pulsa la casilla para encender y la apaga.
     """
-    bloque = APP[APP.index("function encenderCapaViva") :][:500]
+    bloque = cuerpo("encenderCapaViva")
 
     assert "casilla.click()" in bloque
     assert "setLayoutProperty" not in bloque, "no puede tocar el mapa por su cuenta"
@@ -618,7 +634,7 @@ def test_el_selector_de_capas_se_navega_con_flechas() -> None:
     seleccionado este en el orden de tabulacion. Sin eso, llegar al mapa con el
     teclado costaba siete tabulaciones por siete capas — y ninguna hacia nada.
     """
-    bloque = APP[APP.index("function pintarSelectorCapas") :][:1800]
+    bloque = cuerpo("pintarSelectorCapas")
 
     assert "ArrowRight" in bloque and "ArrowLeft" in bloque
     assert "Home" in bloque and "End" in bloque, "faltan los extremos del grupo"
@@ -626,7 +642,7 @@ def test_el_selector_de_capas_se_navega_con_flechas() -> None:
 
 def test_solo_la_capa_activa_entra_en_el_orden_de_tabulacion() -> None:
     """`tabindex` rotatorio: el grupo es una parada, no siete."""
-    bloque = APP[APP.index("function pintarSelectorCapas") :][:1800]
+    bloque = cuerpo("pintarSelectorCapas")
 
     assert 'tabindex="${id === estado.capa ? 0 : -1}"' in bloque
 
@@ -637,7 +653,7 @@ def test_moverse_con_el_teclado_cambia_la_capa() -> None:
     Tener que confirmar con Enter deja al usuario mirando una capa que no es la
     que tiene el foco — y como el mapa esta al lado, se nota.
     """
-    bloque = APP[APP.index("function pintarSelectorCapas") :][:1800]
+    bloque = cuerpo("pintarSelectorCapas")
 
     assert "destino.focus();" in bloque
     assert "cambiarCapa(destino.dataset.capa);" in bloque
@@ -645,7 +661,7 @@ def test_moverse_con_el_teclado_cambia_la_capa() -> None:
 
 def test_cambiar_de_capa_mueve_el_tabindex() -> None:
     """Si no, tras un clic el orden de tabulacion apunta a la capa anterior."""
-    bloque = APP[APP.index("function cambiarCapa") :][:900]
+    bloque = cuerpo("cambiarCapa")
 
     assert "aria-selected" in bloque
     assert "tabIndex" in bloque
@@ -714,7 +730,9 @@ def test_ninguna_clase_se_confunde_con_el_suelo_del_mapa() -> None:
         alta, baja = sorted((luminancia(a), luminancia(b)), reverse=True)
         return (alta + 0.05) / (baja + 0.05)
 
-    suelo = re.search(r'const BASE_TIERRA = "(#[0-9a-fA-F]{6})"', APP).group(1)
+    hallado = re.search(r'const BASE_TIERRA = "(#[0-9a-fA-F]{6})"', APP)
+    assert hallado, "no se encontro BASE_TIERRA"
+    suelo = hallado.group(1)
     fuego = re.findall(r"#[0-9a-fA-F]{6}", APP.split("const FUEGO_COLORES", 1)[1].split("]", 1)[0])
 
     peor = min(contraste(c, suelo) for c in fuego)
@@ -749,6 +767,7 @@ def test_el_encuadre_inicial_muestra_toda_latam() -> None:
     vista = re.search(
         r"const VISTA_INICIAL = \{ center: \[(-?[\d.]+), (-?[\d.]+)\], zoom: ([\d.]+)", APP
     )
+    assert vista, "no se encontro VISTA_INICIAL"
     _lon, lat, zoom = (float(g) for g in vista.groups())
 
     # El limite real es la ALTURA, no la anchura: el mapa del tablero es
@@ -806,7 +825,7 @@ def test_el_fuego_va_debajo_de_los_epicentros() -> None:
     veintiuno y son lo que este sistema existe para publicar. Sin orden
     explicito, la que se dibuja despues gana — y es el fuego.
     """
-    bloque = APP[APP.index("function dibujarIncendios") :][:1600]
+    bloque = cuerpo("dibujarIncendios")
 
     assert 'm.getLayer("epicentros-halo") ? "epicentros-halo"' in bloque
 
@@ -819,6 +838,7 @@ def test_el_sobrante_del_encuadre_cae_sobre_el_oceano() -> None:
     mapa. Desplazado al oeste cae sobre el Pacifico, que esta vacio.
     """
     vista = re.search(r"const VISTA_INICIAL = \{ center: \[(-?[\d.]+)", APP)
+    assert vista, "no se encontro VISTA_INICIAL"
     lon = float(vista.group(1))
 
     assert lon <= -80, f"el centro en {lon} deja Africa dentro del encuadre"
@@ -842,7 +862,7 @@ def test_hay_forma_de_salir_de_un_evento() -> None:
 
 def test_escape_tambien_sale() -> None:
     """Es lo que prueba cualquiera antes de buscar un boton."""
-    bloque = APP[APP.index("function engancharSalidas") :][:600]
+    bloque = cuerpo("engancharSalidas")
 
     assert '"Escape"' in bloque
     assert "estado.seleccionado" in bloque, "Escape no puede cerrar lo que ya esta cerrado"
@@ -850,7 +870,7 @@ def test_escape_tambien_sale() -> None:
 
 def test_al_salir_el_desplegable_vuelve_a_vacio() -> None:
     """Si no, la cabecera sigue diciendo el evento del que acabas de salir."""
-    bloque = APP[APP.index("function cerrarDetalle") :][:900]
+    bloque = cuerpo("cerrarDetalle")
 
     assert 'selector.value = ""' in bloque
 
@@ -865,7 +885,7 @@ def test_el_mapa_dice_que_es_cada_simbolo() -> None:
     assert "function pintarLeyendaSimbolos" in APP
     assert "pintarLeyendaSimbolos();" in APP, "la leyenda existe y nadie la llama"
 
-    bloque = APP[APP.index("function pintarLeyendaSimbolos") :][:1600]
+    bloque = cuerpo("pintarLeyendaSimbolos")
     for concepto in ("Sismo con reporte", "Sismo visto, sin reporte", "Foco activo"):
         assert concepto in bloque, f"la leyenda no explica: {concepto}"
 
@@ -873,6 +893,40 @@ def test_el_mapa_dice_que_es_cada_simbolo() -> None:
 def test_la_leyenda_de_simbolos_esta_siempre() -> None:
     """A diferencia de la del fuego, no se apaga: la pregunta "¿que es esto?"
     no depende de que capa este encendida."""
-    bloque = APP[APP.index("function pintarLeyendaSimbolos") :][:1600]
+    bloque = cuerpo("pintarLeyendaSimbolos")
 
     assert "hidden = true" not in bloque
+
+
+def test_el_visor_dice_sobre_que_esta_ardiendo() -> None:
+    """Es lo que convierte "hay fuego" en informacion.
+
+    Un foco sobre pastizal en agosto es rutina agricola; el mismo sobre bosque
+    no lo es. El visor decia cuantas celdas arden y cuanta gente hay debajo, y
+    no decia **que** esta ardiendo.
+    """
+    bloque = cuerpo("pintarEnVivo")
+
+    assert "sobre qué está ardiendo" in bloque
+    assert "suelo-reparto" in bloque
+    for clase in ("arbolado", "pastizal", "cultivo", "humedal"):
+        assert clase in bloque
+
+
+def test_el_reparto_del_suelo_no_aparece_sin_datos() -> None:
+    """Con activos anteriores a la Fase 1 el reparto viene vacio.
+
+    Cuatro barras a cero se leerian como "no hay bosque ni pasto ni cultivo".
+    """
+    bloque = cuerpo("pintarEnVivo")
+
+    assert "if (reparto.length)" in bloque
+
+
+def test_el_reparto_dice_que_es_energia_y_no_focos() -> None:
+    """Mil detecciones debiles y cincuenta intensas dan repartos distintos.
+
+    Sin decirlo, el porcentaje se lee como "de cada cien focos", que es otra
+    cosa y suele apuntar al reves.
+    """
+    assert "Reparto de la energía medida, no del número de focos" in APP

@@ -1963,6 +1963,7 @@ async function cargarIncendios() {
   pintarLeyendaFuego();
   pintarInterruptorIncendios(datos);
   estado.vivo.incendios = datos.totales || {};
+  estado.vivo.suelo = datos.suelo || {};
   estado.vivo.ventanaFuego = datos.ventana_horas || 24;
   pintarEnVivo();
 }
@@ -2206,6 +2207,20 @@ function pintarEnVivo() {
   // activa con Enter, y un lector de pantalla lo anuncia como algo que hace
   // algo. Ese es todo el motivo.
   const partes = [];
+  // Sobre que arde. Es lo que convierte "hay fuego" en informacion: un foco
+  // sobre pastizal en agosto es rutina agricola; el mismo sobre bosque no.
+  //
+  // Solo aparece si el activo del pais trae cobertura del suelo. Los anteriores
+  // a la Fase 1 no la traen, y publicar ceros diria "no hay bosque" donde lo
+  // honesto es no decir nada.
+  const suelo = v.suelo || {};
+  const reparto = [
+    ["arbolado", suelo.arbolado],
+    ["pastizal", suelo.pastizal],
+    ["cultivo", suelo.cultivo],
+    ["humedal", suelo.humedal],
+  ].filter(([, pct]) => Number(pct) >= 1);
+
   if (v.incendios && v.incendios.celdas) {
     partes.push(
       `<button type="button" class="metrica metrica-viva" data-capa="incendios">` +
@@ -2214,6 +2229,23 @@ function pintarEnVivo() {
         `<span class="apunte">${numero(v.incendios.celdas)} celdas · ` +
         `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
+    );
+  }
+  if (reparto.length) {
+    const barras = reparto
+      .map(
+        ([nombre, pct]) =>
+          `<li><span class="suelo-nombre">${nombre}</span>` +
+          `<span class="suelo-barra"><span style="width:${Math.min(100, Number(pct))}%"></span></span>` +
+          `<span class="suelo-pct">${numero(Number(pct))}&nbsp;%</span></li>`
+      )
+      .join("");
+    partes.push(
+      `<div class="metrica metrica-suelo"><span class="etiqueta">sobre qué está ardiendo</span>` +
+        `<ul class="suelo-reparto">${barras}</ul>` +
+        `<span class="apunte">Reparto de la energía medida, no del número de focos. ` +
+        `${numero(suelo.celdas_medidas)} celdas con cobertura conocida` +
+        `${suelo.celdas_sin_medir ? `; ${numero(suelo.celdas_sin_medir)} sin medir` : ""}.</span></div>`
     );
   }
   if (v.observados !== undefined) {

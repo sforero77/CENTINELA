@@ -369,3 +369,54 @@ def test_entre_celdas_con_gente_manda_la_poblacion() -> None:
     )
 
     assert [c["h3"] for c in datos["celdas"]] == ["88b"]
+
+
+# --- Sobre que arde ---------------------------------------------------------
+
+
+def test_el_reparto_del_suelo_pondera_por_energia() -> None:
+    """Mil detecciones debiles sobre cultivo no son cincuenta intensas sobre bosque.
+
+    Contar celdas las igualaria. Lo que importa es donde cayo la energia.
+    """
+    from dataclasses import replace
+
+    from pipelines.p5_incendios.incendios import build_incendios
+
+    debil = replace(_celda("88a", frp=1.0), cultivo_pct=100.0)
+    fuerte = replace(_celda("88b", frp=99.0), arbolado_pct=100.0)
+
+    suelo = build_incendios([debil, fuerte])["suelo"]
+
+    assert suelo["arbolado"] == 99.0
+    assert suelo["cultivo"] == 1.0
+
+
+def test_sin_cobertura_del_suelo_no_se_publica_un_reparto() -> None:
+    """Los activos anteriores a la Fase 1 no la traen.
+
+    Publicar ceros diria "no hay bosque" donde lo honesto es no decir nada. Es
+    la misma regla que sostiene el resto del sistema: ausencia de medicion no es
+    medicion de cero.
+    """
+    from pipelines.p5_incendios.incendios import build_incendios
+
+    assert build_incendios([_celda("88a", frp=10.0)])["suelo"] == {}
+
+
+def test_se_dice_cuantas_celdas_no_tienen_cobertura() -> None:
+    """Un reparto sobre la mitad de las celdas y otro sobre todas no valen igual.
+
+    Sin el conteo, los porcentajes parecen del total y no lo son.
+    """
+    from dataclasses import replace
+
+    from pipelines.p5_incendios.incendios import build_incendios
+
+    con = replace(_celda("88a", frp=5.0), arbolado_pct=80.0)
+    sin = _celda("88b", frp=5.0)
+
+    suelo = build_incendios([con, sin])["suelo"]
+
+    assert suelo["celdas_medidas"] == 1
+    assert suelo["celdas_sin_medir"] == 1

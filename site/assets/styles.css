@@ -1192,3 +1192,50 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   background: linear-gradient(135deg, #f4a621, #c02a4a 55%, #4a1370);
   border: 1px solid #3d0f52;
 }
+
+
+/* Sobre que arde. Barras y no una tarta: comparar longitudes es lo unico que el
+ * ojo hace bien, y aqui la pregunta es "¿cual pesa mas?". */
+.metrica-suelo {
+  grid-column: 1 / -1;
+}
+
+.suelo-reparto {
+  list-style: none;
+  margin: 0.45rem 0 0.3rem;
+  padding: 0;
+  display: grid;
+  gap: 0.28rem;
+}
+
+.suelo-reparto li {
+  display: grid;
+  grid-template-columns: 4.6rem 1fr 2.6rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.suelo-nombre {
+  color: #4a4640;
+}
+
+.suelo-barra {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(28, 27, 26, 0.08);
+  overflow: hidden;
+}
+
+.suelo-barra > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #1f6f4a;
+}
+
+.suelo-pct {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #4a4640;
+}

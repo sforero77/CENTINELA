@@ -43,6 +43,48 @@ NOTA: Final[str] = (
 )
 
 
+#: Sobre que arde. Es la pregunta que convierte "hay fuego" en informacion.
+#:
+#: Un foco sobre pastizal en agosto es rutina agricola; el mismo foco sobre
+#: bosque no lo es. Sin este reparto el visor decia cuantas celdas arden y
+#: cuanta gente hay debajo, y no decia **que** esta ardiendo — que es lo que
+#: separa un contador de un dato.
+#:
+#: Se pondera por potencia radiativa y no por numero de celdas: mil detecciones
+#: debiles sobre cultivo no son lo mismo que cincuenta intensas sobre bosque
+#: primario, y contar celdas las igualaria.
+SUELOS: Final[tuple[tuple[str, str], ...]] = (
+    ("arbolado_pct", "arbolado"),
+    ("pastizal_pct", "pastizal"),
+    ("cultivo_pct", "cultivo"),
+    ("humedal_pct", "humedal"),
+)
+
+
+def _reparto_del_suelo(celdas: list[CeldaConFuego]) -> dict[str, Any]:
+    """Que porcentaje de la energia del fuego cayo sobre cada tipo de suelo.
+
+    Devuelve `{}` si ninguna celda trae cobertura del suelo: los activos
+    anteriores a la Fase 1 no la tienen, y publicar ceros diria "no hay bosque"
+    donde lo correcto es "no se midio". Es la misma regla que sostiene el resto
+    del sistema.
+    """
+    con_suelo = [c for c in celdas if any(getattr(c, campo) > 0 for campo, _ in SUELOS)]
+    if not con_suelo:
+        return {}
+
+    energia = sum(c.frp_suma for c in con_suelo) or 1.0
+
+    def cuota(campo: str) -> float:
+        propia = sum(c.frp_suma * getattr(c, campo) / 100.0 for c in con_suelo)
+        return float(round(propia / energia * 100, 1))
+
+    reparto: dict[str, Any] = {nombre: cuota(campo) for campo, nombre in SUELOS}
+    reparto["celdas_medidas"] = len(con_suelo)
+    reparto["celdas_sin_medir"] = len(celdas) - len(con_suelo)
+    return reparto
+
+
 def _prioridad(celdas: list[CeldaConFuego], max_celdas: int) -> list[CeldaConFuego]:
     """Las que se publican: **primero todas las que tienen gente**.
 
@@ -80,6 +122,7 @@ def build_incendios(
         "generado_utc": utcnow_iso(),
         "ventana_horas": ventana_horas,
         "nota": NOTA,
+        "suelo": _reparto_del_suelo(celdas),
         "totales": {
             "celdas": len(celdas),
             "celdas_publicadas": len(publicadas),
