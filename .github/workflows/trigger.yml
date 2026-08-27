@@ -95,6 +95,71 @@ jobs:
         id: trigger
         run: uv run centinela trigger ${{ inputs.dry_run && '--dry-run' || '' }}
 
+      # EL VIGIA ES EL RELOJ DE LOS DEMAS.
+      #
+      # GitHub no concede un turno de cron por workflow: concede unos pocos por
+      # repositorio. Medido el 27-ago-2026: cinco turnos en veinticuatro horas
+      # repartidos entre cinco workflows programados. `incendios.yml` pedia
+      # cuatro al dia y no corrio **ninguno** en las siete horas siguientes a su
+      # creacion; `frescura.yml` pedia ocho y corrio dos, asi que su deteccion
+      # real fue de trece horas en vez de tres.
+      #
+      # Eso dejaba a los vigilantes dependiendo de la misma cola que vigilan,
+      # que es el punto debil estructural de todo el sistema.
+      #
+      # `workflow_dispatch` **no** pasa por esa cola: es la excepcion
+      # documentada, la misma con la que este workflow ya republica el visor y
+      # despacha P2. Asi que el repositorio pide **un** turno de cron —este— y
+      # desde aqui salen los demas cuando toca.
+      #
+      # Su propio `schedule` se queda como respaldo: si algun dia este paso deja
+      # de correr, siguen teniendo una via, aunque sea mala. Y por eso se
+      # comprueba cuanto hace que corrieron en vez de disparar a ciegas: sin la
+      # comprobacion, un turno concedido a los dos relojes duplicaria la corrida.
+      #
+      # VA ANTES DE PUBLICAR, Y ESO IMPORTA.
+      #
+      # La primera version despachaba al final y `frescura` fallo en su primera
+      # corrida: el vigia commiteo a las 21:45:19, republico el visor, y
+      # `frescura` arranco quince segundos despues. El despliegue de Pages tarda
+      # unos veintiseis, asi que la reviso **a medias** y reporto 7,4 h de
+      # desfase que eran ciertas en ese instante y falsas medio minuto despues.
+      #
+      # Despachar al vigilante justo tras publicar garantiza que lo pille en la
+      # ventana de despliegue. Aqui mira el estado anterior, que esta asentado —
+      # y lo que acaba de commitearse lo vera en la pasada siguiente, que es
+      # exactamente cuando ya es comprobable.
+      - name: Despachar los workflows que dependen del reloj
+        if: always() && !inputs.dry_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          despachar_si_toca() {
+            local workflow="$1" cada_horas="$2"
+            local ultima edad_h
+
+            ultima=$(gh run list --workflow="$workflow" --limit 1                        --json createdAt --jq '.[0].createdAt // ""' 2>/dev/null || echo "")
+
+            if [ -z "$ultima" ]; then
+              echo "$workflow: nunca ha corrido; se lanza"
+            else
+              edad_h=$(( ( $(date -u +%s) - $(date -u -d "$ultima" +%s) ) / 3600 ))
+              if [ "$edad_h" -lt "$cada_horas" ]; then
+                echo "$workflow: corrio hace ${edad_h}h (cada ${cada_horas}h); no toca"
+                return 0
+              fi
+              echo "$workflow: corrio hace ${edad_h}h (cada ${cada_horas}h); se lanza"
+            fi
+
+            # Un fallo aqui no puede tumbar al vigia: su trabajo ya esta hecho y
+            # commiteado. Se avisa y se sigue con el siguiente.
+            gh workflow run "$workflow" || echo "::warning::no se pudo despachar $workflow"
+          }
+
+          despachar_si_toca frescura.yml 3
+          despachar_si_toca incendios.yml 6
+
       # ESTE PASO NO LLEVA CONDICION DE `hay_trabajo`, Y ES DELIBERADO.
       #
       # La llevaba, y el latido de /status no llegaba nunca a publicarse. El
@@ -210,58 +275,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: gh workflow run site.yml
-
-      # EL VIGIA ES EL RELOJ DE LOS DEMAS.
-      #
-      # GitHub no concede un turno de cron por workflow: concede unos pocos por
-      # repositorio. Medido el 27-ago-2026: cinco turnos en veinticuatro horas
-      # repartidos entre cinco workflows programados. `incendios.yml` pedia
-      # cuatro al dia y no corrio **ninguno** en las siete horas siguientes a su
-      # creacion; `frescura.yml` pedia ocho y corrio dos, asi que su deteccion
-      # real fue de trece horas en vez de tres.
-      #
-      # Eso dejaba a los vigilantes dependiendo de la misma cola que vigilan,
-      # que es el punto debil estructural de todo el sistema.
-      #
-      # `workflow_dispatch` **no** pasa por esa cola: es la excepcion
-      # documentada, la misma con la que este workflow ya republica el visor y
-      # despacha P2. Asi que el repositorio pide **un** turno de cron —este— y
-      # desde aqui salen los demas cuando toca.
-      #
-      # Su propio `schedule` se queda como respaldo: si algun dia este paso deja
-      # de correr, siguen teniendo una via, aunque sea mala. Y por eso se
-      # comprueba cuanto hace que corrieron en vez de disparar a ciegas: sin la
-      # comprobacion, un turno concedido a los dos relojes duplicaria la corrida.
-      - name: Despachar los workflows que dependen del reloj
-        if: always() && !inputs.dry_run
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          despachar_si_toca() {
-            local workflow="$1" cada_horas="$2"
-            local ultima edad_h
-
-            ultima=$(gh run list --workflow="$workflow" --limit 1                        --json createdAt --jq '.[0].createdAt // ""' 2>/dev/null || echo "")
-
-            if [ -z "$ultima" ]; then
-              echo "$workflow: nunca ha corrido; se lanza"
-            else
-              edad_h=$(( ( $(date -u +%s) - $(date -u -d "$ultima" +%s) ) / 3600 ))
-              if [ "$edad_h" -lt "$cada_horas" ]; then
-                echo "$workflow: corrio hace ${edad_h}h (cada ${cada_horas}h); no toca"
-                return 0
-              fi
-              echo "$workflow: corrio hace ${edad_h}h (cada ${cada_horas}h); se lanza"
-            fi
-
-            # Un fallo aqui no puede tumbar al vigia: su trabajo ya esta hecho y
-            # commiteado. Se avisa y se sigue con el siguiente.
-            gh workflow run "$workflow" || echo "::warning::no se pudo despachar $workflow"
-          }
-
-          despachar_si_toca frescura.yml 3
-          despachar_si_toca incendios.yml 6
 
       # Latido para el monitor externo. Si deja de llegar, el equipo recibe
       # alerta en 30 min (§6.5) — la desactivacion silenciosa del cron es el

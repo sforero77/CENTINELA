@@ -97,3 +97,23 @@ def test_las_cadencias_declaradas_coinciden_con_los_crones() -> None:
         assert despachado == declarado == esperado, (
             f"{workflow}: cron cada {declarado} h, despachado cada {despachado} h"
         )
+
+
+def test_el_reloj_despacha_antes_de_publicar() -> None:
+    """El orden no es cosmetico: costo el primer fallo de `frescura`.
+
+    Despachando al final, el vigia commiteaba, republicaba el visor, y
+    `frescura` arrancaba quince segundos despues. El despliegue de Pages tarda
+    unos veintiseis, asi que lo reviso **a medias**: reporto 7,4 h de desfase
+    que eran ciertas en ese instante y falsas medio minuto despues.
+
+    Un vigilante que da falsos positivos por diseno se aprende a ignorar, y
+    entonces no avisa el dia que importa.
+
+    Aqui mira el estado anterior, que esta asentado. Lo que acaba de commitearse
+    lo vera en la pasada siguiente, que es cuando ya es comprobable.
+    """
+    despacho = TRIGGER.index("- name: Despachar los workflows que dependen del reloj")
+    publicacion = TRIGGER.index("- name: Publicar estado y latido")
+
+    assert despacho < publicacion, "el reloj volvio a despachar dentro de la ventana de despliegue"
