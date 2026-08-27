@@ -956,3 +956,30 @@ def test_el_dibujo_no_depende_de_que_el_estilo_se_declare_listo() -> None:
     bloque = cuerpo("cuandoElEstiloEsteListo")
 
     assert "setTimeout(" in bloque
+
+
+def test_la_barra_de_escala_no_queda_debajo_de_las_leyendas() -> None:
+    """Estaba abajo a la izquierda, que es donde se apilaron las leyendas.
+
+    Una barra de escala tapada es peor que no tenerla: el hueco se da por
+    cubierto. Y este sistema publica distancias —"41 km al SO de"—, asi que
+    poder juzgarlas en el mapa no es decorativo.
+    """
+    bloque = APP[APP.index("ScaleControl") - 300 :][:600]
+
+    assert '"bottom-right"' in bloque
+    assert '"bottom-left"' not in bloque
+
+
+def test_la_nota_de_la_capa_se_puede_plegar() -> None:
+    """Nueve lineas fijas se comen el mapa a zoom cercano.
+
+    La nota explica por que hay huecos en la malla y por que las lineas del
+    ShakeMap si llegan al mar: hay que tenerla disponible, no delante todo el
+    rato.
+    """
+    html = (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
+
+    assert "leyenda-detalle" in html
+    assert "<summary>Cómo leer esta capa</summary>" in html
+    assert 'id="leyenda-nota"' in html, "la nota sigue teniendo que existir"

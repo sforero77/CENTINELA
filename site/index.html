@@ -86,7 +86,14 @@
         <div class="leyenda" id="leyenda" hidden>
           <p class="leyenda-titulo mono" id="leyenda-titulo"></p>
           <ul class="leyenda-escala" id="leyenda-escala"></ul>
-          <p class="leyenda-nota" id="leyenda-nota"></p>
+          <!-- Plegable: la nota explica por que hay huecos en la malla y por
+               que las lineas del ShakeMap si llegan al mar. Es informacion que
+               hay que tener disponible y que no hace falta tener delante todo
+               el rato — nueve lineas fijas se comen el mapa a zoom cercano. -->
+          <details class="leyenda-detalle">
+            <summary>Cómo leer esta capa</summary>
+            <p class="leyenda-nota" id="leyenda-nota"></p>
+          </details>
         </div>
 
         <!-- Los sismos menores que el vigia vio y no despacho. El interruptor

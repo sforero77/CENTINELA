@@ -1600,7 +1600,14 @@ function iniciarMapa() {
   // añadirla la imprimía dos veces seguidas.
   mapa.addControl(new maplibregl.AttributionControl({ compact: true }));
   mapa.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-  mapa.addControl(new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }), "bottom-left");
+  // Abajo a la DERECHA, sobre la atribucion. La esquina de abajo a la
+  // izquierda es de las leyendas desde que se apilaron ahi, y una barra de
+  // escala tapada no mide nada — que es peor que no tenerla, porque el hueco se
+  // da por cubierto.
+  mapa.addControl(
+    new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }),
+    "bottom-right"
+  );
 
   // Positron viene en gris neutro. Sobre un fondo de arena cálida canta, y su
   // agua es casi del mismo tono que su tierra — inservible para un sistema
