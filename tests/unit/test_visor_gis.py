@@ -1068,3 +1068,76 @@ def test_se_explica_que_es_mmi_donde_se_usa() -> None:
     html = (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
 
     assert "MMI 7 es la sacudida" in html
+
+
+def test_el_visor_ensena_los_servicios_bajo_fuego() -> None:
+    """Lo que el popup de una celda decia y el indicador no.
+
+    Salud y educacion dentro de celdas con fuego activo estaban solo para quien
+    pulsara la celda exacta entre catorce mil.
+    """
+    bloque = cuerpo("pintarEnVivo")
+
+    assert "salud_en_celdas_con_fuego" in bloque
+    assert "edu_en_celdas_con_fuego" in bloque
+    assert "en celdas con fuego activo" in bloque
+
+
+def test_los_servicios_no_se_pintan_si_son_cero() -> None:
+    """Cero puede ser "no hay" o "el pais no tiene activo cargado".
+
+    Pintar "0 sedes de salud" afirmaria lo primero sin poder distinguirlo.
+    """
+    bloque = cuerpo("pintarEnVivo")
+
+    assert "filter(([, n]) => Number(n) > 0)" in bloque
+    assert "if (servicios.length)" in bloque
+
+
+# --- Indicadores: un catalogo, una funcion ----------------------------------
+
+
+def test_una_sola_funcion_pinta_las_cifras() -> None:
+    """El HTML de cada cifra estaba escrito a mano en cada sitio que la mostraba.
+
+    Eso hacia imposible anadirle nada —un icono, un nivel— sin repetirlo tres
+    veces y que las tres se separaran a la primera.
+    """
+    assert "function tarjetaIndicador" in APP
+
+    # Panel de un evento, reporte preliminar por radios y bloque de fuego.
+    for llamador in ("pintarMetricas",):
+        assert "tarjetaIndicador" in sin_comentarios_js(cuerpo(llamador))
+
+
+def test_los_cortes_de_nivel_estan_medidos_y_no_elegidos() -> None:
+    """p33 y p66 de los diez reportes del catalogo que alcanzan MMI≥7.
+
+    Un nivel "alto" inventado diria mas del criterio de quien lo eligio que del
+    evento. Asi es relativo a lo que de verdad ha pasado en LATAM.
+    """
+    bloque = APP[APP.index("const INDICADORES") :][:900]
+
+    assert "cortes: [247720, 910714]" in bloque, "los cortes de poblacion no son los medidos"
+    assert "cortes: [31, 152]" in bloque, "los de salud tampoco"
+
+
+def test_sin_valor_no_se_inventa_un_nivel() -> None:
+    """Un cero o un nulo no son "nivel bajo": son ausencia de dato.
+
+    Pintar tres barras vacias como si fueran una medicion es la forma visual del
+    error que este proyecto persigue.
+    """
+    bloque = cuerpo("nivelDe")
+
+    assert "if (v <= 0) return null" in bloque
+    assert "!Number.isFinite(Number(valor))" in bloque
+
+
+def test_cada_indicador_declara_su_icono() -> None:
+    """Sin icono la cifra se encuentra leyendo; con icono, mirando."""
+    catalogo = APP[APP.index("const INDICADORES") : APP.index("const NIVELES")]
+    iconos = APP[APP.index("const ICONOS") : APP.index("const INDICADORES")]
+
+    for clave in re.findall(r"icono: \"(\w+)\"", catalogo):
+        assert f"{clave}:" in iconos, f"el indicador declara el icono {clave} y no existe"

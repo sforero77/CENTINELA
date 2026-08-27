@@ -1327,3 +1327,91 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   color: #6b6660;
   max-width: 34rem;
 }
+
+
+/* Salud y educacion bajo fuego, en una sola fila. Dos cifras pequenas juntas
+ * pesan lo que deben: menos que la poblacion, mas que un dato de popup. */
+.metrica-servicios {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1.1rem;
+}
+
+.metrica-servicios .servicio {
+  font-size: 0.92rem;
+  color: #1c1b1a;
+}
+
+.metrica-servicios .servicio strong {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrica-servicios .etiqueta {
+  flex-basis: 100%;
+}
+
+
+/* --- Indicadores con icono y nivel ---------------------------------------
+ *
+ * El icono ayuda a encontrar la cifra de un vistazo; el nivel dice si es mucha
+ * o poca **comparada con lo que este sistema ha publicado**, que es la unica
+ * comparacion honesta que tenemos. Tres barras y no una etiqueta: ocupa menos y
+ * no compite con el numero.
+ */
+.metrica .cabeza {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.icono {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #6b6660;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* La llama y el birrete se leen mejor rellenos que perfilados. */
+.metrica[data-nivel] .icono { stroke: #4a4640; }
+
+.nivel {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-left: auto;
+  height: 12px;
+  cursor: help;
+}
+
+.nivel i {
+  display: block;
+  width: 3px;
+  border-radius: 1px;
+  background: rgba(28, 27, 26, 0.16);
+}
+
+.nivel i:nth-child(1) { height: 5px; }
+.nivel i:nth-child(2) { height: 8px; }
+.nivel i:nth-child(3) { height: 11px; }
+
+.metrica[data-nivel="bajo"] .nivel i:nth-child(1),
+.metrica[data-nivel="medio"] .nivel i:nth-child(-n + 2),
+.metrica[data-nivel="alto"] .nivel i {
+  background: #1f6f4a;
+}
+
+/* Solo el tercio alto tira a rojo: es el que pide mirar. */
+.metrica[data-nivel="alto"] .nivel i { background: #8f2c14; }
+
+.metrica-servicios .servicio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}

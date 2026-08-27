@@ -906,6 +906,85 @@ function pintarFranjas(reporte) {
     .join("");
 }
 
+
+// --- Indicadores: iconos, rangos y una sola funcion que los pinta -----------
+//
+// El HTML de cada cifra estaba escrito a mano en cada sitio que la mostraba, y
+// eso hacia imposible anadirle nada —un icono, un nivel— sin repetirlo. Aqui se
+// declara **que** es cada indicador; `tarjetaIndicador` decide como se ve.
+//
+// Los cortes NO estan elegidos a ojo: son el p33 y el p66 medidos sobre los
+// diez reportes del catalogo que alcanzan MMI≥7. Un evento por debajo del
+// primero es de los pequenos que ha visto este sistema; por encima del segundo,
+// de los grandes. Es una escala relativa a lo que de verdad ha pasado en LATAM,
+// no a una intuicion.
+const ICONOS = {
+  personas:
+    '<circle cx="9" cy="7" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/>' +
+    '<circle cx="17" cy="8.5" r="2.2"/><path d="M15.5 20c0-2.6 1.6-4.6 4-4.6 2 0 3.5 1.4 3.5 3.6"/>',
+  mayores:
+    '<circle cx="10" cy="6" r="3"/><path d="M10 9v11M10 12l-3 8M10 12l3 8M17 9v11M17 9l2 3"/>',
+  salud: '<path d="M12 4v16M4 12h16"/>',
+  educacion: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5"/>',
+  edificaciones:
+    '<path d="M3 21V8l7-4v17M10 21V10l8-3v14"/><path d="M6 12h1M6 16h1M13.5 12h1M13.5 16h1"/>',
+  superficie: '<path d="M4 4h16v16H4z"/><path d="M4 10h16M4 16h16M10 4v16M16 4v16"/>',
+  vias: '<path d="M6 21L9 3M18 21l-3-18"/><path d="M12 4v3M12 11v3M12 18v3"/>',
+  fuego: '<path d="M12 22c3.9 0 6-2.5 6-5.6 0-4-3-5.4-3-9.4-2 1-3 3-3 5 0-1.5-.7-2.7-2-3.6C9 10 6 11.6 6 16.4 6 19.5 8.1 22 12 22z"/>',
+};
+
+//: `clave -> icono, etiqueta, cortes medidos y formato`.
+const INDICADORES = {
+  personas: { icono: "personas", cortes: [247720, 910714], formato: comoTexto },
+  mayores: { icono: "mayores", cortes: [15016, 81267], formato: comoTexto },
+  salud: { icono: "salud", cortes: [31, 152], formato: numero },
+  educacion: { icono: "educacion", cortes: [92, 998], formato: numero },
+  edificaciones: { icono: "edificaciones", cortes: [130938, 331809], formato: comoTexto },
+  superficie: { icono: "superficie", cortes: [8.3, 46.8] },
+  vias: { icono: "vias", cortes: [1572, 5266] },
+  fuego: { icono: "fuego", cortes: [50000, 300000], formato: comoTexto },
+};
+
+const NIVELES = { bajo: "bajo para el catálogo", medio: "medio", alto: "alto para el catálogo" };
+
+//: En que tercio del catalogo cae un valor. `null` si no hay cortes o no hay
+//: valor: un nivel inventado seria peor que ninguno.
+function nivelDe(valor, cortes) {
+  if (!cortes || !Number.isFinite(Number(valor))) return null;
+  const v = Number(valor);
+  if (v <= 0) return null;
+  return v < cortes[0] ? "bajo" : v < cortes[1] ? "medio" : "alto";
+}
+
+function iconoSvg(nombre) {
+  const trazo = ICONOS[nombre];
+  return trazo
+    ? `<svg class="icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${trazo}</svg>`
+    : "";
+}
+
+//: La unica funcion que pinta una cifra en este visor.
+//
+// `texto` permite pasar un valor ya formateado —"69,8 km²", "8503 km"— sin que
+// el catalogo tenga que saber de unidades.
+function tarjetaIndicador({ clave, valor, texto, etiqueta, apunte, ancha }) {
+  const d = INDICADORES[clave] || {};
+  const nivel = nivelDe(valor, d.cortes);
+  const formateado = texto ?? (d.formato || numero)(valor);
+  return (
+    `<div class="metrica${ancha ? " ancha" : ""}"${nivel ? ` data-nivel="${nivel}"` : ""}>` +
+    `<span class="cabeza">${iconoSvg(d.icono)}<span class="valor">${formateado}</span>` +
+    (nivel
+      ? `<span class="nivel" title="${NIVELES[nivel]}, comparado con los reportes publicados">` +
+        `<i></i><i></i><i></i></span>`
+      : "") +
+    `</span>` +
+    `<span class="etiqueta">${etiqueta}</span>` +
+    (apunte ? `<span class="apunte">${apunte}</span>` : "") +
+    `</div>`
+  );
+}
+
 function pintarMetricas(reporte) {
   const t = reporte.totales;
 
@@ -914,10 +993,8 @@ function pintarMetricas(reporte) {
   if (reporte.preliminar) {
     $("titulo-metricas").textContent = "Expuesto por radio";
     $("detalle-metricas").innerHTML = (reporte.radios || [])
-      .map(
-        (r) =>
-          `<div class="metrica"><span class="valor">${comoTexto(r.pop)}</span>` +
-          `<span class="etiqueta">a ${r.radio_km} km</span></div>`
+      .map((r) =>
+        tarjetaIndicador({ clave: "personas", valor: r.pop, etiqueta: `a ${r.radio_km} km` })
       )
       .join("");
     return;
@@ -936,13 +1013,14 @@ function pintarMetricas(reporte) {
   const tarjetas = [
     banda && banda !== 7
       ? {
-          valor: comoTexto(t[`pop_mmi${banda}p`]),
+          clave: "personas",
+          valor: t[`pop_mmi${banda}p`],
           etiqueta: `personas en MMI≥${banda}`,
           apunte: "La sacudida no alcanzó MMI 7 sobre población: ninguna de las cifras de abajo, que se cuentan en MMI≥7, aplica a este evento.",
           ancha: true,
         }
-      : { valor: comoTexto(t.pop_mmi7p), etiqueta: "personas" },
-    { valor: comoTexto(t.pop_65p_mmi7p), etiqueta: "de 65 años o más" },
+      : { clave: "personas", valor: t.pop_mmi7p, etiqueta: "personas" },
+    { clave: "mayores", valor: t.pop_65p_mmi7p, etiqueta: "de 65 años o más" },
     // Salud y educacion **antes** que edificaciones y superficie.
     //
     // El orden anterior iba por tamano del numero: 444.000 edificaciones y 69,8
@@ -952,16 +1030,20 @@ function pintarMetricas(reporte) {
     // esas dos cifras caian por debajo del pliegue.
     //
     // El orden de un tablero lo fija para que sirve, no cuanto abulta.
-    { valor: numero(t.health_mmi7p), etiqueta: "sedes de salud" },
-    { valor: numero(t.edu_mmi7p), etiqueta: "sedes educativas" },
-    { valor: comoTexto(t.bld_mmi7p), etiqueta: "edificaciones" },
+    { clave: "salud", valor: t.health_mmi7p, etiqueta: "sedes de salud" },
+    { clave: "educacion", valor: t.edu_mmi7p, etiqueta: "sedes educativas" },
+    { clave: "edificaciones", valor: t.bld_mmi7p, etiqueta: "edificaciones" },
     {
-      valor: km2 === null ? "—" : `${numero(km2, 1)} km²`,
+      clave: "superficie",
+      valor: km2,
+      texto: km2 === null ? "—" : `${numero(km2, 1)} km²`,
       etiqueta: "superficie construida",
       apunte: "Vista por satélite: incluye lo que OSM no mapeó.",
     },
     {
-      valor: `${numero(t.road_km_mmi7p)} km`,
+      clave: "vias",
+      valor: t.road_km_mmi7p,
+      texto: `${numero(t.road_km_mmi7p)} km`,
       etiqueta: "de vía",
       ancha: true,
       apunte: Number.isFinite(principal)
@@ -970,16 +1052,7 @@ function pintarMetricas(reporte) {
     },
   ];
 
-  $("detalle-metricas").innerHTML = tarjetas
-    .map(
-      (m) =>
-        `<div class="metrica${m.ancha ? " ancha" : ""}">` +
-        `<span class="valor">${m.valor}</span>` +
-        `<span class="etiqueta">${m.etiqueta}</span>` +
-        (m.apunte ? `<span class="apunte">${m.apunte}</span>` : "") +
-        `</div>`
-    )
-    .join("");
+  $("detalle-metricas").innerHTML = tarjetas.map(tarjetaIndicador).join("");
 }
 
 // Licuefacción y deslizamiento salen del modelo de ground failure del USGS y
@@ -2280,13 +2353,36 @@ function pintarEnVivo() {
 
   if (v.incendios && v.incendios.celdas) {
     partes.push(
-      `<button type="button" class="metrica metrica-viva" data-capa="incendios">` +
-        `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span>` +
+      `<button type="button" class="metrica metrica-viva" data-capa="incendios"` +
+        `${nivelDe(v.incendios.pop_en_celdas_con_fuego, INDICADORES.fuego.cortes)
+          ? ` data-nivel="${nivelDe(v.incendios.pop_en_celdas_con_fuego, INDICADORES.fuego.cortes)}"`
+          : ""}>` +
+        `<span class="cabeza">${iconoSvg("personas")}` +
+        `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span></span>` +
         `<span class="etiqueta">personas en celdas con fuego activo</span>` +
         `<span class="apunte">${numero(v.incendios.celdas)} celdas · ` +
         `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
+    // Salud y educacion bajo fuego: la cifra que decide un traslado, y que
+    // hasta ahora solo veia quien pulsara la celda exacta entre catorce mil.
+    const servicios = [
+      ["sedes de salud", v.incendios.salud_en_celdas_con_fuego],
+      ["sedes educativas", v.incendios.edu_en_celdas_con_fuego],
+    ].filter(([, n]) => Number(n) > 0);
+    if (servicios.length) {
+      partes.push(
+        `<div class="metrica metrica-servicios">` +
+          servicios
+            .map(
+              ([nombre, n]) =>
+                `<span class="servicio">${iconoSvg(nombre.includes("salud") ? "salud" : "educacion")}` +
+                `<strong>${numero(Number(n))}</strong> ${nombre}</span>`
+            )
+            .join("") +
+          `<span class="etiqueta">en celdas con fuego activo</span></div>`
+      );
+    }
   }
   if (reparto.length) {
     const barras = reparto

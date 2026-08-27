@@ -420,3 +420,24 @@ def test_se_dice_cuantas_celdas_no_tienen_cobertura() -> None:
 
     assert suelo["celdas_medidas"] == 1
     assert suelo["celdas_sin_medir"] == 1
+
+
+def test_los_servicios_bajo_fuego_son_un_total_publicado() -> None:
+    """Un hospital dentro de una celda con fuego decide un traslado.
+
+    Estaba solo en el popup de esa celda concreta, entre catorce mil. El mismo
+    criterio que en el lado sismico: el orden de un tablero lo fija para que
+    sirve, no cuanto abulta.
+    """
+    from dataclasses import replace
+
+    from pipelines.p5_incendios.incendios import build_incendios
+
+    con_hospital = replace(_celda("88a"), salud=2, edu=5, bld=40)
+    sin_nada = _celda("88b")
+
+    t = build_incendios([con_hospital, sin_nada])["totales"]
+
+    assert t["salud_en_celdas_con_fuego"] == 2
+    assert t["edu_en_celdas_con_fuego"] == 5
+    assert t["bld_en_celdas_con_fuego"] == 40

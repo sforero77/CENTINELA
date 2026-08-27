@@ -130,6 +130,15 @@ def build_incendios(
             "detecciones_baja": sum(c.detecciones_baja for c in celdas),
             "celdas_con_poblacion": sum(1 for c in celdas if c.pop > 0),
             "pop_en_celdas_con_fuego": round(sum(c.pop for c in celdas)),
+            # Lo que el popup de una celda ya decia y el indicador no.
+            #
+            # Un hospital dentro de una celda con fuego activo es la cifra que
+            # decide un traslado, y estaba solo para quien pulsara esa celda
+            # concreta entre catorce mil. Mismo criterio que en el lado sismico:
+            # el orden de un tablero lo fija para que sirve.
+            "salud_en_celdas_con_fuego": sum(c.salud for c in celdas),
+            "edu_en_celdas_con_fuego": sum(c.edu for c in celdas),
+            "bld_en_celdas_con_fuego": sum(c.bld for c in celdas),
             "frp_total_mw": round(sum(c.frp_suma for c in celdas), 1),
         },
         "celdas": [asdict(c) for c in publicadas],
