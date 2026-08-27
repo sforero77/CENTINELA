@@ -707,17 +707,41 @@ def test_el_encuadre_inicial_muestra_toda_latam() -> None:
     quedaban fuera de pantalla — y ahi es donde esta la temporada de quemas, asi
     que la capa de fuego se encendia sobre territorio invisible.
     """
-    assert "ENCUADRE_LATAM" in APP
-    assert "fitBounds(ENCUADRE_LATAM" in APP, "se declara el encuadre y no se aplica"
+    import math
 
     caja = re.search(r"const ENCUADRE_LATAM = \[(.*?)\];", APP, re.S).group(1)
-    numeros = [float(n) for n in re.findall(r"-?\d+\.?\d*", caja)]
-    assert min(numeros) <= -57, "el encuadre no llega al sur del continente"
+    oeste, sur, este, norte = (float(n) for n in re.findall(r"-?\d+\.?\d*", caja))
+    vista = re.search(
+        r"const VISTA_INICIAL = \{ center: \[(-?[\d.]+), (-?[\d.]+)\], zoom: ([\d.]+)", APP
+    )
+    lon, lat, zoom = (float(g) for g in vista.groups())
+
+    # Grados visibles a ese zoom en una ventana de 1.100 px de ancho, que es lo
+    # que da el tablero en un portatil. Si no cabe la caja, medio continente se
+    # queda fuera — y ahi es donde esta la temporada de quemas.
+    grados_a_lo_ancho = 360.0 / (2**zoom) * (1100 / 512)
+
+    assert grados_a_lo_ancho >= (este - oeste), (
+        f"a zoom {zoom} caben {grados_a_lo_ancho:.0f}° y LATAM mide {este - oeste:.0f}°"
+    )
+    assert oeste < lon < este, "el centro no esta dentro de la caja"
+    assert sur < lat < norte
+    # Centrado en el norte, el sur del continente se pierde. La latitud media de
+    # la caja es -12,25: el centro no puede alejarse mucho de ahi.
+    assert abs(lat - (sur + norte) / 2) < 12, "el centro esta descolgado hacia un extremo"
+    assert math.isfinite(zoom)
 
 
-def test_el_encuadre_no_pisa_un_evento_seleccionado() -> None:
-    """Entrar por un enlace a un sismo y que el mapa se vaya a LATAM seria peor
-    que no encuadrar: la URL dice a donde ir."""
-    bloque = APP[APP.index("fitBounds(ENCUADRE_LATAM") - 200 :][:300]
+def test_el_encuadre_no_se_calcula_al_vuelo() -> None:
+    """Costo un mapa completamente en blanco averiguarlo.
 
-    assert "!estado.evento" in bloque
+    `fitBounds` desde el ayudante de estilo listo se ejecuta con `styledata`,
+    que puede llegar antes de que el contenedor tenga su tamano final. La camara
+    se calcula entonces contra una caja que aun no mide lo que va a medir, y el
+    resultado fue: estilo cargado, capas creadas, atribucion pintada, y ni un
+    pixel dibujado.
+
+    Un centro y un zoom no dependen del tamano de la ventana para ser validos.
+    Menos elegante y siempre correcto.
+    """
+    assert "fitBounds(ENCUADRE_LATAM" not in APP

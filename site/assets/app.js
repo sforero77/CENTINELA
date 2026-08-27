@@ -24,7 +24,11 @@ const INCENDIOS = "incendios.json";
 //
 // `fitBounds` se adapta a la ventana; un zoom fijo solo es correcto para el
 // tamano de pantalla en que se eligio.
-const VISTA_INICIAL = { center: [-76.0, 4.0], zoom: 2.6 };
+const VISTA_INICIAL = { center: [-72.0, -14.0], zoom: 2.35 };
+
+//: La caja que el encuadre tiene que cubrir. Es la misma `LATAM_BBOX` del
+//: pipeline, y esta aqui para que una prueba pueda comprobar que la vista
+//: inicial la contiene — no para dibujar nada.
 const ENCUADRE_LATAM = [
   [-119.0, -57.5],
   [-32.0, 33.0],
@@ -1511,15 +1515,16 @@ function iniciarMapa() {
     attributionControl: false,
   });
 
-  // El encuadre real se calcula sobre la ventana ya medida. `VISTA_INICIAL`
-  // solo evita el parpadeo del primer cuadro.
+  // NO se encuadra con `fitBounds` aqui, y costo un mapa en blanco averiguarlo.
   //
-  // Por `cuandoElEstiloEsteListo` y no por `once("load")`: es la misma carrera
-  // que dejo el mapa sin epicentros con la cache fria, y este fichero ya la
-  // resolvio una vez. Repetirla aqui seria reabrirla.
-  cuandoElEstiloEsteListo(mapa, () => {
-    if (!estado.evento) mapa.fitBounds(ENCUADRE_LATAM, { padding: 24, animate: false });
-  });
+  // `cuandoElEstiloEsteListo` se dispara con `styledata`, que puede llegar
+  // antes de que el contenedor tenga su tamano final. `fitBounds` calcula
+  // entonces la camara contra una caja que aun no mide lo que va a medir, y el
+  // mapa acaba mirando a ninguna parte: estilo cargado, capas creadas,
+  // atribucion pintada, y ni un pixel.
+  //
+  // `VISTA_INICIAL` es un centro y un zoom, que no dependen del tamano de la
+  // ventana para ser validos. Menos elegante y siempre correcto.
 
   // Sin `customAttribution`: el estilo de OpenFreeMap ya declara la suya y
   // añadirla la imprimía dos veces seguidas.
