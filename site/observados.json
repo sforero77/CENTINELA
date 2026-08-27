@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-26T20:11:58Z",
+  "generado_utc": "2026-08-27T03:17:17Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -83,16 +83,6 @@
       "lugar": "northern Mid-Atlantic Ridge",
       "origen_utc": "2026-08-22T07:21:25Z",
       "razon": "M4.9 < umbral M5.5"
-    },
-    {
-      "usgs_id": "us6000tmnz",
-      "mag": 4.7,
-      "lon": -68.8817,
-      "lat": -25.5675,
-      "depth_km": 102.4,
-      "lugar": "147 km al NE de Diego de Almagro, Chile",
-      "origen_utc": "2026-08-21T22:26:03Z",
-      "razon": "M4.7 < umbral M5.5"
     }
   ]
 }
