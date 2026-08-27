@@ -1121,18 +1121,45 @@ function pintarDescargas(usgsId) {
 // `styledata` se emite cada vez que el estilo cambia e `idle` cuando todo se
 // asienta: entre los dos no hay ventana en la que el aviso se pierda.
 function cuandoElEstiloEsteListo(m, fn) {
+  // NINGUN FALLO DE AQUI PUEDE SER SILENCIOSO.
+  //
+  // `fn` corre **diferido**, dentro de un manejador de eventos de MapLibre. El
+  // `try/catch` de quien llamo a esto ya termino, y MapLibre se traga lo que
+  // lance un manejador. Resultado: la malla de un evento no se dibujaba, el
+  // selector de capas se quedaba oculto, y no habia ni una linea en consola.
+  //
+  // Dos horas de diagnostico para un fallo que se anunciaba solo en cuanto
+  // alguien lo dejaba hablar.
+  const seguro = () => {
+    try {
+      fn();
+    } catch (error) {
+      console.error("fallo al dibujar sobre el mapa:", error);
+    }
+  };
+
   if (m.isStyleLoaded()) {
-    fn();
+    seguro();
     return;
   }
   const reintentar = () => {
     if (!m.isStyleLoaded()) return;
     m.off("styledata", reintentar);
     m.off("idle", reintentar);
-    fn();
+    seguro();
   };
   m.on("styledata", reintentar);
   m.on("idle", reintentar);
+
+  // Y una red por si `isStyleLoaded()` no llega a ser cierto nunca — pasa
+  // cuando una fuente se queda a medias. Sin esto el callback no corre jamas y
+  // el visor se queda a medio pintar sin decir nada.
+  setTimeout(() => {
+    if (!m.getStyle()) return;
+    m.off("styledata", reintentar);
+    m.off("idle", reintentar);
+    seguro();
+  }, 4000);
 }
 
 // El circulo proporcional se apaga en cuanto hay malla en pantalla: la

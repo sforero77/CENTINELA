@@ -930,3 +930,29 @@ def test_el_reparto_dice_que_es_energia_y_no_focos() -> None:
     cosa y suele apuntar al reves.
     """
     assert "Reparto de la energía medida, no del número de focos" in APP
+
+
+def test_ningun_dibujo_sobre_el_mapa_falla_en_silencio() -> None:
+    """El callback corre **diferido**, dentro de un manejador de MapLibre.
+
+    El `try/catch` de quien lo encolo ya termino, y MapLibre se traga lo que
+    lance un manejador. La malla de un evento dejo de dibujarse, el selector de
+    capas se quedo oculto, y no habia ni una linea en consola — dos horas de
+    diagnostico para un fallo que se anunciaba solo en cuanto se le dejaba
+    hablar.
+    """
+    bloque = cuerpo("cuandoElEstiloEsteListo")
+
+    assert "catch (error)" in bloque
+    assert "console.error" in bloque
+
+
+def test_el_dibujo_no_depende_de_que_el_estilo_se_declare_listo() -> None:
+    """`isStyleLoaded()` puede no ser cierto nunca si una fuente se queda a medias.
+
+    Sin red de seguridad el callback no corre jamas y el visor se queda a medio
+    pintar, que es indistinguible de un visor roto.
+    """
+    bloque = cuerpo("cuandoElEstiloEsteListo")
+
+    assert "setTimeout(" in bloque
