@@ -124,10 +124,42 @@ jobs:
           fi
           # P2 empuja a la misma rama; sin rebase, dos jobs concurrentes se
           # rechazan mutuamente y se pierde el estado del evento.
+          # P2 empuja a la misma rama y reescribe `site/status.json` entero,
+          # igual que este paso. Cuando coinciden, el rebase conflicta siempre:
+          # un derivado no se fusiona, se regenera. Es el mismo manejador que
+          # `impact.yml` ya tenia, y que aqui faltaba — con el agravante de que
+          # sin `--abort` el rebase se quedaba a medias y los tres reintentos
+          # siguientes morian con "rebase in progress" sin intentar nada.
+          #
+          # La colision es rara —P2 solo corre con un sismo M>=5.5— pero ocurre
+          # exactamente cuando mas importa: mientras se publica un reporte real.
+          DERIVADOS='site/status.json site/observados.json'
+
+          regenerar_derivados() {
+            local conflictos
+            conflictos=$(git diff --name-only --diff-filter=U)
+            [ -n "$conflictos" ] || return 1
+            # Un conflicto fuera de la lista es real y no se toca: regenerar a
+            # ciegas descartaria el trabajo del otro job.
+            if grep -qvE '^(site/status\.json|site/observados\.json)$' <<<"$conflictos"; then
+              return 1
+            fi
+            echo "::notice::derivados en conflicto; se regeneran en vez de fusionarse"
+            uv run centinela status
+            # shellcheck disable=SC2086
+            git add $DERIVADOS
+            GIT_EDITOR=true git rebase --continue
+          }
+
           for intento in 1 2 3 4; do
-            if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then
-              echo "publicado=true" >> "$GITHUB_OUTPUT"
-              exit 0
+            if git pull --rebase origin "${GITHUB_REF_NAME}"; then
+              git push && { echo "publicado=true" >> "$GITHUB_OUTPUT"; exit 0; }
+            elif regenerar_derivados; then
+              git push && { echo "publicado=true" >> "$GITHUB_OUTPUT"; exit 0; }
+            else
+              # Sin esto el rebase se queda a medias y el reintento siguiente
+              # falla antes de intentar nada.
+              git rebase --abort || true
             fi
             sleep $((2 ** intento))
           done
@@ -159,8 +191,15 @@ jobs:
       # Latido para el monitor externo. Si deja de llegar, el equipo recibe
       # alerta en 30 min (§6.5) — la desactivacion silenciosa del cron es el
       # modo de falla mas probable de todo el sistema.
+      # `success()`, NO `always()`. Lo tenia en `always()`, y eso convertia el
+      # monitor en un mentiroso: una corrida que fallaba le decia igualmente
+      # "estoy vivo", asi que solo detectaba "no corrio" y nunca "corrio y se
+      # rompio". Justo el caso que el manejador de arriba existe para cubrir.
+      #
+      # Con `success()`, un fallo se ve como silencio — y silencio es
+      # exactamente lo que el monitor sabe interpretar: alerta a los 30 min.
       - name: Latido al monitor externo
-        if: always() && env.HEALTHCHECK_URL != ''
+        if: success() && env.HEALTHCHECK_URL != ''
         env:
           HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
         run: curl -fsS --retry 3 "$HEALTHCHECK_URL" || true
