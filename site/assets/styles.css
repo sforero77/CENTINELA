@@ -607,6 +607,17 @@ a:hover { color: var(--verde-vivo); }
   gap: 0.85rem;
 }
 
+/* El atributo `hidden` del navegador es `display: none` con especificidad de
+   elemento: cualquier regla de clase lo pisa. `aplicarFiltro` marcaba
+   `li.hidden = true` en dieciocho tarjetas, la pastilla del pais se ponia en
+   `aria-pressed="true"`, se anunciaba "3 reportes en la lista" al lector de
+   pantalla... y las veintiuna seguian en pantalla.
+
+   La trampa ya se conocia —`.leyenda[hidden]` la guarda desde su propia regla—
+   y aqui no se aplico. Medido el 28-ago-2026: 28 elementos con [hidden] en la
+   pagina, 18 visibles, y los 18 eran estas tarjetas. */
+.lista-eventos li[hidden] { display: none; }
+
 .lista-eventos li {
   display: flex;
   flex-direction: column;
@@ -898,6 +909,26 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   align-items: flex-start;
   gap: 8px;
   max-width: calc(100% - 24px);
+  /* Y EL ALTO, QUE FALTABA. La pila esta anclada abajo, asi que crece hacia
+     arriba; con la leyenda de simbolos y la de potencia radiativa puestas a la
+     vez se sale del mapa por encima. Medido el 28-ago-2026 con 603 px utiles
+     —un portatil normal—: la caja subia a `top: -66px` y desde ahi tapaba la
+     banda de "Exposicion no es dano" y dejaba tres pestañas de capa
+     **inpulsables**, Intensidad entre ellas, que es la capa por defecto.
+     `elementFromPoint` sobre sus centros devolvia la leyenda, no el boton. */
+  /* Los 84px reservan la banda superior donde vive `#capas`, la barra de
+     pestañas de capa. Las dos cajas son `absolute` con el mismo `z-index: 3`,
+     asi que gana la ultima del DOM —esta— y con solo `calc(100% - 24px)` la
+     pila dejaba de salirse del mapa pero seguia aterrizando encima de las
+     pestañas: `elementFromPoint` sobre el centro de Intensidad, Poblacion y
+     Edificaciones devolvia la leyenda. Subir el `z-index` de `#capas` las
+     haria pulsables y las dibujaria montadas sobre la leyenda; reservar el
+     espacio las deja pulsables **y** legibles.
+     Quien necesite mas sitio puede plegar "Que hay en el mapa": es un
+     `<details>`. */
+  max-height: calc(100% - 84px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .controles-mapa:empty {
