@@ -269,3 +269,170 @@ def test_el_registro_es_superficie_publica() -> None:
     app = (RAIZ / "site" / "assets" / "app.js").read_text(encoding="utf-8")
 
     assert "window.CENTINELA = { pintado, errores: erroresAlPintar };" in app
+
+
+# --- Lo que se oculta tiene que dejar de verse -------------------------------
+
+
+def test_ningun_elemento_oculto_se_sigue_viendo(pagina: Any) -> None:
+    """`[hidden]` es `display: none` con especificidad de elemento: lo pisa
+    cualquier regla de clase.
+
+    El filtro por pais marcaba `hidden` en dieciocho tarjetas, ponia la pastilla
+    del pais en `aria-pressed="true"`, anunciaba "3 reportes en la lista" al
+    lector de pantalla — y las veintiuna seguian en pantalla, porque
+    `.lista-eventos li { display: flex }` gana. Nada fallaba: la funcion
+    simplemente no hacia nada.
+
+    La trampa ya se conocia —`.leyenda[hidden]` la guarda desde su propia
+    regla— y no se habia aplicado aqui. Por eso esta prueba es generica: mira
+    **todos** los `[hidden]` de la pagina, para que la proxima clase con
+    `display` no repita el descuido.
+    """
+    _esperar_capa(pagina, "epicentros")
+    # Acotado al filtro: "Venezuela" aparece tambien en las tarjetas de
+    # evento y en la tabla de cobertura, y sin acotar son cuatro nodos.
+    pagina.locator("#filtro-paises").get_by_role("button", name="Venezuela").click()
+
+    visibles = pagina.evaluate("""() =>
+        [...document.querySelectorAll('[hidden]')]
+          .filter(e => getComputedStyle(e).display !== 'none')
+          .map(e => `${e.tagName}${e.id ? '#' + e.id : ''}: ${(e.innerText||'').slice(0,40)}`)
+    """)
+
+    assert visibles == [], f"elementos con [hidden] que el CSS sigue mostrando: {visibles}"
+
+
+def test_el_filtro_por_pais_deja_solo_los_suyos(pagina: Any) -> None:
+    """Y el efecto visible, no solo el atributo."""
+    _esperar_capa(pagina, "epicentros")
+    contar = """() => [...document.querySelectorAll('#lista-eventos li')]
+                   .filter(l => l.offsetParent !== null).length"""
+
+    todos = pagina.evaluate(contar)
+    # Acotado al filtro: "Venezuela" aparece tambien en las tarjetas de
+    # evento y en la tabla de cobertura, y sin acotar son cuatro nodos.
+    pagina.locator("#filtro-paises").get_by_role("button", name="Venezuela").click()
+    filtrado = pagina.evaluate(contar)
+
+    assert todos > filtrado > 0, f"el filtro no redujo la lista: {todos} -> {filtrado}"
+    paises = pagina.evaluate("""() =>
+        [...document.querySelectorAll('#lista-eventos li')]
+          .filter(l => l.offsetParent !== null)
+          .map(l => l.dataset.iso3)
+    """)
+    assert set(paises) == {"VEN"}, f"con Venezuela seleccionado quedan {set(paises)}"
+
+
+# --- Los controles del mapa no pueden comerse los botones -------------------
+
+
+def test_las_pestanas_de_capa_se_pueden_pulsar(pagina: Any) -> None:
+    """El peor caso: evento seleccionado, focos encendidos, pantalla de portatil.
+
+    La pila de leyendas esta anclada abajo y crece hacia arriba. Con la leyenda
+    de simbolos y la de potencia radiativa puestas a la vez se salia del mapa,
+    tapaba la banda de "Exposicion no es dano" y dejaba **tres pestañas
+    inpulsables** —Intensidad entre ellas, que es la capa por defecto—.
+
+    No basta con mirar si las cajas se solapan: hay que preguntar quien recibe
+    el clic. Las dos son `absolute` con el mismo `z-index`, asi que el solape
+    visual y el funcional no son el mismo problema.
+    """
+    # Ventana corta a proposito. Con 720 px de alto la pila cabe y la prueba
+    # pasaba sobre el codigo roto — comprobado desactivando el arreglo. El
+    # fallo se midio con 603 px utiles, que es un portatil de 768 px con su
+    # barra de navegador: la ventana mas comun que existe.
+    pagina.set_viewport_size({"width": 1280, "height": 620})
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.get_by_label("Focos activos", exact=False).check()
+    _esperar_capa(pagina, "incendios")
+
+    tapadas = pagina.evaluate("""() =>
+        [...document.querySelectorAll('#capas button')].filter(b => {
+          const r = b.getBoundingClientRect();
+          const e = document.elementFromPoint(r.left + r.width/2, r.top + r.height/2);
+          return !(e && e.closest('#capas'));
+        }).map(b => b.innerText)
+    """)
+
+    assert tapadas == [], f"pestañas que no reciben el clic: {tapadas}"
+
+
+def test_los_controles_no_tapan_el_aviso_de_que_esto_no_es_dano(pagina: Any) -> None:
+    """«Exposición no es daño» es el encuadre entero de este sistema.
+
+    Taparlo con una leyenda no rompe nada y cambia lo que la pagina significa.
+    """
+    # Ventana corta a proposito. Con 720 px de alto la pila cabe y la prueba
+    # pasaba sobre el codigo roto — comprobado desactivando el arreglo. El
+    # fallo se midio con 603 px utiles, que es un portatil de 768 px con su
+    # barra de navegador: la ventana mas comun que existe.
+    pagina.set_viewport_size({"width": 1280, "height": 620})
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.get_by_label("Focos activos", exact=False).check()
+    _esperar_capa(pagina, "incendios")
+
+    solapa = pagina.evaluate("""() => {
+        const p = document.querySelector('.controles-mapa').getBoundingClientRect();
+        const a = document.querySelector('.aviso').getBoundingClientRect();
+        return p.top < a.bottom;
+    }""")
+
+    assert not solapa, "la pila de controles vuelve a montarse sobre el aviso"
+
+
+# --- Movil ------------------------------------------------------------------
+
+#: Un telefono corriente. Es donde se amontona todo lo que en escritorio cabe.
+MOVIL = {"width": 390, "height": 844}
+
+
+def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any) -> None:
+    """No es estetica: OpenStreetMap es ODbL y exige que su credito se vea.
+
+    Medido el 28-ago-2026 en 390x844: la pila de interruptores caia justo sobre
+    `.maplibregl-ctrl-attrib` y `elementFromPoint` sobre su centro devolvia el
+    interruptor de sismos menores. Un proyecto que rechaza fuentes enteras por
+    incompatibilidad de licencia no puede taparle el credito al mapa que usa.
+
+    `maplibre-gl.css` declara `z-index: 2` en esa regla y se carga despues, asi
+    que la nuestra necesita dos clases para ganarle.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+    pagina.get_by_label("Focos activos", exact=False).check()
+    _esperar_capa(pagina, "incendios")
+
+    encima = pagina.evaluate("""() => {
+        const a = document.querySelector('.maplibregl-ctrl-attrib');
+        const r = a.getBoundingClientRect();
+        const e = document.elementFromPoint(r.left + r.width/2, r.top + r.height/2);
+        return e && a.contains(e) ? null : (e ? (e.className || e.tagName).toString() : 'nada');
+    }""")
+
+    assert encima is None, f"algo tapa la atribucion del mapa base: {encima}"
+
+
+def test_la_pagina_no_se_desplaza_en_horizontal_en_movil(pagina: Any) -> None:
+    """La tabla de cobertura arrastraba a toda la pagina.
+
+    Diecinueve filas de cuatro columnas no caben en 390 px: la tabla se salia
+    96 px y con ella se movian de lado el mapa, el panel y las tarjetas. Que se
+    desplace la tabla, no la pagina.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+
+    medida = pagina.evaluate("""() => ({
+        scroll: document.documentElement.scrollWidth,
+        visible: document.documentElement.clientWidth,
+    })""")
+
+    assert medida["scroll"] <= medida["visible"] + 1, (
+        f"la pagina se desplaza en horizontal: {medida['scroll']}px sobre {medida['visible']}px"
+    )
