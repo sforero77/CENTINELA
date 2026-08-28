@@ -19,7 +19,7 @@ def _fuente(**overrides: Any) -> dict[str, Any]:
         "url": "https://example.org/ghs.zip",
         "license": "EC-reuse-attribution",
         "vintage": "R2023A-E2025",
-        "sha256": "a" * 64,
+        "insumos_sha256": "a" * 64,
     }
     return base | overrides
 
@@ -61,9 +61,37 @@ def test_url_no_reconocida_es_error(tmp_path: Path) -> None:
     assert any("url no reconocida" in p for p in problemas)
 
 
-def test_sha256_faltante_es_solo_aviso(tmp_path: Path) -> None:
-    problemas = lint_manifest(_cargar(tmp_path, _manifest(_fuente(sha256=""))))
+def test_digest_faltante_es_solo_aviso(tmp_path: Path) -> None:
+    problemas = lint_manifest(_cargar(tmp_path, _manifest(_fuente(insumos_sha256=""))))
     assert problemas and all("(aviso)" in p for p in problemas)
+
+
+def test_una_fuente_remota_no_reclama_digest(tmp_path: Path) -> None:
+    """Overture y la cobertura del suelo nunca tocan el disco.
+
+    No hay bytes que hashear, asi que pedirles un digest es pedir algo que no
+    puede existir. Un aviso irresoluble por fuente son cuatro por pais y 76 en
+    el repositorio: con ese ruido los que si son accionables dejan de leerse.
+    """
+    overture = _fuente(
+        id="overture_buildings",
+        layer="buildings",
+        url="s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building",
+        license="ODbL-1.0",
+        vintage="2026-08-19.0",
+        insumos_sha256="",
+    )
+    landcover = _fuente(
+        id="worldcover",
+        layer="landcover",
+        url="https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/",
+        license="CC-BY-4.0",
+        vintage="2021",
+        insumos_sha256="",
+    )
+    manifest = _cargar(tmp_path, _manifest(overture, landcover))
+    assert all(s.se_lee_en_remoto for s in manifest.sources)
+    assert not [p for p in lint_manifest(manifest) if "insumos_sha256" in p]
 
 
 def test_ids_duplicados(tmp_path: Path) -> None:

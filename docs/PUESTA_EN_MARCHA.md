@@ -163,8 +163,18 @@ gh release create exposure-col-20260823 exposure_h3.parquet admin_lookup.parquet
 cd ..\..\..\..
 ```
 
-Anota los `sha256` que imprime el build en `data/manifests/COL.yaml`: cierran
-la trazabilidad de RNF-04 y hoy estan vacios.
+Fija los digests de insumos que midio el build, que cierran la trazabilidad de
+RNF-04 y hoy estan vacios:
+
+```powershell
+centinela fijar-insumos COL
+```
+
+Lee el bloque `insumos` de `medicion.json` —el que se publica en el Release al
+lado del parquet— y escribe cada `insumos_sha256` en su fuente del manifest, sin
+tocar la prosa. A partir de ahi, un insumo republicado por un tercero detiene el
+build en la descarga en vez de fallar dos horas despues. No se anota a mano: con
+194 fuentes en diecinueve paises, copiar a mano no es tedioso, es que no ocurre.
 
 ### Se puede reanudar
 

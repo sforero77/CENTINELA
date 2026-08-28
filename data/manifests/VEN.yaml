@@ -6,7 +6,9 @@
 #
 # Verificado contra fuentes primarias el 23-ago-2026: cada fuente de aqui se
 # probo con una peticion real, y las columnas del COD-AB se leyeron abriendo el
-# shapefile, no la documentacion. Los `sha256` se llenan en la primera corrida.
+# shapefile, no la documentacion. Los `insumos_sha256` los mide cada
+# build y los publica en `medicion.json`; volcarlos aqui es un paso explicito,
+# `centinela fijar-insumos VEN`.
 
 manifest_id: ven-v0.2
 iso3: VEN
@@ -72,7 +74,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Mismo producto global que Colombia; la seleccion de teselas la hace
       pipelines/p0_exposure/sources/ghsl.py a partir de la caja del pais. No se
@@ -84,7 +86,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Superficie construida en m² por pixel de 100 m, derivada de Sentinel-2 y
       Landsat. Misma retícula, misma epoca y misma licencia que GHS-POP, asi que
@@ -106,7 +108,7 @@ sources:
     url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/VEN/v1/100m/constrained/
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Verificado: HTTP 200 y las 20 bandas de la serie combinada `ven_t_<edad>`,
       de 00 a 90. La url apunta al directorio; solo se baja la serie `_t_`
@@ -117,7 +119,7 @@ sources:
     url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/VEN/v1/100m/constrained/ven_pop_2025_CN_100m_R2025A_v1.tif
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Verificado: HTTP 200. Alimenta la banda de discrepancia publicada, nunca
       la cifra principal. En Venezuela esa banda importa mas que en Colombia:
@@ -129,7 +131,7 @@ sources:
     url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
     license: ODbL-1.0
     vintage: "2026-08-19.0"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       No se descarga: DuckDB lee los parquet en remoto podando por la columna
       `bbox`. El subtipo `type=building` trae las huellas; `type=building_part`
@@ -140,7 +142,7 @@ sources:
     url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
     license: ODbL-1.0
     vintage: "2026-08-19.0"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       `type=segment` es la geometria lineal; `type=connector` son nodos. Se
       filtra `subtype = 'road'`: el tema tambien publica ferrocarril y agua.
@@ -152,7 +154,7 @@ sources:
     hdx_resource: "ven_admin_boundaries.shp"
     license: CC-BY-IGO
     vintage: COD-AB-2020
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Fuente de verdad de adm1/adm2. Se fija el recurso SHP (18,8 MB) y no el
       GeoJSON (17,5 MB) porque el shapefile trae el CRS declarado en su `.prj`
@@ -168,7 +170,7 @@ sources:
     hdx_dataset: hotosm_ven_health_facilities
     license: ODbL-1.0
     vintage: "2026-08-06"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: el dataset existe, es
       ODbL y publica Geopackage. El extracto mezcla POINT, POLYGON y
@@ -181,14 +183,14 @@ sources:
     hdx_dataset: hotosm_ven_education_facilities
     license: ODbL-1.0
     vintage: "2026-08-06"
-    sha256: ""
+    insumos_sha256: ""
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover
     url: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/
     license: CC-BY-4.0
     vintage: "2021"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       ESA WorldCover 10 m v200. Cobertura del suelo en once clases, de las que se
       publican seis: arbolado, matorral, pastizal, cultivo, construido y humedal.

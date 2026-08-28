@@ -5,9 +5,11 @@
 # un reporte de hace seis meses siga siendo reproducible (RNF-04).
 #
 # ESTADO: fuentes verificadas con peticion real el 2026-08-23; **el activo no se ha
-# construido todavia**. Los `sha256` y `medido_ghs_pop` se llenan en la primera
-# corrida de `centinela country PER`, y hasta entonces este manifest declara
-# de donde saldrian los datos, no que ya se hayan medido.
+# construido todavia**. `medido_ghs_pop` se llena en la primera corrida de
+# `centinela country PER`, y hasta entonces este manifest declara de donde
+# saldrian los datos, no que ya se hayan medido. Los `insumos_sha256` los mide
+# cada build y los publica en `medicion.json`; volcarlos aqui es un paso
+# explicito, `centinela fijar-insumos PER`.
 
 manifest_id: per-v0.2
 iso3: PER
@@ -73,7 +75,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       No se descarga esta URL: el mosaico global pesa 5,25 GB. El JRC publica el
       mismo producto en 375 teselas y la seleccion la hace
@@ -86,7 +88,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Superficie construida en m² por pixel, derivada de Sentinel-2 y Landsat.
       Misma retícula y misma epoca que GHS-POP. No hereda los huecos de OSM en
@@ -99,7 +101,7 @@ sources:
     url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/PER/v1/100m/constrained/
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Verificado: HTTP 200 y las 20 bandas de la serie combinada `per_t_<edad>`,
       de 00 a 90. La url apunta al DIRECTORIO; solo se baja la serie `_t_`, que
@@ -111,7 +113,7 @@ sources:
     url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/PER/v1/100m/constrained/per_pop_2025_CN_100m_R2025A_v1.tif
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Verificado: HTTP 200. Alimenta la banda de discrepancia publicada, nunca
       la cifra principal.
@@ -121,7 +123,7 @@ sources:
     url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
     license: ODbL-1.0
     vintage: "2026-08-19.0"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       No se descarga: DuckDB lee los parquet en remoto podando por la columna
       `bbox`. `type=building` trae las huellas; `type=building_part` es
@@ -133,7 +135,7 @@ sources:
     url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
     license: ODbL-1.0
     vintage: "2026-08-19.0"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       `type=segment` es la geometria lineal; `type=connector` son nodos. Se
       filtra `subtype = 'road'`: el tema tambien publica ferrocarril y agua.
@@ -144,7 +146,7 @@ sources:
     hdx_dataset: cod-ab-per
     license: CC-BY-IGO
     vintage: COD-AB-2026-08
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Common Operational Dataset de OCHA, fuente de verdad de adm1/adm2. Es la
       unica geometria administrativa de este manifest, asi que si el recurso
@@ -160,7 +162,7 @@ sources:
     hdx_dataset: hotosm_per_health_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
       Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital
@@ -176,14 +178,14 @@ sources:
     hdx_dataset: hotosm_per_education_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    sha256: ""
+    insumos_sha256: ""
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover
     url: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/
     license: CC-BY-4.0
     vintage: "2021"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       ESA WorldCover 10 m v200. Cobertura del suelo en once clases, de las que se
       publican seis: arbolado, matorral, pastizal, cultivo, construido y humedal.

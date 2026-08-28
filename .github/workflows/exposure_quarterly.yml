@@ -138,8 +138,42 @@ jobs:
       # Aqui no se pierde nada al borrarlos: el runner arranca vacio en cada
       # corrida, asi que no hay reanudado que abaratar. En local es al reves y
       # por eso la opcion no viene puesta por defecto.
+      # SE REINTENTA EL PAIS, NO EL FICHERO.
+      #
+      # El reintento por fichero de `HttpFetcher` son tres intentos con esperas
+      # de 2, 4 y 8 segundos: catorce segundos, contra caidas que duran horas.
+      # El 27-ago-2026 el JRC estuvo caido tres y Peru gasto 2 h 40 min
+      # concluyendo, tesela a tesela, que el pais es todo oceano.
+      #
+      # Esto solo es barato porque el chequeo previo de origenes falla en
+      # segundos: reintentar cuesta la espera y nada mas. Y solo se reintenta el
+      # codigo 4 —origen caido—; un activo que no pasa los asserts de calidad no
+      # se arregla volviendo a intentarlo, y repetirlo tres veces solo retrasaria
+      # el diagnostico media hora.
       - name: Construir exposure_h3
-        run: uv run centinela country "$ISO3" --liberar-rasters
+        run: |
+          ESPERAS="600 1800"
+          INTENTO=0
+          for ESPERA in $ESPERAS ""; do
+            INTENTO=$((INTENTO + 1))
+            set +e
+            uv run centinela country "$ISO3" --liberar-rasters
+            CODIGO=$?
+            set -e
+            if [ "$CODIGO" -eq 0 ]; then
+              exit 0
+            fi
+            if [ "$CODIGO" -ne 4 ]; then
+              echo "::error::$ISO3 fallo con codigo $CODIGO. No es un origen caido: no se reintenta."
+              exit "$CODIGO"
+            fi
+            if [ -n "$ESPERA" ]; then
+              echo "::warning::$ISO3: origen caido en el intento $INTENTO. Reintento en ${ESPERA}s."
+              sleep "$ESPERA"
+            fi
+          done
+          echo "::error::$ISO3: el origen sigue sin contestar tras $INTENTO intentos."
+          exit 4
 
       - name: Publicar Release versionado
         env:

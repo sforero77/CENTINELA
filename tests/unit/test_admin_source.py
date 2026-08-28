@@ -332,7 +332,15 @@ def test_todas_las_rutas_de_descarga_saltan_lo_que_ya_esta(tmp_path: Path) -> No
 
     from pipelines.p0_exposure import download
 
-    fuente = inspect.getsource(download.download_manifest)
+    # Las ramas viven en `_descargar_fuente`, no en `download_manifest`: salieron
+    # aparte para que exista el momento en que los ficheros de UNA fuente estan
+    # completos y se puede verificar su digest. Se comprueba tambien que el
+    # orquestador siga llamandola — sin eso esta prueba volveria a leer una
+    # funcion que ya no esta en el camino, que es el fallo que documenta abajo.
+    assert "_descargar_fuente(" in inspect.getsource(download.download_manifest), (
+        "download_manifest ya no delega en _descargar_fuente: esta prueba mira al lado equivocado"
+    )
+    fuente = inspect.getsource(download._descargar_fuente)
     # La rama generica de .tif/.csv era la que faltaba.
     assert "if not path.exists():" in fuente, "la rama generica volvio a descargar siempre"
 

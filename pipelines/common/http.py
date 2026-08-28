@@ -24,6 +24,39 @@ USER_AGENT = "centinela/0.1 (+https://github.com/sforero77/CENTINELA) comunidad 
 DEFAULT_TIMEOUT_S = 30.0
 DEFAULT_RETRIES = 3
 
+#: Codigos con los que el servidor afirma que el recurso no esta. No son un
+#: fallo de red: son una respuesta, y una definitiva.
+_AUSENTE = frozenset({404, 410})
+
+#: Timeout del chequeo previo de origenes. Corto porque su unico valor es ser
+#: rapido: si hay que esperar treinta segundos por host, deja de compensar.
+_PREFLIGHT_TIMEOUT_S = 15.0
+
+
+class RecursoAusenteError(RuntimeError):
+    """El servidor contesto que el recurso no existe.
+
+    SEPARARLA DE UN FALLO DE RED NO ES COSMETICA, y costo tres horas de runner
+    el 27-ago-2026. `download_ghsl` captura el fallo de descarga para tratar un
+    caso legitimo —las teselas GHSL que solo cubren oceano no existen, y ahi un
+    404 *es* la respuesta correcta—, pero hasta hoy la unica excepcion que
+    llegaba era un `RuntimeError` generico que significaba lo mismo para un 404
+    que para un timeout. Con el JRC caido, las 24 teselas de Peru agotaron sus
+    reintentos y se contaron una a una como "probablemente solo oceano": el pais
+    se ensamblo con poblacion 0.
+
+    Hereda de `RuntimeError` para no romper a quien ya captura eso —HDX prueba
+    el siguiente formato cuando un recurso esta muerto, y esa sigue siendo la
+    conducta correcta—.
+
+    Ademas **no se reintenta**. Volver a preguntar tres veces, con esperas de 2,
+    4 y 8 segundos, algo que el servidor ya contesto sin ambiguedad son catorce
+    segundos por tesela para reconfirmar un no. Medido sobre la corrida sana de
+    Peru: cuatro teselas oceanicas, dieciseis segundos cada una, y catorce de
+    los dieciseis eran dormir.
+    """
+
+
 #: Sufijo del archivo a medio bajar. Un corte de red, o un Ctrl+C, no puede
 #: dejar en su sitio un raster truncado: la siguiente corrida lo daria por bueno
 #: y el activo saldria sin filas al sur del pais, cuadrando todo.
@@ -84,6 +117,13 @@ class HttpFetcher:
                 )
                 response.raise_for_status()
                 return response
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code in _AUSENTE:
+                    raise RecursoAusenteError(
+                        f"{url} no existe (HTTP {exc.response.status_code})"
+                    ) from exc
+                last = exc
+                time.sleep(self._sleep * (2**attempt))
             except (httpx.HTTPError, httpx.StreamError) as exc:  # pragma: no cover - red
                 last = exc
                 delay = self._sleep * (2**attempt)
@@ -150,6 +190,32 @@ class HttpFetcher:
             except (httpx.HTTPError, httpx.StreamError):  # pragma: no cover - red
                 time.sleep(self._sleep * (2**attempt))
         raise RuntimeError(f"No se pudo leer el rango {start}-{end} de {url}")
+
+    def responde(self, url: str) -> bool:
+        """¿Contesta algo el servidor de esta URL?
+
+        LA PREGUNTA NO ES SI EL RECURSO EXISTE, es si el origen esta en pie.
+        Por eso **cualquier codigo de estado cuenta como vivo**, 404 y 403 y 405
+        incluidos: un servidor que contesta "no lo tengo" o "ese metodo no" esta
+        funcionando, y tratarlo como caido convertiria este chequeo en un
+        generador de falsos positivos que habria que desactivar a la semana.
+        Solo cuenta como caido lo que impide obtener respuesta: conexion
+        rechazada, DNS que no resuelve, timeout.
+
+        Sin reintentos y con timeout corto a proposito. Esto tiene que costar
+        segundos: su unico valor es descubrir en diez lo que el 27-ago-2026 se
+        descubrio en cuatro horas.
+        """
+        try:
+            httpx.head(
+                url,
+                timeout=_PREFLIGHT_TIMEOUT_S,
+                follow_redirects=True,
+                headers={"User-Agent": USER_AGENT},
+            )
+        except (httpx.HTTPError, httpx.StreamError):
+            return False
+        return True
 
     def content_length(self, url: str) -> int:
         """Tamano total del recurso, por HEAD."""
@@ -264,6 +330,16 @@ class HttpFetcher:
                 )
                 return destino
 
+            except httpx.HTTPStatusError as exc:
+                # Un 404 aqui no deja `.parcial` que reanudar ni tiene sentido
+                # reintentar: el recurso no esta y el servidor lo dijo.
+                if exc.response.status_code in _AUSENTE:
+                    parcial.unlink(missing_ok=True)
+                    raise RecursoAusenteError(
+                        f"{url} no existe (HTTP {exc.response.status_code})"
+                    ) from exc
+                last = exc
+                time.sleep(self._sleep * (2**attempt))
             except (httpx.HTTPError, httpx.StreamError, RuntimeError) as exc:  # pragma: no cover
                 last = exc
                 delay = self._sleep * (2**attempt)
@@ -314,6 +390,10 @@ class FixtureFetcher:
         if isinstance(value, str):
             return value.encode("utf-8")
         return json.dumps(value).encode("utf-8")
+
+    def responde(self, url: str) -> bool:
+        """En pruebas no hay origen que pueda estar caido."""
+        return True
 
     def get_range(self, url: str, start: int, end: int) -> bytes:
         """Rango sobre el contenido grabado, para probar la extraccion de ZIPs."""

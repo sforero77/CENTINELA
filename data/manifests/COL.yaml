@@ -5,8 +5,9 @@
 # un reporte de hace seis meses siga siendo reproducible (RNF-04).
 #
 # Verificado contra fuentes primarias el 23-ago-2026: cada URL de aqui se probo
-# con una peticion real. Los `sha256` se llenan en la primera corrida de P0; el
-# lint los reporta como aviso hasta entonces.
+# con una peticion real. Los `insumos_sha256` los mide cada build y los
+# publica en `medicion.json`; volcarlos aqui es un paso explicito,
+# `centinela fijar-insumos COL`, y el lint los reporta como aviso hasta entonces.
 
 manifest_id: col-v0.6
 iso3: COL
@@ -60,7 +61,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       NO se descarga esta URL: el mosaico global pesa 5,25 GB. El JRC publica el
       mismo producto en 375 teselas y Colombia necesita nueve, que suman 93 MB.
@@ -77,7 +78,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Superficie construida en m² por pixel de 100 m, derivada de Sentinel-2 y
       Landsat. Misma retícula, misma epoca y misma licencia que GHS-POP, asi que
@@ -99,7 +100,7 @@ sources:
     url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       CORRIGE UN SUPUESTO DE LA ESPEC. §2.2 daba 2020 como la unica epoca con
       desglose por edad y sexo, y de ahi salia la limitacion "proporciones de
@@ -119,7 +120,7 @@ sources:
     url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/col_pop_2025_CN_100m_R2025A_v1.tif
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    sha256: ""
+    insumos_sha256: ""
     notes: "Verificado: sirve (HTTP 200, ~64 MB). Alimenta la banda de discrepancia."
 
   - id: overture_buildings
@@ -127,7 +128,7 @@ sources:
     url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
     license: ODbL-1.0
     vintage: "2026-08-19.0"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       512 ficheros, 277 GB, 2.529 millones de edificaciones en total; Colombia
       toca once. La seleccion se hace con el bbox por fichero que publica el
@@ -143,7 +144,7 @@ sources:
     url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
     license: ODbL-1.0
     vintage: "2026-08-19.0"
-    sha256: ""
+    insumos_sha256: ""
     notes: "`type=segment` es la geometria lineal; `type=connector` son nodos."
 
   - id: overture_divisions
@@ -151,7 +152,7 @@ sources:
     url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=divisions/type=division_area
     license: ODbL-1.0
     vintage: "2026-08-19.0"
-    sha256: ""
+    insumos_sha256: ""
     notes: "`type=division_area` trae los poligonos; `division` son puntos."
 
   - id: cod_ab_col
@@ -161,7 +162,7 @@ sources:
     hdx_resource: "COL Administrative Divisions Shapefiles"
     license: CC-BY-IGO
     vintage: COD-AB-2025-05-27
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Common Operational Dataset de OCHA. Para Colombia es el propio MGN del
       DANE reempaquetado, asi que no aporta geometria nueva aqui; entra porque
@@ -181,7 +182,7 @@ sources:
     url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_MPIO_GRAFICO.zip
     license: CC-BY-4.0
     vintage: MGN-2025
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       T0.4 RESUELTA. El Geoportal DANE publica su informacion geografica bajo
       CC BY 4.0: permite uso comercial y redistribucion, y pide citar
@@ -207,7 +208,7 @@ sources:
     hdx_dataset: hotosm_col_health_facilities
     license: ODbL-1.0
     vintage: "2026-08-06"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Extracto OSM de HOT, GeoPackage de ~1 MB, con geometria. Sustituye al REPS
       como fuente de conteo por celda: es la que si trae coordenadas. La URL de
@@ -221,7 +222,7 @@ sources:
     hdx_resource: "colombia-healthsites-geojson"
     license: ODbL-1.0
     vintage: "2026-06-11"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       healthsites.io publicado en HDX como GeoJSON. Se usa esta via y no la API
       de healthsites.io porque esa exige API key, y O4 pide reconstruir el
@@ -242,7 +243,7 @@ sources:
     hdx_dataset: hotosm_col_education_facilities
     license: ODbL-1.0
     vintage: "2026-08-06"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       Extracto OSM de HOT, GeoPackage de ~5 MB, con geometria. Sustituye al
       directorio del MEN por la misma razon que arriba.
@@ -252,7 +253,7 @@ sources:
     url: https://davidmegginson.github.io/ourairports-data/airports.csv
     license: public-domain
     vintage: snapshot-2026-08-01
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       T1.2 RESUELTA (23-ago-2026). La dedicacion al dominio publico esta en dos
       sitios, y los dos se leyeron directamente.
@@ -277,7 +278,7 @@ sources:
     url: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/
     license: CC-BY-4.0
     vintage: "2021"
-    sha256: ""
+    insumos_sha256: ""
     notes: >-
       ESA WorldCover 10 m v200. Cobertura del suelo en once clases, de las que se
       publican seis: arbolado, matorral, pastizal, cultivo, construido y humedal.

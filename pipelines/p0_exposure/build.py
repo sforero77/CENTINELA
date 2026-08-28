@@ -637,6 +637,7 @@ def write_measurement(
     *,
     rescate: dict[str, float],
     referencia: dict[str, Any] | None = None,
+    insumos: dict[str, Any] | None = None,
 ) -> Path:
     """Deja junto al activo lo que se midio al construirlo.
 
@@ -665,6 +666,12 @@ def write_measurement(
         "resumen": resumen,
         "rescate": rescate,
     }
+    # Los hashes de los insumos se calculaban en cada corrida y se tiraban: del
+    # inventario de descarga solo llegaba al log un conteo de ficheros. Aqui es
+    # donde sobreviven, y por eso este fichero pasa de tres numeros a ser la
+    # procedencia completa del activo.
+    if insumos:
+        medicion["insumos"] = insumos
     if oficial:
         medicion["referencia"] = {
             "poblacion": oficial,
@@ -742,7 +749,7 @@ def build_country(
         poblacion_rescatada,
         rescue_unassigned,
     )
-    from .download import COUNTRY_BBOX, download_manifest
+    from .download import COUNTRY_BBOX, download_manifest, resumen_de_insumos
     from .raster_h3 import aggregate_rasters_to_h3
     from .vector_h3 import aggregate_points_to_h3
 
@@ -751,6 +758,7 @@ def build_country(
     fetcher = HttpFetcher(timeout_s=600.0)
 
     inventario = download_manifest(plan.manifest, trabajo, fetcher=fetcher)
+    insumos = resumen_de_insumos(plan.manifest, inventario)
     por_capa: dict[str, list[Path]] = {}
     for item in inventario:
         por_capa.setdefault(item.layer, []).append(item.path)
@@ -834,7 +842,9 @@ def build_country(
     conexion.execute(
         f"COPY admin_lookup TO '{plan.salida / 'admin_lookup.parquet'}' (FORMAT PARQUET)"
     )
-    medicion = write_measurement(plan, resumen, rescate=rescate, referencia=referencia)
+    medicion = write_measurement(
+        plan, resumen, rescate=rescate, referencia=referencia, insumos=insumos
+    )
     _log.info(
         "activo construido",
         extra={"context": {"iso3": plan.iso3, "medicion": str(medicion), **resumen}},

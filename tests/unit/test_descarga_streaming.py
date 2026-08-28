@@ -271,7 +271,10 @@ def test_las_rutas_pesadas_bajan_por_streaming() -> None:
     for funcion in (
         download.download_ghsl,
         download.download_worldpop_agesex,
-        download.download_manifest,
+        # La rama generica del manifest vive en `_descargar_fuente` desde que
+        # cada fuente se verifica por separado; `download_manifest` solo la
+        # orquesta y ya no toca la red.
+        download._descargar_fuente,
     ):
         assert "download_to" in inspect.getsource(funcion), (
             f"{funcion.__name__} sigue bajando con get_bytes"

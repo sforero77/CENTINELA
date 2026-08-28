@@ -33,7 +33,7 @@ def huella(fuentes: list[dict[str, object]]) -> str:
 
     Solo entran el id, la capa, la url y la licencia de cada fuente: es lo que
     determina que datos entran en el activo. Reordenar las claves de un YAML,
-    corregir una nota o rellenar un `sha256` no cambia el resultado y no deberia
+    corregir una nota o rellenar un `insumos_sha256` no cambia el resultado y no deberia
     obligar a una version nueva.
     """
     partes = sorted(

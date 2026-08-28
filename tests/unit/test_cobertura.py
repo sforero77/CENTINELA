@@ -40,7 +40,7 @@ def _manifest(tmp_path: Path, iso3: str, **referencia: object) -> Path:
                 "url": "https://ejemplo.org/pop.zip",
                 "license": "CC-BY-4.0",
                 "vintage": "R2023A",
-                "sha256": "",
+                "insumos_sha256": "",
             }
         ],
     }
