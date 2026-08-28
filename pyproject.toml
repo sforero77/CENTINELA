@@ -31,6 +31,11 @@ geo = [
 render = [
   "matplotlib>=3.9",
 ]
+# El visor se comprueba abriendolo. Va aparte porque arrastra un Chromium de
+# ~130 MB y el resto de la suite corre sin red ni navegador en 27 segundos.
+visor = [
+  "playwright>=1.44",
+]
 dev = [
   "pytest>=8.2",
   "pytest-cov>=5.0",
@@ -89,12 +94,13 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 # Por defecto ninguna prueba toca la red; el workflow nocturno de deriva de
 # contrato lo revierte con `-m network` explicito.
-addopts = "-q --strict-markers -m 'not network'"
+addopts = "-q --strict-markers -m 'not network and not visor'"
 markers = [
   "golden: pruebas de regresion contra eventos reales congelados",
   "network: requiere red viva (excluida de CI de PR)",
   "geo: requiere el extra [geo]",
   "render: requiere el extra [render]",
+  "visor: abre el visor en un navegador de verdad (extra [visor], workflow visor.yml)",
 ]
 
 [tool.coverage.run]

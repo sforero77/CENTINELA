@@ -1,0 +1,68 @@
+name: Visor · abierto en un navegador
+
+# LA UNICA COBERTURA QUE VE LA PANTALLA.
+#
+# El resto de la suite comprueba que `app.js` **declara** las cosas: que la
+# rampa es la acordada, que el epicentro es una estrella, que la leyenda se
+# construye con las clases del evento. Los tres bugs de la auditoria de UX/UI
+# —mapa en blanco al seleccionar un evento, hexagonos a 0,05 pixeles, capa de
+# fuego invisible sobre el suelo— pasaron esa suite entera.
+#
+# No lleva cron a proposito. GitHub concede unos pocos turnos por repositorio y
+# el vigia sismico los necesita todos; esto corre cuando cambia lo que vigila,
+# que ademas es cuando sirve.
+
+on:
+  push:
+    branches: [main]
+    paths: &vigilado
+      - "site/**"
+      - "tests/visor/**"
+      - ".github/workflows/visor.yml"
+  pull_request:
+    paths: *vigilado
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: visor-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mirar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync --python 3.12 --extra dev --extra visor
+
+      # El navegador se cachea por version de Playwright: son ~115 MB y bajarlos
+      # en cada corrida es la mitad del tiempo de este job.
+      - name: Version de Playwright
+        id: pw
+        run: echo "v=$(uv run python -c 'import playwright; print(playwright.__version__)')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        id: cache-navegador
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.v }}
+
+      - name: Instalar Chromium
+        if: steps.cache-navegador.outputs.cache-hit != 'true'
+        run: uv run playwright install --with-deps chromium
+
+      # `-m visor` revierte la exclusion por defecto de pyproject. Si el
+      # navegador no estuviera, las pruebas **fallan** en vez de saltarse: un
+      # salto silencioso en el unico guardia que ve la pantalla es peor que no
+      # tenerlo — la misma leccion que dejo el nocturno de deriva de contrato.
+      - name: Abrir el visor y comprobar que pinta
+        run: uv run pytest tests/visor -m visor

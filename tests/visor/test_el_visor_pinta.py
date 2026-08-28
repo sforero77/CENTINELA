@@ -1,0 +1,271 @@
+"""El visor, abierto en un navegador de verdad.
+
+EL HUECO QUE CIERRA. El resto de la suite comprueba que `app.js` **declara** las
+cosas: que la rampa es la acordada, que el epicentro es una estrella, que la
+leyenda se construye con las clases del evento. Nada de eso ve la pantalla, y
+los tres bugs de la auditoria de UX/UI —mapa en blanco al seleccionar un evento,
+hexagonos a 0,05 pixeles, capa de fuego invisible— pasaron la suite entera.
+
+POR QUE SE ESPERA AL REGISTRO Y NO AL RELOJ. El 28-ago-2026 se reviso el visor a
+ojo y se dieron por rotas tres capas que estaban perfectamente: se habian medido
+antes de que terminaran de pintar. La malla de un evento tarda ~5,7 s en local y
+unos 10 s contra la pagina publicada.
+
+Una prueba con `sleep(4)` habria "encontrado" los mismos tres bugs inexistentes,
+y una con `sleep(15)` tardaria un minuto en cuatro comprobaciones y seguiria
+fallando el dia que la red va lenta. Por eso `app.js` publica `window.CENTINELA`
+—lo que ha pintado y cuantos rasgos— y aqui se espera a eso.
+
+Cuenta rasgos y no un booleano a proposito: "la capa existe" no distingue una
+malla dibujada de una malla vacia, que es el cero silencioso de siempre.
+"""
+
+from __future__ import annotations
+
+import shutil
+import threading
+from collections.abc import Iterator
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+pytestmark = pytest.mark.visor
+
+RAIZ = Path(__file__).parent.parent.parent
+
+#: Cuanto se espera a que una capa aparezca en el registro. Holgado a proposito:
+#: el fallo que esta prueba tiene que dar es "no se pinto", no "tarde mas de lo
+#: que yo supuse". Si de verdad tarda 25 s, eso es un hallazgo y no un flake.
+ESPERA_MS = 25_000
+
+
+def _sitio(destino: Path) -> Path:
+    """Arma `_site` igual que `site.yml`, que es lo que se publica.
+
+    Se replica el workflow en vez de servir `site/` a secas porque los reportes
+    viven en la raiz del repositorio y en la pagina cuelgan de `/reports`. Servir
+    otra cosa comprobaria un visor que nadie usa.
+    """
+    shutil.copytree(RAIZ / "site", destino, dirs_exist_ok=True)
+    shutil.copytree(RAIZ / "reports", destino / "reports", dirs_exist_ok=True)
+    return destino
+
+
+@pytest.fixture(scope="module")
+def servidor(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+    """Sirve el sitio armado en un puerto libre."""
+    raiz = _sitio(tmp_path_factory.mktemp("_site"))
+    manejador = partial(SimpleHTTPRequestHandler, directory=str(raiz))
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), manejador)
+    hilo = threading.Thread(target=httpd.serve_forever, daemon=True)
+    hilo.start()
+    try:
+        yield f"http://127.0.0.1:{httpd.server_address[1]}"
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+@pytest.fixture(scope="module")
+def navegador() -> Iterator[Any]:
+    """Chromium, y **falla si no esta** en vez de saltarse.
+
+    Un salto silencioso en el unico guardia que ve la pantalla es peor que no
+    tenerlo — la misma leccion que dejo el nocturno de deriva de contrato.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:  # pragma: no cover - depende del entorno
+        pytest.fail(
+            "playwright no esta instalado y estas pruebas se pidieron con `-m visor`.\n"
+            "  uv sync --extra visor && uv run playwright install chromium"
+        )
+
+    with sync_playwright() as pw:
+        try:
+            nav = pw.chromium.launch()
+        except Exception as exc:  # pragma: no cover - depende del entorno
+            pytest.fail(f"no se pudo abrir Chromium: {exc}\n  uv run playwright install chromium")
+        try:
+            yield nav
+        finally:
+            nav.close()
+
+
+@pytest.fixture
+def pagina(navegador: Any, servidor: str) -> Iterator[Any]:
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    errores: list[str] = []
+    pg.on("pageerror", lambda e: errores.append(str(e)))
+    pg.goto(f"{servidor}/index.html")
+    yield pg
+    # Un error de JS no lanzado deja el visor a medias sin decir nada, que es
+    # como se perdio la malla de un evento durante dos horas de diagnostico.
+    assert not errores, f"la pagina lanzo errores de JavaScript: {errores}"
+    ctx.close()
+
+
+def _esperar_capa(pagina: Any, nombre: str, *, desde: str = "") -> dict[str, Any]:
+    """Espera a que el visor declare esa capa pintada y devuelve su anotacion.
+
+    ``desde`` permite exigir una anotacion **nueva**: al cambiar de evento la
+    clave ya existe de la carga anterior, y sin comparar la marca de tiempo la
+    espera devolveria al instante la malla del evento anterior.
+    """
+    pagina.wait_for_function(
+        """([nombre, desde]) => {
+             const p = window.CENTINELA && window.CENTINELA.pintado;
+             return !!(p && p[nombre] && p[nombre].utc > desde);
+           }""",
+        arg=[nombre, desde],
+        timeout=ESPERA_MS,
+    )
+    anotacion: dict[str, Any] = pagina.evaluate(f"window.CENTINELA.pintado[{nombre!r}]")
+    return anotacion
+
+
+def _ahora(pagina: Any) -> str:
+    marca: str = pagina.evaluate("new Date().toISOString()")
+    return marca
+
+
+# --- El panorama ------------------------------------------------------------
+
+
+def test_el_panorama_dibuja_los_epicentros(pagina: Any) -> None:
+    """Veintiun reportes son veintiuna estrellas.
+
+    Se dieron por ausentes al mirar la captura: a zoom continental un epicentro
+    ocupa pocos pixeles. Contarlos no admite esa duda.
+    """
+    anotacion = _esperar_capa(pagina, "epicentros")
+
+    assert anotacion["rasgos"] > 0, "el panorama no dibujo ni un epicentro"
+    catalogo = pagina.evaluate(
+        "fetch('reports/index.json').then(r => r.json()).then(e => e.length)"
+    )
+    assert anotacion["rasgos"] == catalogo, (
+        f"el catalogo trae {catalogo} reportes y el mapa dibujo {anotacion['rasgos']}"
+    )
+
+
+def test_los_focos_activos_se_dibujan(pagina: Any) -> None:
+    """La capa de fuego fue uno de los tres bugs invisibles de la auditoria.
+
+    Y sigue siendo la mas fragil: sus hexagonos son subpixel a zoom continental,
+    y por eso su fuente lleva `tolerance: 0` — con el valor por defecto la
+    simplificacion los colapsa y desaparecen antes de dibujarse.
+    """
+    anotacion = _esperar_capa(pagina, "incendios")
+
+    assert anotacion["rasgos"] > 0, "la capa de focos no dibujo ni una celda"
+    publicadas = pagina.evaluate(
+        "fetch('incendios.json').then(r => r.json()).then(d => d.celdas.length)"
+    )
+    assert anotacion["rasgos"] == publicadas, (
+        f"incendios.json trae {publicadas} celdas y el mapa dibujo {anotacion['rasgos']}"
+    )
+
+
+# --- Un evento --------------------------------------------------------------
+
+
+def test_seleccionar_un_evento_dibuja_su_malla(pagina: Any) -> None:
+    """El bug: "el mapa en blanco al seleccionar un evento".
+
+    Aqui no se mira si el mapa "parece" lleno: se exige que la malla declare
+    rasgos y que los contornos tambien, que son las dos capas que el tablero
+    promete al mostrar sus cifras de poblacion por franja.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+
+    celdas = _esperar_capa(pagina, "celdas", desde=marca)
+    contornos = _esperar_capa(pagina, "contornos", desde=marca)
+
+    assert celdas["rasgos"] > 0, "se selecciono un evento y la malla salio vacia"
+    assert contornos["rasgos"] > 0, "el area de afectacion no se dibujo"
+
+
+def test_la_leyenda_y_la_malla_hablan_del_mismo_dato(pagina: Any) -> None:
+    """Si no, se lee una cifra plausible y equivocada.
+
+    Una malla coloreada por intensidad bajo una leyenda de poblacion no rompe
+    nada: se ve bien, y quien la mire interpretara naranjas con una escala
+    turquesa. Es el modo de fallo que este proyecto persigue en todas partes.
+
+    NO se comprueba un repintado. Cambiar de capa **no** repinta la malla: la
+    reestiliza con `setPaintProperty` y `setFilter` sobre la misma fuente, que es
+    lo correcto. La primera version de esta prueba esperaba rasgos nuevos y
+    agotaba los 25 s con el visor funcionando perfectamente.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    antes = _ahora(pagina)
+    # Por el rol `tab` y no por `button`: el selector de capas es un `tablist`
+    # ARIA, y buscarlo asi comprueba de paso que ese contrato sigue en pie.
+    # `role="tab"` sustituye al rol implicito, asi que `get_by_role("button")`
+    # no encuentra nada.
+    pagina.get_by_role("tab", name="Población").click()
+    pagina.wait_for_function(
+        """desde => {
+             const c = window.CENTINELA.pintado.capa;
+             return !!(c && c.utc > desde);
+           }""",
+        arg=antes,
+        timeout=ESPERA_MS,
+    )
+
+    capa = pagina.evaluate("window.CENTINELA.pintado.capa")
+    assert capa["id"] == "pop", f"se pulso Poblacion y la malla quedo en {capa['id']!r}"
+
+    leyenda = pagina.locator("#leyenda").inner_text()
+    assert "POBLACIÓN" in leyenda.upper(), (
+        f"la malla se colorea por {capa['columna']!r} y la leyenda dice otra cosa: {leyenda[:60]!r}"
+    )
+
+
+def test_el_visor_no_se_traga_sus_errores(pagina: Any) -> None:
+    """`cuandoElEstiloEsteListo` corre diferido y MapLibre se come lo que lance.
+
+    Costo dos horas de diagnostico un fallo que no dejaba ni una linea en
+    consola. Desde entonces se captura y se anota; esta prueba exige que el
+    registro salga limpio en el camino normal.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    errores = pagina.evaluate("window.CENTINELA.errores")
+    assert errores == [], f"el visor anoto fallos al pintar: {errores}"
+
+
+# --- Que el registro no se quede atras --------------------------------------
+
+
+def test_el_registro_cubre_todas_las_capas_del_visor() -> None:
+    """Una capa nueva sin anotar es una capa que esta prueba no puede vigilar.
+
+    No hace falta navegador: lee `app.js`. Vive aqui, junto a lo que protege,
+    porque separarla la volveria invisible para quien anada la siguiente capa.
+    """
+    app = (RAIZ / "site" / "assets" / "app.js").read_text(encoding="utf-8")
+
+    for capa in ("celdas", "contornos", "epicentros", "incendios", "observados"):
+        assert f'anotarPintado("{capa}"' in app, (
+            f"la capa {capa!r} se dibuja y no se anota en window.CENTINELA: "
+            f"las pruebas de visor no pueden esperarla"
+        )
+
+
+def test_el_registro_es_superficie_publica() -> None:
+    """Sin `window.CENTINELA` no hay forma de esperar sin adivinar."""
+    app = (RAIZ / "site" / "assets" / "app.js").read_text(encoding="utf-8")
+
+    assert "window.CENTINELA = { pintado, errores: erroresAlPintar };" in app
