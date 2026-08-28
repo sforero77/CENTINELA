@@ -399,7 +399,37 @@ a:hover { color: var(--verde-vivo); }
 }
 
 @media (max-width: 34rem) {
-  .leyenda { width: auto; left: 0.9rem; right: 0.9rem; bottom: 2rem; }
+  /* EL PIE DEL MAPA NO CABE EN UN TELEFONO, Y SE APILABA SOBRE SI MISMO.
+     Medido el 28-ago-2026 en 390x844, con evento y focos: leyenda 553-708,
+     interruptores 599-728, atribucion 706-730. Las tres cajas sobre el mismo
+     rincon de 506 px de mapa: la leyenda de intensidad —la que explica los
+     colores— quedaba ilegible debajo de los interruptores.
+
+     La leyenda sube al hueco que queda bajo la barra de capas, que esta vacio.
+     Entre esa barra y la atribucion hay 349 px libres y las dos cajas suman
+     296: caben, solo estaban mal repartidas. */
+  .leyenda { width: auto; }
+
+  /* POR `#leyenda` Y NO POR `.leyenda`. La leyenda de simbolos declara
+     `class="leyenda leyenda-simbolos"`, asi que una regla de clase la movia a
+     ella tambien — y acababa exactamente encima de la de intensidad, que es lo
+     que este bloque venia a evitar. Lo caza `test_ningun_texto_se_pisa_con_otro`.
+     Solo se recoloca la de intensidad, que es la unica suelta sobre el mapa: la
+     de simbolos vive dentro de `.controles-mapa` y se apila con ellos. */
+  #leyenda {
+    left: 0.9rem;
+    right: 0.9rem;
+    top: 1rem;
+    bottom: auto;
+  }
+
+  /* `.capas` va antes que `#leyenda` en el DOM, asi que el hermano general
+     sirve para bajarla solo cuando hay barra de pestañas — en panorama no la
+     hay y la leyenda puede ocupar el borde superior. */
+  .capas:not([hidden]) ~ #leyenda {
+    top: 8.6rem;
+  }
+
   .capas { right: 4.2rem; max-width: none; width: auto; justify-content: flex-start; }
 }
 
@@ -959,6 +989,19 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
 
 .controles-mapa:empty {
   display: none;
+}
+
+/* DESPUES de la regla base a proposito: una media query no anade especificidad,
+   asi que `.controles-mapa { bottom: 12px }` de arriba ganaba a un bloque movil
+   escrito mas arriba en el fichero. Se perdio una iteracion averiguandolo. */
+@media (max-width: 34rem) {
+  .controles-mapa {
+    /* Deja libre la franja de la atribucion del mapa base, que es obligatoria. */
+    bottom: 2.4rem;
+    /* Y no puede crecer hasta comerse la leyenda, que ahora vive arriba: con
+       los focos encendidos la pila gana la leyenda de potencia radiativa. */
+    max-height: 30%;
+  }
 }
 
 .interruptor-observados {

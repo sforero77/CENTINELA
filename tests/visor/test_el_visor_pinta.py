@@ -436,3 +436,83 @@ def test_la_pagina_no_se_desplaza_en_horizontal_en_movil(pagina: Any) -> None:
     assert medida["scroll"] <= medida["visible"] + 1, (
         f"la pagina se desplaza en horizontal: {medida['scroll']}px sobre {medida['visible']}px"
     )
+
+
+#: Detecta texto visible que se pisa con otro texto visible. Devuelve los pares.
+#:
+#: `checkVisibility` y no `offsetParent`: un `<details>` cerrado usa
+#: `content-visibility`, asi que su contenido conserva caja y no se pinta. Sin
+#: eso la sonda reportaba solapes que nadie ve — paso, y costo media hora
+#: perseguir un fallo inexistente entre la leyenda y la atribucion.
+SONDA_SOLAPES = """
+() => {
+  // `getBoundingClientRect` devuelve la posicion SIN recortar: un hijo dentro
+  // de un contenedor con scroll se reporta donde estaria si el contenedor no
+  // recortara, aunque no se pinte ahi. Sin esto la sonda daba por solapada la
+  // leyenda de simbolos con la de intensidad — y el texto estaba recortado.
+  const visibleTrasRecorte = e => {
+    let r = e.getBoundingClientRect();
+    for (let p = e.parentElement; p; p = p.parentElement) {
+      const s = getComputedStyle(p);
+      if (s.overflowY === 'visible' && s.overflowX === 'visible') continue;
+      const c = p.getBoundingClientRect();
+      if (r.bottom <= c.top + 1 || r.top >= c.bottom - 1) return false;
+      if (r.right <= c.left + 1 || r.left >= c.right - 1) return false;
+    }
+    return true;
+  };
+
+  const conTexto = [...document.querySelectorAll('body *')].filter(e => {
+    if (!e.checkVisibility({ contentVisibilityAuto: true, opacityProperty: true,
+                             visibilityProperty: true })) return false;
+    const r = e.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return false;
+    if (r.bottom < 0 || r.top > innerHeight) return false;
+    if (!visibleTrasRecorte(e)) return false;
+    return [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 1);
+  });
+  const pares = [];
+  for (let i = 0; i < conTexto.length; i++) {
+    for (let j = i + 1; j < conTexto.length; j++) {
+      const a = conTexto[i], b = conTexto[j];
+      if (a.contains(b) || b.contains(a)) continue;
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+      const ix = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+      const iy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+      if (ix > 3 && iy > 3) pares.push(
+        `«${a.textContent.trim().slice(0,24)}» sobre «${b.textContent.trim().slice(0,24)}»`);
+    }
+  }
+  return pares;
+}
+"""
+
+
+@pytest.mark.parametrize(
+    ("etiqueta", "ancho", "alto"),
+    [("movil", 390, 844), ("portatil", 1280, 620), ("escritorio", 1600, 900)],
+)
+def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, alto: int) -> None:
+    """El pie del mapa se apilaba sobre si mismo en un telefono.
+
+    Medido el 28-ago-2026 en 390x844 con evento y focos: leyenda de intensidad
+    553-708, interruptores 599-728, atribucion 706-730 — las tres cajas sobre el
+    mismo rincon de 506 px de mapa. La leyenda, que es la que explica los
+    colores, quedaba ilegible debajo de los interruptores.
+
+    Se comprueba en los tres tamanos y con el peor estado (evento + focos)
+    porque el fallo no existia en escritorio: el hueco solo aparece cuando el
+    mapa se estrecha.
+    """
+    pagina.set_viewport_size({"width": ancho, "height": alto})
+    _esperar_capa(pagina, "epicentros")
+    pagina.get_by_label("Focos activos", exact=False).check()
+    _esperar_capa(pagina, "incendios")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    solapes = pagina.evaluate(SONDA_SOLAPES)
+
+    assert solapes == [], f"en {etiqueta} ({ancho}x{alto}) hay texto encima de otro: {solapes}"
