@@ -87,6 +87,11 @@ mypy_path = "."
 module = [
   "duckdb.*", "h3.*", "rasterio.*", "contextily.*", "matplotlib.*",
   "shapely.*", "pyarrow.*", "pyproj.*",
+  # El job principal de CI no instala el extra [visor] —son ~115 MB de Chromium
+  # para una suite que solo corre cuando cambia `site/`— asi que mypy no
+  # encuentra playwright ahi. Donde si esta instalado usa sus tipos propios:
+  # esto solo silencia "no lo encuentro", no los errores de tipo.
+  "playwright.*",
 ]
 ignore_missing_imports = true
 
