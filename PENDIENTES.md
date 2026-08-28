@@ -311,18 +311,21 @@ cumple, se documenta y se cierra; si no, se cambia el metodo.
 
 ### 2.6 Deuda menor
 
-- **Los digests de insumos, medidos pero no fijados.** Las 194 fuentes de los
-  diecinueve manifiestos siguen con `insumos_sha256` vacio. Esta linea decia que
-  "se llenan solos en la primera corrida de `make country`, que devuelve el
-  inventario con hashes", y era falso en dos sitios: el inventario se devolvia y
-  se **tiraba** —del build solo llegaba al log un conteo de ficheros—, y el campo
-  se llamaba `sha256` y era escalar cuando una fuente aporta cero, uno o veinte
-  ficheros. Cerrado el 27-ago-2026 (ver
-  [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md) §3): el build mide,
-  `medicion.json` lo publica en el Release, `centinela fijar-insumos <ISO3>` lo
-  vuelca al manifest y un insumo republicado detiene el build. **Falta fijarlos**,
-  y solo se pueden medir construyendo: entran en la proxima reconstruccion, la
-  misma que alinea la version del activo.
+- **✅ Los digests de insumos, fijados el 28-ago-2026.** Las 194 fuentes de los
+  diecinueve manifiestos llevaban `insumos_sha256` vacio, y esta linea decia que
+  "se llenan solos en la primera corrida de `make country`" — falso en dos
+  sitios: el inventario se devolvia y se **tiraba**, y el campo era escalar
+  cuando una fuente aporta cero, uno o veinte ficheros.
+
+  Hoy estan fijados: **136 con digest y 58 sin el**, y esos 58 son exactamente
+  las fuentes que se leen en remoto (Overture y la cobertura del suelo), que no
+  pasan por disco y no tienen bytes que hashear. El lint sale sin un solo aviso
+  por primera vez. En total, **664 ficheros y 18,6 GB de insumos verificados**.
+
+  El circuito, para el proximo pais: el build mide y publica el bloque `insumos`
+  en `medicion.json`, y `centinela fijar-insumos <ISO3>` lo vuelca al manifest
+  sin tocar la prosa. A partir de ahi, un insumo republicado por un tercero
+  **detiene el build en la descarga** en vez de fallar dos horas despues.
 - `overture_divisions` esta declarado en `COL.yaml` y no se usa: la geometria
   sale del MGN. No cuesta nada (las fuentes `s3://` no se descargan) pero
   induce a pensar que participa.

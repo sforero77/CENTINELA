@@ -61,7 +61,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    insumos_sha256: ""
+    insumos_sha256: "21de9e57a6856432eaea855a765ed0cd17003c4d0848d67092bc27140e0dfa20"
     notes: >-
       NO se descarga esta URL: el mosaico global pesa 5,25 GB. El JRC publica el
       mismo producto en 375 teselas y Colombia necesita nueve, que suman 93 MB.
@@ -78,7 +78,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    insumos_sha256: ""
+    insumos_sha256: "8a8069e1dc7430d969fa5e5b07b419c54a9940762f7965441c56047b27237c73"
     notes: >-
       Superficie construida en m² por pixel de 100 m, derivada de Sentinel-2 y
       Landsat. Misma retícula, misma epoca y misma licencia que GHS-POP, asi que
@@ -100,7 +100,7 @@ sources:
     url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    insumos_sha256: ""
+    insumos_sha256: "29714b8b556e9b4a743864ea520583c618b5392b9c5b885176193c4fc32f974c"
     notes: >-
       CORRIGE UN SUPUESTO DE LA ESPEC. §2.2 daba 2020 como la unica epoca con
       desglose por edad y sexo, y de ahi salia la limitacion "proporciones de
@@ -120,7 +120,7 @@ sources:
     url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/COL/v1/100m/constrained/col_pop_2025_CN_100m_R2025A_v1.tif
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    insumos_sha256: ""
+    insumos_sha256: "c8fa14056a1c5c7f15bfc9a331c3e30d965fa18265cf3d54e7fe76ea239fc748"
     notes: "Verificado: sirve (HTTP 200, ~64 MB). Alimenta la banda de discrepancia."
 
   - id: overture_buildings
@@ -162,7 +162,7 @@ sources:
     hdx_resource: "COL Administrative Divisions Shapefiles"
     license: CC-BY-IGO
     vintage: COD-AB-2025-05-27
-    insumos_sha256: ""
+    insumos_sha256: "1f45c4192a987ff4cf423c5607b7454fb47ac79098de8c367f689e889e1677b4"
     notes: >-
       Common Operational Dataset de OCHA. Para Colombia es el propio MGN del
       DANE reempaquetado, asi que no aporta geometria nueva aqui; entra porque
@@ -182,7 +182,7 @@ sources:
     url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_MPIO_GRAFICO.zip
     license: CC-BY-4.0
     vintage: MGN-2025
-    insumos_sha256: ""
+    insumos_sha256: "6bd01926b248b9a073b37f9f0a8bd2df24b72d6998222713015914f115f9ebbd"
     notes: >-
       T0.4 RESUELTA. El Geoportal DANE publica su informacion geografica bajo
       CC BY 4.0: permite uso comercial y redistribucion, y pide citar
@@ -208,7 +208,7 @@ sources:
     hdx_dataset: hotosm_col_health_facilities
     license: ODbL-1.0
     vintage: "2026-08-06"
-    insumos_sha256: ""
+    insumos_sha256: "8605e1c930d40ac84bd29e61c82cf1f74f3a24e2c7cdb0d16257cfa867bbb6e7"
     notes: >-
       Extracto OSM de HOT, GeoPackage de ~1 MB, con geometria. Sustituye al REPS
       como fuente de conteo por celda: es la que si trae coordenadas. La URL de
@@ -222,7 +222,7 @@ sources:
     hdx_resource: "colombia-healthsites-geojson"
     license: ODbL-1.0
     vintage: "2026-06-11"
-    insumos_sha256: ""
+    insumos_sha256: "50d09fa39fcb4d035935b42a8c311da37ad8a60e41d87370012212ce3c59acf8"
     notes: >-
       healthsites.io publicado en HDX como GeoJSON. Se usa esta via y no la API
       de healthsites.io porque esa exige API key, y O4 pide reconstruir el
@@ -243,7 +243,7 @@ sources:
     hdx_dataset: hotosm_col_education_facilities
     license: ODbL-1.0
     vintage: "2026-08-06"
-    insumos_sha256: ""
+    insumos_sha256: "2c82f984937902f7f714561853c6d8b89f3c31166097cb674e7db59f2725e26b"
     notes: >-
       Extracto OSM de HOT, GeoPackage de ~5 MB, con geometria. Sustituye al
       directorio del MEN por la misma razon que arriba.
@@ -253,7 +253,7 @@ sources:
     url: https://davidmegginson.github.io/ourairports-data/airports.csv
     license: public-domain
     vintage: snapshot-2026-08-01
-    insumos_sha256: ""
+    insumos_sha256: "a56b85917effb259a69dffe3cc776ab4823580511caf79be7f0cac08bc03d6fb"
     notes: >-
       T1.2 RESUELTA (23-ago-2026). La dedicacion al dominio publico esta en dos
       sitios, y los dos se leyeron directamente.

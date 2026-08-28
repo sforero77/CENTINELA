@@ -4,12 +4,11 @@
 # STAC apunta siempre al ultimo; fijar el release explicito es lo que hace que
 # un reporte de hace seis meses siga siendo reproducible (RNF-04).
 #
-# ESTADO: fuentes verificadas con peticion real el 2026-08-23; **el activo no se ha
-# construido todavia**. `medido_ghs_pop` se llena en la primera corrida de
-# `centinela country CHL`, y hasta entonces este manifest declara de donde
-# saldrian los datos, no que ya se hayan medido. Los `insumos_sha256` los mide
-# cada build y los publica en `medicion.json`; volcarlos aqui es un paso
-# explicito, `centinela fijar-insumos CHL`.
+# ESTADO: activo construido y publicado. La ultima reconstruccion midio
+# 19.690.592 habitantes y fijo los `insumos_sha256` de cada fuente
+# descargable; las que se leen en remoto no llevan digest porque no pasan por
+# disco. Las cifras vivas estan en `medicion.json`, publicado en el Release al
+# lado del parquet — aqui no se repiten a mano.
 
 manifest_id: chl-v0.2
 iso3: CHL
@@ -75,7 +74,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    insumos_sha256: ""
+    insumos_sha256: "6519c1e09ab67ca23fd5a92add1d4b31f1e02abcdc7efa383a0cc7bdd70a3d97"
     notes: >-
       No se descarga esta URL: el mosaico global pesa 5,25 GB. El JRC publica el
       mismo producto en 375 teselas y la seleccion la hace
@@ -88,7 +87,7 @@ sources:
     url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
     license: EC-reuse-attribution
     vintage: R2023A-E2025-54009-100m
-    insumos_sha256: ""
+    insumos_sha256: "4211a69d12c9d4952ad05d4ad4f51ab67a05209b8c38d57ea55202def86b18c5"
     notes: >-
       Superficie construida en m² por pixel, derivada de Sentinel-2 y Landsat.
       Misma retícula y misma epoca que GHS-POP. No hereda los huecos de OSM en
@@ -101,7 +100,7 @@ sources:
     url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/CHL/v1/100m/constrained/
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    insumos_sha256: ""
+    insumos_sha256: "75532065947dc5046979d6d7d450afa4f911f36ccb0763211dd6f26d877250ed"
     notes: >-
       Verificado: HTTP 200 y las 20 bandas de la serie combinada `chl_t_<edad>`,
       de 00 a 90. La url apunta al DIRECTORIO; solo se baja la serie `_t_`, que
@@ -113,7 +112,7 @@ sources:
     url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/CHL/v1/100m/constrained/chl_pop_2025_CN_100m_R2025A_v1.tif
     license: CC-BY-4.0
     vintage: R2025A-2025-constrained-100m
-    insumos_sha256: ""
+    insumos_sha256: "85cfcaffd172c08e339a0aeda08b966f5f3c53f5f61732528252fb81d007044d"
     notes: >-
       Verificado: HTTP 200. Alimenta la banda de discrepancia publicada, nunca
       la cifra principal.
@@ -146,7 +145,7 @@ sources:
     hdx_dataset: cod-ab-chl
     license: CC-BY-IGO
     vintage: COD-AB-2026-08
-    insumos_sha256: ""
+    insumos_sha256: "1315ee396eafe0bcb414cffcf4cc054484abaa3a0699641fda174ac44d184084"
     notes: >-
       Common Operational Dataset de OCHA, fuente de verdad de adm1/adm2. Es la
       unica geometria administrativa de este manifest, asi que si el recurso
@@ -162,7 +161,7 @@ sources:
     hdx_dataset: hotosm_chl_health_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    insumos_sha256: ""
+    insumos_sha256: "bb20e5a72c4366e4aa1ada7a520e2ca34c803214b440485009ec1b5880b31a7c"
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
       Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital
@@ -178,7 +177,7 @@ sources:
     hdx_dataset: hotosm_chl_education_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    insumos_sha256: ""
+    insumos_sha256: "d23ffba11f556fca60e8c50f90dde300db5625430ea6fbae4bea38b3e50fde05"
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover
