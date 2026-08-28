@@ -385,6 +385,19 @@ a:hover { color: var(--verde-vivo); }
 .leyenda-valor { font-family: var(--tipo-mono); font-size: 0.72rem; }
 .leyenda-nota { margin: 0; color: var(--tenue-mas); font-size: 0.72rem; line-height: 1.45; }
 
+/* LA ATRIBUCION DEL MAPA BASE VA POR ENCIMA DE TODO LO NUESTRO.
+   No es estetica: OpenStreetMap es ODbL y exige que la atribucion se vea. En
+   movil la pila de interruptores caia justo sobre ella —medido el 28-ago-2026:
+   `elementFromPoint` sobre el centro de `.maplibregl-ctrl-attrib` devolvia el
+   interruptor de sismos menores— y este proyecto rechaza fuentes enteras por
+   incompatibilidad de licencia como para taparle el credito al mapa que usa. */
+/* Dos clases y no una: `maplibre-gl.css` declara `z-index: 2` en esa misma
+   regla y se carga despues, asi que con igual especificidad ganaba ella. */
+.lienzo .maplibregl-ctrl-bottom-right,
+.lienzo .maplibregl-ctrl-bottom-left {
+  z-index: 5;
+}
+
 @media (max-width: 34rem) {
   .leyenda { width: auto; left: 0.9rem; right: 0.9rem; bottom: 2rem; }
   .capas { right: 4.2rem; max-width: none; width: auto; justify-content: flex-start; }
@@ -789,6 +802,19 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   margin-top: 2rem;
   border-collapse: collapse;
   font-size: 0.92rem;
+}
+
+/* Diecinueve filas de cuatro columnas no caben en 390 px, y sin esto la tabla
+   se salia 96 px y arrastraba a **toda la pagina** a desplazarse en horizontal:
+   el mapa, el panel y las tarjetas se movian de lado al leer la cobertura.
+   Medido el 28-ago-2026: `scrollWidth` 486 sobre un viewport de 390.
+   Que se desplace la tabla y no la pagina. */
+@media (max-width: 48rem) {
+  .tabla-cobertura {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .tabla-cobertura th,

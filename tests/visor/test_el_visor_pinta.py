@@ -384,3 +384,55 @@ def test_los_controles_no_tapan_el_aviso_de_que_esto_no_es_dano(pagina: Any) -> 
     }""")
 
     assert not solapa, "la pila de controles vuelve a montarse sobre el aviso"
+
+
+# --- Movil ------------------------------------------------------------------
+
+#: Un telefono corriente. Es donde se amontona todo lo que en escritorio cabe.
+MOVIL = {"width": 390, "height": 844}
+
+
+def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any) -> None:
+    """No es estetica: OpenStreetMap es ODbL y exige que su credito se vea.
+
+    Medido el 28-ago-2026 en 390x844: la pila de interruptores caia justo sobre
+    `.maplibregl-ctrl-attrib` y `elementFromPoint` sobre su centro devolvia el
+    interruptor de sismos menores. Un proyecto que rechaza fuentes enteras por
+    incompatibilidad de licencia no puede taparle el credito al mapa que usa.
+
+    `maplibre-gl.css` declara `z-index: 2` en esa regla y se carga despues, asi
+    que la nuestra necesita dos clases para ganarle.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+    pagina.get_by_label("Focos activos", exact=False).check()
+    _esperar_capa(pagina, "incendios")
+
+    encima = pagina.evaluate("""() => {
+        const a = document.querySelector('.maplibregl-ctrl-attrib');
+        const r = a.getBoundingClientRect();
+        const e = document.elementFromPoint(r.left + r.width/2, r.top + r.height/2);
+        return e && a.contains(e) ? null : (e ? (e.className || e.tagName).toString() : 'nada');
+    }""")
+
+    assert encima is None, f"algo tapa la atribucion del mapa base: {encima}"
+
+
+def test_la_pagina_no_se_desplaza_en_horizontal_en_movil(pagina: Any) -> None:
+    """La tabla de cobertura arrastraba a toda la pagina.
+
+    Diecinueve filas de cuatro columnas no caben en 390 px: la tabla se salia
+    96 px y con ella se movian de lado el mapa, el panel y las tarjetas. Que se
+    desplace la tabla, no la pagina.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+
+    medida = pagina.evaluate("""() => ({
+        scroll: document.documentElement.scrollWidth,
+        visible: document.documentElement.clientWidth,
+    })""")
+
+    assert medida["scroll"] <= medida["visible"] + 1, (
+        f"la pagina se desplaza en horizontal: {medida['scroll']}px sobre {medida['visible']}px"
+    )
