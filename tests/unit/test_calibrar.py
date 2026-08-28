@@ -133,3 +133,78 @@ def test_una_calibracion_bloqueada_actualiza_lo_medido_pero_no_la_tolerancia(
     texto = ruta.read_text(encoding="utf-8")
     assert "medido_ghs_pop: 9000000" in texto
     assert "tolerancia_pct: 2.0" in texto
+
+
+#: Un manifest recien escrito: declara referencia y tolerancia provisional, pero
+#: todavia no ha medido nada. Es la forma que tiene un pais antes de su primer
+#: build — y la que tenia Brasil despues de dos builds correctos.
+MANIFEST_SIN_MEDIR = """\
+manifest_id: bra-v0.2
+iso3: BRA
+
+referencia_oficial:
+  poblacion_2025: 212812405
+  fuente: "ONU, World Population Prospects"
+  tolerancia_pct: 25.0
+  nota: >-
+    Tolerancia provisional hasta el primer build.
+"""
+
+
+def test_lo_medido_se_anade_cuando_la_clave_no_estaba(tmp_path: Path) -> None:
+    """El fallo de Brasil: `aplicar` solo reescribia la clave si ya existia.
+
+    Dos builds correctos —218.881.538 habitantes, desvio real del 2,85 %— y el
+    manifest seguia con `tolerancia_pct: 25.0` y sin una cifra detras, mientras
+    su propia nota afirmaba que la fija cada build. Con 25 % de tolerancia el
+    assert de §6.4 aceptaba a Brasil con 55 millones de habitantes de menos.
+
+    Y no era un caso de Brasil: **ningun manifest recien escrito trae la clave**,
+    asi que le habria pasado a cada pais nuevo de Fase 1.
+    """
+    ruta = tmp_path / "BRA.yaml"
+    ruta.write_text(MANIFEST_SIN_MEDIR, encoding="utf-8")
+    cal = calibrar(_medicion("BRA", 218_881_538, 212_812_405, 2.8519), {"tolerancia_pct": 25.0})
+
+    assert aplicar(ruta, cal, fecha="2026-08-28")
+    texto = ruta.read_text(encoding="utf-8")
+    assert "medido_ghs_pop: 218881538" in texto
+    assert "tolerancia_pct: 3.35" in texto
+    # Va junto a la tolerancia, que es como se leen: el margen y lo medido.
+    lineas = texto.splitlines()
+    i_tol = next(i for i, x in enumerate(lineas) if "tolerancia_pct:" in x)
+    assert "medido_ghs_pop:" in lineas[i_tol + 1]
+    # Y la prosa sigue entera.
+    assert "Tolerancia provisional hasta el primer build." in texto
+
+
+def test_sin_tolerancia_declarada_no_se_inventa_donde_ponerlo(tmp_path: Path) -> None:
+    """Un manifest sin referencia oficial no tiene con que comparar lo medido.
+
+    Anadir `medido_ghs_pop` suelto ahi seria una cifra sin guardian al lado, que
+    es justo la forma en que este repositorio se ha mordido antes.
+    """
+    ruta = tmp_path / "XXX.yaml"
+    ruta.write_text("manifest_id: xxx-v0.1\niso3: XXX\n", encoding="utf-8")
+    cal = calibrar(_medicion("XXX", 1_000.0, 900.0, 11.1), {"tolerancia_pct": 2.0})
+
+    aplicar(ruta, cal, fecha="2026-08-28")
+    assert "medido_ghs_pop" not in ruta.read_text(encoding="utf-8")
+
+
+def test_los_manifests_del_repo_declaran_lo_que_midieron() -> None:
+    """Los diecinueve, sin excepcion.
+
+    Una tolerancia sin la cifra que la justifica no se puede auditar: no hay
+    forma de saber si es estrecha porque se midio o ancha porque nadie volvio.
+    """
+    import yaml
+
+    from pipelines.common.paths import MANIFESTS_DIR
+
+    for path in sorted(MANIFESTS_DIR.glob("*.yaml")):
+        ref = yaml.safe_load(path.read_text(encoding="utf-8")).get("referencia_oficial") or {}
+        assert ref.get("tolerancia_pct"), f"{path.name} no declara tolerancia"
+        assert ref.get("medido_ghs_pop"), (
+            f"{path.name} tiene tolerancia pero no dice que midio para fijarla"
+        )

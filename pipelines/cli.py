@@ -16,11 +16,11 @@ from typing import Any
 from .common.frescura import SITIO_PUBLICADO
 from .common.http import HttpFetcher
 from .common.logging import get_logger
-from .common.manifest import Manifest, lint_manifest_file
+from .common.manifest import Manifest, fijar_insumos_en_manifest, lint_manifest_file
 from .common.paths import BUILD_DIR, MANIFESTS_DIR
 from .common.state import EventState
 from .common.status import write_status
-from .p0_exposure.build import build_country
+from .p0_exposure.build import MEDICION_FICHERO, build_country
 from .p1_trigger.observados import (
     DIAS_OBSERVADOS,
     fusionar,
@@ -88,6 +88,15 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
 #: que mirar".
 EXIT_ACTIVO_DE_OTRO_PAIS = 3
 
+#: Codigo de salida de "el origen no estaba disponible; vuelve a intentarlo".
+#:
+#: Misma logica que el 3 de arriba: **no es un fallo del pais ni del codigo**,
+#: y quien orquesta necesita distinguirlos. Ante un activo que no pasa los
+#: asserts hay que mirar el manifest; ante un origen caido hay que reintentar
+#: mas tarde y ya esta. El 27-ago-2026 los dos salian como exit 1 y habia que
+#: leer cuatro horas de log para saber cual de los dos era.
+EXIT_ORIGEN_CAIDO = 4
+
 
 def _cmd_impact(args: argparse.Namespace) -> int:
     """P2/P3: procesa un evento ya detectado y publica su reporte."""
@@ -126,13 +135,83 @@ def _cmd_impact(args: argparse.Namespace) -> int:
 
 def _cmd_country(args: argparse.Namespace) -> int:
     """P0: reconstruye el activo de exposicion de un pais."""
-    out = build_country(
-        args.iso3,
-        out_dir=Path(args.out or BUILD_DIR),
-        liberar_rasters=args.liberar_rasters,
-    )
+    from .p0_exposure.download import OrigenCaidoError
+
+    try:
+        out = build_country(
+            args.iso3,
+            out_dir=Path(args.out or BUILD_DIR),
+            liberar_rasters=args.liberar_rasters,
+        )
+    except OrigenCaidoError as exc:
+        # Sale con su propio codigo para que el workflow pueda reintentar solo
+        # esto. Un activo que no pasa los asserts no se arregla reintentando.
+        _log.warning(
+            "origen caido, no se construyo nada",
+            extra={"context": {"iso3": args.iso3.upper(), "detalle": str(exc)}},
+        )
+        print(str(exc), file=sys.stderr)
+        return EXIT_ORIGEN_CAIDO
     print(out)
     return 0
+
+
+def _cmd_fijar_insumos(args: argparse.Namespace) -> int:
+    """Vuelca al manifest los digests que midio el build.
+
+    Cierra el circuito: el build mide, `medicion.json` lo publica junto al
+    activo, y esto lo fija en el manifest. Sin este paso el digest se copia a
+    mano, y con 194 fuentes en diecinueve paises copiar a mano no es tedioso,
+    es que no ocurre — que es exactamente por que las 194 llevaban vacias desde
+    el primer dia.
+    """
+    directory = Path(args.dir or MANIFESTS_DIR)
+    iso3 = args.iso3.upper()
+    if args.medicion:
+        medicion_path = Path(args.medicion)
+    else:
+        salida = Path(args.out or BUILD_DIR) / f"iso3={iso3}" / "layer=exposure"
+        medicion_path = salida / MEDICION_FICHERO
+    if not medicion_path.exists():
+        print(
+            f"No hay medicion en {medicion_path}. La escribe `centinela country "
+            f"{iso3}`, y se publica en el Release del activo.",
+            file=sys.stderr,
+        )
+        return 1
+
+    medicion = json.loads(medicion_path.read_text(encoding="utf-8"))
+    insumos = medicion.get("insumos") or {}
+    if not insumos:
+        print(
+            f"{medicion_path} no trae bloque `insumos`: lo construyo una version "
+            f"anterior del pipeline. Hace falta reconstruir el pais.",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Las fuentes leidas en remoto —Overture, la cobertura del suelo— no tienen
+    # bytes en disco que hashear, asi que no traen digest y no se fijan. Su
+    # anclaje es el release del vintage, que el lint ya obliga a ser explicito.
+    digests = {
+        sid: datos["insumos_sha256"] for sid, datos in insumos.items() if "insumos_sha256" in datos
+    }
+    remotas = sorted(sid for sid, datos in insumos.items() if datos.get("remoto"))
+
+    manifest_path = directory / f"{iso3}.yaml"
+    if not manifest_path.exists():
+        print(f"No hay manifest para {iso3}: {manifest_path}", file=sys.stderr)
+        return 1
+
+    parte = fijar_insumos_en_manifest(manifest_path, digests)
+    print(f"{manifest_path.name}: {len(digests)} fuentes con digest, {len(remotas)} en remoto")
+    for linea in parte:
+        print(f"  {linea}")
+    if not parte:
+        print("  sin cambios: ya estaba todo fijado")
+    if remotas:
+        print(f"  sin digest (se leen en remoto): {', '.join(remotas)}")
+    return 1 if any("SIN TOCAR" in linea for linea in parte) else 0
 
 
 def _cmd_lint_manifests(args: argparse.Namespace) -> int:
@@ -503,6 +582,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     p_country.set_defaults(func=_cmd_country)
+
+    p_fijar = sub.add_parser(
+        "fijar-insumos",
+        help="vuelca al manifest los insumos_sha256 que midio el build",
+    )
+    p_fijar.add_argument("iso3")
+    p_fijar.add_argument("--dir", help="directorio de manifests")
+    p_fijar.add_argument("--out", help="directorio de salida del build")
+    p_fijar.add_argument("--medicion", help="ruta explicita a medicion.json")
+    p_fijar.set_defaults(func=_cmd_fijar_insumos)
 
     p_lint = sub.add_parser("lint-manifests", help="valida licencias y vintages")
     p_lint.add_argument("--dir", help="directorio de manifests")

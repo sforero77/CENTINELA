@@ -130,12 +130,44 @@ _TOLERANCIA = re.compile(r"^(?P<sangria>\s*)tolerancia_pct:\s*(?P<valor>[\d.]+)\
 _MEDIDO = re.compile(r"^(?P<sangria>\s*)medido_ghs_pop:\s*(?P<valor>[\d]+)\s*$")
 
 
+def _insertar_medido(lineas: list[str], medido: int) -> tuple[list[str], bool]:
+    """Anade `medido_ghs_pop` detras de `tolerancia_pct`, donde vive en el resto.
+
+    Se ancla a `tolerancia_pct` y no al principio del bloque `referencia_oficial`
+    porque las dos cifras se leen juntas —una es el margen y la otra lo que se
+    midio— y separarlas obliga a buscar a quien venga detras.
+
+    Un manifest sin `tolerancia_pct` no se toca: significa que no declara
+    referencia oficial, y ahi `medido_ghs_pop` no tiene con que compararse.
+    """
+    for i, linea in enumerate(lineas):
+        if m := _TOLERANCIA.match(linea):
+            anadida = f"{m['sangria']}medido_ghs_pop: {medido}"
+            return [*lineas[: i + 1], anadida, *lineas[i + 1 :]], True
+    return lineas, False
+
+
 def aplicar(ruta: Path, cal: Calibracion, *, fecha: str) -> bool:
-    """Escribe la calibracion en el manifest. Devuelve si cambio algo."""
+    """Escribe la calibracion en el manifest. Devuelve si cambio algo.
+
+    Si `medido_ghs_pop` no existe todavia, **se anade**. No es un detalle: esta
+    funcion solo reescribia la linea cuando ya estaba, asi que un pais que nunca
+    la tuvo no la recibia nunca. Brasil llevaba dos builds correctos
+    —218.881.538 habitantes medidos, desvio real del 2,85 %— con
+    `tolerancia_pct: 25.0` y sin una sola cifra detras que la justificara,
+    mientras su propio manifest afirmaba que "la cifra medida vive en
+    `medido_ghs_pop` y la fija cada build".
+
+    Con esa tolerancia, el assert de §6.4 aceptaba a Brasil con 55 millones de
+    habitantes de menos sin decir nada. Y le habria pasado igual a cada pais
+    nuevo de Fase 1, porque un manifest recien escrito no trae la clave.
+    """
     lineas = ruta.read_text(encoding="utf-8").split("\n")
     cambiado = False
+    visto_medido = False
     for i, linea in enumerate(lineas):
         if m := _MEDIDO.match(linea):
+            visto_medido = True
             nueva = f"{m['sangria']}medido_ghs_pop: {round(cal.medido)}"
             cambiado = cambiado or nueva != linea
             lineas[i] = nueva
@@ -143,6 +175,11 @@ def aplicar(ruta: Path, cal: Calibracion, *, fecha: str) -> bool:
             nueva = f"{m['sangria']}tolerancia_pct: {cal.tolerancia_propuesta}"
             cambiado = cambiado or nueva != linea
             lineas[i] = nueva
+
+    if not visto_medido:
+        lineas, anadida = _insertar_medido(lineas, round(cal.medido))
+        cambiado = cambiado or anadida
+
     if cambiado:
         ruta.write_text("\n".join(lineas), encoding="utf-8")
         _log.info(

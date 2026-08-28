@@ -64,15 +64,79 @@ la linea entera (`republica()`).
 | ARG, mismo fichero | Itati englobando a San Luis del Palmar al 100 % |
 | WorldCover | teselas que no existen (solo mar) → 404 |
 | Overture | el `vintage` fijado caduca en octubre |
+| **PER, JRC caido** | **el origen no responde y el pais sale "todo oceano"** |
+
+**El caso peruano, del 27-ago-2026, es el mas instructivo porque el tercero no
+cambio nada: se cayo.** `HttpFetcher.download_to` lanza el mismo `RuntimeError`
+generico para cualquier causa —404, timeout, 500, conexion cortada— y
+`download_ghsl` lo captura para tratar un caso legitimo: las teselas que solo
+cubren oceano no existen en el servidor, y ahi un 404 **es** la respuesta
+correcta. Con el JRC caido tres horas, las nueve teselas de Peru agotaron sus
+reintentos, se contaron una a una como «tesela ausente, probablemente solo
+oceano», y el pais se ensamblo con poblacion 0 y superficie construida 0.
+
+Lo detuvo el assert de §6.4 —`Total nacional 0 se desvia -100.00%`— pero al
+final de la cadena, tres horas y 24 millones de edificaciones despues. Desde el
+27-ago-2026 lo detiene antes `_verificar_insumos`: una fuente que **si** descarga
+y vuelve con cero ficheros levanta `InsumoAusenteError` al terminar esa descarga.
+Vacio no es lo mismo que remoto, y suponerlo era el agujero.
+
+**Cerrado del todo el 28-ago-2026, en tres piezas.** La caida *parcial* seguia
+abierta —si de nueve teselas responden cinco no hay cero que detectar, y el pais
+sale con una fraccion de su poblacion: una cifra plausible, del orden correcto y
+equivocada—. Lo que faltaba era que el fetcher distinguiera «404, esta tesela no
+existe» de «no pude descargarla», que eran la misma excepcion.
+
+| | Antes | Ahora |
+|---|---|---|
+| Tesela oceanica (404) | 3 intentos, 14 s de espera | `RecursoAusenteError`, sin reintento |
+| Origen caido | 3 intentos, ~6,7 min, y «oceano» | sube el fallo con su nombre |
+| Origen caido, el pais entero | se descubre a las 4 h | `comprobar_origenes`, ~10 s |
+| Reintento | por fichero, 14 s | por pais, 10 y 30 min, solo si el codigo es 4 |
+
+`RecursoAusenteError` es la unica excepcion que `download_ghsl` acepta como
+«solo oceano»; cualquier otra sube. `comprobar_origenes` pregunta por HEAD a
+cada host distinto del manifest antes de la primera descarga, y **cualquier
+codigo de estado cuenta como vivo** —404, 403, 405 incluidos—: la pregunta es si
+el servidor esta en pie, no si el recurso existe, y un chequeo que confundiera
+las dos cosas seria un generador de falsos positivos desactivado en una semana.
+
+Y `centinela country` sale con **codigo 4** cuando el origen no estaba, para que
+el workflow reintente solo eso: un activo que no pasa los asserts de calidad
+falla igual las tres veces, y repetirlo solo retrasaria el diagnostico media
+hora.
 
 **Por que pasa.** Dependemos de HDX, USGS, JRC, ESA, Overture. Ninguno avisa. Y
 lo mas fino del caso argentino: el filtro `ST_GeometryType(...) = 'POLYGON'`
 **parecia cubrirlo y no podia**, porque devuelve `POLYGON` tanto para el tipo 3
 como para el 1003 — borra la dimension al contestar.
 
-**Lo que falta.** Los `sha256` vacios de los manifiestos. Son exactamente lo que
-convertiria esto en un aviso —"este fichero cambio"— en vez de en un fallo a las
-dos horas de build.
+**La puerta, puesta el 27-ago-2026.** Cada fuente se compara contra su
+`insumos_sha256` en cuanto sus ficheros estan en disco, y un insumo republicado
+detiene el build ahi —a los minutos, nombrando la fuente y el fichero— en vez de
+salir a las dos horas disfrazado de error de geometria.
+
+**Por que llevaba vacio desde el primer dia, que no era disciplina.** El campo se
+llamaba `sha256` y era escalar, y **una fuente del manifest no es un fichero**:
+GHS-POP son nueve u once teselas, el desglose etario de WorldPop veinte rasters,
+un COD-AB el shapefile con su `.dbf` y su `.prj`, y Overture no baja ninguno. No
+habia un fichero al que pertenecer, asi que las 194 fuentes de los diecinueve
+manifiestos no podian llenarse. El campo es ahora `insumos_sha256` y hashea la
+lista canonica `(nombre, sha256)` del conjunto, que si existe para los tres
+casos.
+
+El segundo motivo era mas simple: `_registrar` **ya calculaba** un sha256 real de
+cada fichero en cada corrida desde siempre, y del inventario solo llegaba al log
+un conteo de ficheros y un total de bytes. Los hashes se computaban y se tiraban,
+build tras build. Ahora sobreviven en el bloque `insumos` de `medicion.json`, que
+ya viaja en el Release al lado del parquet.
+
+**Lo que falta.** Los 194 digests siguen vacios: solo se pueden medir
+construyendo, y los diecinueve activos publicados se construyeron antes de que
+esto existiera. Se llenan pais a pais con `centinela fijar-insumos <ISO3>` sobre
+la medicion de la proxima reconstruccion —la misma que ya alinea la version del
+activo—, y hasta entonces el lint lo reporta como aviso y el build lo registra
+sin detenerse.
 
 ---
 

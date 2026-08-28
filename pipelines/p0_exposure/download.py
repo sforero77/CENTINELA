@@ -26,12 +26,15 @@ from __future__ import annotations
 
 import hashlib
 import zipfile
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
 
 from ..common.geo import BBox
 from ..common.hdx import dataset_license, map_license, resolve_attempts
-from ..common.http import PARTIAL_SUFFIX, HttpFetcher
+from ..common.http import PARTIAL_SUFFIX, HttpFetcher, RecursoAusenteError
 from ..common.licensing import LicenseViolationError
 from ..common.logging import get_logger
 from ..common.manifest import Manifest, Source
@@ -186,6 +189,12 @@ def download_ghsl(
 
     Las teselas que solo cubren oceano no existen en el servidor: un 404 aqui
     no es un fallo, es la respuesta correcta.
+
+    UN FALLO DE DESCARGA NO ES ESO, y confundirlos costo tres horas el
+    27-ago-2026. Esta funcion capturaba `RuntimeError`, que era lo mismo para un
+    404 que para un timeout; con el JRC caido, las 24 teselas de Peru se
+    contaron como oceano y el pais se ensamblo con poblacion 0. Solo
+    `RecursoAusenteError` significa "no esta"; lo demas sube.
     """
     destino.mkdir(parents=True, exist_ok=True)
     rutas: list[Path] = []
@@ -197,9 +206,9 @@ def download_ghsl(
         zip_path = destino / f"{tesela.name}.zip"
         try:
             fetcher.download_to(tesela.url, zip_path)
-        except RuntimeError:
+        except RecursoAusenteError:
             _log.info(
-                "tesela ausente, probablemente solo oceano",
+                "tesela ausente en el servidor: solo oceano",
                 extra={"context": {"tesela": tesela.name}},
             )
             continue
@@ -483,6 +492,224 @@ def download_zip_completo(url: str, destino: Path, *, fetcher: HttpFetcher) -> l
     return rutas
 
 
+class InsumoCambiadoError(RuntimeError):
+    """Un insumo fijado en el manifest ya no es el que se fijo.
+
+    Es un fallo de reproducibilidad, no de red: la descarga fue bien y lo que
+    llego no es lo que el manifest declara. Se lanza en cuanto los ficheros de
+    esa fuente estan en disco, antes de agregar una sola celda H3.
+    """
+
+
+class InsumoAusenteError(RuntimeError):
+    """Una fuente que si descarga volvio sin un solo fichero.
+
+    Distinta de :class:`InsumoCambiadoError` a proposito: alli el insumo llego y
+    era otro, aqui no llego nada. La primera es un problema de reproducibilidad
+    y la segunda es la puerta de entrada del cero silencioso —la capa se crea
+    vacia, el LEFT JOIN la vuelve ceros y el activo se publica sin que nada
+    falle—, asi que quien lea el log tiene que poder distinguirlas sin leer el
+    mensaje entero.
+    """
+
+
+def digest_de_insumos(descargados: Iterable[Descargado]) -> str:
+    """sha256 sobre la lista canonica ``nombre  sha256`` de una fuente.
+
+    UNA FUENTE DEL MANIFEST NO ES UN FICHERO, y por eso el campo escalar
+    ``sha256`` llevaba vacio desde el primer dia en las 194 fuentes de los
+    diecinueve manifests: no habia un fichero al que pertenecer. GHS-POP son
+    nueve u once teselas, el desglose etario de WorldPop veinte rasters, un
+    COD-AB el shapefile con su ``.dbf`` y su ``.prj``, y Overture no baja
+    ninguno.
+
+    El digest si existe para los tres casos porque no habla de un fichero sino
+    del conjunto: una linea por fichero, ordenadas por nombre, hash de todo.
+    Anadir una tesela, perder un ``.prj`` o que cambie un solo byte dan digests
+    distintos.
+
+    El nombre se hashea junto al contenido a proposito. Dos teselas GHSL que
+    intercambian su contenido son un fallo del selector, y sin el nombre en la
+    linea el digest no lo veria.
+    """
+    lineas = sorted(f"{d.path.name}  {d.sha256}" for d in descargados)
+    return hashlib.sha256("\n".join(lineas).encode("utf-8")).hexdigest()
+
+
+def _verificar_insumos(source: Source, descargados: Sequence[Descargado]) -> None:
+    """Compara lo que llego contra lo que el manifest fijo. Falla si difiere.
+
+    Esta es la puerta que le faltaba al sistema. El caso real: un dataset de
+    HDX republicado —misma URL estable, mismo nombre, geometria distinta— dejo
+    a un pais entero fuera durante horas, y el fallo aparecio al final de la
+    cadena disfrazado de error de geometria. Con el digest fijado aparece aqui,
+    a los minutos de empezar, diciendo exactamente que fuente se movio.
+    """
+    if not descargados:
+        if source.se_lee_en_remoto:
+            # Overture y la cobertura del suelo no pasan por disco: DuckDB y
+            # los rangos HTTP los leen remotos. No hay bytes que hashear, y
+            # fingir un digest seria peor que no tener ninguno. Lo que fija
+            # esas fuentes es el release del vintage, que el lint ya obliga a
+            # ser explicito.
+            return
+
+        # VACIO NO ES LO MISMO QUE REMOTO, y suponerlo era el agujero de la
+        # primera version de esta funcion. Una fuente que SI descarga y vuelve
+        # con cero ficheros es el cero silencioso: `ensure_layer_tables` crea
+        # la tabla vacia, el LEFT JOIN la convierte en ceros y el activo se
+        # escribe sin que nada falle.
+        #
+        # Medido el 27-ago-2026 con Peru: el JRC estuvo caido tres horas, las
+        # teselas GHSL se contaron como "probablemente solo oceano" y el pais
+        # se ensamblo con poblacion 0. Lo detuvo el assert de §6.4, pero al
+        # final —despues de agregar 24 millones de edificaciones y 549 millones
+        # de pixeles de cobertura—. Aqui se detiene al terminar esa descarga.
+        raise InsumoAusenteError(
+            f"[{source.id}] la fuente no aporto ningun fichero.\n"
+            f"  capa    : {source.layer}\n"
+            f"  url     : {source.url}\n"
+            f"  No se lee en remoto, asi que cero ficheros no es una respuesta valida:\n"
+            f"  o el servidor de origen esta caido, o cambio la ruta, o el selector\n"
+            f"  dejo de encajar. Construir igual daria esa capa a cero en todo el\n"
+            f"  pais, en silencio y con toda la pinta de una cifra correcta."
+        )
+
+    medido = digest_de_insumos(descargados)
+    if not source.insumos_sha256:
+        _log.warning(
+            "insumo sin digest fijado; volcalo al manifest con `centinela fijar-insumos`",
+            extra={
+                "context": {
+                    "source": source.id,
+                    "insumos_sha256": medido,
+                    "ficheros": len(descargados),
+                }
+            },
+        )
+        return
+
+    if medido != source.insumos_sha256:
+        detalle = "\n    ".join(
+            f"{d.path.name}  {d.sha256}" for d in sorted(descargados, key=lambda x: x.path.name)
+        )
+        raise InsumoCambiadoError(
+            f"[{source.id}] el insumo cambio desde que se fijo el manifest.\n"
+            f"  fijado : {source.insumos_sha256}\n"
+            f"  medido : {medido}\n"
+            f"  vintage declarado: {source.vintage}\n"
+            f"  lo que hay ahora ({len(descargados)} ficheros):\n    {detalle}\n"
+            f"  El tercero republico la fuente. Compara con el bloque `insumos` de la\n"
+            f"  medicion.json del Release anterior antes de decidir: si el cambio es\n"
+            f"  legitimo, fija el digest medido; si no, el activo publicado sigue\n"
+            f"  siendo el bueno y este build no debe reemplazarlo."
+        )
+
+
+def _descargar_fuente(
+    source: Source,
+    destino: Path,
+    *,
+    bbox: BBox,
+    fetcher: HttpFetcher,
+) -> list[Descargado]:
+    """Trae a disco los ficheros de una sola fuente, sea cual sea su forma.
+
+    Estaba en linea dentro de ``download_manifest``. Sale aparte para que exista
+    el momento en que los ficheros de UNA fuente estan completos y todavia no se
+    han mezclado con los de las demas: ese es el momento de verificar el digest.
+    """
+    carpeta = destino / source.layer
+
+    if source.hdx_dataset:
+        return [_registrar(source, path) for path in download_hdx(source, carpeta, fetcher=fetcher)]
+
+    if source.se_lee_en_remoto:
+        # Overture (DuckDB con poda por bbox) y la cobertura del suelo (rangos
+        # HTTP sobre las overviews del COG). El criterio vive en `Source` y no
+        # aqui a proposito: el lint necesita el mismo, y dos copias del mismo
+        # criterio es como el lint acaba avisando de lo que nadie puede
+        # resolver.
+        _log.info(
+            "fuente leida en remoto, sin descarga",
+            extra={"context": {"source": source.id, "url": source.url}},
+        )
+        return []
+
+    if source.layer == WORLDPOP_AGESEX_LAYER:
+        return [
+            _registrar(source, tif)
+            for tif in download_worldpop_agesex(source.url, carpeta, fetcher=fetcher)
+        ]
+
+    if (slug := _producto_ghsl(source.url)) is not None:
+        return [
+            _registrar(source, tif)
+            for tif in download_ghsl(carpeta, bbox, fetcher=fetcher, slug=slug)
+        ]
+
+    if source.url.endswith(".zip"):
+        return [
+            _registrar(source, capa)
+            for capa in download_zip_completo(source.url, carpeta / source.id, fetcher=fetcher)
+        ]
+
+    if source.url.endswith((".tif", ".csv")):
+        carpeta.mkdir(parents=True, exist_ok=True)
+        path = carpeta / Path(source.url).name
+        # Como el resto de rutas: lo que ya esta no se vuelve a pedir. Aqui son
+        # 60 MB de WorldPop y 12,7 de OurAirports en cada reintento.
+        if not path.exists():
+            fetcher.download_to(source.url, path)
+        return [_registrar(source, path)]
+
+    _log.warning(
+        "fuente sin estrategia de descarga automatica",
+        extra={"context": {"source": source.id, "url": source.url}},
+    )
+    return []
+
+
+class OrigenCaidoError(RuntimeError):
+    """Un servidor de origen no contesta, y el build no ha empezado."""
+
+
+def comprobar_origenes(manifest: Manifest, *, fetcher: HttpFetcher) -> None:
+    """Pregunta a cada origen distinto si esta en pie, antes de bajar nada.
+
+    Cuesta un HEAD por host —cuatro o cinco por pais, unos segundos— y evita la
+    forma mas cara de fallar que tiene este sistema: enterarse de que un origen
+    esta caido despues de horas intentandolo. El 27-ago-2026 el JRC estuvo caido
+    tres, y la corrida de Peru lo descubrio en la cuarta.
+
+    Se agrupa por host y no por fuente porque lo que se cae es el servidor: las
+    dos fuentes de GHSL viven en el mismo, y preguntar dos veces solo alarga el
+    chequeo. Se saltan las que se leen en remoto: su disponibilidad la comprueba
+    DuckDB cuando toca, y un HEAD contra un prefijo ``s3://`` no significa nada.
+    """
+    representante: dict[str, str] = {}
+    for source in manifest.sources:
+        if source.se_lee_en_remoto:
+            continue
+        host = urlparse(source.url).netloc
+        if host:
+            representante.setdefault(host, source.url)
+
+    caidos = sorted(host for host, url in representante.items() if not fetcher.responde(url))
+    if caidos:
+        raise OrigenCaidoError(
+            f"Origenes que no contestan: {', '.join(caidos)}.\n"
+            f"  No se ha descargado nada todavia. Construir ahora gastaria horas de\n"
+            f"  runner para acabar con las capas de ese origen vacias — que es como\n"
+            f"  Peru se ensamblo con poblacion 0 el 27-ago-2026.\n"
+            f"  Reintenta el pais cuando el origen vuelva."
+        )
+    _log.info(
+        "origenes en pie",
+        extra={"context": {"hosts": sorted(representante), "iso3": manifest.iso3}},
+    )
+
+
 def download_manifest(
     manifest: Manifest,
     destino: Path,
@@ -491,8 +718,12 @@ def download_manifest(
 ) -> list[Descargado]:
     """Descarga todo lo que el manifest declara y devuelve el inventario.
 
-    Los ``sha256`` del resultado son los que hay que volcar al manifest para
-    cerrar la trazabilidad de RNF-04.
+    Cada fuente se verifica contra su ``insumos_sha256`` en cuanto sus ficheros
+    estan en disco, no al final: si un tercero republico algo, el build se
+    detiene ahi y no despues de dos horas de agregacion.
+
+    Y antes de la primera descarga se pregunta a cada origen si esta vivo, que
+    son unos segundos y ahorra las horas de descubrirlo bajando.
     """
     cliente = fetcher or HttpFetcher(timeout_s=300.0)
     bbox = COUNTRY_BBOX.get(manifest.iso3)
@@ -502,51 +733,46 @@ def download_manifest(
             f"Agregala a COUNTRY_BBOX antes de construir el pais."
         )
 
+    comprobar_origenes(manifest, fetcher=cliente)
+
     inventario: list[Descargado] = []
     for source in manifest.sources:
-        carpeta = destino / source.layer
-        if source.hdx_dataset:
-            for path in download_hdx(source, carpeta, fetcher=cliente):
-                inventario.append(_registrar(source, path))
-        elif source.url.startswith("s3://"):
-            # Overture no se descarga: DuckDB lo lee remoto con poda por bbox.
-            _log.info(
-                "fuente leida en remoto, sin descarga",
-                extra={"context": {"source": source.id, "url": source.url}},
-            )
-        elif source.layer == LANDCOVER_LAYER:
-            # Tampoco se descarga, y por la misma razon que Overture con mas
-            # motivo: 858 teselas a 96 MB son 82 GB para los diecinueve paises
-            # y un runner tiene ~14 GB libres. Se leen las overviews del COG por
-            # rangos HTTP en `build_landcover_layer`.
-            #
-            # Se declara en el manifest de todas formas porque el contrato del
-            # proyecto es que toda cifra publicada tenga fuente y licencia. Que
-            # el fichero nunca toque el disco no cambia de quien es el dato.
-            _log.info(
-                "fuente leida en remoto, sin descarga",
-                extra={"context": {"source": source.id, "url": source.url}},
-            )
-        elif source.layer == WORLDPOP_AGESEX_LAYER:
-            for tif in download_worldpop_agesex(source.url, carpeta, fetcher=cliente):
-                inventario.append(_registrar(source, tif))
-        elif (slug := _producto_ghsl(source.url)) is not None:
-            for tif in download_ghsl(carpeta, bbox, fetcher=cliente, slug=slug):
-                inventario.append(_registrar(source, tif))
-        elif source.url.endswith(".zip"):
-            for capa in download_zip_completo(source.url, carpeta / source.id, fetcher=cliente):
-                inventario.append(_registrar(source, capa))
-        elif source.url.endswith((".tif", ".csv")):
-            carpeta.mkdir(parents=True, exist_ok=True)
-            path = carpeta / Path(source.url).name
-            # Como el resto de rutas: lo que ya esta no se vuelve a pedir. Aqui
-            # son 60 MB de WorldPop y 12,7 de OurAirports en cada reintento.
-            if not path.exists():
-                cliente.download_to(source.url, path)
-            inventario.append(_registrar(source, path))
-        else:
-            _log.warning(
-                "fuente sin estrategia de descarga automatica",
-                extra={"context": {"source": source.id, "url": source.url}},
-            )
+        de_la_fuente = _descargar_fuente(source, destino, bbox=bbox, fetcher=cliente)
+        _verificar_insumos(source, de_la_fuente)
+        inventario.extend(de_la_fuente)
     return inventario
+
+
+def resumen_de_insumos(manifest: Manifest, inventario: Sequence[Descargado]) -> dict[str, Any]:
+    """Lo que entro al build, fuente por fuente, para publicar junto al activo.
+
+    Los sha256 se calculaban en cada corrida y se tiraban: del inventario solo
+    sobrevivian al log un conteo de ficheros y un total de bytes. Este es el
+    bloque que los conserva, y viaja en ``medicion.json`` —que ya se publica en
+    el Release al lado del parquet— por reparto de tamanos: el manifest se queda
+    con el digest, que es una linea por fuente, y el detalle por fichero queda a
+    un clic sin volver a construir ni descargar nada.
+
+    Sin este bloque, un digest que no cuadra solo puede decir *que* la fuente
+    cambio. Con el, se puede decir *que fichero*.
+    """
+    por_fuente: dict[str, list[Descargado]] = {}
+    for item in inventario:
+        por_fuente.setdefault(item.source_id, []).append(item)
+
+    resumen: dict[str, Any] = {}
+    for source in manifest.sources:
+        de_la_fuente = por_fuente.get(source.id, [])
+        if not de_la_fuente:
+            # Se declara igual: que no toque el disco no lo saca del activo.
+            resumen[source.id] = {"remoto": True, "vintage": source.vintage}
+            continue
+        resumen[source.id] = {
+            "insumos_sha256": digest_de_insumos(de_la_fuente),
+            "vintage": source.vintage,
+            "bytes": sum(d.bytes for d in de_la_fuente),
+            "ficheros": {
+                d.path.name: d.sha256 for d in sorted(de_la_fuente, key=lambda x: x.path.name)
+            },
+        }
+    return resumen

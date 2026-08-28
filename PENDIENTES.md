@@ -256,8 +256,18 @@ cumple, se documenta y se cierra; si no, se cambia el metodo.
 
 ### 2.6 Deuda menor
 
-- `data/manifests/COL.yaml` tiene los `sha256` vacios. Se llenan solos en la
-  primera corrida de `make country`, que devuelve el inventario con hashes.
+- **Los digests de insumos, medidos pero no fijados.** Las 194 fuentes de los
+  diecinueve manifiestos siguen con `insumos_sha256` vacio. Esta linea decia que
+  "se llenan solos en la primera corrida de `make country`, que devuelve el
+  inventario con hashes", y era falso en dos sitios: el inventario se devolvia y
+  se **tiraba** —del build solo llegaba al log un conteo de ficheros—, y el campo
+  se llamaba `sha256` y era escalar cuando una fuente aporta cero, uno o veinte
+  ficheros. Cerrado el 27-ago-2026 (ver
+  [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md) §3): el build mide,
+  `medicion.json` lo publica en el Release, `centinela fijar-insumos <ISO3>` lo
+  vuelca al manifest y un insumo republicado detiene el build. **Falta fijarlos**,
+  y solo se pueden medir construyendo: entran en la proxima reconstruccion, la
+  misma que alinea la version del activo.
 - `overture_divisions` esta declarado en `COL.yaml` y no se usa: la geometria
   sale del MGN. No cuesta nada (las fuentes `s3://` no se descargan) pero
   induce a pensar que participa.

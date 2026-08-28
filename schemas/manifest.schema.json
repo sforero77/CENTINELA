@@ -75,8 +75,10 @@
             "type": "string",
             "minLength": 1
           },
-          "sha256": {
-            "type": "string"
+          "insumos_sha256": {
+            "description": "sha256 sobre la lista canonica (nombre, sha256) de los ficheros que esta fuente aporta al build. No es el hash de un fichero: una fuente puede aportar cero (Overture, leido en remoto), uno o veinte. Vacio mientras no se haya fijado.",
+            "type": "string",
+            "pattern": "^([0-9a-f]{64})?$"
           },
           "notes": {
             "type": "string"
