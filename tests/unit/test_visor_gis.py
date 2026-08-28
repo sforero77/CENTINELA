@@ -480,10 +480,25 @@ def test_el_punto_tambien_abre_el_popup() -> None:
 
     Si solo el hexagono fuera clicable, la capa seria consultable unicamente en
     el zoom en el que casi nadie la mira.
-    """
-    bloque = APP[APP.index("// Las dos representaciones son clicables") :][:400]
 
-    assert '"incendios-punto"' in bloque
+    SEXTA VEZ QUE UN CORTE DE N CARACTERES FALLA. Esta prueba cortaba 400 desde
+    un comentario ancla, y el 28-ago-2026 se anadieron tres lineas de comentario
+    en medio: el `for` que buscaba quedo fuera de la ventana y la prueba dio rojo
+    sin que nada estuviera roto. Es lo mismo que documenta `cuerpo()` —«fallo
+    cinco veces en un dia»— y la razon por la que ese ayudante existe.
+
+    Ahora se busca el registro de oyentes por su forma, sin depender de a que
+    distancia del comentario quede.
+    """
+    bloque = cuerpo("dibujarIncendios")
+    oyentes = re.search(
+        r"for \(const capa of \[([^\]]+)\]\) \{\s*\n\s*m\.on\(\"mouseenter\"", bloque
+    )
+
+    assert oyentes is not None, "ya no se registran oyentes de raton sobre las capas de fuego"
+    assert '"incendios-punto"' in oyentes.group(1), (
+        f"el punto dejo de ser clicable; solo se enganchan {oyentes.group(1)}"
+    )
 
 
 def test_el_interruptor_apaga_las_tres_capas() -> None:

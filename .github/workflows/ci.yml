@@ -41,7 +41,11 @@ jobs:
         run: uv run mypy
 
       - name: Pruebas (sin red)
-        run: uv run pytest -m "not network" --cov --cov-report=term-missing
+        # El `-m` explicito **reemplaza** al de `addopts`, no se suma: con
+        # `-m "not network"` a secas se recogen las pruebas de visor, que
+        # necesitan Chromium y aqui no esta. Fallan ruidosamente —que es lo que
+        # se les pidio— pero el job que no las quiere no deberia pedirlas.
+        run: uv run pytest -m "not network and not visor" --cov --cov-report=term-missing
 
       # Guardia de licencias: la contaminacion entre cubos es un riesgo de
       # impacto alto (§7). No basta documentarla; el build falla si ocurre.

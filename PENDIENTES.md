@@ -37,12 +37,20 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 | Toponimos en espanol (RF-06) y changelog de deltas (RF-04) | ✅ funcional |
 | Golden G1 (Chocó), G2 (Venezuela) y G3 | ✅ corren, ninguna saltada |
 | Verificacion de insumos (`insumos_sha256`) | ✅ mide y detiene · digests sin fijar, §2.6 |
+| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 7 pruebas en un navegador real |
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**948 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), `ruff` y
-`mypy --strict` limpios, arranque verificado desde clon vacio. Medido el
-28-ago-2026. Eran 431 antes de la auditoria, 523 al empezarla y 686 el 26-ago.
+**948 pruebas** sin red y sin navegador (mas 8 nocturnas contra las fuentes
+vivas y 7 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
+arranque verificado desde clon vacio. Medido el 28-ago-2026. Eran 431 antes de
+la auditoria, 523 al empezarla y 686 el 26-ago.
+
+**El visor ya no depende de que alguien lo mire.** `tests/visor` lo abre en un
+navegador de verdad y espera a `window.CENTINELA` —el registro de lo que ha
+pintado, con el recuento de rasgos de cada capa— en vez de esperar N segundos.
+Corre en `visor.yml` cuando cambia `site/`, no por cron: los turnos que GitHub
+concede al repositorio los necesita el vigia.
 
 Se saltan 21, y todas por la misma razon legitima:
 `test_el_visor_se_republica` esta parametrizada por workflow y omite los que no

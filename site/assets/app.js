@@ -494,6 +494,7 @@ function cambiarCapa(id) {
     // está vacía, y pintarla del primer color la haría parecer un valor bajo en
     // vez de una ausencia.
     m.setFilter("celdas", [">", ["coalesce", ["get", capa.columna], 0], 0]);
+    anotarCapaActiva(id, capa.columna);
   }
   for (const boton of document.querySelectorAll("#capas button")) {
     const suya = boton.dataset.capa === id;
@@ -1177,6 +1178,50 @@ function pintarDescargas(usgsId) {
     .join(" · ");
 }
 
+// --- Lo que el visor declara haber pintado -----------------------------------
+//
+// El visor publica lo que dibujo, por la misma razon por la que el pipeline
+// publica `/status`: un sistema que no dice lo que hizo solo se puede comprobar
+// mirandolo, y mirar no escala.
+//
+// NACE DE UN FALLO DE DIAGNOSTICO, no de una necesidad de pruebas. El
+// 28-ago-2026 se reviso el visor a ojo y se dieron por rotas tres capas que
+// estaban perfectamente: los sismos del panorama, la malla de intensidad de un
+// evento y la capa de focos activos. Las tres se habian medido **antes de que
+// terminaran de pintar** — la malla tarda unos diez segundos.
+//
+// Sin una senal que diga "ya esta", la unica alternativa es esperar N segundos.
+// Y N siempre es demasiado corto el dia que la red va lenta, o demasiado largo
+// el resto de los dias. Un vigilante que da falsos positivos se aprende a
+// ignorar, que es la misma leccion que dejo `frescura`.
+//
+// Cuenta rasgos y no un booleano a proposito: "la capa existe" no distingue
+// una malla dibujada de una malla vacia, y ese es justo el cero silencioso que
+// este proyecto persigue en el resto del sistema.
+const pintado = {};
+const erroresAlPintar = [];
+
+function anotarPintado(nombre, rasgos) {
+  pintado[nombre] = { rasgos, utc: new Date().toISOString() };
+}
+
+// Cambiar de capa NO repinta la malla: la reestiliza con `setPaintProperty` y
+// `setFilter` sobre la misma fuente, que es lo eficiente y lo correcto. Por eso
+// no vale contar rasgos aqui — no cambian.
+//
+// Lo que si hay que poder comprobar desde fuera es que **la leyenda y el mapa
+// hablan del mismo dato**. Una malla coloreada por intensidad bajo una leyenda
+// de poblacion se lee como una cifra plausible y equivocada, que es el modo de
+// fallo que este proyecto persigue en todas partes.
+function anotarCapaActiva(id, columna) {
+  pintado.capa = { id, columna, utc: new Date().toISOString() };
+}
+
+// Superficie publica y estable. No lleva guiones bajos ni `__test__`: no es un
+// gancho de pruebas, es el visor rindiendo cuentas — y sirve igual para
+// diagnosticar desde la consola del navegador de quien reporte un fallo.
+window.CENTINELA = { pintado, errores: erroresAlPintar };
+
 // --- Mapa -------------------------------------------------------------------
 
 // MapLibre lanza "Style is not done loading" ante `getStyle`, `addLayer` o
@@ -1217,6 +1262,10 @@ function cuandoElEstiloEsteListo(m, fn) {
       fn();
     } catch (error) {
       console.error("fallo al dibujar sobre el mapa:", error);
+      // Y queda anotado, no solo en consola: quien comprueba el visor desde
+      // fuera no ve la consola, y un `pintado` incompleto sin explicacion
+      // manda a buscar una lentitud que no existe.
+      erroresAlPintar.push({ mensaje: String((error && error.message) || error) });
     }
   };
 
@@ -1298,7 +1347,11 @@ function colorDeContorno() {
 }
 
 function dibujarContornos(m, datos, antes) {
-  if (!datos || !datos.features || !datos.features.length) return;
+  if (!datos || !datos.features || !datos.features.length) {
+    anotarPintado("contornos", 0);
+    return;
+  }
+  anotarPintado("contornos", datos.features.length);
 
   m.addSource("contornos", { type: "geojson", data: datos });
   m.addLayer({
@@ -1361,6 +1414,8 @@ function dibujarCeldas(m, datos, reporte, contornos) {
     $("capas").hidden = true;
     $("leyenda").hidden = true;
     verHaloProporcional(true);
+    // Cero es una respuesta, y hay que poder distinguirla de "todavia no".
+    anotarPintado("celdas", 0);
     if (Number.isFinite(reporte.event.lon) && reporte.event.lon !== 0) {
       m.easeTo({ center: [reporte.event.lon, reporte.event.lat], zoom: 7.5, duration: VUELO });
     }
@@ -1370,6 +1425,8 @@ function dibujarCeldas(m, datos, reporte, contornos) {
   // `generateId` da a cada hexágono un id estable dentro de la fuente, que es
   // lo que necesita `feature-state` para resaltar el de debajo del cursor.
   m.addSource("celdas", { type: "geojson", data: geo, generateId: true });
+
+  anotarPintado("celdas", geo.features.length);
 
   const antes = primeraEtiqueta(m);
   dibujarContornos(m, contornos, antes);
@@ -1638,6 +1695,8 @@ function dibujarEpicentros(eventos) {
         "text-halo-width": 1.6,
       },
     });
+
+    anotarPintado("epicentros", conCoords.length);
 
     for (const capa of ["epicentros", "epicentros-halo"]) {
       m.on("click", capa, (ev) => seleccionar(ev.features[0].properties.usgs_id));
@@ -1987,6 +2046,8 @@ function dibujarObservados(eventos) {
       paint: { "icon-opacity": 0.9 },
     });
 
+    anotarPintado("observados", eventos.length);
+
     m.on("mouseenter", "observados", () => (m.getCanvas().style.cursor = "help"));
     m.on("mouseleave", "observados", () => (m.getCanvas().style.cursor = ""));
     m.on("click", "observados", (ev) => {
@@ -2207,6 +2268,11 @@ function dibujarIncendios(datos) {
     // Las dos representaciones son clicables: si solo lo fuera el hexagono, a
     // escala continental —que es donde se mira esta capa— no se podria abrir
     // ninguna celda.
+    // Se anotan los puntos y no los hexagonos: los hexagonos solo existen por
+    // encima de FUEGO_ZOOM_HEX, asi que a zoom continental —que es como se abre
+    // el visor— contar hexagonos daria cero con la capa perfectamente dibujada.
+    anotarPintado("incendios", puntos.features.length);
+
     for (const capa of ["incendios", "incendios-punto"]) {
       m.on("mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
       m.on("mouseleave", capa, () => (m.getCanvas().style.cursor = ""));
