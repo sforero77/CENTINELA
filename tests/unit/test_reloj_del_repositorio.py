@@ -89,10 +89,17 @@ def test_las_cadencias_declaradas_coinciden_con_los_crones() -> None:
     empeorarla en silencio."""
     for workflow, esperado in (("frescura.yml", 3), ("incendios.yml", 6)):
         cron = yaml.safe_load((WORKFLOWS / workflow).read_text(encoding="utf-8"))[True]
-        declarado = int(re.search(r"\*/(\d+)", cron["schedule"][0]["cron"]).group(1))
-        despachado = int(
-            re.search(rf"despachar_si_toca {re.escape(workflow)} (\d+)", TRIGGER).group(1)
-        )
+        # Los dos `search` pueden no encajar, y ese caso no es un detalle de
+        # tipos: si el cron deja de decir `*/N` o el trigger deja de nombrar el
+        # workflow, esta prueba tiene que decirlo con esas palabras en vez de
+        # reventar con un AttributeError sobre None.
+        en_cron = re.search(r"\*/(\d+)", cron["schedule"][0]["cron"])
+        assert en_cron is not None, f"{workflow}: su cron ya no declara una cadencia `*/N`"
+        en_trigger = re.search(rf"despachar_si_toca {re.escape(workflow)} (\d+)", TRIGGER)
+        assert en_trigger is not None, f"{workflow}: el reloj ya no lo despacha"
+
+        declarado = int(en_cron.group(1))
+        despachado = int(en_trigger.group(1))
 
         assert despachado == declarado == esperado, (
             f"{workflow}: cron cada {declarado} h, despachado cada {despachado} h"
