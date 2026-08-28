@@ -1,8 +1,13 @@
 # Pendientes y hoja de ruta
 
-Estado al **24 de agosto de 2026**, el dia que el sistema se encendio. Este
+Estado al **28 de agosto de 2026**. El sistema se encendio el 24. Este
 documento es el traspaso: que queda por hacer, quien puede hacerlo, y en que
 orden.
+
+Se revisa contra la realidad, no de memoria: cada cifra de aqui se volvio a
+medir el 28-ago contra los Releases publicados, las corridas de Actions y la
+pagina viva. Varias estaban desfasadas y se corrigen abajo — un documento de
+traspaso que envejece en silencio es peor que no tenerlo.
 
 Ya no hay pasos bloqueados por permisos: la puesta en marcha se completo (§1) y
 **todo lo que queda es codigo, abordable desde un clon**. Para vigilar el
@@ -16,7 +21,7 @@ sistema ya operando, la referencia es
 El sistema **funciona de punta a punta y corre solo**:
 
 ```bash
-centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000tjl2&format=geojson"   --exposure data/build/exposure_h3.parquet --manifest col-v0.5
+centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000tjl2&format=geojson"   --exposure data/build/exposure_h3.parquet --manifest col-v0.6
 # 24,7 s -> 2.415.793 personas en MMI>=7, reporte publicado en reports/
 ```
 
@@ -24,25 +29,45 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 |---|---|
 | P1 trigger (feed, filtro, dedupe, estado) | ✅ operando, y publicando su latido |
 | Visor y `/status` publicados | ✅ https://sforero77.github.io/CENTINELA/ |
-| P0 activo de exposicion (descarga → parquet) | ✅ **publicado en 18 de 19 paises** |
+| P0 activo de exposicion (descarga → parquet) | ✅ **publicado en los 19 paises** |
 | P2 impacto (contornos → celdas → GF → join) | ✅ funcional, con reintento por pais |
 | P3 reporte (json, md, csv, hilo, 2 mapas, malla, contornos) | ✅ funcional |
-| **Catalogo historico** | ✅ **21 reportes en 15 paises** |
+| **Catalogo historico** | ✅ **21 reportes en 15 paises** — todos backtest |
 | Asserts de calidad §6.4, en P0 y en P2 | ✅ funcional |
 | Toponimos en espanol (RF-06) y changelog de deltas (RF-04) | ✅ funcional |
 | Golden G1 (Chocó), G2 (Venezuela) y G3 | ✅ corren, ninguna saltada |
-| Activo de Brasil | ⏳ en curso · §2.1 |
+| Verificacion de insumos (`insumos_sha256`) | ✅ mide y detiene · digests sin fijar, §2.6 |
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**686 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), ninguna
-saltada, `ruff` y `mypy --strict` limpios, arranque verificado desde clon vacio.
-Medido el 26-ago-2026. Eran 431 antes de la auditoria y 523 al empezarla.
+**948 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), `ruff` y
+`mypy --strict` limpios, arranque verificado desde clon vacio. Medido el
+28-ago-2026. Eran 431 antes de la auditoria, 523 al empezarla y 686 el 26-ago.
 
-**El cron declara `*/10` y no corre cada diez minutos.** Medido sobre 22
-corridas: mediana 45,7 min, maximo 73,3. La demora la pone la cola de GitHub y
-no el intervalo, asi que subir la frecuencia no arregla nada — ver
-[`docs/OPERACION.md`](docs/OPERACION.md) §1.
+Se saltan 21, y todas por la misma razon legitima:
+`test_el_visor_se_republica` esta parametrizada por workflow y omite los que no
+publican nada que el visor lea. No hay ninguna saltada por estar rota.
+
+**El cron declara `*/30` y no corre cada treinta minutos.** La cabecera de
+[`trigger.yml`](.github/workflows/trigger.yml) lleva la medicion buena y el
+mecanismo: GitHub no concede un turno por workflow sino **unos pocos por
+repositorio**, y aqui hay cinco programados compitiendo.
+
+Medido de nuevo el 28-ago-2026 sobre las 86 corridas programadas de cuatro dias:
+
+| | |
+|---|---|
+| declarado | 30 min |
+| mediana | 45,6 min |
+| media | 57,8 min |
+| **maximo** | **663 min (11,1 h)** |
+| huecos > 2 h | 4 de 85 |
+
+La cifra que este documento traia —«maximo 73,3» sobre 22 corridas— era del
+24-ago y se quedo corta en un orden de magnitud. **Y no lo causan nuestros
+propios builds saturando la cola:** los dos peores huecos tuvieron 2 % y 0 % de
+solape con corridas de exposicion. Es el planificador, y la salida es el reloj
+externo — ver §2.8.
 
 ### El cero silencioso que casi se publica
 
@@ -121,11 +146,12 @@ repetirlo, sigue en
 Ordenado por lo que mas desbloquea. Lo ya cerrado esta en §3, en una linea cada
 cosa, porque este documento es la lista de trabajo y no el registro de lo hecho.
 
-### 2.1 Brasil, el pais 19
+### 2.1 ✅ Brasil, el pais 19 · cerrado el 28-ago-2026
 
-Es el unico de los diecinueve sin activo, y no por falta de intento: fallo dos
-veces, el 25 y el 26 de agosto. **La causa esta confirmada y arreglada; falta
-volver a lanzarlo.**
+Fue el ultimo de los diecinueve en tener activo, y no por falta de intento:
+fallo dos veces, el 25 y el 26 de agosto. Se deja el diagnostico entero porque
+la leccion —el pico de memoria no puede depender del tamano del pais— vale para
+cada pais que entre en Fase 1.
 
 **Brasil es el pais mas caro con diferencia:**
 
@@ -180,11 +206,23 @@ en cada paso, que es lo que faltaba para no tener que deducir esto tres veces
 —el mensaje con que GitHub mata un runner sin recursos no distingue disco de
 memoria.
 
-**Queda volver a lanzarlo:**
+**Construido y publicado el 26-ago-2026**, y reconstruido el 27. Midio
+**218.881.538 habitantes**, un desvio del 2,85 % frente a la referencia de la
+ONU. Los diecinueve paises tienen activo.
 
-    gh workflow run exposure_quarterly.yml -f iso3=BRA
+**Pero paso dos dias vigilado por una tolerancia del 25 %**, y eso no fue
+descuido: `calibrar.aplicar` solo reescribia `medido_ghs_pop` si la clave ya
+existia y **nunca la creaba**, asi que un manifest recien escrito no la recibia
+por muchos builds correctos que acumulara. Con ese margen, el assert de §6.4
+aceptaba a Brasil con 55 millones de habitantes de menos.
 
-**Y aunque se construya, Brasil no puede producir un reporte** con el pipeline
+Y como `construido` se deriva de esa clave, la pagina publica de cobertura
+declaraba `paises_construidos: 18` y a Brasil como `poblacion_medida: 0` — **219
+millones de personas de menos en una cifra publica**, con el activo en el Release
+desde el 26. Cerrado el 28-ago-2026: la clave se inserta si falta, Brasil quedo
+en 3,35 % y la cobertura publicada pasa a 19 paises y 649.793.406 personas.
+
+**Y aunque este construido, Brasil no puede producir un reporte** con el pipeline
 actual. Sus doce sismos M≥5,5 desde 2000 estan entre 534 y 603 km de
 profundidad, y USGS no publica contornos MMI para ninguno. Se construye por
 preparacion —un somero raro en la costa cambiaria eso en un dia— no para obtener
@@ -233,15 +271,24 @@ toponimos.
 Lo que cada pais nuevo necesita, en orden:
 
 1. `uv run centinela country <ISO3>` — unos 800 MB y una hora larga por pais.
-2. Anotar `medido_ghs_pop` en su manifest y **ajustar `tolerancia_pct`**.
-   Hecho ya para los dieciocho construidos: `centinela calibrar` las estrecho
-   con lo medido y hoy van de 0,59 % (Paraguay) a 5,44 % (Venezuela). Brasil
-   sigue con el 5 % provisional porque es el unico sin construir — su manifest
-   lleva 25 % y no tiene `medido_ghs_pop`.
-3. Validar los toponimos. (La codificacion de Venezuela estaba anotada como
+2. Anotar `medido_ghs_pop` en su manifest y **ajustar `tolerancia_pct`**, con
+   `centinela calibrar <medicion.json>`. Hecho para los diecinueve: las
+   tolerancias van de 0,59 % (Paraguay) a 5,44 % (Venezuela).
+
+   **Este paso no es opcional y el sistema no lo hacia solo.** `calibrar` solo
+   reescribia `medido_ghs_pop` si la clave ya estaba, y un manifest recien
+   escrito no la trae: Brasil acumulo dos builds correctos vigilado por su 25 %
+   provisional. Arreglado el 28-ago-2026 —la clave se inserta si falta— y hay
+   una prueba que exige que los diecinueve declaren lo que midieron. Aun asi,
+   **`calibrar` hay que ejecutarlo**: el build publica `medicion.json` en el
+   Release y no toca el manifest.
+3. Fijar los digests con `centinela fijar-insumos <ISO3>` sobre esa misma
+   medicion. Sin eso, la fuente del pais no queda verificada contra
+   republicaciones — §2.6.
+4. Validar los toponimos. (La codificacion de Venezuela estaba anotada como
    rota —«Falc?n»— y **no lo esta**: era la consola de Windows. Verificado
    byte a byte sobre el parquet publicado.)
-4. Publicar el activo como Release.
+5. Publicar el activo como Release.
 
 Ojo con el coste de las cajas insulares: Chile llega a 109,7°O por Rapa Nui,
 Mexico a 118,6°O por Guadalupe y Revillagigedo, Ecuador a 92,3°O por Galapagos.
@@ -306,6 +353,47 @@ tenemos. Un sistema de exposicion sismica para LATAM que cubre la mitad de La
 Espanola es dificil de defender.
 
 Hace falta `data/manifests/HTI.yaml` y una corrida de `exposure_quarterly`.
+
+### 2.8 El reloj externo · lo unico que rompe la promesa del sistema
+
+**Es el pendiente mas caro de la lista, y el unico que no se puede cerrar desde
+un clon.** El objetivo O1 es p50 <= 60 min desde el origen hasta el reporte
+publicado. La deteccion sola tiene una mediana de 45,6 min y un maximo medido de
+**11,1 h**: el presupuesto entero se lo puede comer el primer paso.
+
+La causa esta cerrada y no admite arreglo interno. GitHub concede unos pocos
+turnos de cron **por repositorio**, no por workflow, y los reparte cuando quiere.
+Se comprobo lo obvio y no era: los dos peores huecos tuvieron 2 % y 0 % de solape
+con builds de exposicion, asi que **no es que nuestras propias corridas saturen
+la cola**. Es el planificador.
+
+Lo que ya esta puesto y funciona:
+
+* El vigia es el reloj del repositorio: despacha `frescura` e `incendios` por
+  `workflow_dispatch`, que no pasa por esa cola.
+* Los dos conservan su `schedule` **a proposito**, como respaldo por si el paso
+  de despacho deja de correr. Hay una prueba que lo exige; quitarselo para
+  liberar turnos se intento el 28-ago-2026 y se revirtio.
+* El monitor externo (healthchecks.io) alerta a los 30 min de silencio, y
+  **alerta de verdad**: confirmado por el mantenedor sobre los huecos del
+  27-ago. El sistema no estuvo ciego sin saberlo.
+
+Lo que falta es la parte que necesita credenciales, y por eso vive aqui y no en
+el codigo:
+
+1. Un PAT *fine-grained* con `actions: write` sobre este repositorio.
+2. Un disparador externo —Cloudflare Workers, cron-job.org, lo que sea— que
+   llame a `workflow_dispatch` de `trigger.yml` cada 10 min.
+
+La espec ya lo contempla como *upgrade path* documentado (§ "Orquestacion").
+`trigger.yml` acepta `workflow_dispatch` desde el primer dia, asi que del lado
+del repositorio no hay nada que escribir: es puramente una tarea de
+infraestructura.
+
+**Mientras no este, el objetivo publicado y la infraestructura no coinciden.**
+Las dos salidas honestas son montarlo o publicar el objetivo real; sostener 60
+min con una deteccion cuya mediana son 45,6 es la clase de cifra que este
+proyecto no se permite en ningun otro sitio.
 
 ---
 
@@ -460,6 +548,42 @@ es indistinguible de uno apagado, que es como estaba el sistema esa manana.
 ---
 
 ## 4. Fases siguientes
+
+### 4.0 Donde estan las puertas, medido el 28-ago-2026
+
+Las puertas las fija `ESPECIFICACION.md` §"Plan por fases". Contrastadas contra
+el estado real:
+
+| Fase | Puerta | Estado |
+|---|---|---|
+| **F0** | G1 y G2 verdes | ✅ |
+| **F0** | Un reporte real publicado end-to-end **sin intervencion** | ❌ **0 de 1** |
+| **F0** | Latencia medida y publicada | ⚠️ el mecanismo publica; no hay dato |
+| **F1** | 7 paises reconstruibles con `make country` | ✅ **19**, muy por encima |
+| **F1** | >= 4 reportes reales publicados | ❌ **0 de 4** |
+| **F1** | 2+ mantenedores pais activos que no sean Sebastian | ❌ **0 de 2** |
+| **F2** | Un GeoPackage publicado con metricas | ❌ falta T2.4 |
+| **F2** | Protocolo probado en simulacro | ⚠️ `simulacro.yml` corre; el protocolo de brigada no esta escrito |
+
+**Los 21 reportes del catalogo son backtest, los 21.** `/status` los excluye a
+proposito del calculo de latencia —`eventos_publicados: 0`,
+`backtests_excluidos: 21`, `p50_min: null`— y hace bien: un backtest se procesa
+sobre productos de USGS ya asentados, asi que su latencia no dice nada sobre lo
+que tardaria un evento vivo. La cifra honesta es que **todavia no hay ninguna**.
+
+**El proyecto esta desbalanceado, y conviene verlo claro.** El trabajo de datos
+de Fase 1 esta hecho al 271 % —diecinueve paises donde la puerta pedia siete— y
+las tres puertas que quedan abiertas no dependen de codigo:
+
+* Dos esperan a que ocurra un sismo M>=5,5 en LATAM. No se pueden forzar y no
+  tiene sentido intentarlo.
+* Una espera a que haya otras personas. Es la unica que se puede empujar hoy, y
+  es la que lleva mas tiempo sin moverse: `CONTRIBUTING.md` define el rol de
+  mantenedor por pais y no hay ninguno.
+
+Dicho de otro modo: **el sistema esta terminado para lo que puede terminarse
+solo.** Lo que queda es sismicidad y comunidad.
+
 
 **Fase 2 — Brigada de imagen.** T2.1, T2.2 y T2.3 cerradas el 24-ago-2026 con
 las licencias citadas literalmente: Copernicus EMS permite reproducir, adaptar y
