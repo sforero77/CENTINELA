@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-29T01:50:05Z",
+  "generado_utc": "2026-08-29T08:42:53Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -43,26 +43,6 @@
       "lugar": "4 km al E de Jordán, Colombia",
       "origen_utc": "2026-08-26T16:45:14Z",
       "razon": "M4.9 < umbral M5.5"
-    },
-    {
-      "usgs_id": "us6000tn2j",
-      "mag": 4.9,
-      "lon": -83.9132,
-      "lat": 9.9853,
-      "depth_km": 10.0,
-      "lugar": "10 km al NNO de Cot, Costa Rica",
-      "origen_utc": "2026-08-24T07:37:17Z",
-      "razon": "M4.9 < umbral M5.5"
-    },
-    {
-      "usgs_id": "us6000tn29",
-      "mag": 4.5,
-      "lon": -67.1543,
-      "lat": -28.143,
-      "depth_km": 129.5,
-      "lugar": "41 km al ESE de Tinogasta, Argentina",
-      "origen_utc": "2026-08-24T05:04:04Z",
-      "razon": "M4.5 < umbral M5.5"
     }
   ]
 }
