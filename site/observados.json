@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-28T18:18:15Z",
+  "generado_utc": "2026-08-29T01:50:05Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -62,16 +62,6 @@
       "depth_km": 129.5,
       "lugar": "41 km al ESE de Tinogasta, Argentina",
       "origen_utc": "2026-08-24T05:04:04Z",
-      "razon": "M4.5 < umbral M5.5"
-    },
-    {
-      "usgs_id": "us6000tn0n",
-      "mag": 4.5,
-      "lon": -71.6087,
-      "lat": -36.7356,
-      "depth_km": 102.5,
-      "lugar": "23 km al ESE de Coihueco, Chile",
-      "origen_utc": "2026-08-23T20:38:14Z",
       "razon": "M4.5 < umbral M5.5"
     }
   ]
