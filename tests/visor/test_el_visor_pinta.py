@@ -1095,3 +1095,59 @@ def test_estado_dice_que_la_cadencia_se_come_el_objetivo(navegador: Any, servido
             assert aviso.count() == 0, "la cadencia cumple el objetivo y la pagina avisa igualmente"
     finally:
         ctx.close()
+
+
+# --- El globo de un foco de fuego -------------------------------------------
+
+
+def test_el_globo_de_un_foco_dice_que_arde_y_sobre_quien(pagina: Any) -> None:
+    """El ultimo eslabon del E2E de fuego que faltaba por ejercitar.
+
+    La cadena FIRMS -> P5 -> JSON -> capa dibujada ya esta cubierta; el globo
+    del foco —`cuadroDeIncendio`, el unico sitio donde una celda de fuego
+    concreta cuenta su potencia y su gente— no lo estaba. Y no es plumbing
+    duplicado: su handler cuelga de capas propias ("incendios",
+    "incendios-punto") y su contenido tiene logica —omitir la poblacion cero
+    para no venderla como medicion— que nadie mas ejercita.
+
+    Se busca un foco barriendo el cursor por el interior este del continente
+    —Amazonia y cerrado, donde arde y no hay epicentros— y se exige el rotulo
+    propio del globo de fuego, no cualquier globo.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.get_by_label("Focos activos", exact=False).check()
+    pagina.wait_for_timeout(1200)
+
+    caja = pagina.locator("#mapa").bounding_box()
+    assert caja
+
+    abierto = False
+    for fy in (0.52, 0.56, 0.6, 0.64, 0.68, 0.72, 0.76):
+        for fx in (0.56, 0.6, 0.64, 0.68, 0.72, 0.76, 0.8):
+            x = caja["x"] + caja["width"] * fx
+            y = caja["y"] + caja["height"] * fy
+            pagina.mouse.move(x, y)
+            cursor = pagina.evaluate("document.querySelector('#mapa canvas').style.cursor")
+            if cursor == "pointer":
+                pagina.mouse.click(x, y)
+                pagina.wait_for_timeout(500)
+                if pagina.locator(".popup-incendio").count():
+                    abierto = True
+                    break
+                # Era otra cosa pulsable (un epicentro despistado): se cierra y
+                # se sigue barriendo.
+                pagina.keyboard.press("Escape")
+                pagina.wait_for_timeout(300)
+        if abierto:
+            break
+
+    assert abierto, "no se pudo abrir el globo de ningun foco en la zona de quemas"
+
+    # `inner_text` devuelve el texto renderizado y el eyebrow va en versalitas
+    # por CSS — la misma trampa que ya mordio en "CARGANDO EL MAPA".
+    texto = pagina.locator(".popup-incendio").inner_text()
+    assert "celda con fuego activo" in texto.lower(), f"el globo no se rotula como fuego: {texto!r}"
+    assert "Potencia radiativa" in texto and "MW" in texto, (
+        f"el globo no dice la energia medida: {texto!r}"
+    )
+    assert "Detecciones" in texto, f"el globo no dice cuantas veces se vio: {texto!r}"

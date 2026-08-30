@@ -2985,7 +2985,8 @@ function pintarLeyendaFuego(datos) {
   // mismo»— no pasa por la casilla.
   const { total, dibujadas, recortado, comoTexto: mil } = celdasDeFuego(datos && datos.totales);
   const corte = recortado
-    ? ` Se dibujan las ${mil(dibujadas)} celdas de mayor energía de ${mil(total)}.`
+    ? ` Se dibujan ${mil(dibujadas)} de ${mil(total)}: primero todas las que ` +
+      `tienen gente debajo, y el resto por energía.`
     : "";
 
   caja.innerHTML =
@@ -3031,7 +3032,7 @@ function pintarInterruptorIncendios(datos) {
       anunciar(
         recortado
           ? `Focos activos: se dibujan ${mil(dibujadas)} celdas de ${mil(total)}, ` +
-            `las de mayor energía.`
+            `primero las que tienen gente debajo.`
           : `Focos activos: ${mil(total)} celdas.`
       );
     }

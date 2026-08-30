@@ -441,3 +441,30 @@ def test_los_servicios_bajo_fuego_son_un_total_publicado() -> None:
     assert t["salud_en_celdas_con_fuego"] == 2
     assert t["edu_en_celdas_con_fuego"] == 5
     assert t["bld_en_celdas_con_fuego"] == 40
+
+
+def test_el_relleno_despoblado_va_por_energia() -> None:
+    """El dia que las celdas con gente no llenen el cupo, el resto no puede
+    entrar en el orden en que DuckDB las escupa.
+
+    Encontrado el 30-ago-2026 auditando el artefacto E2E: `sin_gente` no se
+    ordenaba antes del corte. Ese dia habia 5.244 celdas pobladas para 4.000
+    puestos y el fallo no se manifestaba — que es exactamente cuando conviene
+    arreglarlo, porque el dia tranquilo en que se manifieste nadie va a estar
+    mirando.
+    """
+    from pipelines.p5_incendios.incendios import _prioridad
+
+    sin_gente = [
+        _celda("8928308280fffff", pop=0, frp=5.0),
+        _celda("8928308280bffff", pop=0, frp=90.0),
+        _celda("89283082807ffff", pop=0, frp=40.0),
+    ]
+    con_gente = [_celda("8928308283bffff", pop=120, frp=1.0)]
+
+    publicadas = _prioridad([*sin_gente, *con_gente], max_celdas=3)
+
+    assert publicadas[0].pop == 120, "la gente va primero, arda lo que arda"
+    assert [c.frp_suma for c in publicadas[1:]] == [90.0, 40.0], (
+        "el relleno despoblado tiene que entrar por energia, no por orden de llegada"
+    )
