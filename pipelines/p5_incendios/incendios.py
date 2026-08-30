@@ -27,10 +27,12 @@ INCENDIOS_FILENAME: Final[str] = "incendios.json"
 
 INCENDIOS_SCHEMA_ID: Final[str] = "centinela/incendios/1.0"
 
-#: Cuantas celdas se publican. Ordenadas por potencia radiativa acumulada, asi
-#: que el corte se lleva la cola larga de detecciones debiles y aisladas, no lo
-#: que importa. Con 22.701 celdas en un dia normal, publicarlas todas serian
-#: varios megabytes que el visor tiene que descargar en cada carga.
+#: Cuantas celdas se publican. El criterio del recorte vive en `_prioridad`:
+#: primero todas las que tienen gente (por poblacion), y el resto por potencia
+#: radiativa. Esta nota decia "ordenadas por potencia radiativa" mucho despues
+#: de que ese dejara de ser el criterio — y de una nota desactualizada salio un
+#: rotulo falso en el visor. Con 22.701 celdas en un dia normal, publicarlas
+#: todas serian varios megabytes que el visor descarga en cada carga.
 MAX_CELDAS: Final[int] = 4000
 
 NOTA: Final[str] = (
@@ -101,6 +103,12 @@ def _prioridad(celdas: list[CeldaConFuego], max_celdas: int) -> list[CeldaConFue
     con_gente = [c for c in celdas if c.pop > 0]
     sin_gente = [c for c in celdas if c.pop <= 0]
     con_gente.sort(key=lambda c: (-c.pop, -c.frp_suma))
+    # El relleno despoblado tambien se ordena. Sin esto, el dia que las celdas
+    # con gente no llenen el cupo, el resto entraba **en el orden en que DuckDB
+    # las escupiera**: arbitrario. Encontrado el 30-ago-2026 auditando el
+    # artefacto E2E — ese dia habia 5.244 celdas pobladas para 4.000 puestos y
+    # el fallo no se manifestaba, que es exactamente cuando conviene arreglarlo.
+    sin_gente.sort(key=lambda c: -c.frp_suma)
     return [*con_gente, *sin_gente][:max_celdas]
 
 
