@@ -53,13 +53,42 @@ jobs:
 
       # Un fallo aqui no es un fallo del pipeline: es que lo publicado no llego
       # a la gente. Merece issue, no solo una corrida en rojo que nadie mira.
+      #
+      # PERO UNA SOLA, Y QUE SE CIERRE SOLA.
+      #
+      # La primera version abria una issue nueva en cada corrida en rojo y no
+      # cerraba ninguna cuando volvia el verde. Medido el 30-ago-2026: dos
+      # abiertas —del 27 y del 29— por condiciones resueltas hacia horas, las dos
+      # describiendo un desfase que ya no existia.
+      #
+      # Eso rompe la alarma por el otro lado. Un aviso que sigue abierto cuando
+      # el problema se fue enseña a no creerselo, y la proxima vez que este
+      # workflow tenga razon nadie va a ir a mirar. Un vigilante que no sabe
+      # decir "ya paso" gasta la confianza que necesita para el dia que importa.
       - name: Avisar si el visor quedo atras
         if: failure() && steps.revisar.outcome == 'failure'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: El visor publicado quedo desactualizado
         run: |
           gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
           gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # Se busca por titulo exacto y no por etiqueta: la creacion tiene un
+          # camino de respaldo **sin etiquetas** para cuando `gh label` falla, y
+          # filtrar por etiqueta dejaria escapar justo esas.
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title             --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            echo "Ya hay una abierta (#$ABIERTA): se anota y no se duplica."
+            gh issue comment "$ABIERTA" --body "Sigue sin recuperarse en la revision de las $(date -u +%H:%M) UTC.
+
+          Corrida: $CORRIDA"
+            exit 0
+          fi
+
           CUERPO=$(cat <<'TXT'
           La pagina publicada quedo detras del repositorio: hay datos
           commiteados que el visor no esta sirviendo.
@@ -69,11 +98,36 @@ jobs:
           `site.yml`; hace falta `gh workflow run site.yml` tras el push.
 
           Reparacion inmediata: lanzar `site.yml` a mano.
+
+          Esta incidencia se cierra sola en cuanto la pagina vuelva a estar al
+          dia. Si sigue abierta, el desfase sigue.
           TXT
           )
           CUERPO="$CUERPO
 
+          Corrida: $CORRIDA"
+          gh issue create --title "$TITULO"                           --label "pipeline,automatico" --body "$CUERPO"             || gh issue create --title "$TITULO" --body "$CUERPO"
+
+      # Y LA OTRA MITAD DE LA ALARMA: decir que ya paso.
+      #
+      # Sin esto el aviso solo sabe encenderse. Se cierra desde aqui —y no a
+      # mano— porque el que sabe que la pagina volvio a estar al dia es este
+      # workflow, que acaba de comprobarlo.
+      - name: Cerrar el aviso si el visor volvio a estar al dia
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: El visor publicado quedo desactualizado
+        run: |
+          NUMEROS=$(gh issue list --state open --limit 100 --json number,title             --jq ".[] | select(.title == \"$TITULO\") | .number")
+          if [ -z "$NUMEROS" ]; then
+            echo "Nada que cerrar: no hay avisos de desfase abiertos."
+            exit 0
+          fi
+          for N in $NUMEROS; do
+            echo "Cerrando #$N: la pagina publicada esta al dia."
+            gh issue comment "$N" --body "Recuperado. La pagina publicada vuelve a estar al dia con el repositorio, comprobado en la revision de las $(date -u +%H:%M) UTC.
+
           Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          gh issue create --title "El visor publicado quedo desactualizado" \
-                          --label "pipeline,automatico" --body "$CUERPO" \
-            || gh issue create --title "El visor publicado quedo desactualizado" --body "$CUERPO"
+            gh issue close "$N" --reason completed
+          done

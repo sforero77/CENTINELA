@@ -1159,3 +1159,61 @@ def test_cada_indicador_declara_su_icono() -> None:
 
     for clave in re.findall(r"icono: \"(\w+)\"", catalogo):
         assert f"{clave}:" in iconos, f"el indicador declara el icono {clave} y no existe"
+
+
+def test_la_muestra_de_la_leyenda_se_distingue_del_fondo() -> None:
+    """La clase mas baja de cada rampa es casi invisible sobre el fondo claro, y
+    en el mapa eso no tiene arreglo: no existe reparto de seis clases que llegue
+    a 3:1 contra el suelo sin dejar las oscuras indistinguibles entre si.
+
+    En la leyenda si lo tiene, y ahi importa mas: es donde se aprende que
+    significa cada color. El contorno de la muestra existia para eso y estaba a
+    alfa 0,2 —#c9ccc3, 1,45:1 contra el fondo—, tan invisible como el relleno
+    que venia a delimitar.
+    """
+    css = (RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8")
+    bloque = css[css.index(".leyenda-escala .muestra") :][:400]
+    encaje = re.search(r"border:\s*1px solid rgba\(28,\s*51,\s*40,\s*([\d.]+)\)", bloque)
+    assert encaje, "la muestra de la leyenda perdio su contorno"
+
+    alfa = float(encaje.group(1))
+    fondo = (244, 242, 234)
+    tinta = (28, 51, 40)
+    pintado = tuple(round(tinta[i] * alfa + fondo[i] * (1 - alfa)) for i in range(3))
+
+    def luminancia(rgb: tuple[int, ...]) -> float:
+        canales = []
+        for v in rgb:
+            c = v / 255
+            canales.append(c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4)
+        return 0.2126 * canales[0] + 0.7152 * canales[1] + 0.0722 * canales[2]
+
+    claro, oscuro = luminancia(fondo), luminancia(pintado)
+    razon = (claro + 0.05) / (oscuro + 0.05)
+
+    assert razon >= 3.0, (
+        f"el contorno de la muestra da {razon:.2f}:1 contra el fondo de la leyenda; "
+        f"hacen falta 3:1 para que delimite un objeto grafico que lleva informacion"
+    )
+
+
+def test_la_medicion_de_la_rampa_queda_escrita() -> None:
+    """La respuesta obvia a ese hallazgo —oscurecer la clase baja— no funciona, y
+    la cuenta que lo demuestra tiene que vivir al lado de las rampas.
+
+    Sin ella, la siguiente auditoria vuelve a levantarlo y alguien oscurece la
+    primera clase, colapsandola contra la segunda.
+    """
+    # El comentario esta reflowado a 80 columnas, asi que las frases se parten
+    # por el salto de linea — y al unirlas queda el `//` de cada linea en medio.
+    # Se quitan los marcadores y se normaliza el espacio: si no, la prueba se
+    # rompe cada vez que alguien reajusta un parrafo.
+    plano = " ".join(re.sub(r"^\s*//:?", " ", APP, flags=re.MULTILINE).split())
+
+    assert "presupuesto de luminancia" in plano, (
+        "no queda escrito por que la rampa no se puede arreglar recoloreando"
+    )
+    assert "1,41:1 entre las dos mas oscuras" in plano, "falta la cifra que lo demuestra"
+    assert "perimetro" in plano.lower(), (
+        "falta decir que la mitad util del hallazgo si se resolvio, y donde"
+    )

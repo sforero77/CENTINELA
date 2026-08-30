@@ -47,11 +47,43 @@ name: P1 · Trigger USGS
 #   * workflow_dispatch, para disparar a mano en cualquier momento
 #   * keepalive.yml, contra la desactivacion automatica a los 60 dias
 #   * monitor externo (healthchecks.io), que alerta si no hay latido en 30 min
-# Upgrade path documentado (no Fase 0): cron externo -> repository_dispatch.
+# EL CRON EXTERNO, YA CONECTADO — falta solo quien lo dispare.
+#
+# El parrafo de arriba pedia medir unos dias antes de montar infraestructura
+# externa "sobre un dia malo". Medido, y no era un dia malo: entre el 25 y el 30
+# de agosto, con 23 latidos, `status.json` publica p50 157 min, p90 462 y peor
+# 766 (12,8 h). El cron pide 48 turnos al dia y consigue entre dos y cuatro.
+#
+# Con el objetivo en 60 min p50 desde que hay ShakeMap, **la deteccion sola se
+# come el presupuesto entero**. Ya no es una sospecha.
+#
+# `repository_dispatch` queda declarado aqui para que un cron externo pueda
+# disparar el vigia sin depender de la cola de GitHub. El cron interno SE QUEDA:
+# si el servicio externo cae, esto sigue corriendo mal pero corriendo, y eso es
+# mejor que un unico punto de fallo fuera del repositorio.
+#
+# LO QUE FALTA, Y NO SE PUEDE HACER DESDE AQUI:
+#
+#   1. Un token con permiso de escritura sobre contenidos del repositorio.
+#   2. Un servicio de cron externo (cron-job.org, Cloudflare Workers, lo que
+#      sea) llamando cada 5-10 min a:
+#
+#      POST https://api.github.com/repos/sforero77/CENTINELA/dispatches
+#      Authorization: Bearer <token>
+#      Accept: application/vnd.github+json
+#      {"event_type": "vigilar"}
+#
+# Si el externo deja de llamar, el latido se para y el monitor de
+# healthchecks.io avisa a los 30 min — que es la alarma que ya existe para la
+# desactivacion silenciosa del cron, y cubre este caso sin nada nuevo.
 
 on:
   schedule:
     - cron: "*/30 * * * *"
+  # Disparo externo. `repository_dispatch` solo corre sobre la rama por defecto,
+  # que es donde vive el vigia.
+  repository_dispatch:
+    types: [vigilar]
   workflow_dispatch:
     inputs:
       dry_run:

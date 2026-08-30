@@ -1054,3 +1054,44 @@ def test_un_enlace_profundo_deja_la_camara_sobre_su_evento(navegador: Any, servi
         )
     finally:
         ctx.close()
+
+
+# --- La pagina de estado hace la resta --------------------------------------
+
+
+def test_estado_dice_que_la_cadencia_se_come_el_objetivo(navegador: Any, servidor: str) -> None:
+    """El objetivo y la cadencia real vivian en dos bloques distintos de la
+    pagina y nadie los ponia uno al lado del otro.
+
+    La conclusion sale de datos que ya se publican: si el vigia tarda 157 min de
+    mediana solo en **mirar** el feed, un objetivo de 60 min desde que hay
+    ShakeMap no se puede cumplir aunque el resto del pipeline fuera instantaneo.
+
+    Decirlo es lo mismo que hace el resto del sistema con el desvio de poblacion
+    —publicarlo aunque incomode— y es lo que impide que un objetivo se quede de
+    adorno.
+    """
+    ctx = navegador.new_context(viewport={"width": 1200, "height": 900})
+    pg = ctx.new_page()
+    try:
+        pg.goto(f"{servidor}/status.html")
+        pg.wait_for_selector("#resumen:not(.cargando)", timeout=ESPERA_MS)
+
+        datos = pg.evaluate(
+            "fetch('status.json').then(r => r.json())"
+            ".then(d => ({objetivo: d.objetivo.p50_min, cadencia: d.cadencia.p50_min}))"
+        )
+        se_come = datos["cadencia"] is not None and datos["cadencia"] > datos["objetivo"]
+
+        aviso = pg.locator(".nota-alarma")
+        if se_come:
+            assert aviso.count() == 1, (
+                f"la cadencia ({datos['cadencia']} min) supera el objetivo "
+                f"({datos['objetivo']} min) y la pagina no lo dice"
+            )
+            texto = aviso.inner_text()
+            assert "vigía" in texto and "objetivo" in texto
+        else:
+            assert aviso.count() == 0, "la cadencia cumple el objetivo y la pagina avisa igualmente"
+    finally:
+        ctx.close()
