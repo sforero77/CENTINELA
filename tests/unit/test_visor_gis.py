@@ -501,12 +501,20 @@ def test_el_punto_tambien_abre_el_popup() -> None:
     )
 
 
-def test_el_interruptor_apaga_las_tres_capas() -> None:
-    """Punto, relleno y borde. Dejarse una deja fuego encendido al apagar."""
-    bloque = cuerpo("pintarInterruptorIncendios")
+def test_el_modo_gobierna_las_tres_capas_de_fuego() -> None:
+    """Punto, relleno y borde. Dejarse una deja fuego encendido en modo sismos.
+
+    Antes esto lo hacia el checkbox de la esquina; ahora lo hace el selector de
+    amenaza, y la invariante es la misma: quien apaga el fuego apaga las tres
+    capas que lo dibujan.
+    """
+    bloque = cuerpo("aplicarAmenaza")
 
     for capa in ("incendios", "incendios-borde", "incendios-punto"):
         assert f'"{capa}"' in bloque
+
+    # Y el contexto del otro lado: los epicentros se atenuan, no desaparecen.
+    assert "icon-opacity" in bloque, "en modo fuego los epicentros deben quedar tenues"
 
 
 # --- UX: que el visor diga lo que sabe --------------------------------------
@@ -541,12 +549,19 @@ def test_la_leyenda_del_fuego_repite_lo_que_no_afirma() -> None:
     assert "No es área quemada" in bloque
 
 
-def test_la_leyenda_del_fuego_sigue_al_interruptor() -> None:
-    """Una leyenda de una capa apagada explica algo que no se ve."""
-    bloque = cuerpo("pintarInterruptorIncendios")
+def test_la_leyenda_del_fuego_sigue_al_modo() -> None:
+    """Una leyenda de una capa apagada explica algo que no se ve.
 
-    assert "leyenda-fuego" in bloque
-    assert "hidden = !ev.target.checked" in bloque
+    La invariante sobrevive a la mudanza del checkbox al selector: la leyenda
+    del fuego se pinta cuando el fuego manda, y el hueco grande se libera al
+    volver a sismos sin evento.
+    """
+    bloque = cuerpo("aplicarAmenaza")
+
+    assert "pintarLeyendaFuego" in bloque, "el modo fuego no pinta su leyenda"
+    assert "hidden = true" in bloque.replace('"leyenda").hidden = true', "hidden = true"), (
+        "al salir del modo fuego sin evento, el hueco grande tiene que vaciarse"
+    )
 
 
 def test_el_visor_dice_lo_que_esta_pasando_ahora() -> None:
@@ -640,25 +655,23 @@ def test_los_controles_del_mapa_se_apilan_y_no_se_desbordan() -> None:
     assert "max-width: calc(100% - 24px)" in bloque
 
 
-def test_la_leyenda_del_fuego_no_se_clava_a_una_altura() -> None:
-    """`bottom: 58px` solo es cierto mientras los controles midan una linea.
+def test_la_leyenda_del_fuego_vive_en_el_hueco_grande() -> None:
+    """La tarjeta de esquina murio con el selector de amenaza.
 
-    En cuanto una etiqueta se parte en dos —un movil— la leyenda los pisa. Se
-    resuelve apilandola con ellos en vez de calcular la altura.
+    En modo fuego, la leyenda de potencia radiativa ocupa el mismo hueco que la
+    de intensidad en modo sismos — con el mismo derecho y el mismo marcado. Y no
+    puede quedar CSS huerfano de la esquina: esta hoja ya se mordio tres veces
+    con reglas que sobrevivian a su elemento.
     """
-    css = sin_comentarios((RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8"))
-    bloque = css[css.index(".leyenda-fuego {") :][:400]
-
-    assert "position: static" in bloque
-    assert "bottom: 58px" not in bloque
-
-    # La funcion entera, hasta su llave de cierre: recortar por caracteres se
-    # queda corto en cuanto el `innerHTML` crece, y el test pasaria a comprobar
-    # el hueco en vez del codigo.
     ini = APP.index("function pintarLeyendaFuego")
-    cuerpo = APP[ini : APP.index(chr(10) + "}", ini)]
+    bloque = APP[ini : APP.index(chr(10) + "}", ini)]
 
-    assert '$("controles-mapa")' in cuerpo, "la leyenda no se apila con los controles"
+    assert '$("leyenda-titulo")' in bloque, "no escribe en el hueco grande"
+    assert '$("leyenda-escala")' in bloque
+    assert "controles-mapa" not in bloque, "sigue atada a la esquina"
+
+    css = (RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8")
+    assert ".leyenda-fuego" not in css, "quedo CSS huerfano de la tarjeta de esquina"
 
 
 # --- Accesibilidad ----------------------------------------------------------

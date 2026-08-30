@@ -92,6 +92,15 @@
           <span class="mono">Cargando el mapa</span>
         </div>
 
+        <!-- La amenaza es el primer control del mapa, no una casilla de esquina.
+             El activo es agnostico —las mismas celdas cuentan gente bajo MMI 7 y
+             bajo fuego— asi que el lente se elige aqui: una amenaza al mando y
+             la otra de contexto discreto. -->
+        <div class="amenazas" id="amenazas" role="group" aria-label="Amenaza mostrada en el mapa">
+          <button type="button" data-amenaza="sismos" aria-pressed="true">Sismos</button>
+          <button type="button" data-amenaza="fuego" aria-pressed="false">Fuego</button>
+        </div>
+
         <div class="capas" id="capas" hidden role="tablist" aria-label="Variable a dibujar en la malla"></div>
 
         <div class="leyenda" id="leyenda" hidden>

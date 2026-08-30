@@ -397,6 +397,16 @@ const escapar = (s) =>
 
 const estado = {
   paisFiltrado: "",
+  //: Que amenaza manda en el mapa. La otra queda de contexto discreto.
+  //:
+  //: El fuego vivia detras de un checkbox apagado en una esquina: 745.000
+  //: personas bajo fuego activo eran invisibles hasta que alguien encontrara la
+  //: casilla. Y la razon de fondo del producto es la contraria — el activo es
+  //: agnostico a la amenaza, las mismas celdas cuentan gente bajo MMI 7 y gente
+  //: bajo fuego. Eso pide que la amenaza sea el primer control del mapa.
+  amenaza: "sismos",
+  //: El ultimo incendios.json cargado, para la leyenda del modo fuego.
+  fuegoDatos: null,
   //: Como se ordena la lista y si se recorta al encuadre del mapa. Los dos son
   //: del usuario, no del dato, asi que no van a la URL: un enlace compartido
   //: tiene que abrir el mismo reporte, no la misma manera de mirarlo.
@@ -469,13 +479,21 @@ function partirLinea(linea) {
 function leerUrl() {
   const p = new URLSearchParams(location.search);
   const capa = p.get("capa");
-  return { evento: p.get("evento"), capa: CAPAS[capa] ? capa : null };
+  return {
+    evento: p.get("evento"),
+    capa: CAPAS[capa] ? capa : null,
+    // Solo "fuego" es un valor: "sismos" es el defecto y no viaja en la URL.
+    amenaza: p.get("amenaza") === "fuego" ? "fuego" : null,
+  };
 }
 
 function escribirUrl() {
   const p = new URLSearchParams();
   if (estado.seleccionado) p.set("evento", estado.seleccionado);
   if (estado.seleccionado && estado.capa !== "mmi") p.set("capa", estado.capa);
+  // Compartible, como ?evento=: quien manda un enlace en modo fuego manda el
+  // modo fuego. Un evento abierto implica sismos, asi que son excluyentes.
+  if (!estado.seleccionado && estado.amenaza === "fuego") p.set("amenaza", "fuego");
   const cadena = p.toString();
   history.replaceState(null, "", cadena ? `?${cadena}` : location.pathname);
 }
@@ -662,6 +680,7 @@ async function cargarEventos() {
 
     const url = leerUrl();
     if (url.capa) estado.capa = url.capa;
+    if (!url.evento && url.amenaza === "fuego") cambiarAmenaza("fuego", { anunciando: false });
     if (url.evento && eventos.some((e) => e.usgs_id === url.evento)) {
       seleccionar(url.evento);
     } else if (url.evento) {
@@ -844,6 +863,13 @@ function filaEvento(evento) {
 }
 
 async function seleccionar(usgsId) {
+  // Abrir un evento es contenido del modo sismos, llegue de donde llegue: la
+  // lista, el mapa en modo fuego, o un enlace con ?evento= y ?amenaza=fuego a
+  // la vez (gana el evento, que es lo mas concreto).
+  if (estado.amenaza !== "sismos") {
+    estado.amenaza = "sismos";
+    aplicarAmenaza();
+  }
   estado.seleccionado = usgsId;
   $("selector-evento").value = usgsId;
   for (const li of document.querySelectorAll(".lista-eventos li")) {
@@ -1484,6 +1510,107 @@ function anotarCapaActiva(id, columna) {
 // diagnosticar desde la consola del navegador de quien reporte un fallo.
 window.CENTINELA = { pintado, errores: erroresAlPintar };
 
+// --- El selector de amenaza --------------------------------------------------
+//
+// Un solo mapa y un lente a la vez, como Windy o Zoom Earth: la amenaza activa
+// manda —su simbologia, su leyenda en el hueco grande, sus controles— y la otra
+// queda de contexto discreto. Ni dos rampas de color compitiendo por el mismo
+// mapa, ni el fuego escondido detras de una casilla.
+//
+// La regla de contexto es asimetrica a proposito. En modo fuego los epicentros
+// se quedan como estrellas tenues: son veintiuno, no estorban, y responden
+// "¿el sismo cayo donde ardia?" sin robar el mapa. En modo sismos el fuego no
+// se dibuja: son cuatro mil simbolos con rampa propia, y "discreto" no es algo
+// que cuatro mil simbolos sepan ser.
+
+//: Aplica el modo actual sobre lo que exista. Idempotente y defensiva a
+//: proposito: las capas llegan cada una a su ritmo —epicentros, observados y
+//: fuego cargan en paralelo— asi que esto se re-ejecuta cuando cada una termina
+//: de dibujarse, y toca solo lo que ya esta.
+function aplicarAmenaza() {
+  const fuego = estado.amenaza === "fuego";
+  const m = estado.mapa;
+
+  for (const boton of document.querySelectorAll("#amenazas button")) {
+    boton.setAttribute("aria-pressed", String(boton.dataset.amenaza === estado.amenaza));
+  }
+
+  // Sin `isStyleLoaded()` de puerta: durante la carga inicial es false mientras
+  // llegan teselas y sprites, y el enlace profundo a modo fuego pasaba por aqui
+  // justo entonces — los paints se saltaban y nadie los re-aplicaba: epicentros
+  // a toda opacidad y con etiqueta sobre el fuego. `pon` ya es defensiva capa a
+  // capa, que es la unica guarda que hace falta.
+  if (m) {
+    const pon = (capa, prop, valor, deLayout = false) => {
+      try {
+        if (!m.getLayer(capa)) return;
+        if (deLayout) m.setLayoutProperty(capa, prop, valor);
+        else m.setPaintProperty(capa, prop, valor);
+      } catch (error) {
+        /* el estilo puede estar en transicion; el siguiente aplicar lo pone */
+      }
+    };
+
+    for (const capa of ["incendios", "incendios-punto", "incendios-borde"]) {
+      pon(capa, "visibility", fuego ? "visible" : "none", true);
+    }
+
+    // Tenues, no ausentes: la etiqueta ("M7,4") si se apaga, porque veintiuna
+    // magnitudes rotuladas encima del fuego son ruido, no contexto.
+    pon("epicentros", "icon-opacity", fuego ? 0.35 : 1);
+    pon("epicentros", "text-opacity", fuego ? 0 : 1);
+    if (fuego) pon("epicentros-halo", "visibility", "none", true);
+    else verHaloProporcional(!estado.seleccionado);
+
+    const casillaObs = document.querySelector("#interruptor-observados input");
+    pon(
+      "observados",
+      "visibility",
+      !fuego && casillaObs && casillaObs.checked ? "visible" : "none",
+      true
+    );
+  }
+
+  // Los controles del modo sismos no aplican al fuego.
+  const obs = $("interruptor-observados");
+  if (obs) obs.hidden = fuego;
+
+  // El hueco grande de la leyenda es del modo: variable de la malla en sismos
+  // (solo con evento), potencia radiativa en fuego.
+  if (fuego) {
+    $("capas").hidden = true;
+    pintarLeyendaFuego(estado.fuegoDatos);
+  } else if (!estado.seleccionado) {
+    $("leyenda").hidden = true;
+  }
+}
+
+function cambiarAmenaza(modo, { anunciando = true } = {}) {
+  if (modo === estado.amenaza) return;
+  estado.amenaza = modo;
+
+  // Un evento abierto es contenido del modo sismos: sus variables, su malla y
+  // su panel no significan nada bajo el lente del fuego. Entrar a fuego lo
+  // cierra, con su vuelo de vuelta al panorama incluido.
+  if (modo === "fuego" && estado.seleccionado) cerrarDetalle();
+
+  aplicarAmenaza();
+  escribirUrl();
+  if (anunciando) {
+    anunciar(
+      modo === "fuego"
+        ? "Modo fuego: focos activos de las últimas 24 horas. Los sismos quedan como contexto."
+        : "Modo sismos: reportes de exposición sísmica."
+    );
+  }
+}
+
+function pintarSelectorAmenaza() {
+  for (const boton of document.querySelectorAll("#amenazas button")) {
+    boton.addEventListener("click", () => cambiarAmenaza(boton.dataset.amenaza));
+  }
+}
+
 // --- Mapa -------------------------------------------------------------------
 
 // MapLibre lanza "Style is not done loading" ante `getStyle`, `addLayer` o
@@ -2096,6 +2223,7 @@ function dibujarEpicentros(eventos) {
     });
 
     anotarPintado("epicentros", conCoords.length);
+    aplicarAmenaza();
 
     for (const capa of ["epicentros", "epicentros-halo"]) {
       m.on("click", capa, (ev) => seleccionar(ev.features[0].properties.usgs_id));
@@ -2259,6 +2387,8 @@ function iniciarMapa() {
   // Como es mas alta que ancha, en una pantalla apaisada manda el alto y el
   // sobrante horizontal se reparte a los dos lados en vez de amontonarse al
   // este.
+  mapa.once("load", () => aplicarAmenaza());
+
   mapa.once("load", () => {
     // Y SOLO SI NADIE HA PEDIDO OTRA COSA.
     //
@@ -2575,6 +2705,7 @@ function pintarFiltroPaises(eventos, nombres) {
 }
 
 estado.mapa = iniciarMapa();
+pintarSelectorAmenaza();
 engancharSalidas();
 cargarEventos();
 
@@ -2659,6 +2790,7 @@ function dibujarObservados(eventos) {
     });
 
     anotarPintado("observados", eventos.length);
+    aplicarAmenaza();
 
     m.on("mouseenter", "observados", () => (m.getCanvas().style.cursor = "help"));
     m.on("mouseleave", "observados", () => (m.getCanvas().style.cursor = ""));
@@ -2731,6 +2863,9 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
     `<input type="checkbox"> ` +
     `<span>Sismos menores vistos <span class="menor">` +
     `(${eventos.length} en ${ventanaDias || 5} días, sin reporte)</span></span>`;
+  // Nace obedeciendo al modo: las capas cargan en paralelo y este control puede
+  // crearse despues de que el selector de amenaza ya se aplico.
+  caja.hidden = estado.amenaza === "fuego";
   anfitrion.appendChild(caja);
 
   caja.querySelector("input").addEventListener("change", (ev) => {
@@ -2763,8 +2898,7 @@ async function cargarIncendios() {
   if (!celdas.length) return;
 
   dibujarIncendios(datos);
-  pintarLeyendaFuego(datos);
-  pintarInterruptorIncendios(datos);
+  estado.fuegoDatos = datos;
   estado.vivo.incendios = datos.totales || {};
   estado.vivo.suelo = datos.suelo || {};
   estado.vivo.ventanaFuego = datos.ventana_horas || 24;
@@ -2885,6 +3019,7 @@ function dibujarIncendios(datos) {
     // encima de FUEGO_ZOOM_HEX, asi que a zoom continental —que es como se abre
     // el visor— contar hexagonos daria cero con la capa perfectamente dibujada.
     anotarPintado("incendios", puntos.features.length);
+    aplicarAmenaza();
 
     for (const capa of ["incendios", "incendios-punto"]) {
       m.on("mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
@@ -2964,81 +3099,33 @@ function celdasDeFuego(totales) {
   };
 }
 
-//: Rotulos de la rampa. Sin esto la capa tiene seis colores y ninguna forma de
-//: saber que significan — que es peor que no tener color: invita a interpretar.
+//: Rotulos de la rampa, en el hueco grande de la leyenda — el mismo que usan
+//: las variables de la malla. Antes vivian en una tarjeta de esquina que solo
+//: aparecia si alguien encontraba el checkbox; en modo fuego la leyenda ES la
+//: del fuego, con el mismo derecho que la de intensidad en modo sismos.
 function pintarLeyendaFuego(datos) {
-  if ($("leyenda-fuego")) return;
-  const caja = document.createElement("div");
-  caja.className = "leyenda leyenda-fuego";
-  caja.id = "leyenda-fuego";
-  caja.hidden = true;
+  const { total, dibujadas, recortado, comoTexto: mil } = celdasDeFuego(datos && datos.totales);
 
-  const rangos = FUEGO_COLORES.map((color, i) => {
+  $("leyenda").hidden = false;
+  $("leyenda-titulo").textContent = "Potencia radiativa · MW";
+  $("leyenda-escala").innerHTML = FUEGO_COLORES.map((color, i) => {
     const desde = i === 0 ? 0 : FUEGO_CORTES[i - 1];
     const hasta = FUEGO_CORTES[i];
-    const texto = hasta ? `${numero(desde)}–${numero(hasta)}` : `${numero(desde)}+`;
-    return `<li><span class="muestra" style="background:${color}"></span>${texto}</li>`;
+    const texto = hasta ? `${numero(desde)} – ${numero(hasta)}` : `${numero(desde)} o más`;
+    return (
+      `<li><span class="muestra" style="background:${color}"></span>` +
+      `<span class="leyenda-valor">${texto}</span></li>`
+    );
   }).join("");
 
-  // El recorte se explica donde se mira la capa, no solo en la casilla que la
-  // enciende: quien llega con la capa ya encendida —desde la tarjeta «ahora
-  // mismo»— no pasa por la casilla.
-  const { total, dibujadas, recortado, comoTexto: mil } = celdasDeFuego(datos && datos.totales);
   const corte = recortado
-    ? ` Se dibujan ${mil(dibujadas)} de ${mil(total)}: primero todas las que ` +
-      `tienen gente debajo, y el resto por energía.`
+    ? ` Se dibujan ${mil(dibujadas)} de ${mil(total)} celdas: primero todas las ` +
+      `que tienen gente debajo, y el resto por energía.`
     : "";
-
-  caja.innerHTML =
-    `<p class="leyenda-titulo mono">Potencia radiativa · MW</p>` +
-    `<ul class="leyenda-escala">${rangos}</ul>` +
-    `<p class="leyenda-nota">Energía medida en 24 h. <strong>No es área quemada.</strong>${corte}</p>`;
-  // Va en el mismo contenedor que los interruptores y no suelta sobre el
-  // mapa: asi apilan solos. Posicionar la leyenda con un `bottom` fijo obliga
-  // a saber cuanto miden los controles, y eso deja de ser cierto en cuanto una
-  // etiqueta se parte en dos lineas — que es lo que pasa en un movil.
-  ($("controles-mapa") || $("lienzo")).appendChild(caja);
+  $("leyenda-nota").textContent =
+    "Energía medida por satélite en 24 h. No es área quemada: el propio FIRMS " +
+    "desaconseja estimarla desde detecciones." + corte;
 }
-
-function pintarInterruptorIncendios(datos) {
-  const anfitrion = $("controles-mapa") || $("leyenda") || $("mapa");
-  if (!anfitrion || $("interruptor-incendios")) return;
-
-  const t = datos.totales || {};
-  const { total, dibujadas, recortado, comoTexto: mil } = celdasDeFuego(t);
-  // Lo que promete el interruptor tiene que ser lo que enciende. El total sigue
-  // delante porque es la cifra del sistema; el recorte va detras porque es lo
-  // que se va a ver.
-  const cuenta = recortado ? `${mil(dibujadas)} de ${mil(total)} celdas` : `${mil(total)} celdas`;
-
-  const caja = document.createElement("label");
-  caja.className = "interruptor-observados";
-  caja.id = "interruptor-incendios";
-  caja.innerHTML =
-    `<input type="checkbox"> <span>Focos activos ` +
-    `<span class="menor">(${cuenta} en ${datos.ventana_horas || 24} h)</span></span>`;
-  anfitrion.appendChild(caja);
-
-  caja.querySelector("input").addEventListener("change", (ev) => {
-    const m = estado.mapa;
-    if (!m || !m.getLayer("incendios")) return;
-    const visible = ev.target.checked ? "visible" : "none";
-    for (const capa of ["incendios", "incendios-borde", "incendios-punto"]) {
-      if (m.getLayer(capa)) m.setLayoutProperty(capa, "visibility", visible);
-    }
-    const leyenda = $("leyenda-fuego");
-    if (leyenda) leyenda.hidden = !ev.target.checked;
-    if (ev.target.checked) {
-      anunciar(
-        recortado
-          ? `Focos activos: se dibujan ${mil(dibujadas)} celdas de ${mil(total)}, ` +
-            `primero las que tienen gente debajo.`
-          : `Focos activos: ${mil(total)} celdas.`
-      );
-    }
-  });
-}
-
 
 // --- Lo que el sistema esta viendo ahora ------------------------------------
 //
@@ -3163,8 +3250,15 @@ function pintarEnVivo() {
 // control y el del mapa no pueden separarse. Tenerlos en dos sitios es como se
 // acaba con una capa encendida y su casilla vacia.
 function encenderCapaViva(capa) {
-  const casilla = document.querySelector(`#interruptor-${capa} input`);
-  if (!casilla) return;
-  if (!casilla.checked) casilla.click();
+  // "Ver en el mapa" pone la amenaza al mando, no marca una casilla: la cifra
+  // de fuego lleva al modo fuego, y la de sismos menores al modo sismos con su
+  // capa encendida.
+  if (capa === "incendios") {
+    cambiarAmenaza("fuego");
+  } else {
+    cambiarAmenaza("sismos");
+    const casilla = document.querySelector(`#interruptor-${capa} input`);
+    if (casilla && !casilla.checked) casilla.click();
+  }
   $("mapa")?.scrollIntoView({ behavior: REDUCIR_MOVIMIENTO ? "auto" : "smooth", block: "nearest" });
 }
