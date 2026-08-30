@@ -1,9 +1,19 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-30T16:15:13Z",
+  "generado_utc": "2026-08-30T16:25:15Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
+    {
+      "usgs_id": "us7000tczt",
+      "mag": 4.7,
+      "lon": -69.6387,
+      "lat": -18.2459,
+      "depth_km": 102.0,
+      "lugar": "62 km al SSE de Palca, Perú",
+      "origen_utc": "2026-08-30T16:04:07Z",
+      "razon": "M4.7 < umbral M5.5"
+    },
     {
       "usgs_id": "us7000tcwp",
       "mag": 4.7,
