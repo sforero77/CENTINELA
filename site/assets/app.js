@@ -55,6 +55,19 @@ const ENCUADRE_LATAM = [
   [-32.0, 33.0],
 ];
 
+//: La ventana **util**, que es la que se encuadra al abrir.
+//:
+//: `ENCUADRE_LATAM` es la caja del pipeline y entra entera solo a un zoom al que
+//: se ven 206 grados de longitud: una franja fina de continente rodeada de
+//: oceano. Esta recorta el norte de Mexico y la Patagonia austral —donde menos
+//: gente y menos actividad hay de los diecinueve paises— que es exactamente el
+//: recorte que `VISTA_INICIAL` ya habia elegido a mano. La diferencia es que
+//: ahora se adapta a la ventana en vez de ser correcto para una sola.
+const ENCUADRE_UTIL = [
+  [-107.0, -46.0],
+  [-34.0, 30.0],
+];
+
 // Mapa base: estilo Positron de OpenFreeMap.
 //
 // **Por qué este y no las teselas de Overture.** Overture tesela para el
@@ -221,6 +234,15 @@ const CAPAS = {
 
 const ORDEN_CAPAS = ["mmi", "pop", "bld", "built_m2", "vias_km", "salud", "edu"];
 
+//: Superficie nominal de una celda H3 r7, que es la resolucion de la malla.
+//:
+//: Es la cifra que el visor ya dice en tres sitios —la pista del panorama, el
+//: popup de la celda y la nota de la capa de poblacion— asi que el area sale de
+//: multiplicarla por el numero de celdas y **se puede comprobar a mano**. Con
+//: `h3.cellArea` saldria mas exacto y ya no cuadraria con lo que se ensena al
+//: lado, que en este visor es peor.
+const AREA_CELDA_KM2 = 5.2;
+
 // El PAGER es la estimación de pérdidas del propio USGS. No es una cifra
 // nuestra y no mide lo mismo que este sistema, así que se enseña rotulada como
 // lo que es y con la fuente delante.
@@ -232,6 +254,16 @@ const PAGER = {
 };
 
 const nf = new Intl.NumberFormat("es");
+
+//: El mismo numero, agrupado siempre.
+//:
+//: El espanol no separa los millares hasta cinco cifras, asi que `numero()` da
+//: "4000" y "15.607". Por separado es la convencion y esta bien. Juntas en la
+//: misma frase o en la misma columna —"4.000 de 15.607", o una tabla de areas
+//: donde 4628 cae debajo de 10.473— la primera parece una errata o un numero de
+//: otro orden. Ahi, y solo ahi, se agrupa a la fuerza.
+const nfMillares = new Intl.NumberFormat("es", { useGrouping: "always" });
+const miles = (v) => (Number.isFinite(v) ? nfMillares.format(Math.round(v)) : "—");
 const numero = (v, d = 0) => (Number.isFinite(v) ? nf.format(Number(v.toFixed(d))) : "—");
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -247,6 +279,35 @@ function comoFecha(iso, conHora = true) {
   const hh = String(d.getUTCHours()).padStart(2, "0");
   const mm = String(d.getUTCMinutes()).padStart(2, "0");
   return `${dia}, ${hh}:${mm} UTC`;
+}
+
+//: Cuanto hace que se reviso.
+//:
+//: El comentario de la tarjeta "ahora mismo" lleva escrito desde que se creo
+//: que las cifras "llevan la hora de la ultima revision: sin ella, «14.984
+//: celdas con fuego» podria ser de hace un mes". No la llevaban. Un tablero que
+//: se presenta como vigilancia en vivo y no fecha sus cifras pide una confianza
+//: que no ha ganado.
+//:
+//: En prosa y no en marca de tiempo: quien mira quiere saber si esto es de hoy,
+//: no a que hora exacta corrio un cron. La marca exacta va en el `title`.
+function haceCuanto(iso) {
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) return null;
+  const min = (Date.now() - t.getTime()) / 60000;
+  if (min < 0) return "ahora mismo";
+  if (min < 90) return `hace ${Math.max(1, Math.round(min))} min`;
+  const horas = min / 60;
+  if (horas < 36) return `hace ${Math.round(horas)} h`;
+  const dias = Math.round(horas / 24);
+  return `hace ${dias} ${dias === 1 ? "día" : "días"}`;
+}
+
+//: La antiguedad, lista para pegar detras de un apunte.
+function selloDeRevision(iso) {
+  const cuanto = haceCuanto(iso);
+  if (!cuanto) return "";
+  return ` · <span class="revisado" title="${escapar(comoFecha(iso))}">revisado ${cuanto}</span>`;
 }
 
 // Redondeo en prosa, igual que el markdown del reporte: publicar
@@ -275,6 +336,20 @@ function capitalizar(nombre) {
     .join(" ");
 }
 
+//: Un conteo no dice si es mucho. "289.000 personas de 65 anos o mas" no
+//: significa nada hasta saber que son el 12 % de los expuestos —muy por encima
+//: del peso de ese grupo en el pais—, y "1,6 M sobre suelo licuable" no dice
+//: nada hasta saber que son dos de cada tres. La division ya se podia hacer con
+//: los numeros que el reporte trae; simplemente no se hacia.
+//:
+//: Devuelve `null` si la cuota no significa nada —sin total, o cero— para que
+//: quien la pinta pueda omitirla en vez de escribir "0 %" o "NaN %".
+function cuotaDe(parte, total) {
+  if (!Number.isFinite(parte) || !Number.isFinite(total) || total <= 0 || parte <= 0) return null;
+  const pct = (100 * parte) / total;
+  return `${numero(pct, pct < 10 ? 1 : 0)} %`;
+}
+
 const $ = (id) => document.getElementById(id);
 
 // El panel lateral llevaba `aria-live` entero: cambiar de evento le leia a
@@ -290,10 +365,18 @@ const escapar = (s) =>
 
 const estado = {
   paisFiltrado: "",
+  //: Como se ordena la lista y si se recorta al encuadre del mapa. Los dos son
+  //: del usuario, no del dato, asi que no van a la URL: un enlace compartido
+  //: tiene que abrir el mismo reporte, no la misma manera de mirarlo.
+  orden: "fecha",
+  soloEnVista: false,
   epicentro: null,
   //: Lo que el sistema esta viendo ahora mismo, para el bloque "en vivo".
   vivo: {},
   mapa: null,
+  //: El unico globo abierto en el mapa, para poder cerrarlo cuando se va el
+  //: dato que describe.
+  globo: null,
   eventos: [],
   seleccionado: null,
   capa: "mmi",
@@ -542,10 +625,33 @@ async function cargarEventos() {
     // asi el mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica.
     const nombres = await cargarCobertura(eventos);
     pintarFiltroPaises(eventos, nombres);
+    pintarControlesLista();
+    refrescarLista({ anunciando: false });
 
     const url = leerUrl();
     if (url.capa) estado.capa = url.capa;
-    if (url.evento && eventos.some((e) => e.usgs_id === url.evento)) seleccionar(url.evento);
+    if (url.evento && eventos.some((e) => e.usgs_id === url.evento)) {
+      seleccionar(url.evento);
+    } else if (url.evento) {
+      // Un enlace a un reporte que no esta caia al panorama en silencio, con el
+      // parametro todavia en la barra. Quien llega desde un enlace compartido a
+      // un reporte retirado —o con el id mal copiado— cree que pulso mal.
+      //
+      // No es un error del sistema, asi que no se pinta como tal: se dice lo que
+      // paso y se deja la lista completa delante, que es lo que hay que ofrecer.
+      const aviso = $("estado-lista");
+      if (aviso) {
+        aviso.hidden = false;
+        aviso.textContent =
+          `No hay ningún reporte con el identificador «${url.evento}». ` +
+          `Puede que se haya retirado, o que el enlace esté incompleto. ` +
+          `Abajo están los ${eventos.length} publicados.`;
+      }
+      anunciar(`No se encontró el reporte ${url.evento}. Se muestra el panorama.`);
+      // El parametro se quita: dejarlo hace que recargar repita el error y que
+      // el enlace se siga compartiendo roto.
+      escribirUrl();
+    }
   } catch (error) {
     aviso.textContent =
       "Aún no hay índice de reportes publicado. El primer reporte real lo genera.";
@@ -645,6 +751,14 @@ function filaEvento(evento) {
   const li = document.createElement("li");
   li.dataset.usgsId = evento.usgs_id;
   if (evento.iso3) li.dataset.iso3 = evento.iso3;
+  // Lo que la lista necesita para ordenarse y para saber si cae en el encuadre.
+  // Va en el DOM y no en una estructura aparte para que ordenar sea mover nodos
+  // y no repintar: repintar perderia el `activo` y el foco del teclado.
+  if (Number.isFinite(evento.lon)) li.dataset.lon = String(evento.lon);
+  if (Number.isFinite(evento.lat)) li.dataset.lat = String(evento.lat);
+  li.dataset.mag = String(Number(evento.mag) || 0);
+  li.dataset.pop = String(bandaTitular(evento).pop || 0);
+  li.dataset.utc = evento.utc || "";
 
   const cabecera = document.createElement("div");
   cabecera.className = "evento-cabecera";
@@ -718,7 +832,7 @@ async function seleccionar(usgsId) {
       // el tablero sigue igual, solo sin el área de afectación dibujada.
       fetch(`reports/${usgsId}/contornos.json`).then((r) => (r.ok ? r.json() : null)),
     ]);
-    pintarLateral(reporte, parsearCsv(csv));
+    pintarLateral(reporte, parsearCsv(csv), celdas);
     // El mapa va en su propio try: las cifras y las barras salen del reporte y
     // no dependen de que la malla se pueda dibujar. Antes un fallo aqui
     // borraba el titulo de un panel que ya estaba entero.
@@ -736,6 +850,21 @@ async function seleccionar(usgsId) {
   }
 }
 
+//: El encuadre de apertura, en un solo sitio.
+//:
+//: Lo pedian dos: el arranque del mapa y "Volver al panorama". Con la caja en
+//: uno y el centro fijo en el otro, volver al panorama daba una vista distinta
+//: de la de llegar, que es de esos detalles que nadie sabe nombrar y todo el
+//: mundo nota.
+function volverAlEncuadre(m, duracion = 0) {
+  if (!m) return;
+  try {
+    m.fitBounds(ENCUADRE_UTIL, { padding: 24, duration: duracion, animate: duracion > 0 });
+  } catch (error) {
+    m.easeTo({ ...VISTA_INICIAL, duration: duracion });
+  }
+}
+
 function cerrarDetalle() {
   estado.seleccionado = null;
   $("lateral-vacio").hidden = false;
@@ -743,14 +872,23 @@ function cerrarDetalle() {
   $("leyenda").hidden = true;
   $("capas").hidden = true;
   for (const li of document.querySelectorAll(".lista-eventos li")) li.classList.remove("activo");
-  quitarCapa("celdas");
+  // Las tres capas del evento, no solo la malla. `contornos` se quedaba desde
+  // siempre —las isolineas de un sismo cerrado seguian sobre el panorama— y no
+  // se notaba porque son lineas palidas sobre un mapa continental. Al anadir el
+  // perimetro, que va en tinta oscura, el resto quedo a la vista: al volver al
+  // panorama flotaba el borde de un area cuyo panel ya no existe.
+  cerrarGlobo();
+  for (const capa of ["celdas", "contornos", "perimetro"]) quitarCapa(capa);
   estado.presentes = null;
+  for (const capa of ["celdas", "contornos", "perimetro"]) anotarPintado(capa, 0);
   verHaloProporcional(true);
   escribirUrl();
   anunciar("Sin evento seleccionado. El panel muestra el panorama de los reportes publicados.");
   const selector = $("selector-evento");
   if (selector) selector.value = "";
-  if (estado.mapa) estado.mapa.easeTo({ ...VISTA_INICIAL, duration: VUELO });
+  // Al mismo encuadre adaptado con el que abre, no al centro y zoom fijos:
+  // volver al panorama tiene que devolver la vista que se tenia al llegar.
+  volverAlEncuadre(estado.mapa, VUELO);
 }
 
 // Tres formas de salir, porque hasta ahora habia media.
@@ -768,7 +906,7 @@ function engancharSalidas() {
 
 // --- Panel lateral ----------------------------------------------------------
 
-function pintarLateral(reporte, municipios) {
+function pintarLateral(reporte, municipios, celdas) {
   const ev = reporte.event;
   const t = reporte.totales;
 
@@ -783,6 +921,7 @@ function pintarLateral(reporte, municipios) {
   ].join(" · ");
 
   pintarDistintivos(reporte);
+  pintarArea(reporte, celdas);
   pintarFranjas(reporte);
   pintarMetricas(reporte);
   pintarTerreno(reporte);
@@ -882,6 +1021,81 @@ function pintarDistintivos(reporte) {
 // El pipeline calcula tres franjas de intensidad y el panel solo enseñaba la de
 // MMI≥7. Con una sola franja no se sabe si el evento fue ancho y suave o
 // estrecho y violento, que es la primera pregunta de quien responde.
+//: Cuanto territorio quedo dentro de cada franja.
+//:
+//: El tablero contaba gente, edificaciones y vias y no decia nunca sobre que
+//: superficie. "2,4 M de personas en MMI≥7" describe igual de bien una ciudad
+//: sacudida que media cordillera, y son dos emergencias distintas.
+//:
+//: Se cuenta la **malla**, no el ShakeMap. Es la diferencia entre "hasta donde
+//: llego el sismo" —que sigue sobre el mar— y "sobre cuanto territorio hay algo
+//: expuesto", que es lo unico que este sistema mide. Por eso el area es
+//: exactamente el area de las celdas que se dibujan y se descargan.
+//:
+//: Acumulado, como las franjas de poblacion: quien esta en MMI≥7 tambien esta
+//: en MMI≥6. Y ademas el reparto por banda, que es donde se ve la forma.
+function areaPorBanda(celdas) {
+  if (!celdas || !Array.isArray(celdas.celdas) || !Array.isArray(celdas.columnas)) return null;
+  const iMmi = celdas.columnas.indexOf("mmi");
+  if (iMmi < 0) return null;
+
+  const cuenta = new Map();
+  for (const fila of celdas.celdas) {
+    const banda = fila[iMmi];
+    if (!Number.isFinite(banda)) continue;
+    cuenta.set(banda, (cuenta.get(banda) || 0) + 1);
+  }
+  if (!cuenta.size) return null;
+
+  const bandas = [...cuenta.keys()].sort((a, b) => b - a);
+  const total = [...cuenta.values()].reduce((a, b) => a + b, 0);
+  const mayor = Math.max(...cuenta.values());
+  return {
+    total,
+    totalKm2: total * AREA_CELDA_KM2,
+    bandas: bandas.map((banda) => ({
+      banda,
+      celdas: cuenta.get(banda),
+      km2: cuenta.get(banda) * AREA_CELDA_KM2,
+      cuota: cuenta.get(banda) / mayor,
+    })),
+  };
+}
+
+function pintarArea(reporte, celdas) {
+  const bloque = $("bloque-area");
+  const reparto = reporte.preliminar ? null : areaPorBanda(celdas);
+  // Un reporte anterior a `celdas.json` no trae malla, y un preliminar no tiene
+  // bandas. En los dos casos el bloque no existe, no sale a cero.
+  bloque.hidden = !reparto;
+  if (!reparto) return;
+
+  // La cifra grande es la banda titular —la misma que rotula el resto del
+  // panel—, para que "4.628 km²" y "2,4 M de personas" hablen del mismo sitio.
+  const titular = bandaDeTotales(reporte.totales) || 7;
+  const dentro = reparto.bandas.filter((b) => b.banda >= titular);
+  const km2Titular = dentro.reduce((a, b) => a + b.km2, 0);
+  const celdasTitular = dentro.reduce((a, b) => a + b.celdas, 0);
+
+  const filas = reparto.bandas
+    .map((b) => {
+      const color = CAPAS.mmi.colores[Math.max(0, CAPAS.mmi.cortes.filter((c) => b.banda >= c).length - 1)];
+      return (
+        `<li><span class="area-banda mono">MMI ${numero(b.banda, 1)}</span>` +
+        `<span class="area-pista"><span class="area-relleno" style="width:${(b.cuota * 100).toFixed(1)}%;background:${color}"></span></span>` +
+        `<span class="area-cifra mono">${miles(b.km2)} km²</span></li>`
+      );
+    })
+    .join("");
+
+  $("detalle-area").innerHTML =
+    `<p class="area-total"><strong>${miles(km2Titular)} km²</strong>` +
+    `<span>dentro de MMI≥${numero(titular, 1)}</span></p>` +
+    `<p class="area-apunte">${miles(celdasTitular)} celdas de ${numero(AREA_CELDA_KM2, 1)} km² · ` +
+    `${miles(reparto.totalKm2)} km² en toda la malla del evento</p>` +
+    `<ul class="area-franjas">${filas}</ul>`;
+}
+
 function pintarFranjas(reporte) {
   const t = reporte.totales;
   const bloque = $("bloque-franjas");
@@ -1021,7 +1235,15 @@ function pintarMetricas(reporte) {
           ancha: true,
         }
       : { clave: "personas", valor: t.pop_mmi7p, etiqueta: "personas" },
-    { clave: "mayores", valor: t.pop_65p_mmi7p, etiqueta: "de 65 años o más" },
+    {
+      clave: "mayores",
+      valor: t.pop_65p_mmi7p,
+      etiqueta: "de 65 años o más",
+      apunte: (() => {
+        const cuota = cuotaDe(t.pop_65p_mmi7p, t.pop_mmi7p);
+        return cuota ? `El ${cuota} de los expuestos a MMI≥7.` : null;
+      })(),
+    },
     // Salud y educacion **antes** que edificaciones y superficie.
     //
     // El orden anterior iba por tamano del numero: 444.000 edificaciones y 69,8
@@ -1070,13 +1292,19 @@ function pintarTerreno(reporte) {
     { etiqueta: "Licuefacción alta", valor: t.pop_lq_alta },
     { etiqueta: "Deslizamiento alto", valor: t.pop_ls_alta },
   ];
+  // La cuota se mide sobre los expuestos a MMI≥7, que es la banda con la que se
+  // rotula el resto del panel: asi "1,6 M" y "66 %" hablan del mismo conjunto.
   $("detalle-terreno").innerHTML =
     filas
-      .map(
-        (f) =>
-          `<li><span>${f.etiqueta}</span><span class="cifra${(f.valor || 0) > 0 ? "" : " cero"}">` +
+      .map((f) => {
+        const cuota = cuotaDe(f.valor, t.pop_mmi7p);
+        return (
+          `<li><span>${f.etiqueta}` +
+          (cuota ? ` <span class="cuota-apunte">· <strong>${cuota}</strong> de los expuestos</span>` : "") +
+          `</span><span class="cifra${(f.valor || 0) > 0 ? "" : " cero"}">` +
           `${comoTexto(f.valor)}</span></li>`
-      )
+        );
+      })
       .join("") +
     `<li style="background:none;padding:0.3rem 0 0"><span class="leyenda-nota">` +
     `Personas sobre terreno con probabilidad alta según el modelo de fallo del ` +
@@ -1311,9 +1539,41 @@ function verHaloProporcional(visible) {
   }
 }
 
+//: El globo abierto, uno solo y localizable.
+//:
+//: No habia ninguna limpieza de popups en el visor. Se abria una celda, se
+//: pulsaba "Volver al panorama" y el globo se quedaba flotando sobre el mapa
+//: continental describiendo una celda de un evento cerrado, sobre una malla que
+//: ya no estaba — y el de celda es el unico de los tres sin boton de cerrar, asi
+//: que solo se iba pulsando el mapa por casualidad.
+//:
+//: MapLibre ya cierra el anterior al abrir otro (`closeOnClick`), asi que esto
+//: no cambia el comportamiento normal: solo da un asa para cerrarlo cuando lo
+//: que desaparece es el dato de debajo.
+function abrirGlobo(popup) {
+  cerrarGlobo();
+  estado.globo = popup;
+  popup.on("close", () => {
+    if (estado.globo === popup) estado.globo = null;
+  });
+  return popup;
+}
+
+function cerrarGlobo() {
+  if (!estado.globo) return;
+  try {
+    estado.globo.remove();
+  } catch (error) {
+    /* ya estaba fuera del DOM */
+  }
+  estado.globo = null;
+}
+
 function quitarCapa(id) {
   const m = estado.mapa;
   if (!m || !m.isStyleLoaded() || !m.getSource(id)) return;
+  // El perimetro lleva funda blanca debajo de la linea, asi que una fuente puede
+  // tener dos capas colgando. Los sufijos se listan aqui una sola vez.
   for (const sufijo of ["", "-borde"]) {
     if (m.getLayer(id + sufijo)) m.removeLayer(id + sufijo);
   }
@@ -1393,6 +1653,103 @@ function extremosDeContorno(datos, minimo) {
   return { lons, lats };
 }
 
+//: El perimetro de lo que se cuenta.
+//:
+//: A escala regional 890 hexagonos de 1 km de lado no se leen como una zona: se
+//: leen como textura. La pregunta "¿que area quedo dentro?" tenia respuesta en
+//: la malla y no tenia **forma**, y una forma es lo que se recuerda y lo que se
+//: puede senalar en una reunion.
+//:
+//: Se disuelve con `h3.cellsToMultiPolygon`, que devuelve el contorno exacto de
+//: la union de las celdas. Y ahi esta lo que lo hace honesto: **el borde es
+//: literalmente el de las celdas que se cuentan y se descargan**, no una
+//: isolinea de otro producto. La cifra del panel —"4.628 km² dentro de MMI≥7"— y
+//: esta linea son el mismo objeto.
+//:
+//: Por eso convive con los contornos del ShakeMap en vez de sustituirlos: son
+//: dos cosas distintas y el mapa ahora las distingue. La isolinea dice hasta
+//: donde llego el sismo, tambien sobre el mar; este perimetro dice sobre que
+//: territorio hay algo que contar.
+function perimetroDeCeldas(datos, minimo) {
+  if (typeof h3 === "undefined" || !datos || !Array.isArray(datos.celdas)) return null;
+  const iH3 = datos.columnas.indexOf("h3");
+  const iMmi = datos.columnas.indexOf("mmi");
+  if (iH3 < 0 || iMmi < 0) return null;
+
+  const dentro = datos.celdas
+    .filter((c) => Number(c[iMmi]) >= minimo)
+    .map((c) => c[iH3]);
+  if (!dentro.length) return null;
+
+  try {
+    // `true` pide el orden GeoJSON —[lng, lat]—, el mismo motivo por el que
+    // `cellToBoundary` lo lleva: sin el, el perimetro aparece en el indico.
+    const poligonos = h3.cellsToMultiPolygon(dentro, true);
+    if (!poligonos || !poligonos.length) return null;
+    return {
+      celdas: dentro.length,
+      geojson: {
+        type: "FeatureCollection",
+        features: [
+          { type: "Feature", properties: { mmi: minimo }, geometry: { type: "MultiPolygon", coordinates: poligonos } },
+        ],
+      },
+    };
+  } catch (error) {
+    console.warn("perimetro:", error && error.message);
+    return null;
+  }
+}
+
+function dibujarPerimetro(m, datos, reporte, antes) {
+  // La banda titular es la que rotula el resto del panel. Dibujar el perimetro
+  // de otra banda pondria en el mapa un area que ninguna cifra nombra.
+  const minimo = bandaDeTotales(reporte.totales) || 6;
+  const per = perimetroDeCeldas(datos, minimo);
+  if (!per) {
+    anotarPintado("perimetro", 0);
+    return;
+  }
+  anotarPintado("perimetro", per.celdas);
+
+  m.addSource("perimetro", { type: "geojson", data: per.geojson });
+
+  // NO se pinta con el color de su banda, que fue el primer intento y salio
+  // invisible: la linea de MMI≥7 quedaba en #ef6548 **encima del relleno de
+  // MMI 7**, que es exactamente ese color. Un borde tiene que contrastar con lo
+  // que encierra, no igualarlo.
+  //
+  // Tinta oscura y funda blanca, que es como la cartografia dibuja un limite
+  // desde siempre: la funda lo despega del relleno naranja y la tinta lo despega
+  // del suelo crema. Y al no ser un tono de la rampa, no se puede confundir con
+  // una banda mas de intensidad — que es justo lo que no es.
+  const ANCHO = ["interpolate", ["linear"], ["zoom"], 4, 1.9, 9, 1.5, 12, 1.1];
+  m.addLayer(
+    {
+      id: "perimetro-borde",
+      type: "line",
+      source: "perimetro",
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint: {
+        "line-color": "#ffffff",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 4.2, 9, 3.4, 12, 2.6],
+        "line-opacity": 0.75,
+      },
+    },
+    antes
+  );
+  m.addLayer(
+    {
+      id: "perimetro",
+      type: "line",
+      source: "perimetro",
+      layout: { "line-join": "round", "line-cap": "round" },
+      paint: { "line-color": "#1c1b1a", "line-width": ANCHO, "line-opacity": 0.9 },
+    },
+    antes
+  );
+}
+
 function pintarCeldas(datos, reporte, contornos) {
   const m = estado.mapa;
   if (!m) return;
@@ -1400,8 +1757,12 @@ function pintarCeldas(datos, reporte, contornos) {
 }
 
 function dibujarCeldas(m, datos, reporte, contornos) {
+  // Cambiar de evento tambien invalida el globo: describiria una celda del
+  // sismo anterior junto a la malla del nuevo, que es la peor version de esto.
+  cerrarGlobo();
   quitarCapa("celdas");
   quitarCapa("contornos");
+  quitarCapa("perimetro");
 
   estado.presentes = datos
     ? new Set(datos.celdas.map((c) => c[datos.columnas.indexOf("mmi")]))
@@ -1462,6 +1823,10 @@ function dibujarCeldas(m, datos, reporte, contornos) {
     },
     antes
   );
+
+  // Encima de la malla y de su borde: es la unica linea que tiene que sobrevivir
+  // al zoom continental, donde los hexagonos se vuelven textura.
+  dibujarPerimetro(m, datos, reporte, antes);
 
   verHaloProporcional(false);
   engancharCeldas(m);
@@ -1532,7 +1897,7 @@ function engancharCeldas(m) {
     const fila = (etiqueta, valor) =>
       `<div style="display:flex;justify-content:space-between;gap:1rem">` +
       `<span style="color:rgba(28,51,40,.72)">${etiqueta}</span><strong>${valor}</strong></div>`;
-    new maplibregl.Popup({ closeButton: false, maxWidth: "18rem" })
+    abrirGlobo(new maplibregl.Popup({ closeButton: true, maxWidth: "18rem" }))
       .setLngLat(ev.lngLat)
       .setHTML(
         // El indice es la clave con la que esta celda se encuentra en el
@@ -1716,15 +2081,62 @@ function dibujarEpicentros(eventos) {
   cuandoElEstiloEsteListo(m, pintar);
 }
 
-function iniciarMapa() {
-  if (!$("mapa") || typeof maplibregl === "undefined") return null;
+//: El mapa es la mitad del visor, no el visor.
+//:
+//: Cuando MapLibre no llega —unpkg caido, una red que lo bloquea, un navegador
+//: sin WebGL— lo que queda debajo sigue siendo correcto: los veintiun reportes,
+//: la cobertura, el panel de un evento entero con sus ocho descargas. Lo unico
+//: que fallaba era el aviso, que se quedaba girando para siempre y hacia
+//: parecer rota una pagina que funciona.
+//:
+//: Se dice lo que pasa y se dice que lo demas sigue en pie. Un «cargando»
+//: eterno no informa de nada; este aviso responde la pregunta que se hace quien
+//: mira un rectangulo vacio.
+function avisarSinMapa() {
+  const aviso = $("cargando");
+  if (!aviso) return;
+  aviso.classList.add("panel-mapa-aviso");
+  aviso.innerHTML =
+    `<span class="mono">El mapa no está disponible</span>` +
+    `<span class="panel-mapa-nota">No se pudo cargar la librería de mapas. ` +
+    `Las cifras y las descargas de cada reporte siguen completas.</span>`;
+  aviso.hidden = false;
+  anunciar("El mapa no está disponible. Las cifras y las descargas siguen completas.");
+}
 
-  const mapa = new maplibregl.Map({
-    container: "mapa",
-    style: ESTILO_BASE,
-    ...VISTA_INICIAL,
-    attributionControl: false,
-  });
+function iniciarMapa() {
+  // La red de seguridad de abajo —`setTimeout(listo, 8000)`— vivia **despues**
+  // de este `return`, asi que justamente en el caso que tenia que cubrir no
+  // llegaba a registrarse: sin `maplibregl` no hay `load` que quitar el aviso y
+  // no habia temporizador que lo hiciera. Medido el 28-ago-2026 con los
+  // `<script>` de unpkg apuntando a 404: treinta y un segundos girando, con el
+  // resto del tablero entero debajo.
+  //
+  // El comentario de la red de seguridad ya decia por que existe —«un cargando
+  // eterno es peor que un mapa gris»— y no cubria su propio caso.
+  if (!$("mapa") || typeof maplibregl === "undefined") {
+    avisarSinMapa();
+    return null;
+  }
+
+  // La otra manera de llegar al mismo rectangulo vacio: la libreria esta y el
+  // constructor falla igual —sin WebGL, con la aceleracion por hardware
+  // apagada, en un navegador viejo—. MapLibre lanza, y sin este `catch` la
+  // excepcion sube hasta el modulo y se lleva por delante todo lo que viene
+  // detras: la lista de eventos, la cobertura y el panel no se pintarian.
+  let mapa;
+  try {
+    mapa = new maplibregl.Map({
+      container: "mapa",
+      style: ESTILO_BASE,
+      ...VISTA_INICIAL,
+      attributionControl: false,
+    });
+  } catch (error) {
+    console.warn("mapa:", error && error.message);
+    avisarSinMapa();
+    return null;
+  }
 
   // NO se encuadra con `fitBounds` aqui, y costo un mapa en blanco averiguarlo.
   //
@@ -1786,6 +2198,40 @@ function iniciarMapa() {
     if (aviso) aviso.hidden = true;
   };
   mapa.once("load", listo);
+
+  // EL ENCUADRE, AHORA SI ADAPTADO A LA VENTANA.
+  //
+  // `VISTA_INICIAL` es un centro y un zoom medidos sobre un mapa de 954 px, y
+  // ahi funciona. Por encima de eso el sobrante no cae en el Pacifico como dice
+  // el comentario de arriba: cae en Africa y en Europa. Medido en un portatil
+  // de 1707 px: el mapa abarca 227 grados de longitud, de -197 a +29, y la caja
+  // de LATAM ocupa el 38 % del ancho — se veian Bulgaria, Italia y la Republica
+  // Democratica del Congo rotuladas en un tablero de America Latina.
+  //
+  // `fitBounds` era lo que este fichero queria desde el principio: "se adapta a
+  // la ventana; un zoom fijo solo es correcto para el tamano de pantalla en que
+  // se eligio". Se descarto porque se llamaba desde `styledata`, que puede
+  // llegar antes de que el contenedor tenga su tamano final, y entonces encuadra
+  // contra una caja que aun no mide lo que va a medir: mapa en blanco.
+  //
+  // `load` no tiene esa carrera — para cuando llega, el contenedor esta medido y
+  // el primer fotograma esta pintado. Y `VISTA_INICIAL` sigue siendo el valor de
+  // arranque, asi que si `load` no llegara nunca el mapa se queda en un encuadre
+  // valido en vez de en ninguno.
+  //
+  // La caja es la ventana util del sistema, no `LATAM_BBOX` entera: recorta el
+  // norte de Mexico y la Patagonia austral, que es lo que el comentario de
+  // `VISTA_INICIAL` ya habia decidido recortar y sigue siendo la decision buena.
+  // Como es mas alta que ancha, en una pantalla apaisada manda el alto y el
+  // sobrante horizontal se reparte a los dos lados en vez de amontonarse al
+  // este.
+  mapa.once("load", () => {
+    try {
+      volverAlEncuadre(mapa);
+    } catch (error) {
+      /* con una caja invalida se queda en VISTA_INICIAL, que es correcta */
+    }
+  });
   setTimeout(listo, 8000);
 
   mapa.on("error", (e) => console.warn("mapa:", e && e.error && e.error.message));
@@ -1921,21 +2367,140 @@ async function cargarCobertura(eventos) {
 
 // --- Filtro por país --------------------------------------------------------
 
-function aplicarFiltro(iso3) {
-  estado.paisFiltrado = iso3;
+//: Como se ordena la lista.
+//:
+//: Iba siempre por fecha, que responde "¿que ha pasado ultimamente?" y nada mas.
+//: Las otras dos preguntas que se hace quien llega —"¿cual fue el mas fuerte?" y
+//: "¿cual afecto a mas gente?"— no tenian respuesta sin leer las veintiuna
+//: tarjetas. Y no son la misma: el M8 de Peru deja 248.000 personas en MMI≥7 y
+//: el M7,4 del Choco deja 2,4 millones.
+const ORDENES = {
+  fecha: { texto: "Fecha", clave: (li) => li.dataset.utc || "" },
+  mag: { texto: "Magnitud", clave: (li) => Number(li.dataset.mag) || 0 },
+  pop: { texto: "Personas expuestas", clave: (li) => Number(li.dataset.pop) || 0 },
+};
+
+//: Si el evento cae dentro de lo que el mapa esta enseñando.
+//:
+//: `getBounds` puede devolver una caja que cruza el antimeridiano cuando el
+//: mapa da la vuelta; a la escala de este visor no pasa, pero se compara con
+//: `contains` de MapLibre en vez de a mano para no tener que decidirlo.
+function enElEncuadre(li) {
+  const m = estado.mapa;
+  const lon = Number(li.dataset.lon);
+  const lat = Number(li.dataset.lat);
+  if (!m || !Number.isFinite(lon) || !Number.isFinite(lat)) return true;
+  try {
+    return m.getBounds().contains([lon, lat]);
+  } catch (error) {
+    return true;
+  }
+}
+
+//: Un solo sitio que decide que se ve y en que orden.
+//:
+//: Antes el filtro por pais escribia `hidden` y nadie mas tocaba la lista. Con
+//: tres criterios —pais, encuadre y orden— tener cada uno su funcion es como se
+//: llega a que uno pise a otro; este es el unico que escribe.
+function refrescarLista({ anunciando = true } = {}) {
+  const lista = $("lista-eventos");
+  if (!lista) return;
+  const filas = [...lista.querySelectorAll("li")];
+
+  const orden = ORDENES[estado.orden] || ORDENES.fecha;
+  filas
+    .slice()
+    .sort((a, b) => {
+      const va = orden.clave(a);
+      const vb = orden.clave(b);
+      // Descendente en las tres: lo mas reciente, lo mas fuerte y lo que mas
+      // gente dejo dentro. Nadie abre esta lista buscando el sismo mas pequeño.
+      return va > vb ? -1 : va < vb ? 1 : 0;
+    })
+    .forEach((li) => lista.appendChild(li));
+
   let visibles = 0;
-  for (const li of document.querySelectorAll(".lista-eventos li")) {
-    const suyo = !iso3 || li.dataset.iso3 === iso3;
-    li.hidden = !suyo;
-    if (suyo) visibles += 1;
+  for (const li of filas) {
+    const suyo = !estado.paisFiltrado || li.dataset.iso3 === estado.paisFiltrado;
+    const dentro = !estado.soloEnVista || enElEncuadre(li);
+    li.hidden = !(suyo && dentro);
+    if (!li.hidden) visibles += 1;
   }
+
   for (const boton of document.querySelectorAll("#filtro-paises button")) {
-    boton.setAttribute("aria-pressed", String((boton.dataset.iso3 || "") === (iso3 || "")));
+    boton.setAttribute(
+      "aria-pressed",
+      String((boton.dataset.iso3 || "") === (estado.paisFiltrado || ""))
+    );
   }
+  for (const boton of document.querySelectorAll("#orden-lista button")) {
+    boton.setAttribute("aria-pressed", String(boton.dataset.orden === estado.orden));
+  }
+  const interruptor = $("solo-en-vista");
+  if (interruptor) interruptor.checked = estado.soloEnVista;
+
+  const cuenta = $("cuenta-lista");
+  if (cuenta) {
+    cuenta.textContent = estado.soloEnVista
+      ? `${visibles} ${visibles === 1 ? "reporte" : "reportes"} en el encuadre`
+      : `${visibles} ${visibles === 1 ? "reporte publicado" : "reportes publicados"}`;
+  }
+
   const vacio = $("sin-resultados");
   vacio.hidden = visibles > 0;
-  if (!visibles) vacio.textContent = "Ese país todavía no tiene reportes publicados.";
-  anunciar(`${visibles} ${visibles === 1 ? "reporte" : "reportes"} en la lista.`);
+  if (!visibles) {
+    vacio.textContent = estado.soloEnVista
+      ? "Ningún reporte cae dentro de lo que el mapa está enseñando. Aleja o mueve el mapa."
+      : "Ese país todavía no tiene reportes publicados.";
+  }
+  if (anunciando) {
+    anunciar(`${visibles} ${visibles === 1 ? "reporte" : "reportes"} en la lista.`);
+  }
+}
+
+function aplicarFiltro(iso3) {
+  estado.paisFiltrado = iso3;
+  refrescarLista();
+}
+
+//: Los controles de la lista.
+//:
+//: El interruptor de encuadre solo aparece si hay mapa: sin el no hay
+//: `getBounds` que consultar, y un control que no puede hacer nada es peor que
+//: la ausencia del control — es la misma regla del interruptor de sismos
+//: menores, que solo se inyecta si hay algo que enseñar.
+function pintarControlesLista() {
+  const caja = $("orden-lista");
+  if (caja && !caja.children.length) {
+    caja.innerHTML = Object.entries(ORDENES)
+      .map(
+        ([clave, o]) =>
+          `<button type="button" data-orden="${clave}" ` +
+          `aria-pressed="${String(clave === estado.orden)}">${o.texto}</button>`
+      )
+      .join("");
+    for (const boton of caja.querySelectorAll("button")) {
+      boton.addEventListener("click", () => {
+        estado.orden = boton.dataset.orden;
+        refrescarLista();
+      });
+    }
+  }
+
+  const etiqueta = $("etiqueta-en-vista");
+  const interruptor = $("solo-en-vista");
+  if (!etiqueta || !interruptor || !estado.mapa) return;
+  etiqueta.hidden = false;
+  interruptor.addEventListener("change", () => {
+    estado.soloEnVista = interruptor.checked;
+    refrescarLista();
+  });
+  // Mientras el recorte esta puesto, mover el mapa mueve la lista. `moveend` y
+  // no `move`: reordenar veintiun nodos en cada fotograma de un desplazamiento
+  // es trabajo tirado, y el usuario solo lee la lista cuando suelta.
+  estado.mapa.on("moveend", () => {
+    if (estado.soloEnVista) refrescarLista({ anunciando: false });
+  });
 }
 
 function pintarFiltroPaises(eventos, nombres) {
@@ -1995,6 +2560,7 @@ async function cargarObservados() {
   pintarInterruptorObservados(eventos, datos.ventana_dias);
   estado.vivo.observados = eventos.length;
   estado.vivo.ventanaSismos = datos.ventana_dias || 5;
+  estado.vivo.sismosUtc = datos.generado_utc || null;
   pintarEnVivo();
 }
 
@@ -2052,7 +2618,7 @@ function dibujarObservados(eventos) {
     m.on("mouseleave", "observados", () => (m.getCanvas().style.cursor = ""));
     m.on("click", "observados", (ev) => {
       const p = ev.features[0].properties;
-      new maplibregl.Popup({ closeButton: true, maxWidth: "300px" })
+      abrirGlobo(new maplibregl.Popup({ closeButton: true, maxWidth: "300px" }))
         .setLngLat(ev.lngLat)
         .setHTML(
           `<div class="popup-observado">` +
@@ -2151,11 +2717,12 @@ async function cargarIncendios() {
   if (!celdas.length) return;
 
   dibujarIncendios(datos);
-  pintarLeyendaFuego();
+  pintarLeyendaFuego(datos);
   pintarInterruptorIncendios(datos);
   estado.vivo.incendios = datos.totales || {};
   estado.vivo.suelo = datos.suelo || {};
   estado.vivo.ventanaFuego = datos.ventana_horas || 24;
+  estado.vivo.fuegoUtc = datos.generado_utc || null;
   pintarEnVivo();
 }
 
@@ -2277,7 +2844,7 @@ function dibujarIncendios(datos) {
       m.on("mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
       m.on("mouseleave", capa, () => (m.getCanvas().style.cursor = ""));
       m.on("click", capa, (ev) => {
-        new maplibregl.Popup({ closeButton: true, maxWidth: "320px" })
+        abrirGlobo(new maplibregl.Popup({ closeButton: true, maxWidth: "320px" }))
           .setLngLat(ev.lngLat)
           .setHTML(cuadroDeIncendio(ev.features[0].properties))
           .addTo(m);
@@ -2326,9 +2893,34 @@ function cuadroDeIncendio(p) {
   );
 }
 
+//: Cuantas celdas hay y cuantas se dibujan, que no son la misma cifra.
+//:
+//: `p5_incendios` ordena por potencia radiativa y publica las 4.000 primeras
+//: —varios megabytes menos que descargar la cola larga de detecciones debiles—
+//: pero calcula los totales sobre **todas**, y emite `celdas_publicadas` justo
+//: para que el recorte se pueda decir. El visor no leia ese campo: rotulaba la
+//: casilla con el total y encendia una capa con el recorte. Medido el
+//: 28-ago-2026: «Focos activos (15.607 celdas en 24 h)» sobre un mapa con
+//: 4.000, y lo mismo por el lector de pantalla.
+//:
+//: Las cifras de la tarjeta «ahora mismo» —personas, sedes, reparto del suelo—
+//: se quedan como estan: esas si son de todas las celdas, y recortarlas para
+//: que cuadren con el mapa seria publicar una cifra falsa por comodidad.
+function celdasDeFuego(totales) {
+  const t = totales || {};
+  const total = Number(t.celdas) || 0;
+  const dibujadas = Number.isFinite(t.celdas_publicadas) ? t.celdas_publicadas : total;
+  return {
+    total,
+    dibujadas,
+    recortado: dibujadas > 0 && dibujadas < total,
+    comoTexto: miles,
+  };
+}
+
 //: Rotulos de la rampa. Sin esto la capa tiene seis colores y ninguna forma de
 //: saber que significan — que es peor que no tener color: invita a interpretar.
-function pintarLeyendaFuego() {
+function pintarLeyendaFuego(datos) {
   if ($("leyenda-fuego")) return;
   const caja = document.createElement("div");
   caja.className = "leyenda leyenda-fuego";
@@ -2342,10 +2934,18 @@ function pintarLeyendaFuego() {
     return `<li><span class="muestra" style="background:${color}"></span>${texto}</li>`;
   }).join("");
 
+  // El recorte se explica donde se mira la capa, no solo en la casilla que la
+  // enciende: quien llega con la capa ya encendida —desde la tarjeta «ahora
+  // mismo»— no pasa por la casilla.
+  const { total, dibujadas, recortado, comoTexto: mil } = celdasDeFuego(datos && datos.totales);
+  const corte = recortado
+    ? ` Se dibujan las ${mil(dibujadas)} celdas de mayor energía de ${mil(total)}.`
+    : "";
+
   caja.innerHTML =
     `<p class="leyenda-titulo mono">Potencia radiativa · MW</p>` +
     `<ul class="leyenda-escala">${rangos}</ul>` +
-    `<p class="leyenda-nota">Energía medida en 24 h. <strong>No es área quemada.</strong></p>`;
+    `<p class="leyenda-nota">Energía medida en 24 h. <strong>No es área quemada.</strong>${corte}</p>`;
   // Va en el mismo contenedor que los interruptores y no suelta sobre el
   // mapa: asi apilan solos. Posicionar la leyenda con un `bottom` fijo obliga
   // a saber cuanto miden los controles, y eso deja de ser cierto en cuanto una
@@ -2358,12 +2958,18 @@ function pintarInterruptorIncendios(datos) {
   if (!anfitrion || $("interruptor-incendios")) return;
 
   const t = datos.totales || {};
+  const { total, dibujadas, recortado, comoTexto: mil } = celdasDeFuego(t);
+  // Lo que promete el interruptor tiene que ser lo que enciende. El total sigue
+  // delante porque es la cifra del sistema; el recorte va detras porque es lo
+  // que se va a ver.
+  const cuenta = recortado ? `${mil(dibujadas)} de ${mil(total)} celdas` : `${mil(total)} celdas`;
+
   const caja = document.createElement("label");
   caja.className = "interruptor-observados";
   caja.id = "interruptor-incendios";
   caja.innerHTML =
     `<input type="checkbox"> <span>Focos activos ` +
-    `<span class="menor">(${numero(t.celdas)} celdas en ${datos.ventana_horas || 24} h)</span></span>`;
+    `<span class="menor">(${cuenta} en ${datos.ventana_horas || 24} h)</span></span>`;
   anfitrion.appendChild(caja);
 
   caja.querySelector("input").addEventListener("change", (ev) => {
@@ -2375,7 +2981,14 @@ function pintarInterruptorIncendios(datos) {
     }
     const leyenda = $("leyenda-fuego");
     if (leyenda) leyenda.hidden = !ev.target.checked;
-    if (ev.target.checked) anunciar(`Focos activos: ${numero(t.celdas)} celdas.`);
+    if (ev.target.checked) {
+      anunciar(
+        recortado
+          ? `Focos activos: se dibujan ${mil(dibujadas)} celdas de ${mil(total)}, ` +
+            `las de mayor energía.`
+          : `Focos activos: ${mil(total)} celdas.`
+      );
+    }
   });
 }
 
@@ -2427,7 +3040,8 @@ function pintarEnVivo() {
         `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span></span>` +
         `<span class="etiqueta">personas en celdas con fuego activo</span>` +
         `<span class="apunte">${numero(v.incendios.celdas)} celdas · ` +
-        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h</span>` +
+        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h` +
+        `${selloDeRevision(v.fuegoUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
     // Salud y educacion bajo fuego: la cifra que decide un traslado, y que
@@ -2472,15 +3086,23 @@ function pintarEnVivo() {
       `<button type="button" class="metrica metrica-viva" data-capa="observados">` +
         `<span class="valor">${numero(v.observados)}</span>` +
         `<span class="etiqueta">sismos vistos y no despachados</span>` +
-        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos} días</span>` +
+        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos} días` +
+        `${selloDeRevision(v.sismosUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
   }
   if (!partes.length) return;
 
+  // NO se promete una cadencia aqui. El cron pide un turno cada 30 minutos y
+  // GitHub concede unos pocos al dia; escribir "se revisa cada 30 min" seria
+  // exactamente la clase de cifra plausible y falsa que este tablero evita.
+  // `status.json` publica la cadencia **medida**, y ahi se manda a quien
+  // pregunte.
   caja.innerHTML =
     `<p class="eyebrow eyebrow-vivo"><span class="pulso" aria-hidden="true"></span>Ahora mismo</p>` +
-    `<div class="metricas">${partes.join("")}</div>`;
+    `<div class="metricas">${partes.join("")}</div>` +
+    `<p class="pie-vivo">Cada cifra lleva cuándo se revisó. La cadencia real ` +
+    `—la que consigue el cron, no la que pide— está en <a href="status.html">Estado</a>.</p>`;
   caja.hidden = false;
 
   for (const boton of caja.querySelectorAll(".metrica-viva")) {
