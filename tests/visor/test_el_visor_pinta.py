@@ -348,8 +348,9 @@ def test_las_pestanas_de_capa_se_pueden_pulsar(pagina: Any) -> None:
     marca = _ahora(pagina)
     pagina.select_option("select", "us6000tjl2")
     _esperar_capa(pagina, "celdas", desde=marca)
-    pagina.get_by_label("Focos activos", exact=False).check()
-    _esperar_capa(pagina, "incendios")
+    # Ya no se enciende el fuego encima: con el selector de amenaza, "evento +
+    # focos" dejo de existir — entrar a fuego cierra el evento. El peor estado
+    # del modo sismos es el evento con su leyenda y el conmutador delante.
 
     tapadas = pagina.evaluate("""() =>
         [...document.querySelectorAll('#capas button')].filter(b => {
@@ -375,8 +376,6 @@ def test_los_controles_no_tapan_el_aviso_de_que_esto_no_es_dano(pagina: Any) -> 
     marca = _ahora(pagina)
     pagina.select_option("select", "us6000tjl2")
     _esperar_capa(pagina, "celdas", desde=marca)
-    pagina.get_by_label("Focos activos", exact=False).check()
-    _esperar_capa(pagina, "incendios")
 
     solapa = pagina.evaluate("""() => {
         const p = document.querySelector('.controles-mapa').getBoundingClientRect();
@@ -406,8 +405,9 @@ def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any) -> None:
     """
     pagina.set_viewport_size(MOVIL)
     _esperar_capa(pagina, "epicentros")
-    pagina.get_by_label("Focos activos", exact=False).check()
     _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(600)
 
     encima = pagina.evaluate("""() => {
         const a = document.querySelector('.maplibregl-ctrl-attrib');
@@ -507,35 +507,36 @@ def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, a
     """
     pagina.set_viewport_size({"width": ancho, "height": alto})
     _esperar_capa(pagina, "epicentros")
-    pagina.get_by_label("Focos activos", exact=False).check()
     _esperar_capa(pagina, "incendios")
+
+    # Peor estado del modo sismos: un evento abierto, con leyenda y pestañas.
     marca = _ahora(pagina)
     pagina.select_option("select", "us6000tjl2")
     _esperar_capa(pagina, "celdas", desde=marca)
     pagina.wait_for_timeout(800)
 
     solapes = pagina.evaluate(SONDA_SOLAPES)
+    assert solapes == [], f"en {etiqueta} ({ancho}x{alto}), modo sismos: {solapes}"
 
-    assert solapes == [], f"en {etiqueta} ({ancho}x{alto}) hay texto encima de otro: {solapes}"
+    # Y el modo fuego, que es un estado nuevo con su propia leyenda grande.
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_timeout(800)
+
+    solapes = pagina.evaluate(SONDA_SOLAPES)
+    assert solapes == [], f"en {etiqueta} ({ancho}x{alto}), modo fuego: {solapes}"
 
 
 # --- Lo que un control promete tiene que ser lo que enciende -----------------
 
 
-def test_el_interruptor_de_fuego_promete_lo_que_dibuja(pagina: Any) -> None:
+def test_el_modo_fuego_promete_lo_que_dibuja(pagina: Any) -> None:
     """La casilla decia 15.607 celdas y el mapa dibujaba 4.000.
 
-    `p5_incendios` recorta a las 4.000 de mayor potencia radiativa para que el
-    visor no descargue varios megabytes, calcula los totales sobre **todas** y
-    publica `celdas_publicadas` justo para que el recorte se pueda decir. El
-    visor no leia ese campo: rotulaba con el total, encendia el recorte, y lo
-    mismo por el lector de pantalla.
-
-    Es el modo de fallo que este proyecto persigue en todas partes —una cifra
-    plausible que el dato de al lado no sostiene— y estaba en el propio visor.
-
-    No se comprueba la redaccion sino la aritmetica: el numero que el control
-    ensena tiene que ser uno que el mapa pueda respaldar.
+    El control cambio —el checkbox de esquina es hoy el selector de amenaza—
+    pero la invariante que esta prueba guarda es la misma: el numero que la
+    interfaz ensena tiene que ser uno que el mapa pueda respaldar, y el recorte
+    tiene que decir su criterio.
     """
     anotacion = _esperar_capa(pagina, "incendios")
     totales = pagina.evaluate("fetch('incendios.json').then(r => r.json()).then(d => d.totales)")
@@ -556,25 +557,20 @@ def test_el_interruptor_de_fuego_promete_lo_que_dibuja(pagina: Any) -> None:
         )
         return texto
 
-    etiqueta = pagina.locator("#interruptor-incendios").inner_text()
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
 
-    assert es(dibujadas) in etiqueta, (
-        f"el interruptor no dice cuantas celdas dibuja ({es(dibujadas)}): {etiqueta!r}"
-    )
+    # `inner_text` devuelve versalitas (la trampa de siempre) y la nota vive
+    # dentro del <details> plegado: se abre, que ademas comprueba que la
+    # explicacion es alcanzable.
+    pagina.locator("#leyenda .leyenda-detalle summary").click()
+    leyenda = pagina.locator("#leyenda").inner_text()
+    assert "potencia radiativa" in leyenda.lower(), f"el modo fuego no trae su leyenda: {leyenda!r}"
     if publicadas < total:
-        assert es(total) in etiqueta, (
-            f"el interruptor esconde el total ({es(total)}) y solo ensena el recorte: {etiqueta!r}"
-        )
-        # El fallo original en su forma exacta: el total como unica cifra.
-        assert not etiqueta.strip().startswith(f"Focos activos ({es(total)} celdas"), (
-            f"el interruptor promete el total y enciende el recorte: {etiqueta!r}"
-        )
-
-        pagina.get_by_label("Focos activos", exact=False).check()
-        leyenda = pagina.locator("#leyenda-fuego").inner_text()
         assert es(dibujadas) in leyenda and es(total) in leyenda, (
-            f"la leyenda de fuego no dice que la capa esta recortada: {leyenda!r}"
+            f"la leyenda no dice el recorte ({es(dibujadas)} de {es(total)}): {leyenda!r}"
         )
+        assert "gente debajo" in leyenda, f"la leyenda no dice el criterio del recorte: {leyenda!r}"
 
 
 # --- Sin libreria de mapas ---------------------------------------------------
@@ -1115,7 +1111,7 @@ def test_el_globo_de_un_foco_dice_que_arde_y_sobre_quien(pagina: Any) -> None:
     propio del globo de fuego, no cualquier globo.
     """
     _esperar_capa(pagina, "incendios")
-    pagina.get_by_label("Focos activos", exact=False).check()
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
     caja = pagina.locator("#mapa").bounding_box()
@@ -1151,3 +1147,88 @@ def test_el_globo_de_un_foco_dice_que_arde_y_sobre_quien(pagina: Any) -> None:
         f"el globo no dice la energia medida: {texto!r}"
     )
     assert "Detecciones" in texto, f"el globo no dice cuantas veces se vio: {texto!r}"
+
+
+# --- El selector de amenaza --------------------------------------------------
+
+
+def test_el_selector_de_amenaza_cambia_el_lente(pagina: Any) -> None:
+    """El fuego deja de ser un checkbox: es un modo con el mismo rango que los
+    sismos, con su leyenda en el hueco grande y su URL compartible.
+    """
+    _esperar_capa(pagina, "incendios")
+
+    boton_fuego = pagina.locator('#amenazas button[data-amenaza="fuego"]')
+    boton_sismos = pagina.locator('#amenazas button[data-amenaza="sismos"]')
+    assert boton_sismos.get_attribute("aria-pressed") == "true", "sismos es el defecto"
+
+    boton_fuego.click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+
+    assert boton_fuego.get_attribute("aria-pressed") == "true"
+    assert "amenaza=fuego" in pagina.url, "el modo no viaja en la URL"
+    assert "potencia radiativa" in pagina.locator("#leyenda").inner_text().lower()
+    assert pagina.locator("#interruptor-observados").is_hidden(), (
+        "el control de sismos menores es del modo sismos y sigue a la vista"
+    )
+
+    # Y de vuelta: el hueco grande se libera y la URL queda limpia.
+    boton_sismos.click()
+    pagina.wait_for_selector("#leyenda[hidden]", state="attached", timeout=ESPERA_MS)
+    assert "amenaza" not in pagina.url
+    assert pagina.locator("#interruptor-observados").is_visible()
+
+
+def test_abrir_un_evento_desde_el_modo_fuego_vuelve_a_sismos(pagina: Any) -> None:
+    """Un evento abierto es contenido del modo sismos, llegue de donde llegue.
+
+    Sin esta regla, elegir un reporte en modo fuego dejaria el panel contando
+    poblacion por franja de intensidad sobre un mapa que dibuja potencia
+    radiativa: dos amenazas hablando a la vez, que es justo lo que el selector
+    existe para impedir.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    assert (
+        pagina.locator('#amenazas button[data-amenaza="sismos"]').get_attribute("aria-pressed")
+        == "true"
+    ), "el evento se abrio y el fuego sigue al mando"
+    assert "intensidad" in pagina.locator("#leyenda").inner_text().lower(), (
+        "la leyenda no volvio a la variable de la malla"
+    )
+    assert "evento=us6000tjl2" in pagina.url and "amenaza" not in pagina.url
+
+
+def test_el_enlace_profundo_al_modo_fuego(navegador: Any, servidor: str) -> None:
+    """?amenaza=fuego abre con el fuego al mando aunque sus capas carguen tarde.
+
+    Las capas llegan en paralelo y el modo se aplica cuando cada una termina de
+    dibujarse: sin eso, un enlace compartido en modo fuego abriria en sismos
+    con el fuego invisible, que es el estado que el enlace venia a evitar.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    try:
+        pg.goto(f"{servidor}/index.html?amenaza=fuego")
+        pg.wait_for_function(
+            """() => {
+                 const p = window.CENTINELA && window.CENTINELA.pintado;
+                 return !!(p && p.incendios && p.incendios.rasgos > 0);
+               }""",
+            timeout=ESPERA_MS,
+        )
+        pg.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+
+        assert (
+            pg.locator('#amenazas button[data-amenaza="fuego"]').get_attribute("aria-pressed")
+            == "true"
+        )
+        assert "potencia radiativa" in pg.locator("#leyenda").inner_text().lower()
+    finally:
+        ctx.close()

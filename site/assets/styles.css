@@ -1375,20 +1375,6 @@ thead th {
   .pulso { animation: none; }
 }
 
-/* La leyenda del fuego vive aparte de la de intensidad: nunca se miran a la
- * vez —una es regional y continua, la otra es de un evento— y compartir caja
- * obligaria a decidir cual gana. */
-.leyenda-fuego {
-  /* Sin posicion propia: vive dentro de `.controles-mapa` y se apila con los
-     interruptores. La version anterior la clavaba a `bottom: 58px`, que solo
-     era cierto mientras los controles midieran una linea. */
-  position: static;
-  order: -1;
-  width: 14rem;
-  max-width: 100%;
-  bottom: auto;
-  right: auto;
-}
 
 
 /* Una cifra que lleva a verla. Hereda de `.metrica` y solo anade lo que la
@@ -1650,12 +1636,6 @@ thead th {
   outline: 2px solid #1f6f4a;
   outline-offset: 2px;
 }
-
-@media (max-width: 34rem) {
-  .leyenda-simbolos,
-  .leyenda-fuego {
-    width: 13rem;
-  }
 }
 
 
@@ -1820,3 +1800,68 @@ thead th {
      las pestañas. A 5rem le pisaba la esquina a la escala (~12 px). */
   .capas:not([hidden]) ~ #leyenda { top: 6.1rem; }
 }
+
+
+/* --- El selector de amenaza (30-ago-2026) ---------------------------------- */
+/* Un lente a la vez: la amenaza activa manda y la otra queda de contexto. El
+   conmutador ocupa la esquina que era de las pestañas de capa, que bajan una
+   fila: la amenaza se elige antes que la variable. */
+
+.amenazas {
+  position: absolute;
+  top: 0.9rem;
+  left: 0.9rem;
+  z-index: 6;
+  display: flex;
+  gap: 0.2rem;
+  padding: 0.22rem;
+  background: rgba(244, 242, 234, 0.95);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  box-shadow: var(--sombra-corta);
+}
+
+.amenazas button {
+  font: inherit;
+  font-family: var(--tipo-titulo);
+  font-size: 0.86rem;
+  font-weight: 600;
+  border: 0;
+  background: none;
+  color: var(--tenue);
+  padding: 0.3rem 0.95rem;
+  border-radius: var(--radio-pastilla);
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.amenazas button:hover { color: var(--bosque); }
+.amenazas button[aria-pressed="true"] { background: var(--bosque); color: var(--crema); }
+
+/* El fuego activo no se pinta del verde de marca: se pinta del magenta hondo de
+   su propia rampa (FUEGO_COLORES[4]), que es su identidad en el mapa. Sobre el
+   texto crema da 7,3:1. */
+.amenazas button[data-amenaza="fuego"][aria-pressed="true"] { background: #8c1d64; }
+
+/* Las pestañas de variable bajan una fila: primero se elige la amenaza. */
+.capas { top: 3.55rem; }
+
+@media (max-width: 48rem) {
+  /* La fila de pestañas se acorta para no cruzarse con la barra de escala, que
+     vive a la derecha bajo el zoom. Sigue siendo desplazable. */
+  .capas { max-width: calc(100% - 8.6rem); }
+
+  /* La leyenda vive bajo TODO lo de arriba: conmutador, pestañas cuando las
+     hay, y la barra de escala — que esta a la derecha bajo el zoom y fue la
+     que pisaba el titulo en modo fuego ("2000 km" sobre "Potencia radiativa",
+     cazado por la sonda de solapes). Un solo tope que libra a los tres. */
+  #leyenda { top: 6.15rem; }
+  .capas:not([hidden]) ~ #leyenda { top: 6.35rem; }
+}
+
+/* La trampa del [hidden], otra vez: el atributo es display:none con
+   especificidad de elemento y `.interruptor-observados { display: flex }` lo
+   pisa — el mismo fallo que este repositorio ya documento en la lista de
+   eventos. El control de sismos menores se oculta en modo fuego por atributo,
+   asi que necesita su regla. */
+.interruptor-observados[hidden] { display: none; }
