@@ -2226,6 +2226,18 @@ function iniciarMapa() {
   // sobrante horizontal se reparte a los dos lados en vez de amontonarse al
   // este.
   mapa.once("load", () => {
+    // Y SOLO SI NADIE HA PEDIDO OTRA COSA.
+    //
+    // `cuandoElEstiloEsteListo` se dispara con `isStyleLoaded()`, que es **antes**
+    // que `load` —`load` espera ademas al primer pintado de las fuentes—. Con un
+    // enlace profundo la secuencia real era: volar al evento, y despues este
+    // encuadre devolviendolo al panorama. Se veia la malla del sismo del tamano
+    // de un sello en mitad de America Latina.
+    //
+    // En local no pasaba: el servidor esta a un milisegundo y `load` llegaba
+    // antes. Aparecio en la pagina publicada, que es donde no se quiere
+    // encontrar algo asi.
+    if (estado.seleccionado) return;
     try {
       volverAlEncuadre(mapa);
     } catch (error) {

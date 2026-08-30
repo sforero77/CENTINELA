@@ -994,3 +994,63 @@ def test_un_enlace_a_un_reporte_que_no_existe_lo_dice(navegador: Any, servidor: 
         )
     finally:
         ctx.close()
+
+
+def test_un_enlace_profundo_deja_la_camara_sobre_su_evento(navegador: Any, servidor: str) -> None:
+    """El encuadre de apertura le robaba la camara al enlace profundo.
+
+    `cuandoElEstiloEsteListo` se dispara con `isStyleLoaded()`, que llega antes
+    que `load`: con `?evento=...` la secuencia real era volar al evento y luego
+    que el encuadre de apertura lo devolviera al panorama. Se veia la malla del
+    sismo del tamano de un sello en mitad de America Latina.
+
+    Las otras pruebas abren el evento con `select_option` **despues** de cargar,
+    y por ese camino no hay carrera: esta entra por la URL, que es como llega
+    quien recibe un enlace compartido.
+
+    Se comprueba con el recorte al encuadre, que ya existe: si la camara esta
+    sobre el Choco solo cae un reporte dentro; si volvio al panorama, los 21.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    try:
+        # La carrera solo aparece cuando `load` llega **tarde**, y en local no
+        # llega tarde: el servidor esta a un milisegundo. Se retrasan las teselas
+        # —no el estilo— para reproducir el orden de la pagina publicada.
+        #
+        # Sin esto la prueba pasaba con el fallo puesto, que es una prueba que no
+        # prueba nada. Comprobado: sin el arreglo da "21 de 21 en el encuadre".
+        def _lento(ruta: Any) -> None:
+            import time
+
+            time.sleep(1.2)
+            ruta.continue_()
+
+        pg.route("**/tiles.openfreemap.org/**/*.pbf", _lento)
+
+        pg.goto(f"{servidor}/index.html?evento=us6000tjl2")
+        pg.wait_for_function(
+            """() => {
+                 const p = window.CENTINELA && window.CENTINELA.pintado;
+                 return !!(p && p.celdas && p.celdas.rasgos > 0);
+               }""",
+            timeout=ESPERA_MS,
+        )
+        # El vuelo dura `VUELO` ms, y hay que dejar que `load` llegue y haga —o
+        # no haga— lo suyo.
+        pg.wait_for_timeout(5000)
+
+        pg.locator("#solo-en-vista").check()
+        pg.wait_for_timeout(600)
+
+        en_vista = pg.evaluate(
+            "document.querySelectorAll('#lista-eventos li:not([hidden])').length"
+        )
+        total = pg.evaluate("document.querySelectorAll('#lista-eventos li').length")
+
+        assert en_vista < total, (
+            f"con un enlace profundo la camara se quedo en el panorama: "
+            f"{en_vista} de {total} reportes en el encuadre"
+        )
+    finally:
+        ctx.close()
