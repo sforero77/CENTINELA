@@ -816,3 +816,181 @@ def test_la_lista_se_recorta_al_encuadre_del_mapa(pagina: Any) -> None:
     assert "encuadre" in pagina.locator("#cuenta-lista").inner_text().lower(), (
         "el contador no dice que la lista esta recortada al encuadre"
     )
+
+
+# --- Lo que la sonda de solapes no veia -------------------------------------
+
+
+#: Solapes **dentro de una seccion**, ignorando la barra fija.
+#:
+#: `SONDA_SOLAPES` recorre la pantalla entera, y en cuanto se desplaza la pagina
+#: la barra pegajosa queda sobre el contenido y da siete pares que no son un
+#: fallo: para eso lleva fondo. Esta sonda mira una sola seccion.
+SONDA_SOLAPES_EN = """
+(sel) => {
+  const raiz = document.querySelector(sel);
+  const conTexto = [...raiz.querySelectorAll('*'), raiz].filter(e => {
+    if (!e.checkVisibility({ visibilityProperty: true, opacityProperty: true })) return false;
+    const r = e.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return false;
+    return [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 1);
+  });
+  const pares = [];
+  for (let i = 0; i < conTexto.length; i++) {
+    for (let j = i + 1; j < conTexto.length; j++) {
+      const a = conTexto[i], b = conTexto[j];
+      if (a.contains(b) || b.contains(a)) continue;
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+      const ox = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+      const oy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+      if (ox > 2 && oy > 2) {
+        const corta = (e) => e.textContent.trim().slice(0, 22);
+        pares.push(`«${corta(a)}» sobre «${corta(b)}»`);
+      }
+    }
+  }
+  return pares;
+}
+"""
+
+
+@pytest.mark.parametrize("ancho", [360, 390, 768, 1024, 1280, 1600])
+def test_la_reticula_no_se_pisa_con_el_titular(pagina: Any, ancho: int) -> None:
+    """La sonda de solapes solo mira lo que cabe en pantalla, y esta seccion vive
+    bajo el pliegue: por eso paso desapercibido durante toda una auditoria.
+
+    La etiqueta "12°N" iba clavada a 0,85rem del borde y terminaba en el pixel
+    41; el titular de "Reportes publicados" empieza en el 28. Se pisaban de 360 a
+    1200 px —cualquier telefono y casi cualquier portatil— y solo se libraba a
+    partir de 1440, cuando el contenedor se centra y deja hueco.
+    """
+    pagina.set_viewport_size({"width": ancho, "height": 800})
+    _esperar_capa(pagina, "epicentros")
+    pagina.locator("#eventos h2").scroll_into_view_if_needed()
+    pagina.wait_for_timeout(400)
+
+    solapes = pagina.evaluate(SONDA_SOLAPES_EN, "#eventos")
+
+    assert solapes == [], f"a {ancho} px hay texto encima de otro en la lista: {solapes}"
+
+
+@pytest.mark.parametrize("ancho", [320, 344, 360, 390])
+def test_la_pagina_no_se_desplaza_de_lado_en_pantallas_estrechas(pagina: Any, ancho: int) -> None:
+    """La rejilla de tarjetas pedia columnas de 20rem que no encogian.
+
+    En un iPhone SE de 320 px la lista empujaba 35 px fuera de la ventana y
+    arrastraba a toda la pagina, mapa incluido. Medido: 320 -> 35, 344 -> 11,
+    360 -> 0. La prueba que ya habia solo miraba 390, justo por encima del
+    umbral donde el fallo empieza.
+    """
+    pagina.set_viewport_size({"width": ancho, "height": 780})
+    _esperar_capa(pagina, "epicentros")
+
+    medida = pagina.evaluate("""() => ({
+        scroll: document.documentElement.scrollWidth,
+        visible: document.documentElement.clientWidth,
+    })""")
+
+    assert medida["scroll"] <= medida["visible"] + 1, (
+        f"a {ancho} px la pagina se desplaza de lado: {medida['scroll']} sobre {medida['visible']}"
+    )
+
+
+# --- Que se sepa de cuando es cada cifra ------------------------------------
+
+
+def test_las_cifras_en_vivo_dicen_cuando_se_revisaron(pagina: Any) -> None:
+    """El comentario de `pintarEnVivo` lo prometia desde que se escribio —"por
+    eso llevan la hora de la ultima revision: sin ella, «14.984 celdas con
+    fuego» podria ser de hace un mes"— y no lo cumplia.
+
+    Un tablero que se presenta como vigilancia en vivo y no fecha sus cifras
+    pide una confianza que no ha ganado.
+    """
+    _esperar_capa(pagina, "incendios")
+    vivo = pagina.locator("#en-vivo")
+
+    assert vivo.is_visible(), "la tarjeta en vivo no salio"
+    texto = vivo.inner_text()
+    assert "revisado" in texto.lower(), f"ninguna cifra dice cuando se reviso: {texto!r}"
+
+    # Y la marca exacta, para quien la quiera, en el `title`.
+    sellos = pagina.locator("#en-vivo .revisado")
+    assert sellos.count() > 0
+    assert sellos.first.get_attribute("title"), "el sello no lleva la fecha exacta"
+
+
+# --- El globo no puede sobrevivir a lo que describe -------------------------
+
+
+def test_el_globo_de_una_celda_se_va_con_su_evento(pagina: Any) -> None:
+    """Se abria una celda, se pulsaba "Volver al panorama" y el globo se quedaba
+    flotando sobre el mapa continental: describia una celda de un evento cerrado
+    sobre una malla que ya no estaba, y era el unico de los tres popups sin
+    boton de cerrar.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    # Se espera a que el vuelo al evento termine: pulsar mientras la camara se
+    # mueve es pulsar sobre una malla que todavia no esta donde se ve.
+    pagina.wait_for_timeout(2000)
+
+    # Y la malla tiene huecos —son ausencia de gente, no de sacudida— asi que el
+    # centro del mapa no siempre cae sobre una celda. Se barre una rejilla.
+    caja = pagina.locator("#mapa").bounding_box()
+    assert caja
+    abierto = False
+    for fy in (0.35, 0.45, 0.55, 0.65):
+        for fx in (0.35, 0.45, 0.55):
+            pagina.mouse.click(caja["x"] + caja["width"] * fx, caja["y"] + caja["height"] * fy)
+            pagina.wait_for_timeout(320)
+            if pagina.locator(".maplibregl-popup").count():
+                abierto = True
+                break
+        if abierto:
+            break
+    assert abierto, "no se pudo abrir el globo de ninguna celda de la malla"
+
+    assert pagina.locator(".maplibregl-popup-close-button").count() > 0, (
+        "el globo de celda sigue sin boton de cerrar"
+    )
+
+    pagina.locator("#volver").click()
+    pagina.wait_for_selector(".maplibregl-popup", state="detached", timeout=ESPERA_MS)
+
+    assert pagina.locator(".maplibregl-popup").count() == 0, (
+        "al volver al panorama quedo un globo describiendo un evento cerrado"
+    )
+
+
+# --- Un enlace roto tiene que decir que lo esta -----------------------------
+
+
+def test_un_enlace_a_un_reporte_que_no_existe_lo_dice(navegador: Any, servidor: str) -> None:
+    """`?evento=NO_EXISTE` caia al panorama en silencio, con el parametro todavia
+    en la barra. Quien llega desde un enlace compartido a un reporte retirado
+    cree que pulso mal.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    try:
+        pg.goto(f"{servidor}/index.html?evento=NO_EXISTE")
+        pg.wait_for_function(
+            "() => document.querySelectorAll('#lista-eventos li').length > 0",
+            timeout=ESPERA_MS,
+        )
+
+        aviso = pg.locator("#estado-lista")
+        assert aviso.is_visible(), "no se dijo nada sobre el reporte que no existe"
+        assert "NO_EXISTE" in aviso.inner_text(), (
+            f"el aviso no nombra el identificador pedido: {aviso.inner_text()!r}"
+        )
+        # Y el panorama entero sigue delante, que es lo que hay que ofrecer.
+        assert pg.locator("#lateral-detalle").is_hidden()
+        assert "evento=" not in pg.url, (
+            "el parametro roto sigue en la barra: recargar repite el error"
+        )
+    finally:
+        ctx.close()

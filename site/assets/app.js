@@ -55,6 +55,19 @@ const ENCUADRE_LATAM = [
   [-32.0, 33.0],
 ];
 
+//: La ventana **util**, que es la que se encuadra al abrir.
+//:
+//: `ENCUADRE_LATAM` es la caja del pipeline y entra entera solo a un zoom al que
+//: se ven 206 grados de longitud: una franja fina de continente rodeada de
+//: oceano. Esta recorta el norte de Mexico y la Patagonia austral —donde menos
+//: gente y menos actividad hay de los diecinueve paises— que es exactamente el
+//: recorte que `VISTA_INICIAL` ya habia elegido a mano. La diferencia es que
+//: ahora se adapta a la ventana en vez de ser correcto para una sola.
+const ENCUADRE_UTIL = [
+  [-107.0, -46.0],
+  [-34.0, 30.0],
+];
+
 // Mapa base: estilo Positron de OpenFreeMap.
 //
 // **Por qué este y no las teselas de Overture.** Overture tesela para el
@@ -268,6 +281,35 @@ function comoFecha(iso, conHora = true) {
   return `${dia}, ${hh}:${mm} UTC`;
 }
 
+//: Cuanto hace que se reviso.
+//:
+//: El comentario de la tarjeta "ahora mismo" lleva escrito desde que se creo
+//: que las cifras "llevan la hora de la ultima revision: sin ella, «14.984
+//: celdas con fuego» podria ser de hace un mes". No la llevaban. Un tablero que
+//: se presenta como vigilancia en vivo y no fecha sus cifras pide una confianza
+//: que no ha ganado.
+//:
+//: En prosa y no en marca de tiempo: quien mira quiere saber si esto es de hoy,
+//: no a que hora exacta corrio un cron. La marca exacta va en el `title`.
+function haceCuanto(iso) {
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) return null;
+  const min = (Date.now() - t.getTime()) / 60000;
+  if (min < 0) return "ahora mismo";
+  if (min < 90) return `hace ${Math.max(1, Math.round(min))} min`;
+  const horas = min / 60;
+  if (horas < 36) return `hace ${Math.round(horas)} h`;
+  const dias = Math.round(horas / 24);
+  return `hace ${dias} ${dias === 1 ? "día" : "días"}`;
+}
+
+//: La antiguedad, lista para pegar detras de un apunte.
+function selloDeRevision(iso) {
+  const cuanto = haceCuanto(iso);
+  if (!cuanto) return "";
+  return ` · <span class="revisado" title="${escapar(comoFecha(iso))}">revisado ${cuanto}</span>`;
+}
+
 // Redondeo en prosa, igual que el markdown del reporte: publicar
 // "2.415.793 personas" sugiere una precisión que el método no tiene.
 function comoTexto(v) {
@@ -332,6 +374,9 @@ const estado = {
   //: Lo que el sistema esta viendo ahora mismo, para el bloque "en vivo".
   vivo: {},
   mapa: null,
+  //: El unico globo abierto en el mapa, para poder cerrarlo cuando se va el
+  //: dato que describe.
+  globo: null,
   eventos: [],
   seleccionado: null,
   capa: "mmi",
@@ -585,7 +630,28 @@ async function cargarEventos() {
 
     const url = leerUrl();
     if (url.capa) estado.capa = url.capa;
-    if (url.evento && eventos.some((e) => e.usgs_id === url.evento)) seleccionar(url.evento);
+    if (url.evento && eventos.some((e) => e.usgs_id === url.evento)) {
+      seleccionar(url.evento);
+    } else if (url.evento) {
+      // Un enlace a un reporte que no esta caia al panorama en silencio, con el
+      // parametro todavia en la barra. Quien llega desde un enlace compartido a
+      // un reporte retirado —o con el id mal copiado— cree que pulso mal.
+      //
+      // No es un error del sistema, asi que no se pinta como tal: se dice lo que
+      // paso y se deja la lista completa delante, que es lo que hay que ofrecer.
+      const aviso = $("estado-lista");
+      if (aviso) {
+        aviso.hidden = false;
+        aviso.textContent =
+          `No hay ningún reporte con el identificador «${url.evento}». ` +
+          `Puede que se haya retirado, o que el enlace esté incompleto. ` +
+          `Abajo están los ${eventos.length} publicados.`;
+      }
+      anunciar(`No se encontró el reporte ${url.evento}. Se muestra el panorama.`);
+      // El parametro se quita: dejarlo hace que recargar repita el error y que
+      // el enlace se siga compartiendo roto.
+      escribirUrl();
+    }
   } catch (error) {
     aviso.textContent =
       "Aún no hay índice de reportes publicado. El primer reporte real lo genera.";
@@ -784,6 +850,21 @@ async function seleccionar(usgsId) {
   }
 }
 
+//: El encuadre de apertura, en un solo sitio.
+//:
+//: Lo pedian dos: el arranque del mapa y "Volver al panorama". Con la caja en
+//: uno y el centro fijo en el otro, volver al panorama daba una vista distinta
+//: de la de llegar, que es de esos detalles que nadie sabe nombrar y todo el
+//: mundo nota.
+function volverAlEncuadre(m, duracion = 0) {
+  if (!m) return;
+  try {
+    m.fitBounds(ENCUADRE_UTIL, { padding: 24, duration: duracion, animate: duracion > 0 });
+  } catch (error) {
+    m.easeTo({ ...VISTA_INICIAL, duration: duracion });
+  }
+}
+
 function cerrarDetalle() {
   estado.seleccionado = null;
   $("lateral-vacio").hidden = false;
@@ -796,6 +877,7 @@ function cerrarDetalle() {
   // se notaba porque son lineas palidas sobre un mapa continental. Al anadir el
   // perimetro, que va en tinta oscura, el resto quedo a la vista: al volver al
   // panorama flotaba el borde de un area cuyo panel ya no existe.
+  cerrarGlobo();
   for (const capa of ["celdas", "contornos", "perimetro"]) quitarCapa(capa);
   estado.presentes = null;
   for (const capa of ["celdas", "contornos", "perimetro"]) anotarPintado(capa, 0);
@@ -804,7 +886,9 @@ function cerrarDetalle() {
   anunciar("Sin evento seleccionado. El panel muestra el panorama de los reportes publicados.");
   const selector = $("selector-evento");
   if (selector) selector.value = "";
-  if (estado.mapa) estado.mapa.easeTo({ ...VISTA_INICIAL, duration: VUELO });
+  // Al mismo encuadre adaptado con el que abre, no al centro y zoom fijos:
+  // volver al panorama tiene que devolver la vista que se tenia al llegar.
+  volverAlEncuadre(estado.mapa, VUELO);
 }
 
 // Tres formas de salir, porque hasta ahora habia media.
@@ -1455,6 +1539,36 @@ function verHaloProporcional(visible) {
   }
 }
 
+//: El globo abierto, uno solo y localizable.
+//:
+//: No habia ninguna limpieza de popups en el visor. Se abria una celda, se
+//: pulsaba "Volver al panorama" y el globo se quedaba flotando sobre el mapa
+//: continental describiendo una celda de un evento cerrado, sobre una malla que
+//: ya no estaba — y el de celda es el unico de los tres sin boton de cerrar, asi
+//: que solo se iba pulsando el mapa por casualidad.
+//:
+//: MapLibre ya cierra el anterior al abrir otro (`closeOnClick`), asi que esto
+//: no cambia el comportamiento normal: solo da un asa para cerrarlo cuando lo
+//: que desaparece es el dato de debajo.
+function abrirGlobo(popup) {
+  cerrarGlobo();
+  estado.globo = popup;
+  popup.on("close", () => {
+    if (estado.globo === popup) estado.globo = null;
+  });
+  return popup;
+}
+
+function cerrarGlobo() {
+  if (!estado.globo) return;
+  try {
+    estado.globo.remove();
+  } catch (error) {
+    /* ya estaba fuera del DOM */
+  }
+  estado.globo = null;
+}
+
 function quitarCapa(id) {
   const m = estado.mapa;
   if (!m || !m.isStyleLoaded() || !m.getSource(id)) return;
@@ -1643,6 +1757,9 @@ function pintarCeldas(datos, reporte, contornos) {
 }
 
 function dibujarCeldas(m, datos, reporte, contornos) {
+  // Cambiar de evento tambien invalida el globo: describiria una celda del
+  // sismo anterior junto a la malla del nuevo, que es la peor version de esto.
+  cerrarGlobo();
   quitarCapa("celdas");
   quitarCapa("contornos");
   quitarCapa("perimetro");
@@ -1780,7 +1897,7 @@ function engancharCeldas(m) {
     const fila = (etiqueta, valor) =>
       `<div style="display:flex;justify-content:space-between;gap:1rem">` +
       `<span style="color:rgba(28,51,40,.72)">${etiqueta}</span><strong>${valor}</strong></div>`;
-    new maplibregl.Popup({ closeButton: false, maxWidth: "18rem" })
+    abrirGlobo(new maplibregl.Popup({ closeButton: true, maxWidth: "18rem" }))
       .setLngLat(ev.lngLat)
       .setHTML(
         // El indice es la clave con la que esta celda se encuentra en el
@@ -2081,6 +2198,40 @@ function iniciarMapa() {
     if (aviso) aviso.hidden = true;
   };
   mapa.once("load", listo);
+
+  // EL ENCUADRE, AHORA SI ADAPTADO A LA VENTANA.
+  //
+  // `VISTA_INICIAL` es un centro y un zoom medidos sobre un mapa de 954 px, y
+  // ahi funciona. Por encima de eso el sobrante no cae en el Pacifico como dice
+  // el comentario de arriba: cae en Africa y en Europa. Medido en un portatil
+  // de 1707 px: el mapa abarca 227 grados de longitud, de -197 a +29, y la caja
+  // de LATAM ocupa el 38 % del ancho — se veian Bulgaria, Italia y la Republica
+  // Democratica del Congo rotuladas en un tablero de America Latina.
+  //
+  // `fitBounds` era lo que este fichero queria desde el principio: "se adapta a
+  // la ventana; un zoom fijo solo es correcto para el tamano de pantalla en que
+  // se eligio". Se descarto porque se llamaba desde `styledata`, que puede
+  // llegar antes de que el contenedor tenga su tamano final, y entonces encuadra
+  // contra una caja que aun no mide lo que va a medir: mapa en blanco.
+  //
+  // `load` no tiene esa carrera — para cuando llega, el contenedor esta medido y
+  // el primer fotograma esta pintado. Y `VISTA_INICIAL` sigue siendo el valor de
+  // arranque, asi que si `load` no llegara nunca el mapa se queda en un encuadre
+  // valido en vez de en ninguno.
+  //
+  // La caja es la ventana util del sistema, no `LATAM_BBOX` entera: recorta el
+  // norte de Mexico y la Patagonia austral, que es lo que el comentario de
+  // `VISTA_INICIAL` ya habia decidido recortar y sigue siendo la decision buena.
+  // Como es mas alta que ancha, en una pantalla apaisada manda el alto y el
+  // sobrante horizontal se reparte a los dos lados en vez de amontonarse al
+  // este.
+  mapa.once("load", () => {
+    try {
+      volverAlEncuadre(mapa);
+    } catch (error) {
+      /* con una caja invalida se queda en VISTA_INICIAL, que es correcta */
+    }
+  });
   setTimeout(listo, 8000);
 
   mapa.on("error", (e) => console.warn("mapa:", e && e.error && e.error.message));
@@ -2409,6 +2560,7 @@ async function cargarObservados() {
   pintarInterruptorObservados(eventos, datos.ventana_dias);
   estado.vivo.observados = eventos.length;
   estado.vivo.ventanaSismos = datos.ventana_dias || 5;
+  estado.vivo.sismosUtc = datos.generado_utc || null;
   pintarEnVivo();
 }
 
@@ -2466,7 +2618,7 @@ function dibujarObservados(eventos) {
     m.on("mouseleave", "observados", () => (m.getCanvas().style.cursor = ""));
     m.on("click", "observados", (ev) => {
       const p = ev.features[0].properties;
-      new maplibregl.Popup({ closeButton: true, maxWidth: "300px" })
+      abrirGlobo(new maplibregl.Popup({ closeButton: true, maxWidth: "300px" }))
         .setLngLat(ev.lngLat)
         .setHTML(
           `<div class="popup-observado">` +
@@ -2570,6 +2722,7 @@ async function cargarIncendios() {
   estado.vivo.incendios = datos.totales || {};
   estado.vivo.suelo = datos.suelo || {};
   estado.vivo.ventanaFuego = datos.ventana_horas || 24;
+  estado.vivo.fuegoUtc = datos.generado_utc || null;
   pintarEnVivo();
 }
 
@@ -2691,7 +2844,7 @@ function dibujarIncendios(datos) {
       m.on("mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
       m.on("mouseleave", capa, () => (m.getCanvas().style.cursor = ""));
       m.on("click", capa, (ev) => {
-        new maplibregl.Popup({ closeButton: true, maxWidth: "320px" })
+        abrirGlobo(new maplibregl.Popup({ closeButton: true, maxWidth: "320px" }))
           .setLngLat(ev.lngLat)
           .setHTML(cuadroDeIncendio(ev.features[0].properties))
           .addTo(m);
@@ -2887,7 +3040,8 @@ function pintarEnVivo() {
         `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span></span>` +
         `<span class="etiqueta">personas en celdas con fuego activo</span>` +
         `<span class="apunte">${numero(v.incendios.celdas)} celdas · ` +
-        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h</span>` +
+        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h` +
+        `${selloDeRevision(v.fuegoUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
     // Salud y educacion bajo fuego: la cifra que decide un traslado, y que
@@ -2932,15 +3086,23 @@ function pintarEnVivo() {
       `<button type="button" class="metrica metrica-viva" data-capa="observados">` +
         `<span class="valor">${numero(v.observados)}</span>` +
         `<span class="etiqueta">sismos vistos y no despachados</span>` +
-        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos} días</span>` +
+        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos} días` +
+        `${selloDeRevision(v.sismosUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
   }
   if (!partes.length) return;
 
+  // NO se promete una cadencia aqui. El cron pide un turno cada 30 minutos y
+  // GitHub concede unos pocos al dia; escribir "se revisa cada 30 min" seria
+  // exactamente la clase de cifra plausible y falsa que este tablero evita.
+  // `status.json` publica la cadencia **medida**, y ahi se manda a quien
+  // pregunte.
   caja.innerHTML =
     `<p class="eyebrow eyebrow-vivo"><span class="pulso" aria-hidden="true"></span>Ahora mismo</p>` +
-    `<div class="metricas">${partes.join("")}</div>`;
+    `<div class="metricas">${partes.join("")}</div>` +
+    `<p class="pie-vivo">Cada cifra lleva cuándo se revisó. La cadencia real ` +
+    `—la que consigue el cron, no la que pide— está en <a href="status.html">Estado</a>.</p>`;
   caja.hidden = false;
 
   for (const boton of caja.querySelectorAll(".metrica-viva")) {

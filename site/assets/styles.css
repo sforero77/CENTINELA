@@ -128,15 +128,29 @@ a:hover { color: var(--verde-vivo); }
   background-position: center top;
 }
 
+/* La etiqueta iba clavada a 0,85rem del borde y terminaba en el pixel 41; el
+   titular de la seccion empieza en el 28 —`#eventos` tiene 1,75rem de padding—
+   asi que se pisaban. Y no solo en movil: medido, de 360 a 1200 px, y solo se
+   libraba a partir de 1440, cuando el contenedor se centra y deja hueco.
+
+   Ahora la etiqueta se coloca **respecto al mismo canal que el texto**: se
+   queda pegada al borde mientras haya sitio y desaparece cuando no lo hay, que
+   es lo que tiene que hacer una marca de reticula decorativa. */
 .paralelo {
   position: absolute;
-  left: 0.85rem;
+  left: max(0.35rem, calc((100% - var(--ancho-texto)) / 2 - 3.2rem));
   font-family: var(--tipo-mono);
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   color: rgba(28, 51, 40, 0.3);
   pointer-events: none;
   user-select: none;
+}
+
+/* Por debajo de esto no hay margen que ocupar: la retícula ya se ve de fondo y
+   la etiqueta solo estorbaría. Decorativa quiere decir prescindible. */
+@media (max-width: 90rem) {
+  .paralelo { display: none; }
 }
 
 /* --- Barra ---------------------------------------------------------------- */
@@ -603,7 +617,13 @@ a:hover { color: var(--verde-vivo); }
   font-family: var(--tipo-mono);
   font-size: 0.64rem;
   text-align: center;
-  color: var(--bosque);
+  /* NO es `--bosque`. Medido sobre el naranja de la banda 7 —#ef6548, donde
+     cae la mitad de los municipios de un evento grande— el verde bosque da
+     4,26:1 y a 10,2 px hacen falta 4,5. Y no se arregla bajando el umbral de
+     `sobre-oscuro`: el blanco sobre ese mismo naranja da 3,17, peor. Casi
+     negro da 5,96 y no desentona con la paleta, porque es el mismo gris de
+     tinta con el que se dibujan los simbolos del mapa. */
+  color: #1c1b1a;
   vertical-align: 0.06em;
 }
 
@@ -662,7 +682,12 @@ a:hover { color: var(--verde-vivo); }
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  /* `minmax(20rem, ...)` no encoge: en un movil de 320 px la columna seguia
+     pidiendo 320 y arrastraba a **toda la pagina** 35 px de lado, mapa
+     incluido. Medido: 320 -> 35 px de desborde, 344 -> 11, 360 y por encima ->
+     0. `min()` deja que la columna ceda cuando la ventana es mas estrecha que
+     la columna, que es justo el caso que faltaba. */
+  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
   gap: 0.85rem;
 }
 
@@ -736,6 +761,36 @@ footer p { margin: 0; }
 footer a { color: var(--tenue); }
 .pie-marca { display: flex; align-items: center; gap: 0.4rem; font-family: var(--tipo-titulo); font-weight: 600; color: var(--bosque); text-decoration: none; }
 .pie-marca em { font-style: italic; color: var(--verde); }
+
+/* --- Cuando se reviso cada cifra ------------------------------------------- */
+/*
+ * El comentario de `pintarEnVivo` prometia desde siempre que las cifras llevan
+ * la hora de su ultima revision —"sin ella, 14.984 celdas con fuego podria ser
+ * de hace un mes"— y no la llevaban. Va dentro del apunte, no en una linea
+ * aparte: la antiguedad es una propiedad de la cifra, no un pie de pagina.
+ */
+.revisado { white-space: nowrap; }
+
+.pie-vivo {
+  margin: 0.75rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--tenue-mas);
+}
+
+/* La linea que dice que la tabla se desplaza. Solo donde no cabe. */
+.tabla-pista { display: none; }
+
+@media (max-width: 48rem) {
+  .tabla-pista {
+    display: block;
+    margin: 0.5rem 0 0;
+    font-family: var(--tipo-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    color: var(--tenue-mas);
+  }
+}
 
 /* --- Controles de la lista ------------------------------------------------- */
 /*
@@ -955,6 +1010,15 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+
+    /* Desplazarse ya lo hacia; decirlo no. En 390 px la columna "Reportes" no
+       se ve y "Desvio vs. oficial" queda cortada a media cifra: se lee "+0," y
+       "-1,", que no parece "hay mas a la derecha" — parece un dato roto.
+
+       Se probo primero la sombra de borde con gradientes y `background-
+       attachment`, el truco de siempre, y aqui no sirve: las celdas llevan
+       fondo propio y lo tapan. Se dice con palabras, que ademas es lo que hace
+       este proyecto en todas partes. */
   }
 }
 
