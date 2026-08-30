@@ -166,6 +166,62 @@ def test_se_mide_el_hueco_real_entre_revisiones() -> None:
     assert c["revisiones"] == 3
 
 
+def test_un_latido_no_es_una_revision() -> None:
+    """El fallo que este campo existe para impedir.
+
+    El latido se commitea como mucho una vez por hora. Mientras el vigia corrio
+    cada media hora, el hueco entre latidos y el ritmo real se parecian lo
+    bastante como para que nadie mirara; con el cron externo a cinco minutos,
+    `/status` publicaba "el vigia tarda 2,6 h en revisar el feed" mientras
+    revisaba cada cinco, y encima culpaba de ello a la cola de GitHub.
+    """
+    from pipelines.common.status import cadencia_del_vigia
+
+    c = cadencia_del_vigia(
+        [
+            {"utc": "2026-08-30T00:00:00Z", "revisiones": 1},
+            {"utc": "2026-08-30T01:00:00Z", "revisiones": 12},
+            {"utc": "2026-08-30T02:00:00Z", "revisiones": 12},
+        ]
+    )
+
+    assert c["p50_min"] == 5.0, "una hora con doce revisiones son cinco minutos"
+    assert c["revisiones"] == 25, "se cuentan las corridas, no los commits"
+    assert c["latidos"] == 3
+
+
+def test_un_latido_sin_el_campo_se_sigue_midiendo_como_antes() -> None:
+    """Los latidos publicados antes del 30-ago no traen `revisiones`.
+
+    Contarlos como una revision es exactamente lo que valian: la serie
+    historica no cambia de significado por añadir el campo.
+    """
+    from pipelines.common.status import cadencia_del_vigia
+
+    c = cadencia_del_vigia([{"utc": "2026-08-27T00:00:00Z"}, {"utc": "2026-08-27T00:30:00Z"}])
+
+    assert c["p50_min"] == 30.0
+
+
+def test_el_conteo_de_revisiones_nunca_mejora_la_cifra_por_error() -> None:
+    """Un cero o un negativo colados dividirian por cero o inflarian el ritmo.
+
+    El conteo viene de una llamada a la API dentro del workflow; si falla,
+    tiene que degradar hacia "no se midio mejor", nunca hacia un numero
+    optimista que nadie puede respaldar.
+    """
+    from pipelines.common.status import cadencia_del_vigia
+
+    for malo in (0, -3, None):
+        c = cadencia_del_vigia(
+            [
+                {"utc": "2026-08-30T00:00:00Z"},
+                {"utc": "2026-08-30T01:00:00Z", "revisiones": malo},
+            ]
+        )
+        assert c["p50_min"] == 60.0, f"con revisiones={malo!r} debe caer a 1"
+
+
 def test_una_parada_larga_no_se_cuenta_como_cadencia() -> None:
     """Un hueco de dias es una parada, no un ritmo.
 

@@ -123,9 +123,39 @@ jobs:
       - name: Instalar nucleo
         run: uv sync --python 3.12 --no-dev
 
+      # CUANTAS VECES SE REVISO DESDE EL ULTIMO LATIDO.
+      #
+      # El latido se commitea como mucho una vez por hora (ver mas abajo), asi
+      # que el hueco entre dos latidos NO es el ritmo del vigia: cubre todas
+      # las revisiones que hubo en medio. Mientras el cron era de media hora
+      # los dos numeros se parecian y nadie noto la diferencia; con el disparo
+      # externo a cinco minutos, /status llego a publicar "revisa cada 2,6 h"
+      # mientras el vigia revisaba cada cinco.
+      #
+      # Una llamada por corrida, y el presupuesto da de sobra: 12 a la hora de
+      # 5.000. Si falla, `1` deja la medida como estaba antes — conservador,
+      # nunca optimista.
+      - name: Contar las revisiones desde el ultimo latido
+        id: revisiones
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          desde=$(git log -1 --format=%cI -- site/status.json 2>/dev/null || echo "")
+          n=1
+          if [ -n "$desde" ]; then
+            filtro="[.[] | select(.createdAt > \"$desde\")] | length"
+            n=$(gh run list --workflow trigger.yml --limit 300 --json createdAt --jq "$filtro" 2>/dev/null || echo 1)
+          fi
+          [ "${n:-0}" -ge 1 ] || n=1
+          echo "n=$n" >> "$GITHUB_OUTPUT"
+          echo "revisiones desde el ultimo latido: $n"
+
       - name: Revisar el feed
         id: trigger
-        run: uv run centinela trigger ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: |
+          seco="${{ inputs.dry_run && '--dry-run' || '' }}"
+          uv run centinela trigger --revisiones "${{ steps.revisiones.outputs.n }}" $seco
 
       # EL VIGIA ES EL RELOJ DE LOS DEMAS.
       #

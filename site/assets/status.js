@@ -49,6 +49,13 @@ function metrica(valor, etiqueta, clase = "") {
 //: latencia y la mediana real entre revisiones del feed. La deteccion es un
 //: sumando de la latencia total, asi que si por si sola supera el objetivo, el
 //: objetivo es inalcanzable hasta que eso cambie.
+//:
+//: El aviso decia ademas "pide un turno cada 30 min y GitHub le concede unos
+//: pocos al dia". Dejo de ser cierto el 30-ago-2026, cuando un cron externo
+//: empezo a disparar el vigia cada cinco minutos por `repository_dispatch`:
+//: la frase seguia culpando a la cola de GitHub de un problema ya resuelto.
+//: Ahora el aviso solo afirma lo que mide, y si la cadencia baja del objetivo
+//: no aparece.
 function avisoDeCadencia(datos) {
   const c = datos.cadencia || {};
   const objetivo = (datos.objetivo || {}).p50_min;
@@ -56,10 +63,9 @@ function avisoDeCadencia(datos) {
   if (c.p50_min <= objetivo) return "";
   return `<p class="nota nota-alarma">Y hay algo que no depende de que ocurra un
      sismo: el vigía tarda <strong>${comoDuracion(c.p50_min)}</strong> de mediana
-     solo en revisar el feed —pide un turno cada ${c.declarado_min} min y GitHub
-     le concede unos pocos al día—. Como la detección es parte de la latencia,
-     mientras esa cadencia no baje, el objetivo de ${objetivo} min no se puede
-     cumplir aunque el resto del pipeline fuera instantáneo.</p>`;
+     entre una revisión del feed y la siguiente. Como la detección es parte de
+     la latencia, mientras esa cadencia no baje, el objetivo de ${objetivo} min
+     no se puede cumplir aunque el resto del pipeline fuera instantáneo.</p>`;
 }
 
 function pintarResumen(datos) {
