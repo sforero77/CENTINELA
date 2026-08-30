@@ -26,7 +26,7 @@ capacidad.
 ## Como funciona
 
 ```
-[Feed GeoJSON de USGS] ──(cron cada 10 min)──▶ P1 TRIGGER
+[Feed GeoJSON de USGS] ──(cron externo cada 5 min)──▶ P1 TRIGGER
      filtro bbox LATAM + M≥5.5 + dedupe por event_state
          │
          ▼
@@ -60,12 +60,12 @@ arranque no funciona en tu maquina, eso es un bug.
 ## Estado del proyecto
 
 **Fase 0, semana 4 — el sistema esta operando.** Desde el 24-ago-2026 el
-trigger vigila el feed de USGS cada 10 minutos y el visor esta publicado en
+trigger vigila el feed de USGS y el visor esta publicado en
 https://sforero77.github.io/CENTINELA/. Lo que ya funciona y lo que falta:
 
 | Componente | Estado |
 |---|---|
-| P1 trigger (feed, filtro, dedupe, `event_state`) | ✅ operando cada 10 min |
+| P1 trigger (feed, filtro, dedupe, `event_state`) | ✅ operando cada 5 min |
 | Contratos USGS (feed + productos) y su validacion | ✅ funcional |
 | Decision de impacto e idempotencia por version | ✅ funcional |
 | Reporte preliminar sin ShakeMap (RF-03) | ✅ funcional |
@@ -80,16 +80,16 @@ https://sforero77.github.io/CENTINELA/. Lo que ya funciona y lo que falta:
 | Enrutado del evento al activo del pais correcto | ✅ funcional, con reintento |
 | Toponimos en espanol (RF-06) | ✅ funcional |
 | **Catalogo historico regional** | ✅ **21 reportes en 15 paises** |
-| **Activo de exposicion construido y publicado** | ✅ **18 de 19 paises** |
+| **Activo de exposicion construido y publicado** | ✅ **19 de 19 paises** |
 | Visor con cobertura regional y filtro por pais | ✅ funcional |
 | Visor y `/status`, con latido del trigger publicado | ✅ funcional |
 | Reconstruccion trimestral de todos los activos publicados | ✅ funcional |
-| Activo de Brasil | ⏳ desbloqueado; falta correrlo en CI (`PENDIENTES.md` §2.1d) |
+| Selector de amenaza del visor (sismos / fuego) | ✅ funcional |
 | Coropletas r7/r6 del visor en PMTiles | ⏳ el resto del visor funciona |
 | P4 brigada de imagen | ⏳ Fase 2 |
 
-**601 pruebas** sin red (mas 8 nocturnas contra las fuentes vivas), ninguna
-saltada, `ruff` y `mypy --strict` limpios. Medido el 25-ago-2026.
+**953 pruebas** sin red, mas **43 de navegador** que abren el visor en un
+Chromium de verdad, `ruff` y `mypy --strict` limpios. Medido el 30-ago-2026.
 
 Las etapas pendientes fallan de forma ruidosa y explicita — nunca devuelven un
 cero que acabaria publicado como cifra. `tests/unit/test_pendientes.py` es el
@@ -160,12 +160,13 @@ publico entonces, cada uno contra el activo de su pais:
 | | |
 |---|---|
 | Reportes publicados | **21**, en **15 paises** |
-| Paises con activo construido y medido | **18 de 19** (falta Brasil) |
-| Personas ya en la malla hexagonal | **430,9 millones** |
+| Paises con activo construido y medido | **19 de 19** |
+| Personas ya en la malla hexagonal | **649,8 millones** |
 | Peor desvio contra la cifra oficial de un pais | **+4,94 %** (Venezuela, y esta explicado) |
 
-Los cuatro paises sin reporte —Bolivia, Brasil, Paraguay y Uruguay— **no son
-huecos del sistema, y no lo son por el mismo motivo**. Se busco para los cuatro:
+Los cuatro paises sin reporte —Bolivia, Brasil, Paraguay y Uruguay— **tienen su
+activo construido**: no son huecos del sistema, y no lo son por el mismo motivo.
+Se busco para los cuatro:
 
 * **Paraguay y Uruguay** no registran un solo sismo M≥5,5 desde el ano 2000.
   Su activo esta construido y esperando, que para un sistema de preparacion es
@@ -201,6 +202,19 @@ tests/           unit/, integration/, golden/, fixtures/
 ```
 
 ## Documentacion
+
+**Empieza por [`docs/`](docs/)**, que es el mapa completo del sistema, con
+diagramas de cada componente:
+
+| Carpeta | Que explica |
+|---|---|
+| [`docs/arquitectura/`](docs/arquitectura/) | La vista de conjunto, el viaje del dato y el contrato de cada fichero |
+| [`docs/acciones/`](docs/acciones/) | Las doce GitHub Actions: quien dispara a quien y con que reloj |
+| [`docs/pipelines/`](docs/pipelines/) | Los seis pipelines: que extrae, que calcula y que escribe cada uno |
+| [`docs/datos/`](docs/datos/) | Fuentes, licencias, agregaciones y el esquema del activo |
+| [`docs/visor/`](docs/visor/) | Que consume el visor, como pinta y como se valida |
+
+Y los transversales:
 
 - [`docs/OPERACION.md`](docs/OPERACION.md) — **que vigilar ahora que el sistema opera**
 - [`PENDIENTES.md`](PENDIENTES.md) — que falta, quien puede hacerlo y en que orden
