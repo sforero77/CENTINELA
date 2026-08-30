@@ -1,9 +1,29 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-28T18:18:15Z",
+  "generado_utc": "2026-08-29T23:01:55Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
+    {
+      "usgs_id": "us7000tcth",
+      "mag": 4.5,
+      "lon": -76.8503,
+      "lat": 4.5688,
+      "depth_km": 58.1,
+      "lugar": "24 km al OSO de Sipí, Colombia",
+      "origen_utc": "2026-08-29T10:50:24Z",
+      "razon": "M4.5 < umbral M5.5"
+    },
+    {
+      "usgs_id": "us7000tcpf",
+      "mag": 4.5,
+      "lon": -69.9747,
+      "lat": -18.8677,
+      "depth_km": 88.0,
+      "lugar": "38 km al NNE de Cuya, Chile",
+      "origen_utc": "2026-08-28T20:44:36Z",
+      "razon": "M4.5 < umbral M5.5"
+    },
     {
       "usgs_id": "us7000tcjv",
       "mag": 4.6,
@@ -43,36 +63,6 @@
       "lugar": "4 km al E de Jordán, Colombia",
       "origen_utc": "2026-08-26T16:45:14Z",
       "razon": "M4.9 < umbral M5.5"
-    },
-    {
-      "usgs_id": "us6000tn2j",
-      "mag": 4.9,
-      "lon": -83.9132,
-      "lat": 9.9853,
-      "depth_km": 10.0,
-      "lugar": "10 km al NNO de Cot, Costa Rica",
-      "origen_utc": "2026-08-24T07:37:17Z",
-      "razon": "M4.9 < umbral M5.5"
-    },
-    {
-      "usgs_id": "us6000tn29",
-      "mag": 4.5,
-      "lon": -67.1543,
-      "lat": -28.143,
-      "depth_km": 129.5,
-      "lugar": "41 km al ESE de Tinogasta, Argentina",
-      "origen_utc": "2026-08-24T05:04:04Z",
-      "razon": "M4.5 < umbral M5.5"
-    },
-    {
-      "usgs_id": "us6000tn0n",
-      "mag": 4.5,
-      "lon": -71.6087,
-      "lat": -36.7356,
-      "depth_km": 102.5,
-      "lugar": "23 km al ESE de Coihueco, Chile",
-      "origen_utc": "2026-08-23T20:38:14Z",
-      "razon": "M4.5 < umbral M5.5"
     }
   ]
 }
