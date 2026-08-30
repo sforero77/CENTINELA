@@ -955,9 +955,13 @@ thead th {
   white-space: nowrap;
 }
 
-tbody td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--borde); }
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
+/* Acotado a `.hoja` (el main de status.html): estos selectores estuvieron
+   desnudos y se fugaban a la tabla de cobertura del indice, que definia su
+   propio lenguaje —hover, sin rayado— y recibia este encima. El bandeado
+   resultante parecia un fallo de render. */
+.hoja tbody td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--borde); }
+.hoja tbody tr:last-child td { border-bottom: none; }
+.hoja tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
 
 .num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--tipo-mono); font-size: 0.8rem; }
 .cumple { color: var(--verde-vivo); }
@@ -1756,4 +1760,63 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   display: inline-flex;
   align-items: center;
   gap: 0.32rem;
+}
+
+
+/* --- Aire (auditoria visual del 30-ago-2026) ------------------------------- */
+/* Nueve correcciones de margen y densidad, medidas en pantallazos a 390 y
+   1440. Van juntas y al final del fichero a proposito: dos de las tres
+   correcciones anteriores de esta hoja se perdieron por escribirse antes que
+   la regla base a la que querian ganar. */
+
+/* Los municipios se encadenaban: nombre, barra y el siguiente nombre a diez
+   pixeles. La barra de uno parecia el subrayado del otro. */
+.barras li { margin-bottom: 0.95rem; }
+.barra-fila { margin-bottom: 0.3rem; }
+
+/* Dentro de la caja de capas, tres familias de contenido —simbolos, rampa de
+   fuego, interruptores— iban sin separacion: un muro. Un hilo entre grupos.
+   `[hidden]` no pinta borde, asi que la rampa apagada no deja hilo doble. */
+/* `> * + *` perdia: el bloque "una sola caja" pone `border: 0` a los hijos con
+   especificidad (0,2,0) y el universal se queda en (0,1,0). `:not(:first-child)`
+   toma la especificidad de su argumento y empata; estando despues, gana. La
+   tercera mordida de la cascada en esta hoja — por eso esta seccion vive al
+   final del fichero. */
+.controles-mapa > :not(:first-child) {
+  border-top: 1px solid var(--borde);
+  padding-top: 0.65rem;
+}
+
+/* Las pastillas de orden se leian como una fila mas del filtro de paises:
+   mismo lenguaje visual, seis pixeles de distancia. El aire es lo que dice
+   "esto es otro grupo". */
+.controles-lista { margin-top: 1.15rem; }
+
+/* La pista de la tabla iba pegada a la nota de abajo. */
+.tabla-pista { margin-bottom: 0.9rem; }
+
+/* La seccion de cobertura no tenia canal lateral: en cualquier pantalla mas
+   estrecha que el contenedor (82rem), las metricas, la tabla y la nota tocaban
+   el borde del viewport. #eventos siempre lo tuvo (1.75rem); esta seccion se
+   quedo sin el. */
+.cobertura { padding-left: 1.75rem; padding-right: 1.75rem; }
+
+@media (max-width: 48rem) {
+  /* Las pestañas de capa se partian en tres filas y, con la leyenda de
+     intensidad debajo, entre las dos se comian el mapa entero de un telefono.
+     Una fila que se desplaza: las siete capas siguen ahi y el mapa vuelve a
+     verse. Es el mismo patron que la tabla de cobertura. */
+  .capas {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .capas::-webkit-scrollbar { display: none; }
+  .capas button { flex: 0 0 auto; }
+
+  /* Con las pestañas en una fila, la leyenda ya no necesita esconderse a
+     8,6rem: sube al hueco real — que empieza bajo la barra de escala, no bajo
+     las pestañas. A 5rem le pisaba la esquina a la escala (~12 px). */
+  .capas:not([hidden]) ~ #leyenda { top: 6.1rem; }
 }

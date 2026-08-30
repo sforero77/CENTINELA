@@ -3087,7 +3087,7 @@ function pintarEnVivo() {
         `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span></span>` +
         `<span class="etiqueta">personas en celdas con fuego activo</span>` +
         `<span class="apunte">${numero(v.incendios.celdas)} celdas · ` +
-        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego} h` +
+        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego}&nbsp;h` +
         `${selloDeRevision(v.fuegoUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
@@ -3133,7 +3133,7 @@ function pintarEnVivo() {
       `<button type="button" class="metrica metrica-viva" data-capa="observados">` +
         `<span class="valor">${numero(v.observados)}</span>` +
         `<span class="etiqueta">sismos vistos y no despachados</span>` +
-        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos} días` +
+        `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos}&nbsp;días` +
         `${selloDeRevision(v.sismosUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
