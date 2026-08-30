@@ -218,6 +218,31 @@ def test_hay_un_workflow_que_lo_ejecuta() -> None:
     assert "gh issue create" in texto, "una corrida en rojo que nadie mira no es una alarma"
 
 
+def test_la_alarma_sabe_apagarse() -> None:
+    """Un vigilante que solo sabe encenderse gasta la confianza que necesita.
+
+    La primera version abria una issue en cada corrida en rojo y no cerraba
+    ninguna al volver el verde. Medido el 30-ago-2026: dos abiertas —del 27 y del
+    29— por condiciones resueltas hacia horas, las dos describiendo un desfase
+    que ya no existia. La proxima vez que este workflow tenga razon, nadie iria
+    a mirar.
+    """
+    raiz = Path(__file__).parent.parent.parent
+    texto = (raiz / ".github" / "workflows" / "frescura.yml").read_text(encoding="utf-8")
+
+    assert "gh issue close" in texto, "la alarma no sabe decir «ya paso»"
+    assert "if: success()" in texto, "el cierre tiene que colgar de la revision en verde"
+
+    # Y no duplicar: buscar una abierta antes de crear otra.
+    crear = texto.index("gh issue create")
+    assert "gh issue list --state open" in texto[:crear], (
+        "se crea la issue sin mirar antes si ya hay una abierta"
+    )
+    assert "gh issue comment" in texto, (
+        "si ya hay una abierta hay que anotar en ella, no callarse ni duplicar"
+    )
+
+
 # --- Lo que no lleva fecha: colecciones --------------------------------------
 
 

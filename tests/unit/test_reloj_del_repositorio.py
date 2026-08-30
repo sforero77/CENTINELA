@@ -124,3 +124,44 @@ def test_el_reloj_despacha_antes_de_publicar() -> None:
     publicacion = TRIGGER.index("- name: Publicar estado y latido")
 
     assert despacho < publicacion, "el reloj volvio a despachar dentro de la ventana de despliegue"
+
+
+def test_el_vigia_acepta_un_disparo_externo() -> None:
+    """El cron interno no puede ganar la cola que comparte, y esta medido.
+
+    Entre el 25 y el 30-ago-2026, con 23 latidos: p50 157 min entre revisiones,
+    p90 462 y peor 766 (12,8 h). El cron pide 48 turnos al dia y consigue entre
+    dos y cuatro. Con el objetivo en 60 min p50 desde que hay ShakeMap, la
+    deteccion sola se come el presupuesto entero.
+
+    `repository_dispatch` deja que un cron externo dispare el vigia sin pasar por
+    esa cola. Es el upgrade path que este fichero llevaba documentado desde el
+    principio, ahora con las cifras que pedia antes de montarlo.
+    """
+    disparadores = yaml.safe_load(TRIGGER)
+    # PyYAML lee la clave `on:` como el booleano `True`.
+    sobre = disparadores.get(True) or disparadores.get("on")
+
+    assert "repository_dispatch" in sobre, (
+        "el vigia sigue atado a la cola de cron que no puede ganar"
+    )
+    assert "vigilar" in sobre["repository_dispatch"]["types"]
+
+    # Y el cron interno SE QUEDA: si el servicio externo cae, esto sigue
+    # corriendo mal pero corriendo. Un unico punto de fallo fuera del
+    # repositorio seria peor que la cola.
+    assert "schedule" in sobre, (
+        "se quito el cron interno: sin el, si el disparo externo cae no queda nada"
+    )
+
+
+def test_el_disparo_externo_lleva_instrucciones() -> None:
+    """Un trigger declarado y sin nadie que lo llame no arregla nada.
+
+    Lo que falta —el token y el servicio de cron— no se puede hacer desde el
+    repositorio, asi que tiene que quedar escrito donde se encuentra: al lado
+    del trigger, no en un chat.
+    """
+    assert "/dispatches" in TRIGGER, "falta el endpoint que hay que llamar"
+    assert '"event_type": "vigilar"' in TRIGGER, "falta el cuerpo de la llamada"
+    assert "healthchecks.io" in TRIGGER, "falta decir que pasa si el disparador externo se muere"

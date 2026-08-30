@@ -43,6 +43,25 @@ function metrica(valor, etiqueta, clase = "") {
   </div>`;
 }
 
+//: Si la cadencia del vigia ya se come el objetivo, decirlo.
+//:
+//: Compara dos cifras que la pagina ya publica por separado: el objetivo de
+//: latencia y la mediana real entre revisiones del feed. La deteccion es un
+//: sumando de la latencia total, asi que si por si sola supera el objetivo, el
+//: objetivo es inalcanzable hasta que eso cambie.
+function avisoDeCadencia(datos) {
+  const c = datos.cadencia || {};
+  const objetivo = (datos.objetivo || {}).p50_min;
+  if (!Number.isFinite(c.p50_min) || !Number.isFinite(objetivo)) return "";
+  if (c.p50_min <= objetivo) return "";
+  return `<p class="nota nota-alarma">Y hay algo que no depende de que ocurra un
+     sismo: el vigía tarda <strong>${comoDuracion(c.p50_min)}</strong> de mediana
+     solo en revisar el feed —pide un turno cada ${c.declarado_min} min y GitHub
+     le concede unos pocos al día—. Como la detección es parte de la latencia,
+     mientras esa cadencia no baje, el objetivo de ${objetivo} min no se puede
+     cumplir aunque el resto del pipeline fuera instantáneo.</p>`;
+}
+
 function pintarResumen(datos) {
   const { medido, objetivo } = datos;
   const nodo = $("resumen");
@@ -59,7 +78,19 @@ function pintarResumen(datos) {
             "reconstrucción retrospectiva queda", "reconstrucciones retrospectivas quedan")}
            fuera de la estadística: un backtest se publica días después del sismo
            y su latencia no mide nada del sistema.</p>`
-        : "");
+        : "") +
+      // LA RESTA QUE NADIE ESTABA HACIENDO.
+      //
+      // El objetivo y la cadencia del vigia vivian en dos bloques distintos de
+      // esta pagina y nadie los ponia uno al lado del otro. Y la conclusion sale
+      // de datos que ya estan publicados: si el vigia tarda 157 min de mediana
+      // solo en **mirar** el feed, un objetivo de 60 min desde que hay ShakeMap
+      // no se puede cumplir aunque el resto del pipeline fuera instantaneo.
+      //
+      // Decirlo no es pesimismo: es lo mismo que hace el resto del sistema con
+      // el desvio de poblacion —publicarlo aunque incomode— y es lo que impide
+      // que un objetivo se quede de adorno.
+      avisoDeCadencia(datos);
     nodo.classList.remove("cargando");
     return;
   }

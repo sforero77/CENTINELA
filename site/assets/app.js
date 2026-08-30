@@ -168,6 +168,35 @@ const VUELO = REDUCIR_MOVIMIENTO ? 0 : 800;
 //
 // MMI no lleva rangos sino un color por valor: el ShakeMap da 6, 6,5, 7, 7,5, 8
 // y 8,5, y escribir "6 – 6,5" sugiere un continuo que no existe.
+// POR QUE LA CLASE MAS BAJA NO LLEGA A 3:1 CONTRA EL SUELO, Y POR QUE SE QUEDA ASI.
+//
+// Una auditoria de contraste lo levanto y es cierto: la primera clase de las
+// siete rampas da entre 1,14 y 1,37:1 contra `BASE_TIERRA`. La respuesta obvia
+// —oscurecerla— no funciona, y esta medido:
+//
+//   El suelo del mapa tiene luminancia 0,814. Para que la clase 1 llegue a 3:1
+//   no puede pasar de L=0,238. La clase 6 ya esta en L=0,045, que es casi negro
+//   y no puede bajar mas. Eso deja SEIS clases entre 0,238 y 0,045: un salto de
+//   0,039 de luminancia cada una, y **1,41:1 entre las dos mas oscuras**.
+//
+// Se cambia un problema por otro: en vez de no distinguir la clase baja del
+// fondo, no se distinguen las altas entre si — y las altas son las que dicen
+// donde esta lo grave. Ninguna asignacion de seis clases sobre un fondo claro
+// satisface las dos cosas; no es un descuido de la paleta, es el presupuesto de
+// luminancia que hay.
+//
+// LO QUE SE HACE EN SU LUGAR. WCAG 1.4.11 exceptua los graficos cuya
+// presentacion concreta es esencial para la informacion, que es el caso de una
+// rampa secuencial, **a cambio de que el dato este disponible de otra forma**.
+// Lo esta, y por triplicado: la leyenda publica los rangos numericos, el globo
+// de cada celda da su valor exacto, y `celdas.json` se descarga entero.
+//
+// Y lo que si se arreglo, que era la mitad que de verdad estorbaba: distinguir
+// "aqui no hay dato" de "aqui hay poco". Eso ahora lo dice el perimetro, que
+// dibuja en tinta el borde del area contada. Ver `dibujarPerimetro`.
+//
+// Si algun dia el mapa base pasa a un fondo oscuro, esta cuenta cambia entera y
+// merece rehacerse.
 const CAPAS = {
   mmi: {
     titulo: "Intensidad",

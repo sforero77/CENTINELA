@@ -405,11 +405,25 @@ a:hover { color: var(--verde-vivo); }
 .leyenda-escala { list-style: none; margin: 0 0 0.55rem; padding: 0; }
 .leyenda-escala li { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.18rem; }
 
+/* EL CONTORNO DE LA MUESTRA HACE UN TRABAJO, Y A 0,2 NO LO HACIA.
+ *
+ * La clase mas baja de cada rampa esta entre 1,24 y 1,48:1 contra el fondo de
+ * la leyenda: casi invisible. El contorno existia para eso y a alfa 0,2 se
+ * pintaba en #c9ccc3, que da 1,45:1 contra el fondo y 1,02:1 contra la muestra
+ * mas clara — o sea, tan invisible como lo que venia a delimitar.
+ *
+ * A 0,6 sale #727f76: 3,74:1 contra el fondo. La muestra queda delimitada
+ * aunque su relleno no se distinga, que es lo que exige WCAG 1.4.11 para un
+ * objeto grafico que transporta informacion.
+ *
+ * Es el arreglo que la coropleta del mapa NO puede tener; ver la nota de
+ * `CAPAS` en app.js. Aqui si, porque la leyenda es donde se aprende el codigo:
+ * si la muestra no se ve, el color del mapa no significa nada. */
 .leyenda-escala .muestra {
   width: 1.6rem; height: 0.65rem;
   flex: 0 0 auto;
   border-radius: 2px;
-  border: 1px solid rgba(28, 51, 40, 0.2);
+  border: 1px solid rgba(28, 51, 40, 0.6);
 }
 
 .leyenda-valor { font-family: var(--tipo-mono); font-size: 0.72rem; }
@@ -761,6 +775,15 @@ footer p { margin: 0; }
 footer a { color: var(--tenue); }
 .pie-marca { display: flex; align-items: center; gap: 0.4rem; font-family: var(--tipo-titulo); font-weight: 600; color: var(--bosque); text-decoration: none; }
 .pie-marca em { font-style: italic; color: var(--verde); }
+
+/* El aviso que hace la resta: objetivo contra cadencia real. Se marca porque
+   es lo unico de la pagina de estado que dice "esto no se esta cumpliendo", y
+   perderlo entre notas grises seria enterrarlo. */
+.nota-alarma {
+  border-left: 3px solid var(--alarma);
+  padding-left: 0.8rem;
+  color: var(--tenue);
+}
 
 /* --- Cuando se reviso cada cifra ------------------------------------------- */
 /*
