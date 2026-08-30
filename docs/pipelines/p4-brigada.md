@@ -17,7 +17,7 @@ flowchart LR
   IMG -->|sí| P4["<b>P4</b><br/>clasificación por edificación"]
   P4 --> CONTR["contraste contra<br/>evaluación externa"]
 
-  style NADA fill:#f4f1e8,stroke:#8a8578
+  style NADA fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
   style P4 stroke-dasharray: 5 5
 ```
 

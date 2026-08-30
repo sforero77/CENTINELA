@@ -81,7 +81,7 @@ flowchart LR
   ART --> VIS(["quien mira<br/>el visor"])
   DESC -.->|"mismos bytes"| VIS
 
-  style ART fill:#e8f0ea,stroke:#0f5636
+  style ART fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 El botón "descargar" del panel lateral apunta **a los mismos ficheros que el

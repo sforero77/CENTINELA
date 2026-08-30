@@ -116,8 +116,8 @@ flowchart LR
   S --> REP["el reporte<br/><b>omite la fila</b><br/>de superficie construida"]
   S -.->|"nunca"| CERO["publicar<br/>'0 km² construidos'"]
 
-  style CERO fill:#f4e8e8,stroke:#8c1d64
-  style REP fill:#e8f0ea,stroke:#0f5636
+  style CERO fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style REP fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 El caso real: `built_m2` llegó en `col-v0.5` cuando el Release publicado era

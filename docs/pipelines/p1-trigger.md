@@ -34,8 +34,8 @@ flowchart TB
   REVIS --> DESP
   OBS --> PUBOBS[/"site/observados.json"/]
 
-  style REL fill:#e8f0ea,stroke:#0f5636
-  style OBS fill:#f4f1e8,stroke:#8a8578
+  style REL fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style OBS fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
 
 ## El filtro, en tres condiciones

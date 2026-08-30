@@ -24,7 +24,7 @@ flowchart LR
   P2 -->|"Report"| P3["<b>P3</b><br/>reporte"]
   P4["<b>P4</b><br/>brigada<br/><i>Fase 2</i>"] -.-> P3
 
-  style BUS fill:#e8f0ea,stroke:#0f5636
+  style BUS fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
   style P4 stroke-dasharray: 5 5
 ```
 

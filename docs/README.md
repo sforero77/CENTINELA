@@ -61,8 +61,8 @@ flowchart LR
   P0 -.-> P5
   FIRMS --> P5 --> SITE --> VIS
 
-  style computo fill:#f4f1e8,stroke:#8a8578
-  style publicado fill:#e8f0ea,stroke:#0f5636
+  style computo fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
+  style publicado fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 **El principio que ordena todo lo demás:** el activo de exposición es

@@ -32,9 +32,9 @@ flowchart LR
   COB --> V
   ST --> SP(["/status"])
 
-  style V fill:#e8f0ea,stroke:#0f5636
-  style SP fill:#e8f0ea,stroke:#0f5636
-  style ACT fill:#f4f1e8,stroke:#8a8578
+  style V fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style SP fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style ACT fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
 
 ## Los ficheros, uno por uno

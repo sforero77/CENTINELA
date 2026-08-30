@@ -53,9 +53,9 @@ flowchart TB
   CM(["cron mensual"]) --> SIM["simulacro.yml"]
   CK(["cron quincenal"]) --> KEEP["keepalive.yml"]
 
-  style TRIG fill:#e8f0ea,stroke:#0f5636,stroke-width:2px
-  style EXT fill:#f4f1e8,stroke:#8a8578
-  style PAGES fill:#e8eef4,stroke:#3a5a78
+  style TRIG fill:#e8f0ea,stroke:#0f5636,stroke-width:2px,color:#1c1b1a
+  style EXT fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
+  style PAGES fill:#e8eef4,stroke:#3a5a78,color:#1c1b1a
 ```
 
 **El vigía es el reloj de todo lo demás.** Es un patrón deliberado: en vez de

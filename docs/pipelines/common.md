@@ -31,7 +31,7 @@ flowchart LR
   CMP -->|"repo &gt; página"| ALERTA["desfase"]
   CMP -->|iguales| OK["al día"]
 
-  style ALERTA fill:#f4e8e8,stroke:#8c1d64
+  style ALERTA fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
 > El 26-ago-2026 el visor llevaba **diecisiete horas** sirviendo datos viejos y

@@ -19,9 +19,9 @@ flowchart TB
   COND -->|sí| SITE["gh workflow run site.yml"]
   CALC -->|fallo| ISSUE2["Abrir incidencia<br/>con el traceback"]
 
-  style CALC fill:#e8f0ea,stroke:#0f5636
-  style ISSUE fill:#f4e8e8,stroke:#8c1d64
-  style ISSUE2 fill:#f4e8e8,stroke:#8c1d64
+  style CALC fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style ISSUE fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style ISSUE2 fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
 ### El enrutado al país
@@ -70,7 +70,7 @@ flowchart LR
   BUILD["Preparar el sitio"] --> OG["Reescribir og:image<br/>al evento más reciente"]
   OG --> DEPLOY["Deploy a Pages"]
 
-  style DEPLOY fill:#e8f0ea,stroke:#0f5636
+  style DEPLOY fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 ### Por qué todos los workflows lo llaman a mano

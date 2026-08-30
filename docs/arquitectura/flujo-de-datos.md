@@ -57,7 +57,7 @@ flowchart LR
   F5 --> F6[/"site/incendios.json"/]
   F6 --> F7(["Visor · modo Fuego"])
 
-  style F4 fill:#f4e8e8,stroke:#8c1d64
+  style F4 fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
 Lo que se cuenta son **detecciones, no incendios**: los tres satélites
@@ -86,7 +86,7 @@ flowchart TB
   J1 --> R1["Personas en MMI ≥ 7<br/>edificaciones · vías · sedes"]
   J2 --> R2["Personas en celdas<br/>con fuego activo"]
 
-  style activo fill:#e8f0ea,stroke:#0f5636
+  style activo fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 Este es el motivo de que el visor tenga un selector de amenaza y no dos mapas:

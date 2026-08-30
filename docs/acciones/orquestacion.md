@@ -41,10 +41,10 @@ flowchart TB
 
   TRIG -.->|"curl"| HC(["healthchecks.io"])
 
-  style TRIG fill:#e8f0ea,stroke:#0f5636,stroke-width:2px
-  style SIT fill:#e8eef4,stroke:#3a5a78
-  style PAGES fill:#e8eef4,stroke:#3a5a78
-  style EXT fill:#f4f1e8,stroke:#8a8578
+  style TRIG fill:#e8f0ea,stroke:#0f5636,stroke-width:2px,color:#1c1b1a
+  style SIT fill:#e8eef4,stroke:#3a5a78,color:#1c1b1a
+  style PAGES fill:#e8eef4,stroke:#3a5a78,color:#1c1b1a
+  style EXT fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
 
 ## Los tres mecanismos de disparo
@@ -63,7 +63,7 @@ flowchart LR
   REPO -.->|"❌ NO dispara<br/>otros workflows"| W2["site.yml"]
   W1 ==>|"✅ gh workflow run<br/>explícito"| W2
 
-  style W2 fill:#e8eef4,stroke:#3a5a78
+  style W2 fill:#e8eef4,stroke:#3a5a78,color:#1c1b1a
 ```
 
 GitHub bloquea la cascada de workflows desde un push hecho con el token

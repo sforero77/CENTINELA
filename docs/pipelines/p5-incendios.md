@@ -28,8 +28,8 @@ flowchart TB
   PRIO --> CUT["recorte a 4.000"]
   CUT --> OUT[/"site/incendios.json"/]
 
-  style JOIN fill:#e8f0ea,stroke:#0f5636
-  style PRIO fill:#f4e8e8,stroke:#8c1d64
+  style JOIN fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style PRIO fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
 ## Detecciones, no incendios
@@ -76,8 +76,8 @@ flowchart LR
   A -->|"❌ sólo por FRP"| B["636 celdas<br/>con gente sobreviven"]
   A -->|"✅ gente primero"| C["3.760 celdas<br/>con gente entran<br/>todas"]
 
-  style B fill:#f4e8e8,stroke:#8c1d64
-  style C fill:#e8f0ea,stroke:#0f5636
+  style B fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style C fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 Medido el 27-ago-2026 sobre los diecinueve activos: de 14.984 celdas con fuego,

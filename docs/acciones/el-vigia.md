@@ -29,8 +29,8 @@ flowchart TB
   FEED --> JOB2{"hay_trabajo?"}
   JOB2 -->|sí| DISP["<b>job: despachar</b><br/>gh workflow run impact.yml<br/>por cada usgs_id"]
 
-  style FEED fill:#e8f0ea,stroke:#0f5636
-  style DISP fill:#f4e8e8,stroke:#8c1d64
+  style FEED fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style DISP fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
 ## Las tres decisiones que este workflow documenta en su propio código

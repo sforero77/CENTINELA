@@ -30,7 +30,7 @@ flowchart LR
   tiempo --> CELDA["<b>La celda H3 r8</b><br/>5,2 km²"]
   vintage --> CELDA
 
-  style CELDA fill:#e8f0ea,stroke:#0f5636
+  style CELDA fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 **La diferencia entre las dos columnas importa.** Lo de la izquierda se

@@ -22,8 +22,8 @@ flowchart TB
     L3["Overture edificios"] --> L4["conteo y área<br/>por celda del<br/><b>centroide</b>"]
   end
 
-  style RC2 fill:#f4f1e8,stroke:#8a8578
-  style L2 fill:#f4f1e8,stroke:#8a8578
+  style RC2 fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
+  style L2 fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
 
 ## Las decisiones que no son obvias
@@ -54,7 +54,7 @@ flowchart LR
   P2 -.->|"el mar<br/>no cuenta"| CALC
   CALC --> PX["<b>lulc_px = 40</b><br/>dice cuánta evidencia<br/>hay detrás"]
 
-  style PX fill:#e8f0ea,stroke:#0f5636
+  style PX fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 En la costa media celda es mar, y el mar no es una clase de cobertura. Los
@@ -91,7 +91,7 @@ flowchart TB
   CELDAS --> ADM["GROUP BY adm2_id<br/>→ top 15 municipios"]
   B7 --> EDAD["desglose etario<br/><i>sólo para MMI ≥ 7</i>"]
 
-  style EDAD fill:#f4f1e8,stroke:#8a8578
+  style EDAD fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
 
 **Las bandas son acumulativas**: "personas en MMI ≥ 7" incluye a las de MMI 8.

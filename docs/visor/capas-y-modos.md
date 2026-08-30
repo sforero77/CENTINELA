@@ -22,8 +22,8 @@ flowchart TB
     A3["observados<br/><i>vistos sin reporte</i>"]
   end
 
-  style fuego fill:#f4e8e8,stroke:#8c1d64
-  style sismos fill:#e8f0ea,stroke:#0f5636
+  style fuego fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style sismos fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 | Capa | Qué dibuja |

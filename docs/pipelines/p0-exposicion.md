@@ -36,9 +36,9 @@ flowchart TB
   V2 -->|sí| W["<b>write_asset</b><br/>GeoParquet particionado<br/>iso3=/layer="]
   W --> REL[("GitHub Release<br/>exposure-&lt;iso3&gt;-&lt;fecha&gt;")]
 
-  style V1 fill:#f4e8e8,stroke:#8c1d64
-  style V2 fill:#f4e8e8,stroke:#8c1d64
-  style W fill:#e8f0ea,stroke:#0f5636
+  style V1 fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style V2 fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style W fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 ## Las diez capas

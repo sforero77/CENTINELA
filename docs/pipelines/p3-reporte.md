@@ -26,8 +26,8 @@ flowchart LR
   IDX --> V
   H --> RED(["el único<br/>paso manual"])
 
-  style R fill:#e8f0ea,stroke:#0f5636
-  style RED fill:#f4f1e8,stroke:#8a8578
+  style R fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style RED fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
 
 | Artefacto | Para quién |

@@ -30,8 +30,8 @@ flowchart TB
   ASSERT -->|ok| TOT["Totales por banda MMI<br/>+ top 15 municipios<br/>+ incertidumbre"]
   TOT --> REP["<b>Report</b> → P3"]
 
-  style JOIN fill:#e8f0ea,stroke:#0f5636
-  style STOP fill:#f4e8e8,stroke:#8c1d64
+  style JOIN fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style STOP fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
 ## De contornos a celdas

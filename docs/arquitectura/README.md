@@ -35,9 +35,9 @@ flowchart TB
   almacen --> computo --> entrega
   computo -.->|"escribe de vuelta"| almacen
 
-  style almacen fill:#f4f1e8,stroke:#8a8578
-  style computo fill:#e8eef4,stroke:#3a5a78
-  style entrega fill:#e8f0ea,stroke:#0f5636
+  style almacen fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
+  style computo fill:#e8eef4,stroke:#3a5a78,color:#1c1b1a
+  style entrega fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 ### Las cuatro propiedades que se defienden

@@ -20,7 +20,7 @@ flowchart TB
   ISS -->|sí| COMENT["comentar en la existente"]
   REPUB --> CIERRE["si al final todo está al día,<br/>cerrar la incidencia sola"]
 
-  style DESF fill:#f4e8e8,stroke:#8c1d64
+  style DESF fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
 **Qué vigila y qué no.** Detecta que el repositorio avanza y la página no. Si
@@ -63,7 +63,7 @@ flowchart LR
   VIS --> M
   M --> MERGE(["se puede fusionar"])
 
-  style M fill:#e8f0ea,stroke:#0f5636
+  style M fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 `visor.yml` no es opcional ni decorativo: abre el visor en un Chromium de

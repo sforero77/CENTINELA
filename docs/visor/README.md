@@ -41,8 +41,8 @@ flowchart TB
   MAPA --> TILES(["OpenFreeMap<br/><i>teselas base</i>"])
   MAPA --> PINT["window.CENTINELA.pintado<br/><i>instrumentación pública</i>"]
 
-  style MAPA fill:#e8f0ea,stroke:#0f5636
-  style PINT fill:#f4f1e8,stroke:#8a8578
+  style MAPA fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style PINT fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
 
 ## Las dependencias externas
@@ -70,7 +70,7 @@ flowchart LR
   S -.->|"el fuego<br/>no se dibuja"| X1["4.000 símbolos con<br/>rampa propia no saben<br/>ser discretos"]
   F -.->|"los epicentros<br/>quedan tenues"| X2["21 estrellas sin etiqueta<br/>responden '¿el sismo cayó<br/>donde ardía?'"]
 
-  style A fill:#e8f0ea,stroke:#0f5636
+  style A fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 La regla de contexto es **asimétrica a propósito** y está explicada en

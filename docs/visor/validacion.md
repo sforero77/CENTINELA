@@ -25,7 +25,7 @@ flowchart TB
     V5["¿el modo cambia lo que debe?"]
   end
 
-  style visor fill:#e8f0ea,stroke:#0f5636
+  style visor fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 Ejemplos de fallos que **sólo** el navegador encontró:

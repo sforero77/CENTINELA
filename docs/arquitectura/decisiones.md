@@ -24,10 +24,10 @@ flowchart LR
   D1["D1 · H3 r8"] --> T3["constants.py<br/>H3_RES_COMPUTE = 8"]
   D7["D7 · feeds"] --> T4["USGS_FDSN_EVENT<br/><i>sólo backtests</i>"]
 
-  style D6 fill:#e8f0ea,stroke:#0f5636
-  style D8 fill:#e8f0ea,stroke:#0f5636
-  style D1 fill:#e8f0ea,stroke:#0f5636
-  style D7 fill:#e8f0ea,stroke:#0f5636
+  style D6 fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style D8 fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style D1 fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style D7 fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 Los valores viven en `pipelines/common/constants.py`, con esta advertencia en
@@ -55,8 +55,8 @@ flowchart TB
   odbl -->|"arrastra ODbL"| SAL
   nc -.->|"NUNCA"| SAL
 
-  style nc fill:#f4e8e8,stroke:#8c1d64
-  style SAL fill:#e8f0ea,stroke:#0f5636
+  style nc fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style SAL fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
 `pipelines/common/licensing.py` implementa `bucket_for(licencia)` y el lint de
