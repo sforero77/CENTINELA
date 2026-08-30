@@ -407,6 +407,11 @@ const estado = {
   amenaza: "sismos",
   //: El ultimo incendios.json cargado, para la leyenda del modo fuego.
   fuegoDatos: null,
+  //: Los focos —grupos de celdas contiguas— y el indice celda -> foco.
+  focos: [],
+  focosPorCelda: null,
+  //: El foco abierto en el panel, si lo hay.
+  focoAbierto: null,
   //: Como se ordena la lista y si se recorta al encuadre del mapa. Los dos son
   //: del usuario, no del dato, asi que no van a la URL: un enlace compartido
   //: tiene que abrir el mismo reporte, no la misma manera de mirarlo.
@@ -957,8 +962,13 @@ function cerrarDetalle() {
 // no se lee como "salir", y ademas se quedaba mostrando el evento elegido.
 function engancharSalidas() {
   $("volver")?.addEventListener("click", cerrarDetalle);
+  conectarVolverDelFoco();
   document.addEventListener("keydown", (ev) => {
-    if (ev.key === "Escape" && estado.seleccionado) cerrarDetalle();
+    if (ev.key !== "Escape") return;
+    // Escape cierra lo que este abierto, y solo hay uno de los dos: abrir un
+    // evento fuerza el modo sismos, que a su vez cierra el foco.
+    if (estado.seleccionado) cerrarDetalle();
+    else if (estado.focoAbierto) cerrarFoco();
   });
 }
 
@@ -1508,7 +1518,12 @@ function anotarCapaActiva(id, columna) {
 // Superficie publica y estable. No lleva guiones bajos ni `__test__`: no es un
 // gancho de pruebas, es el visor rindiendo cuentas — y sirve igual para
 // diagnosticar desde la consola del navegador de quien reporte un fallo.
-window.CENTINELA = { pintado, errores: erroresAlPintar };
+window.CENTINELA = {
+  pintado,
+  errores: erroresAlPintar,
+  //: Puerta para las pruebas de navegador. Ver `abrirFocoDePrueba`.
+  abrirFoco: (indice) => abrirFocoDePrueba(indice),
+};
 
 // --- El selector de amenaza --------------------------------------------------
 //
@@ -1574,6 +1589,33 @@ function aplicarAmenaza() {
   // Los controles del modo sismos no aplican al fuego.
   const obs = $("interruptor-observados");
   if (obs) obs.hidden = fuego;
+
+  // EL PANEL TAMBIEN CAMBIA DE AMENAZA.
+  //
+  // Cambiar solo las capas del mapa dejaba el lateral mezclado: en modo fuego
+  // se leia "9 sismos vistos y no despachados" y debajo el panorama sismico
+  // entero —21 reportes, el Choco, los 15 paises—; en modo sismos seguia la
+  // tarjeta de fuego. Dos amenazas hablando a la vez, que es justo lo que el
+  // selector existe para evitar.
+  // Cada bloque de la tarjeta declara de que amenaza es, y aqui solo se
+  // compara. Enumerarlos —"si es incendios, en modo fuego"— ya fallo una vez:
+  // el titular se ocultaba pero "171 sedes de salud EN CELDAS CON FUEGO ACTIVO"
+  // y "SOBRE QUÉ ESTÁ ARDIENDO" seguian en el panel de sismos, porque anadir un
+  // bloque nuevo no obliga a acordarse de esta funcion. Ahora si.
+  for (const bloque of document.querySelectorAll("#en-vivo [data-amenaza]")) {
+    bloque.hidden = bloque.dataset.amenaza !== estado.amenaza;
+  }
+  const panorama = $("bloque-panorama");
+  if (panorama) panorama.hidden = fuego;
+  const pistaFuego = $("pista-fuego");
+  if (pistaFuego) pistaFuego.hidden = !fuego;
+  const enVivo = $("en-vivo");
+  if (enVivo) {
+    // La tarjeta se queda si le queda alguna cifra que mostrar en este modo.
+    const visibles = enVivo.querySelectorAll(".metrica:not([hidden])").length;
+    enVivo.hidden = !visibles;
+  }
+  if (!fuego) cerrarFoco();
 
   // El hueco grande de la leyenda es del modo: variable de la malla en sismos
   // (solo con evento), potencia radiativa en fuego.
@@ -2899,11 +2941,129 @@ async function cargarIncendios() {
 
   dibujarIncendios(datos);
   estado.fuegoDatos = datos;
+  estado.focos = agruparFocos(celdas);
+  estado.focosPorCelda = new Map();
+  for (const foco of estado.focos) {
+    for (const h of foco.h3s) estado.focosPorCelda.set(h, foco);
+  }
+  // Cuantos focos salieron de las celdas. Va al registro publico por el mismo
+  // motivo que las capas: una prueba de navegador no puede afirmar nada sobre
+  // el agrupado si tiene que deducirlo de un pantallazo.
+  anotarPintado("focos", estado.focos.length);
   estado.vivo.incendios = datos.totales || {};
   estado.vivo.suelo = datos.suelo || {};
   estado.vivo.ventanaFuego = datos.ventana_horas || 24;
   estado.vivo.fuegoUtc = datos.generado_utc || null;
   pintarEnVivo();
+}
+
+//: Un incendio no es una celda: es el grupo de celdas contiguas que arden.
+//:
+//: El visor solo sabia hablar de celdas sueltas. Pulsar una abria un globo con
+//: sus cifras y nada mas, asi que "¿que superficie cubre este incendio?" —la
+//: primera pregunta de cualquiera que mire un mapa de fuego— no tenia respuesta
+//: en ninguna parte del producto. Y la tarjeta de arriba solo daba el total de
+//: toda America Latina, que es el otro extremo: o todo, o un hexagono de 5 km².
+//:
+//: Un foco es una componente conexa sobre la malla H3: dos celdas del mismo
+//: foco si comparten lado. Es la definicion que usa cualquier producto de
+//: fuego, y la que hace que el area signifique algo.
+//:
+//: `gridDisk(h, 1)` da la celda y sus seis vecinas. Con 4.000 celdas son
+//: ~28.000 consultas a un Set: milisegundos. No hace falta nada mas listo.
+function agruparFocos(celdas) {
+  if (typeof h3 === "undefined" || !Array.isArray(celdas) || !celdas.length) return [];
+
+  const porH3 = new Map(celdas.map((c) => [c.h3, c]));
+  const padre = new Map(celdas.map((c) => [c.h3, c.h3]));
+
+  const raiz = (x) => {
+    let r = x;
+    while (padre.get(r) !== r) r = padre.get(r);
+    // Compresion de caminos: sin esto, una cadena larga de celdas —una quema
+    // siguiendo un rio, que es la forma mas comun— degrada a O(n) por consulta.
+    while (padre.get(x) !== r) {
+      const siguiente = padre.get(x);
+      padre.set(x, r);
+      x = siguiente;
+    }
+    return r;
+  };
+
+  for (const c of celdas) {
+    let vecinas;
+    try {
+      vecinas = h3.gridDisk(c.h3, 1);
+    } catch (error) {
+      continue; // una celda ilegible no puede tumbar el agrupado entero
+    }
+    for (const v of vecinas) {
+      if (v === c.h3 || !porH3.has(v)) continue;
+      const a = raiz(c.h3);
+      const b = raiz(v);
+      if (a !== b) padre.set(a, b);
+    }
+  }
+
+  const grupos = new Map();
+  for (const c of celdas) {
+    const r = raiz(c.h3);
+    if (!grupos.has(r)) grupos.set(r, []);
+    grupos.get(r).push(c);
+  }
+
+  return [...grupos.entries()].map(([id, suyas]) => resumirFoco(id, suyas));
+}
+
+//: Las cifras de un foco. Se suman las de sus celdas, con una excepcion.
+//:
+//: El reparto del suelo se pondera por energia, no por numero de celdas, que es
+//: la misma regla que usa `p5_incendios` para el reparto regional. Contar
+//: celdas daria el mismo peso a una que arde con 4 MW y a otra con 900.
+function resumirFoco(id, celdas) {
+  const suma = (campo) => celdas.reduce((t, c) => t + (Number(c[campo]) || 0), 0);
+
+  // Solo las celdas que tienen cobertura del suelo entran en el reparto: las
+  // demas no son "cero por ciento arbolado", son "sin medir". El panel dice
+  // cuantas fueron.
+  const conSuelo = celdas.filter((c) =>
+    ["arbolado_pct", "pastizal_pct", "cultivo_pct", "humedal_pct"].some((k) => Number(c[k]) > 0)
+  );
+  const energiaMedida = conSuelo.reduce((t, c) => t + (Number(c.frp_suma) || 0), 0);
+  const suelo = {};
+  if (energiaMedida > 0) {
+    for (const clase of ["arbolado", "pastizal", "cultivo", "humedal"]) {
+      const pct =
+        conSuelo.reduce(
+          (t, c) => t + ((Number(c[`${clase}_pct`]) || 0) / 100) * (Number(c.frp_suma) || 0),
+          0
+        ) / energiaMedida;
+      if (pct > 0) suelo[clase] = pct * 100;
+    }
+  }
+
+  const sellos = celdas.map((c) => c.ultima_utc).filter(Boolean).sort();
+  const primeros = celdas.map((c) => c.primera_utc).filter(Boolean).sort();
+
+  return {
+    id,
+    celdas,
+    h3s: celdas.map((c) => c.h3),
+    nCeldas: celdas.length,
+    areaKm2: celdas.length * AREA_CELDA_KM2,
+    pop: suma("pop"),
+    bld: suma("bld"),
+    salud: suma("salud"),
+    edu: suma("edu"),
+    detecciones: suma("detecciones"),
+    deteccionesBaja: suma("detecciones_baja"),
+    frpSuma: suma("frp_suma"),
+    frpMax: celdas.reduce((t, c) => Math.max(t, Number(c.frp_max) || 0), 0),
+    suelo,
+    celdasConSuelo: conSuelo.length,
+    primeraUtc: primeros[0] || null,
+    ultimaUtc: sellos[sellos.length - 1] || null,
+  };
 }
 
 function incendiosAGeoJson(celdas) {
@@ -3025,15 +3185,235 @@ function dibujarIncendios(datos) {
       m.on("mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
       m.on("mouseleave", capa, () => (m.getCanvas().style.cursor = ""));
       m.on("click", capa, (ev) => {
+        const props = ev.features[0].properties;
+        // El foco manda sobre la celda: la pregunta al pulsar fuego es "¿que
+        // tan grande es esto?", y una celda suelta no la responde. El globo se
+        // queda para la celda exacta, que sigue siendo el dato mas fino.
+        const foco = focoDeCelda(props.h3);
+        // Las dos cosas, y no una: el panel responde "¿que tan grande es este
+        // incendio?" y el globo "¿que hay en la celda que acabo de pulsar?".
+        // Quitar el globo al anadir el panel habria cambiado una carencia por
+        // otra — el identificador H3 y las cifras de la celda exacta no viven
+        // en ningun otro sitio del visor.
+        if (foco) abrirFoco(foco);
         abrirGlobo(new maplibregl.Popup({ closeButton: true, maxWidth: "320px" }))
           .setLngLat(ev.lngLat)
-          .setHTML(cuadroDeIncendio(ev.features[0].properties))
+          .setHTML(cuadroDeIncendio(props))
           .addTo(m);
       });
     }
   };
 
   cuandoElEstiloEsteListo(m, pintar);
+}
+
+//: Abre el detalle de un foco: panel, perimetro y encuadre.
+//:
+//: Mismo trato que un sismo, y a proposito. El selector de amenaza prometio dos
+//: amenazas de primera clase sobre el mismo activo; mientras una tuviera panel,
+//: area y perimetro y la otra solo un globo, la promesa estaba a medias.
+function abrirFoco(foco) {
+  if (!foco) return;
+  estado.focoAbierto = foco;
+  // Sin `cerrarGlobo()` aqui: el clic abre panel Y globo, y cerrarlo desde el
+  // panel mataria el globo que el mismo clic acaba de pedir.
+
+  $("lateral-vacio").hidden = true;
+  $("lateral-detalle").hidden = true;
+  const caja = $("detalle-fuego");
+  caja.hidden = false;
+
+  $("fuego-titulo").textContent =
+    foco.nCeldas === 1 ? "Una celda con fuego activo" : `${numero(foco.nCeldas)} celdas contiguas ardiendo`;
+  $("fuego-meta").textContent =
+    `Detectado ${comoFecha(foco.primeraUtc)} · último paso ${comoFecha(foco.ultimaUtc)}`;
+
+  $("fuego-area").innerHTML =
+    `<p class="cifra-area"><strong>${numero(Math.round(foco.areaKm2))}</strong> km²</p>` +
+    `<p class="apunte">${numero(foco.nCeldas)} celda${foco.nCeldas === 1 ? "" : "s"} de ` +
+    `${numero(AREA_CELDA_KM2, 1)} km²</p>`;
+
+  // El cero se omite en vez de imprimirse. Una celda sin poblacion puede estar
+  // fuera de los paises con activo construido, y "0 personas" ahi se leeria
+  // como medicion cuando es ausencia de medida. Es la misma regla del globo.
+  const expuesto = [
+    ["personas", foco.pop, "personas"],
+    ["edificaciones", foco.bld, null],
+    ["sedes de salud", foco.salud, "salud"],
+    ["sedes educativas", foco.edu, "educacion"],
+  ].filter(([, n]) => Number(n) > 0);
+
+  $("fuego-metricas").innerHTML = expuesto.length
+    ? expuesto
+        .map(
+          ([nombre, n, icono]) =>
+            `<div class="metrica"><span class="cabeza">${icono ? iconoSvg(icono) : ""}` +
+            `<span class="valor">${comoTexto(n)}</span></span>` +
+            `<span class="etiqueta">${nombre}</span></div>`
+        )
+        .join("")
+    : `<div class="metrica"><span class="etiqueta">Sin exposición medida en estas celdas. ` +
+      `Puede que no haya nadie, o que caigan fuera de los países con activo construido.</span></div>`;
+
+  const reparto = Object.entries(foco.suelo)
+    .filter(([, pct]) => pct >= 1)
+    .sort((a, b) => b[1] - a[1]);
+  $("bloque-fuego-suelo").hidden = !reparto.length;
+  if (reparto.length) {
+    $("fuego-suelo").innerHTML = reparto
+      .map(
+        ([nombre, pct]) =>
+          `<li><span class="suelo-nombre">${nombre}</span>` +
+          `<span class="suelo-barra"><span style="width:${Math.min(100, pct)}%"></span></span>` +
+          `<span class="suelo-pct">${numero(pct)}&nbsp;%</span></li>`
+      )
+      .join("");
+  }
+
+  $("fuego-deteccion").innerHTML =
+    `<div class="metrica"><span class="valor">${numero(foco.detecciones)}</span>` +
+    `<span class="etiqueta">detecciones en 24 h</span></div>` +
+    `<div class="metrica"><span class="valor">${numero(Math.round(foco.frpSuma))}</span>` +
+    `<span class="etiqueta">MW de potencia radiativa</span></div>`;
+
+  $("fuego-apostilla").textContent =
+    `Una detección no es un incendio: tres satélites sobre el mismo fuego producen tres ` +
+    `detecciones. No se estima área quemada — el propio FIRMS lo desaconseja.` +
+    (foco.deteccionesBaja > 0
+      ? ` ${numero(foco.deteccionesBaja)} detecciones de baja confianza no se cuentan.`
+      : "") +
+    (foco.celdasConSuelo < foco.nCeldas
+      ? ` ${numero(foco.nCeldas - foco.celdasConSuelo)} de ${numero(foco.nCeldas)} celdas sin cobertura del suelo conocida.`
+      : "");
+
+  dibujarPerimetroDeFoco(foco);
+  volarAlFoco(foco);
+  $("lateral").focus();
+  anunciar(
+    `Foco de ${numero(foco.nCeldas)} celdas, ${numero(Math.round(foco.areaKm2))} kilómetros cuadrados. ` +
+      (foco.pop > 0 ? `${numero(Math.round(foco.pop))} personas expuestas.` : "Sin exposición medida.")
+  );
+}
+
+function conectarVolverDelFoco() {
+  const boton = $("volver-fuego");
+  if (boton) boton.addEventListener("click", cerrarFoco);
+}
+
+function cerrarFoco() {
+  estado.focoAbierto = null;
+  const caja = $("detalle-fuego");
+  if (caja) caja.hidden = true;
+  quitarPerimetroDeFoco();
+  // SIN CONDICION DE MODO, Y ES EL FALLO QUE ESTO ARREGLA.
+  //
+  // La llevaba (`amenaza === "fuego"`), y al cambiar a sismos `aplicarAmenaza`
+  // llama aqui **despues** de haber cambiado el modo: la condicion ya era falsa,
+  // el panel de vacio no se restauraba, y volver a fuego daba un lateral en
+  // blanco. Lo unico que decide si se ve el panorama es si hay un evento
+  // abierto; el modo ya decide, aparte, que hay dentro de el.
+  if (!estado.seleccionado) {
+    const vacio = $("lateral-vacio");
+    if (vacio) vacio.hidden = false;
+  }
+}
+
+function quitarPerimetroDeFoco() {
+  const m = estado.mapa;
+  if (!m || !m.getSource) return;
+  for (const capa of ["foco-perimetro", "foco-perimetro-borde"]) {
+    if (m.getLayer(capa)) m.removeLayer(capa);
+  }
+  if (m.getSource("foco-perimetro")) m.removeSource("foco-perimetro");
+}
+
+//: El perimetro del foco, con la misma tinta que el del sismo.
+//:
+//: Oscuro con funda blanca, no el color de la rampa: sobre su propio relleno
+//: magenta un borde magenta es invisible. Ya se aprendio con las bandas MMI.
+function dibujarPerimetroDeFoco(foco) {
+  const m = estado.mapa;
+  if (!m || typeof h3 === "undefined") return;
+  // `addSource` LANZA si el estilo no ha terminado de cargar —"Style is not
+  // done loading"—, y quien pulsa un foco nada mas abrir la pagina cae justo
+  // ahi. No se salta el dibujo: se difiere, que es lo que hace la pieza que
+  // este repositorio ya tiene para esto. Saltarlo dejaria el panel hablando de
+  // un area que el mapa no rodea.
+  cuandoElEstiloEsteListo(m, () => pintarPerimetroDeFoco(m, foco));
+}
+
+function pintarPerimetroDeFoco(m, foco) {
+  quitarPerimetroDeFoco();
+  let poligonos;
+  try {
+    poligonos = h3.cellsToMultiPolygon(foco.h3s, true);
+  } catch (error) {
+    console.warn("perimetro del foco:", error && error.message);
+    return;
+  }
+  if (!poligonos || !poligonos.length) return;
+
+  m.addSource("foco-perimetro", {
+    type: "geojson",
+    data: {
+      type: "FeatureCollection",
+      features: [{ type: "Feature", properties: {}, geometry: { type: "MultiPolygon", coordinates: poligonos } }],
+    },
+  });
+  m.addLayer({
+    id: "foco-perimetro-borde",
+    type: "line",
+    source: "foco-perimetro",
+    paint: { "line-color": "#ffffff", "line-width": 4, "line-opacity": 0.9 },
+  });
+  m.addLayer({
+    id: "foco-perimetro",
+    type: "line",
+    source: "foco-perimetro",
+    paint: { "line-color": "#1c1b1a", "line-width": 1.6 },
+  });
+  anotarPintado("foco-perimetro", foco.nCeldas);
+}
+
+function volarAlFoco(foco) {
+  const m = estado.mapa;
+  if (!m || typeof h3 === "undefined") return;
+  let m1 = 90, m2 = -90, n1 = 180, n2 = -180;
+  for (const h of foco.h3s) {
+    for (const [lat, lng] of h3.cellToBoundary(h)) {
+      if (lat < m1) m1 = lat;
+      if (lat > m2) m2 = lat;
+      if (lng < n1) n1 = lng;
+      if (lng > n2) n2 = lng;
+    }
+  }
+  if (m1 > m2) return;
+  m.fitBounds(
+    [
+      [n1, m1],
+      [n2, m2],
+    ],
+    { padding: 90, maxZoom: 10, duration: REDUCIR_MOVIMIENTO ? 0 : 900 }
+  );
+}
+
+//: De la celda pulsada a su foco. Sin el indice, habria que recorrer los focos.
+function focoDeCelda(h3id) {
+  return (estado.focosPorCelda && estado.focosPorCelda.get(h3id)) || null;
+}
+
+//: Abrir el foco n-esimo por tamano. Existe para las pruebas de navegador.
+//:
+//: Acertar con el raton un hexagono concreto entre cuatro mil, en tres tamanos
+//: de pantalla y con la camara donde la deje el encuadre, es una prueba que
+//: falla por motivos que no son el fallo que busca. Esto abre exactamente el
+//: mismo camino que el clic —`abrirFoco`— sin la loteria del pixel.
+function abrirFocoDePrueba(indice = 0) {
+  const ordenados = [...estado.focos].sort((a, b) => b.nCeldas - a.nCeldas);
+  const foco = ordenados[indice];
+  if (!foco) return null;
+  abrirFoco(foco);
+  return { celdas: foco.nCeldas, areaKm2: foco.areaKm2, pop: foco.pop };
 }
 
 function cuadroDeIncendio(p) {
@@ -3166,14 +3546,21 @@ function pintarEnVivo() {
 
   if (v.incendios && v.incendios.celdas) {
     partes.push(
-      `<button type="button" class="metrica metrica-viva" data-capa="incendios"` +
+      `<button type="button" class="metrica metrica-viva" data-capa="incendios" data-amenaza="fuego"` +
         `${nivelDe(v.incendios.pop_en_celdas_con_fuego, INDICADORES.fuego.cortes)
           ? ` data-nivel="${nivelDe(v.incendios.pop_en_celdas_con_fuego, INDICADORES.fuego.cortes)}"`
           : ""}>` +
         `<span class="cabeza">${iconoSvg("personas")}` +
         `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span></span>` +
         `<span class="etiqueta">personas en celdas con fuego activo</span>` +
-        `<span class="apunte">${numero(v.incendios.celdas)} celdas · ` +
+        // EL ALCANCE, QUE NO SE DECIA EN NINGUNA PARTE.
+        //
+        // "586.000 personas en celdas con fuego activo" no dice de donde: se
+        // podia leer como un incendio, como un pais o como la region entera.
+        // Es la suma de TODA America Latina en 24 h, y sin decirlo la cifra no
+        // significa nada. Un foco concreto se mira pulsandolo en el mapa.
+        `<span class="apunte">En toda América Latina · ` +
+        `${numero(v.incendios.celdas)} celdas · ` +
         `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego}&nbsp;h` +
         `${selloDeRevision(v.fuegoUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
@@ -3186,7 +3573,7 @@ function pintarEnVivo() {
     ].filter(([, n]) => Number(n) > 0);
     if (servicios.length) {
       partes.push(
-        `<div class="metrica metrica-servicios">` +
+        `<div class="metrica metrica-servicios" data-amenaza="fuego">` +
           servicios
             .map(
               ([nombre, n]) =>
@@ -3208,7 +3595,7 @@ function pintarEnVivo() {
       )
       .join("");
     partes.push(
-      `<div class="metrica metrica-suelo"><span class="etiqueta">sobre qué está ardiendo</span>` +
+      `<div class="metrica metrica-suelo" data-amenaza="fuego"><span class="etiqueta">sobre qué está ardiendo</span>` +
         `<ul class="suelo-reparto">${barras}</ul>` +
         `<span class="apunte">Reparto de la energía medida, no del número de focos. ` +
         `${numero(suelo.celdas_medidas)} celdas con cobertura conocida` +
@@ -3217,7 +3604,7 @@ function pintarEnVivo() {
   }
   if (v.observados !== undefined) {
     partes.push(
-      `<button type="button" class="metrica metrica-viva" data-capa="observados">` +
+      `<button type="button" class="metrica metrica-viva" data-capa="observados" data-amenaza="sismos">` +
         `<span class="valor">${numero(v.observados)}</span>` +
         `<span class="etiqueta">sismos vistos y no despachados</span>` +
         `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos}&nbsp;días` +
@@ -3242,6 +3629,10 @@ function pintarEnVivo() {
   for (const boton of caja.querySelectorAll(".metrica-viva")) {
     boton.addEventListener("click", () => encenderCapaViva(boton.dataset.capa));
   }
+  // La tarjeta nace despues de que el modo ya se aplico —incendios.json y
+  // observados.json llegan por su cuenta—, asi que hay que volver a aplicarlo.
+  // Es la misma carrera de creacion que ya mordio al interruptor de observados.
+  aplicarAmenaza();
 }
 
 //: Enciende la capa desde su cifra, sin duplicar la logica del interruptor.

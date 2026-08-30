@@ -1380,16 +1380,29 @@ thead th {
 /* Una cifra que lleva a verla. Hereda de `.metrica` y solo anade lo que la
  * convierte en control: area de pulsacion, foco visible y la pista de que
  * pasa al pulsar. */
+/* LA CIFRA VIVA OCUPA LA FILA ENTERA.
+ *
+ * `.metricas` es una rejilla de dos columnas pensada para los pares de cifras
+ * del detalle de un sismo. `.metrica-suelo` y `.metrica-servicios` ya declaran
+ * `grid-column: 1 / -1` porque su contenido es una frase, no un numero — y a
+ * esta se le olvido. Resultado: el titular de la tarjeta —"586.000 personas en
+ * celdas con fuego activo"— vivia en media columna de 148 px con el texto
+ * apretado, y su `margin: -6px -8px` sacaba el fondo del hover 8 px fuera de la
+ * tarjeta. Es el "no tiene margen" que se ve en cuanto alguien mira el panel.
+ *
+ * Sin margen negativo: con el padding de `.metrica` el fondo cubre la celda
+ * entera, que es lo que se queria conseguir con el truco. */
 .metrica-viva {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   width: 100%;
   text-align: left;
   border: 0;
-  background: transparent;
-  padding: 6px 8px;
-  margin: -6px -8px;
-  border-radius: 6px;
+  background: var(--crema);
+  padding: 0.8rem 0.9rem;
+  margin: 0;
   cursor: pointer;
   font: inherit;
   color: inherit;
@@ -1865,3 +1878,52 @@ thead th {
    eventos. El control de sismos menores se oculta en modo fuego por atributo,
    asi que necesita su regla. */
 .interruptor-observados[hidden] { display: none; }
+
+/* --- El detalle de un foco de incendio (30-ago-2026) --------------------- */
+
+/* Hereda del detalle de sismo: mismo lateral, misma retorica de bloques. Lo que
+   cambia es la cifra de portada, que aqui es superficie y no poblacion — un
+   incendio se mide primero por lo grande que es. */
+#detalle-fuego .cifra-area {
+  margin: 0;
+  font-family: var(--tipo-titulo, inherit);
+  font-size: 1.9rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+#detalle-fuego .cifra-area strong {
+  font-weight: 700;
+}
+
+#detalle-fuego .apunte {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--tinta-suave, #6b6862);
+}
+
+/* La rejilla del foco no hereda el `:nth-child(odd)` del detalle de sismo: con
+   dos cifras de deteccion siempre pares, y con una a cuatro de exposicion, la
+   regla de "la ultima impar ocupa el ancho" es exactamente la que se quiere. */
+#fuego-metricas .metrica .cabeza,
+#fuego-deteccion .metrica .cabeza {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#detalle-fuego .suelo-reparto {
+  margin: 0;
+}
+
+#fuego-apostilla {
+  margin-top: 14px;
+}
+
+/* En modo fuego la tarjeta viva se queda con una sola cifra: sin esto, el hueco
+   de la que se oculta deja ver la linea de 1px del contenedor y parece rota.
+   Es el mismo sintoma que motivo `.metrica:last-child:nth-child(odd)`. */
+.metrica[hidden] {
+  display: none;
+}
