@@ -343,6 +343,22 @@ a:hover { color: var(--verde-vivo); }
 
 .panel-mapa[hidden] { display: none; }
 
+/* El mismo panel cuando deja de ser un «espere» y pasa a ser una respuesta:
+   sin girito, dos lineas y sitio para la segunda. */
+.panel-mapa-aviso {
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.panel-mapa-nota {
+  max-width: 26rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--tenue-mas);
+}
+
 .giro {
   width: 0.9rem; height: 0.9rem;
   border: 2px solid rgba(28, 51, 40, 0.18);
@@ -721,6 +737,101 @@ footer a { color: var(--tenue); }
 .pie-marca { display: flex; align-items: center; gap: 0.4rem; font-family: var(--tipo-titulo); font-weight: 600; color: var(--bosque); text-decoration: none; }
 .pie-marca em { font-style: italic; color: var(--verde); }
 
+/* --- Controles de la lista ------------------------------------------------- */
+/*
+ * Ordenar y recortar al encuadre. Van en una fila que se parte sola: en un
+ * movil las pastillas de orden ocupan la primera linea, el interruptor la
+ * segunda y la cuenta cae debajo, sin que ninguna se salga.
+ */
+.controles-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.9rem;
+  margin: 0 0 1.4rem;
+}
+
+.orden-lista { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+/* Mismas pastillas que el filtro por pais: es el mismo gesto —acotar la
+   lista— y darle dos lenguajes distintos obligaria a aprender dos. */
+.orden-lista button {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  background: var(--crema);
+  color: var(--tenue);
+  cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+.orden-lista button:hover { border-color: var(--verde); color: var(--bosque); }
+
+.orden-lista button[aria-pressed="true"] {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: var(--crema);
+}
+
+.solo-en-vista {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--tenue);
+  cursor: pointer;
+  user-select: none;
+}
+
+.solo-en-vista input { margin: 0; accent-color: var(--verde); }
+.solo-en-vista[hidden] { display: none; }
+
+/* A la derecha del todo, y en monoespaciada: es un contador, no una etiqueta.
+   `margin-left: auto` lo empuja solo cuando cabe; al partirse la fila cae
+   debajo alineado a la izquierda, que es como se lee en un movil. */
+.cuenta-lista { margin-left: auto; font-size: 0.68rem; }
+
+/* --- Area de afectacion ---------------------------------------------------- */
+
+.area-total { display: flex; align-items: baseline; gap: 0.55rem; margin: 0.2rem 0 0; }
+.area-total strong {
+  font-family: var(--tipo-titulo);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.area-total span {
+  font-family: var(--tipo-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--tenue-mas);
+}
+.area-apunte { margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--tenue-mas); }
+
+.area-franjas { list-style: none; margin: 0.8rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+
+/* Tres columnas fijas: la etiqueta y la cifra no se mueven de banda a banda, y
+   asi las barras se comparan entre si sin tener que leerlas. */
+.area-franjas li {
+  display: grid;
+  grid-template-columns: 4.1rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+.area-banda { font-size: 0.68rem; color: var(--tenue-mas); }
+.area-pista { height: 0.5rem; border-radius: var(--radio-pastilla); background: var(--crema-alt); overflow: hidden; }
+.area-relleno { display: block; height: 100%; border-radius: var(--radio-pastilla); }
+.area-cifra { font-size: 0.72rem; font-variant-numeric: tabular-nums; color: var(--tenue); }
+
+/* La proporcion que convierte un conteo en una noticia: 289.000 mayores no dice
+   nada hasta que se sabe que son el 12 % de los expuestos. */
+.cuota-apunte { color: var(--tenue-mas); }
+.cuota-apunte strong { color: var(--tenue); font-weight: 600; }
+
 /* --- Pagina de estado ------------------------------------------------------ */
 
 /* Antes esta pagina no tenia ni una regla propia: heredaba los tokens y salia
@@ -986,6 +1097,50 @@ tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
+/* --- Una sola caja de capas ------------------------------------------------ */
+/*
+ * Eran tres: "Que hay en el mapa", la rampa de potencia radiativa y los dos
+ * interruptores, cada una con su borde, su fondo y su sombra, apiladas en la
+ * misma esquina. La pregunta que se hace quien mira es una sola —"¿que hay aqui
+ * y que puedo encender?"— y habia que buscar en cual de las tres estaba la
+ * respuesta. Wildfire Aware lo resuelve al reves: una lista, y cada capa lleva
+ * su leyenda colgando de su propia casilla.
+ *
+ * El ancho se acota, no se fija. Al quitarle el suyo a cada hijo, la caja pasaba
+ * a medir lo que midiera la linea mas larga —la nota de la rampa de fuego— y
+ * crecia hasta 470 px sobre el mapa. Con `min()` manda el tope en escritorio y
+ * el porcentaje en un movil, que es donde clavar 17rem devolveria el problema
+ * que ya costo una correccion: 248 px de caja sobre 390 tapando media Colombia.
+ */
+.controles-mapa {
+  max-width: min(17rem, calc(100% - 24px));
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  background: rgba(244, 242, 234, 0.96);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-medio);
+  box-shadow: var(--sombra-corta);
+}
+
+/* Los hijos pierden su cromo: dentro de una caja, tres bordes redondeados son
+   ruido. Se quedan con su contenido y su orden. */
+.controles-mapa > .leyenda,
+.controles-mapa > .interruptor-observados {
+  width: auto;
+  max-width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+/* La casilla mantiene su area de pulsacion aunque pierda el fondo. */
+.controles-mapa > .interruptor-observados { padding: 0.15rem 0; }
+.controles-mapa > .interruptor-observados:hover { color: var(--bosque); }
+
 
 .controles-mapa:empty {
   display: none;

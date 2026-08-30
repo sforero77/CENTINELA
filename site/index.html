@@ -130,6 +130,16 @@
           <p class="detalle-meta" id="detalle-meta"></p>
           <ul class="distintivos" id="detalle-distintivos"></ul>
 
+          <!-- Cuanto territorio, antes de cuanta gente. El visor contaba
+               personas, edificaciones y vias y no decia nunca sobre que
+               superficie: "2,4 M en MMI≥7" no distingue una ciudad sacudida de
+               media cordillera. Sale de contar las celdas que ya se dibujan. -->
+          <section class="bloque" id="bloque-area" hidden>
+            <h3 class="eyebrow">Área de afectación</h3>
+            <p class="subtitulo-bloque">Superficie de la malla contada, no la del ShakeMap: llega hasta donde hay algo expuesto, y por eso no entra en el mar.</p>
+            <div id="detalle-area"></div>
+          </section>
+
           <section class="bloque" id="bloque-franjas">
             <h3 class="eyebrow">Población por franja de intensidad</h3>
             <p class="subtitulo-bloque">Cuánta gente vivía dentro de cada nivel de sacudida. Las franjas se acumulan: quien está en MMI≥7 también cuenta en MMI≥6.</p>
@@ -183,6 +193,18 @@
       <p class="seccion-lema" id="lema-reportes">Cada uno se emitió solo, sin que nadie interviniera.</p>
 
       <div class="filtro-paises" id="filtro-paises" hidden role="group" aria-label="Filtrar reportes por país"></div>
+
+      <!-- Ordenar y recortar al encuadre. La lista respondia solo "¿que ha
+           pasado ultimamente?"; ahora tambien "¿cual fue el mas fuerte?",
+           "¿cual afecto a mas gente?" y "¿cuales caen donde estoy mirando?". -->
+      <div class="controles-lista">
+        <div class="orden-lista" id="orden-lista" role="group" aria-label="Ordenar los reportes"></div>
+        <label class="solo-en-vista" id="etiqueta-en-vista" hidden>
+          <input type="checkbox" id="solo-en-vista" />
+          <span>Solo los que se ven en el mapa</span>
+        </label>
+        <p class="cuenta-lista mono" id="cuenta-lista" aria-live="polite"></p>
+      </div>
 
       <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
       <ul class="lista-eventos" id="lista-eventos"></ul>

@@ -22,6 +22,7 @@ malla dibujada de una malla vacia, que es el cero silencioso de siempre.
 
 from __future__ import annotations
 
+import re
 import shutil
 import threading
 from collections.abc import Iterator
@@ -516,3 +517,302 @@ def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, a
     solapes = pagina.evaluate(SONDA_SOLAPES)
 
     assert solapes == [], f"en {etiqueta} ({ancho}x{alto}) hay texto encima de otro: {solapes}"
+
+
+# --- Lo que un control promete tiene que ser lo que enciende -----------------
+
+
+def test_el_interruptor_de_fuego_promete_lo_que_dibuja(pagina: Any) -> None:
+    """La casilla decia 15.607 celdas y el mapa dibujaba 4.000.
+
+    `p5_incendios` recorta a las 4.000 de mayor potencia radiativa para que el
+    visor no descargue varios megabytes, calcula los totales sobre **todas** y
+    publica `celdas_publicadas` justo para que el recorte se pueda decir. El
+    visor no leia ese campo: rotulaba con el total, encendia el recorte, y lo
+    mismo por el lector de pantalla.
+
+    Es el modo de fallo que este proyecto persigue en todas partes —una cifra
+    plausible que el dato de al lado no sostiene— y estaba en el propio visor.
+
+    No se comprueba la redaccion sino la aritmetica: el numero que el control
+    ensena tiene que ser uno que el mapa pueda respaldar.
+    """
+    anotacion = _esperar_capa(pagina, "incendios")
+    totales = pagina.evaluate("fetch('incendios.json').then(r => r.json()).then(d => d.totales)")
+    dibujadas = anotacion["rasgos"]
+    publicadas = totales["celdas_publicadas"]
+    total = totales["celdas"]
+
+    assert dibujadas == publicadas, (
+        f"el mapa dibujo {dibujadas} celdas y el JSON declara {publicadas} publicadas"
+    )
+
+    def es(n: int) -> str:
+        # Agrupado siempre, como lo hace el visor con este par de cifras: por
+        # defecto el español no separa los millares hasta cinco digitos y
+        # "4000 de 15.607" parece una errata.
+        texto: str = pagina.evaluate(
+            "n => new Intl.NumberFormat('es', { useGrouping: 'always' }).format(n)", n
+        )
+        return texto
+
+    etiqueta = pagina.locator("#interruptor-incendios").inner_text()
+
+    assert es(dibujadas) in etiqueta, (
+        f"el interruptor no dice cuantas celdas dibuja ({es(dibujadas)}): {etiqueta!r}"
+    )
+    if publicadas < total:
+        assert es(total) in etiqueta, (
+            f"el interruptor esconde el total ({es(total)}) y solo ensena el recorte: {etiqueta!r}"
+        )
+        # El fallo original en su forma exacta: el total como unica cifra.
+        assert not etiqueta.strip().startswith(f"Focos activos ({es(total)} celdas"), (
+            f"el interruptor promete el total y enciende el recorte: {etiqueta!r}"
+        )
+
+        pagina.get_by_label("Focos activos", exact=False).check()
+        leyenda = pagina.locator("#leyenda-fuego").inner_text()
+        assert es(dibujadas) in leyenda and es(total) in leyenda, (
+            f"la leyenda de fuego no dice que la capa esta recortada: {leyenda!r}"
+        )
+
+
+# --- Sin libreria de mapas ---------------------------------------------------
+
+
+def test_sin_libreria_de_mapas_el_aviso_no_se_queda_eterno(navegador: Any, servidor: str) -> None:
+    """«Cargando el mapa» giraba para siempre si unpkg no respondia.
+
+    La red de seguridad existia —`setTimeout(listo, 8000)`— pero vivia dentro de
+    `iniciarMapa()`, **despues** del `return` temprano que se dispara cuando
+    `maplibregl` es `undefined`: justo el caso que tenia que cubrir era el unico
+    que no cubria. Medido el 28-ago-2026 con los `<script>` de unpkg apuntando a
+    404: treinta y un segundos girando.
+
+    Lo que hace grave a un aviso eterno es lo que hay debajo: los veintiun
+    reportes, la cobertura y el panel de un evento entero funcionaban. La pagina
+    servia y parecia rota.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    errores: list[str] = []
+    pg.on("pageerror", lambda e: errores.append(str(e)))
+    # El CDN, caido. Se corta la libreria de mapas y se deja todo lo demas.
+    pg.route("**/maplibre-gl.js*", lambda ruta: ruta.abort())
+    try:
+        pg.goto(f"{servidor}/index.html")
+        pg.wait_for_function(
+            "() => document.querySelectorAll('#lista-eventos li').length > 0", timeout=ESPERA_MS
+        )
+
+        aviso = pg.locator("#cargando")
+        # `inner_text` devuelve el texto **renderizado** y `.mono` va en
+        # versalitas, asi que aqui llega "CARGANDO EL MAPA". Comparar sin
+        # normalizar la caja dejaba pasar la prueba por el motivo equivocado.
+        texto = aviso.inner_text()
+
+        assert "cargando" not in texto.lower(), (
+            f"el aviso de carga sigue puesto sin libreria de mapas: {texto!r}"
+        )
+        assert texto.strip(), "el aviso se quito sin decir que el mapa no esta"
+        assert "mapa" in texto.lower(), (
+            f"el aviso no explica que lo que falta es el mapa: {texto!r}"
+        )
+        assert aviso.locator(".giro").count() == 0, (
+            "el girito sigue girando sobre un mapa que no va a existir"
+        )
+
+        # Y lo de debajo, intacto: es la mitad del argumento para no alarmar.
+        eventos = pg.evaluate("document.querySelectorAll('#lista-eventos li').length")
+        catalogo = pg.evaluate(
+            "fetch('reports/index.json').then(r => r.json()).then(e => e.length)"
+        )
+        assert eventos == catalogo, f"sin mapa la lista quedo en {eventos} de {catalogo}"
+        assert pg.evaluate("document.querySelectorAll('#tabla-cobertura tbody tr').length") > 0, (
+            "sin mapa la cobertura regional no se pinto"
+        )
+
+        assert not errores, f"la pagina lanzo errores de JavaScript: {errores}"
+    finally:
+        ctx.close()
+
+
+# --- Cuanto territorio, no solo cuanta gente --------------------------------
+
+
+def test_el_area_de_afectacion_cuadra_con_la_malla(pagina: Any) -> None:
+    """El tablero contaba gente y no decia nunca sobre que superficie.
+
+    "2,4 M de personas en MMI≥7" describe igual de bien una ciudad sacudida que
+    media cordillera, y son dos emergencias distintas. El area sale de contar
+    las celdas que ya se dibujan, asi que se puede comprobar contra el registro
+    de pintado: si el bloque dice mas km² de los que hay celdas, esta inventando.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    celdas = _esperar_capa(pagina, "celdas", desde=marca)
+
+    bloque = pagina.locator("#bloque-area")
+    assert bloque.is_visible(), "el evento trae malla y el bloque de area no salio"
+
+    # El total de la malla que declara el panel no puede exceder el de la capa.
+    dibujadas = celdas["rasgos"]
+    area = pagina.locator("#detalle-area").inner_text()
+    numeros = [
+        int(n.replace(".", "")) for n in re.findall(r"([\d.]+) km²", area.replace("KM²", "km²"))
+    ]
+    assert numeros, f"el bloque de area no publica ninguna cifra: {area!r}"
+    assert max(numeros) <= dibujadas * 5.2 + 1, (
+        f"el area declarada ({max(numeros)} km²) supera la de las {dibujadas} celdas dibujadas"
+    )
+
+
+def test_las_cifras_vulnerables_llevan_su_proporcion(pagina: Any) -> None:
+    """Un conteo no dice si es mucho.
+
+    "289.000 personas de 65 anos o mas" no significa nada hasta saber que son el
+    12 % de los expuestos, y "1,6 M sobre suelo licuable" tampoco hasta saber que
+    son dos de cada tres. La division se podia hacer con los numeros que el
+    reporte ya trae y no se hacia.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    metricas = pagina.locator("#detalle-metricas").inner_text()
+    assert "de los expuestos" in metricas, (
+        f"la cifra de mayores de 65 sigue sin su proporcion: {metricas!r}"
+    )
+
+    terreno = pagina.locator("#detalle-terreno").inner_text()
+    assert "de los expuestos" in terreno, f"la licuefaccion sigue sin su proporcion: {terreno!r}"
+
+
+# --- El area de afectacion tiene forma, no solo cifra ------------------------
+
+
+def test_el_perimetro_encierra_exactamente_lo_que_se_cuenta(pagina: Any) -> None:
+    """A escala regional 890 hexagonos no se leen como una zona: se leen como
+    textura. La pregunta "¿que area quedo dentro?" tenia cifra y no tenia forma.
+
+    Lo que hace honesto a este perimetro es que sale de disolver **las mismas
+    celdas que se cuentan**, no de una isolinea de otro producto: el borde y el
+    "4.628 km²" del panel son el mismo objeto. Por eso la prueba compara el
+    numero de celdas disueltas con las que el panel declara.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    perimetro = _esperar_capa(pagina, "perimetro", desde=marca)
+
+    assert perimetro["rasgos"] > 0, "la malla se dibujo y el perimetro salio vacio"
+
+    area = pagina.locator("#detalle-area").inner_text()
+    encaje = re.search(r"([\d.]+) celdas", area)
+    assert encaje, f"el bloque de area no dice cuantas celdas hay detras: {area!r}"
+    celdas_panel = int(encaje.group(1).replace(".", ""))
+    assert perimetro["rasgos"] == celdas_panel, (
+        f"el panel dice {celdas_panel} celdas y el perimetro disolvio {perimetro['rasgos']}"
+    )
+
+
+def test_volver_al_panorama_no_deja_capas_del_evento(pagina: Any) -> None:
+    """`cerrarDetalle` quitaba la malla y se dejaba los contornos.
+
+    No se notaba porque las isolineas son palidas sobre un mapa continental. Al
+    anadir el perimetro —tinta oscura— quedo a la vista: al volver al panorama
+    flotaba el borde de un area cuyo panel ya no existia.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    _esperar_capa(pagina, "perimetro", desde=marca)
+
+    pagina.locator("#volver").click()
+    pagina.wait_for_function(
+        """() => {
+             const p = window.CENTINELA.pintado;
+             return ['celdas', 'contornos', 'perimetro'].every((c) => p[c] && p[c].rasgos === 0);
+           }""",
+        timeout=ESPERA_MS,
+    )
+
+    quedan = pagina.evaluate(
+        "['celdas','contornos','perimetro'].filter(c => window.CENTINELA.pintado[c].rasgos > 0)"
+    )
+    assert quedan == [], f"al volver al panorama quedaron capas del evento: {quedan}"
+
+
+# --- La lista responde a mas de una pregunta --------------------------------
+
+
+def _titulos_visibles(pagina: Any) -> list[str]:
+    titulos: list[str] = pagina.evaluate(
+        """() => [...document.querySelectorAll('#lista-eventos li')]
+                   .filter(li => !li.hidden)
+                   .map(li => li.querySelector('a').textContent)"""
+    )
+    return titulos
+
+
+def test_la_lista_se_ordena_por_lo_que_se_le_pide(pagina: Any) -> None:
+    """Iba siempre por fecha, que responde "¿que ha pasado ultimamente?".
+
+    Las otras dos preguntas no tenian respuesta sin leer las veintiuna tarjetas,
+    y no son la misma: el M8 de Peru deja 248.000 personas en MMI≥7 y el M7,4 del
+    Choco deja 2,4 millones. Ordenar por magnitud y por exposicion tiene que dar
+    listas distintas, y esa diferencia es justamente el hallazgo.
+    """
+    _esperar_capa(pagina, "epicentros")
+
+    pagina.locator('#orden-lista button[data-orden="mag"]').click()
+    por_mag = pagina.evaluate(
+        """() => [...document.querySelectorAll('#lista-eventos li')]
+                   .filter(li => !li.hidden).map(li => Number(li.dataset.mag))"""
+    )
+    assert por_mag == sorted(por_mag, reverse=True), f"el orden por magnitud no baja: {por_mag}"
+
+    pagina.locator('#orden-lista button[data-orden="pop"]').click()
+    por_pop = pagina.evaluate(
+        """() => [...document.querySelectorAll('#lista-eventos li')]
+                   .filter(li => !li.hidden).map(li => Number(li.dataset.pop))"""
+    )
+    assert por_pop == sorted(por_pop, reverse=True), f"el orden por exposicion no baja: {por_pop}"
+
+    assert _titulos_visibles(pagina) != [], "la lista se quedo vacia al reordenar"
+    assert (
+        pagina.locator('#orden-lista button[data-orden="pop"]').get_attribute("aria-pressed")
+        == "true"
+    )
+
+
+def test_la_lista_se_recorta_al_encuadre_del_mapa(pagina: Any) -> None:
+    """El mapa ensenaba dos epicentros y la lista seguia ensenando veintiuno.
+
+    Es el gesto de Wildfire Aware —"138 incendios a la vista", y uno solo al
+    acercarse— y aqui vale igual: mapa y lista son el mismo conjunto mirado de
+    dos maneras, y no lo eran.
+    """
+    _esperar_capa(pagina, "epicentros")
+    todos = len(_titulos_visibles(pagina))
+    assert todos > 1, "hacen falta varios reportes para que esta prueba diga algo"
+
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    pagina.locator("#solo-en-vista").check()
+    pagina.wait_for_function(
+        "(n) => document.querySelectorAll('#lista-eventos li:not([hidden])').length < n",
+        arg=todos,
+        timeout=ESPERA_MS,
+    )
+
+    en_vista = _titulos_visibles(pagina)
+    assert 0 < len(en_vista) < todos, (
+        f"con el mapa sobre el Choco la lista deberia recortarse; "
+        f"quedo en {len(en_vista)} de {todos}"
+    )
+    assert "encuadre" in pagina.locator("#cuenta-lista").inner_text().lower(), (
+        "el contador no dice que la lista esta recortada al encuadre"
+    )

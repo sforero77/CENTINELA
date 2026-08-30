@@ -520,7 +520,10 @@ def test_la_rampa_del_fuego_tiene_leyenda() -> None:
     poco, ni en que unidad.
     """
     assert "function pintarLeyendaFuego" in APP
-    assert "pintarLeyendaFuego();" in APP, "la leyenda existe y nadie la llama"
+    # Se busca la llamada, no una firma concreta: la leyenda pasó a recibir los
+    # datos para poder decir que la capa va recortada, y una prueba clavada a
+    # `pintarLeyendaFuego();` convertía eso en un fallo rojo sin nada roto.
+    assert re.search(r"\n\s*pintarLeyendaFuego\(", APP), "la leyenda existe y nadie la llama"
 
     bloque = cuerpo("pintarLeyendaFuego")
     assert "Potencia radiativa" in bloque, "la leyenda no dice que mide"
