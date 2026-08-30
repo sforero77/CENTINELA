@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from ..common.constants import PRELIMINARY_MAX_HOURS, PRELIMINARY_RETRY_MINUTES
+from ..common.constants import CADENCIA_MINIMA_MIN, PRELIMINARY_MAX_HOURS
 from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.paths import REPORTS_DIR, validate_usgs_id
@@ -28,8 +29,43 @@ from .products import ProductSet, parse_products
 
 _log = get_logger(__name__)
 
-#: Cuantos reintentos preliminares caben en la ventana de RF-03.
-MAX_PRELIMINARY_ATTEMPTS = PRELIMINARY_MAX_HOURS * 60 // PRELIMINARY_RETRY_MINUTES
+#: Tope absoluto de intentos preliminares. NO es lo que cierra la ventana.
+#:
+#: Lo era, y estaba mal. `6 h / 30 min = 12` daba por supuesto que el vigia
+#: pasaba cada media hora; el 30-ago-2026 un cron externo lo puso a **cinco
+#: minutos** y esos doce intentos se consumieron en una hora. La ventana de
+#: RF-03 se encogio de seis horas a una sin que nada fallara, y el evento se
+#: marcaba `degradado` con la nota "sin ShakeMap tras 6 h de reintentos" —
+#: falsa por un factor de seis, y publicada.
+#:
+#: Lo peor: `test_ventana_de_reintentos_es_de_seis_horas` seguia en verde. La
+#: asercion (`== 12`) era cierta; el nombre era lo que mentia.
+#:
+#: Ahora la ventana la cierra el reloj y esto es solo una red por si el sello
+#: de deteccion falta. Se calcula con la cadencia mas rapida posible para que
+#: el conteo no pueda volver a ser lo que cierra antes de tiempo.
+MAX_PRELIMINARY_ATTEMPTS = PRELIMINARY_MAX_HOURS * 60 // CADENCIA_MINIMA_MIN
+
+
+def _ventana_preliminar_agotada(state: EventState) -> bool:
+    """¿Se agotaron las seis horas de RF-03? Medidas en reloj, no en intentos.
+
+    El ancla es cuando el vigia vio el evento por primera vez, que es cuando
+    empieza a contar la promesa. Si ese sello falta o no se puede leer —un
+    estado malformado—, se cae al tope de intentos, que es generoso a
+    proposito: rendirse antes de tiempo es el fallo que esto arregla.
+    """
+    desde = state.timestamps.get("detectado") or state.timestamps.get("preliminar")
+    if desde:
+        try:
+            inicio = datetime.fromisoformat(desde.replace("Z", "+00:00"))
+        except ValueError:
+            inicio = None
+        if inicio is not None:
+            if inicio.tzinfo is None:
+                inicio = inicio.replace(tzinfo=UTC)
+            return datetime.now(UTC) - inicio >= timedelta(hours=PRELIMINARY_MAX_HOURS)
+    return state.intentos_preliminar >= MAX_PRELIMINARY_ATTEMPTS
 
 
 class Action(StrEnum):
@@ -81,7 +117,7 @@ def decide(state: EventState, products: ProductSet, *, forzar: bool = False) -> 
         )
 
     if not products.has_shakemap:
-        if state.intentos_preliminar >= MAX_PRELIMINARY_ATTEMPTS:
+        if _ventana_preliminar_agotada(state):
             return Decision(
                 Action.AGOTADO,
                 f"sin ShakeMap tras {PRELIMINARY_MAX_HOURS} h de reintentos",

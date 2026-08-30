@@ -49,9 +49,26 @@ GROUND_FAILURE_HIGH_PROB: Final[float] = 0.10
 
 # --- Reintentos del reporte preliminar (RF-03) ----------------------------
 
-#: Cadencia y ventana de reintento mientras no aparece ShakeMap.
+#: Cadencia de reintento que declara RF-03 mientras no aparece ShakeMap.
+#:
+#: Es un **suelo de la especificacion, no un freno del codigo**. Quien decide
+#: cada cuanto se vuelve a mirar es el vigia, y desde el cron externo pasa cada
+#: cinco minutos: comprobar mas a menudo detecta el ShakeMap antes, y el SLO se
+#: cuenta desde que ese ShakeMap existe. El coste es nulo —el commit del
+#: reporte esta guardado por `git diff --staged --quiet`, asi que un preliminar
+#: identico no publica nada— y la ganancia son hasta veinticinco minutos.
 PRELIMINARY_RETRY_MINUTES: Final[int] = 30
 PRELIMINARY_MAX_HOURS: Final[int] = 6
+
+#: Cada cuanto puede pasar el vigia, en el caso mas rapido.
+#:
+#: Es el intervalo del cron externo por `repository_dispatch`, y tambien el
+#: minimo que GitHub acepta en un `schedule`. Existe aqui porque la ventana de
+#: RF-03 se conto durante un tiempo en **intentos** y no en horas: con el vigia
+#: a media hora, doce intentos eran seis horas y nadie noto la diferencia; al
+#: bajar a cinco minutos, esos doce intentos pasaron a ser **una** hora y la
+#: ventana se encogio en silencio. Ver `_ventana_preliminar_agotada`.
+CADENCIA_MINIMA_MIN: Final[int] = 5
 #: Radios (km) de la exposicion preliminar sin ShakeMap.
 PRELIMINARY_RADII_KM: Final[tuple[int, ...]] = (25, 50, 100)
 
