@@ -133,13 +133,66 @@
                que distingue a esto de un PDF es que esta mirando ahora. -->
           <div class="en-vivo" id="en-vivo" hidden aria-live="polite"></div>
 
-          <p class="eyebrow">Panorama</p>
-          <div id="panorama"></div>
-          <p class="pista">
-            Elige un evento arriba, pulsa un epicentro en el mapa o abre uno de
-            la lista. Cada evento se dibuja sobre la malla hexagonal de 5,2&nbsp;km²
-            con la que se calcula.
+          <!-- El panorama es del modo sismos y se oculta en modo fuego: un
+               panel que habla de los 21 reportes publicados mientras el mapa
+               dibuja focos de calor son dos amenazas hablando a la vez. -->
+          <div id="bloque-panorama">
+            <p class="eyebrow">Panorama</p>
+            <div id="panorama"></div>
+            <p class="pista">
+              Elige un evento arriba, pulsa un epicentro en el mapa o abre uno de
+              la lista. Cada evento se dibuja sobre la malla hexagonal de 5,2&nbsp;km²
+              con la que se calcula.
+            </p>
+          </div>
+
+          <!-- Su equivalente en modo fuego: que hacer con el mapa que se ve. -->
+          <p class="pista" id="pista-fuego" hidden>
+            Cada hexágono es una celda de 5,2&nbsp;km² con detección de satélite en
+            las últimas 24&nbsp;h. Pulsa cualquiera para ver el foco al que pertenece:
+            su superficie, cuánta gente vive dentro y sobre qué está ardiendo.
           </p>
+        </div>
+
+        <!-- El detalle de un foco. Un incendio no es una celda suelta: es el
+             grupo de celdas contiguas que estan ardiendo, y su area es la de
+             ese grupo. Antes solo habia un globo sobre el mapa con la celda
+             pulsada, asi que la pregunta "¿que superficie cubre esto?" no
+             tenia respuesta en ninguna parte. -->
+        <div id="detalle-fuego" hidden>
+          <button type="button" class="volver" id="volver-fuego">
+            <span aria-hidden="true">&#8592;</span> Volver a los focos
+          </button>
+
+          <p class="eyebrow">Foco activo</p>
+          <h2 id="fuego-titulo"></h2>
+          <p class="detalle-meta" id="fuego-meta"></p>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Área del foco</h3>
+            <p class="subtitulo-bloque">Superficie de las celdas contiguas con detección en las últimas 24 h. No es área quemada: es dónde el satélite vio fuego.</p>
+            <div id="fuego-area"></div>
+          </section>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Expuesto dentro del foco</h3>
+            <p class="subtitulo-bloque">Lo que el activo de exposición cuenta dentro de esas celdas. Exposición, no daño.</p>
+            <div class="metricas" id="fuego-metricas"></div>
+          </section>
+
+          <section class="bloque" id="bloque-fuego-suelo" hidden>
+            <h3 class="eyebrow">Sobre qué está ardiendo</h3>
+            <p class="subtitulo-bloque">Reparto de la energía medida dentro del foco. Un fuego sobre pastizal en agosto es rutina agrícola; el mismo sobre arbolado no.</p>
+            <ul class="suelo-reparto" id="fuego-suelo"></ul>
+          </section>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Detección</h3>
+            <p class="subtitulo-bloque">Cuántas veces lo vieron los satélites y con cuánta energía. Tres satélites sobre el mismo fuego producen tres detecciones.</p>
+            <div class="metricas" id="fuego-deteccion"></div>
+          </section>
+
+          <p class="apostilla" id="fuego-apostilla"></p>
         </div>
 
         <div id="lateral-detalle" hidden>

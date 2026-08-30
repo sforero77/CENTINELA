@@ -269,7 +269,9 @@ def test_el_registro_es_superficie_publica() -> None:
     """Sin `window.CENTINELA` no hay forma de esperar sin adivinar."""
     app = (RAIZ / "site" / "assets" / "app.js").read_text(encoding="utf-8")
 
-    assert "window.CENTINELA = { pintado, errores: erroresAlPintar };" in app
+    assert "window.CENTINELA = {" in app
+    for clave in ("pintado,", "errores: erroresAlPintar,"):
+        assert clave in app, f"el registro publico perdio {clave!r}"
 
 
 # --- Lo que se oculta tiene que dejar de verse -------------------------------
@@ -1232,3 +1234,141 @@ def test_el_enlace_profundo_al_modo_fuego(navegador: Any, servidor: str) -> None
         assert "potencia radiativa" in pg.locator("#leyenda").inner_text().lower()
     finally:
         ctx.close()
+
+
+# --- Focos de incendio (30-ago-2026) ----------------------------------------
+#
+# Cinco pruebas para lo que el visor no sabia hacer: un incendio era una celda
+# suelta con un globo, la tarjeta daba el total de America Latina sin decirlo, y
+# el panel mezclaba las dos amenazas.
+
+
+def test_las_celdas_contiguas_se_agrupan_en_focos(pagina: Any) -> None:
+    """Un incendio no es un hexagono de 5,2 km²: es el grupo que arde junto.
+
+    Sin agrupar, la unica respuesta a "¿que tan grande es este fuego?" era el
+    total regional o una celda. Ninguna de las dos es un incendio.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    celdas = _esperar_capa(pagina, "incendios")["rasgos"]
+    focos = _esperar_capa(pagina, "focos")["rasgos"]
+
+    assert focos > 0, "no se agrupo ni un foco"
+    assert focos < celdas, (
+        f"{focos} focos para {celdas} celdas: si no hay ninguna celda contigua "
+        "a otra, el agrupado no esta uniendo nada"
+    )
+
+
+def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
+    """La pregunta que el visor no respondia: cuanta superficie cubre esto.
+
+    El area sale de contar celdas, asi que tiene que cuadrar con el numero de
+    celdas que el propio panel declara. Publicar un area que no se deduce de lo
+    que se ve al lado seria una cifra sin respaldo.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "incendios")
+    _esperar_capa(pagina, "focos")
+
+    foco = pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    assert foco and foco["celdas"] >= 1
+
+    pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
+    _esperar_capa(pagina, "foco-perimetro")
+
+    texto = pagina.locator("#fuego-area").inner_text().lower()
+    esperado = round(foco["celdas"] * 5.2)
+    assert f"{esperado:,}".replace(",", ".") in texto or str(esperado) in texto, (
+        f"el panel deberia decir {esperado} km² para {foco['celdas']} celdas: {texto!r}"
+    )
+
+
+def test_en_modo_sismos_no_queda_rastro_de_incendios(pagina: Any) -> None:
+    """El fallo que se veia de un vistazo en el panel.
+
+    En modo fuego el lateral seguia mostrando "9 sismos vistos y no despachados"
+    y debajo el panorama sismico entero. Al reves, en modo sismos seguia la
+    tarjeta de fuego. Dos amenazas hablando a la vez es lo que el selector
+    existe para evitar.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "incendios")
+    # `wait_for_selector` espera a que sea VISIBLE por defecto, y un elemento
+    # oculto no lo es nunca: hay que pedir el estado explicitamente.
+    pagina.wait_for_selector("#bloque-panorama[hidden]", state="attached", timeout=ESPERA_MS)
+
+    pagina.locator('#amenazas button[data-amenaza="sismos"]').click()
+    pagina.wait_for_selector("#bloque-panorama:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_timeout(600)
+
+    lateral = pagina.locator("#lateral").inner_text().lower()
+    intrusos = [p for p in ("fuego", "incendio", "ardiendo", "radiativa") if p in lateral]
+    assert not intrusos, f"el panel de sismos habla de incendios: {intrusos}"
+
+
+def test_volver_de_un_foco_devuelve_el_panorama(pagina: Any) -> None:
+    """La regresion que se introdujo al arreglar esto, cazada en el navegador.
+
+    `cerrarFoco` restauraba el panel solo si la amenaza seguia siendo fuego, y
+    `aplicarAmenaza` lo llama **despues** de cambiar de modo: al pasar a sismos
+    la condicion ya era falsa, y volver a fuego dejaba el lateral en blanco.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
+
+    # El camino largo: salir por el cambio de modo, no por el boton.
+    pagina.locator('#amenazas button[data-amenaza="sismos"]').click()
+    pagina.wait_for_timeout(700)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(700)
+
+    assert pagina.locator("#lateral-vacio").is_visible(), "el lateral se quedo en blanco"
+    assert "ahora mismo" in pagina.locator("#lateral").inner_text().lower()
+
+
+def test_la_cifra_viva_ocupa_la_fila_y_no_se_sale(pagina: Any) -> None:
+    """El "no tiene margen" que se ve en cuanto alguien mira el panel.
+
+    `.metricas` es una rejilla de dos columnas. `.metrica-suelo` y
+    `.metrica-servicios` declaran `grid-column: 1 / -1`; a `.metrica-viva` se le
+    olvido, asi que el titular vivia en media columna de 148 px y su
+    `margin: -8px` sacaba el fondo fuera de la tarjeta.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "incendios")
+    pagina.wait_for_timeout(700)
+
+    medidas = pagina.evaluate(
+        """() => {
+        const b = document.querySelector('.metrica-viva:not([hidden])');
+        const g = document.querySelector('#en-vivo .metricas');
+        if (!b || !g) return null;
+        const rb = b.getBoundingClientRect(), rg = g.getBoundingClientRect();
+        return { bx: rb.left, br: rb.right, bw: rb.width, gx: rg.left, gr: rg.right, gw: rg.width };
+    }"""
+    )
+
+    assert medidas, "no hay cifra viva que medir"
+    assert medidas["bx"] >= medidas["gx"] - 1, "la cifra se sale por la izquierda"
+    assert medidas["br"] <= medidas["gr"] + 1, "la cifra se sale por la derecha"
+    assert abs(medidas["bw"] - medidas["gw"]) <= 3, (
+        f"la cifra ocupa {medidas['bw']:.0f} px de {medidas['gw']:.0f}: "
+        "deberia ocupar la fila entera"
+    )
+
+
+def test_la_tarjeta_viva_dice_de_donde_es_la_cifra(pagina: Any) -> None:
+    """ "586.000 personas en celdas con fuego activo" — ¿de donde?
+
+    Se podia leer como un incendio, como un pais o como la region entera. Es la
+    suma de toda America Latina, y sin decirlo la cifra no significa nada.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "incendios")
+    pagina.wait_for_timeout(600)
+
+    texto = pagina.locator('.metrica-viva[data-capa="incendios"]').inner_text().lower()
+    assert "américa latina" in texto, f"la cifra no declara su alcance: {texto!r}"
