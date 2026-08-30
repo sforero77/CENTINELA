@@ -41,7 +41,7 @@ Las pruebas leen `window.CENTINELA.pintado`, un registro público de qué capas
 se pintaron y con cuántos rasgos:
 
 ```python
-_esperar_capa(pagina, "incendios")   # espera a que el registro lo confirme
+_esperar_capa(pagina, "incendios")  # espera a que el registro lo confirme
 ```
 
 **Nunca se mide desde una captura de pantalla.** Una pestaña que corre en
@@ -77,7 +77,7 @@ Un fallo que sólo aparece con red lenta no se reproduce en un servidor local,
 que responde en microsegundos. Se retrasan **las teselas**, no el estilo:
 
 ```python
-pg.route("**/tiles.openfreemap.org/**/*.pbf", _lento)   # 1,2 s
+pg.route("**/tiles.openfreemap.org/**/*.pbf", _lento)  # 1,2 s
 ```
 
 Retrasar el estilo no sirve: en local `load` llega antes que `styledata` y la

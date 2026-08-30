@@ -43,9 +43,9 @@ flowchart TB
 `pipelines/p1_trigger/filters.py` — todas explícitas y testeables sin red:
 
 ```python
-if candidate.tipo != "earthquake":        # explosiones, hielo, ruido
+if candidate.tipo != "earthquake":  # explosiones, hielo, ruido
     return RelevanceDecision(False, f"tipo no sismico: {candidate.tipo}")
-if candidate.mag < MIN_MAGNITUDE:         # 5.5
+if candidate.mag < MIN_MAGNITUDE:  # 5.5
     return RelevanceDecision(False, f"M{candidate.mag} < umbral M{MIN_MAGNITUDE}")
 if not bbox.contains(candidate.lon, candidate.lat):
     return RelevanceDecision(False, "fuera del bbox LATAM")
