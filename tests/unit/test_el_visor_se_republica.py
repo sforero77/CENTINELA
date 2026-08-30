@@ -161,3 +161,24 @@ def test_mencionar_el_comando_no_es_ejecutarlo() -> None:
 
     assert REPUBLICAR in _texto(frescura), "ya no explica como repararlo"
     assert not republica(frescura), "el guardia volvio a confundir la prosa con el codigo"
+
+
+def test_la_vista_previa_apunta_al_ultimo_evento() -> None:
+    """`og:image` iba clavada en el HTML a un evento concreto.
+
+    Funcionaba hoy y se rompia en silencio el dia que ese reporte se retirara —
+    y un tablero de crisis compartido por WhatsApp enseñaria siempre el sismo de
+    agosto de 2026, tuviera lo que tuviera delante. El despliegue es el unico
+    sitio que sabe que se publica, asi que la reescritura vive ahi.
+    """
+    texto = (WORKFLOWS / "site.yml").read_text(encoding="utf-8")
+
+    assert "og:image" in texto, "el despliegue ya no actualiza la vista previa"
+    assert "reports/index.json" in texto, (
+        "la vista previa no sale del indice de reportes, que es quien sabe cual es el ultimo"
+    )
+    # Y el HTML conserva un valor fijo de respaldo para quien sirva site/ a secas.
+    html = (WORKFLOWS.parent.parent / "site" / "index.html").read_text(encoding="utf-8")
+    assert 'property="og:image" content="https://' in html, (
+        "el HTML se quedo sin og:image de respaldo"
+    )

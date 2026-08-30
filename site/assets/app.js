@@ -327,9 +327,12 @@ function haceCuanto(iso) {
   if (min < 0) return "ahora mismo";
   if (min < 90) return `hace ${Math.max(1, Math.round(min))} min`;
   const horas = min / 60;
-  if (horas < 36) return `hace ${Math.round(horas)} h`;
+  // Hasta 48 y no 36: con el corte en 36, `round(36/24)` da 2 y "hace 1 día"
+  // era literalmente inalcanzable — de "hace 35 h" se saltaba a "hace 2 días",
+  // duplicando la antiguedad aparente de una cifra de dia y medio.
+  if (horas < 48) return `hace ${Math.round(horas)} h`;
   const dias = Math.round(horas / 24);
-  return `hace ${dias} ${dias === 1 ? "día" : "días"}`;
+  return `hace ${dias} días`;
 }
 
 //: La antiguedad, lista para pegar detras de un apunte.
@@ -1295,7 +1298,9 @@ function pintarMetricas(reporte) {
     {
       clave: "vias",
       valor: t.road_km_mmi7p,
-      texto: `${numero(t.road_km_mmi7p)} km`,
+      // `miles` y no `numero`: 8.503 km, en la misma columna tipografica que
+      // el resto de cifras grandes del panel.
+      texto: `${miles(t.road_km_mmi7p)} km`,
       etiqueta: "de vía",
       ancha: true,
       apunte: Number.isFinite(principal)

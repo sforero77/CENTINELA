@@ -46,6 +46,40 @@ jobs:
         run: |
           mkdir -p _site
           cp -r site/* _site/
+
+          # LA VISTA PREVIA APUNTA AL ULTIMO EVENTO, NO A UNO CONGELADO.
+          #
+          # `og:image` iba clavada en el HTML a `us6000tjl2`. Funcionaba hoy y
+          # se rompia en silencio el dia que ese reporte se retirara — y ademas
+          # un tablero de crisis compartido por WhatsApp enseñaria siempre el
+          # sismo de agosto de 2026, tuviera lo que tuviera delante.
+          #
+          # Se reescribe aqui, en el unico sitio que sabe que se publica: el
+          # despliegue. El HTML del repositorio conserva un valor fijo como
+          # respaldo para quien sirva `site/` a secas.
+          python3 - <<'PY'
+          import json, html, io
+          eventos = json.load(io.open("reports/index.json", encoding="utf-8"))
+          ultimo = max(eventos, key=lambda e: e.get("utc") or "")
+          usgs = ultimo["usgs_id"]
+          mag = str(ultimo.get("mag", "")).replace(".", ",")
+          lugar = ultimo.get("lugar", "")
+          base = "https://sforero77.github.io/CENTINELA"
+
+          p = "_site/index.html"
+          s = io.open(p, encoding="utf-8").read()
+          import re
+          s = re.sub(
+              r'(property="og:image" content=")[^"]*(")',
+              rf"\g<1>{base}/reports/{usgs}/mapa_prensa.png\g<2>", s, count=1)
+          s = re.sub(
+              r'(property="og:image:alt" content=")[^"]*(")',
+              r"\g<1>" + html.escape(
+                  f"Mapa de exposición del M{mag} — {lugar}.", quote=True
+              ) + r"\g<2>", s, count=1)
+          io.open(p, "w", encoding="utf-8").write(s)
+          print(f"og:image -> {usgs} (M{mag}, {lugar})")
+          PY
           # Los reportes publicados se sirven junto al visor: sin backend,
           # sin llaves de API, cero SLA que sostener (D6).
           cp -r reports _site/reports
