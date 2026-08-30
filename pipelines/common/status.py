@@ -135,26 +135,41 @@ def cadencia_del_vigia(latidos: list[dict[str, Any]]) -> dict[str, Any]:
 
     Se salta el hueco cuando pasa de un dia: es una parada, no una cadencia, y
     meterla en la mediana la ahogaria.
+
+    **Un latido no es una revision.** El latido se publica como mucho una vez
+    por hora para no llenar el historial de commits, asi que el hueco entre dos
+    latidos cubre todas las revisiones que hubo en medio. Mientras el vigia
+    corrio cada media hora los dos numeros se parecian bastante y la diferencia
+    no se noto; con el cron externo a cinco minutos, el hueco entre latidos
+    dejo de medir nada — la pagina publicaba "revisa cada 2,6 h" mientras el
+    vigia revisaba cada cinco. Por eso cada latido declara cuantas revisiones
+    representa, y el intervalo real es el hueco dividido entre ellas.
+
+    Un latido sin ese campo cuenta como una sola revision, que es exactamente
+    lo que era antes: los historicos siguen midiendo lo mismo.
     """
-    instantes = sorted(
-        filtrado
+    con_sello = [
+        (sello, max(1, int(latido.get("revisiones", 1) or 1)))
         for latido in latidos
-        if (filtrado := _parse(str(latido.get("utc", "")))) is not None
-    )
-    huecos = [
-        minutos
-        for antes, despues in pairwise(instantes)
+        if (sello := _parse(str(latido.get("utc", "")))) is not None
+    ]
+    con_sello.sort(key=lambda par: par[0])
+
+    intervalos = [
+        minutos / cuantas
+        for (antes, _), (despues, cuantas) in pairwise(con_sello)
         if 0 < (minutos := (despues - antes).total_seconds() / 60) <= 24 * 60
     ]
-    if not huecos:
+    if not intervalos:
         return {}
 
     return {
         "declarado_min": 30,
-        "p50_min": percentil(huecos, 0.50),
-        "p90_min": percentil(huecos, 0.90),
-        "peor_min": round(max(huecos), 1),
-        "revisiones": len(huecos) + 1,
+        "p50_min": percentil(intervalos, 0.50),
+        "p90_min": percentil(intervalos, 0.90),
+        "peor_min": round(max(intervalos), 1),
+        "revisiones": sum(cuantas for _, cuantas in con_sello[1:]) + 1,
+        "latidos": len(con_sello),
     }
 
 

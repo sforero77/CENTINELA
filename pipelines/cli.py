@@ -57,6 +57,12 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
             "utc": result.latido_utc,
             "revisados": result.revisados,
             "relevantes": result.relevantes,
+            # Cuantas corridas del vigia cubre este latido. El latido se
+            # commitea como mucho una vez por hora, asi que sin este numero el
+            # hueco entre dos latidos se lee como si fuera el ritmo del cron —
+            # y con el disparo externo a cinco minutos eso sobreestima el
+            # intervalo real por un factor de doce.
+            "revisiones": max(1, args.revisiones),
         }
     )
 
@@ -535,6 +541,15 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="comando", required=True)
 
     p_trigger = sub.add_parser("trigger", help="P1: vigila el feed USGS")
+    p_trigger.add_argument(
+        "--revisiones",
+        type=int,
+        default=1,
+        help=(
+            "corridas del vigia desde el latido anterior; el workflow lo cuenta "
+            "para que /status publique el intervalo real y no el de los commits"
+        ),
+    )
     p_trigger.add_argument("--dry-run", action="store_true", help="no escribe event_state")
     p_trigger.set_defaults(func=_cmd_trigger)
 
