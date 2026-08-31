@@ -1,9 +1,19 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-31T00:55:20Z",
+  "generado_utc": "2026-08-31T02:25:16Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
+    {
+      "usgs_id": "us7000td1g",
+      "mag": 4.5,
+      "lon": -79.0145,
+      "lat": -9.6152,
+      "depth_km": 59.4,
+      "lugar": "71 km al OSO de Puerto Casma, Perú",
+      "origen_utc": "2026-08-31T01:08:05Z",
+      "razon": "M4.5 < umbral M5.5"
+    },
     {
       "usgs_id": "us7000tczt",
       "mag": 4.7,
