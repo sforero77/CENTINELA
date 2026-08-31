@@ -263,7 +263,12 @@ const CAPAS = {
 
 const ORDEN_CAPAS = ["mmi", "pop", "bld", "built_m2", "vias_km", "salud", "edu"];
 
-//: Superficie nominal de una celda H3 r7, que es la resolucion de la malla.
+//: Superficie nominal de una celda H3 r7, que es la resolucion **de la malla
+//: sismica**: `p3_report/celdas.py` agrega de r8 a r7 antes de publicar, y los
+//: indices de `celdas.json` empiezan por `87`.
+//:
+//: NO VALE PARA EL FUEGO. P5 publica r8 sin agregar y su area es siete veces
+//: menor; ver `AREA_CELDA_FUEGO_KM2` justo debajo, y lo que costo confundirlas.
 //:
 //: Es la cifra que el visor ya dice en tres sitios —la pista del panorama, el
 //: popup de la celda y la nota de la capa de poblacion— asi que el area sale de
@@ -271,6 +276,23 @@ const ORDEN_CAPAS = ["mmi", "pop", "bld", "built_m2", "vias_km", "salud", "edu"]
 //: `h3.cellArea` saldria mas exacto y ya no cuadraria con lo que se ensena al
 //: lado, que en este visor es peor.
 const AREA_CELDA_KM2 = 5.2;
+
+//: Y la de una celda de FUEGO, que **no es la misma** y durante todo este
+//: tiempo se calculo como si lo fuera.
+//:
+//: D1 dice: computo en r8, agregado a r7/r6 para el visor. El lado sismico lo
+//: cumple —`p3_report/celdas.py` hace `h3_cell_to_parent(h3_08, 7)` y publica
+//: indices `87...` de 5,2 km²—. **P5 no agrega**: publica los `88...` de r8 tal
+//: cual, y el visor les aplicaba `AREA_CELDA_KM2`, que es el area de r7.
+//:
+//: Resultado: cada area de foco salia SIETE VECES MAYOR de lo real. Un foco de
+//: cien celdas se anunciaba como 520 km² cuando son 74. Y el rotulo de la capa
+//: decia "cada hexagono es una celda de 5,2 km²" sobre hexagonos de 0,74.
+//:
+//: 0,737 km² es la media de r8 segun `h3.average_hexagon_area`. Se redondea a
+//: 0,74 por el mismo motivo que el 5,2 de al lado: es la cifra que el visor
+//: ensena, y tiene que poder comprobarse multiplicando a mano.
+const AREA_CELDA_FUEGO_KM2 = 0.74;
 
 // El PAGER es la estimación de pérdidas del propio USGS. No es una cifra
 // nuestra y no mide lo mismo que este sistema, así que se enseña rotulada como
@@ -3194,6 +3216,16 @@ function agruparFocos(celdas) {
 //: El reparto del suelo se pondera por energia, no por numero de celdas, que es
 //: la misma regla que usa `p5_incendios` para el reparto regional. Contar
 //: celdas daria el mismo peso a una que arde con 4 MW y a otra con 900.
+//: El area de un foco, con un decimal cuando es pequena.
+//:
+//: Con celdas de 0,74 km², `Math.round` convierte un foco de una celda en
+//: "1 km²" —un 35 % de mas— y uno de dos en "1" tambien. Por debajo de 10 km²
+//: el decimal deja de ser ruido y pasa a ser la diferencia entre dos focos
+//: distintos.
+function areaDeFoco(km2) {
+  return km2 < 10 ? numero(km2, 1) : numero(Math.round(km2));
+}
+
 function resumirFoco(id, celdas) {
   const suma = (campo) => celdas.reduce((t, c) => t + (Number(c[campo]) || 0), 0);
 
@@ -3224,7 +3256,7 @@ function resumirFoco(id, celdas) {
     celdas,
     h3s: celdas.map((c) => c.h3),
     nCeldas: celdas.length,
-    areaKm2: celdas.length * AREA_CELDA_KM2,
+    areaKm2: celdas.length * AREA_CELDA_FUEGO_KM2,
     pop: suma("pop"),
     bld: suma("bld"),
     salud: suma("salud"),
@@ -3354,7 +3386,7 @@ function filaFoco(foco) {
   titulo.textContent = foco.nCeldas === 1 ? "1 celda" : numero(foco.nCeldas) + " celdas";
   const area = document.createElement("span");
   area.className = "enlace-reporte";
-  area.textContent = numero(Math.round(foco.areaKm2)) + " km²";
+  area.textContent = areaDeFoco(foco.areaKm2) + " km²";
   cabecera.append(titulo, area);
 
   const meta = document.createElement("p");
@@ -4010,9 +4042,9 @@ function abrirFoco(foco) {
     `Detectado ${comoFecha(foco.primeraUtc)} · último paso ${comoFecha(foco.ultimaUtc)}`;
 
   $("fuego-area").innerHTML =
-    `<p class="cifra-area"><strong>${numero(Math.round(foco.areaKm2))}</strong> km²</p>` +
+    `<p class="cifra-area"><strong>${areaDeFoco(foco.areaKm2)}</strong> km²</p>` +
     `<p class="apunte">${numero(foco.nCeldas)} celda${foco.nCeldas === 1 ? "" : "s"} de ` +
-    `${numero(AREA_CELDA_KM2, 1)} km²</p>`;
+    `${numero(AREA_CELDA_FUEGO_KM2, 2)} km²</p>`;
 
   // El cero se omite en vez de imprimirse. Una celda sin poblacion puede estar
   // fuera de los paises con activo construido, y "0 personas" ahi se leeria
@@ -4081,7 +4113,7 @@ function abrirFoco(foco) {
   volarAlFoco(foco);
   $("lateral").focus();
   anunciar(
-    `Foco de ${numero(foco.nCeldas)} celdas, ${numero(Math.round(foco.areaKm2))} kilómetros cuadrados. ` +
+    `Foco de ${numero(foco.nCeldas)} celdas, ${areaDeFoco(foco.areaKm2)} kilómetros cuadrados. ` +
       (foco.pop > 0 ? `${numero(Math.round(foco.pop))} personas expuestas.` : "Sin exposición medida.")
   );
 }
@@ -4283,7 +4315,15 @@ function cuadroDeViento(p) {
     `<span class="rosa" style="transform:rotate(${empuja}deg)">${iconoSvg("viento")}</span>` +
     `<span class="valor">${numero(kmh)}</span></span>` +
     `<span class="etiqueta">km/h, empuja hacia el ${nombreDeRumbo(empuja)}</span>` +
-    `<span class="apunte">Del modelo GFS a 27&nbsp;km, no medido en la celda</span></div>` +
+    // EL ROTULO ANTERIOR NO SE ENTENDIA, Y HAY EVIDENCIA: decia "Del modelo GFS
+    // a 27 km, no medido en la celda" y quien conoce el sistema por dentro tuvo
+    // que preguntar que significaba. Metia dos ideas en ocho palabras —que es
+    // modelado y que la malla es gruesa— y no transmitia ninguna.
+    //
+    // Ahora van en el orden en que importan: primero que es de la zona y de un
+    // modelo, despues el detalle tecnico.
+    `<span class="apunte">Viento de la zona según modelo, no medido en el incendio` +
+    ` · malla de 27&nbsp;km</span></div>` +
     (p.hr_pct >= 0
       ? `<div class="metrica"><span class="cabeza">${iconoSvg("humedad")}` +
         `<span class="valor">${numero(Math.round(p.hr_pct))}</span></span>` +

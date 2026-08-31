@@ -41,7 +41,7 @@ por celda** y se mide cada trozo en proyección equiárea local.
 ### Edificaciones: por centroide, y se asume
 
 Un edificio pertenece a la celda de su centroide, aunque cruce el borde. A
-5,2 km² por celda, el error es despreciable frente al de la propia cobertura
+0,74 km² por celda, el error es despreciable frente al de la propia cobertura
 de OSM.
 
 ### Cobertura del suelo: el porcentaje es sobre lo clasificado

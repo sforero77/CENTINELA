@@ -1265,7 +1265,18 @@ def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
     El area sale de contar celdas, asi que tiene que cuadrar con el numero de
     celdas que el propio panel declara. Publicar un area que no se deduce de lo
     que se ve al lado seria una cifra sin respaldo.
+
+    ESTA PRUEBA CODIFICABA EL ERROR QUE VENIA A VIGILAR. Multiplicaba por 5,2,
+    que es el area de una celda **r7**, cuando P5 publica **r8** —siete veces
+    mas pequena—. Exigia 556 km² para 107 celdas cuando son 79, asi que el panel
+    y la prueba estaban de acuerdo en un numero equivocado y el error sobrevivio
+    meses. Encontrado el 31-ago-2026 revisando los textos del visor.
+
+    Por eso ahora el area esperada sale de `h3`, no de una constante escrita a
+    mano: una prueba que repite la suposicion del codigo no vigila nada.
     """
+    import h3
+
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     _esperar_capa(pagina, "incendios")
     _esperar_capa(pagina, "focos")
@@ -1277,10 +1288,17 @@ def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
     _esperar_capa(pagina, "foco-perimetro")
 
     texto = pagina.locator("#fuego-area").inner_text().lower()
-    esperado = round(foco["celdas"] * 5.2)
-    assert f"{esperado:,}".replace(",", ".") in texto or str(esperado) in texto, (
-        f"el panel deberia decir {esperado} km² para {foco['celdas']} celdas: {texto!r}"
+    por_celda = h3.average_hexagon_area(8, unit="km^2")
+    esperado = foco["celdas"] * por_celda
+    # Se comprueba el orden de magnitud, no el redondeo exacto: el panel pone un
+    # decimal por debajo de 10 km² y ninguno por encima. Un error de resolucion
+    # —el que hubo— desvia por SIETE, asi que un margen del 15 % lo caza igual y
+    # no se rompe con el formato.
+    assert abs(foco["areaKm2"] - esperado) / esperado < 0.15, (
+        f"el foco dice {foco['areaKm2']} km² y {foco['celdas']} celdas r8 son "
+        f"{esperado:.1f}: ¿se volvio a usar el area de r7?"
     )
+    assert "km²" in texto and texto.strip(), f"el panel no dice el area: {texto!r}"
 
 
 def test_en_modo_sismos_no_queda_rastro_de_incendios(pagina: Any) -> None:

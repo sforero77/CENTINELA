@@ -19,6 +19,7 @@ from typing import Any
 
 import pytest
 
+from pipelines.common.constants import H3_RES_COMPUTE
 from pipelines.p5_incendios.firms import (
     CONFIANZA_BAJA,
     REGIONES,
@@ -709,3 +710,51 @@ def test_un_sello_ilegible_no_tumba_la_corrida() -> None:
     datos = build_incendios([c], ventana_horas=24)
 
     assert len(datos["celdas"]) == 1
+
+
+def test_una_celda_de_fuego_mide_lo_que_dice_el_visor() -> None:
+    """SIETE VECES. Ese era el error, y estuvo publicado meses.
+
+    D1 dice: computo en r8, agregado a r7/r6 para el visor. El lado sismico lo
+    cumple —`p3_report/celdas.py` hace `h3_cell_to_parent(h3_08, 7)` y publica
+    indices `87...`—. **P5 no agrega**: publica los `88...` de r8 tal cual.
+
+    El visor aplicaba a esos r8 la constante `AREA_CELDA_KM2 = 5.2`, que es el
+    area de r7. Cada foco se anunciaba con SIETE VECES su superficie: uno de
+    cien celdas decia 520 km² cuando son 74. Y el rotulo de la capa prometia
+    "hexagonos de 5,2 km²" sobre hexagonos de 0,74.
+
+    Nadie lo caza salvo una prueba que compare la constante del visor contra la
+    geometria de verdad, que es esta.
+    """
+    import re
+    from pathlib import Path
+
+    import h3
+
+    real = h3.average_hexagon_area(H3_RES_COMPUTE, unit="km^2")
+    app = (Path(__file__).parent.parent.parent / "site" / "assets" / "app.js").read_text(
+        encoding="utf-8"
+    )
+    m = re.search(r"const AREA_CELDA_FUEGO_KM2 = ([\d.]+);", app)
+    assert m is not None, "el visor ya no declara el area de una celda de fuego"
+    declarada = float(m.group(1))
+
+    assert abs(declarada - real) < 0.01, (
+        f"el visor dice {declarada} km² por celda y una r{H3_RES_COMPUTE} mide {real:.3f}"
+    )
+
+
+def test_el_visor_no_usa_el_area_de_r7_para_el_fuego() -> None:
+    """La constante equivocada sigue existiendo, y con razon: el lado sismico
+    publica en r7 y ahi 5,2 km² es correcto. Lo que no puede es volver a
+    aplicarse a un foco."""
+    from pathlib import Path
+
+    app = (Path(__file__).parent.parent.parent / "site" / "assets" / "app.js").read_text(
+        encoding="utf-8"
+    )
+
+    assert "areaKm2: celdas.length * AREA_CELDA_FUEGO_KM2," in app, (
+        "el area de un foco volvio a calcularse con la constante de r7"
+    )
