@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-31T16:30:24Z",
+  "generado_utc": "2026-08-31T16:45:35Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -112,17 +112,6 @@
       "lugar": "42 km al E de Estique, Perú",
       "origen_utc": "2026-08-27T17:40:41Z",
       "razon": "M4.5 < umbral M5.5",
-      "iso3": ""
-    },
-    {
-      "usgs_id": "us7000tbzn",
-      "mag": 4.9,
-      "lon": -73.0596,
-      "lat": 6.737,
-      "depth_km": 159.9,
-      "lugar": "4 km al E de Jordán, Colombia",
-      "origen_utc": "2026-08-26T16:45:14Z",
-      "razon": "M4.9 < umbral M5.5",
       "iso3": ""
     }
   ]
