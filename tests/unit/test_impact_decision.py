@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -67,13 +69,48 @@ def test_sin_shakemap_va_a_preliminar(detail_sin_shakemap: dict[str, Any]) -> No
 
 
 def test_la_ventana_de_reintentos_se_agota(detail_sin_shakemap: dict[str, Any]) -> None:
-    """RF-03: se reintenta cada 30 min hasta 6 h, y no mas."""
-    estado = _estado(estado=EventStatus.PRELIMINAR, intentos_preliminar=MAX_PRELIMINARY_ATTEMPTS)
+    """RF-03: se reintenta hasta 6 h, y no mas. Seis horas de reloj."""
+    hace_siete_horas = (datetime.now(UTC) - timedelta(hours=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    estado = _estado(estado=EventStatus.PRELIMINAR)
+    estado = replace(estado, timestamps={"detectado": hace_siete_horas})
     assert decide(estado, parse_products(detail_sin_shakemap)).action is Action.AGOTADO
 
 
-def test_ventana_de_reintentos_es_de_seis_horas() -> None:
-    assert MAX_PRELIMINARY_ATTEMPTS == 12
+def test_la_ventana_no_se_agota_antes_de_las_seis_horas(
+    detail_sin_shakemap: dict[str, Any],
+) -> None:
+    """El fallo que introdujo el cron de cinco minutos.
+
+    La ventana se contaba en intentos —doce— dando por supuesto que el vigia
+    pasaba cada media hora. Al bajar a cinco minutos, esos doce intentos se
+    consumian en UNA hora: un sismo cuyo ShakeMap tardara mas de eso se
+    abandonaba con la nota "sin ShakeMap tras 6 h de reintentos", falsa por un
+    factor de seis. Aqui hay veinte intentos en una hora, que es exactamente lo
+    que produce el vigia rapido, y la ventana sigue abierta.
+    """
+    hace_una_hora = (datetime.now(UTC) - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    estado = _estado(estado=EventStatus.PRELIMINAR, intentos_preliminar=20)
+    estado = replace(estado, timestamps={"detectado": hace_una_hora})
+    assert decide(estado, parse_products(detail_sin_shakemap)).action is Action.PRELIMINAR
+
+
+def test_sin_sello_de_deteccion_se_cae_al_tope_de_intentos(
+    detail_sin_shakemap: dict[str, Any],
+) -> None:
+    """Un estado malformado no puede dejar el reintento corriendo para siempre.
+
+    Y el tope se calcula con la cadencia mas rapida posible, no con la del cron
+    interno: asi el conteo nunca vuelve a ser lo que cierra la ventana antes de
+    tiempo. Rendirse pronto es el fallo que esto arregla.
+    """
+    estado = _estado(estado=EventStatus.PRELIMINAR, intentos_preliminar=MAX_PRELIMINARY_ATTEMPTS)
+    estado = replace(estado, timestamps={})
+    assert decide(estado, parse_products(detail_sin_shakemap)).action is Action.AGOTADO
+
+
+def test_el_tope_de_intentos_cubre_seis_horas_al_ritmo_mas_rapido() -> None:
+    """72 = 6 h a 5 min. Antes era 12 = 6 h a 30 min, y el vigia ya no va a 30."""
+    assert MAX_PRELIMINARY_ATTEMPTS == 72
 
 
 def test_evento_descartado_nunca_se_procesa(detail_con_productos: dict[str, Any]) -> None:
