@@ -2033,3 +2033,160 @@ thead th {
   font-size: 1.55rem;
   margin-bottom: 0.3rem;
 }
+
+/* --- El atributo `hidden` gana. Punto. (31-ago-2026) --------------------- */
+
+/* QUINTA VEZ QUE ESTE FALLO MUERDE EN ESTE REPOSITORIO.
+ *
+ * `hidden` es una regla del agente de usuario con especificidad de elemento, y
+ * cualquier `.clase { display: flex }` la pisa. Lo hemos arreglado uno a uno en
+ * la lista de eventos, en el interruptor de observados, en la métrica viva y en
+ * el filtro de países — y a la sexta clase con `display` alguien vuelve a
+ * escribir `nodo.hidden = true` esperando que funcione, porque en HTML funciona.
+ *
+ * Arreglarlo por clase es jugar al topo. Esta regla lo cierra de una vez.
+ *
+ * Lleva `!important` a propósito y es de los pocos sitios donde se justifica:
+ * sin él basta con que una regla de clase se declare más abajo para volver a
+ * romperlo, que es exactamente cómo llegamos hasta aquí. Si algún día hace
+ * falta enseñar algo marcado como oculto, la respuesta es quitarle el atributo,
+ * no pisarlo desde el CSS.
+ *
+ * `test_ningun_elemento_oculto_se_sigue_viendo` es quien lo vigila. */
+[hidden] {
+  display: none !important;
+}
+
+/* --- La barra de filtros (31-ago-2026) ----------------------------------- */
+
+/* Se viste como el selector de evento de la cabecera —mismo chevron, misma
+   pastilla, mismo verde al pasar— porque hace lo mismo: elegir qué se mira.
+   Verlos distintos sugeriría dos sistemas de control donde hay uno. */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.9rem;
+  padding: 0.7rem 1.75rem;
+  background: var(--crema);
+  border-bottom: 1px solid var(--borde);
+}
+
+.filtros-titulo {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+
+.filtro {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.filtro > .mono {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  white-space: nowrap;
+}
+
+/* El mismo tratamiento que `.selector select`: chevron propio, el del sistema
+   apagado. Repetir la declaración en vez de encadenar selectores mantiene los
+   dos independientes — la cabecera puede cambiar sin arrastrar esto. */
+.filtro select {
+  font: inherit;
+  font-size: 0.84rem;
+  color: var(--bosque);
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%231c3328' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  appearance: none;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  padding: 0.36rem 2.1rem 0.36rem 0.85rem;
+  max-width: 15rem;
+  /* Sin esto un `select` no baja del ancho de su opción más larga y «Todos los
+     países (21)» empuja la barra fuera de la pantalla en un teléfono. */
+  min-width: 0;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.filtro select:hover {
+  border-color: var(--verde);
+}
+
+.filtros-cuenta {
+  margin: 0 0 0 auto;
+  font-size: 0.76rem;
+  color: var(--tenue);
+  white-space: nowrap;
+}
+
+/* Solo aparece cuando hay algo que quitar. Un botón de limpiar siempre visible
+   no informa; visible solo cuando un filtro está actuando es además la señal de
+   que lo está — que es justo lo que se pierde cuando los controles viven lejos
+   del mapa. */
+.filtros-limpiar {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.32rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radio-pastilla);
+  background: transparent;
+  color: var(--verde);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.filtros-limpiar:hover {
+  border-color: var(--verde);
+  text-decoration: none;
+}
+
+/* EN UN TELÉFONO LA BARRA ES UNA SOLA FILA, Y SE DESPLAZA.
+ *
+ * Envolviendo se comía el alto del mapa: en 390×844 los seis controles caían en
+ * cinco líneas, empujaban el lienzo hacia abajo y la atribución de OpenStreetMap
+ * —que la ODbL exige que se vea— quedaba fuera de la ventana. Lo cazó
+ * `test_la_atribucion_del_mapa_no_queda_debajo_de_nada`.
+ *
+ * Los rótulos («PAÍS», «PERÍODO») se van con ellas: el propio desplegable ya
+ * dice qué es —«Todos los países», «24 h», «Reciente»— así que en pantalla eran
+ * repetición, no ayuda. El `aria-label` de cada `select` se queda, que es quien
+ * lo cuenta a un lector de pantalla. */
+@media (max-width: 700px) {
+  .filtros {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0.5rem 1rem;
+    gap: 0.45rem;
+  }
+  .filtros::-webkit-scrollbar {
+    display: none;
+  }
+  .filtros-titulo,
+  .filtro > .mono {
+    display: none;
+  }
+  .filtro,
+  .filtros-limpiar,
+  .solo-en-vista {
+    flex: 0 0 auto;
+  }
+  .filtros-cuenta {
+    margin-left: 0.3rem;
+    flex: 0 0 auto;
+  }
+  .filtro select {
+    max-width: 9.5rem;
+  }
+}
