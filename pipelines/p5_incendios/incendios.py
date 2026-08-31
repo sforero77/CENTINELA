@@ -20,6 +20,7 @@ from ..common.logging import get_logger
 from ..common.paths import SITE_DIR
 from ..common.state import utcnow_iso
 from .focos_h3 import CeldaConFuego
+from .viento import Lectura as LecturaViento
 
 _log = get_logger(__name__)
 
@@ -44,6 +45,19 @@ NOTA: Final[str] = (
     "estar fuera de los paises cubiertos, no vacia."
 )
 
+#: Lo que el viento NO dice, escrito donde viaja el dato.
+#:
+#: Misma funcion que `NOTA` para las detecciones: la unica linea que impide
+#: leer un punto de reticula de 27 km como el viento de una celda de 5 km2, y
+#: la direccion como hacia donde va en vez de desde donde sopla.
+NOTA_VIENTO: Final[str] = (
+    "Viento a 10 m y humedad a 2 m del modelo NOAA GFS, en una reticula de 0,25 "
+    "grados (unos 27 km). NO es una medicion en la celda: una celda H3 son 5 km2 "
+    "y decenas comparten el mismo punto. La direccion es DESDE donde sopla, "
+    "convencion meteorologica: 90 grados es viento del este, que empuja el fuego "
+    "hacia el oeste."
+)
+
 
 #: Sobre que arde. Es la pregunta que convierte "hay fuego" en informacion.
 #:
@@ -61,6 +75,71 @@ SUELOS: Final[tuple[tuple[str, str], ...]] = (
     ("cultivo_pct", "cultivo"),
     ("humedal_pct", "humedal"),
 )
+
+
+def _rejilla_de_viento(
+    celdas: list[CeldaConFuego], lectura: LecturaViento | None
+) -> dict[str, Any] | None:
+    """El viento que toca a las celdas con fuego, como reticula y no por celda.
+
+    ES LA DECISION DE DISENO DE ESTE BLOQUE Y TIENE MOTIVO. Lo comodo seria
+    meter velocidad, direccion y humedad dentro de cada celda, junto a la
+    poblacion y el arbolado. Se descarto porque **seria una precision falsa**:
+    GFS va a 0,25 grados —unos 27 km— y una celda H3 r8 son 5 km2. Escribir el
+    valor dentro de cada celda las haria parecer medidas independientes cuando
+    son el mismo numero repetido.
+
+    Publicando la reticula, el paso de 27 km queda **a la vista en la propia
+    forma del dato**: quien lo lea ve puntos separados, no un valor por celda.
+    El visor busca el mas cercano, que es exactamente lo que hay.
+
+    El ahorro de sitio es real pero modesto, y conviene no exagerarlo: medido
+    sobre la corrida del 31-ago-2026, 4.000 celdas caen en 1.783 puntos —dos
+    celdas por punto, porque el fuego esta mas repartido de lo que parece—, o
+    sea unos 140 KB en vez de 200. La razon de peso es la primera, no esta.
+
+    Solo se emiten los puntos que tocan alguna celda con fuego: la caja entera
+    son 137.541.
+    """
+    if lectura is None or lectura.ciego or not celdas:
+        return None
+
+    import h3
+
+    vistos: dict[tuple[int, int], tuple[float, float]] = {}
+    referencia = next(iter(lectura.rejillas.values()))
+    for celda in celdas:
+        lat, lon = h3.cell_to_latlng(celda.h3)
+        # Se redondea al punto de reticula y se guarda una sola vez: es lo que
+        # convierte cuatro mil celdas en unos cientos de puntos.
+        clave = (round(lat / referencia.dj), round(lon / referencia.di))
+        if clave not in vistos:
+            vistos[clave] = (clave[0] * referencia.dj, clave[1] * referencia.di)
+
+    puntos: list[dict[str, Any]] = []
+    for lat, lon in sorted(vistos.values()):
+        viento = lectura.viento_en(lat, lon)
+        if viento is None:
+            continue
+        puntos.append(
+            {
+                "lat": round(lat, 3),
+                "lon": round(lon, 3),
+                "vel_ms": viento.velocidad_ms,
+                "dir_grados": viento.direccion_grados,
+                "hr_pct": viento.humedad_pct,
+            }
+        )
+    if not puntos:
+        return None
+
+    return {
+        "ciclo": lectura.ciclo,
+        "paso_grados": referencia.di,
+        "paso_km_aprox": 27,
+        "nota": NOTA_VIENTO,
+        "puntos": puntos,
+    }
 
 
 def _reparto_del_suelo(celdas: list[CeldaConFuego]) -> dict[str, Any]:
@@ -117,6 +196,7 @@ def build_incendios(
     *,
     ventana_horas: int = 24,
     max_celdas: int = MAX_CELDAS,
+    viento: LecturaViento | None = None,
 ) -> dict[str, Any]:
     """Arma el JSON que consume el visor.
 
@@ -125,6 +205,7 @@ def build_incendios(
     para que cuadre con la lista seria publicar una cifra falsa por comodidad.
     """
     publicadas = _prioridad(celdas, max_celdas)
+    rejilla = _rejilla_de_viento(publicadas, viento)
     return {
         "schema": INCENDIOS_SCHEMA_ID,
         "generado_utc": utcnow_iso(),
@@ -150,6 +231,10 @@ def build_incendios(
             "frp_total_mw": round(sum(c.frp_suma for c in celdas), 1),
         },
         "celdas": [asdict(c) for c in publicadas],
+        # Va al final y como clave aparte, no dentro de cada celda. El porque
+        # esta en `_rejilla_de_viento`. Ausente —no vacia— cuando no se pudo
+        # leer GFS: una reticula vacia se leeria como "no hay viento".
+        **({"viento": rejilla} if rejilla else {}),
     }
 
 
@@ -158,11 +243,12 @@ def write_incendios(
     *,
     site_dir: Path | None = None,
     ventana_horas: int = 24,
+    viento: LecturaViento | None = None,
 ) -> Path:
     """Publica `site/incendios.json`."""
     destino = (site_dir or SITE_DIR) / INCENDIOS_FILENAME
     destino.parent.mkdir(parents=True, exist_ok=True)
-    datos = build_incendios(celdas, ventana_horas=ventana_horas)
+    datos = build_incendios(celdas, ventana_horas=ventana_horas, viento=viento)
     destino.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     _log.info("incendios publicados", extra={"context": datos["totales"]})

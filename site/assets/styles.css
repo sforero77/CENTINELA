@@ -1704,6 +1704,22 @@ thead th {
   stroke-linejoin: round;
 }
 
+/* La rosa del viento: una flecha girada, no una animacion.
+
+   `transform` no se aplica a un elemento en linea, asi que el envoltorio tiene
+   que ser `inline-flex`. Sin eso el giro se ignora en silencio y la flecha
+   apunta siempre al norte — que es peor que no tenerla, porque parece un dato.
+
+   No lleva transicion: no es un movimiento, es un rumbo. */
+.rosa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 50% 50%;
+}
+
+.rosa .icono { stroke: var(--verde); stroke-width: 2; }
+
 /* La llama y el birrete se leen mejor rellenos que perfilados. */
 .metrica[data-nivel] .icono { stroke: #4a4640; }
 
