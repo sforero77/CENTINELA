@@ -497,3 +497,52 @@ def test_el_relleno_despoblado_va_por_energia() -> None:
     assert [c.frp_suma for c in publicadas[1:]] == [90.0, 40.0], (
         "el relleno despoblado tiene que entrar por energia, no por orden de llegada"
     )
+
+
+def test_la_celda_publica_de_que_pais_es() -> None:
+    """Sin `iso3` el visor no puede filtrar el fuego por país como filtra los sismos.
+
+    El activo de exposición lo sabe —es una columna de `exposure_h3`— y el cruce
+    no lo traía: la información existía y no llegaba a la pantalla. El mismo
+    patrón que este repositorio ya cazó con `celdas_publicadas`.
+    """
+    from dataclasses import asdict
+
+    from pipelines.p5_incendios.focos_h3 import CeldaConFuego
+
+    celda = CeldaConFuego(
+        h3="8866d32a65fffff",
+        detecciones=3,
+        detecciones_baja=0,
+        frp_max=12.0,
+        frp_suma=30.0,
+        primera_utc="2026-08-30T00:00:00Z",
+        ultima_utc="2026-08-30T06:00:00Z",
+        iso3="BRA",
+    )
+
+    assert asdict(celda)["iso3"] == "BRA", "el país no llega al JSON publicado"
+
+
+def test_una_celda_fuera_de_los_activos_no_finge_un_pais() -> None:
+    """El fuego no respeta fronteras: una corrida regional siempre tiene celdas
+    de países cuyo activo no está cargado.
+
+    Cadena vacía y no un ISO3 por defecto: «no se sabe» tiene que poder
+    distinguirse de «es de aquí», que es la misma regla por la que la población
+    de esas celdas se omite en vez de publicarse como cero.
+    """
+    from pipelines.p5_incendios.focos_h3 import CeldaConFuego
+
+    celda = CeldaConFuego(
+        h3="8866d32a65fffff",
+        detecciones=1,
+        detecciones_baja=0,
+        frp_max=4.9,
+        frp_suma=4.9,
+        primera_utc="2026-08-30T00:00:00Z",
+        ultima_utc="2026-08-30T00:00:00Z",
+    )
+
+    assert celda.iso3 == ""
+    assert celda.pop == 0.0

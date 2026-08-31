@@ -414,6 +414,14 @@ const estado = {
   focoAbierto: null,
   //: Coordenadas de los sismos vistos y no reportados, para encuadrarlos.
   observadosGeo: [],
+  //: Ventana temporal de la lista de reportes.
+  ventana: "todo",
+  //: Y los de la lista de focos, que van por su cuenta: son otra amenaza.
+  ventanaFuego: "h24",
+  ordenFocos: "reciente",
+  paisFuego: "",
+  //: ISO3 -> nombre, del unico sitio que lo publica: la cobertura.
+  nombresPais: null,
   //: Como se ordena la lista y si se recorta al encuadre del mapa. Los dos son
   //: del usuario, no del dato, asi que no van a la URL: un enlace compartido
   //: tiene que abrir el mismo reporte, no la misma manera de mirarlo.
@@ -681,6 +689,9 @@ async function cargarEventos() {
     // La cobertura primero: da los nombres de pais que necesita el filtro, y
     // asi el mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica.
     const nombres = await cargarCobertura(eventos);
+    // El mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica. La
+    // lista de focos lo necesita igual que el filtro de reportes.
+    estado.nombresPais = nombres;
     pintarFiltroPaises(eventos, nombres);
     pintarControlesLista();
     refrescarLista({ anunciando: false });
@@ -1659,6 +1670,17 @@ function aplicarAmenaza() {
   if (panorama) panorama.hidden = fuego;
   const pistaFuego = $("pista-fuego");
   if (pistaFuego) pistaFuego.hidden = !fuego;
+  // Cada amenaza tiene su indice, y solo uno a la vez: leer "Reportes
+  // publicados" con el mapa lleno de fuego es la misma mezcla que el selector
+  // existe para evitar.
+  const seccionEventos = $("eventos");
+  const seccionFocos = $("focos");
+  if (seccionEventos) seccionEventos.hidden = fuego;
+  if (seccionFocos) seccionFocos.hidden = !fuego || !estado.focos.length;
+  if (fuego && estado.focos.length) {
+    pintarControlesFocos();
+    pintarListaFocos({ anunciando: false });
+  }
   const enVivo = $("en-vivo");
   if (enVivo) {
     // La tarjeta se queda si le queda alguna cifra que mostrar en este modo.
@@ -2646,6 +2668,33 @@ async function cargarCobertura(eventos) {
 //: "¿cual afecto a mas gente?"— no tenian respuesta sin leer las veintiuna
 //: tarjetas. Y no son la misma: el M8 de Peru deja 248.000 personas en MMI≥7 y
 //: el M7,4 del Choco deja 2,4 millones.
+//: Desde cuando. El catalogo cubre catorce anos —de 2012 a hoy— y la lista los
+//: daba todos de golpe, asi que la pregunta mas comun ("¿que ha pasado
+//: ultimamente?") obligaba a leerla entera o a fiarse del orden.
+//:
+//: Los cortes no son redondos por gusto: 90 dias es la ventana en la que USGS
+//: sigue revisando un ShakeMap —la misma que usa el repaso de versiones— y doce
+//: meses es el marco en que se piensa "este ano".
+const VENTANAS = {
+  todo: { texto: "Todo", dias: null },
+  ano: { texto: "12 meses", dias: 365 },
+  trimestre: { texto: "90 días", dias: 90 },
+};
+
+//: ¿Cae esta fila dentro de la ventana elegida?
+//:
+//: Sin sello de fecha se deja pasar. Un reporte cuyo `utc` no se pudo leer es un
+//: fallo del dato, no algo que deba desaparecer de la lista sin decir nada.
+function enLaVentana(li) {
+  const dias = (VENTANAS[estado.ventana] || VENTANAS.todo).dias;
+  if (!dias) return true;
+  const utc = li.dataset.utc;
+  if (!utc) return true;
+  const t = Date.parse(utc);
+  if (!Number.isFinite(t)) return true;
+  return Date.now() - t <= dias * 86400000;
+}
+
 const ORDENES = {
   fecha: { texto: "Fecha", clave: (li) => li.dataset.utc || "" },
   mag: { texto: "Magnitud", clave: (li) => Number(li.dataset.mag) || 0 },
@@ -2695,10 +2744,13 @@ function refrescarLista({ anunciando = true } = {}) {
   for (const li of filas) {
     const suyo = !estado.paisFiltrado || li.dataset.iso3 === estado.paisFiltrado;
     const dentro = !estado.soloEnVista || enElEncuadre(li);
-    li.hidden = !(suyo && dentro);
+    li.hidden = !(suyo && dentro && enLaVentana(li));
     if (!li.hidden) visibles += 1;
   }
 
+  for (const boton of document.querySelectorAll("#ventana-lista button")) {
+    boton.setAttribute("aria-pressed", String(boton.dataset.ventana === estado.ventana));
+  }
   for (const boton of document.querySelectorAll("#filtro-paises button")) {
     boton.setAttribute(
       "aria-pressed",
@@ -2721,9 +2773,16 @@ function refrescarLista({ anunciando = true } = {}) {
   const vacio = $("sin-resultados");
   vacio.hidden = visibles > 0;
   if (!visibles) {
+    // El aviso nombra el filtro que dejo la lista vacia, y no uno cualquiera.
+    // Decir "ese pais no tiene reportes" cuando lo que sobra es la ventana
+    // temporal manda a cambiar lo que no era.
+    const ventana = VENTANAS[estado.ventana] || VENTANAS.todo;
     vacio.textContent = estado.soloEnVista
       ? "Ningún reporte cae dentro de lo que el mapa está enseñando. Aleja o mueve el mapa."
-      : "Ese país todavía no tiene reportes publicados.";
+      : ventana.dias
+        ? `Ningún reporte en los últimos ${ventana.texto.toLowerCase()}` +
+          `${estado.paisFiltrado ? " en ese país" : ""}. Prueba con «Todo».`
+        : "Ese país todavía no tiene reportes publicados.";
   }
   if (anunciando) {
     anunciar(`${visibles} ${visibles === 1 ? "reporte" : "reportes"} en la lista.`);
@@ -2742,6 +2801,23 @@ function aplicarFiltro(iso3) {
 //: la ausencia del control — es la misma regla del interruptor de sismos
 //: menores, que solo se inyecta si hay algo que enseñar.
 function pintarControlesLista() {
+  const ventanas = $("ventana-lista");
+  if (ventanas && !ventanas.children.length) {
+    ventanas.innerHTML = Object.entries(VENTANAS)
+      .map(
+        ([clave, v]) =>
+          `<button type="button" data-ventana="${clave}" ` +
+          `aria-pressed="${String(clave === estado.ventana)}">${v.texto}</button>`
+      )
+      .join("");
+    for (const boton of ventanas.querySelectorAll("button")) {
+      boton.addEventListener("click", () => {
+        estado.ventana = boton.dataset.ventana;
+        refrescarLista();
+      });
+    }
+  }
+
   const caja = $("orden-lista");
   if (caja && !caja.children.length) {
     caja.innerHTML = Object.entries(ORDENES)
@@ -3008,6 +3084,8 @@ async function cargarIncendios() {
   // motivo que las capas: una prueba de navegador no puede afirmar nada sobre
   // el agrupado si tiene que deducirlo de un pantallazo.
   anotarPintado("focos", estado.focos.length);
+  pintarControlesFocos();
+  pintarListaFocos({ anunciando: false });
   estado.vivo.incendios = datos.totales || {};
   estado.vivo.suelo = datos.suelo || {};
   estado.vivo.ventanaFuego = datos.ventana_horas || 24;
@@ -3070,7 +3148,11 @@ function agruparFocos(celdas) {
     grupos.get(r).push(c);
   }
 
-  return [...grupos.entries()].map(([id, suyas]) => resumirFoco(id, suyas));
+  return [...grupos.entries()].map(([id, suyas]) => {
+    const foco = resumirFoco(id, suyas);
+    foco.iso3 = paisDelFoco(foco);
+    return foco;
+  });
 }
 
 //: Las cifras de un foco. Se suman las de sus celdas, con una excepcion.
@@ -3122,6 +3204,266 @@ function resumirFoco(id, celdas) {
     primeraUtc: primeros[0] || null,
     ultimaUtc: sellos[sellos.length - 1] || null,
   };
+}
+
+// --- La lista de focos ------------------------------------------------------
+//
+// Gemela de la de reportes, del otro lado del selector de amenaza. El fuego
+// tenia mapa y panel de detalle pero ningun indice: para saber cuales son los
+// focos mas recientes, o los de un pais, habia que buscar hexagonos a ojo entre
+// cuatro mil.
+
+//: La ventana del fuego es de horas, no de anos, y no por simetria rota: FIRMS
+//: publica una foto de veinticuatro horas. Pedir "12 meses" aqui no significaria
+//: nada, y ofrecerlo prometeria un archivo que no existe.
+const VENTANAS_FUEGO = {
+  h24: { texto: "24 h", horas: 24 },
+  h12: { texto: "12 h", horas: 12 },
+  h6: { texto: "6 h", horas: 6 },
+};
+
+//: Como se ordenan. "Reciente" primero y por defecto: la pregunta que trae a
+//: alguien a un mapa de fuego es que esta ardiendo AHORA, no que arde mas.
+const ORDENES_FOCOS = {
+  reciente: { texto: "Reciente", clave: (f) => Date.parse(f.ultimaUtc) || 0 },
+  area: { texto: "Área", clave: (f) => f.areaKm2 },
+  personas: { texto: "Personas", clave: (f) => f.pop },
+  energia: { texto: "Energía", clave: (f) => f.frpSuma },
+};
+
+function enLaVentanaFuego(foco) {
+  const horas = (VENTANAS_FUEGO[estado.ventanaFuego] || VENTANAS_FUEGO.h24).horas;
+  const t = Date.parse(foco.ultimaUtc);
+  // Sin sello legible se deja pasar: es un fallo del dato, no algo que deba
+  // desaparecer de la lista sin decir nada.
+  if (!Number.isFinite(t)) return true;
+  return Date.now() - t <= horas * 3600000;
+}
+
+//: El pais de un foco es el de sus celdas. Casi siempre uno solo; un incendio
+//: que cruza una frontera existe, pero partir el foco por eso seria inventar
+//: dos incendios donde hay uno. Se toma el pais con mas celdas.
+//:
+//: Un foco sin pais —fuera de los activos cargados— no se descarta: el fuego no
+//: respeta fronteras y esas celdas son informacion. Solo no aparece al filtrar
+//: por un pais concreto, que es lo correcto: no se sabe si es de ese.
+function paisDelFoco(foco) {
+  const cuenta = new Map();
+  for (const c of foco.celdas) {
+    const iso = String(c.iso3 || "").trim();
+    if (iso) cuenta.set(iso, (cuenta.get(iso) || 0) + 1);
+  }
+  let mejor = "";
+  let max = 0;
+  for (const [iso, n] of cuenta) {
+    if (n > max) {
+      mejor = iso;
+      max = n;
+    }
+  }
+  return mejor;
+}
+
+function nombrePais(iso3) {
+  return (estado.nombresPais && estado.nombresPais.get(iso3)) || iso3;
+}
+
+//: Cuantos focos se listan. No son las 2.903 filas que salen del agrupado:
+//: nadie lee tres mil, y construirlas cuesta mas que dibujar el mapa entero.
+//: Se listan los primeros por el orden elegido y la cuenta dice cuantos quedan
+//: fuera, para que el recorte no se lea como "esto es todo lo que hay" — que es
+//: el mismo error que la capa de fuego cometia rotulandose con el total.
+const MAX_FILAS_FOCOS = 60;
+
+function filaFoco(foco) {
+  const li = document.createElement("li");
+  li.dataset.utc = foco.ultimaUtc || "";
+  li.dataset.iso3 = foco.iso3 || "";
+
+  // Las mismas clases que la fila de un reporte: son dos indices gemelos y
+  // verlos distintos sugeriria que se leen distinto.
+  const cabecera = document.createElement("div");
+  cabecera.className = "evento-cabecera";
+  const titulo = document.createElement("span");
+  titulo.className = "evento-mag";
+  titulo.textContent = foco.nCeldas === 1 ? "1 celda" : numero(foco.nCeldas) + " celdas";
+  const area = document.createElement("span");
+  area.className = "enlace-reporte";
+  area.textContent = numero(Math.round(foco.areaKm2)) + " km²";
+  cabecera.append(titulo, area);
+
+  const meta = document.createElement("p");
+  meta.className = "evento-meta";
+  meta.textContent = [
+    comoFecha(foco.ultimaUtc),
+    foco.iso3 ? nombrePais(foco.iso3) : "fuera de los activos",
+    numero(foco.detecciones) + (foco.detecciones === 1 ? " detección" : " detecciones"),
+  ].join(" · ");
+
+  const cifra = document.createElement("p");
+  cifra.className = "evento-cifra";
+  // Por debajo de una persona no se publica una cifra: "0,1 personas dentro" es
+  // una precision que el modelo no tiene y que lee peor que no decir nada. La
+  // poblacion de una celda es una suma dasimetrica, no un censo.
+  cifra.innerHTML =
+    foco.pop >= 1
+      ? iconoSvg("personas") + comoTexto(foco.pop) + " personas dentro"
+      : '<span class="sin-alcance">Sin población medida en estas celdas</span>';
+
+  li.append(cabecera, meta, cifra);
+  li.addEventListener("click", () => {
+    abrirFoco(foco);
+    $("mapa")?.scrollIntoView({
+      behavior: REDUCIR_MOVIMIENTO ? "auto" : "smooth",
+      block: "nearest",
+    });
+  });
+  return li;
+}
+
+function pintarListaFocos({ anunciando = true } = {}) {
+  const lista = $("lista-focos");
+  if (!lista || !estado.focos.length) return;
+
+  const orden = ORDENES_FOCOS[estado.ordenFocos] || ORDENES_FOCOS.reciente;
+  const dentro = estado.focos.filter(
+    (f) => enLaVentanaFuego(f) && (!estado.paisFuego || f.iso3 === estado.paisFuego)
+  );
+  const listados = dentro
+    .slice()
+    .sort((a, b) => orden.clave(b) - orden.clave(a))
+    .slice(0, MAX_FILAS_FOCOS);
+
+  lista.innerHTML = "";
+  for (const foco of listados) lista.appendChild(filaFoco(foco));
+
+  const cargando = $("estado-focos");
+  if (cargando) cargando.hidden = true;
+
+  const cuenta = $("cuenta-focos");
+  if (cuenta) {
+    cuenta.textContent = dentro.length
+      ? listados.length < dentro.length
+        ? numero(listados.length) + " de " + numero(dentro.length) + " focos"
+        : numero(dentro.length) + (dentro.length === 1 ? " foco" : " focos")
+      : "";
+  }
+
+  const vacio = $("sin-focos");
+  if (vacio) {
+    vacio.hidden = dentro.length > 0;
+    if (!dentro.length) {
+      // El aviso dice CUANDO se miro por ultima vez, y no solo que no hay nada.
+      //
+      // La ventana se cuenta desde ahora, pero el dato es una foto que puede
+      // llevar horas publicada: con un fichero de hace diez horas, "ultimas 6 h"
+      // sale vacio siempre, y sin este apunte se lee como "no hay fuego" cuando
+      // lo cierto es "no lo hemos vuelto a mirar".
+      const v = VENTANAS_FUEGO[estado.ventanaFuego] || VENTANAS_FUEGO.h24;
+      const sello = estado.vivo && estado.vivo.fuegoUtc ? haceCuanto(estado.vivo.fuegoUtc) : null;
+      const apunte = sello ? " El satélite se revisó " + sello + "." : "";
+      vacio.textContent =
+        (estado.paisFuego
+          ? "Ningún foco en ese país en las últimas " + v.texto + "."
+          : "Ningún foco detectado en las últimas " + v.texto + ".") + apunte;
+    }
+  }
+
+  for (const boton of document.querySelectorAll("#ventana-focos button")) {
+    boton.setAttribute("aria-pressed", String(boton.dataset.ventana === estado.ventanaFuego));
+  }
+  for (const boton of document.querySelectorAll("#orden-focos button")) {
+    boton.setAttribute("aria-pressed", String(boton.dataset.orden === estado.ordenFocos));
+  }
+  for (const boton of document.querySelectorAll("#filtro-paises-fuego button")) {
+    boton.setAttribute(
+      "aria-pressed",
+      String((boton.dataset.iso3 || "") === (estado.paisFuego || ""))
+    );
+  }
+  if (anunciando) {
+    anunciar(numero(dentro.length) + (dentro.length === 1 ? " foco" : " focos") + " en la lista.");
+  }
+}
+
+function pintarControlesFocos() {
+  const ventanas = $("ventana-focos");
+  if (ventanas && !ventanas.children.length) {
+    ventanas.innerHTML = Object.entries(VENTANAS_FUEGO)
+      .map(
+        ([clave, v]) =>
+          '<button type="button" data-ventana="' +
+          clave +
+          '" aria-pressed="' +
+          String(clave === estado.ventanaFuego) +
+          '">' +
+          v.texto +
+          "</button>"
+      )
+      .join("");
+    for (const boton of ventanas.querySelectorAll("button")) {
+      boton.addEventListener("click", () => {
+        estado.ventanaFuego = boton.dataset.ventana;
+        pintarListaFocos();
+      });
+    }
+  }
+
+  const ordenes = $("orden-focos");
+  if (ordenes && !ordenes.children.length) {
+    ordenes.innerHTML = Object.entries(ORDENES_FOCOS)
+      .map(
+        ([clave, o]) =>
+          '<button type="button" data-orden="' +
+          clave +
+          '" aria-pressed="' +
+          String(clave === estado.ordenFocos) +
+          '">' +
+          o.texto +
+          "</button>"
+      )
+      .join("");
+    for (const boton of ordenes.querySelectorAll("button")) {
+      boton.addEventListener("click", () => {
+        estado.ordenFocos = boton.dataset.orden;
+        pintarListaFocos();
+      });
+    }
+  }
+
+  // Solo los paises que de verdad tienen fuego ahora. Una fila de diecinueve
+  // pastillas donde diecisiete no filtran nada es ruido con aspecto de control
+  // — la misma regla que ya aplica el filtro de reportes.
+  const paises = $("filtro-paises-fuego");
+  if (paises && !paises.children.length) {
+    const cuenta = new Map();
+    for (const f of estado.focos) {
+      if (f.iso3) cuenta.set(f.iso3, (cuenta.get(f.iso3) || 0) + 1);
+    }
+    if (cuenta.size >= 2) {
+      const orden = [...cuenta.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+      const boton = (iso3, texto, n) =>
+        '<button type="button" data-iso3="' +
+        escapar(iso3) +
+        '" aria-pressed="' +
+        String(iso3 === "") +
+        '">' +
+        escapar(texto) +
+        '<span class="cuenta">' +
+        nf.format(n) +
+        "</span></button>";
+      paises.innerHTML =
+        boton("", "Todos", estado.focos.length) +
+        orden.map(([iso3, n]) => boton(iso3, nombrePais(iso3), n)).join("");
+      paises.hidden = false;
+      for (const b of paises.querySelectorAll("button")) {
+        b.addEventListener("click", () => {
+          estado.paisFuego = b.dataset.iso3 || "";
+          pintarListaFocos();
+        });
+      }
+    }
+  }
 }
 
 function incendiosAGeoJson(celdas) {

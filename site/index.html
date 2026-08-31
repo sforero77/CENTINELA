@@ -275,6 +275,10 @@
            pasado ultimamente?"; ahora tambien "¿cual fue el mas fuerte?",
            "¿cual afecto a mas gente?" y "¿cuales caen donde estoy mirando?". -->
       <div class="controles-lista">
+        <!-- Desde cuando. El catalogo cubre catorce anos y la lista los daba
+             todos de golpe: "¿que ha pasado ultimamente?" obligaba a leerla
+             entera o a fiarse del orden. -->
+        <div class="ventana-lista" id="ventana-lista" role="group" aria-label="Filtrar por fecha"></div>
         <div class="orden-lista" id="orden-lista" role="group" aria-label="Ordenar los reportes"></div>
         <label class="solo-en-vista" id="etiqueta-en-vista" hidden>
           <input type="checkbox" id="solo-en-vista" />
@@ -286,6 +290,35 @@
       <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
       <ul class="lista-eventos" id="lista-eventos"></ul>
       <p class="pista" id="sin-resultados" hidden></p>
+    </div>
+  </section>
+
+  <!-- LA LISTA DE FOCOS, gemela de la de reportes y del otro lado del selector
+       de amenaza.
+       El fuego tenia mapa y panel de detalle pero ningun indice: para saber
+       cuales son los focos mas recientes, o los de un pais, habia que buscar
+       hexagonos a ojo entre cuatro mil. La lista de sismos responde "¿que ha
+       pasado ultimamente?" desde el primer dia; esta no respondia nada.
+       Su ventana temporal es distinta a proposito: el fuego es una foto de 24
+       horas, no un archivo de catorce anos. -->
+  <section id="focos" class="graticula" hidden>
+    <div class="contenedor">
+      <h2>Focos activos</h2>
+      <p class="seccion-lema" id="lema-focos">
+        Celdas contiguas con detección de satélite en las últimas 24&nbsp;horas.
+      </p>
+
+      <div class="filtro-paises" id="filtro-paises-fuego" hidden role="group" aria-label="Filtrar focos por país"></div>
+
+      <div class="controles-lista">
+        <div class="ventana-lista" id="ventana-focos" role="group" aria-label="Filtrar focos por hora de detección"></div>
+        <div class="orden-lista" id="orden-focos" role="group" aria-label="Ordenar los focos"></div>
+        <p class="cuenta-lista mono" id="cuenta-focos" aria-live="polite"></p>
+      </div>
+
+      <p class="cargando" id="estado-focos">Cargando focos&hellip;</p>
+      <ul class="lista-eventos" id="lista-focos"></ul>
+      <p class="pista" id="sin-focos" hidden></p>
     </div>
   </section>
 

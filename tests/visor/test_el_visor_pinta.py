@@ -1529,3 +1529,99 @@ def test_ver_en_el_mapa_del_fuego_devuelve_el_panorama(pagina: Any) -> None:
     assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "panorama:fuego", (
         "el botón no pidió devolver el panorama"
     )
+
+
+# --- Filtros de tiempo y país (31-ago-2026) ---------------------------------
+
+
+def test_la_ventana_temporal_recorta_la_lista_de_reportes(pagina: Any) -> None:
+    """El catálogo cubre catorce años y la lista los daba todos de golpe.
+
+    «¿Qué ha pasado últimamente?» obligaba a leerla entera o a fiarse del orden.
+    """
+    pagina.wait_for_function(
+        "() => document.querySelectorAll('#lista-eventos li').length > 0", timeout=ESPERA_MS
+    )
+
+    def visibles() -> int:
+        n: int = pagina.locator("#lista-eventos li:not([hidden])").count()
+        return n
+
+    todos = visibles()
+    assert todos > 0
+
+    pagina.locator('#ventana-lista button[data-ventana="ano"]').click()
+    pagina.wait_for_timeout(700)
+    ultimo_ano = visibles()
+
+    assert ultimo_ano < todos, f"la ventana de 12 meses no recortó nada: {ultimo_ano} de {todos}"
+
+    pagina.locator('#ventana-lista button[data-ventana="todo"]').click()
+    pagina.wait_for_timeout(700)
+    assert visibles() == todos, "volver a «Todo» no devolvió la lista entera"
+
+
+def test_cada_amenaza_tiene_su_indice_y_solo_uno_a_la_vez(pagina: Any) -> None:
+    """El fuego tenía mapa y panel de detalle pero ningún índice.
+
+    Para saber cuáles son los focos más recientes había que buscar hexágonos a
+    ojo entre cuatro mil. Y leer «Reportes publicados» con el mapa lleno de fuego
+    es la misma mezcla que el selector de amenaza existe para evitar.
+    """
+    _esperar_capa(pagina, "focos")
+    assert pagina.locator("#eventos").is_visible(), "en sismos falta el índice de reportes"
+    assert pagina.locator("#focos").is_hidden(), "la lista de focos está en modo sismos"
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(900)
+
+    assert pagina.locator("#focos").is_visible(), "en fuego falta el índice de focos"
+    assert pagina.locator("#eventos").is_hidden(), "la lista de reportes está en modo fuego"
+    assert pagina.locator("#lista-focos li").count() > 0
+
+
+def test_los_focos_se_listan_por_lo_mas_reciente(pagina: Any) -> None:
+    """La pregunta que trae a alguien a un mapa de fuego es qué arde AHORA.
+
+    Por eso «Reciente» es el orden por defecto y no la energía, que es lo que
+    ordena la capa del mapa.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
+
+    reciente = pagina.locator('#orden-focos button[data-orden="reciente"]')
+    assert reciente.get_attribute("aria-pressed") == "true", "no ordena por reciente al abrir"
+
+    sellos = pagina.eval_on_selector_all(
+        "#lista-focos li", "els => els.map(e => e.dataset.utc).filter(Boolean)"
+    )
+    assert sellos == sorted(sellos, reverse=True), "las filas no van de lo más reciente a lo menos"
+
+
+def test_la_ventana_del_fuego_es_de_horas_y_lo_dice_cuando_vacia(pagina: Any) -> None:
+    """El fuego es una foto de 24 h, no un archivo de catorce años.
+
+    Y cuando la ventana no deja nada, el aviso dice **cuándo se revisó**: con un
+    fichero de hace once horas «últimas 6 h» sale vacío siempre, y sin ese
+    apunte se lee como «no hay fuego» cuando lo cierto es «no lo hemos vuelto a
+    mirar».
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
+
+    etiquetas = pagina.eval_on_selector_all(
+        "#ventana-focos button", "els => els.map(e => e.textContent.trim())"
+    )
+    assert etiquetas == ["24 h", "12 h", "6 h"], f"la ventana del fuego no es de horas: {etiquetas}"
+
+    pagina.locator('#ventana-focos button[data-ventana="h6"]').click()
+    pagina.wait_for_timeout(700)
+
+    vacio = pagina.locator("#sin-focos")
+    if vacio.is_visible():
+        texto = vacio.inner_text().lower()
+        assert "se revisó" in texto or "se reviso" in texto, (
+            f"el aviso no dice cuándo se miró por última vez: {texto!r}"
+        )

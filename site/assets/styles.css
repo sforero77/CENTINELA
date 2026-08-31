@@ -1953,3 +1953,83 @@ thead th {
 .terreno .icono {
   opacity: 0.7;
 }
+
+/* --- Ventana temporal de la lista (31-ago-2026) -------------------------- */
+
+/* Hereda de `.orden-lista`: son dos grupos de pastillas en la misma fila y
+   verlos distintos sugeriría que hacen cosas de distinta clase. Lo que los
+   separa es el orden de lectura —primero cuándo, luego cómo ordenar— y un
+   separador tenue, no un estilo propio. */
+.ventana-lista {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.ventana-lista button {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.28rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tinta-suave, #6b6862);
+  cursor: pointer;
+}
+
+.ventana-lista button:hover {
+  border-color: #1f6f4a;
+  color: #1f6f4a;
+}
+
+.ventana-lista button[aria-pressed="true"] {
+  background: #123c29;
+  border-color: #123c29;
+  color: #f4f1e8;
+}
+
+.ventana-lista button:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 2px;
+}
+
+/* El separador entre "cuándo" y "cómo ordenar". En móvil los dos grupos caen en
+   líneas distintas y la raya sobraría. */
+@media (min-width: 700px) {
+  .ventana-lista::after {
+    content: "";
+    width: 1px;
+    height: 1.1rem;
+    margin: 0 4px 0 8px;
+    background: var(--borde);
+  }
+}
+
+/* --- La sección de focos, gemela de la de reportes (31-ago-2026) ---------- */
+
+/* LA TRAMPA DEL [hidden], POR CUARTA VEZ EN ESTE REPOSITORIO.
+ *
+ * `.filtro-paises { display: flex }` es un selector de clase (0,1,0) y el
+ * atributo `hidden` es una regla de agente de usuario que pierde contra él. El
+ * filtro de reportes tenía el mismo fallo desde el principio y no se veía
+ * porque se muestra en cuanto hay dos países; el de focos arranca oculto y sin
+ * `iso3` en el dato se queda así, que es como lo cazó
+ * `test_ningun_elemento_oculto_se_sigue_viendo`.
+ *
+ * La regla cubre los dos, que es donde estaba de verdad el problema. */
+.filtro-paises[hidden] {
+  display: none;
+}
+
+/* El mismo aire y la misma jerarquía que `#eventos`: son dos índices gemelos y
+   verlos distintos sugeriría que se leen distinto. Sin esto la sección quedaba
+   pegada al panel y su título chocaba con el pie de la tarjeta viva, que es lo
+   que cazó la sonda de solapes en 1280×620. */
+#focos {
+  padding: 3rem 1.75rem 2.5rem;
+}
+
+#focos h2 {
+  font-size: 1.55rem;
+  margin-bottom: 0.3rem;
+}
