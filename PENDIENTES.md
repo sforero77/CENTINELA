@@ -269,7 +269,16 @@ en `celdas.json` desde el principio y solo se veian abriendo celda por celda.
   en dos paises. Cuando entre un pais con mas equipamiento mapeado hay que
   volver a medirlos, igual que se hizo con los de poblacion y vias.
 
-### 2.4 Los paises que quedan por medir
+### 2.4 ✅ Los diecinueve paises, construidos y medidos
+
+**Cerrado.** Comprobado el 31-ago-2026 contra `site/cobertura.json`: los 19
+`construido: true`, **649.793.406 personas en la malla** y **4,94 % de peor
+desvio** contra las referencias de la ONU, dentro de la tolerancia declarada.
+
+Esta seccion decia "hace falta construir y medir" mucho despues de que ambas
+cosas estuvieran hechas, que es la misma clase de nota vencida que una vez
+produjo un rotulo falso en el visor. Lo que sigue es el procedimiento, que
+mantiene su valor para cualquier pais nuevo.
 
 Los **19 manifests estan escritos** y sus cajas envolventes medidas sobre
 `division_area` de Overture con un solo criterio. Por pais ya no hace falta
@@ -350,7 +359,12 @@ cumple, se documenta y se cierra; si no, se cambia el metodo.
 
 ---
 
-### 2.7 Haiti no existe en este proyecto
+### 2.7 Haiti · FUERA DE ALCANCE por decision del 31-ago-2026
+
+**Decidido: no se hace.** Esta seccion se conserva —en vez de borrarla— porque
+la omision es lo bastante llamativa como para que alguien la vuelva a proponer
+cada vez que lea este documento, y para que quien la vea sepa que no es un
+descuido sino una decision tomada. Lo que sigue es el analisis original.
 
 **No tiene manifiesto, no estaba en esta lista, y no aparecia en la auditoria.**
 Se cayo de la lista de los veinte en algun momento y nadie lo noto — yo tampoco,
@@ -363,9 +377,27 @@ Enriquillo-Plantain Garden y comparte isla con Republica Dominicana, que **si**
 tenemos. Un sistema de exposicion sismica para LATAM que cubre la mitad de La
 Espanola es dificil de defender.
 
-Hace falta `data/manifests/HTI.yaml` y una corrida de `exposure_quarterly`.
+Haria falta `data/manifests/HTI.yaml` y una corrida de `exposure_quarterly`.
+No se va a hacer.
 
-### 2.8 El reloj externo · lo unico que rompe la promesa del sistema
+### 2.8 ✅ El reloj externo, montado y midiendo
+
+**Cerrado el 31-ago-2026.** El cron externo despacha `repository_dispatch` y se
+midio sobre 60 corridas reales de `P1 · Trigger USGS` en cinco horas:
+
+    hueco mediano 5,0 min · p90 5,1 · peor 5,1
+
+Contra los 87,6 min de mediana y los 765,9 del peor hueco que dejaba el
+planificador de GitHub. Era "lo unico que rompe la promesa del sistema" y ya no
+la rompe.
+
+**Ojo con la cifra publicada:** `status.json` sigue mostrando `p50_min: 87,6`
+porque promedia toda la historia, incluidos los meses sin cron. No es un fallo
+—es la mediana real de lo vivido— pero describe un problema que ya no existe, y
+bajara sola conforme se acumulen latidos. Separar "cadencia historica" de
+"cadencia de los ultimos 7 dias" esta sin hacer.
+
+Lo que sigue es el diagnostico original, que explica por que hizo falta.
 
 **Es el pendiente mas caro de la lista, y el unico que no se puede cerrar desde
 un clon.** El objetivo O1 es p50 <= 60 min desde el origen hasta el reporte
