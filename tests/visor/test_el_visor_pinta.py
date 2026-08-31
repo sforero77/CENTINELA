@@ -1265,6 +1265,22 @@ def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
     El area sale de contar celdas, asi que tiene que cuadrar con el numero de
     celdas que el propio panel declara. Publicar un area que no se deduce de lo
     que se ve al lado seria una cifra sin respaldo.
+
+    ESTA PRUEBA CODIFICABA EL ERROR QUE VENIA A VIGILAR. Multiplicaba por 5,2,
+    que es el area de una celda **r7**, cuando P5 publica **r8** —siete veces
+    mas pequena—. Exigia 556 km² para 107 celdas cuando son 79, asi que el panel
+    y la prueba estaban de acuerdo en un numero equivocado y el error sobrevivio
+    meses. Encontrado el 31-ago-2026 revisando los textos del visor.
+
+    Aqui se comprueba el CABLEADO: que el area del panel sea la que sale de
+    multiplicar sus propias celdas por su propia constante. Que **esa constante**
+    valga lo que mide una celda r8 de verdad lo comprueba
+    `test_una_celda_de_fuego_mide_lo_que_dice_el_visor`, en la suite unitaria,
+    que es donde vive `h3`: este trabajo de CI instala solo el extra `visor`.
+
+    Repartido asi a proposito, y aprendido fallando: la primera version importaba
+    `h3` aqui para recalcular lo mismo, y reventó en el PR #34 con
+    `ModuleNotFoundError`. Una prueba que no corre en CI no vigila nada.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     _esperar_capa(pagina, "incendios")
@@ -1277,10 +1293,20 @@ def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
     _esperar_capa(pagina, "foco-perimetro")
 
     texto = pagina.locator("#fuego-area").inner_text().lower()
-    esperado = round(foco["celdas"] * 5.2)
-    assert f"{esperado:,}".replace(",", ".") in texto or str(esperado) in texto, (
-        f"el panel deberia decir {esperado} km² para {foco['celdas']} celdas: {texto!r}"
+    por_celda = pagina.evaluate("() => window.CENTINELA.areaDeUnaCeldaDeFuego()")
+    esperado = foco["celdas"] * por_celda
+
+    assert abs(foco["areaKm2"] - esperado) < 0.01, (
+        f"el foco dice {foco['areaKm2']} km² y {foco['celdas']} celdas por "
+        f"{por_celda} son {esperado:.2f}"
     )
+    # Y que el panel ensene esa cifra y no otra. El formato lleva un decimal por
+    # debajo de 10 km² y ninguno por encima.
+    en_pantalla = f"{esperado:.1f}" if esperado < 10 else str(round(esperado))
+    assert en_pantalla.replace(".", ",") in texto or en_pantalla in texto, (
+        f"el panel deberia decir {en_pantalla} km²: {texto!r}"
+    )
+    assert "km²" in texto and texto.strip(), f"el panel no dice el area: {texto!r}"
 
 
 def test_en_modo_sismos_no_queda_rastro_de_incendios(pagina: Any) -> None:
