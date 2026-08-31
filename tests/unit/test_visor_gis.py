@@ -631,7 +631,14 @@ def test_encender_desde_la_cifra_pasa_por_el_interruptor() -> None:
     """
     bloque = cuerpo("encenderCapaViva")
 
-    assert "casilla.click()" in bloque
+    # Se FIJA el valor y se despacha `change`, no se alterna con `.click()`.
+    # Alternar era exactamente lo que hacia que el boton se comportara como un
+    # interruptor: "Ver en el mapa" dice encender, no conmutar.
+    assert "casilla.checked = true" in bloque
+    assert 'dispatchEvent(new Event("change"' in bloque, (
+        "el control tiene que enterarse: escucha `change`"
+    )
+    assert "casilla.click()" not in bloque, "alternar apagaria lo que el boton dice encender"
     assert "setLayoutProperty" not in bloque, "no puede tocar el mapa por su cuenta"
 
 
