@@ -62,6 +62,17 @@ class ResultadoRepaso:
     #: confunden con "sin cambios": un fallo de red no es una respuesta.
     fallidos: list[str] = field(default_factory=list)
 
+    @property
+    def ciego(self) -> bool:
+        """No se pudo consultar NINGUNO de los que tocaba.
+
+        La misma distincion que en la lectura de FIRMS y en la comprobacion de
+        frescura: que falle **alguno** es tolerable —los demas si se miraron y
+        sus despachos valen— pero que fallen **todos** es no haber repasado, y
+        eso no puede salir en verde.
+        """
+        return bool(self.fallidos) and self.revisados == 0
+
 
 def detail_url(usgs_id: str) -> str:
     """El detail de un evento, por identificador.

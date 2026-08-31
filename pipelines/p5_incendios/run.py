@@ -28,6 +28,14 @@ class IncendiosResult:
     publicado: Path | None = None
     #: Paises cuyo activo se cargo para el cruce.
     paises: list[str] = field(default_factory=list)
+    #: Ficheros de FIRMS que no se pudieron leer, y cuantos se pidieron.
+    fallidos: list[str] = field(default_factory=list)
+    pedidos: int = 0
+
+    @property
+    def ciego(self) -> bool:
+        """No se pudo leer NADA de FIRMS. La corrida no puede salir en verde."""
+        return self.pedidos > 0 and len(self.fallidos) >= self.pedidos
 
 
 def run_incendios(
@@ -55,8 +63,19 @@ def run_incendios(
     from .incendios import write_incendios
 
     result = IncendiosResult()
-    focos = fetch_focos(fetcher)
+    lectura = fetch_focos(fetcher)
+    focos = lectura.focos
     result.leidos = len(focos)
+    # La merma viaja con el resultado. Que FIRMS no responda es normal y
+    # tolerable —por eso un fichero caido no tumba los otros cinco—, pero que
+    # fallen los seis y la corrida salga verde no lo es.
+    result.fallidos = list(lectura.fallidos)
+    result.pedidos = lectura.pedidos
+    if lectura.ciego:
+        _log.error(
+            "FIRMS no devolvio ni un fichero",
+            extra={"context": {"pedidos": lectura.pedidos, "fallidos": lectura.fallidos}},
+        )
 
     en_latam = focos_en(bbox, focos)
     result.en_latam = len(en_latam)

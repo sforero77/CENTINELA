@@ -385,6 +385,22 @@ def _cmd_incendios(args: argparse.Namespace) -> int:
         )
     )
     _emit_github_output("celdas", str(resultado.celdas))
+    # UNA CORRIDA CIEGA NO SALE EN VERDE.
+    #
+    # El 30-ago-2026 fallaron los seis ficheros de FIRMS y esta funcion
+    # devolvio 0: cero detecciones, cero celdas, workflow verde y nadie
+    # enterado. La capa publicada se salvo porque el pipeline se niega a
+    # publicar ceros —la guarda del cero silencioso funciono— pero si FIRMS se
+    # cayera una semana el visor serviria fuego de hace siete dias sin una sola
+    # alarma. Que fallen algunos ficheros es tolerable y se sigue publicando;
+    # que fallen todos es quedarse a ciegas, y eso se dice.
+    if resultado.ciego:
+        print(
+            f"FIRMS no devolvio ninguno de sus {resultado.pedidos} ficheros: "
+            f"no hay dato nuevo que publicar.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
@@ -406,9 +422,17 @@ def _cmd_repasar(args: argparse.Namespace) -> int:
     )
     _emit_github_output("eventos", json.dumps(resultado.a_despachar))
     _emit_github_output("hay_trabajo", "true" if resultado.a_despachar else "false")
-    # Un fallo de red no tumba el repaso —los demas eventos si se miraron— pero
-    # tampoco sale en verde como si todo estuviera al dia.
-    return 1 if resultado.fallidos else 0
+    _emit_github_output("fallidos", str(len(resultado.fallidos)))
+    # Que falle alguno se avisa y se sigue: los que si se miraron valen, y sus
+    # despachos tienen que salir. Que fallen todos es no haber repasado.
+    if resultado.ciego:
+        print(
+            f"No se pudo consultar ninguno de los {len(resultado.fallidos)} eventos "
+            f"de la ventana: el repaso no llego a correr.",
+            file=sys.stderr,
+        )
+        return 1
+    return 0
 
 
 def _cmd_frescura(args: argparse.Namespace) -> int:
@@ -444,6 +468,30 @@ def _cmd_frescura(args: argparse.Namespace) -> int:
     ]
     print(resumen(revisiones))
     raise_if_stale(revisiones)
+
+    # NO PODER MIRAR NO ES "ESTA AL DIA".
+    #
+    # Una corrida sana devuelve un hallazgo por fichero comparado, con
+    # `preocupa` en falso. Cero hallazgos significa que no se comparo **ninguno**
+    # — la pagina no respondio a nada— y entonces `raise_if_stale` no levanta,
+    # esto devolvia cero y `frescura.yml` se ponia verde.
+    #
+    # El peor sitio posible para ese fallo: este modulo existe porque el visor
+    # estuvo diecisiete horas congelado con todo en verde, y su propio vigilante
+    # se apuntaba un verde estando ciego.
+    #
+    # La distincion es la misma que en la lectura de FIRMS: que falle ALGUN
+    # fichero es tolerable —uno recien nacido devuelve 404 hasta el primer
+    # despliegue, y eso no es una alarma— pero que no se pueda leer NINGUNO es
+    # no haber mirado. Y confundir "la red se cayo" con "la pagina esta vieja"
+    # manda a investigar mal, asi que se dice con sus palabras.
+    if not revisiones:
+        print(
+            "No se pudo leer nada de la pagina publicada: la comprobacion no "
+            "llego a correr. No es lo mismo que estar al dia.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

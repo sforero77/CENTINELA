@@ -161,10 +161,39 @@ def test_un_fichero_caido_no_se_lleva_los_otros_cinco() -> None:
     fila = "1.0,-70.0,305.0,0.4,0.4,2026-08-25,1230,N,nominal,2.0NRT,287.0,1.0,D"
     firms = _FirmsFalso(_csv(fila), revienta="J1_VIIRS_C2_South_America")
 
-    focos = fetch_focos(firms)
+    lectura = fetch_focos(firms)
 
     assert len(firms.pedidas) == 6
-    assert len(focos) == 5, "las cinco que si respondieron"
+    assert len(lectura.focos) == 5, "las cinco que si respondieron"
+    assert lectura.fallidos == ["J1_VIIRS_C2/South_America"], (
+        "la merma tiene que salir del log: sin esto, quien mira la corrida no "
+        "sabe que se publico con cinco sextos del dato"
+    )
+    assert lectura.pedidos == 6
+    assert not lectura.ciego, "cinco de seis no es quedarse a ciegas"
+
+
+def test_si_fallan_todos_los_ficheros_la_corrida_no_sale_en_verde() -> None:
+    """El fallo del 30-ago-2026, cazado en produccion validando el despliegue.
+
+    Fallaron los seis ficheros —FIRMS tuvo un mal minuto—, el pipeline devolvio
+    cero detecciones y cero celdas, y el workflow salio **verde**. La capa
+    publicada se salvo porque ya se niega a publicar ceros, pero si FIRMS se
+    cayera una semana el visor serviria fuego de hace siete dias sin una sola
+    alarma.
+
+    Que fallen algunos es tolerable y se sigue publicando; que fallen todos es
+    quedarse a ciegas, y eso hay que decirlo.
+    """
+    # "VIIRS" esta en las seis URL: revientan todas.
+    fila = "1.0,-70.0,305.0,0.4,0.4,2026-08-25,1230,N,nominal,2.0NRT,287.0,1.0,D"
+    firms = _FirmsFalso(_csv(fila), revienta="VIIRS")
+
+    lectura = fetch_focos(firms)
+
+    assert lectura.focos == []
+    assert len(lectura.fallidos) == 6
+    assert lectura.ciego, "seis de seis es quedarse a ciegas"
 
 
 def test_la_confianza_baja_se_distingue_de_la_util() -> None:

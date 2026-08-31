@@ -212,3 +212,49 @@ def test_la_ventana_es_configurable(tmp_path: Path, dias: int) -> None:
 
     esperado = ["us1"] if dias > 15 else []
     assert [e.usgs_id for e in eventos_a_repasar(tmp_path, dias=dias)] == esperado
+
+
+def test_si_no_se_pudo_consultar_ninguno_la_corrida_no_sale_en_verde(tmp_path: Path) -> None:
+    """La misma distinción que en FIRMS y en frescura, y por el mismo motivo.
+
+    El repaso salía con código 1 en cuanto fallaba **un** evento, y el workflow
+    lo tapaba con `continue-on-error` para que los demás despachos salieran.
+    Efecto: una corrida que no pudo consultar nada quedaba en verde con un
+    aviso amarillo. Es el fallo que este mismo día se encontró en la lectura de
+    FIRMS, repetido dentro del código escrito para arreglarlo.
+    """
+    _evento(tmp_path, "us1", dias=5)
+    _evento(tmp_path, "us2", dias=5)
+    fetcher = _FetcherFalso({"us1": 3, "us2": 3}, revientan={"us1", "us2"})
+
+    r = repasar(fetcher, events_dir=tmp_path)
+
+    assert r.revisados == 0
+    assert len(r.fallidos) == 2
+    assert r.ciego, "cero consultados de dos es no haber repasado"
+
+
+def test_si_falla_alguno_pero_no_todos_la_corrida_sigue_valiendo(tmp_path: Path) -> None:
+    """Los que sí se miraron valen, y sus despachos tienen que salir."""
+    _evento(tmp_path, "bien", dias=5, shakemap=1)
+    _evento(tmp_path, "mal", dias=5, shakemap=1)
+    fetcher = _FetcherFalso({"bien": 9, "mal": 9}, revientan={"mal"})
+
+    r = repasar(fetcher, events_dir=tmp_path)
+
+    assert r.a_despachar == ["bien"]
+    assert r.fallidos == ["mal"]
+    assert not r.ciego, "uno de dos no es quedarse a ciegas"
+
+
+def test_sin_eventos_que_repasar_no_es_estar_ciego(tmp_path: Path) -> None:
+    """Hoy es el caso real: los 25 eventos son backtests y quedan fuera.
+
+    Cero revisados y cero fallidos es "no había nada que mirar", no "no se pudo
+    mirar". Confundirlos pondría el workflow en rojo todos los días.
+    """
+    r = repasar(_FetcherFalso({}), events_dir=tmp_path)
+
+    assert r.revisados == 0
+    assert not r.fallidos
+    assert not r.ciego
