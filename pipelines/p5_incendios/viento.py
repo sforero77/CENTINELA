@@ -227,7 +227,27 @@ def descargar(fetcher: Fetcher, *, ahora: datetime | None = None) -> Lectura:
         etiqueta = f"{dia}/{hora:02d}z"
         try:
             rejillas = leer_grib2(fetcher.get_bytes(url_del_ciclo(dia, hora)))
-        except (OSError, ValueError) as error:
+        except Exception as error:
+            # SE CAPTURA TODO, A PROPOSITO, Y ESTA ES LA HISTORIA.
+            #
+            # Aqui ponia `(OSError, ValueError)`, que es lo que uno supone que
+            # lanza una descarga. La capa HTTP de este proyecto lanza
+            # `RecursoAusenteError`, que hereda de `RuntimeError` y no de
+            # ninguna de las dos. Resultado, el 31-ago-2026 a las 19:40: el
+            # ciclo 18z todavia no estaba publicado —que es EXACTAMENTE el caso
+            # que este bucle existe para sortear, probando el anterior— y el 404
+            # subio hasta la CLI y **tumbo P5 entero**. 14.233 celdas con fuego
+            # leidas de FIRMS y ni una publicada, por no poder leer el viento.
+            #
+            # El docstring de `run_incendios` ya decia que el viento "es
+            # contexto util, no el dato; perderlo degrada, no invalida". El
+            # codigo decia otra cosa.
+            #
+            # Por eso no se enumeran tipos: cualquier fallo leyendo la
+            # meteorologia tiene que quedarse aqui dentro. La unica forma de que
+            # el viento vuelva a tirar la capa de incendios es que este `except`
+            # sea mas estrecho que la realidad, y la realidad no se deja
+            # enumerar.
             lectura.fallidos.append(etiqueta)
             _log.warning(
                 "corrida de GFS no disponible",
