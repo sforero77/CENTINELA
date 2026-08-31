@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-31T19:05:18Z",
+  "generado_utc": "2026-08-31T19:15:18Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
+    {
+      "usgs_id": "us7000td5l",
+      "mag": 4.6,
+      "lon": -88.4432,
+      "lat": 12.244,
+      "depth_km": 35.0,
+      "lugar": "112 km al SSO de Chirilagua, El Salvador",
+      "origen_utc": "2026-08-31T18:56:28Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "SLV"
+    },
     {
       "usgs_id": "us7000td3y",
       "mag": 4.7,
