@@ -1268,6 +1268,15 @@ const ICONOS = {
     '<path d="M10 14.5V5a2 2 0 1 1 4 0v9.5"/><circle cx="12" cy="17.5" r="3.5"/>' +
     '<path d="M16 7h2M16 10h2"/>',
 
+  // AMBIENTE. Hacia donde empuja y con que sequedad.
+  //
+  // La flecha apunta al NORTE en reposo, y se gira desde el marcado. Ese giro
+  // es la unica pieza de todo el visor donde equivocarse por 180 grados manda a
+  // alguien hacia el fuego en vez de lejos, y por eso el rumbo va ademas
+  // escrito con letras al lado: una flecha sola se lee mal.
+  viento: '<path d="M12 21V4"/><path d="M7 9l5-5 5 5"/>',
+  humedad: '<path d="M12 3s6 6.5 6 10.5a6 6 0 0 1-12 0C6 9.5 12 3 12 3z"/>',
+
   // TERRENO: las dos formas en que el suelo falla despues del sismo.
   deslizamiento: '<path d="M3 8l7 6 4-3 7 5"/><path d="M21 21H3"/><path d="M7 18l3-2M12 19l3-3"/>',
   licuefaccion:
@@ -1589,6 +1598,14 @@ window.CENTINELA = {
   camara,
   //: Puerta para las pruebas de navegador. Ver `abrirFocoDePrueba`.
   abrirFoco: (indice) => abrirFocoDePrueba(indice),
+  //: El punto de reticula que le toco al foco abierto, tal cual sale del JSON.
+  //:
+  //: Existe para poder comprobar la INVERSION de la flecha contra el dato real
+  //: en vez de contra una constante escrita en la prueba. Es el unico sitio del
+  //: visor donde un signo cambiado no rompe nada, no sale de rango, no aparece
+  //: en ningun log y pone todas las flechas al reves.
+  vientoDelFocoAbierto: () =>
+    estado.focoAbierto ? vientoDelFoco(estado.focoAbierto) : null,
   //: El filtro que MapLibre tiene puesto sobre una capa. Es como se comprueba
   //: que un filtro toca el MAPA y no solo la lista: contar hexagonos en una
   //: captura no distingue "filtrado" de "la animacion no avanzo".
@@ -3989,6 +4006,8 @@ function abrirFoco(foco) {
       .join("");
   }
 
+  $("fuego-ambiente").innerHTML = cuadroDeViento(vientoDelFoco(foco));
+
   $("fuego-deteccion").innerHTML =
     `<div class="metrica"><span class="cabeza">${iconoSvg("detecciones")}` +
     `<span class="valor">${numero(foco.detecciones)}</span></span>` +
@@ -4148,6 +4167,84 @@ function encuadrarPuntos(coords, { maxZoom = 6 } = {}) {
     return false;
   }
   return true;
+}
+
+// --- Viento: hacia donde empuja ---------------------------------------------
+//
+// El panel decia cuanto arde y sobre quien, y no hacia donde va. Es la
+// diferencia entre un contador y algo con lo que se decide.
+//
+// El dato llega como reticula y no dentro de cada celda, y eso es a proposito:
+// GFS va a 0,25 grados —unos 27 km— y una celda H3 son 5 km2, asi que decenas
+// comparten el mismo punto. Verlo como puntos separados es ver la resolucion
+// que de verdad hay.
+
+//: Los ocho rumbos, para escribir al lado de la flecha.
+//:
+//: Una flecha sola se lee mal —sobre todo girada— y aqui leerla al reves
+//: significa alejarse en la direccion equivocada. El texto no es redundancia.
+const RUMBOS = ["norte", "nordeste", "este", "sureste", "sur", "suroeste", "oeste", "noroeste"];
+
+function nombreDeRumbo(grados) {
+  return RUMBOS[Math.round(((grados % 360) + 360) % 360 / 45) % 8];
+}
+
+//: El punto de reticula mas cercano al centro del foco.
+//:
+//: No interpola, igual que el pipeline: con 27 km de paso, interpolar daria una
+//: precision aparente que el dato no tiene.
+function vientoDelFoco(foco) {
+  const rejilla = estado.fuegoDatos && estado.fuegoDatos.viento;
+  if (!rejilla || !rejilla.puntos || !rejilla.puntos.length) return null;
+  if (typeof h3 === "undefined" || !foco.h3s || !foco.h3s.length) return null;
+
+  let lat = 0;
+  let lon = 0;
+  for (const h of foco.h3s) {
+    const [a, b] = h3.cellToLatLng(h);
+    lat += a;
+    lon += b;
+  }
+  lat /= foco.h3s.length;
+  lon /= foco.h3s.length;
+
+  let mejor = null;
+  let cerca = Infinity;
+  for (const p of rejilla.puntos) {
+    const d = (p.lat - lat) ** 2 + (p.lon - lon) ** 2;
+    if (d < cerca) {
+      cerca = d;
+      mejor = p;
+    }
+  }
+  // Mas de medio grado de separacion ya no describe este foco: es un punto de
+  // otra parte. Antes que un viento ajeno, ninguno.
+  return mejor && cerca <= 0.5 ** 2 ? mejor : null;
+}
+
+function cuadroDeViento(p) {
+  if (!p) return "";
+
+  // LA FLECHA APUNTA A DONDE EMPUJA, NO DE DONDE VIENE.
+  //
+  // `dir_grados` es la convencion meteorologica: de donde sopla. Un viento de
+  // 90 grados —del este— empuja hacia el oeste. La flecha del icono mira al
+  // norte en reposo, asi que hay que girarla `dir + 180`.
+  const empuja = (p.dir_grados + 180) % 360;
+  const kmh = Math.round(p.vel_ms * 3.6);
+
+  return (
+    `<div class="metrica"><span class="cabeza">` +
+    `<span class="rosa" style="transform:rotate(${empuja}deg)">${iconoSvg("viento")}</span>` +
+    `<span class="valor">${numero(kmh)}</span></span>` +
+    `<span class="etiqueta">km/h, empuja hacia el ${nombreDeRumbo(empuja)}</span>` +
+    `<span class="apunte">Del modelo GFS a 27&nbsp;km, no medido en la celda</span></div>` +
+    (p.hr_pct >= 0
+      ? `<div class="metrica"><span class="cabeza">${iconoSvg("humedad")}` +
+        `<span class="valor">${numero(Math.round(p.hr_pct))}</span></span>` +
+        `<span class="etiqueta">% de humedad relativa</span></div>`
+      : "")
+  );
 }
 
 function volarAlFoco(foco) {

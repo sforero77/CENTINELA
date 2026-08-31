@@ -31,6 +31,10 @@ class IncendiosResult:
     #: Ficheros de FIRMS que no se pudieron leer, y cuantos se pidieron.
     fallidos: list[str] = field(default_factory=list)
     pedidos: int = 0
+    #: Corrida de GFS que se uso para el viento. Vacia si no se consiguio
+    #: ninguna, que **no** tumba la corrida: el fuego se publica igual. El
+    #: viento es contexto util, no el dato; perderlo degrada, no invalida.
+    ciclo_viento: str = ""
 
     @property
     def ciego(self) -> bool:
@@ -61,6 +65,7 @@ def run_incendios(
     from ..p2_impact.pipeline import register_exposure_view
     from .focos_h3 import cruzar_con_exposicion, registrar_focos
     from .incendios import write_incendios
+    from .viento import descargar as descargar_viento
 
     result = IncendiosResult()
     lectura = fetch_focos(fetcher)
@@ -90,5 +95,20 @@ def run_incendios(
         register_exposure_view(conexion, exposure_glob)
 
     celdas = cruzar_con_exposicion(conexion)
-    result.publicado = write_incendios(celdas, site_dir=site_dir)
+
+    # El viento va despues del cruce y no antes a proposito: si no hay celdas
+    # no hay a que aplicarselo, y pedir GFS igualmente seria gastar una descarga
+    # de 600 KB para tirarla.
+    viento = descargar_viento(fetcher)
+    if viento.ciego:
+        # Aviso, no error. Que GFS no conteste deja el fuego sin contexto de
+        # viento; que FIRMS no conteste deja el fuego sin fuego. No son lo
+        # mismo y no pueden pintar igual en un log.
+        _log.warning(
+            "sin viento para esta corrida",
+            extra={"context": {"ciclos_probados": viento.fallidos}},
+        )
+    result.ciclo_viento = viento.ciclo
+
+    result.publicado = write_incendios(celdas, site_dir=site_dir, viento=viento)
     return result
