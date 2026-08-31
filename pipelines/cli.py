@@ -28,6 +28,7 @@ from .p1_trigger.observados import (
     podar,
     write_observados,
 )
+from .p1_trigger.repaso import DIAS_DE_REPASO
 from .p1_trigger.run import run_trigger
 from .p2_impact.run import run_impact
 
@@ -387,6 +388,29 @@ def _cmd_incendios(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_repasar(args: argparse.Namespace) -> int:
+    """Eventos ya caidos del feed cuya version de producto avanzo (RF-04)."""
+    from .p1_trigger.repaso import repasar
+
+    resultado = repasar(HttpFetcher(timeout_s=60.0), dias=args.dias)
+    print(
+        json.dumps(
+            {
+                "revisados": resultado.revisados,
+                "a_despachar": resultado.a_despachar,
+                "fallidos": resultado.fallidos,
+                "ventana_dias": args.dias,
+            },
+            ensure_ascii=False,
+        )
+    )
+    _emit_github_output("eventos", json.dumps(resultado.a_despachar))
+    _emit_github_output("hay_trabajo", "true" if resultado.a_despachar else "false")
+    # Un fallo de red no tumba el repaso —los demas eventos si se miraron— pero
+    # tampoco sale en verde como si todo estuviera al dia.
+    return 1 if resultado.fallidos else 0
+
+
 def _cmd_frescura(args: argparse.Namespace) -> int:
     """Comprueba que la pagina publicada sirve lo que hay en el repositorio.
 
@@ -661,6 +685,21 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"ancho de la ventana (por defecto {DIAS_OBSERVADOS})",
     )
     p_observados.set_defaults(func=_cmd_observados)
+
+    p_repasar = sub.add_parser(
+        "repasar",
+        help="RF-04 fuera del feed: eventos con version de producto mas nueva",
+    )
+    p_repasar.add_argument(
+        "--dias",
+        type=int,
+        default=DIAS_DE_REPASO,
+        help=(
+            "ventana hacia atras. El valor por defecto sale de medir cuando deja "
+            "de revisarse un ShakeMap de verdad: mediana 63 dias"
+        ),
+    )
+    p_repasar.set_defaults(func=_cmd_repasar)
 
     p_frescura = sub.add_parser(
         "frescura", help="comprueba que la pagina publicada no quedo detras del repositorio"

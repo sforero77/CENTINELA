@@ -221,6 +221,10 @@ jobs:
 
           despachar_si_toca frescura.yml 3
           despachar_si_toca incendios.yml 6
+          # RF-04 mas alla de las 24 h que cubre el feed. Diario basta: una
+          # revision de ShakeMap que llega el dia 40 no es mas urgente por
+          # mirarla cada hora, y la mediana de la ultima revision son 63 dias.
+          despachar_si_toca repaso.yml 24
 
       # ESTE PASO NO LLEVA CONDICION DE `hay_trabajo`, Y ES DELIBERADO.
       #

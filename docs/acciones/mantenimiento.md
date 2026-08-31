@@ -32,6 +32,48 @@ cuál de las dos cosas se rompió.
 La deduplicación de incidencias y el auto-cierre existen porque una alarma que
 abre una incidencia cada 3 horas deja de leerse a la semana.
 
+## `repaso.yml` — RF-04 más allá de las 24 h del feed
+
+Diario (y cuando el vigía lo despierta). Pregunta por los eventos de los
+últimos **90 días** *por su identificador*, sin depender del feed, y despacha a
+P2 los que tengan una versión de producto más nueva.
+
+```mermaid
+flowchart TB
+  R(["diario"]) --> LEE["Leer events/<br/>no descartados · no backtest<br/>origen dentro de 90 días"]
+  LEE --> PIDE["GET detail por eventid<br/><i>el mismo endpoint que ya usa P2</i>"]
+  PIDE --> CMP{"¿shakemap o ground_failure<br/>más nuevos que<br/>versiones_procesadas?"}
+  CMP -->|no| NADA(["sin cambios"])
+  CMP -->|sí| DESP["gh workflow run impact.yml"]
+  PIDE -->|"falla la red"| FALLO["se cuenta como<br/><b>fallido</b>, no como<br/>'sin cambios'"]
+
+  style CMP fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style FALLO fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+```
+
+**Por qué existe.** El vigía cumple RF-04 mirando el feed, y `4.5_day` son 24
+horas. Pasado un día el evento se cae de ahí y nadie vuelve a preguntar. Pero
+las revisiones de ShakeMap duran mucho más: medido contra USGS sobre los veinte
+eventos publicados, la mediana hasta la última revisión son **63 días**, y el de
+Venezuela llegó a **v15 dos meses después** del sismo. Ninguno terminó dentro de
+las 24 h del feed.
+
+**Por qué 90 días.** Cubre 17 de los 20 medidos. Los tres que se salen —185, 571
+y 2.024 días— no son revisiones del evento: son reprocesos del catálogo entero
+que USGS hace cada varios años, y perseguirlos a diario sería gastar peticiones
+en algo que no va a pasar hoy.
+
+**Qué queda fuera, a propósito:**
+
+- **`descartado`** es terminal.
+- **Los backtests.** Son reconstrucciones congeladas de históricos; re-emitirlos
+  cada vez que USGS retoca su Atlas convertiría el catálogo en ruido.
+
+**Y un fallo de red no es un «sin cambios».** Los eventos que no se pudieron
+consultar se cuentan aparte y el comando sale con código 1: tragarse el error
+dejaría el evento sin repasar y el contador diciendo que se repasó — el cero
+silencioso, en su versión «todo al día».
+
 ## `keepalive.yml` — que GitHub no apague los crons
 
 Días 1 y 15, 07:00 UTC. GitHub **desactiva los workflows programados de repos

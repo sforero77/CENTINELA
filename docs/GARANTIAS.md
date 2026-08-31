@@ -31,6 +31,12 @@ demuestra que sigue vivo.
 El vigía lee `4.5_day`, una ventana de **24 horas**. Aunque el cron tarde once
 —el peor caso medido—, el evento sigue en el feed cuando llegue.
 
+Esa ventana garantiza que no se pierde un sismo, **no** que se sigan viendo sus
+revisiones: pasadas 24 h el evento se cae del feed. De eso se ocupa
+`repaso.yml`, que pregunta por los eventos de los últimos 90 días por su
+identificador. Hizo falta porque la mediana hasta la última revisión de un
+ShakeMap son 63 días, y el de Venezuela llegó a v15 dos meses después.
+
 Solo se perdería con una parada de más de un día, y de eso avisa el monitor
 externo en treinta minutos.
 
