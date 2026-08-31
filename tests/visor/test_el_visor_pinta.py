@@ -1372,3 +1372,160 @@ def test_la_tarjeta_viva_dice_de_donde_es_la_cifra(pagina: Any) -> None:
 
     texto = pagina.locator('.metrica-viva[data-capa="incendios"]').inner_text().lower()
     assert "américa latina" in texto, f"la cifra no declara su alcance: {texto!r}"
+
+
+# --- "Ver en el mapa" tiene que llevar al sitio (31-ago-2026) ----------------
+
+
+def _escala(pagina: Any) -> str:
+    """Lo que dice la barra de escala. Es la lectura fiable de la cámara.
+
+    En una pestaña oculta `requestAnimationFrame` va a ~1 fps y el lienzo puede
+    parecer congelado; la barra de escala sí refleja el zoom.
+    """
+    texto: str = pagina.locator(".maplibregl-ctrl-scale").first.inner_text()
+    return texto.strip()
+
+
+def _km(texto: str) -> float:
+    """La misma conversión, para una escala ya capturada."""
+    numero_, unidad = texto.replace(" ", " ").split()
+    return float(numero_.replace(",", ".")) * (1.0 if unidad == "km" else 0.001)
+
+
+def _camara_quieta(pagina: Any, intentos: int = 40) -> float:
+    """Espera a que el vuelo termine y devuelve la escala en km.
+
+    Dos trampas, las dos aprendidas aquí:
+
+    1. Los vuelos de MapLibre llevan duración. Medir a mitad da una lectura
+       intermedia —1.000 km cuando la cámara va camino de 5— y un
+       `wait_for_timeout` fijo hace fallar la prueba por la máquina y no por el
+       fallo que busca.
+    2. Con la pestaña de fondo, `requestAnimationFrame` cae a ~1 fps y el vuelo
+       **se para**: dos lecturas seguidas salen iguales a mitad de camino y una
+       espera ingenua las toma por el final. Por eso aquí se empuja con un
+       `resize` entre lecturas —lo mismo que hace falta para validar a mano— y
+       se exigen tres iguales, no dos.
+    """
+    estables = 0
+    anterior = _escala_km(pagina)
+    for _ in range(intentos):
+        pagina.evaluate("() => window.dispatchEvent(new Event('resize'))")
+        pagina.wait_for_timeout(350)
+        ahora = _escala_km(pagina)
+        estables = estables + 1 if ahora == anterior else 0
+        anterior = ahora
+        if estables >= 3:
+            return ahora
+    return anterior
+
+
+def _escala_km(pagina: Any) -> float:
+    """La escala como número, para poder comparar cuánto se alejó la cámara.
+
+    Comparar las cadenas obliga a acertar el encuadre exacto, y no es lo que
+    interesa: «volvió al panorama» es «se alejó un orden de magnitud», no «dice
+    2000 km». La barra salta entre valores redondos, así que exigir uno concreto
+    hace la prueba frágil por un motivo que no es el fallo que busca.
+    """
+    texto = _escala(pagina).replace(" ", " ")
+    numero_, unidad = texto.split()
+    return float(numero_.replace(",", ".")) * (1.0 if unidad == "km" else 0.001)
+
+
+def test_ver_en_el_mapa_encuadra_los_sismos_vistos(pagina: Any) -> None:
+    """El botón decía «Ver en el mapa» y no llevaba a ninguna parte.
+
+    Encendía nueve estrellas huecas repartidas por un continente, sin mover la
+    cámara y sin decir nada. En un portátil, donde el mapa ya se ve entero, el
+    `scrollIntoView` tampoco hacía nada: para quien lo pulsa, el botón está roto.
+    """
+    _esperar_capa(pagina, "observados")
+    boton = pagina.locator('.metrica-viva[data-capa="observados"]')
+    boton.wait_for(state="visible", timeout=ESPERA_MS)
+    antes = _escala(pagina)
+
+    boton.click()
+    pagina.wait_for_timeout(600)
+    _camara_quieta(pagina)
+
+    casilla = pagina.locator("#interruptor-observados input")
+    assert casilla.is_checked(), "la capa que el botón promete encender sigue apagada"
+    assert _escala(pagina) != antes, (
+        f"la cámara no se movió: sigue en {antes}. «Ver en el mapa» tiene que llevar al sitio"
+    )
+
+
+def test_ver_en_el_mapa_no_es_un_boton_de_un_solo_uso(pagina: Any) -> None:
+    """La segunda pulsación no hacía literalmente nada.
+
+    `cambiarAmenaza` sale temprano si el modo ya es ese, y la casilla solo se
+    marcaba `if (!casilla.checked)`. Encendida la capa, el botón quedaba mudo.
+    """
+    _esperar_capa(pagina, "observados")
+    boton = pagina.locator('.metrica-viva[data-capa="observados"]')
+    boton.wait_for(state="visible", timeout=ESPERA_MS)
+
+    boton.click()
+    pagina.wait_for_timeout(600)
+    _camara_quieta(pagina)
+    encuadrado = _escala(pagina)
+
+    # Alejarse a mano, como haría cualquiera que se mueva por el mapa.
+    pagina.locator(".maplibregl-ctrl-zoom-out").click()
+    pagina.locator(".maplibregl-ctrl-zoom-out").click()
+    _camara_quieta(pagina)
+    assert _escala(pagina) != encuadrado, "el zoom manual no movió la cámara"
+
+    boton.click()
+    pagina.wait_for_timeout(600)
+    _camara_quieta(pagina)
+
+    assert _escala(pagina) == encuadrado, (
+        "la segunda pulsación no devolvió el encuadre: el botón sigue siendo de un solo uso"
+    )
+
+
+def test_volver_a_los_focos_devuelve_tambien_la_camara(pagina: Any) -> None:
+    """El botón dice «Volver a los focos», en plural, y dejaba uno solo delante.
+
+    Cerraba el panel y quitaba el perímetro, pero la vista se quedaba clavada
+    sobre el foco recién cerrado, a cinco kilómetros de escala: el panel decía
+    una cosa y el mapa otra. «Volver al panorama» de un sismo sí devolvía la
+    cámara desde el primer día.
+
+    Se comprueba sobre `window.CENTINELA.camara`, no sobre la barra de escala, y
+    por el mismo motivo que las capas se comprueban sobre `pintado`: en esta
+    pestaña los vuelos de MapLibre se paran a medias, así que el píxel no
+    distingue «no se pidió mover la cámara» de «se pidió y no avanzó».
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
+    pagina.evaluate("() => { window.CENTINELA.camara.motivo = null; }")
+
+    pagina.locator("#volver-fuego").click()
+    pagina.wait_for_timeout(900)
+
+    assert pagina.locator("#detalle-fuego").is_hidden()
+    assert (
+        pagina.evaluate("() => window.CENTINELA.camara.motivo") == "panorama:volver-a-los-focos"
+    ), "cerrar el foco no pidió devolver la vista"
+
+
+def test_ver_en_el_mapa_del_fuego_devuelve_el_panorama(pagina: Any) -> None:
+    """La cifra habla de toda América Latina, así que el encuadre es ese."""
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    boton = pagina.locator('.metrica-viva[data-capa="incendios"]')
+    boton.wait_for(state="visible", timeout=ESPERA_MS)
+    pagina.evaluate("() => { window.CENTINELA.camara.motivo = null; }")
+
+    boton.click()
+    pagina.wait_for_timeout(900)
+
+    assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "panorama:fuego", (
+        "el botón no pidió devolver el panorama"
+    )

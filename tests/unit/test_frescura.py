@@ -389,3 +389,66 @@ def test_el_aviso_dice_que_mirar_si_algo_se_congelo() -> None:
         raise_if_stale([Congelado("incendios.json", "2026-08-24T00:00:00Z", 72.0, 24.0)])
 
     assert "gh run list --workflow=" in str(excinfo.value)
+
+
+def test_no_poder_mirar_no_es_estar_al_dia(tmp_path: Path) -> None:
+    """El vigilante se apuntaba un verde estando ciego.
+
+    Si la página no responde a nada, `revisar` registra un aviso en el log y
+    devuelve una lista vacía. Sin hallazgos, `raise_if_stale` no levanta y el
+    comando salía con cero: `frescura.yml` en verde diciendo que todo está al
+    día cuando lo que ha pasado es que **no se ha podido mirar**.
+
+    El peor sitio posible para ese fallo. Este módulo existe porque el visor
+    estuvo diecisiete horas congelado con todo en verde.
+
+    La distinción tiene que ser fina, y por eso el arreglo no está en `revisar`:
+    que un fichero devuelva 404 es normal —acaba de nacer y el primer despliegue
+    no ha corrido— y confundir «la red se cayó» con «la página está vieja» manda
+    a investigar mal. Lo que no puede pasar es que no se compare **ninguno** y
+    la corrida salga verde.
+    """
+    from pipelines.common.frescura import resumen, revisar
+
+    _escribir(tmp_path, "status.json", "2026-08-26T20:00:00Z")
+    caida = _PaginaFalsa(error=TimeoutError("la red"))
+
+    revisiones = revisar(caida, site_dir=tmp_path, sitio="https://ejemplo/")
+
+    assert revisiones == [], "una caída de red no se reporta como página vieja"
+    # Y esa lista vacía es la señal: el resumen ya lo decía con todas sus
+    # letras, y nadie actuaba sobre ello.
+    assert "No se pudo comparar" in resumen(list(revisiones))
+
+
+def test_una_corrida_sana_si_devuelve_hallazgos(tmp_path: Path) -> None:
+    """Es lo que hace utilizable la señal de la prueba anterior.
+
+    Un fichero comparado y fresco devuelve un hallazgo con `preocupa` en falso.
+    Si el caso bueno devolviera lista vacía, «cero hallazgos» no podría
+    distinguir «todo bien» de «no se pudo mirar».
+    """
+    from pipelines.common.frescura import revisar
+
+    _escribir(tmp_path, "status.json", "2026-08-26T20:00:00Z")
+    pagina = _PaginaFalsa({"status.json": {"generado_utc": "2026-08-26T20:00:00Z"}})
+
+    revisiones = revisar(pagina, site_dir=tmp_path, sitio="https://ejemplo/")
+
+    assert len(revisiones) == 1
+    assert not revisiones[0].preocupa
+
+
+def test_el_comando_de_frescura_falla_cuando_no_pudo_comparar_nada() -> None:
+    """Que la señal esté conectada, no solo disponible.
+
+    Es el patrón que este repositorio caza una y otra vez: la pieza correcta
+    escrita y sin nadie que la llame.
+    """
+    raiz = Path(__file__).parent.parent.parent
+    fuente = (raiz / "pipelines" / "cli.py").read_text(encoding="utf-8")
+    cuerpo = fuente[fuente.index("def _cmd_frescura") :]
+    cuerpo = cuerpo[: cuerpo.index("\ndef ")]
+
+    assert "if not revisiones:" in cuerpo, "nadie mira si se comparo algo"
+    assert "return 1" in cuerpo, "la corrida ciega sigue saliendo en verde"

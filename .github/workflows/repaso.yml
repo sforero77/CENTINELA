@@ -63,15 +63,19 @@ jobs:
 
       - name: Repasar versiones de producto
         id: repaso
-        # `continue-on-error` porque el comando devuelve 1 cuando algun evento
-        # no se pudo consultar —un fallo de red no es un "sin cambios"— y aun
-        # asi los que SI se miraron deben despacharse. El aviso queda abajo.
-        continue-on-error: true
+        # SIN `continue-on-error`, y es deliberado.
+        #
+        # Lo llevaba, y con el la corrida salia verde tambien cuando no se pudo
+        # consultar **ni un solo evento** — el mismo fallo que este mismo dia se
+        # encontro en la lectura de FIRMS, repetido en codigo escrito para
+        # arreglarlo. Ahora el comando distingue: si fallan algunos sale con
+        # cero (los que si se miraron valen y sus despachos salen) y avisa; si
+        # fallan todos sale con uno y la corrida se pone roja.
         run: uv run centinela repasar --dias "${{ inputs.dias || '90' }}"
 
-      - name: Avisar si alguno no se pudo consultar
-        if: steps.repaso.outcome == 'failure'
-        run: echo "::warning::el repaso no pudo consultar todos los eventos; se reintenta en la proxima pasada"
+      - name: Avisar de los que no se pudieron consultar
+        if: steps.repaso.outputs.fallidos != '0' && steps.repaso.outputs.fallidos != ''
+        run: echo "::warning::${{ steps.repaso.outputs.fallidos }} eventos no se pudieron consultar; se reintentan en la proxima pasada"
 
   despachar:
     needs: repasar

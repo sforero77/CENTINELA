@@ -29,6 +29,14 @@ nada — de eso se ocupa el latido a healthchecks.io, que es un vigilante
 distinto para un fallo distinto. Mezclarlos daría una alarma incapaz de decir
 cuál de las dos cosas se rompió.
 
+**Y no poder mirar no es estar al día.** Un 404 en un fichero recién nacido es
+normal —el primer despliegue no ha corrido— y confundir «la red se cayó» con «la
+página está vieja» manda a investigar mal, así que un fallo suelto se anota y se
+sigue. Pero si no se pudo comparar **ninguno**, la comprobación no llegó a
+correr, y el comando sale con código 1. Estuvo saliendo en verde hasta el
+31-ago-2026: el vigilante que existe porque el visor pasó diecisiete horas
+congelado con todo en verde se apuntaba un verde estando ciego.
+
 La deduplicación de incidencias y el auto-cierre existen porque una alarma que
 abre una incidencia cada 3 horas deja de leerse a la semana.
 
@@ -69,10 +77,14 @@ en algo que no va a pasar hoy.
 - **Los backtests.** Son reconstrucciones congeladas de históricos; re-emitirlos
   cada vez que USGS retoca su Atlas convertiría el catálogo en ruido.
 
-**Y un fallo de red no es un «sin cambios».** Los eventos que no se pudieron
-consultar se cuentan aparte y el comando sale con código 1: tragarse el error
-dejaría el evento sin repasar y el contador diciendo que se repasó — el cero
-silencioso, en su versión «todo al día».
+**Y un fallo de red no es un «sin cambios»**, con la distinción que importa: si
+falla **alguno**, se avisa y la corrida sigue —los que sí se consultaron valen y
+sus despachos salen—; si fallan **todos**, sale con código 1 y la corrida se pone
+roja, porque eso no es «sin cambios» sino no haber repasado.
+
+Y «no había nada que repasar» tampoco es «no se pudo repasar»: hoy los 25
+eventos son backtests y quedan fuera, así que cero revisados con cero fallidos
+sale en verde. Confundirlo pondría el workflow en rojo todos los días.
 
 ## `keepalive.yml` — que GitHub no apague los crons
 

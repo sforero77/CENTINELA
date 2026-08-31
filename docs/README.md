@@ -21,7 +21,7 @@ qué garantiza y cómo se rompe.
 |---|---|
 | [`OPERACION.md`](OPERACION.md) | Qué vigilar ahora que el sistema opera |
 | [`GARANTIAS.md`](GARANTIAS.md) | Qué garantiza el sistema y qué explícitamente no |
-| [`FAMILIAS_DE_FALLO.md`](FAMILIAS_DE_FALLO.md) | Siete formas de romperlo sin que nada se ponga rojo |
+| [`FAMILIAS_DE_FALLO.md`](FAMILIAS_DE_FALLO.md) | Ocho formas de romperlo sin que nada se ponga rojo |
 | [`PUESTA_EN_MARCHA.md`](PUESTA_EN_MARCHA.md) | Levantar el proyecto desde cero |
 | [`PUBLICAR_ACTIVO.md`](PUBLICAR_ACTIVO.md) | Cómo se publica el activo y por qué no va en git |
 | [`AUDITORIA.md`](AUDITORIA.md) | La auditoría del 25-ago-2026 y su cierre |
