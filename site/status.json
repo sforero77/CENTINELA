@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-08-31T07:15:21Z",
+  "generado_utc": "2026-08-31T08:15:29Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -163,10 +163,10 @@
   "cadencia": {
     "declarado_min": 30,
     "p50_min": 95.2,
-    "p90_min": 472.8,
+    "p90_min": 470.0,
     "peor_min": 765.9,
-    "revisiones": 335,
-    "latidos": 40
+    "revisiones": 348,
+    "latidos": 41
   },
   "latidos": [
     {
@@ -376,6 +376,12 @@
     {
       "utc": "2026-08-31T07:15:20Z",
       "revisados": 13,
+      "relevantes": 0,
+      "revisiones": 13
+    },
+    {
+      "utc": "2026-08-31T08:15:29Z",
+      "revisados": 11,
       "relevantes": 0,
       "revisiones": 13
     }
