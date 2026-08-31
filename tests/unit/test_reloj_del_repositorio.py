@@ -28,7 +28,29 @@ WORKFLOWS = Path(__file__).parent.parent.parent / ".github" / "workflows"
 TRIGGER = (WORKFLOWS / "trigger.yml").read_text(encoding="utf-8")
 
 #: `workflow -> cada cuantas horas debe despacharse`, leido del propio paso.
-DEPENDIENTES = ("frescura.yml", "incendios.yml")
+DEPENDIENTES = ("frescura.yml", "incendios.yml", "repaso.yml")
+
+#: Cadencia que cada uno declara, en horas.
+CADENCIAS = {"frescura.yml": 3, "incendios.yml": 6, "repaso.yml": 24}
+
+
+def _horas_del_cron(expresion: str) -> int | None:
+    """Cada cuantas horas corre un cron. Entiende `*/N` y la hora fija.
+
+    `repaso.yml` corre una vez al dia y su cron es `37 5 * * *`: no hay `*/N`
+    que leer, y la cadencia son 24 h. Sin esto, anadir un workflow diario
+    obligaria a escribir `*/24` —que en el campo de horas significa "la hora
+    cero" y se lee como un error— solo para que la prueba encaje.
+    """
+    campos = expresion.split()
+    if len(campos) != 5:
+        return None
+    hora = campos[1]
+    if (cada := re.match(r"^\*/(\d+)$", hora)) is not None:
+        return int(cada.group(1))
+    if re.match(r"^\d+$", hora) and campos[2] == "*" and campos[4] == "*":
+        return 24
+    return None
 
 
 def test_el_vigia_despacha_a_los_que_dependen_del_reloj() -> None:
@@ -87,18 +109,18 @@ def test_el_reloj_corre_aunque_el_vigia_no_publique() -> None:
 def test_las_cadencias_declaradas_coinciden_con_los_crones() -> None:
     """Despachar `frescura` cada seis horas cuando su cron dice tres seria
     empeorarla en silencio."""
-    for workflow, esperado in (("frescura.yml", 3), ("incendios.yml", 6)):
+    for workflow, esperado in CADENCIAS.items():
         cron = yaml.safe_load((WORKFLOWS / workflow).read_text(encoding="utf-8"))[True]
-        # Los dos `search` pueden no encajar, y ese caso no es un detalle de
-        # tipos: si el cron deja de decir `*/N` o el trigger deja de nombrar el
-        # workflow, esta prueba tiene que decirlo con esas palabras en vez de
+        # Los dos pueden no encajar, y ese caso no es un detalle de tipos: si el
+        # cron deja de declarar una cadencia legible o el trigger deja de nombrar
+        # el workflow, esta prueba tiene que decirlo con esas palabras en vez de
         # reventar con un AttributeError sobre None.
-        en_cron = re.search(r"\*/(\d+)", cron["schedule"][0]["cron"])
-        assert en_cron is not None, f"{workflow}: su cron ya no declara una cadencia `*/N`"
+        declarado_o_no = _horas_del_cron(cron["schedule"][0]["cron"])
+        assert declarado_o_no is not None, f"{workflow}: su cron ya no declara una cadencia legible"
         en_trigger = re.search(rf"despachar_si_toca {re.escape(workflow)} (\d+)", TRIGGER)
         assert en_trigger is not None, f"{workflow}: el reloj ya no lo despacha"
 
-        declarado = int(en_cron.group(1))
+        declarado = declarado_o_no
         despachado = int(en_trigger.group(1))
 
         assert despachado == declarado == esperado, (

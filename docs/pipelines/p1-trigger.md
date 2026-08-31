@@ -88,6 +88,26 @@ Ventana móvil de 5 días. El visor los dibuja como estrellas huecas, con la
 etiqueta *"Sismo visto, sin reporte — por debajo de M5,5. Se vio y no se midió
 su impacto"*.
 
+## El límite del feed, y quién lo tapa
+
+El vigía solo ve lo que está **en el feed**, y `4.5_day` son **24 horas**.
+Pasado un día el evento desaparece de ahí y nadie vuelve a preguntar por él.
+
+Eso importa porque RF-04 promete re-emitir al aparecer una versión nueva de
+ShakeMap, y las revisiones duran mucho más de un día. Medido contra USGS sobre
+los veinte eventos publicados, días desde el sismo hasta la última revisión:
+
+| | |
+|---|---|
+| Mediana | **63 días** |
+| Chocó (M7,4) | 11,5 días, hasta v7 |
+| Venezuela (M6,3) | 61,2 días, hasta **v15** |
+| Noviembre 2024 | 75,1 días, hasta v9 |
+
+**Ninguno terminó de revisarse dentro de las 24 h del feed.** De ese hueco se
+ocupa [`repaso.yml`](../acciones/mantenimiento.md), que pregunta por los
+eventos de los últimos 90 días **por su identificador**, sin depender del feed.
+
 ## Idempotencia (RF-02)
 
 Correr P1 dos veces sobre el mismo feed no crea trabajo duplicado. El estado

@@ -1,6 +1,6 @@
 # GitHub Actions
 
-Doce workflows. Tres son el camino crítico de un sismo, cinco son
+Trece workflows. Tres son el camino crítico de un sismo, seis son
 mantenimiento periódico, dos son verificación de código y dos se disparan a
 mano.
 
@@ -20,6 +20,7 @@ mano.
 | `site.yml` | push a `site/` o `reports/` + manual | Publica el visor en GitHub Pages |
 | `incendios.yml` | cron cada 6 h | P5: focos activos de FIRMS |
 | `frescura.yml` | cron cada 3 h | ¿La página publicada va al día con el repositorio? |
+| `repaso.yml` | cron diario | RF-04 más allá del feed: eventos con versión de producto más nueva |
 | `exposure_quarterly.yml` | cron trimestral | P0: reconstruye el activo de exposición |
 | `contract_drift.yml` | cron diario 08:00 UTC | ¿Cambiaron los contratos de las fuentes? |
 | `simulacro.yml` | cron mensual, día 5 | Ensayo en seco de la cadena completa |
@@ -40,6 +41,7 @@ flowchart TB
   TRIG -->|"si hay evento"| IMP["impact.yml"]
   TRIG -->|"si lleva &gt;3 h"| FRE["frescura.yml"]
   TRIG -->|"si lleva &gt;6 h"| INC["incendios.yml"]
+  TRIG -->|"si lleva &gt;24 h"| REP["repaso.yml"]
   TRIG -->|"si commiteó"| SIT["site.yml"]
 
   IMP --> SIT

@@ -1,0 +1,98 @@
+# RF-04 fuera de la ventana del feed.
+#
+# El vigia cumple RF-04 —"al aparecer version nueva de ShakeMap, re-emite"—
+# mirando `4.5_day`, que son **veinticuatro horas**. Pasado un dia el evento se
+# cae del feed y nadie vuelve a preguntar por el.
+#
+# Medido contra USGS el 30-ago-2026, sobre los veinte eventos publicados, dias
+# desde el sismo hasta la ultima revision de ShakeMap:
+#
+#     mediana 63 dias · Choco 11,5 · Venezuela 61,2 (v15) · 2024-11 75,1 (v9)
+#
+# Ni uno termino de revisarse dentro de las 24 h del feed. Este workflow es lo
+# que hace que la promesa siga en pie despues del primer dia.
+#
+# Lo despierta el vigia cuando lleva mas de 24 h sin correr, igual que a
+# `frescura.yml` y `incendios.yml`: GitHub no concede un turno de cron por
+# workflow, y el vigia es el unico reloj fiable que hay. El `schedule` de abajo
+# es el respaldo, no la via principal.
+
+name: Repaso de versiones (RF-04)
+
+on:
+  # Respaldo propio, como todo lo que despacha el vigia: si el paso del reloj
+  # deja de correr, esto sigue teniendo una via. Mala —es la cola estrangulada
+  # de GitHub— pero una via.
+  schedule:
+    - cron: "37 5 * * *"
+  workflow_dispatch:
+    inputs:
+      dias:
+        description: "Ventana hacia atras, en dias"
+        type: string
+        default: "90"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repaso
+  cancel-in-progress: false
+
+jobs:
+  repasar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    permissions:
+      contents: read
+      # Para despachar impact.yml sobre los eventos que avanzaron.
+      actions: write
+    outputs:
+      eventos: ${{ steps.repaso.outputs.eventos }}
+      hay_trabajo: ${{ steps.repaso.outputs.hay_trabajo }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Solo el nucleo: esto pregunta versiones, no calcula impacto.
+      - name: Instalar nucleo
+        run: uv sync --python 3.12 --no-dev
+
+      - name: Repasar versiones de producto
+        id: repaso
+        # `continue-on-error` porque el comando devuelve 1 cuando algun evento
+        # no se pudo consultar —un fallo de red no es un "sin cambios"— y aun
+        # asi los que SI se miraron deben despacharse. El aviso queda abajo.
+        continue-on-error: true
+        run: uv run centinela repasar --dias "${{ inputs.dias || '90' }}"
+
+      - name: Avisar si alguno no se pudo consultar
+        if: steps.repaso.outcome == 'failure'
+        run: echo "::warning::el repaso no pudo consultar todos los eventos; se reintenta en la proxima pasada"
+
+  despachar:
+    needs: repasar
+    if: needs.repasar.outputs.hay_trabajo == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Disparar P2 por evento con version nueva
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sin checkout, `gh` no puede inferir el repositorio del remoto.
+          GH_REPO: ${{ github.repository }}
+          EVENTOS: ${{ needs.repasar.outputs.eventos }}
+        run: |
+          echo "$EVENTOS" | python3 -c '
+          import json, subprocess, sys
+          for usgs_id in json.load(sys.stdin):
+              subprocess.run([
+                  "gh", "workflow", "run", "impact.yml",
+                  "-f", f"usgs_id={usgs_id}",
+              ], check=True)
+          '
