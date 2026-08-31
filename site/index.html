@@ -254,6 +254,16 @@
             <div class="metricas" id="fuego-deteccion"></div>
           </section>
 
+          <!-- Ambiente. Va DESPUES de la deteccion y no antes: lo primero es
+               que arde y cuanto, que es lo medido; el viento es del modelo y
+               contextualiza. Vacio cuando no se pudo leer GFS, que es distinto
+               de "no hace viento" y por eso no se pinta un cero. -->
+          <section class="bloque">
+            <h3 class="eyebrow">Ambiente</h3>
+            <p class="subtitulo-bloque">Hacia dónde empuja el viento y con qué sequedad. Del modelo NOAA GFS en una retícula de unos 27&nbsp;km: no es una medición en el foco.</p>
+            <div class="metricas" id="fuego-ambiente"></div>
+          </section>
+
           <p class="apostilla" id="fuego-apostilla"></p>
         </div>
 

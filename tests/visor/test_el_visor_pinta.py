@@ -1788,8 +1788,10 @@ def test_el_filtro_de_pais_del_fuego_llega_a_las_tres_capas(pagina: Any) -> None
     El fuego se dibuja en tres capas —relleno, punto y borde— y filtrar solo una
     dejaría el contorno de celdas que ya no están, o puntos sin su hexágono.
     """
+    # La capa del mapa, no la anotacion de la lista. Ver el comentario
+    # largo en `test_el_filtro_del_fuego_por_pais_se_construye_bien`.
+    _esperar_capa(pagina, "incendios")
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
     # Esperar a la condición y no al reloj: las capas nacen cuando llegan sus
     # datos, que es después de la primera pasada de filtros.
     pagina.wait_for_function(
@@ -1816,8 +1818,10 @@ def test_la_ventana_del_fuego_mueve_el_filtro_del_mapa(pagina: Any) -> None:
     que no existen — y la ventana se mide desde la detección más reciente del
     fichero, no desde el reloj.
     """
+    # La capa del mapa, no la anotacion de la lista. Ver el comentario
+    # largo en `test_el_filtro_del_fuego_por_pais_se_construye_bien`.
+    _esperar_capa(pagina, "incendios")
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
     pagina.wait_for_timeout(1000)
 
     def corte() -> str:
@@ -1848,8 +1852,20 @@ def test_el_filtro_del_fuego_por_pais_se_construye_bien(pagina: Any) -> None:
     control que no filtra nada es ruido con aspecto de control. Lo que sí se
     puede comprobar hoy es que, en cuanto los haya, la expresión sale bien.
     """
+    # SE ESPERA "incendios", NO "focos", Y LA DIFERENCIA NO ES COSMETICA.
+    #
+    # `pintado.focos` lo anota la LISTA, que no necesita mapa; las capas del
+    # mapa las crea `dibujarIncendios` cuando el estilo esta listo, mas tarde.
+    # Esperando "focos" esta prueba afirmaba sobre `getFilter('incendios')`
+    # antes de que la capa existiera: `filtroDeCapa` devolvia `null` y el
+    # assert de mas abajo comparaba contra la nada.
+    #
+    # Pasaba igualmente porque `pagina` es de ambito modulo y arrastraba las
+    # capas de una prueba anterior. Un verde prestado, que es la peor clase:
+    # esta prueba existe para vigilar que el filtro de pais toca el MAPA —el
+    # fallo que se reporto— y durante un tiempo no vigilo nada.
+    _esperar_capa(pagina, "incendios")
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
     pagina.wait_for_timeout(1000)
 
     expresion = pagina.evaluate(
@@ -1909,3 +1925,92 @@ def test_el_sello_de_geoai_latam_carga_de_verdad(pagina: Any) -> None:
         assert globo["ancho"] >= 12, f"el sello se pinta a {globo['ancho']}px, invisible"
 
     assert "🌎" not in pagina.content(), "volvio el emoji en vez del sello de la marca"
+
+
+# --- El viento del panel de un foco -----------------------------------------
+
+
+@pytest.mark.visor
+def test_la_flecha_del_viento_apunta_a_donde_empuja_y_no_de_donde_viene(pagina: Any) -> None:
+    """La comprobacion mas importante de la capa de viento.
+
+    `dir_grados` es la convencion meteorologica: DE DONDE sopla. Un viento de 90
+    grados —del este— empuja el fuego HACIA EL OESTE. La flecha tiene que girar
+    `dir + 180`.
+
+    Equivocarse aqui no rompe nada, no saca ningun valor de rango, no aparece en
+    ningun log y pone todas las flechas exactamente al reves. En un mapa de
+    incendios eso significa alejarse en la direccion del fuego. Es el unico
+    sitio del visor donde un signo cambiado tiene esa consecuencia, y por eso se
+    comprueba contra el JSON publicado en vez de contra una constante.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_timeout(1200)
+
+    rejilla = pagina.evaluate(
+        """() => fetch('incendios.json').then((r) => r.json()).then((d) => d.viento || null)"""
+    )
+    if not rejilla:
+        pytest.skip("el incendios.json publicado aun no trae viento (hace falta P5 con GFS)")
+
+    assert pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_timeout(600)
+
+    ambiente = pagina.locator("#fuego-ambiente")
+    html = ambiente.inner_html()
+    if not html.strip():
+        pytest.skip("el primer foco cae lejos de todo punto de la reticula")
+
+    giro = pagina.evaluate(
+        r"""() => {
+             const r = document.querySelector('#fuego-ambiente .rosa');
+             if (!r) return null;
+             const m = /rotate\(([-0-9.]+)deg\)/.exec(r.style.transform || '');
+             return m ? Math.round(parseFloat(m[1])) : null;
+           }"""
+    )
+    assert giro is not None, "la flecha no lleva giro: apuntaria siempre al norte"
+
+    # El punto que el visor debio elegir: el mas cercano al centro del foco.
+    esperado = pagina.evaluate(
+        """() => {
+             const p = window.CENTINELA.vientoDelFocoAbierto();
+             return p ? p.dir_grados : null;
+           }"""
+    )
+    if esperado is not None:
+        assert giro == (esperado + 180) % 360, (
+            f"la flecha gira {giro} para un viento de {esperado}: "
+            "apunta a de donde viene, no a donde empuja"
+        )
+
+    # El giro tiene que ser uno de los rumbos publicados, invertido. Sin el
+    # gancho anterior esto sigue atrapando una flecha sin invertir.
+    rumbos = {(p["dir_grados"] + 180) % 360 for p in rejilla["puntos"]}
+    assert giro in rumbos, f"giro {giro} que no corresponde a ningun punto invertido"
+
+    # Y el rotulo tiene que decir con letras lo mismo que la flecha: una flecha
+    # girada se lee mal, y aqui leerla al reves es el fallo que importa.
+    assert "empuja hacia el" in html, "la flecha va sola, sin rumbo escrito"
+    assert "27" in html, "falta el aviso de que son 27 km de reticula, no la celda"
+
+
+@pytest.mark.visor
+def test_sin_viento_publicado_el_bloque_queda_vacio_y_no_en_cero(pagina: Any) -> None:
+    """Que no se pudiera leer GFS no es "no hace viento".
+
+    Pintar 0 km/h cuando falta el dato seria el cero silencioso otra vez, esta
+    vez en la cara del usuario: una calma inventada junto a un incendio.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_timeout(800)
+
+    vacio = pagina.evaluate(
+        r"""() => {
+             const antes = document.getElementById('fuego-ambiente').innerHTML;
+             return { tieneCero: /">0<\/span>/.test(antes) && !/[1-9]/.test(antes) };
+           }"""
+    )
+    assert not vacio["tieneCero"], "se pinto un cero donde falta el dato"

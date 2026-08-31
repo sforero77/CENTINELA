@@ -438,6 +438,33 @@ Las dos salidas honestas son montarlo o publicar el objetivo real; sostener 60
 min con una deteccion cuya mediana son 45,6 es la clase de cifra que este
 proyecto no se permite en ningun otro sitio.
 
+### 2.9 Viento para el fuego · decidido A, sin escribir
+
+**Esto tenia que estar escrito hace dias y no lo estaba.** Se investigo, se
+llego a una conclusion con consecuencias de licencia, y se quedo en la
+conversacion. Que es justo lo que esta seccion existe para evitar.
+
+**Que falta.** El panel de un foco dice cuanto arde y sobre quien, pero no hacia
+donde va. Velocidad y direccion del viento, y humedad relativa, son las
+variables que convierten "hay fuego aqui" en "va hacia alla" — es lo que hace
+util al Wildfire Aware de Living Atlas, que fue de donde salio la idea.
+
+**Por que no Open-Meteo, que era el camino obvio.** Su nivel gratuito es **no
+comercial**. Meterlo haria del cubo NC de D8 —hoy vacio a proposito— el primer
+cubo con algo dentro, y contaminaria el activo publicado: el mismo dataset que
+hoy se puede redistribuir bajo CC BY 4.0 dejaria de poderse. La regla de los
+tres cubos no tiene excepcion para "es solo una variable mas".
+
+**Decidido: NOAA GFS directo.** Es **dominio publico**, o sea cubo nucleo, sin
+llave —lo que respeta D6— y con cobertura global cada 6 h. El coste es que hay
+que leer GRIB2 en vez de un JSON, y elegir la retícula: GFS va a 0,25°, unos 27
+km, contra los 5,2 km² de una celda H3 r8. **Una direccion de viento de 27 km
+aplicada a una celda de 5 km es una interpolacion, y hay que rotularla como
+tal** o sera otra cifra creible y falsa, como lo habria sido publicar la
+temperatura de brillo en grados.
+
+**Sin empezar.** Lo unico hecho es descartar Open-Meteo y elegir la fuente.
+
 ---
 
 ## 3. Cerrado, y donde esta el detalle
