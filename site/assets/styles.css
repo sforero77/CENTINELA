@@ -1927,3 +1927,29 @@ thead th {
 .metrica[hidden] {
   display: none;
 }
+
+/* --- Iconos en las categorías (31-ago-2026) ------------------------------ */
+
+/* Los iconos ya existían para las métricas de un reporte —personas, salud,
+   vías— pero las categorías de cobertura del suelo, terreno, detección y
+   panorama iban sin ninguno: una lista de palabras donde el resto del panel
+   lleva silueta. Estos tres contextos son texto en línea, no cabeceras de
+   cifra, así que el icono se alinea con la letra y no con el número. */
+.suelo-nombre,
+.terreno li > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* El de suelo va con el color de su barra, que es lo que lo hace legible de un
+   vistazo: la silueta dice qué es y el tono lo confirma. */
+.suelo-nombre .icono {
+  stroke: #4b7f5a;
+  opacity: 0.85;
+}
+
+/* En una lista de dos filas el icono compite con la cifra si pesa lo mismo. */
+.terreno .icono {
+  opacity: 0.7;
+}

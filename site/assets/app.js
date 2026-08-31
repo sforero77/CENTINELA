@@ -412,6 +412,8 @@ const estado = {
   focosPorCelda: null,
   //: El foco abierto en el panel, si lo hay.
   focoAbierto: null,
+  //: Coordenadas de los sismos vistos y no reportados, para encuadrarlos.
+  observadosGeo: [],
   //: Como se ordena la lista y si se recorta al encuadre del mapa. Los dos son
   //: del usuario, no del dato, asi que no van a la URL: un enlace compartido
   //: tiene que abrir el mismo reporte, no la misma manera de mirarlo.
@@ -735,13 +737,16 @@ function pintarPanorama(eventos) {
 
   caja.innerHTML =
     `<div class="metricas">` +
-    `<div class="metrica"><span class="valor">${eventos.length}</span>` +
+    `<div class="metrica"><span class="cabeza">${iconoSvg("reportes")}` +
+    `<span class="valor">${eventos.length}</span></span>` +
     `<span class="etiqueta">reportes publicados</span></div>` +
-    `<div class="metrica"><span class="valor">${comoTexto(mayor.pop_mmi7p)}</span>` +
+    `<div class="metrica"><span class="cabeza">${iconoSvg("personas")}` +
+    `<span class="valor">${comoTexto(mayor.pop_mmi7p)}</span></span>` +
     `<span class="etiqueta">mayor exposición registrada</span>` +
     `<span class="apunte">M${String(mayor.mag).replace(".", ",")} · ${escapar(mayor.lugar)}</span></div>` +
     (paises > 1
-      ? `<div class="metrica"><span class="valor">${paises}</span>` +
+      ? `<div class="metrica"><span class="cabeza">${iconoSvg("paises")}` +
+        `<span class="valor">${paises}</span></span>` +
         `<span class="etiqueta">países con reporte</span></div>`
       : "") +
     `</div>` +
@@ -919,6 +924,20 @@ async function seleccionar(usgsId) {
 //: uno y el centro fijo en el otro, volver al panorama daba una vista distinta
 //: de la de llegar, que es de esos detalles que nadie sabe nombrar y todo el
 //: mundo nota.
+//: La ultima orden dada a la camara, y por que.
+//:
+//: Existe por el mismo motivo que `pintado`: en una pestana de fondo los vuelos
+//: de MapLibre se paran a medias, asi que la barra de escala no distingue "no
+//: se pidio mover la camara" de "se pidio y la animacion no avanzo". Una prueba
+//: que mide el pixel acaba fallando por la animacion en vez de por el fallo que
+//: busca. Esto anota la **decision**, que es lo que el producto promete.
+const camara = { motivo: null, utc: null };
+
+function anotarCamara(motivo) {
+  camara.motivo = motivo;
+  camara.utc = new Date().toISOString();
+}
+
 function volverAlEncuadre(m, duracion = 0) {
   if (!m) return;
   try {
@@ -1214,6 +1233,36 @@ const ICONOS = {
   superficie: '<path d="M4 4h16v16H4z"/><path d="M4 10h16M4 16h16M10 4v16M16 4v16"/>',
   vias: '<path d="M6 21L9 3M18 21l-3-18"/><path d="M12 4v3M12 11v3M12 18v3"/>',
   fuego: '<path d="M12 22c3.9 0 6-2.5 6-5.6 0-4-3-5.4-3-9.4-2 1-3 3-3 5 0-1.5-.7-2.7-2-3.6C9 10 6 11.6 6 16.4 6 19.5 8.1 22 12 22z"/>',
+
+  // COBERTURA DEL SUELO. Sobre que arde, que es lo que convierte "hay fuego" en
+  // informacion. Se dibujan por silueta —copa, espiga, mata, junco— y no por
+  // color: el color ya lo lleva la barra que va al lado, y repetirlo no anade
+  // nada a quien no distingue esos verdes.
+  arbolado: '<path d="M12 21v-5"/><path d="M12 3 6.5 11h11z"/><path d="M12 8l-4.5 7h9z"/>',
+  pastizal:
+    '<path d="M4 21c0-5 1.5-8 3-10M9 21c0-6 1.5-10 3-13M14 21c0-5 1.5-8 3-10M20 21c0-4 .8-6.5 2-8"/>',
+  cultivo: '<path d="M4 20h16"/><path d="M7 20V9M12 20V6M17 20v-8"/><path d="M7 12l3-2M12 9l3-2M17 15l3-2"/>',
+  humedal:
+    '<path d="M3 15c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M3 19c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/>' +
+    '<path d="M9 12V4M9 7c2 0 3-1.5 3-3-2 0-3 1.3-3 3z"/>',
+  arbustos: '<path d="M12 21v-4"/><circle cx="9" cy="11" r="4"/><circle cx="15.5" cy="12.5" r="3.5"/>',
+  construido: '<path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M10 21v-5h4v5"/>',
+
+  // DETECCION. Lo que vio el satelite y con cuanta energia.
+  detecciones: '<circle cx="12" cy="12" r="2.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="7.5"/>',
+  potencia: '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>',
+
+  // TERRENO: las dos formas en que el suelo falla despues del sismo.
+  deslizamiento: '<path d="M3 8l7 6 4-3 7 5"/><path d="M21 21H3"/><path d="M7 18l3-2M12 19l3-3"/>',
+  licuefaccion:
+    '<path d="M3 20h18"/><path d="M6 20v-4M10 20v-7M14 20v-5M18 20v-9"/>' +
+    '<path d="M4 8c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0"/>',
+
+  // PANORAMA Y COBERTURA REGIONAL.
+  reportes: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h5"/>',
+  paises: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/>',
+  malla: '<path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/><path d="M12 8l4.3 2.5v5L12 18l-4.3-2.5v-5z"/>',
+  desvio: '<path d="M3 18h18"/><path d="M6 18V9M12 18V5M18 18v-6"/><path d="M3 12h18" stroke-dasharray="2 2"/>',
 };
 
 //: `clave -> icono, etiqueta, cortes medidos y formato`.
@@ -1359,8 +1408,8 @@ function pintarTerreno(reporte) {
   if (bloque.hidden) return;
 
   const filas = [
-    { etiqueta: "Licuefacción alta", valor: t.pop_lq_alta },
-    { etiqueta: "Deslizamiento alto", valor: t.pop_ls_alta },
+    { etiqueta: "Licuefacción alta", valor: t.pop_lq_alta, icono: "licuefaccion" },
+    { etiqueta: "Deslizamiento alto", valor: t.pop_ls_alta, icono: "deslizamiento" },
   ];
   // La cuota se mide sobre los expuestos a MMI≥7, que es la banda con la que se
   // rotula el resto del panel: asi "1,6 M" y "66 %" hablan del mismo conjunto.
@@ -1369,7 +1418,7 @@ function pintarTerreno(reporte) {
       .map((f) => {
         const cuota = cuotaDe(f.valor, t.pop_mmi7p);
         return (
-          `<li><span>${f.etiqueta}` +
+          `<li><span>${iconoSvg(f.icono)}${f.etiqueta}` +
           (cuota ? ` <span class="cuota-apunte">· <strong>${cuota}</strong> de los expuestos</span>` : "") +
           `</span><span class="cifra${(f.valor || 0) > 0 ? "" : " cero"}">` +
           `${comoTexto(f.valor)}</span></li>`
@@ -1521,6 +1570,7 @@ function anotarCapaActiva(id, columna) {
 window.CENTINELA = {
   pintado,
   errores: erroresAlPintar,
+  camara,
   //: Puerta para las pruebas de navegador. Ver `abrirFocoDePrueba`.
   abrirFoco: (indice) => abrirFocoDePrueba(indice),
 };
@@ -2481,16 +2531,20 @@ function pintarResumenCobertura(datos, eventos) {
   const conReporte = new Set(eventos.map((e) => e.iso3).filter(Boolean)).size;
 
   $("cobertura-resumen").innerHTML =
-    `<div class="metrica"><span class="valor">${resumen.paises_construidos}</span>` +
+    `<div class="metrica"><span class="cabeza">${iconoSvg("paises")}` +
+    `<span class="valor">${resumen.paises_construidos}</span></span>` +
     `<span class="etiqueta">países con activo publicado</span>` +
     `<span class="apunte">de ${resumen.paises_con_manifest} con fuentes fijadas</span></div>` +
-    `<div class="metrica"><span class="valor">${comoTexto(resumen.poblacion_en_la_malla)}</span>` +
+    `<div class="metrica"><span class="cabeza">${iconoSvg("malla")}` +
+    `<span class="valor">${comoTexto(resumen.poblacion_en_la_malla)}</span></span>` +
     `<span class="etiqueta">personas en la malla hexagonal</span>` +
     `<span class="apunte">precalculadas, antes de que ocurra nada</span></div>` +
-    `<div class="metrica"><span class="valor">${porcentaje(resumen.peor_desvio_pct)}</span>` +
+    `<div class="metrica"><span class="cabeza">${iconoSvg("desvio")}` +
+    `<span class="valor">${porcentaje(resumen.peor_desvio_pct)}</span></span>` +
     `<span class="etiqueta">peor desvío vs. cifra oficial</span>` +
     `<span class="apunte">el de Venezuela, y está explicado</span></div>` +
-    `<div class="metrica"><span class="valor">${conReporte}</span>` +
+    `<div class="metrica"><span class="cabeza">${iconoSvg("reportes")}` +
+    `<span class="valor">${conReporte}</span></span>` +
     `<span class="etiqueta">países con reporte publicado</span></div>`;
 }
 
@@ -2785,6 +2839,10 @@ async function cargarObservados() {
 
 function dibujarObservados(eventos) {
   const m = estado.mapa;
+  //: Las coordenadas se guardan aunque no haya mapa: "Ver en el mapa" las
+  //: necesita para encuadrarlas, y sin esto el boton solo podia encender una
+  //: capa y confiar en que se notara.
+  estado.observadosGeo = eventos.map((e) => [Number(e.lon), Number(e.lat)]);
   if (!m) return;
 
   const pintar = () => {
@@ -3238,7 +3296,7 @@ function abrirFoco(foco) {
   // como medicion cuando es ausencia de medida. Es la misma regla del globo.
   const expuesto = [
     ["personas", foco.pop, "personas"],
-    ["edificaciones", foco.bld, null],
+    ["edificaciones", foco.bld, "edificaciones"],
     ["sedes de salud", foco.salud, "salud"],
     ["sedes educativas", foco.edu, "educacion"],
   ].filter(([, n]) => Number(n) > 0);
@@ -3263,7 +3321,7 @@ function abrirFoco(foco) {
     $("fuego-suelo").innerHTML = reparto
       .map(
         ([nombre, pct]) =>
-          `<li><span class="suelo-nombre">${nombre}</span>` +
+          `<li><span class="suelo-nombre">${iconoSvg(nombre)}${nombre}</span>` +
           `<span class="suelo-barra"><span style="width:${Math.min(100, pct)}%"></span></span>` +
           `<span class="suelo-pct">${numero(pct)}&nbsp;%</span></li>`
       )
@@ -3271,9 +3329,11 @@ function abrirFoco(foco) {
   }
 
   $("fuego-deteccion").innerHTML =
-    `<div class="metrica"><span class="valor">${numero(foco.detecciones)}</span>` +
+    `<div class="metrica"><span class="cabeza">${iconoSvg("detecciones")}` +
+    `<span class="valor">${numero(foco.detecciones)}</span></span>` +
     `<span class="etiqueta">detecciones en 24 h</span></div>` +
-    `<div class="metrica"><span class="valor">${numero(Math.round(foco.frpSuma))}</span>` +
+    `<div class="metrica"><span class="cabeza">${iconoSvg("potencia")}` +
+    `<span class="valor">${numero(Math.round(foco.frpSuma))}</span></span>` +
     `<span class="etiqueta">MW de potencia radiativa</span></div>`;
 
   $("fuego-apostilla").textContent =
@@ -3297,10 +3357,10 @@ function abrirFoco(foco) {
 
 function conectarVolverDelFoco() {
   const boton = $("volver-fuego");
-  if (boton) boton.addEventListener("click", cerrarFoco);
+  if (boton) boton.addEventListener("click", () => cerrarFoco({ devolverLaVista: true }));
 }
 
-function cerrarFoco() {
+function cerrarFoco({ devolverLaVista = false } = {}) {
   estado.focoAbierto = null;
   const caja = $("detalle-fuego");
   if (caja) caja.hidden = true;
@@ -3315,6 +3375,18 @@ function cerrarFoco() {
   if (!estado.seleccionado) {
     const vacio = $("lateral-vacio");
     if (vacio) vacio.hidden = false;
+  }
+  // Y LA CAMARA VUELVE, como en "Volver al panorama" de un sismo.
+  //
+  // No volvia. El boton dice "Volver a los focos" —en plural— y dejaba la vista
+  // clavada sobre el unico foco que se acababa de cerrar, a cinco kilometros de
+  // escala. El panel decia una cosa y el mapa otra.
+  //
+  // Solo cuando lo pide el propio boton: `aplicarAmenaza` tambien llama aqui al
+  // cambiar de modo, y ahi la camara la gobierna el cambio de amenaza.
+  if (devolverLaVista) {
+    volverAlEncuadre(estado.mapa, VUELO);
+    anotarCamara("panorama:volver-a-los-focos");
   }
 }
 
@@ -3373,6 +3445,42 @@ function pintarPerimetroDeFoco(m, foco) {
     paint: { "line-color": "#1c1b1a", "line-width": 1.6 },
   });
   anotarPintado("foco-perimetro", foco.nCeldas);
+}
+
+//: Encuadra un punado de puntos sueltos, con margen y un tope de acercamiento.
+//:
+//: `volarAlFoco` hace lo mismo para las celdas de un incendio; esto es para
+//: cosas que no son poligonos —los epicentros observados— y necesita el tope:
+//: nueve sismos repartidos por el continente dan una caja enorme, pero dos que
+//: caigan a diez kilometros darian un zoom de calle sobre dos estrellas.
+function encuadrarPuntos(coords, { maxZoom = 6 } = {}) {
+  const m = estado.mapa;
+  if (!m || !Array.isArray(coords) || !coords.length) return false;
+  let lo = 180,
+    la = 90,
+    LO = -180,
+    LA = -90;
+  for (const [lon, lat] of coords) {
+    if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
+    if (lon < lo) lo = lon;
+    if (lon > LO) LO = lon;
+    if (lat < la) la = lat;
+    if (lat > LA) LA = lat;
+  }
+  if (lo > LO || la > LA) return false;
+  try {
+    m.fitBounds(
+      [
+        [lo, la],
+        [LO, LA],
+      ],
+      { padding: 80, maxZoom, duration: VUELO }
+    );
+  } catch (error) {
+    console.warn("encuadre:", error && error.message);
+    return false;
+  }
+  return true;
 }
 
 function volarAlFoco(foco) {
@@ -3589,7 +3697,7 @@ function pintarEnVivo() {
     const barras = reparto
       .map(
         ([nombre, pct]) =>
-          `<li><span class="suelo-nombre">${nombre}</span>` +
+          `<li><span class="suelo-nombre">${iconoSvg(nombre)}${nombre}</span>` +
           `<span class="suelo-barra"><span style="width:${Math.min(100, Number(pct))}%"></span></span>` +
           `<span class="suelo-pct">${numero(Number(pct))}&nbsp;%</span></li>`
       )
@@ -3640,16 +3748,45 @@ function pintarEnVivo() {
 // Se pulsa el checkbox en vez de tocar el mapa directamente: asi el estado del
 // control y el del mapa no pueden separarse. Tenerlos en dos sitios es como se
 // acaba con una capa encendida y su casilla vacia.
+//: "Ver en el mapa" tiene que LLEVAR al sitio, no solo encender una capa.
+//:
+//: No lo hacia, y de dos maneras. Pulsarlo por segunda vez no hacia
+//: literalmente nada —`cambiarAmenaza` sale temprano si el modo ya es ese, y la
+//: casilla solo se marcaba `if (!casilla.checked)`—, asi que el boton era de un
+//: solo uso. Y ni siquiera el primero cumplia lo que promete: encendia nueve
+//: estrellas huecas repartidas por un continente, sin mover la camara y sin
+//: decir nada. En un portatil, donde el mapa ya se ve entero, `scrollIntoView`
+//: tampoco hacia nada. El resultado es un boton que parece roto porque, para
+//: quien lo pulsa, lo esta.
+//:
+//: Ahora las tres cosas: poner el modo, **asegurar** la capa —fijarla, no
+//: alternarla— y encuadrar aquello de lo que habla la cifra.
 function encenderCapaViva(capa) {
-  // "Ver en el mapa" pone la amenaza al mando, no marca una casilla: la cifra
-  // de fuego lleva al modo fuego, y la de sismos menores al modo sismos con su
-  // capa encendida.
   if (capa === "incendios") {
     cambiarAmenaza("fuego");
+    // La cifra habla de toda America Latina, asi que el encuadre es ese. Si se
+    // estaba mirando un foco concreto, se cierra: la cifra de la tarjeta no es
+    // la suya.
+    cerrarFoco();
+    volverAlEncuadre(estado.mapa, VUELO);
+    anotarCamara("panorama:fuego");
+    anunciar("Focos activos en el mapa, en toda América Latina.");
   } else {
     cambiarAmenaza("sismos");
     const casilla = document.querySelector(`#interruptor-${capa} input`);
-    if (casilla && !casilla.checked) casilla.click();
+    // `checked = true` y no `.click()`: alternar hacia que la segunda pulsacion
+    // apagara lo que el boton dice encender.
+    if (casilla && !casilla.checked) {
+      casilla.checked = true;
+      casilla.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    const encuadrado = encuadrarPuntos(estado.observadosGeo);
+    if (encuadrado) anotarCamara("observados");
+    anunciar(
+      encuadrado
+        ? `${numero(estado.observadosGeo.length)} sismos vistos sin reporte, encuadrados en el mapa.`
+        : "Sismos vistos sin reporte, visibles en el mapa."
+    );
   }
   $("mapa")?.scrollIntoView({ behavior: REDUCIR_MOVIMIENTO ? "auto" : "smooth", block: "nearest" });
 }
