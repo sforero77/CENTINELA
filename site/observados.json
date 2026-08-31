@@ -1,9 +1,19 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-31T11:30:21Z",
+  "generado_utc": "2026-08-31T12:10:20Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
+    {
+      "usgs_id": "us7000td3y",
+      "mag": 4.7,
+      "lon": -75.4097,
+      "lat": -12.1824,
+      "depth_km": 10.0,
+      "lugar": "3 km al NO de Yanacancha, Perú",
+      "origen_utc": "2026-08-31T11:53:26Z",
+      "razon": "M4.7 < umbral M5.5"
+    },
     {
       "usgs_id": "us7000td1g",
       "mag": 4.5,
