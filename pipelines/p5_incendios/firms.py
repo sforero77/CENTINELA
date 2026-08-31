@@ -128,13 +128,39 @@ def parse_csv(texto: str) -> list[Foco]:
     return focos
 
 
+@dataclass(frozen=True, slots=True)
+class Lectura:
+    """Lo leido de FIRMS, y lo que no se pudo leer.
+
+    Los fallidos viajan con los focos, no solo en el log. El 30-ago-2026
+    fallaron **los seis ficheros** —FIRMS tuvo un mal minuto— y la corrida salio
+    verde: cero detecciones, cero celdas, y nada que lo dijera. La capa
+    publicada se salvo porque el pipeline ya se niega a publicar ceros, pero si
+    FIRMS se cayera una semana el visor serviria fuego de hace siete dias con
+    todo en verde. Que es, exactamente, la familia de fallo que este proyecto
+    persigue.
+    """
+
+    focos: list[Foco]
+    #: Que ficheros no se pudieron leer, como "J1_VIIRS_C2/South_America".
+    fallidos: list[str]
+    #: Cuantos se pidieron. Sin esto, "dos fallidos" no dice si fue un roce o
+    #: una caida: dos de seis es un roce, dos de dos es quedarse a ciegas.
+    pedidos: int
+
+    @property
+    def ciego(self) -> bool:
+        """¿Fallaron TODOS? Entonces no se leyo nada y hay que decirlo."""
+        return self.pedidos > 0 and len(self.fallidos) >= self.pedidos
+
+
 def fetch_focos(
     fetcher: Any,
     *,
     satelites: tuple[tuple[str, str], ...] = SATELITES,
     regiones: tuple[str, ...] = REGIONES,
     ventana: str = VENTANA,
-) -> list[Foco]:
+) -> Lectura:
     """Descarga y parsea las seis combinaciones de satelite y region.
 
     **Un fichero que falla no tumba los otros cinco.** Son seis peticiones a un
@@ -166,10 +192,11 @@ def fetch_focos(
                 "detecciones": len(todos),
                 "utiles": sum(1 for f in todos if f.util),
                 "ficheros_fallidos": fallidos,
+                "ficheros_pedidos": len(satelites) * len(regiones),
             }
         },
     )
-    return todos
+    return Lectura(focos=todos, fallidos=fallidos, pedidos=len(satelites) * len(regiones))
 
 
 def _fetcher_por_defecto() -> Fetcher:

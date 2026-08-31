@@ -385,6 +385,22 @@ def _cmd_incendios(args: argparse.Namespace) -> int:
         )
     )
     _emit_github_output("celdas", str(resultado.celdas))
+    # UNA CORRIDA CIEGA NO SALE EN VERDE.
+    #
+    # El 30-ago-2026 fallaron los seis ficheros de FIRMS y esta funcion
+    # devolvio 0: cero detecciones, cero celdas, workflow verde y nadie
+    # enterado. La capa publicada se salvo porque el pipeline se niega a
+    # publicar ceros —la guarda del cero silencioso funciono— pero si FIRMS se
+    # cayera una semana el visor serviria fuego de hace siete dias sin una sola
+    # alarma. Que fallen algunos ficheros es tolerable y se sigue publicando;
+    # que fallen todos es quedarse a ciegas, y eso se dice.
+    if resultado.ciego:
+        print(
+            f"FIRMS no devolvio ninguno de sus {resultado.pedidos} ficheros: "
+            f"no hay dato nuevo que publicar.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
