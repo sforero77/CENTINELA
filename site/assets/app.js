@@ -4335,13 +4335,21 @@ function cuadroDeIncendio(p) {
 
 //: Cuantas celdas hay y cuantas se dibujan, que no son la misma cifra.
 //:
-//: `p5_incendios` ordena por potencia radiativa y publica las 4.000 primeras
-//: —varios megabytes menos que descargar la cola larga de detecciones debiles—
-//: pero calcula los totales sobre **todas**, y emite `celdas_publicadas` justo
-//: para que el recorte se pueda decir. El visor no leia ese campo: rotulaba la
-//: casilla con el total y encendia una capa con el recorte. Medido el
-//: 28-ago-2026: «Focos activos (15.607 celdas en 24 h)» sobre un mapa con
-//: 4.000, y lo mismo por el lector de pantalla.
+//: DESDE EL 31-AGO-2026 YA NO SE RECORTA: `p5_incendios` publica todas las
+//: celdas. `recortado` se queda en falso solo y la casilla dice el total, que
+//: ahora si es lo que hay en el mapa.
+//:
+//: El recorte existio porque se creia que publicarlo todo eran "varios
+//: megabytes que el visor descarga en cada carga". Era falso —GitHub Pages
+//: sirve comprimido: 203 KB con las 13.031 celdas, contra 136 con 4.000— y
+//: nadie lo habia medido. Se deja el campo y esta rama porque queda un tope de
+//: seguridad para una temporada catastrofica; el dia que muerda, el visor tiene
+//: que poder decirlo.
+//:
+//: Lo que arreglo en su dia sigue valiendo: el visor no leia `celdas_publicadas`
+//: y rotulaba la casilla con el total mientras encendia una capa con el
+//: recorte. Medido el 28-ago-2026: «Focos activos (15.607 celdas en 24 h)»
+//: sobre un mapa con 4.000, y lo mismo por el lector de pantalla.
 //:
 //: Las cifras de la tarjeta «ahora mismo» —personas, sedes, reparto del suelo—
 //: se quedan como estan: esas si son de todas las celdas, y recortarlas para

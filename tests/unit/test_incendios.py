@@ -310,21 +310,79 @@ def _celda(h3: str, *, pop: float = 0.0, frp: float = 1.0) -> CeldaConFuego:
     )
 
 
-def test_los_totales_se_calculan_sobre_todas_las_celdas() -> None:
-    """Recortar la lista para que quepa es razonable; recortar la suma, no.
+def test_ahora_se_publican_todas_las_celdas() -> None:
+    """El tope estuvo en 4.000 por una razon que nadie habia medido.
 
-    Con 21.459 celdas en un dia normal, publicarlas todas serian megabytes que
-    el visor descarga en cada carga. Pero ajustar el total nacional para que
-    cuadre con la lista recortada seria publicar una cifra falsa por comodidad.
+    Decia: "publicarlas todas serian varios megabytes que el visor descarga en
+    cada carga". GitHub Pages sirve el fichero comprimido, asi que no. Medido el
+    31-ago-2026 por la red y en un navegador de verdad:
+
+        13.031 celdas -> 203 KB por la red, 97 MB de memoria, 60 cuadros/s
+        23.000 celdas -> 304 KB por la red, 109 MB, 60 cuadros/s
+
+    Contra los 136 KB de las 4.000 de entonces. Publicarlo todo cuesta 67 KB.
+
+    Importa porque los indicadores del tablero se cruzan contra lo publicado: con
+    una muestra de 4.000 de 13.031, filtrar por pais daba cifras que no eran las
+    del pais, sino las de la parte que cupo.
     """
-    celdas = [_celda(f"88{i:013x}", pop=1.0) for i in range(MAX_CELDAS + 500)]
+    celdas = [_celda(f"88{i:013x}", pop=1.0) for i in range(13_031)]
 
     datos = build_incendios(celdas)
 
-    assert datos["totales"]["celdas"] == MAX_CELDAS + 500
-    assert datos["totales"]["celdas_publicadas"] == MAX_CELDAS
-    assert len(datos["celdas"]) == MAX_CELDAS
-    assert datos["totales"]["pop_en_celdas_con_fuego"] == MAX_CELDAS + 500
+    assert datos["totales"]["celdas"] == 13_031
+    assert datos["totales"]["celdas_publicadas"] == 13_031
+    assert len(datos["celdas"]) == 13_031, "se recorto algo que cabia"
+
+
+def test_los_totales_se_calculan_sobre_todas_las_celdas() -> None:
+    """Ajustar la suma nacional para que cuadre con una lista recortada seria
+    publicar una cifra falsa por comodidad.
+
+    Sigue vigente aunque hoy no se recorte: el tope de seguridad existe, y el
+    dia que muerda los totales tienen que seguir siendo los de verdad.
+    """
+    celdas = [_celda(f"88{i:013x}", pop=1.0) for i in range(20)]
+
+    datos = build_incendios(celdas, max_celdas=12)
+
+    assert datos["totales"]["celdas"] == 20
+    assert datos["totales"]["celdas_publicadas"] == 12
+    assert len(datos["celdas"]) == 12
+    assert datos["totales"]["pop_en_celdas_con_fuego"] == 20, "el total no se recorta"
+
+
+def test_el_tope_es_de_seguridad_y_esta_muy_por_encima_del_peor_dia() -> None:
+    """22.701 celdas fue el peor dia visto. Un tope por debajo de eso volveria a
+    convertir el fichero en una muestra sin que nadie se entere."""
+    assert MAX_CELDAS >= 50_000
+
+
+def test_si_el_tope_llegara_a_morder_se_dice_a_gritos(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Un recorte mudo convierte "esto es todo lo que arde" en una mentira sin
+    que nada falle. Es la familia del cero silencioso."""
+    import logging
+
+    celdas = [_celda(f"88{i:013x}", pop=1.0) for i in range(20)]
+
+    with caplog.at_level(logging.ERROR):
+        build_incendios(celdas, max_celdas=5)
+
+    assert any("NO es todo lo que arde" in r.message for r in caplog.records)
+
+
+def test_el_json_va_sin_sangria(tmp_path: Path) -> None:
+    """Con todas las celdas dentro, `indent=2` son unos 2 MB de espacios en un
+    fichero que ninguna persona lee: lo consume el visor."""
+    write_incendios([_celda("88abc", pop=1.0)], site_dir=tmp_path)
+
+    crudo = (tmp_path / "incendios.json").read_text(encoding="utf-8")
+
+    salto = chr(10)
+    assert salto + "  " not in crudo, "el fichero sale sangrado"
+    assert crudo.count(salto) == 1, "el JSON deberia ocupar una sola linea"
 
 
 def test_la_nota_dice_que_no_es_area_quemada() -> None:

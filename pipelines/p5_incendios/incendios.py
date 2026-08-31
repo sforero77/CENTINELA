@@ -28,13 +28,31 @@ INCENDIOS_FILENAME: Final[str] = "incendios.json"
 
 INCENDIOS_SCHEMA_ID: Final[str] = "centinela/incendios/1.0"
 
-#: Cuantas celdas se publican. El criterio del recorte vive en `_prioridad`:
-#: primero todas las que tienen gente (por poblacion), y el resto por potencia
-#: radiativa. Esta nota decia "ordenadas por potencia radiativa" mucho despues
-#: de que ese dejara de ser el criterio — y de una nota desactualizada salio un
-#: rotulo falso en el visor. Con 22.701 celdas en un dia normal, publicarlas
-#: todas serian varios megabytes que el visor descarga en cada carga.
-MAX_CELDAS: Final[int] = 4000
+#: Tope de seguridad, no criterio editorial. **Se publican todas las celdas.**
+#:
+#: Estuvo en 4.000 con esta justificacion: "con 22.701 celdas en un dia normal,
+#: publicarlas todas serian varios megabytes que el visor descarga en cada
+#: carga". ERA FALSA, y nadie la habia medido. GitHub Pages sirve el fichero
+#: comprimido —comprobado contra produccion: `Content-Encoding: gzip`— y el
+#: visor nunca descargo megabytes.
+#:
+#: Medido el 31-ago-2026, por la red y en un navegador de verdad:
+#:
+#:     celdas   gzip     memoria   cuadros/s
+#:      4.000   136 KB    77 MB       60
+#:     13.031   203 KB    97 MB       60
+#:     23.000   304 KB   109 MB       60
+#:
+#: O sea: publicarlo todo cuesta 67 KB mas que hoy, y en pico de temporada 168.
+#: A cambio, los indicadores del tablero pueden cruzarse contra el dato completo
+#: en vez de contra una muestra, que era el motivo real del recorte y nadie
+#: habia notado que lo fuera.
+#:
+#: Queda un tope solo porque una temporada catastrofica esta fuera de lo medido,
+#: y porque un fichero sin limite superior es una forma de caerse. 60.000 es mas
+#: del doble del peor dia visto. Si alguna vez muerde, se dice a gritos: un
+#: recorte silencioso convertiria "esto es todo lo que arde" en una mentira.
+MAX_CELDAS: Final[int] = 60_000
 
 NOTA: Final[str] = (
     "Detecciones de satelite (VIIRS, 375 m) en las ultimas 24 horas, agregadas a "
@@ -188,7 +206,28 @@ def _prioridad(celdas: list[CeldaConFuego], max_celdas: int) -> list[CeldaConFue
     # artefacto E2E — ese dia habia 5.244 celdas pobladas para 4.000 puestos y
     # el fallo no se manifestaba, que es exactamente cuando conviene arreglarlo.
     sin_gente.sort(key=lambda c: -c.frp_suma)
-    return [*con_gente, *sin_gente][:max_celdas]
+    ordenadas = [*con_gente, *sin_gente]
+
+    # EL RECORTE YA NO DECIDE QUE SE PUBLICA —caben todas— PERO SI LLEGARA A
+    # MORDER TIENE QUE OIRSE.
+    #
+    # Un `[:max_celdas]` mudo convierte "esto es todo lo que arde" en una
+    # mentira sin que nada falle ni nadie se entere: exactamente la familia del
+    # cero silencioso. El orden de arriba sigue valiendo aunque no recorte,
+    # porque deja el fichero estable entre corridas y pone delante las celdas
+    # con gente.
+    if len(ordenadas) > max_celdas:
+        _log.error(
+            "se recortan celdas con fuego: el fichero publicado NO es todo lo que arde",
+            extra={
+                "context": {
+                    "celdas": len(ordenadas),
+                    "publicadas": max_celdas,
+                    "descartadas": len(ordenadas) - max_celdas,
+                }
+            },
+        )
+    return ordenadas[:max_celdas]
 
 
 def build_incendios(
@@ -249,7 +288,16 @@ def write_incendios(
     destino = (site_dir or SITE_DIR) / INCENDIOS_FILENAME
     destino.parent.mkdir(parents=True, exist_ok=True)
     datos = build_incendios(celdas, ventana_horas=ventana_horas, viento=viento)
-    destino.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # SIN SANGRIA, y no por tacaneria: con todas las celdas dentro, `indent=2`
+    # son unos 2 MB de espacios en un fichero que **ninguna persona lee** —lo
+    # consume el visor—. El diff de git tampoco pierde nada: este fichero se
+    # regenera entero en cada corrida, nunca se revisa linea a linea.
+    #
+    # Los que si se leen a mano —`status.json`, `cobertura.json`— conservan la
+    # suya.
+    destino.write_text(
+        json.dumps(datos, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8"
+    )
 
     _log.info("incendios publicados", extra={"context": datos["totales"]})
     return destino
