@@ -10,8 +10,8 @@ asi que la seccion no aparecio jamas en un reporte. El mismo patron que el
 reporte preliminar y que las tres capas del activo: piezas correctas, sin nadie
 que las una.
 
-Importa mas de lo que parece. Un ShakeMap se revisa muchas veces —el de
-Venezuela llego a v14— y quien ya leyo la version anterior necesita saber
+Importa más de lo que parece. Un ShakeMap se revisa muchas veces —el de
+Venezuela llego a v14— y quien ya leyo la versión anterior necesita saber
 **que cambio**, no volver a leerlo entero durante una emergencia.
 """
 
@@ -24,15 +24,15 @@ from .model import Report
 #: `Totales`: el changelog se lee durante una emergencia y trece filas de
 #: deltas no se leen. Van las que cambian una decision.
 CIFRAS_COMPARADAS: tuple[tuple[str, str], ...] = (
-    ("pop_mmi6p", "Poblacion en MMI≥6"),
-    ("pop_mmi7p", "Poblacion en MMI≥7"),
-    ("pop_mmi8p", "Poblacion en MMI≥8"),
-    ("pop_65p_mmi7p", "Poblacion de 65 anos o mas en MMI≥7"),
+    ("pop_mmi6p", "Población en MMI≥6"),
+    ("pop_mmi7p", "Población en MMI≥7"),
+    ("pop_mmi8p", "Población en MMI≥8"),
+    ("pop_65p_mmi7p", "Población de 65 años o más en MMI≥7"),
     ("bld_mmi7p", "Edificaciones en MMI≥7"),
     ("health_mmi7p", "Sedes de salud en MMI≥7"),
     ("edu_mmi7p", "Sedes educativas en MMI≥7"),
-    ("pop_ls_alta", "Poblacion en deslizamiento alto"),
-    ("pop_lq_alta", "Poblacion en licuefaccion alta"),
+    ("pop_ls_alta", "Población en deslizamiento alto"),
+    ("pop_lq_alta", "Población en licuefacción alta"),
 )
 
 
@@ -62,7 +62,7 @@ def build_changelog(anterior: Report | None, nuevo: Report) -> tuple[str, ...]:
     # resultado, y decirlo cuesta una linea: sin ella, quien lee no sabe si es
     # que nada cambio o si nadie lo calculo.
     if not cifras:
-        return (*versiones, "Ninguna cifra publicada cambia frente a la version anterior.")
+        return (*versiones, "Ninguna cifra publicada cambia frente a la versión anterior.")
 
     return (*versiones, *cifras)
 
@@ -87,10 +87,10 @@ def _cambios_de_cifras(anterior: Report, nuevo: Report) -> list[str]:
     """Deltas de las cifras, en la misma prosa con que se publican.
 
     **Se compara la cifra ya redondeada, no la exacta.** Si un ShakeMap nuevo
-    mueve la poblacion de 2.415.793 a 2.415.802, el reporte sigue diciendo
+    mueve la población de 2.415.793 a 2.415.802, el reporte sigue diciendo
     "2,4 millones" en los dos sitios: anunciarlo como cambio seria inventar una
     diferencia que ningun lector puede ver. La regla de RF-06 —dos cifras
-    significativas en prosa— decide tambien que cuenta como cambio.
+    significativas en prosa— decide también que cuenta como cambio.
     """
     antes, ahora = anterior.totales, nuevo.totales
     cambios: list[str] = []

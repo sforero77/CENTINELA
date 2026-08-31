@@ -36,7 +36,7 @@ def test_el_reporte_omite_la_seccion_con_nota_y_no_falla() -> None:
         totales=Totales(pop_mmi6p=88_000, pop_mmi7p=4_100),
     )
     md = render_markdown(reporte)
-    assert "Deslizamiento y licuefaccion" in md
+    assert "Deslizamiento y licuefacción" in md
     assert "no ha publicado el producto" in md
     assert "Advertencias" in md
 

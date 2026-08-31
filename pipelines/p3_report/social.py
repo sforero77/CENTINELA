@@ -23,8 +23,8 @@ def render_thread(report: Report) -> list[str]:
     cabeza = (
         f"Sismo M{ev.mag} en {ev.lugar} ({ev.utc} UTC, "
         f"{format_number_es(ev.depth_km, 0)} km de profundidad). "
-        f"Reporte automatico de EXPOSICION estimada de CENTINELA. "
-        f"No es un reporte de danos."
+        f"Reporte automático de EXPOSICIÓN estimada de CENTINELA. "
+        f"No es un reporte de daños."
     )
     posts.append(cabeza)
 
@@ -44,11 +44,12 @@ def render_thread(report: Report) -> list[str]:
     if report.top_municipios:
         top = report.top_municipios[:3]
         nombres = ", ".join(m.nombre for m in top)
-        posts.append(f"Municipios mas expuestos: {nombres}.")
+        posts.append(f"Municipios más expuestos: {nombres}.")
 
     posts.append(
-        "Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los "
-        "servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: "
+        "Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los "
+        "servicios geológicos ni a las unidades de gestión del riesgo. "
+        "Datos abiertos y metodología: "
         "ver el reporte completo."
     )
 

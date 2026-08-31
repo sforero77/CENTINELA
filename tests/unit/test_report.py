@@ -92,7 +92,7 @@ def test_markdown_con_cifras_en_prosa(reporte: Report) -> None:
     assert "1,2 millones" in md
     assert "Bahia Solano" in md
     assert "PAGER" in md
-    assert "exposicion estimada" in md.lower()
+    assert "exposición estimada" in md.lower()
 
 
 def test_markdown_omite_ground_failure_si_no_hay_producto(reporte: Report) -> None:
@@ -121,7 +121,7 @@ def test_markdown_incluye_changelog(reporte: Report) -> None:
     con_cambios = Report.from_dict(
         {**reporte.to_dict(), "changelog": ["pop MMI≥7: 340 mil → 350 mil"]}
     )
-    assert "Cambios frente a la version anterior" in render_markdown(con_cambios)
+    assert "Cambios frente a la versión anterior" in render_markdown(con_cambios)
 
 
 def test_hilo_respeta_el_limite_de_caracteres(reporte: Report) -> None:
@@ -130,7 +130,7 @@ def test_hilo_respeta_el_limite_de_caracteres(reporte: Report) -> None:
 
 def test_hilo_aclara_que_no_es_dano(reporte: Report) -> None:
     texto = render_thread_text(reporte)
-    assert "No es un reporte de danos" in texto
+    assert "No es un reporte de daños" in texto
     assert "no es alerta temprana" in texto.lower()
 
 

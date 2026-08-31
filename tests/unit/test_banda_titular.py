@@ -10,7 +10,7 @@ El producto entero titulaba con MMI≥7. Para esos ocho eventos eso significaba:
 * una cifra grande que decia **0 personas**,
 * una tabla de "municipios mas expuestos" ordenada por una columna de ceros, o
   sea en orden alfabetico,
-* y una columna rotulada "Poblacion MMI≥7" con quince ceros debajo.
+* y una columna rotulada "Población MMI≥7" con quince ceros debajo.
 
 Tehuantepec 2017 —M8,2, 98 muertos— se publicaba asi. Un cero es cierto y se lee
 como que el sistema fallo, o como que el sismo no fue nada.
@@ -83,8 +83,8 @@ def test_la_tabla_se_rotula_con_la_banda_alcanzada() -> None:
 
     texto = render_markdown(reporte)
 
-    assert "Poblacion MMI≥6" in texto
-    assert "por poblacion en MMI≥6" in texto
+    assert "Población MMI≥6" in texto
+    assert "por población en MMI≥6" in texto
     assert "41 mil" in texto, "la tabla tiene que traer la cifra de la banda, no el cero"
 
 
@@ -97,7 +97,7 @@ def test_un_evento_que_si_llega_a_siete_no_cambia() -> None:
 
     texto = render_markdown(reporte)
 
-    assert "Poblacion MMI≥7" in texto
+    assert "Población MMI≥7" in texto
     assert "500 mil" in texto
 
 

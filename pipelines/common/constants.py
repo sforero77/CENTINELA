@@ -82,10 +82,10 @@ PROSE_SIGNIFICANT_DIGITS: Final[int] = 2
 
 #: Disclaimers fijos, obligatorios en todo artefacto (§1.2).
 DISCLAIMERS: Final[tuple[str, ...]] = (
-    "Exposicion estimada, no dano observado.",
-    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
-    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
-    "Fuentes, vintages y versiones consumidas: ver manifest enlazado.",
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado.",
 )
 
 # --- Cobertura por fase (O2) ----------------------------------------------
