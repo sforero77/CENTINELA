@@ -2014,3 +2014,194 @@ def test_sin_viento_publicado_el_bloque_queda_vacio_y_no_en_cero(pagina: Any) ->
            }"""
     )
     assert not vacio["tieneCero"], "se pinto un cero donde falta el dato"
+
+
+# --- El tablero se cruza con los filtros ------------------------------------
+
+
+@pytest.mark.visor
+def test_sin_filtros_el_tablero_da_lo_mismo_que_el_pipeline(pagina: Any) -> None:
+    """LA PRUEBA QUE SOSTIENE TODO LO DEMAS.
+
+    Las cifras de la tarjeta se calculaban antes copiando el bloque `totales`
+    del JSON. Ahora se suman en el navegador desde las celdas que pasan los
+    filtros, que es lo que permite cruzarlas. El precio es que hay **dos
+    implementaciones de la misma suma** —una en Python y otra en JavaScript— y
+    dos implementaciones divergen en cuanto nadie las compara.
+
+    Sin filtros tienen que dar exactamente lo mismo. Si algun dia no coinciden,
+    una de las dos esta mal y da igual cual.
+
+    **Solo se puede comparar si el fichero trae todas las celdas.** Con un
+    `incendios.json` recortado en origen —los publicados antes del 31-ago-2026
+    traian 4.000 de 13.031— la suma del navegador daria 3.575 donde el pipeline
+    dice 13.031, y no porque ninguna este mal: es que no miran lo mismo. Ese
+    caso lo cubre la prueba siguiente.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    if not pagina.evaluate("() => window.CENTINELA.ficheroCompleto()"):
+        pytest.skip("el incendios.json servido viene recortado; hace falta P5 con el tope nuevo")
+
+    comparacion = pagina.evaluate(
+        """async () => {
+             const pub = (await (await fetch('incendios.json')).json()).totales;
+             const mio = window.CENTINELA.sumaDelVisor();
+             const campos = [
+               'celdas', 'detecciones', 'detecciones_baja', 'celdas_con_poblacion',
+               'pop_en_celdas_con_fuego', 'salud_en_celdas_con_fuego',
+               'edu_en_celdas_con_fuego', 'bld_en_celdas_con_fuego',
+             ];
+             return campos.map((k) => ({ campo: k, pipeline: pub[k], visor: mio[k] }));
+           }"""
+    )
+    for fila in comparacion:
+        # La poblacion sale de redondear una suma de flotantes, y ahi las dos
+        # lenguas no coinciden por convencion: `round` de Python redondea al par
+        # y `Math.round` de JavaScript hacia arriba. Sobre 435.782 personas la
+        # diferencia medida es de UNA, y forzar un redondeo identico entre
+        # lenguajes no arregla nada que importe. Los enteros si tienen que
+        # cuadrar exactos, porque ahi no hay convencion que valga.
+        margen = 1 if fila["campo"] == "pop_en_celdas_con_fuego" else 0
+        assert abs(fila["pipeline"] - fila["visor"]) <= margen, (
+            f"{fila['campo']}: el pipeline dice {fila['pipeline']} y el visor {fila['visor']}"
+        )
+
+
+@pytest.mark.visor
+def test_con_un_fichero_recortado_no_se_encogen_las_cifras(pagina: Any) -> None:
+    """El regreso que este cambio estuvo a punto de introducir.
+
+    Al pasar las cifras a calcularse en el navegador, un `incendios.json`
+    recortado en origen —4.000 celdas de 13.031— las habria hecho caer a la
+    suma de la muestra: 566.535 personas pasaban a ser las de 3.575 celdas, sin
+    que nada fallara ni nadie se enterara. Lo cazo esta prueba antes de subirlo.
+
+    La regla: **sin filtros mandan los totales del pipeline**, que son exactos
+    aunque el fichero llegue recortado. Solo al filtrar se suma en el navegador,
+    y entonces el rotulo dice sobre cuantas celdas se sumo.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    estado = pagina.evaluate(
+        """async () => {
+             const pub = (await (await fetch('incendios.json')).json()).totales;
+             return {
+               completo: window.CENTINELA.ficheroCompleto(),
+               ensenado: window.CENTINELA.totalesDelTablero(),
+               publicado: pub,
+             };
+           }"""
+    )
+    # Con o sin recorte, sin filtros la tarjeta ensena lo que publica el
+    # pipeline. Es la unica cifra que siempre es cierta.
+    assert estado["ensenado"]["celdas"] == estado["publicado"]["celdas"]
+    assert (
+        estado["ensenado"]["pop_en_celdas_con_fuego"]
+        == estado["publicado"]["pop_en_celdas_con_fuego"]
+    )
+
+
+@pytest.mark.visor
+def test_al_filtrar_por_pais_las_cifras_del_tablero_bajan(pagina: Any) -> None:
+    """El fallo que se reporto: "567.000 personas" no se movia al filtrar.
+
+    Elegir Brasil recortaba la lista y el mapa, y la tarjeta seguia diciendo la
+    suma de America Latina entera. El numero y el mapa contaban cosas distintas
+    a la vez.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    opciones = pagina.evaluate(
+        "() => [...document.getElementById('filtro-paises-fuego').options].map((o) => o.value)"
+    )
+    if len(opciones) < 2:
+        pytest.skip("no hay paises que ofrecer en el filtro de fuego")
+
+    antes = pagina.evaluate("() => window.CENTINELA.totalesDelTablero()")
+    pagina.select_option("#filtro-paises-fuego", opciones[1])
+    pagina.wait_for_timeout(1200)
+    despues = pagina.evaluate("() => window.CENTINELA.totalesDelTablero()")
+
+    assert despues["celdas"] < antes["celdas"], "el filtro de pais no recorto las celdas"
+    assert despues["pop_en_celdas_con_fuego"] <= antes["pop_en_celdas_con_fuego"]
+
+    # Y el rotulo tiene que dejar de decir "toda America Latina", que con un
+    # pais elegido pasa de aclaracion a mentira.
+    apunte = pagina.locator("#en-vivo .metrica-viva .apunte").first.inner_text()
+    assert "toda América Latina" not in apunte, f"el rotulo sigue diciendo: {apunte}"
+
+
+@pytest.mark.visor
+def test_la_ventana_temporal_tambien_mueve_las_cifras(pagina: Any) -> None:
+    """Mismo fallo por el otro filtro: 24 h -> 6 h dejaba las cifras quietas."""
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    antes = pagina.evaluate("() => window.CENTINELA.totalesDelTablero().celdas")
+    pagina.select_option("#ventana-focos", "h6")
+    pagina.wait_for_timeout(1200)
+    despues = pagina.evaluate("() => window.CENTINELA.totalesDelTablero().celdas")
+
+    assert despues < antes, "pasar de 24 h a 6 h no recorto ninguna celda"
+
+
+@pytest.mark.visor
+def test_la_extension_del_mapa_ya_filtra_el_fuego(pagina: Any) -> None:
+    """Estaba escondida en modo fuego: mover el mapa no recortaba nada.
+
+    Es el filtro mas natural de un tablero de mapa —lo que veo es de lo que me
+    hablan— y era el unico que faltaba.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1000)
+
+    assert pagina.locator("#etiqueta-en-vista").is_visible(), (
+        "la casilla de extension sigue oculta en modo fuego"
+    )
+
+    antes = pagina.evaluate("() => window.CENTINELA.totalesDelTablero().celdas")
+    pagina.evaluate(
+        """() => {
+             const c = document.getElementById('solo-en-vista');
+             c.checked = true;
+             c.dispatchEvent(new Event('change', { bubbles: true }));
+           }"""
+    )
+    pagina.wait_for_timeout(1500)
+    despues = pagina.evaluate("() => window.CENTINELA.totalesDelTablero().celdas")
+
+    assert despues <= antes
+    apunte = pagina.locator("#en-vivo .metrica-viva .apunte").first.inner_text()
+    assert "encuadre" in apunte, f"el rotulo no dice que se esta recortando: {apunte}"
+
+
+@pytest.mark.visor
+def test_ver_en_el_mapa_dice_algo_aunque_la_vista_no_cambie(pagina: Any) -> None:
+    """El boton volvia siempre al encuadre general.
+
+    Si ya estabas en fuego mirando el panorama —que es cuando lees esa tarjeta—
+    no cambiaba ni un pixel y no anunciaba nada: se leia como roto, y a efectos
+    practicos lo estaba.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    boton = pagina.locator('#en-vivo .metrica-viva[data-capa="incendios"]')
+    if not boton.count():
+        pytest.skip("no hay tarjeta de incendios que pulsar")
+
+    boton.first.click()
+    pagina.wait_for_timeout(1500)
+
+    anuncio = pagina.locator("#anuncio").inner_text()
+    assert "celdas con fuego en el mapa" in anuncio, f"el boton no anuncio nada util: {anuncio!r}"

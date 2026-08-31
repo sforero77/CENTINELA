@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Final
 
@@ -184,6 +185,57 @@ def _reparto_del_suelo(celdas: list[CeldaConFuego]) -> dict[str, Any]:
     return reparto
 
 
+def _en_la_ventana(celdas: list[CeldaConFuego], horas: int) -> list[CeldaConFuego]:
+    """Recorta a la ventana que el fichero DICE cubrir.
+
+    EL FICHERO DECLARABA 24 HORAS Y TRAIA TREINTA Y UNA. FIRMS publica un
+    "active fire 24h" por satelite y por region, y los seis ficheros no cortan a
+    la misma hora: al unirlos, el span real medido el 31-ago-2026 era de **30,9
+    h**. Nadie recortaba despues.
+
+    Consecuencia, medida sobre esa misma corrida: **425 de 4.000 celdas —10,6 %—
+    quedaban fuera de las 24 h declaradas, y con ellas 130.754 personas**. La
+    tarjeta decia "personas en celdas con fuego activo ... en 24 h" contando
+    detecciones de hasta 31 horas antes.
+
+    Y ademas descuadraba el visor contra su propia fuente: el visor si aplica la
+    ventana, asi que el indicador (4.000) y el mapa (3.575) contaban cosas
+    distintas sobre el mismo dato. Cuadrarlos era imposible mientras el fichero
+    publicara mas de lo que declaraba.
+
+    La referencia es **la deteccion mas reciente del propio dato**, no el reloj:
+    es la misma regla que usa `referenciaDelFuego` en el visor. Con el reloj, un
+    fichero de FIRMS de hace cuatro horas dejaria la ventana de 6 h vacia.
+    """
+    sellos = [c.ultima_utc for c in celdas if c.ultima_utc]
+    if not sellos:
+        return celdas
+    referencia = max(sellos)
+    try:
+        corte = (
+            datetime.fromisoformat(referencia.replace("Z", "+00:00")) - timedelta(hours=horas)
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        # Un sello ilegible no puede tirar la corrida entera: se publica sin
+        # recortar, que es lo que se hacia hasta ahora.
+        return celdas
+
+    dentro = [c for c in celdas if not c.ultima_utc or c.ultima_utc >= corte]
+    if len(dentro) < len(celdas):
+        _log.info(
+            "celdas fuera de la ventana declarada",
+            extra={
+                "context": {
+                    "ventana_horas": horas,
+                    "recortadas": len(celdas) - len(dentro),
+                    "de": len(celdas),
+                    "referencia": referencia,
+                }
+            },
+        )
+    return dentro
+
+
 def _prioridad(celdas: list[CeldaConFuego], max_celdas: int) -> list[CeldaConFuego]:
     """Las que se publican: **primero todas las que tienen gente**.
 
@@ -243,6 +295,7 @@ def build_incendios(
     Recortar la lista para que quepa es razonable; recortar la suma nacional
     para que cuadre con la lista seria publicar una cifra falsa por comodidad.
     """
+    celdas = _en_la_ventana(celdas, ventana_horas)
     publicadas = _prioridad(celdas, max_celdas)
     rejilla = _rejilla_de_viento(publicadas, viento)
     return {

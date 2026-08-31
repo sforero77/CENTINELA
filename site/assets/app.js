@@ -1596,6 +1596,20 @@ window.CENTINELA = {
   pintado,
   errores: erroresAlPintar,
   camara,
+  //: Las cifras que el tablero esta ensenando AHORA, ya cruzadas con los
+  //: filtros. Existe para poder compararlas con el bloque `totales` que
+  //: publica el pipeline: son dos implementaciones de la misma suma —una en
+  //: Python y otra aqui— y dos implementaciones divergen en cuanto nadie las
+  //: compara. Sin filtros tienen que dar identico.
+  totalesDelTablero: () => estado.vivo.incendios || {},
+  //: Lo que sale de sumar en el navegador las celdas que pasan los filtros.
+  //: Se expone aparte de `totalesDelTablero` porque no siempre son lo mismo:
+  //: sin filtros el tablero ensena los totales del pipeline, que son exactos
+  //: aunque el fichero venga recortado. Esto es la otra implementacion de la
+  //: misma suma, y existe para poder compararlas.
+  sumaDelVisor: () => totalesDeFuego(celdasDeFuegoFiltradas()),
+  //: Si el `incendios.json` servido trae todas las celdas o una muestra.
+  ficheroCompleto: () => !(estado.vivo && estado.vivo.recortadoEnOrigen),
   //: Puerta para las pruebas de navegador. Ver `abrirFocoDePrueba`.
   abrirFoco: (indice) => abrirFocoDePrueba(indice),
   //: El punto de reticula que le toco al foco abierto, tal cual sale del JSON.
@@ -1712,8 +1726,12 @@ function aplicarAmenaza() {
   verCampo("campo-orden", !fuego);
   verCampo("campo-ventana-fuego", fuego);
   verCampo("campo-orden-fuego", fuego);
+  // La extensión vale para las dos amenazas: aquí decía `hidden = fuego`, que
+  // es lo que la escondía en cuanto se cambiaba de amenaza —aunque el
+  // enganchado la mostrara— y dejaba el fuego sin el filtro más natural de un
+  // tablero de mapa.
   const enVista = $("etiqueta-en-vista");
-  if (enVista && estado.mapa) enVista.hidden = fuego;
+  if (enVista && estado.mapa) enVista.hidden = false;
   const cuentaSismos = $("cuenta-lista");
   if (cuentaSismos) cuentaSismos.hidden = fuego;
   const cuentaFuego = $("cuenta-focos");
@@ -3098,11 +3116,15 @@ async function cargarIncendios() {
   anotarPintado("focos", estado.focos.length);
   pintarControlesFocos();
   pintarListaFocos({ anunciando: false });
-  estado.vivo.incendios = datos.totales || {};
-  estado.vivo.suelo = datos.suelo || {};
   estado.vivo.ventanaFuego = datos.ventana_horas || 24;
   estado.vivo.fuegoUtc = datos.generado_utc || null;
-  pintarEnVivo();
+  // Los centros, una vez: los necesita el filtro por extensión en cada
+  // movimiento del mapa.
+  estado.centrosDeCelda = indexarCentros(celdas);
+  // Y ya no se copia `datos.totales`: las cifras se calculan desde las celdas
+  // que pasan los filtros. Sin filtros dan lo mismo —hay prueba de ello— y con
+  // filtros dan lo que el usuario está mirando, que es lo que faltaba.
+  refrescarTablero();
 }
 
 //: Un incendio no es una celda: es el grupo de celdas contiguas que arden.
@@ -3635,9 +3657,10 @@ function verCampo(id, visible) {
 //: que limpiar es ademas la senal de que un filtro esta actuando — que es justo
 //: lo que se pierde de vista cuando los controles viven lejos del mapa.
 function hayFiltros() {
+  if (estado.soloEnVista) return true;
   return estado.amenaza === "fuego"
     ? Boolean(estado.paisFuego) || estado.ventanaFuego !== "h24"
-    : Boolean(estado.paisFiltrado) || estado.ventana !== "todo" || estado.soloEnVista;
+    : Boolean(estado.paisFiltrado) || estado.ventana !== "todo";
 }
 
 //: Devuelve los desplegables a lo que dice el estado.
@@ -3653,6 +3676,11 @@ function hayFiltros() {
 function filtroCambio() {
   if (estado.amenaza === "fuego") pintarListaFocos();
   else refrescarLista();
+  // EL TABLERO TAMBIÉN. Es el punto por el que pasa cualquier cambio de filtro,
+  // y hasta ahora movía la lista y el mapa dejando las cifras de arriba
+  // quietas: «566.535 personas en celdas con fuego activo» seguía diciendo lo
+  // de toda América Latina con Brasil seleccionado.
+  refrescarTablero();
   encuadrarLoFiltrado();
 }
 
@@ -3675,20 +3703,24 @@ function pintarLimpiar() {
       if (estado.amenaza === "fuego") {
         estado.paisFuego = "";
         estado.ventanaFuego = "h24";
-        pintarListaFocos();
       } else {
         estado.paisFiltrado = "";
         estado.ventana = "todo";
-        estado.soloEnVista = false;
-        const casilla = $("solo-en-vista");
-        if (casilla) casilla.checked = false;
-        refrescarLista();
       }
+      // La extensión se limpia en las dos amenazas: la casilla es una sola y
+      // ahora filtra las dos. Dejarla marcada al "quitar filtros" era dejar un
+      // filtro puesto con el botón diciendo que no queda ninguno.
+      estado.soloEnVista = false;
+      const casilla = $("solo-en-vista");
+      if (casilla) casilla.checked = false;
+      // Por `filtroCambio` y no repintando a mano: es el punto que mueve lista,
+      // mapa Y tablero a la vez. Duplicarlo aquí es como se quedó el tablero
+      // fuera del resto durante todo este tiempo.
+      filtroCambio();
       // Los desplegables se repintan: limpiar el estado y dejar el control
       // enseñando "Colombia" es la misma divergencia que este visor persigue
       // entre lo que un control dice y lo que el sistema hace.
       sincronizarFiltros();
-      encuadrarLoFiltrado();
       anunciar("Filtros quitados.");
     });
   }
@@ -3741,18 +3773,31 @@ function pintarControlesLista() {
   const etiqueta = $("etiqueta-en-vista");
   const interruptor = $("solo-en-vista");
   if (!etiqueta || !interruptor || !estado.mapa) return;
-  if (estado.amenaza !== "fuego") etiqueta.hidden = false;
+  // LA EXTENSION VALE PARA LAS DOS AMENAZAS.
+  //
+  // Estaba escondida en modo fuego, asi que mover el mapa no recortaba nada:
+  // los focos y las cifras seguian siendo los de todo el continente mientras se
+  // miraba una provincia. Es el filtro mas natural de un tablero de mapa —lo
+  // que veo es de lo que me hablan— y era el unico que faltaba.
+  etiqueta.hidden = false;
   if (!interruptor.dataset.enganchado) {
     interruptor.dataset.enganchado = "1";
     interruptor.addEventListener("change", () => {
       estado.soloEnVista = interruptor.checked;
-      refrescarLista();
+      filtroCambio();
+      pintarLimpiar();
     });
-    // Mientras el recorte esta puesto, mover el mapa mueve la lista. `moveend` y
-    // no `move`: reordenar veintiun nodos en cada fotograma de un desplazamiento
-    // es trabajo tirado, y el usuario solo lee la lista cuando suelta.
+    // Mientras el recorte esta puesto, mover el mapa mueve la lista Y las
+    // cifras. `moveend` y no `move`: rehacer las sumas en cada fotograma de un
+    // desplazamiento es trabajo tirado, y solo se leen al soltar.
     estado.mapa.on("moveend", () => {
-      if (estado.soloEnVista) refrescarLista({ anunciando: false });
+      if (!estado.soloEnVista) return;
+      if (estado.amenaza === "fuego") {
+        pintarListaFocos({ anunciando: false });
+        refrescarTablero();
+      } else {
+        refrescarLista({ anunciando: false });
+      }
     });
   }
 }
@@ -4404,6 +4449,190 @@ function pintarLeyendaFuego(datos) {
 // Las cifras de aqui son las unicas del visor que cambian entre una visita y la
 // siguiente. Por eso van arriba y por eso llevan la hora de la ultima revision:
 // sin ella, "14.984 celdas con fuego" podria ser de hace un mes.
+// --- El tablero se cruza con los filtros ------------------------------------
+//
+// Hasta ahora las cifras de la tarjeta «ahora mismo» —personas, sedes de salud,
+// sedes educativas, sobre qué arde— salían tal cual del bloque `totales` del
+// JSON: sumas que calcula el pipeline sobre TODAS las celdas. No se recalculaban
+// nunca. Elegir Brasil recortaba la lista y el mapa, y las cifras de arriba
+// seguían diciendo las de América Latina entera.
+//
+// Es peor que un despiste: el número y el mapa contaban cosas distintas a la
+// vez, que es la misma clase de contradicción que el selector de amenaza existe
+// para evitar.
+//
+// AHORA SE PUEDE HACER BIEN PORQUE SE PUBLICAN TODAS LAS CELDAS. Mientras el
+// fichero traía 4.000 de 13.031, recalcular en el cliente habría dado «las
+// cifras de la parte que cupo» — un error más discreto y por eso peor. Con el
+// dato completo, filtrar y sumar da exactamente lo mismo que sumaría el
+// pipeline.
+
+//: Las celdas que pasan los filtros de ahora mismo. **Una sola definición**,
+//: de la que dependen las cifras, la lista y el encuadre.
+//:
+//: Tener dos sitios que deciden qué entra es como se acaba con la lista
+//: filtrada y el indicador sin filtrar, que es justo lo que había.
+function celdasDeFuegoFiltradas() {
+  const datos = estado.fuegoDatos;
+  const todas = (datos && datos.celdas) || [];
+  if (!todas.length) return [];
+
+  const horas = (VENTANAS_FUEGO[estado.ventanaFuego] || VENTANAS_FUEGO.h24).horas;
+  const corte = new Date(referenciaDelFuego() - horas * 3600000).toISOString();
+  const iso = estado.paisFuego;
+  const caja = estado.soloEnVista ? encuadreActual() : null;
+
+  return todas.filter((c) => {
+    if (iso && c.iso3 !== iso) return false;
+    // Se compara como cadena ISO, igual que el filtro del mapa: son sellos
+    // UTC, que ordenan igual como texto que como instante. Comparar aquí de
+    // una forma y allí de otra es como divergen.
+    if (c.ultima_utc && c.ultima_utc < corte) return false;
+    if (caja) {
+      const centro = estado.centrosDeCelda && estado.centrosDeCelda.get(c.h3);
+      if (!centro) return false;
+      const [lat, lon] = centro;
+      if (lat < caja.sur || lat > caja.norte || lon < caja.oeste || lon > caja.este) return false;
+    }
+    return true;
+  });
+}
+
+//: La caja que se ve en el mapa, o `null` si no hay mapa todavía.
+function encuadreActual() {
+  const m = estado.mapa;
+  if (!m || !m.getBounds) return null;
+  try {
+    const b = m.getBounds();
+    return { sur: b.getSouth(), norte: b.getNorth(), oeste: b.getWest(), este: b.getEast() };
+  } catch (error) {
+    return null;
+  }
+}
+
+//: Los centros de las celdas, calculados **una vez** al cargar.
+//:
+//: El filtro por extensión los necesita en cada movimiento del mapa. Llamar a
+//: `h3.cellToLatLng` trece mil veces por cada arrastre convertiría el filtro en
+//: un tirón; una vez al cargar no se nota.
+function indexarCentros(celdas) {
+  const centros = new Map();
+  if (typeof h3 === "undefined") return centros;
+  for (const c of celdas) {
+    try {
+      centros.set(c.h3, h3.cellToLatLng(c.h3));
+    } catch (error) {
+      // Una celda con identificador ilegible no puede tumbar el indexado de las
+      // otras doce mil; simplemente no se podrá filtrar por extensión.
+    }
+  }
+  return centros;
+}
+
+//: Recalcula las cifras del tablero desde una lista de celdas.
+//:
+//: Reproduce lo que hace `build_incendios` en el pipeline, y hay una prueba de
+//: que sin filtros da EXACTAMENTE lo mismo que el bloque `totales` publicado.
+//: Sin esa prueba, dos implementaciones de la misma suma divergen sin avisar.
+function totalesDeFuego(celdas) {
+  const suma = (campo) => celdas.reduce((t, c) => t + (Number(c[campo]) || 0), 0);
+
+  // Solo las celdas con cobertura conocida entran en el reparto del suelo: las
+  // demás no son «cero por ciento arbolado», son «sin medir».
+  const clases = ["arbolado", "pastizal", "cultivo", "humedal"];
+  const conSuelo = celdas.filter((c) => clases.some((k) => Number(c[`${k}_pct`]) > 0));
+  const energia = conSuelo.reduce((t, c) => t + (Number(c.frp_suma) || 0), 0);
+  const suelo = {};
+  if (energia > 0) {
+    for (const clase of clases) {
+      const pct =
+        conSuelo.reduce(
+          (t, c) => t + ((Number(c[`${clase}_pct`]) || 0) / 100) * (Number(c.frp_suma) || 0),
+          0
+        ) / energia;
+      suelo[clase] = Math.round(pct * 1000) / 10;
+    }
+  }
+  suelo.celdas_medidas = conSuelo.length;
+  suelo.celdas_sin_medir = celdas.length - conSuelo.length;
+
+  return {
+    celdas: celdas.length,
+    detecciones: suma("detecciones"),
+    detecciones_baja: suma("detecciones_baja"),
+    celdas_con_poblacion: celdas.filter((c) => Number(c.pop) > 0).length,
+    pop_en_celdas_con_fuego: Math.round(suma("pop")),
+    salud_en_celdas_con_fuego: suma("salud"),
+    edu_en_celdas_con_fuego: suma("edu"),
+    bld_en_celdas_con_fuego: suma("bld"),
+    frp_total_mw: Math.round(suma("frp_suma") * 10) / 10,
+    suelo,
+  };
+}
+
+//: De qué habla la cifra, en palabras.
+//:
+//: Antes era la constante «En toda América Latina», que era cierta porque nada
+//: se filtraba. Ahora que las cifras se cruzan, un rótulo fijo sería peor que
+//: no tenerlo: diría «toda América Latina» debajo del número de Brasil.
+function alcanceDelFuego() {
+  const partes = [];
+  partes.push(estado.paisFuego ? `En ${nombrePais(estado.paisFuego)}` : "En toda América Latina");
+  if (estado.soloEnVista) partes.push("dentro del encuadre");
+  // Cuántas quedaron fuera del filtro. Decir «1.240 celdas» sin decir de
+  // cuántas convierte un recorte en un total.
+  const todas = estado.vivo && estado.vivo.celdasTotales;
+  const vistas = estado.vivo && estado.vivo.incendios && estado.vivo.incendios.celdas;
+  if (todas && vistas && vistas < todas) partes.push(`de ${numero(todas)} en total`);
+  // Y si el fichero llegó recortado en origen, lo filtrado se calculó sobre una
+  // muestra. Callarlo daría una cifra que parece exacta y no lo es.
+  if (estado.vivo && estado.vivo.recortadoEnOrigen && !partes.includes("de")) {
+    const publicadas = (estado.fuegoDatos && estado.fuegoDatos.celdas.length) || 0;
+    if (estado.paisFuego || estado.soloEnVista || estado.ventanaFuego !== "h24") {
+      partes.push(`sobre las ${numero(publicadas)} celdas publicadas`);
+    }
+  }
+  return partes.join(", ");
+}
+
+//: Vuelve a calcular lo que enseña la tarjeta y lo repinta.
+//:
+//: Es el punto único al que llama cualquier cosa que cambie un filtro: el
+//: desplegable de país, el de ventana, la casilla de la extensión y el propio
+//: mapa al moverse.
+function refrescarTablero() {
+  const datos = estado.fuegoDatos;
+  if (!datos) return;
+
+  const publicadas = (datos.celdas || []).length;
+  const totalReal = Number(datos.totales && datos.totales.celdas) || publicadas;
+  // ¿El fichero trae todas las celdas o una muestra? Desde el 31-ago-2026 las
+  // trae todas, pero un `incendios.json` publicado antes de ese cambio sigue
+  // sirviéndose hasta que P5 vuelva a correr, y el visor tiene que ser correcto
+  // con los dos.
+  estado.vivo.recortadoEnOrigen = publicadas < totalReal;
+  estado.vivo.celdasTotales = totalReal;
+
+  // SIN FILTROS SE USAN LOS TOTALES DEL PIPELINE, Y NO ES REDUNDANCIA.
+  //
+  // Son exactos SIEMPRE, incluso si el fichero viene recortado. Sumar en el
+  // cliente sobre una muestra de 4.000 de 13.031 daría 3.575 donde el pipeline
+  // dice 13.031: las cifras se encogerían sin que nada fallara, que es
+  // exactamente la clase de error que este cambio venía a quitar. Medido.
+  const sinFiltros =
+    !estado.paisFuego && estado.ventanaFuego === "h24" && !estado.soloEnVista;
+
+  if (sinFiltros && datos.totales) {
+    estado.vivo.incendios = datos.totales;
+    estado.vivo.suelo = datos.suelo || {};
+  } else {
+    const t = totalesDeFuego(celdasDeFuegoFiltradas());
+    estado.vivo.incendios = t;
+    estado.vivo.suelo = t.suelo;
+  }
+  pintarEnVivo();
+}
+
 function pintarEnVivo() {
   const caja = $("en-vivo");
   const v = estado.vivo;
@@ -4440,13 +4669,16 @@ function pintarEnVivo() {
         `<span class="cabeza">${iconoSvg("personas")}` +
         `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span></span>` +
         `<span class="etiqueta">personas en celdas con fuego activo</span>` +
-        // EL ALCANCE, QUE NO SE DECIA EN NINGUNA PARTE.
+        // EL ALCANCE, QUE AHORA ADEMAS CAMBIA.
         //
         // "586.000 personas en celdas con fuego activo" no dice de donde: se
         // podia leer como un incendio, como un pais o como la region entera.
-        // Es la suma de TODA America Latina en 24 h, y sin decirlo la cifra no
-        // significa nada. Un foco concreto se mira pulsandolo en el mapa.
-        `<span class="apunte">En toda América Latina · ` +
+        // Sin decirlo, la cifra no significa nada.
+        //
+        // Y desde que las cifras se cruzan con los filtros, el rotulo fijo
+        // "En toda America Latina" pasaria de ser una aclaracion a ser una
+        // mentira en cuanto alguien eligiera Brasil. Lo dice `alcanceDelFuego`.
+        `<span class="apunte">${alcanceDelFuego()} · ` +
         `${numero(v.incendios.celdas)} celdas · ` +
         `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego}&nbsp;h` +
         `${selloDeRevision(v.fuegoUtc)}</span>` +
@@ -4543,13 +4775,36 @@ function pintarEnVivo() {
 function encenderCapaViva(capa) {
   if (capa === "incendios") {
     cambiarAmenaza("fuego");
-    // La cifra habla de toda America Latina, asi que el encuadre es ese. Si se
-    // estaba mirando un foco concreto, se cierra: la cifra de la tarjeta no es
-    // la suya.
+    // Si se estaba mirando un foco concreto, se cierra: la cifra de la tarjeta
+    // no es la suya.
     cerrarFoco();
-    volverAlEncuadre(estado.mapa, VUELO);
-    anotarCamara("panorama:fuego");
-    anunciar("Focos activos en el mapa, en toda América Latina.");
+
+    // EL BOTON NO HACIA NADA, Y ESTE ES EL PORQUE.
+    //
+    // Volvia siempre al encuadre general. Si ya estabas en fuego mirando el
+    // panorama —que es exactamente cuando lees esta tarjeta— no cambiaba ni un
+    // pixel y no decia nada. Un boton que promete "Ver en el mapa" y deja la
+    // pantalla igual se lee como roto, y lo estaba a efectos practicos.
+    //
+    // Ahora lleva a LO QUE LA CIFRA CUENTA: si hay un pais elegido, a ese pais;
+    // si no, al panorama. Y si la vista ya es la que toca, lo dice en vez de
+    // fingir que hizo algo.
+    const filtradas = celdasDeFuegoFiltradas();
+    const centros = filtradas
+      .map((c) => estado.centrosDeCelda && estado.centrosDeCelda.get(c.h3))
+      .filter(Boolean)
+      .map(([lat, lon]) => [lon, lat]);
+
+    const movido = estado.paisFuego && centros.length ? encuadrarPuntos(centros) : false;
+    if (!movido) {
+      volverAlEncuadre(estado.mapa, VUELO);
+      anotarCamara("panorama:fuego");
+    } else {
+      anotarCamara("filtrado:fuego");
+    }
+    anunciar(
+      `${numero(filtradas.length)} celdas con fuego en el mapa. ${alcanceDelFuego()}.`
+    );
   } else {
     cambiarAmenaza("sismos");
     const casilla = document.querySelector(`#interruptor-${capa} input`);
