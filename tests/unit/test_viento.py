@@ -420,3 +420,59 @@ def test_no_hay_llave_en_la_url() -> None:
 
     for sospechoso in ("key", "token", "api", "secret", "auth"):
         assert sospechoso not in url, f"aparece '{sospechoso}' en la URL de GFS"
+
+
+def test_un_404_del_ciclo_mas_reciente_no_revienta_la_lectura() -> None:
+    """EL FALLO QUE TUMBO P5 EN PRODUCCION el 31-ago-2026 a las 19:40.
+
+    El `except` enumeraba `(OSError, ValueError)`, que es lo que uno supone que
+    lanza una descarga. La capa HTTP de este proyecto lanza
+    `RecursoAusenteError`, que hereda de `RuntimeError` y no de ninguna de las
+    dos. El ciclo 18z aun no estaba publicado —el caso EXACTO que este bucle
+    existe para sortear— y el 404 subio hasta la CLI: 14.233 celdas con fuego
+    leidas de FIRMS y ni una publicada, por no poder leer el viento.
+    """
+    from pipelines.common.http import RecursoAusenteError
+
+    class _Fetcher404:
+        def __init__(self) -> None:
+            self.pedidos: list[str] = []
+
+        def get_bytes(self, url: str) -> bytes:
+            self.pedidos.append(url)
+            if "%2F18%2F" in url:
+                raise RecursoAusenteError(f"{url} no existe (HTTP 404)")
+            return _corrida()
+
+        def get_json(self, url: str) -> dict[str, object]:
+            raise AssertionError("el viento viene en GRIB2")
+
+    fetcher = _Fetcher404()
+    lectura = descargar(fetcher, ahora=datetime(2026, 8, 31, 20, 0, tzinfo=UTC))
+
+    assert not lectura.ciego, "un 404 del ciclo mas nuevo dejo la lectura ciega"
+    assert lectura.ciclo == "20260831/12z", "no se probo el ciclo anterior"
+    assert lectura.fallidos == ["20260831/18z"]
+
+
+def test_ningun_fallo_leyendo_el_viento_puede_salir_de_aqui() -> None:
+    """El viento es contexto util, no el dato: perderlo degrada, no invalida.
+
+    Se prueba con una excepcion que no hereda de nada esperable, porque la
+    leccion del 31-ago fue justamente que enumerar tipos deja huecos.
+    """
+
+    class _Raro(BaseException):
+        pass
+
+    class _FetcherRaro:
+        def get_bytes(self, url: str) -> bytes:
+            raise RuntimeError("algo que a nadie se le ocurrio enumerar")
+
+        def get_json(self, url: str) -> dict[str, object]:
+            raise AssertionError("el viento viene en GRIB2")
+
+    lectura = descargar(_FetcherRaro(), ahora=datetime(2026, 8, 31, 20, 0, tzinfo=UTC))
+
+    assert lectura.ciego, "sin viento la lectura es ciega"
+    assert len(lectura.fallidos) == MAX_CICLOS, "no se probaron todos los ciclos"
