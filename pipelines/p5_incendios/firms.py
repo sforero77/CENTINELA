@@ -72,6 +72,19 @@ class Foco:
     frp: float
     adquirido_utc: str
     satelite: str
+    #: Temperatura de brillo del canal I-4 (3,55-3,93 um), en kelvin.
+    #:
+    #: FIRMS la publica en cada fila y este pipeline la tiraba: se leian ocho de
+    #: las trece columnas del CSV y `bright_ti4` no era una de ellas. Es el otro
+    #: numero que da el producto —la potencia radiativa dice cuanta energia, esta
+    #: cuanto calienta— y sin ella la unica intensidad publicada era el FRP.
+    #:
+    #: NO ES LA TEMPERATURA DEL FUEGO, y confundirlas es facil. Es la del pixel
+    #: entero de 375 m, que mezcla la llama con el terreno frio de alrededor: un
+    #: fuego de 900 K ocupando una centesima del pixel se lee como ~350 K.
+    #: Publicarla como "temperatura del incendio" seria una cifra creible y
+    #: falsa, que es lo que este sistema evita por encima de todo.
+    brillo_k: float
     #: ``D`` o ``N``. Las detecciones nocturnas tienen menos falso positivo por
     #: reflejo solar, que es justo el modo de error de la confianza baja.
     dia_noche: str
@@ -117,6 +130,7 @@ def parse_csv(texto: str) -> list[Foco]:
                     frp=float(fila.get("frp") or 0.0),
                     adquirido_utc=_instante(fila["acq_date"], fila["acq_time"]),
                     satelite=str(fila.get("satellite", "")).strip(),
+                    brillo_k=float(fila.get("bright_ti4") or 0.0),
                     dia_noche=str(fila.get("daynight", "")).strip().upper(),
                 )
             )
