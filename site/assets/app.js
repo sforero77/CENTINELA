@@ -1623,6 +1623,10 @@ window.CENTINELA = {
   //: publica el pipeline: son dos implementaciones de la misma suma —una en
   //: Python y otra aqui— y dos implementaciones divergen en cuanto nadie las
   //: compara. Sin filtros tienen que dar identico.
+  //: El area que el visor da por buena para una celda de fuego. La prueba de
+  //: navegador comprueba el cableado contra ESTA cifra; que la cifra sea la
+  //: correcta lo comprueba la suite unitaria contra `h3`, que es donde vive.
+  areaDeUnaCeldaDeFuego: () => AREA_CELDA_FUEGO_KM2,
   totalesDelTablero: () => estado.vivo.incendios || {},
   //: Lo que sale de sumar en el navegador las celdas que pasan los filtros.
   //: Se expone aparte de `totalesDelTablero` porque no siempre son lo mismo:

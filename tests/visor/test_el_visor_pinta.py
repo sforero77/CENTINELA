@@ -1272,11 +1272,16 @@ def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
     y la prueba estaban de acuerdo en un numero equivocado y el error sobrevivio
     meses. Encontrado el 31-ago-2026 revisando los textos del visor.
 
-    Por eso ahora el area esperada sale de `h3`, no de una constante escrita a
-    mano: una prueba que repite la suposicion del codigo no vigila nada.
-    """
-    import h3
+    Aqui se comprueba el CABLEADO: que el area del panel sea la que sale de
+    multiplicar sus propias celdas por su propia constante. Que **esa constante**
+    valga lo que mide una celda r8 de verdad lo comprueba
+    `test_una_celda_de_fuego_mide_lo_que_dice_el_visor`, en la suite unitaria,
+    que es donde vive `h3`: este trabajo de CI instala solo el extra `visor`.
 
+    Repartido asi a proposito, y aprendido fallando: la primera version importaba
+    `h3` aqui para recalcular lo mismo, y reventó en el PR #34 con
+    `ModuleNotFoundError`. Una prueba que no corre en CI no vigila nada.
+    """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     _esperar_capa(pagina, "incendios")
     _esperar_capa(pagina, "focos")
@@ -1288,15 +1293,18 @@ def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
     _esperar_capa(pagina, "foco-perimetro")
 
     texto = pagina.locator("#fuego-area").inner_text().lower()
-    por_celda = h3.average_hexagon_area(8, unit="km^2")
+    por_celda = pagina.evaluate("() => window.CENTINELA.areaDeUnaCeldaDeFuego()")
     esperado = foco["celdas"] * por_celda
-    # Se comprueba el orden de magnitud, no el redondeo exacto: el panel pone un
-    # decimal por debajo de 10 km² y ninguno por encima. Un error de resolucion
-    # —el que hubo— desvia por SIETE, asi que un margen del 15 % lo caza igual y
-    # no se rompe con el formato.
-    assert abs(foco["areaKm2"] - esperado) / esperado < 0.15, (
-        f"el foco dice {foco['areaKm2']} km² y {foco['celdas']} celdas r8 son "
-        f"{esperado:.1f}: ¿se volvio a usar el area de r7?"
+
+    assert abs(foco["areaKm2"] - esperado) < 0.01, (
+        f"el foco dice {foco['areaKm2']} km² y {foco['celdas']} celdas por "
+        f"{por_celda} son {esperado:.2f}"
+    )
+    # Y que el panel ensene esa cifra y no otra. El formato lleva un decimal por
+    # debajo de 10 km² y ninguno por encima.
+    en_pantalla = f"{esperado:.1f}" if esperado < 10 else str(round(esperado))
+    assert en_pantalla.replace(".", ",") in texto or en_pantalla in texto, (
+        f"el panel deberia decir {en_pantalla} km²: {texto!r}"
     )
     assert "km²" in texto and texto.strip(), f"el panel no dice el area: {texto!r}"
 
