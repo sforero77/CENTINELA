@@ -1,7 +1,9 @@
-# Siete formas de romper este sistema sin que nada se ponga rojo
+# Ocho formas de romper este sistema sin que nada se ponga rojo
 
 Escrito el 27-ago-2026, tras tres dias de auditoria y unos cuarenta fallos
-encontrados. `AUDITORIA.md` los lista uno a uno; esto los agrupa por **causa**,
+encontrados. La octava se anadio el 31-ago, y se anadio mal: se encontro
+validando produccion en vez de antes del PR, que es justo lo que este documento
+existe para evitar. `AUDITORIA.md` los lista uno a uno; esto los agrupa por **causa**,
 que es lo que sirve para reconocer el siguiente antes de que muerda.
 
 El hilo comun: **casi ninguno falla ruidosamente.** Producen resultados
@@ -211,7 +213,41 @@ escribiste.
 
 ---
 
-## Lo que estas siete comparten
+## 8 · La fuente entera se cayo y la corrida salio en verde
+
+P5 lee seis ficheros de FIRMS. Un fichero caido no puede tumbar los otros cinco
+—perder una region entera es peor que publicar con cinco sextos del dato— asi
+que el fallo se anota en el log y se sigue. Correcto.
+
+El 30-ago-2026 fallaron **los seis**:
+
+    {"detecciones": 0, "utiles": 0, "ficheros_fallidos": [los seis]}
+
+Cero detecciones, cero celdas, y el workflow **verde**. La capa publicada se
+salvo porque el pipeline ya se niega a publicar ceros —la familia 6 hizo su
+trabajo— pero nadie se entero de que ese dia no se miro. Si FIRMS se cayera una
+semana, el visor serviria fuego de hace siete dias con el sello «revisado hace 5
+min» que este mismo repositorio anade para que eso no pase.
+
+**Y estaba en tres sitios.** La auditoria posterior lo encontro tambien en
+`frescura` —el vigilante que existe porque el visor estuvo diecisiete horas
+congelado en verde, apuntandose un verde cuando no podia leer la pagina— y en el
+repaso de versiones, escrito ese mismo dia para arreglar otro fallo de esta
+misma familia.
+
+**La regla.** Tolerar fallos parciales exige contar el denominador. Dos fallidos
+de seis es un roce; dos de dos es no haber mirado, y eso no es «sin cambios».
+Todo bucle que lee N fuentes y tolera que alguna falle necesita responder
+**¿fallaron todas?** — y si la respuesta es si, salir en rojo.
+
+**El corolario, que es el que costo.** Los tres sitios tenian su fallo parcial
+bien pensado y documentado. La ceguera total no aparecio en ninguna revision
+porque **nadie escribe la prueba del caso que cree imposible**. Si un bucle
+tolera fallos, la prueba de «fallan todos» va con la de «falla uno».
+
+---
+
+## Lo que estas ocho comparten
 
 Ninguna se detecta leyendo el codigo de la pieza. Todas se detectan preguntando
 una de estas cuatro cosas:
@@ -220,6 +256,7 @@ una de estas cuatro cosas:
 2. **¿Que pasa si el dato de fuera cambia de forma?** (familias 3 y 5)
 3. **¿Que pasa cuando el pais es seis veces mas grande?** (familia 4)
 4. **¿Esto se puede leer como algo que no es?** (familias 2, 6 y 7)
+5. **¿Y si falla todo a la vez, no solo una parte?** (familia 8)
 
 Y la regla que las cubre todas, que es del dueno del proyecto: **el sistema tiene
 que demostrar que funciona por si mismo, no porque alguien lo note y pregunte.**
