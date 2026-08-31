@@ -1747,3 +1747,130 @@ def test_quitar_filtros_aparece_solo_cuando_hay_algo_que_quitar(pagina: Any) -> 
     assert pagina.locator("#ventana-lista").input_value() == "todo", (
         "el control se quedó enseñando el filtro que acaba de quitarse"
     )
+
+
+def test_los_sismos_menores_obedecen_al_filtro_de_pais(pagina: Any) -> None:
+    """Con «Colombia» puesto el mapa dejaba un epicentro y seguían los diez
+    menores repartidos por el continente.
+
+    El primer arreglo fue apagar la capa entera al elegir país, con la excusa de
+    que «de estos no se sabe de qué país son». Era falso: el país estaba en el
+    dato, al final del topónimo que publica USGS. Apagar una capa porque no
+    supimos leer lo que ya teníamos es peor que no filtrarla.
+    """
+    _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#campo-pais:not([hidden])", timeout=ESPERA_MS)
+
+    casilla = pagina.locator("#interruptor-observados input")
+    casilla.check()
+    pagina.wait_for_timeout(1200)
+
+    sin_filtro = pagina.evaluate("() => window.CENTINELA.filtroDeCapa('observados')")
+    assert sin_filtro in (None, ["all"]), f"sin país elegido no debería filtrar: {sin_filtro}"
+
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Chile"))
+    pagina.wait_for_timeout(1500)
+
+    con_filtro = pagina.evaluate(
+        "() => JSON.stringify(window.CENTINELA.filtroDeCapa('observados'))"
+    )
+    assert con_filtro and "iso3" in con_filtro, (
+        f"la capa de menores no filtra por país: {con_filtro}"
+    )
+    assert "__ninguno__" not in con_filtro, (
+        "la capa se apaga entera en vez de filtrarse: el país está en el dato"
+    )
+
+
+def test_el_filtro_de_pais_del_fuego_llega_a_las_tres_capas(pagina: Any) -> None:
+    """Lo mismo que se le exige a los sismos, y por el mismo motivo.
+
+    El fuego se dibuja en tres capas —relleno, punto y borde— y filtrar solo una
+    dejaría el contorno de celdas que ya no están, o puntos sin su hexágono.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    # Esperar a la condición y no al reloj: las capas nacen cuando llegan sus
+    # datos, que es después de la primera pasada de filtros.
+    pagina.wait_for_function(
+        "() => window.CENTINELA.filtroDeCapa('incendios-borde') != null",
+        timeout=ESPERA_MS,
+    )
+
+    expresiones = pagina.evaluate(
+        """() => ['incendios', 'incendios-punto', 'incendios-borde']
+                   .map(c => JSON.stringify(window.CENTINELA.filtroDeCapa(c)))"""
+    )
+    assert len(set(expresiones)) == 1, (
+        f"las tres capas del fuego no llevan el mismo filtro: {expresiones}"
+    )
+    assert "ultima_utc" in (expresiones[0] or ""), (
+        f"el filtro del fuego no acota por hora de detección: {expresiones[0]}"
+    )
+
+
+def test_la_ventana_del_fuego_mueve_el_filtro_del_mapa(pagina: Any) -> None:
+    """Que la lista y el mapa cuenten desde el mismo sitio.
+
+    Si contaran desde referencias distintas, uno enseñaría focos que el otro dice
+    que no existen — y la ventana se mide desde la detección más reciente del
+    fichero, no desde el reloj.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_timeout(1000)
+
+    def corte() -> str:
+        crudo: str = pagina.evaluate(
+            "() => JSON.stringify(window.CENTINELA.filtroDeCapa('incendios'))"
+        )
+        return crudo
+
+    de_24 = corte()
+    pagina.select_option("#ventana-focos", "h6")
+    pagina.wait_for_timeout(1500)
+    de_6 = corte()
+
+    assert de_24 != de_6, "cambiar la ventana no movió el filtro del mapa"
+
+    # Y la lista no se queda vacía: la ventana se cuenta desde el dato, no desde
+    # el reloj. Con un fichero de once horas, «6 h» desde ahora sería siempre
+    # cero — que es exactamente el fallo que esto arregla.
+    assert pagina.locator("#lista-focos li").count() > 0, (
+        "«6 h» dejó la lista vacía: la ventana volvió a contarse desde el reloj"
+    )
+
+
+def test_el_filtro_del_fuego_por_pais_se_construye_bien(pagina: Any) -> None:
+    """El desplegable de país sólo aparece cuando el dato trae `iso3`.
+
+    Hasta que P5 corra con la columna nueva no hay países que ofrecer, y un
+    control que no filtra nada es ruido con aspecto de control. Lo que sí se
+    puede comprobar hoy es que, en cuanto los haya, la expresión sale bien.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_timeout(1000)
+
+    expresion = pagina.evaluate(
+        """() => {
+          const antes = window.CENTINELA.filtroDeCapa('incendios');
+          return JSON.stringify(antes);
+        }"""
+    )
+    campo = pagina.locator("#campo-pais-fuego")
+    hay_paises = pagina.evaluate(
+        "() => document.getElementById('filtro-paises-fuego').options.length > 1"
+    )
+
+    if not hay_paises:
+        assert campo.is_hidden(), "el desplegable de país aparece sin países que ofrecer"
+        assert "iso3" not in (expresion or ""), "filtra por un país que el dato no trae"
+        return
+
+    valor = pagina.evaluate("() => document.getElementById('filtro-paises-fuego').options[1].value")
+    pagina.select_option("#filtro-paises-fuego", valor)
+    pagina.wait_for_timeout(1500)
+
+    despues = pagina.evaluate("() => JSON.stringify(window.CENTINELA.filtroDeCapa('incendios'))")
+    assert valor in despues, f"la capa de fuego no filtra por {valor}: {despues}"
