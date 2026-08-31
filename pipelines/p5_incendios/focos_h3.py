@@ -33,6 +33,9 @@ class CeldaConFuego:
     detecciones_baja: int
     frp_max: float
     frp_suma: float
+    #: Temperatura de brillo mas alta vista en la celda, en kelvin. Es la del
+    #: pixel de 375 m, no la de la llama. Ver `Foco.brillo_k`.
+    brillo_max_k: float
     primera_utc: str
     ultima_utc: str
     #: Pais de la celda, del activo. Cadena vacia si cae fuera de los activos
@@ -63,6 +66,10 @@ SELECT h3_latlng_to_cell(lat, lon, {resolucion})              AS h3_08,
        count(*) FILTER (WHERE confianza =  'low')             AS detecciones_baja,
        max(frp)                                               AS frp_max,
        round(sum(frp), 1)                                     AS frp_suma,
+       -- El MAXIMO y no la media: promediar el pixel mas caliente con los
+       -- tibios de al lado da un numero que no describe nada. Lo que interesa
+       -- de una celda es lo mas caliente que se vio en ella.
+       round(max(brillo_k), 1)                                AS brillo_max_k,
        min(adquirido_utc)                                     AS primera_utc,
        max(adquirido_utc)                                     AS ultima_utc
 FROM focos_arrow
@@ -112,6 +119,7 @@ def registrar_focos(con: Any, focos: list[Foco], *, resolucion: int = H3_RES_COM
                 "confianza": pa.array([f.confianza for f in focos], pa.string()),
                 "frp": pa.array([f.frp for f in focos], pa.float64()),
                 "adquirido_utc": pa.array([f.adquirido_utc for f in focos], pa.string()),
+                "brillo_k": pa.array([f.brillo_k for f in focos], pa.float64()),
             }
         ),
     )
@@ -153,18 +161,19 @@ def cruzar_con_exposicion(con: Any) -> list[CeldaConFuego]:
             detecciones_baja=int(f[2]),
             frp_max=round(float(f[3]), 1),
             frp_suma=round(float(f[4]), 1),
-            primera_utc=str(f[5]),
-            ultima_utc=str(f[6]),
-            iso3=str(f[7] or ""),
-            pop=round(float(f[8]), 1),
-            bld=int(f[9]),
-            salud=int(f[10]),
-            edu=int(f[11]),
-            vias_km=round(float(f[12]), 1),
-            arbolado_pct=float(f[13]),
-            pastizal_pct=float(f[14]),
-            cultivo_pct=float(f[15]),
-            humedal_pct=float(f[16]),
+            brillo_max_k=round(float(f[5] or 0.0), 1),
+            primera_utc=str(f[6]),
+            ultima_utc=str(f[7]),
+            iso3=str(f[8] or ""),
+            pop=round(float(f[9]), 1),
+            bld=int(f[10]),
+            salud=int(f[11]),
+            edu=int(f[12]),
+            vias_km=round(float(f[13]), 1),
+            arbolado_pct=float(f[14]),
+            pastizal_pct=float(f[15]),
+            cultivo_pct=float(f[16]),
+            humedal_pct=float(f[17]),
         )
         for f in filas
     ]
