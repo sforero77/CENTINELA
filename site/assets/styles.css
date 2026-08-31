@@ -217,6 +217,26 @@ a:hover { color: var(--verde-vivo); }
 
 /* Endoso de la comunidad: el mismo bloqueo que usa su sitio — el globo y
    "GeoAI" en bosque con "LATAM" en verde cursiva. */
+
+/* EL GLOBO ES LA MARCA DE VERDAD, NO UN EMOJI.
+
+   Aqui hubo un F30E durante toda la vida del visor, y un emoji lo dibuja
+   cada sistema a su manera: en Windows sale azul, en Android verde plano, en
+   algun Linux no sale. El sello de GeoAI LATAM tiene una sola forma —globo
+   marino con America en verde— y es el que sirve su sitio. Va como PNG de 180
+   con las esquinas transparentes, asi que el circulo cae limpio sobre la arena
+   y sirve tambien de icono de pantalla de inicio.
+
+   No sustituye al favicon: ese sigue siendo el hexagono, que es de CENTINELA.
+   Este identifica a quien lo hace; aquel, a la cosa. */
+.globo {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+}
+
+.pie-marca .globo { width: 1.1rem; height: 1.1rem; }
 .endoso {
   display: flex;
   align-items: center;
@@ -230,7 +250,6 @@ a:hover { color: var(--verde-vivo); }
   white-space: nowrap;
 }
 
-.endoso .globo { font-size: 1rem; line-height: 1; }
 .endoso em { font-style: italic; color: var(--verde); font-weight: 600; }
 .endoso:hover em { color: var(--verde-vivo); }
 

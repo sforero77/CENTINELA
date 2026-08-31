@@ -1874,3 +1874,38 @@ def test_el_filtro_del_fuego_por_pais_se_construye_bien(pagina: Any) -> None:
 
     despues = pagina.evaluate("() => JSON.stringify(window.CENTINELA.filtroDeCapa('incendios'))")
     assert valor in despues, f"la capa de fuego no filtra por {valor}: {despues}"
+
+
+# --- La marca de quien lo hace ----------------------------------------------
+
+
+@pytest.mark.visor
+def test_el_sello_de_geoai_latam_carga_de_verdad(pagina: Any) -> None:
+    """Una ruta rota aqui no se ve: el `alt` esta vacio a proposito.
+
+    El globo es decorativo —el nombre "GeoAI LATAM" va al lado en texto—, asi
+    que lleva `alt=""` para que un lector de pantalla no lo lea dos veces. El
+    precio de esa decision es que si el PNG desaparece o cambia de sitio no
+    aparece ningun icono roto ni ningun texto: queda un hueco de veinte pixeles
+    y la cabecera se ve perfectamente normal. Es el mismo fallo mudo que el cero
+    silencioso de los pipelines, en version tipografica.
+
+    Durante toda la vida del visor aqui hubo un emoji, que cada sistema dibuja a
+    su manera —azul en Windows, verde plano en Android, ausente en algun Linux—.
+    Se comprueba tambien que no haya vuelto.
+    """
+    globos = pagina.locator("img.globo")
+    assert globos.count() >= 1, "no queda ningun sello de GeoAI LATAM en la pagina"
+
+    cargados = pagina.evaluate(
+        """() => [...document.querySelectorAll('img.globo')].map((g) => ({
+             ok: g.complete && g.naturalWidth > 0,
+             src: g.getAttribute('src'),
+             ancho: Math.round(g.getBoundingClientRect().width),
+           }))"""
+    )
+    for globo in cargados:
+        assert globo["ok"], f"el sello no carga: {globo['src']}"
+        assert globo["ancho"] >= 12, f"el sello se pinta a {globo['ancho']}px, invisible"
+
+    assert "🌎" not in pagina.content(), "volvio el emoji en vez del sello de la marca"
