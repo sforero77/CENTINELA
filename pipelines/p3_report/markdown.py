@@ -23,15 +23,15 @@ _ENCABEZADO_PRELIMINAR = (
 #: guardan el pasado. Un lector que no lo sepa leeria "444.281 edificaciones
 #: expuestas" como si hubieran existido entonces.
 _ENCABEZADO_BACKTEST = (
-    "> **Reconstruccion retrospectiva.** Este reporte se calculo despues del "
-    "evento, no en respuesta a el, y no cuenta para las metricas de latencia "
+    "> **Reconstrucción retrospectiva.** Este reporte se calculó después del "
+    "evento, no en respuesta a él, y no cuenta para las métricas de latencia "
     "del sistema.\n"
     ">\n"
-    "> La **poblacion** corresponde a la epoca indicada en el manifest de "
-    "exposicion. Las **edificaciones, vias, sedes de salud y educativas son las "
+    "> La **población** corresponde a la época indicada en el manifiesto de "
+    "exposición. Las **edificaciones, vías, sedes de salud y educativas son las "
     "actuales**: OpenStreetMap y Overture publican el estado presente, no el "
-    'historico. Leelas como "que infraestructura de hoy caeria en esa zona de '
-    'intensidad", no como lo que habia entonces.'
+    'histórico. Léelas como "qué infraestructura de hoy caería en esa zona de '
+    'intensidad", no como lo que había entonces.'
 )
 
 
@@ -41,7 +41,7 @@ def render_markdown(report: Report) -> str:
     tot = report.totales
     partes: list[str] = []
 
-    partes.append(f"# Exposicion sismica — M{ev.mag} {ev.lugar}")
+    partes.append(f"# Exposición sísmica — M{ev.mag} {ev.lugar}")
     partes.append(
         f"**Evento USGS:** `{ev.usgs_id}` · **Origen:** {ev.utc} UTC · "
         f"**Profundidad:** {format_number_es(ev.depth_km, 1)} km"
@@ -57,22 +57,22 @@ def render_markdown(report: Report) -> str:
         # cero, y una tabla de ceros con el titulo "Exposicion estimada" es una
         # respuesta falsa y creible: el unico error que este sistema no puede
         # permitirse. Mejor una cifra mas pobre y verdadera.
-        partes.append("## Poblacion por distancia al epicentro")
+        partes.append("## Población por distancia al epicentro")
         partes.append(_tabla_radios(report))
     else:
-        partes.append("## Exposicion estimada")
+        partes.append("## Exposición estimada")
         partes.append(_tabla_totales(report))
 
     if tot.pop_65p_mmi7p and not report.preliminar:
         partes.append(
-            f"De la poblacion en intensidad MMI≥7, alrededor de "
+            f"De la población en intensidad MMI≥7, alrededor de "
             f"**{format_count_prose(tot.pop_65p_mmi7p)}** personas tienen 65 años o más."
         )
 
     if report.top_municipios:
         partes.append(
-            f"## Municipios mas expuestos (top {TOP_ADM2_COUNT}), "
-            f"por poblacion en MMI≥{report.totales.banda_titular or 6}"
+            f"## Municipios más expuestos (top {TOP_ADM2_COUNT}), "
+            f"por población en MMI≥{report.totales.banda_titular or 6}"
         )
         partes.append(_tabla_municipios(report))
 
@@ -89,7 +89,7 @@ def render_markdown(report: Report) -> str:
 
     if report.changelog:
         partes.append(
-            "## Cambios frente a la version anterior\n\n"
+            "## Cambios frente a la versión anterior\n\n"
             + "\n".join(f"- {linea}" for linea in report.changelog)
         )
 
@@ -104,14 +104,14 @@ def _tabla_radios(report: Report) -> str:
     """Poblacion dentro de cada radio, con su advertencia (RF-03)."""
     if not report.radios:
         return (
-            "No se pudo calcular el corte por radios: no hay activo de exposicion "
-            "para el pais del epicentro."
+            "No se pudo calcular el corte por radios: no hay activo de exposición "
+            "para el país del epicentro."
         )
-    lineas = ["| Radio desde el epicentro | Poblacion |", "|---|---:|"]
+    lineas = ["| Radio desde el epicentro | Población |", "|---|---:|"]
     for r in sorted(report.radios, key=lambda x: x.radio_km):
         lineas.append(f"| {r.radio_km} km | {format_count_prose(r.pop)} |")
     return "\n".join(lineas) + (
-        "\n\nLos radios **no son bandas de intensidad**. Aqui no hay modelo de "
+        "\n\nLos radios **no son bandas de intensidad**. Aquí no hay modelo de "
         "sacudida, solo distancia: un sismo superficial y uno profundo de la misma "
         "magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve "
         "para dimensionar, no para priorizar."
@@ -121,9 +121,9 @@ def _tabla_radios(report: Report) -> str:
 def _tabla_totales(report: Report) -> str:
     tot = report.totales
     filas = [
-        ("Poblacion en MMI≥6", format_count_prose(tot.pop_mmi6p)),
-        ("Poblacion en MMI≥7", format_count_prose(tot.pop_mmi7p)),
-        ("Poblacion en MMI≥8", format_count_prose(tot.pop_mmi8p)),
+        ("Población en MMI≥6", format_count_prose(tot.pop_mmi6p)),
+        ("Población en MMI≥7", format_count_prose(tot.pop_mmi7p)),
+        ("Población en MMI≥8", format_count_prose(tot.pop_mmi8p)),
         ("Edificaciones en MMI≥7", format_count_prose(tot.bld_mmi7p)),
         ("Sedes de salud en MMI≥7", format_number_es(tot.health_mmi7p)),
         ("Sedes educativas en MMI≥7", format_number_es(tot.edu_mmi7p)),
@@ -136,11 +136,11 @@ def _tabla_totales(report: Report) -> str:
         local = max(tot.road_km_mmi7p - tot.road_km_principal_mmi7p, 0.0)
         filas.append(
             (
-                "Vias primarias y secundarias en MMI≥7",
+                "Vías primarias y secundarias en MMI≥7",
                 format_count_prose(tot.road_km_principal_mmi7p) + " km",
             )
         )
-        filas.append(("Vias locales en MMI≥7", format_count_prose(local) + " km"))
+        filas.append(("Vías locales en MMI≥7", format_count_prose(local) + " km"))
     else:
         filas.append(("Kilometros de via en MMI≥7", format_count_prose(tot.road_km_mmi7p) + " km"))
     if tot.built_m2_mmi7p > 0:
@@ -165,10 +165,16 @@ UMBRAL_HUECO_MAPEO = 1.5
 def _nota_superficie(report: Report) -> str:
     """Advierte cuando el satelite ve mucho mas construido de lo mapeado.
 
+
+
     Es la unica forma que tiene el reporte de decir "esta cifra se queda corta"
+
     sin callarse ni inventar. El hueco de OSM se concentra en asentamientos
-    informales y zona rural dispersa, o sea en la poblacion mas expuesta: darlo
+
+    informales y zona rural dispersa, o sea en la población más expuesta: darlo
+
     por bueno seria publicar una cobertura que no existe (§6.4).
+
     """
     tot = report.totales
     if tot.built_m2_mmi7p <= 0 or tot.bld_mmi7p <= 0:
@@ -178,33 +184,47 @@ def _nota_superficie(report: Report) -> str:
         return ""
     veces = tot.built_m2_mmi7p / esperado
     return (
-        f"\n\nEl satelite detecta **{format_number_es(veces, 1)} veces** mas superficie "
-        f"construida de la que explicarian las {format_count_prose(tot.bld_mmi7p)} "
+        f"\n\nEl satélite detecta **{format_number_es(veces, 1)} veces** más superficie "
+        f"construida de la que explicarían las {format_count_prose(tot.bld_mmi7p)} "
         f"edificaciones registradas. La diferencia suele ser asentamiento informal o "
         f"zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto "
-        f"ahi, y la superficie construida no**."
+        f"ahí, y la superficie construida no**."
     )
 
 
 def _tabla_municipios(report: Report) -> str:
     """Ranking municipal, rotulado con la banda que este evento alcanzo.
 
+
+
     Dos cosas que la tabla daba por supuestas y no son ciertas fuera de
+
     Colombia:
 
-    **La banda.** La columna decia siempre "Poblacion MMI≥7", y casi la mitad
-    de los sismos reales de LATAM no llegan ahi sobre poblacion: para ellos eran
+
+
+    **La banda.** La columna decia siempre "Población MMI≥7", y casi la mitad
+
+    de los sismos reales de LATAM no llegan ahi sobre población: para ellos eran
+
     quince ceros bajo un rotulo que prometia cifras. Tehuantepec 2017, M8,2, se
+
     publicaba asi.
 
+
+
     **El codigo.** Decia "DIVIPOLA", que es el codigo municipal **de
+
     Colombia**. En el reporte de Tehuantepec rotulaba `MX20043` como DIVIPOLA.
-    El sistema cubre diecinueve paises y cada uno nombra el suyo: se rotula por
-    lo que es —un codigo de municipio— y el pais lo pone el manifest.
+
+    El sistema cubre diecinueve países y cada uno nombra el suyo: se rotula por
+
+    lo que es —un codigo de municipio— y el país lo pone el manifest.
+
     """
     banda = report.totales.banda_titular or 6
     lineas = [
-        f"| # | Municipio | Codigo | MMI max | Poblacion MMI≥{banda} |",
+        f"| # | Municipio | Código | MMI max | Población MMI≥{banda} |",
         "|---:|---|---|---:|---:|",
     ]
     for i, m in enumerate(report.top_municipios[:TOP_ADM2_COUNT], start=1):
@@ -222,19 +242,19 @@ def _seccion_ground_failure(report: Report) -> str:
     """Seccion de falla de terreno; se omite con nota si no hay producto (G3)."""
     if report.inputs.groundfailure_version == 0:
         return (
-            "## Deslizamiento y licuefaccion\n\n"
+            "## Deslizamiento y licuefacción\n\n"
             "USGS no ha publicado el producto *Ground Failure* para este evento. "
             "La seccion se omite; el reporte se re-emite automaticamente si aparece."
         )
     tot = report.totales
     return (
-        "## Deslizamiento y licuefaccion\n\n"
-        f"- Poblacion en celdas con probabilidad **alta de deslizamiento**: "
+        "## Deslizamiento y licuefacción\n\n"
+        f"- Población en celdas con probabilidad **alta de deslizamiento**: "
         f"{format_count_prose(tot.pop_ls_alta)}\n"
-        f"- Poblacion en celdas con probabilidad **alta de licuefaccion**: "
+        f"- Población en celdas con probabilidad **alta de licuefacción**: "
         f"{format_count_prose(tot.pop_lq_alta)}\n\n"
         "Fuente: producto *Ground Failure* de USGS "
-        f"(v{report.inputs.groundfailure_version}), dominio publico."
+        f"(v{report.inputs.groundfailure_version}), dominio público."
     )
 
 
@@ -243,7 +263,7 @@ def _seccion_incertidumbre(report: Report) -> str:
     lineas = [
         "## Incertidumbre y calidad",
         "",
-        f"Discrepancia entre GHS-POP y WorldPop en el area afectada: "
+        f"Discrepancia entre GHS-POP y WorldPop en el área afectada: "
         f"**{format_number_es(inc.pop_discrepancia_pct, 1)} %**.",
     ]
     if inc.notas:
@@ -270,6 +290,6 @@ def _seccion_procedencia(report: Report) -> str:
         "## Procedencia\n\n"
         f"- ShakeMap consumido: **v{report.inputs.shakemap_version}**\n"
         f"- Ground Failure consumido: **v{report.inputs.groundfailure_version}**\n"
-        f"- Manifest de exposicion: `{report.inputs.exposure_manifest}`\n"
+        f"- Manifiesto de exposición: `{report.inputs.exposure_manifest}`\n"
         f"- Pipeline: `{report.pipeline_version}` · Generado: {report.generado_utc}"
     )

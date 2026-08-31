@@ -18,20 +18,20 @@ from pipelines.p3_report.model import Report
 
 
 def test_un_reporte_en_vivo_no_lleva_aviso(reporte: Report) -> None:
-    assert "Reconstruccion retrospectiva" not in render_markdown(reporte)
+    assert "Reconstrucción retrospectiva" not in render_markdown(reporte)
 
 
 def test_un_historico_lo_declara_arriba(reporte: Report) -> None:
     """El aviso va antes de las cifras, no en las advertencias del final."""
     md = render_markdown(replace(reporte, backtest=True))
-    assert "Reconstruccion retrospectiva" in md
-    assert md.index("Reconstruccion retrospectiva") < md.index("## Exposicion estimada")
+    assert "Reconstrucción retrospectiva" in md
+    assert md.index("Reconstrucción retrospectiva") < md.index("## Exposición estimada")
 
 
 def test_el_aviso_distingue_poblacion_de_infraestructura(reporte: Report) -> None:
     """Es el matiz entero: sin el, el aviso no dice nada util."""
     md = render_markdown(replace(reporte, backtest=True))
-    assert "poblacion" in md.lower()
+    assert "población" in md.lower()
     assert "actuales" in md
     assert "no guardan el pasado" in md or "estado presente" in md
 

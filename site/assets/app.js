@@ -2483,7 +2483,7 @@ function pintarResumenCobertura(datos, eventos) {
   $("cobertura-resumen").innerHTML =
     `<div class="metrica"><span class="valor">${resumen.paises_construidos}</span>` +
     `<span class="etiqueta">países con activo publicado</span>` +
-    `<span class="apunte">de ${resumen.paises_con_manifest} con manifiesto escrito</span></div>` +
+    `<span class="apunte">de ${resumen.paises_con_manifest} con fuentes fijadas</span></div>` +
     `<div class="metrica"><span class="valor">${comoTexto(resumen.poblacion_en_la_malla)}</span>` +
     `<span class="etiqueta">personas en la malla hexagonal</span>` +
     `<span class="apunte">precalculadas, antes de que ocurra nada</span></div>` +
@@ -3606,7 +3606,7 @@ function pintarEnVivo() {
     partes.push(
       `<button type="button" class="metrica metrica-viva" data-capa="observados" data-amenaza="sismos">` +
         `<span class="valor">${numero(v.observados)}</span>` +
-        `<span class="etiqueta">sismos vistos y no despachados</span>` +
+        `<span class="etiqueta">sismos vistos, sin reporte</span>` +
         `<span class="apunte">por debajo de M5,5 · ${v.ventanaSismos}&nbsp;días` +
         `${selloDeRevision(v.sismosUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
@@ -3623,7 +3623,7 @@ function pintarEnVivo() {
     `<p class="eyebrow eyebrow-vivo"><span class="pulso" aria-hidden="true"></span>Ahora mismo</p>` +
     `<div class="metricas">${partes.join("")}</div>` +
     `<p class="pie-vivo">Cada cifra lleva cuándo se revisó. La cadencia real ` +
-    `—la que consigue el cron, no la que pide— está en <a href="status.html">Estado</a>.</p>`;
+    `—medida, no la prometida— está en <a href="status.html">Estado</a>.</p>`;
   caja.hidden = false;
 
   for (const boton of caja.querySelectorAll(".metrica-viva")) {

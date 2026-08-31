@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CENTINELA — estado del sistema</title>
-  <meta name="description" content="Latencia medida, eventos publicados y latidos del disparador de CENTINELA. La transparencia sobre la demora es parte del producto." />
+  <meta name="description" content="Latencia medida, eventos publicados y revisiones del vigía de CENTINELA. La transparencia sobre la demora es parte del producto." />
   <meta name="color-scheme" content="light" />
 
   <!-- La pagina de estado no tenia Open Graph en absoluto, y es justo la que se
        comparte cuando alguien pregunta "¿esto sigue vivo?". -->
   <meta property="og:title" content="CENTINELA — estado del sistema" />
-  <meta property="og:description" content="Latencia medida, eventos publicados y latidos del disparador. La transparencia sobre la demora es parte del producto." />
+  <meta property="og:description" content="Latencia medida, eventos publicados y revisiones del vigía. La transparencia sobre la demora es parte del producto." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://sforero77.github.io/CENTINELA/status.html" />
   <meta property="og:locale" content="es_LA" />
@@ -64,10 +64,10 @@
     </div>
     <p class="nota">
       Medido desde que el primer ShakeMap del evento está disponible hasta que
-      el reporte v1 queda publicado. El cron de GitHub Actions es
-      <em>best-effort</em>: sus demoras documentadas van de 5 a 30 minutos y no
-      las controlamos. El objetivo se define sobre lo que sí controlamos, y la
-      demora real del cron se publica aparte para que se pueda auditar la
+      el reporte v1 queda publicado. GitHub Actions concede sus turnos
+      <em>según disponibilidad</em>: las demoras documentadas van de 5 a 30 minutos y no
+      dependen de nosotros. El objetivo se define sobre lo que sí controlamos, y la
+      demora real se publica aparte para que se pueda auditar la
       diferencia.
     </p>
 
@@ -83,10 +83,10 @@
     </table></div>
     <p class="nota" id="nota-eventos" hidden></p>
 
-    <h2>Últimos latidos del disparador</h2>
+    <h2>Últimas revisiones del vigía</h2>
     <p class="nota">
-      El cron de GitHub Actions se desactiva solo tras 60 días sin actividad en
-      el repositorio. Que dejen de aparecer latidos aquí es la señal de que eso
+      GitHub desactiva las tareas programadas tras 60 días sin actividad en
+      el repositorio. Que dejen de aparecer revisiones aquí es la señal de que eso
       pasó — el modo de falla más probable de todo el sistema.
     </p>
     <p class="cargando" id="estado-latidos">Cargando…</p>

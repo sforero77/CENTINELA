@@ -5,7 +5,7 @@ evaluacion eran matplotlib+contextily, un render headless de MapLibre, y
 matplotlib a secas. Gana la tercera, por razones que no son de calidad grafica:
 
 * **Sin dependencia de red en el camino critico.** Un basemap es una descarga
-  de teselas mas durante el minuto en que hay que publicar. Si el proveedor
+  de teselas más durante el minuto en que hay que publicar. Si el proveedor
   esta lento, el reporte llega tarde por una razon puramente decorativa.
 * **Sin problema de atribucion.** Cada proveedor de teselas trae su licencia y
   su exigencia de credito. Poner un fondo cuya licencia no controlamos dentro
@@ -22,7 +22,7 @@ Dos variantes obligatorias:
 * ``general`` — contexto amplio, contornos MMI, municipios etiquetados.
 * ``prensa`` — recorte cerrado, tipografia grande, pensado para captura.
 
-Restriccion dura: el PNG mas el markdown deben sumar menos de 500 KB (RNF-05).
+Restriccion dura: el PNG más el markdown deben sumar menos de 500 KB (RNF-05).
 """
 
 from __future__ import annotations
@@ -63,10 +63,10 @@ SPECS: dict[MapVariant, MapSpec] = {
 
 #: Atribucion obligatoria al pie de todo mapa (§2.4 regla 2).
 ATTRIBUTION_LINE = (
-    "Intensidad: USGS ShakeMap (dominio publico) · "
-    "Poblacion: GHS-POP, JRC/Comision Europea · "
-    "Edificaciones y vias: Overture Maps, © OpenStreetMap contributors (ODbL) · "
-    "CENTINELA — exposicion estimada, no dano"
+    "Intensidad: USGS ShakeMap (dominio público) · "
+    "Población: GHS-POP, JRC/Comisión Europea · "
+    "Edificaciones y vías: Overture Maps, © OpenStreetMap contributors (ODbL) · "
+    "CENTINELA — exposición estimada, no daño"
 )
 
 
@@ -209,8 +209,8 @@ def render_map(
         color="#1c1b1a",
     )
     ax.set_xlabel(
-        f"Poblacion en MMI≥7 por municipio · ShakeMap v{report.inputs.shakemap_version}"
-        " · exposicion estimada, no dano",
+        f"Población en MMI≥7 por municipio · ShakeMap v{report.inputs.shakemap_version}"
+        " · exposición estimada, no daño",
         fontsize=8,
         color="#55524e",
     )
@@ -340,8 +340,8 @@ def _etiquetables(
     """Los municipios mas expuestos, descartando los que se pisarian.
 
     Etiquetar los quince del ranking produce una mancha ilegible justo en la
-    zona mas afectada, que es donde el lector mira. Se recorren de mayor a
-    menor poblacion y se salta el que caiga demasiado cerca de otro ya puesto.
+    zona más afectada, que es donde el lector mira. Se recorren de mayor a
+    menor población y se salta el que caiga demasiado cerca de otro ya puesto.
     """
     elegidos: list[tuple[float, float, float, float, str]] = []
     for punto in sorted(puntos, key=lambda p: p[3], reverse=True):

@@ -54,9 +54,9 @@ def test_no_publica_cifras_por_intensidad(estado: EventState, sin_productos: Pro
     md = render_markdown(reporte)
     # El encabezado de seccion, no la palabra: un disclaimer dice "Exposicion
     # estimada, no dano observado" y ese si debe seguir ahi.
-    assert "## Exposicion estimada" not in md
+    assert "## Exposición estimada" not in md
     assert "MMI≥7" not in md
-    assert "Poblacion por distancia al epicentro" in md
+    assert "Población por distancia al epicentro" in md
 
 
 def test_publica_cada_radio(estado: EventState, sin_productos: ProductSet) -> None:

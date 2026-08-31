@@ -335,7 +335,7 @@ def test_las_pestanas_de_capa_se_pueden_pulsar(pagina: Any) -> None:
 
     La pila de leyendas esta anclada abajo y crece hacia arriba. Con la leyenda
     de simbolos y la de potencia radiativa puestas a la vez se salia del mapa,
-    tapaba la banda de "Exposicion no es dano" y dejaba **tres pestañas
+    tapaba la banda de "Exposición no es daño" y dejaba **tres pestañas
     inpulsables** —Intensidad entre ellas, que es la capa por defecto—.
 
     No basta con mirar si las cajas se solapan: hay que preguntar quien recibe

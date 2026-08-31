@@ -42,7 +42,7 @@ def test_el_delta_sale_en_la_prosa_del_ejemplo_de_la_espec(reporte: Report) -> N
     """RF-04 lo escribe asi: "pop MMI≥7: 340k → 355k"."""
     lineas = build_changelog(reporte, _con(reporte, version=8, pop_mmi7p=2_800_000))
 
-    assert "Poblacion en MMI≥7: 2,4 millones → 2,8 millones" in lineas
+    assert "Población en MMI≥7: 2,4 millones → 2,8 millones" in lineas
 
 
 def test_un_cambio_que_no_se_ve_publicado_no_se_anuncia(reporte: Report) -> None:
@@ -55,10 +55,10 @@ def test_un_cambio_que_no_se_ve_publicado_no_se_anuncia(reporte: Report) -> None
     """
     lineas = build_changelog(reporte, _con(reporte, version=8, pop_mmi7p=2_415_802))
 
-    assert not any("Poblacion en MMI≥7" in linea for linea in lineas)
+    assert not any("Población en MMI≥7" in linea for linea in lineas)
     assert lineas == (
         "ShakeMap: v7 → v8",
-        "Ninguna cifra publicada cambia frente a la version anterior.",
+        "Ninguna cifra publicada cambia frente a la versión anterior.",
     )
 
 
@@ -73,7 +73,7 @@ def test_un_shakemap_nuevo_que_no_mueve_nada_lo_dice(reporte: Report) -> None:
 
     assert lineas == (
         "ShakeMap: v7 → v8",
-        "Ninguna cifra publicada cambia frente a la version anterior.",
+        "Ninguna cifra publicada cambia frente a la versión anterior.",
     )
 
 
@@ -89,7 +89,7 @@ def test_se_listan_todas_las_cifras_que_cambiaron(reporte: Report) -> None:
 
     lineas = build_changelog(reporte, nuevo)
 
-    assert any("Poblacion en MMI≥7" in linea for linea in lineas)
+    assert any("Población en MMI≥7" in linea for linea in lineas)
     assert any("Edificaciones en MMI≥7" in linea for linea in lineas)
 
 
@@ -100,7 +100,7 @@ def test_el_changelog_llega_al_markdown(reporte: Report) -> None:
     nuevo = _con(reporte, version=8, pop_mmi7p=2_800_000)
     texto = render_markdown(replace(nuevo, changelog=build_changelog(reporte, nuevo)))
 
-    assert "## Cambios frente a la version anterior" in texto
+    assert "## Cambios frente a la versión anterior" in texto
     assert "2,4 millones → 2,8 millones" in texto
 
 

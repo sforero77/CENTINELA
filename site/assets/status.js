@@ -82,7 +82,7 @@ function pintarResumen(datos) {
       (medido.backtests_excluidos
         ? `<p class="nota">${plural(medido.backtests_excluidos,
             "reconstrucción retrospectiva queda", "reconstrucciones retrospectivas quedan")}
-           fuera de la estadística: un backtest se publica días después del sismo
+           fuera de la estadística: una reconstrucción se publica días después del sismo
            y su latencia no mide nada del sistema.</p>`
         : "") +
       // LA RESTA QUE NADIE ESTABA HACIENDO.

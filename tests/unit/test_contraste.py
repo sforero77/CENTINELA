@@ -1,6 +1,6 @@
 """Contraste del activo contra una evaluacion de dano externa (Fase 2).
 
-Exposicion no es dano. Este modulo existe para poder ensenar la diferencia con
+Exposición no es daño. Este modulo existe para poder ensenar la diferencia con
 cifras del mismo evento en vez de explicarla con palabras.
 """
 
