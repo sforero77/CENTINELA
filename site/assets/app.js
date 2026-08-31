@@ -414,6 +414,16 @@ const estado = {
   focoAbierto: null,
   //: Coordenadas de los sismos vistos y no reportados, para encuadrarlos.
   observadosGeo: [],
+  //: Ventana temporal de la lista de reportes.
+  ventana: "todo",
+  //: Y los de la lista de focos, que van por su cuenta: son otra amenaza.
+  ventanaFuego: "h24",
+  ordenFocos: "reciente",
+  paisFuego: "",
+  //: ISO3 -> nombre, del unico sitio que lo publica: la cobertura.
+  nombresPais: null,
+  //: Instante desde el que se cuenta la ventana del fuego. Ver `referenciaDelFuego`.
+  fuegoRef: 0,
   //: Como se ordena la lista y si se recorta al encuadre del mapa. Los dos son
   //: del usuario, no del dato, asi que no van a la URL: un enlace compartido
   //: tiene que abrir el mismo reporte, no la misma manera de mirarlo.
@@ -681,6 +691,9 @@ async function cargarEventos() {
     // La cobertura primero: da los nombres de pais que necesita el filtro, y
     // asi el mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica.
     const nombres = await cargarCobertura(eventos);
+    // El mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica. La
+    // lista de focos lo necesita igual que el filtro de reportes.
+    estado.nombresPais = nombres;
     pintarFiltroPaises(eventos, nombres);
     pintarControlesLista();
     refrescarLista({ anunciando: false });
@@ -1573,6 +1586,17 @@ window.CENTINELA = {
   camara,
   //: Puerta para las pruebas de navegador. Ver `abrirFocoDePrueba`.
   abrirFoco: (indice) => abrirFocoDePrueba(indice),
+  //: El filtro que MapLibre tiene puesto sobre una capa. Es como se comprueba
+  //: que un filtro toca el MAPA y no solo la lista: contar hexagonos en una
+  //: captura no distingue "filtrado" de "la animacion no avanzo".
+  filtroDeCapa: (capa) => {
+    const m = estado.mapa;
+    try {
+      return m && m.getLayer(capa) ? m.getFilter(capa) : null;
+    } catch (error) {
+      return null;
+    }
+  },
 };
 
 // --- El selector de amenaza --------------------------------------------------
@@ -1659,6 +1683,42 @@ function aplicarAmenaza() {
   if (panorama) panorama.hidden = fuego;
   const pistaFuego = $("pista-fuego");
   if (pistaFuego) pistaFuego.hidden = !fuego;
+  // Cada amenaza tiene su indice, y solo uno a la vez: leer "Reportes
+  // publicados" con el mapa lleno de fuego es la misma mezcla que el selector
+  // existe para evitar.
+  // La barra ensena los filtros de la amenaza al mando: dos "País" uno al lado
+  // del otro serian dos amenazas hablando a la vez.
+  verCampo("campo-ventana", !fuego);
+  verCampo("campo-orden", !fuego);
+  verCampo("campo-ventana-fuego", fuego);
+  verCampo("campo-orden-fuego", fuego);
+  const enVista = $("etiqueta-en-vista");
+  if (enVista && estado.mapa) enVista.hidden = fuego;
+  const cuentaSismos = $("cuenta-lista");
+  if (cuentaSismos) cuentaSismos.hidden = fuego;
+  const cuentaFuego = $("cuenta-focos");
+  if (cuentaFuego) cuentaFuego.hidden = !fuego;
+  // El campo de pais de la OTRA amenaza se oculta aqui y siempre. Dejarlo en
+  // manos de su pintor —que solo corre cuando toca— es como acabaron dos "País"
+  // uno al lado del otro, con Colombia y Brasil compitiendo en la misma barra.
+  verCampo("campo-pais", false);
+  verCampo("campo-pais-fuego", false);
+  // Y el de la amenaza al mando se vuelve a preguntar: solo aparece si de
+  // verdad tiene paises que ofrecer, y eso lo decide su pintor.
+  if (fuego) pintarControlesFocos();
+  else if (estado.eventos && estado.nombresPais) {
+    pintarFiltroPaises(estado.eventos, estado.nombresPais);
+  }
+  pintarLimpiar();
+
+  const seccionEventos = $("eventos");
+  const seccionFocos = $("focos");
+  if (seccionEventos) seccionEventos.hidden = fuego;
+  if (seccionFocos) seccionFocos.hidden = !fuego || !estado.focos.length;
+  if (fuego && estado.focos.length) {
+    pintarControlesFocos();
+    pintarListaFocos({ anunciando: false });
+  }
   const enVivo = $("en-vivo");
   if (enVivo) {
     // La tarjeta se queda si le queda alguna cifra que mostrar en este modo.
@@ -2263,6 +2323,12 @@ function dibujarEpicentros(eventos) {
           properties: {
             usgs_id: e.usgs_id,
             pop: bandaTitular(e).pop,
+            // Pais y fecha viajan con el rasgo para que los filtros puedan
+            // tocar el MAPA y no solo la lista. Elegir "Colombia" y seguir
+            // viendo veintiun epicentros repartidos por el continente era el
+            // filtro diciendo una cosa y el mapa otra.
+            iso3: e.iso3 || "",
+            utc: e.utc || "",
             etiqueta: `M${String(e.mag).replace(".", ",")}`,
           },
         })),
@@ -2646,6 +2712,33 @@ async function cargarCobertura(eventos) {
 //: "¿cual afecto a mas gente?"— no tenian respuesta sin leer las veintiuna
 //: tarjetas. Y no son la misma: el M8 de Peru deja 248.000 personas en MMI≥7 y
 //: el M7,4 del Choco deja 2,4 millones.
+//: Desde cuando. El catalogo cubre catorce anos —de 2012 a hoy— y la lista los
+//: daba todos de golpe, asi que la pregunta mas comun ("¿que ha pasado
+//: ultimamente?") obligaba a leerla entera o a fiarse del orden.
+//:
+//: Los cortes no son redondos por gusto: 90 dias es la ventana en la que USGS
+//: sigue revisando un ShakeMap —la misma que usa el repaso de versiones— y doce
+//: meses es el marco en que se piensa "este ano".
+const VENTANAS = {
+  todo: { texto: "Todo", dias: null },
+  ano: { texto: "12 meses", dias: 365 },
+  trimestre: { texto: "90 días", dias: 90 },
+};
+
+//: ¿Cae esta fila dentro de la ventana elegida?
+//:
+//: Sin sello de fecha se deja pasar. Un reporte cuyo `utc` no se pudo leer es un
+//: fallo del dato, no algo que deba desaparecer de la lista sin decir nada.
+function enLaVentana(li) {
+  const dias = (VENTANAS[estado.ventana] || VENTANAS.todo).dias;
+  if (!dias) return true;
+  const utc = li.dataset.utc;
+  if (!utc) return true;
+  const t = Date.parse(utc);
+  if (!Number.isFinite(t)) return true;
+  return Date.now() - t <= dias * 86400000;
+}
+
 const ORDENES = {
   fecha: { texto: "Fecha", clave: (li) => li.dataset.utc || "" },
   mag: { texto: "Magnitud", clave: (li) => Number(li.dataset.mag) || 0 },
@@ -2695,10 +2788,13 @@ function refrescarLista({ anunciando = true } = {}) {
   for (const li of filas) {
     const suyo = !estado.paisFiltrado || li.dataset.iso3 === estado.paisFiltrado;
     const dentro = !estado.soloEnVista || enElEncuadre(li);
-    li.hidden = !(suyo && dentro);
+    li.hidden = !(suyo && dentro && enLaVentana(li));
     if (!li.hidden) visibles += 1;
   }
 
+  for (const boton of document.querySelectorAll("#ventana-lista button")) {
+    boton.setAttribute("aria-pressed", String(boton.dataset.ventana === estado.ventana));
+  }
   for (const boton of document.querySelectorAll("#filtro-paises button")) {
     boton.setAttribute(
       "aria-pressed",
@@ -2721,10 +2817,19 @@ function refrescarLista({ anunciando = true } = {}) {
   const vacio = $("sin-resultados");
   vacio.hidden = visibles > 0;
   if (!visibles) {
+    // El aviso nombra el filtro que dejo la lista vacia, y no uno cualquiera.
+    // Decir "ese pais no tiene reportes" cuando lo que sobra es la ventana
+    // temporal manda a cambiar lo que no era.
+    const ventana = VENTANAS[estado.ventana] || VENTANAS.todo;
     vacio.textContent = estado.soloEnVista
       ? "Ningún reporte cae dentro de lo que el mapa está enseñando. Aleja o mueve el mapa."
-      : "Ese país todavía no tiene reportes publicados.";
+      : ventana.dias
+        ? `Ningún reporte en los últimos ${ventana.texto.toLowerCase()}` +
+          `${estado.paisFiltrado ? " en ese país" : ""}. Prueba con «Todo».`
+        : "Ese país todavía no tiene reportes publicados.";
   }
+  aplicarFiltrosAlMapa();
+  pintarLimpiar();
   if (anunciando) {
     anunciar(`${visibles} ${visibles === 1 ? "reporte" : "reportes"} en la lista.`);
   }
@@ -2741,64 +2846,7 @@ function aplicarFiltro(iso3) {
 //: `getBounds` que consultar, y un control que no puede hacer nada es peor que
 //: la ausencia del control — es la misma regla del interruptor de sismos
 //: menores, que solo se inyecta si hay algo que enseñar.
-function pintarControlesLista() {
-  const caja = $("orden-lista");
-  if (caja && !caja.children.length) {
-    caja.innerHTML = Object.entries(ORDENES)
-      .map(
-        ([clave, o]) =>
-          `<button type="button" data-orden="${clave}" ` +
-          `aria-pressed="${String(clave === estado.orden)}">${o.texto}</button>`
-      )
-      .join("");
-    for (const boton of caja.querySelectorAll("button")) {
-      boton.addEventListener("click", () => {
-        estado.orden = boton.dataset.orden;
-        refrescarLista();
-      });
-    }
-  }
 
-  const etiqueta = $("etiqueta-en-vista");
-  const interruptor = $("solo-en-vista");
-  if (!etiqueta || !interruptor || !estado.mapa) return;
-  etiqueta.hidden = false;
-  interruptor.addEventListener("change", () => {
-    estado.soloEnVista = interruptor.checked;
-    refrescarLista();
-  });
-  // Mientras el recorte esta puesto, mover el mapa mueve la lista. `moveend` y
-  // no `move`: reordenar veintiun nodos en cada fotograma de un desplazamiento
-  // es trabajo tirado, y el usuario solo lee la lista cuando suelta.
-  estado.mapa.on("moveend", () => {
-    if (estado.soloEnVista) refrescarLista({ anunciando: false });
-  });
-}
-
-function pintarFiltroPaises(eventos, nombres) {
-  const caja = $("filtro-paises");
-  if (!caja) return;
-  const cuenta = new Map();
-  for (const e of eventos) {
-    if (e.iso3) cuenta.set(e.iso3, (cuenta.get(e.iso3) || 0) + 1);
-  }
-  // Con un solo pais el filtro no filtra nada: es ruido con aspecto de control.
-  if (cuenta.size < 2) return;
-
-  const orden = [...cuenta.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  const boton = (iso3, texto, n) =>
-    `<button type="button" data-iso3="${escapar(iso3)}" aria-pressed="${iso3 === ""}">` +
-    `${escapar(texto)}<span class="cuenta">${nf.format(n)}</span></button>`;
-
-  caja.innerHTML =
-    boton("", "Todos", eventos.length) +
-    orden.map(([iso3, n]) => boton(iso3, nombres.get(iso3) || iso3, n)).join("");
-  caja.hidden = false;
-
-  for (const b of caja.querySelectorAll("button")) {
-    b.addEventListener("click", () => aplicarFiltro(b.dataset.iso3 || ""));
-  }
-}
 
 estado.mapa = iniciarMapa();
 pintarSelectorAmenaza();
@@ -2966,12 +3014,26 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
   // Nace obedeciendo al modo: las capas cargan en paralelo y este control puede
   // crearse despues de que el selector de amenaza ya se aplico.
   caja.hidden = estado.amenaza === "fuego";
+
+  // Por que desaparecen al elegir un pais. Sin esta linea, encender la casilla
+  // con un pais puesto no hace nada visible y parece que el control esta roto.
+  const aviso = document.createElement("p");
+  aviso.className = "apunte aviso-observados";
+  aviso.id = "aviso-observados";
+  aviso.hidden = true;
+  aviso.textContent =
+    "No se dibujan con un país elegido: de estos no se sabe de qué país son.";
+  caja.insertAdjacentElement("afterend", aviso);
   anfitrion.appendChild(caja);
 
   caja.querySelector("input").addEventListener("change", (ev) => {
     const m = estado.mapa;
     if (!m || !m.getLayer("observados")) return;
     m.setLayoutProperty("observados", "visibility", ev.target.checked ? "visible" : "none");
+    // Encender la capa no basta: los filtros que ya estan puestos tienen que
+    // alcanzarla. Sin esto, marcar la casilla con "Colombia" elegido devolvia
+    // los diez menores de todo el continente.
+    aplicarFiltrosAlMapa();
   });
 }
 
@@ -3007,7 +3069,10 @@ async function cargarIncendios() {
   // Cuantos focos salieron de las celdas. Va al registro publico por el mismo
   // motivo que las capas: una prueba de navegador no puede afirmar nada sobre
   // el agrupado si tiene que deducirlo de un pantallazo.
+  estado.fuegoRef = 0; // se recalcula con los focos recien cargados
   anotarPintado("focos", estado.focos.length);
+  pintarControlesFocos();
+  pintarListaFocos({ anunciando: false });
   estado.vivo.incendios = datos.totales || {};
   estado.vivo.suelo = datos.suelo || {};
   estado.vivo.ventanaFuego = datos.ventana_horas || 24;
@@ -3070,7 +3135,11 @@ function agruparFocos(celdas) {
     grupos.get(r).push(c);
   }
 
-  return [...grupos.entries()].map(([id, suyas]) => resumirFoco(id, suyas));
+  return [...grupos.entries()].map(([id, suyas]) => {
+    const foco = resumirFoco(id, suyas);
+    foco.iso3 = paisDelFoco(foco);
+    return foco;
+  });
 }
 
 //: Las cifras de un foco. Se suman las de sus celdas, con una excepcion.
@@ -3122,6 +3191,597 @@ function resumirFoco(id, celdas) {
     primeraUtc: primeros[0] || null,
     ultimaUtc: sellos[sellos.length - 1] || null,
   };
+}
+
+// --- La lista de focos ------------------------------------------------------
+//
+// Gemela de la de reportes, del otro lado del selector de amenaza. El fuego
+// tenia mapa y panel de detalle pero ningun indice: para saber cuales son los
+// focos mas recientes, o los de un pais, habia que buscar hexagonos a ojo entre
+// cuatro mil.
+
+//: La ventana del fuego es de horas, no de anos, y no por simetria rota: FIRMS
+//: publica una foto de veinticuatro horas. Pedir "12 meses" aqui no significaria
+//: nada, y ofrecerlo prometeria un archivo que no existe.
+const VENTANAS_FUEGO = {
+  h24: { texto: "24 h", horas: 24 },
+  h12: { texto: "12 h", horas: 12 },
+  h6: { texto: "6 h", horas: 6 },
+};
+
+//: Como se ordenan. "Reciente" primero y por defecto: la pregunta que trae a
+//: alguien a un mapa de fuego es que esta ardiendo AHORA, no que arde mas.
+const ORDENES_FOCOS = {
+  reciente: { texto: "Reciente", clave: (f) => Date.parse(f.ultimaUtc) || 0 },
+  area: { texto: "Área", clave: (f) => f.areaKm2 },
+  personas: { texto: "Personas", clave: (f) => f.pop },
+  energia: { texto: "Energía", clave: (f) => f.frpSuma },
+};
+
+//: Desde cuando se cuenta la ventana del fuego. **No es "ahora".**
+//:
+//: Es el sello de la deteccion mas reciente que hay en el fichero. La ventana
+//: se medía desde `Date.now()`, y con un `incendios.json` de once horas —que es
+//: lo normal: el cron corre cada seis y FIRMS tarda unas tres en publicar—
+//: "ultimas 6 h" salia SIEMPRE vacio. El filtro parecia roto y en realidad
+//: estaba diciendo la verdad sobre una pregunta que nadie hace: nadie quiere
+//: saber que ardio en las ultimas seis horas de reloj, sino en las ultimas seis
+//: horas **de lo que el satelite vio**.
+//:
+//: Se toma el maximo de los sellos y no `generado_utc` porque son cosas
+//: distintas: uno es cuando se publico el fichero y otro cuando paso el
+//: satelite por ultima vez, y entre los dos hay horas.
+function referenciaDelFuego() {
+  if (estado.fuegoRef) return estado.fuegoRef;
+  let max = 0;
+  for (const f of estado.focos) {
+    const t = Date.parse(f.ultimaUtc);
+    if (Number.isFinite(t) && t > max) max = t;
+  }
+  if (!max && estado.vivo && estado.vivo.fuegoUtc) {
+    const t = Date.parse(estado.vivo.fuegoUtc);
+    if (Number.isFinite(t)) max = t;
+  }
+  estado.fuegoRef = max || Date.now();
+  return estado.fuegoRef;
+}
+
+function enLaVentanaFuego(foco) {
+  const horas = (VENTANAS_FUEGO[estado.ventanaFuego] || VENTANAS_FUEGO.h24).horas;
+  const t = Date.parse(foco.ultimaUtc);
+  // Sin sello legible se deja pasar: es un fallo del dato, no algo que deba
+  // desaparecer de la lista sin decir nada.
+  if (!Number.isFinite(t)) return true;
+  return referenciaDelFuego() - t <= horas * 3600000;
+}
+
+//: El pais de un foco es el de sus celdas. Casi siempre uno solo; un incendio
+//: que cruza una frontera existe, pero partir el foco por eso seria inventar
+//: dos incendios donde hay uno. Se toma el pais con mas celdas.
+//:
+//: Un foco sin pais —fuera de los activos cargados— no se descarta: el fuego no
+//: respeta fronteras y esas celdas son informacion. Solo no aparece al filtrar
+//: por un pais concreto, que es lo correcto: no se sabe si es de ese.
+function paisDelFoco(foco) {
+  const cuenta = new Map();
+  for (const c of foco.celdas) {
+    const iso = String(c.iso3 || "").trim();
+    if (iso) cuenta.set(iso, (cuenta.get(iso) || 0) + 1);
+  }
+  let mejor = "";
+  let max = 0;
+  for (const [iso, n] of cuenta) {
+    if (n > max) {
+      mejor = iso;
+      max = n;
+    }
+  }
+  return mejor;
+}
+
+function nombrePais(iso3) {
+  return (estado.nombresPais && estado.nombresPais.get(iso3)) || iso3;
+}
+
+//: Cuantos focos se listan. No son las 2.903 filas que salen del agrupado:
+//: nadie lee tres mil, y construirlas cuesta mas que dibujar el mapa entero.
+//: Se listan los primeros por el orden elegido y la cuenta dice cuantos quedan
+//: fuera, para que el recorte no se lea como "esto es todo lo que hay" — que es
+//: el mismo error que la capa de fuego cometia rotulandose con el total.
+const MAX_FILAS_FOCOS = 60;
+
+function filaFoco(foco) {
+  const li = document.createElement("li");
+  li.dataset.utc = foco.ultimaUtc || "";
+  li.dataset.iso3 = foco.iso3 || "";
+
+  // Las mismas clases que la fila de un reporte: son dos indices gemelos y
+  // verlos distintos sugeriria que se leen distinto.
+  const cabecera = document.createElement("div");
+  cabecera.className = "evento-cabecera";
+  const titulo = document.createElement("span");
+  titulo.className = "evento-mag";
+  titulo.textContent = foco.nCeldas === 1 ? "1 celda" : numero(foco.nCeldas) + " celdas";
+  const area = document.createElement("span");
+  area.className = "enlace-reporte";
+  area.textContent = numero(Math.round(foco.areaKm2)) + " km²";
+  cabecera.append(titulo, area);
+
+  const meta = document.createElement("p");
+  meta.className = "evento-meta";
+  meta.textContent = [
+    comoFecha(foco.ultimaUtc),
+    foco.iso3 ? nombrePais(foco.iso3) : "fuera de los activos",
+    numero(foco.detecciones) + (foco.detecciones === 1 ? " detección" : " detecciones"),
+  ].join(" · ");
+
+  const cifra = document.createElement("p");
+  cifra.className = "evento-cifra";
+  // Por debajo de una persona no se publica una cifra: "0,1 personas dentro" es
+  // una precision que el modelo no tiene y que lee peor que no decir nada. La
+  // poblacion de una celda es una suma dasimetrica, no un censo.
+  cifra.innerHTML =
+    foco.pop >= 1
+      ? iconoSvg("personas") + comoTexto(foco.pop) + " personas dentro"
+      : '<span class="sin-alcance">Sin población medida en estas celdas</span>';
+
+  li.append(cabecera, meta, cifra);
+  li.addEventListener("click", () => {
+    abrirFoco(foco);
+    $("mapa")?.scrollIntoView({
+      behavior: REDUCIR_MOVIMIENTO ? "auto" : "smooth",
+      block: "nearest",
+    });
+  });
+  return li;
+}
+
+function pintarListaFocos({ anunciando = true } = {}) {
+  const lista = $("lista-focos");
+  if (!lista || !estado.focos.length) return;
+
+  const orden = ORDENES_FOCOS[estado.ordenFocos] || ORDENES_FOCOS.reciente;
+  const dentro = estado.focos.filter(
+    (f) => enLaVentanaFuego(f) && (!estado.paisFuego || f.iso3 === estado.paisFuego)
+  );
+  const listados = dentro
+    .slice()
+    .sort((a, b) => orden.clave(b) - orden.clave(a))
+    .slice(0, MAX_FILAS_FOCOS);
+
+  lista.innerHTML = "";
+  for (const foco of listados) lista.appendChild(filaFoco(foco));
+
+  const cargando = $("estado-focos");
+  if (cargando) cargando.hidden = true;
+
+  const cuenta = $("cuenta-focos");
+  if (cuenta) {
+    cuenta.textContent = dentro.length
+      ? listados.length < dentro.length
+        ? numero(listados.length) + " de " + numero(dentro.length) + " focos"
+        : numero(dentro.length) + (dentro.length === 1 ? " foco" : " focos")
+      : "";
+  }
+
+  const vacio = $("sin-focos");
+  if (vacio) {
+    vacio.hidden = dentro.length > 0;
+    if (!dentro.length) {
+      // El aviso dice CUANDO se miro por ultima vez, y no solo que no hay nada.
+      //
+      // La ventana se cuenta desde ahora, pero el dato es una foto que puede
+      // llevar horas publicada: con un fichero de hace diez horas, "ultimas 6 h"
+      // sale vacio siempre, y sin este apunte se lee como "no hay fuego" cuando
+      // lo cierto es "no lo hemos vuelto a mirar".
+      const v = VENTANAS_FUEGO[estado.ventanaFuego] || VENTANAS_FUEGO.h24;
+      const sello = estado.vivo && estado.vivo.fuegoUtc ? haceCuanto(estado.vivo.fuegoUtc) : null;
+      const apunte = sello ? " El satélite se revisó " + sello + "." : "";
+      vacio.textContent =
+        (estado.paisFuego
+          ? "Ningún foco en ese país en las últimas " + v.texto + "."
+          : "Ningún foco detectado en las últimas " + v.texto + ".") + apunte;
+    }
+  }
+
+  for (const boton of document.querySelectorAll("#ventana-focos button")) {
+    boton.setAttribute("aria-pressed", String(boton.dataset.ventana === estado.ventanaFuego));
+  }
+  for (const boton of document.querySelectorAll("#orden-focos button")) {
+    boton.setAttribute("aria-pressed", String(boton.dataset.orden === estado.ordenFocos));
+  }
+  for (const boton of document.querySelectorAll("#filtro-paises-fuego button")) {
+    boton.setAttribute(
+      "aria-pressed",
+      String((boton.dataset.iso3 || "") === (estado.paisFuego || ""))
+    );
+  }
+  aplicarFiltrosAlMapa();
+  pintarLimpiar();
+  if (anunciando) {
+    anunciar(numero(dentro.length) + (dentro.length === 1 ? " foco" : " focos") + " en la lista.");
+  }
+}
+
+
+// --- Los filtros gobiernan el mapa, no solo la lista ------------------------
+//
+// Vivian debajo, dentro de la seccion de reportes, y solo recortaban filas.
+// Elegir "Colombia" dejaba la lista con los suyos y el mapa con veintiun
+// epicentros repartidos por el continente: el filtro diciendo una cosa y el
+// mapa otra, que es la misma clase de contradiccion que el selector de amenaza
+// existe para evitar.
+//
+// Aqui se traducen a filtros de MapLibre. `setFilter` es la via correcta: no
+// toca la fuente, no repinta hexagonos y deja el estado del control y el del
+// mapa donde tienen que estar, que es en el mismo sitio.
+
+//: Un filtro que no descarta nada. MapLibre acepta `null`, pero un `null`
+//: suelto se lee como "se me olvido" y esto se lee como "todo pasa".
+const TODO_PASA = null;
+
+//: Corte de la ventana en milisegundos desde la epoca, o `null` si es "Todo".
+function corteDeVentana(dias) {
+  return dias ? Date.now() - dias * 86400000 : null;
+}
+
+//: El filtro de los epicentros: pais y fecha.
+//:
+//: La fecha se compara como cadena ISO y no convirtiendo a numero dentro de la
+//: expresion: MapLibre no sabe parsear fechas, y los sellos de USGS son ISO-8601
+//: en UTC, que ordena igual como texto que como instante. Es la misma propiedad
+//: que hace que `sort()` funcione sobre los sellos de la lista.
+function filtroDeEpicentros() {
+  const partes = ["all"];
+  if (estado.paisFiltrado) partes.push(["==", ["get", "iso3"], estado.paisFiltrado]);
+  const dias = (VENTANAS[estado.ventana] || VENTANAS.todo).dias;
+  const corte = corteDeVentana(dias);
+  if (corte !== null) {
+    partes.push([">=", ["get", "utc"], new Date(corte).toISOString()]);
+  }
+  return partes.length > 1 ? partes : TODO_PASA;
+}
+
+//: El de los focos: pais y hora de deteccion.
+function filtroDeFocos() {
+  const partes = ["all"];
+  if (estado.paisFuego) partes.push(["==", ["get", "iso3"], estado.paisFuego]);
+  const horas = (VENTANAS_FUEGO[estado.ventanaFuego] || VENTANAS_FUEGO.h24).horas;
+  // La misma referencia que la lista: el sello mas reciente del fichero, no el
+  // reloj. Si el mapa y la lista contaran desde sitios distintos, uno ensenaria
+  // focos que el otro dice que no existen.
+  const corte = referenciaDelFuego() - horas * 3600000;
+  partes.push([">=", ["get", "ultima_utc"], new Date(corte).toISOString()]);
+  return partes.length > 1 ? partes : TODO_PASA;
+}
+
+//: Aplica al mapa lo que dicen los controles.
+//:
+//: Se llama desde `refrescarLista` y `pintarListaFocos`, que es donde ya se
+//: sabe que un filtro cambio: tener dos sitios que reaccionan al mismo cambio
+//: es como se acaba con la lista filtrada y el mapa sin filtrar.
+function aplicarFiltrosAlMapa() {
+  const m = estado.mapa;
+  if (!m || !m.getLayer) return;
+
+  const pon = (capa, filtro) => {
+    try {
+      if (m.getLayer(capa)) m.setFilter(capa, filtro);
+    } catch (error) {
+      // Una capa que aun no existe no es un fallo: los datos llegan por su
+      // cuenta y esto corre cada vez que se toca un control.
+      console.warn("filtro de " + capa + ":", error && error.message);
+    }
+  };
+
+  const sismos = filtroDeEpicentros();
+  for (const capa of ["epicentros", "epicentros-halo"]) pon(capa, sismos);
+
+  // LOS SISMOS MENORES TAMBIEN OBEDECEN, Y NO DE LA MISMA MANERA.
+  //
+  // Se quedaban fuera: con "Colombia" puesto el mapa dejaba un epicentro y
+  // seguian los diez menores repartidos por el continente. El filtro decia una
+  // cosa y el mapa otra, que es justo lo que estos filtros vinieron a arreglar.
+  //
+  // Por FECHA se filtran igual: `origen_utc` es un sello como cualquier otro.
+  //
+  // Por PAIS no, y no por descuido: `observados.json` no trae `iso3`. Se podria
+  // deducir de la caja envolvente del pais —el sistema ya lo hace para elegir
+  // que activo bajar— pero esas cajas se solapan: la de Colombia y la de
+  // Venezuela comparten miles de km². Para elegir un activo vale, porque el
+  // join contra las celdas desempata despues; aqui no habria nada que
+  // desempatara y estariamos publicando un pais inventado sobre un mapa.
+  //
+  // Asi que con un pais elegido la capa se apaga entera. Es lo unico que no
+  // miente: "de estos no sabemos de que pais son". El rotulo de la casilla lo
+  // dice.
+  const menores = ["all"];
+  const diasSismos = (VENTANAS[estado.ventana] || VENTANAS.todo).dias;
+  const corteSismos = corteDeVentana(diasSismos);
+  if (corteSismos !== null) {
+    menores.push([">=", ["get", "origen_utc"], new Date(corteSismos).toISOString()]);
+  }
+  const casilla = document.querySelector("#interruptor-observados input");
+  const encendida = Boolean(casilla && casilla.checked);
+  const verMenores = encendida && !estado.paisFiltrado && estado.amenaza !== "fuego";
+  pon("observados", verMenores ? (menores.length > 1 ? menores : TODO_PASA) : ["==", ["get", "usgs_id"], "__ninguno__"]);
+  const aviso = $("aviso-observados");
+  if (aviso) aviso.hidden = !(encendida && estado.paisFiltrado);
+
+  const fuego = filtroDeFocos();
+  for (const capa of ["incendios", "incendios-punto", "incendios-borde"]) pon(capa, fuego);
+}
+
+//: Lleva la camara a lo que el filtro dejo. Solo cuando el filtro CAMBIA.
+//:
+//: Un filtro que recorta el mapa y no lo encuadra obliga a buscar a mano lo que
+//: acaba de quedar: se elige Colombia, el mapa se queda con un epicentro, y hay
+//: que ir a por el arrastrando desde una vista continental.
+//:
+//: Y solo al cambiar, no en cada repintado: `refrescarLista` corre tambien
+//: cuando se mueve el mapa con "solo lo que se ve" puesto, y encuadrar ahi
+//: pelearia con la mano del usuario en cada arrastre.
+function encuadrarLoFiltrado() {
+  if (!hayFiltros()) {
+    // Sin filtros, la vista util es la region entera. Es la vuelta natural de
+    // "Quitar filtros": lo contrario seria quedarse encerrado donde te dejo el
+    // ultimo filtro.
+    volverAlEncuadre(estado.mapa, VUELO);
+    anotarCamara("panorama:sin-filtros");
+    return;
+  }
+
+  if (estado.amenaza === "fuego") {
+    const dentro = estado.focos.filter(
+      (f) => enLaVentanaFuego(f) && (!estado.paisFuego || f.iso3 === estado.paisFuego)
+    );
+    const puntos = [];
+    for (const f of dentro) {
+      for (const h of f.h3s.slice(0, 4)) {
+        try {
+          const [lat, lng] = h3.cellToLatLng(h);
+          puntos.push([lng, lat]);
+        } catch (error) {
+          /* una celda ilegible no impide encuadrar las demas */
+        }
+      }
+    }
+    if (encuadrarPuntos(puntos, { maxZoom: 8 })) anotarCamara("filtro:fuego");
+    return;
+  }
+
+  const puntos = [];
+  for (const li of document.querySelectorAll("#lista-eventos li:not([hidden])")) {
+    const lon = Number(li.dataset.lon);
+    const lat = Number(li.dataset.lat);
+    if (Number.isFinite(lon) && Number.isFinite(lat)) puntos.push([lon, lat]);
+  }
+  if (encuadrarPuntos(puntos, { maxZoom: 7 })) anotarCamara("filtro:sismos");
+}
+
+//: Cuantos rasgos deja ver el filtro, para poder decirlo al lado del control.
+//:
+//: Un filtro que recorta el mapa sin decir cuanto quito obliga a contar
+//: hexagonos a ojo — que es exactamente lo que la lista de focos vino a
+//: eliminar.
+function contarEnElMapa(capas) {
+  const m = estado.mapa;
+  if (!m || !m.queryRenderedFeatures) return null;
+  const presentes = capas.filter((c) => m.getLayer(c));
+  if (!presentes.length) return null;
+  try {
+    return m.queryRenderedFeatures({ layers: presentes }).length;
+  } catch (error) {
+    return null;
+  }
+}
+
+//: Rellena un `<select>` y engancha su cambio. Los cuatro filtros son la misma
+//: cosa con distintas opciones, y escribirla cuatro veces es como acaban
+//: divergiendo: uno recuerda sincronizar el estado y otro no.
+function poblarSelect(id, opciones, seleccionado, alCambiar) {
+  const sel = $(id);
+  if (!sel) return null;
+  const html = opciones
+    .map(
+      ([valor, texto, cuenta]) =>
+        '<option value="' +
+        escapar(valor) +
+        '">' +
+        escapar(texto) +
+        (Number.isFinite(cuenta) ? " (" + nf.format(cuenta) + ")" : "") +
+        "</option>"
+    )
+    .join("");
+  if (sel.innerHTML !== html) sel.innerHTML = html;
+  sel.value = seleccionado;
+  if (!sel.dataset.enganchado) {
+    sel.dataset.enganchado = "1";
+    sel.addEventListener("change", () => alCambiar(sel.value));
+  }
+  return sel;
+}
+
+//: Enseña u oculta el campo entero, etiqueta incluida.
+//:
+//: Ocultar solo el `<select>` dejaria su rotulo flotando —"País" sin nada al
+//: lado—, que es peor que no tener el filtro.
+function verCampo(id, visible) {
+  const campo = $(id);
+  if (campo) campo.hidden = !visible;
+}
+
+//: ¿Hay algun filtro puesto? Decide si se ofrece "Quitar filtros".
+//:
+//: Un boton de limpiar siempre visible no informa; visible solo cuando hay algo
+//: que limpiar es ademas la senal de que un filtro esta actuando — que es justo
+//: lo que se pierde de vista cuando los controles viven lejos del mapa.
+function hayFiltros() {
+  return estado.amenaza === "fuego"
+    ? Boolean(estado.paisFuego) || estado.ventanaFuego !== "h24"
+    : Boolean(estado.paisFiltrado) || estado.ventana !== "todo" || estado.soloEnVista;
+}
+
+//: Devuelve los desplegables a lo que dice el estado.
+//:
+//: `poblarSelect` ya lo hace al pintar, pero limpiar cambia el estado sin
+//: repintar: sin esto el control se queda enseñando el filtro que acaba de
+//: quitarse.
+//: Un filtro acaba de cambiar. Es el UNICO sitio que encuadra.
+//:
+//: `refrescarLista` y `pintarListaFocos` corren tambien por otros motivos —al
+//: mover el mapa con "solo lo que se ve" puesto, al cargar datos— y encuadrar
+//: ahi pelearia con la mano del usuario en cada arrastre.
+function filtroCambio() {
+  if (estado.amenaza === "fuego") pintarListaFocos();
+  else refrescarLista();
+  encuadrarLoFiltrado();
+}
+
+function sincronizarFiltros() {
+  if (estado.eventos && estado.nombresPais) {
+    pintarFiltroPaises(estado.eventos, estado.nombresPais);
+  }
+  pintarControlesLista();
+  if (estado.focos.length) pintarControlesFocos();
+  pintarLimpiar();
+}
+
+function pintarLimpiar() {
+  const boton = $("limpiar-filtros");
+  if (!boton) return;
+  boton.hidden = !hayFiltros();
+  if (!boton.dataset.enganchado) {
+    boton.dataset.enganchado = "1";
+    boton.addEventListener("click", () => {
+      if (estado.amenaza === "fuego") {
+        estado.paisFuego = "";
+        estado.ventanaFuego = "h24";
+        pintarListaFocos();
+      } else {
+        estado.paisFiltrado = "";
+        estado.ventana = "todo";
+        estado.soloEnVista = false;
+        const casilla = $("solo-en-vista");
+        if (casilla) casilla.checked = false;
+        refrescarLista();
+      }
+      // Los desplegables se repintan: limpiar el estado y dejar el control
+      // enseñando "Colombia" es la misma divergencia que este visor persigue
+      // entre lo que un control dice y lo que el sistema hace.
+      sincronizarFiltros();
+      encuadrarLoFiltrado();
+      anunciar("Filtros quitados.");
+    });
+  }
+}
+
+function pintarFiltroPaises(eventos, nombres) {
+  const cuenta = new Map();
+  for (const e of eventos) {
+    if (e.iso3) cuenta.set(e.iso3, (cuenta.get(e.iso3) || 0) + 1);
+  }
+  // Con un solo pais el filtro no filtra nada: es ruido con aspecto de control.
+  verCampo("campo-pais", cuenta.size >= 2 && estado.amenaza !== "fuego");
+  if (cuenta.size < 2) return;
+
+  const orden = [...cuenta.entries()].sort(
+    (a, b) => b[1] - a[1] || (nombres.get(a[0]) || a[0]).localeCompare(nombres.get(b[0]) || b[0], "es")
+  );
+  poblarSelect(
+    "filtro-paises",
+    [["", "Todos los países", eventos.length], ...orden.map(([iso, n]) => [iso, nombres.get(iso) || iso, n])],
+    estado.paisFiltrado,
+    (valor) => {
+      estado.paisFiltrado = valor;
+      filtroCambio();
+    }
+  );
+}
+
+function pintarControlesLista() {
+  poblarSelect(
+    "ventana-lista",
+    Object.entries(VENTANAS).map(([clave, v]) => [clave, v.texto]),
+    estado.ventana,
+    (valor) => {
+      estado.ventana = valor;
+      filtroCambio();
+    }
+  );
+
+  poblarSelect(
+    "orden-lista",
+    Object.entries(ORDENES).map(([clave, o]) => [clave, o.texto]),
+    estado.orden,
+    (valor) => {
+      estado.orden = valor;
+      refrescarLista();
+    }
+  );
+
+  const etiqueta = $("etiqueta-en-vista");
+  const interruptor = $("solo-en-vista");
+  if (!etiqueta || !interruptor || !estado.mapa) return;
+  if (estado.amenaza !== "fuego") etiqueta.hidden = false;
+  if (!interruptor.dataset.enganchado) {
+    interruptor.dataset.enganchado = "1";
+    interruptor.addEventListener("change", () => {
+      estado.soloEnVista = interruptor.checked;
+      refrescarLista();
+    });
+    // Mientras el recorte esta puesto, mover el mapa mueve la lista. `moveend` y
+    // no `move`: reordenar veintiun nodos en cada fotograma de un desplazamiento
+    // es trabajo tirado, y el usuario solo lee la lista cuando suelta.
+    estado.mapa.on("moveend", () => {
+      if (estado.soloEnVista) refrescarLista({ anunciando: false });
+    });
+  }
+}
+
+function pintarControlesFocos() {
+  poblarSelect(
+    "ventana-focos",
+    Object.entries(VENTANAS_FUEGO).map(([clave, v]) => [clave, v.texto]),
+    estado.ventanaFuego,
+    (valor) => {
+      estado.ventanaFuego = valor;
+      filtroCambio();
+    }
+  );
+
+  poblarSelect(
+    "orden-focos",
+    Object.entries(ORDENES_FOCOS).map(([clave, o]) => [clave, o.texto]),
+    estado.ordenFocos,
+    (valor) => {
+      estado.ordenFocos = valor;
+      pintarListaFocos();
+    }
+  );
+
+  // Solo los paises que de verdad tienen fuego ahora. Una lista de diecinueve
+  // donde diecisiete no filtran nada es ruido con aspecto de control — la misma
+  // regla que ya aplica el filtro de reportes.
+  const cuenta = new Map();
+  for (const f of estado.focos) {
+    if (f.iso3) cuenta.set(f.iso3, (cuenta.get(f.iso3) || 0) + 1);
+  }
+  verCampo("campo-pais-fuego", cuenta.size >= 2 && estado.amenaza === "fuego");
+  if (cuenta.size < 2) return;
+
+  const orden = [...cuenta.entries()].sort(
+    (a, b) => b[1] - a[1] || nombrePais(a[0]).localeCompare(nombrePais(b[0]), "es")
+  );
+  poblarSelect(
+    "filtro-paises-fuego",
+    [["", "Todos los países", estado.focos.length], ...orden.map(([iso, n]) => [iso, nombrePais(iso), n])],
+    estado.paisFuego,
+    (valor) => {
+      estado.paisFuego = valor;
+      filtroCambio();
+    }
+  );
 }
 
 function incendiosAGeoJson(celdas) {

@@ -295,7 +295,7 @@ def test_ningun_elemento_oculto_se_sigue_viendo(pagina: Any) -> None:
     _esperar_capa(pagina, "epicentros")
     # Acotado al filtro: "Venezuela" aparece tambien en las tarjetas de
     # evento y en la tabla de cobertura, y sin acotar son cuatro nodos.
-    pagina.locator("#filtro-paises").get_by_role("button", name="Venezuela").click()
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Venezuela"))
 
     visibles = pagina.evaluate("""() =>
         [...document.querySelectorAll('[hidden]')]
@@ -315,7 +315,7 @@ def test_el_filtro_por_pais_deja_solo_los_suyos(pagina: Any) -> None:
     todos = pagina.evaluate(contar)
     # Acotado al filtro: "Venezuela" aparece tambien en las tarjetas de
     # evento y en la tabla de cobertura, y sin acotar son cuatro nodos.
-    pagina.locator("#filtro-paises").get_by_role("button", name="Venezuela").click()
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Venezuela"))
     filtrado = pagina.evaluate(contar)
 
     assert todos > filtrado > 0, f"el filtro no redujo la lista: {todos} -> {filtrado}"
@@ -763,14 +763,14 @@ def test_la_lista_se_ordena_por_lo_que_se_le_pide(pagina: Any) -> None:
     """
     _esperar_capa(pagina, "epicentros")
 
-    pagina.locator('#orden-lista button[data-orden="mag"]').click()
+    pagina.select_option("#orden-lista", "mag")
     por_mag = pagina.evaluate(
         """() => [...document.querySelectorAll('#lista-eventos li')]
                    .filter(li => !li.hidden).map(li => Number(li.dataset.mag))"""
     )
     assert por_mag == sorted(por_mag, reverse=True), f"el orden por magnitud no baja: {por_mag}"
 
-    pagina.locator('#orden-lista button[data-orden="pop"]').click()
+    pagina.select_option("#orden-lista", "pop")
     por_pop = pagina.evaluate(
         """() => [...document.querySelectorAll('#lista-eventos li')]
                    .filter(li => !li.hidden).map(li => Number(li.dataset.pop))"""
@@ -778,9 +778,8 @@ def test_la_lista_se_ordena_por_lo_que_se_le_pide(pagina: Any) -> None:
     assert por_pop == sorted(por_pop, reverse=True), f"el orden por exposicion no baja: {por_pop}"
 
     assert _titulos_visibles(pagina) != [], "la lista se quedo vacia al reordenar"
-    assert (
-        pagina.locator('#orden-lista button[data-orden="pop"]').get_attribute("aria-pressed")
-        == "true"
+    assert pagina.locator("#orden-lista").input_value() == "pop", (
+        "el control no refleja el orden puesto"
     )
 
 
@@ -1377,6 +1376,24 @@ def test_la_tarjeta_viva_dice_de_donde_es_la_cifra(pagina: Any) -> None:
 # --- "Ver en el mapa" tiene que llevar al sitio (31-ago-2026) ----------------
 
 
+def _iso_de(pagina: Any, nombre: str) -> str:
+    """El valor (ISO3) de la opción que empieza por ese nombre.
+
+    Se elige por valor y no por etiqueta porque la etiqueta lleva la cuenta
+    entre paréntesis —«Venezuela (3)»— y esa cuenta cambia con los datos.
+    """
+    iso: str = pagina.evaluate(
+        """(nombre) => {
+          const sel = document.getElementById('filtro-paises');
+          const o = [...sel.options].find(x => x.text.startsWith(nombre));
+          return o ? o.value : '';
+        }""",
+        nombre,
+    )
+    assert iso, f"no hay una opción para {nombre}"
+    return iso
+
+
 def _escala(pagina: Any) -> str:
     """Lo que dice la barra de escala. Es la lectura fiable de la cámara.
 
@@ -1528,4 +1545,205 @@ def test_ver_en_el_mapa_del_fuego_devuelve_el_panorama(pagina: Any) -> None:
 
     assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "panorama:fuego", (
         "el botón no pidió devolver el panorama"
+    )
+
+
+# --- Filtros de tiempo y país (31-ago-2026) ---------------------------------
+
+
+def test_la_ventana_temporal_recorta_la_lista_de_reportes(pagina: Any) -> None:
+    """El catálogo cubre catorce años y la lista los daba todos de golpe.
+
+    «¿Qué ha pasado últimamente?» obligaba a leerla entera o a fiarse del orden.
+    """
+    pagina.wait_for_function(
+        "() => document.querySelectorAll('#lista-eventos li').length > 0", timeout=ESPERA_MS
+    )
+
+    def visibles() -> int:
+        n: int = pagina.locator("#lista-eventos li:not([hidden])").count()
+        return n
+
+    todos = visibles()
+    assert todos > 0
+
+    pagina.select_option("#ventana-lista", "ano")
+    pagina.wait_for_timeout(700)
+    ultimo_ano = visibles()
+
+    assert ultimo_ano < todos, f"la ventana de 12 meses no recortó nada: {ultimo_ano} de {todos}"
+
+    pagina.select_option("#ventana-lista", "todo")
+    pagina.wait_for_timeout(700)
+    assert visibles() == todos, "volver a «Todo» no devolvió la lista entera"
+
+
+def test_cada_amenaza_tiene_su_indice_y_solo_uno_a_la_vez(pagina: Any) -> None:
+    """El fuego tenía mapa y panel de detalle pero ningún índice.
+
+    Para saber cuáles son los focos más recientes había que buscar hexágonos a
+    ojo entre cuatro mil. Y leer «Reportes publicados» con el mapa lleno de fuego
+    es la misma mezcla que el selector de amenaza existe para evitar.
+    """
+    _esperar_capa(pagina, "focos")
+    assert pagina.locator("#eventos").is_visible(), "en sismos falta el índice de reportes"
+    assert pagina.locator("#focos").is_hidden(), "la lista de focos está en modo sismos"
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(900)
+
+    assert pagina.locator("#focos").is_visible(), "en fuego falta el índice de focos"
+    assert pagina.locator("#eventos").is_hidden(), "la lista de reportes está en modo fuego"
+    assert pagina.locator("#lista-focos li").count() > 0
+
+
+def test_los_focos_se_listan_por_lo_mas_reciente(pagina: Any) -> None:
+    """La pregunta que trae a alguien a un mapa de fuego es qué arde AHORA.
+
+    Por eso «Reciente» es el orden por defecto y no la energía, que es lo que
+    ordena la capa del mapa.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
+
+    assert pagina.locator("#orden-focos").input_value() == "reciente", (
+        "no ordena por reciente al abrir"
+    )
+
+    sellos = pagina.eval_on_selector_all(
+        "#lista-focos li", "els => els.map(e => e.dataset.utc).filter(Boolean)"
+    )
+    assert sellos == sorted(sellos, reverse=True), "las filas no van de lo más reciente a lo menos"
+
+
+def test_la_ventana_del_fuego_es_de_horas_y_lo_dice_cuando_vacia(pagina: Any) -> None:
+    """El fuego es una foto de 24 h, no un archivo de catorce años.
+
+    Y cuando la ventana no deja nada, el aviso dice **cuándo se revisó**: con un
+    fichero de hace once horas «últimas 6 h» sale vacío siempre, y sin ese
+    apunte se lee como «no hay fuego» cuando lo cierto es «no lo hemos vuelto a
+    mirar».
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
+
+    etiquetas = pagina.eval_on_selector_all(
+        "#ventana-focos option", "els => els.map(e => e.textContent.trim())"
+    )
+    assert etiquetas == ["24 h", "12 h", "6 h"], f"la ventana del fuego no es de horas: {etiquetas}"
+
+    pagina.select_option("#ventana-focos", "h6")
+    pagina.wait_for_timeout(700)
+
+    vacio = pagina.locator("#sin-focos")
+    if vacio.is_visible():
+        texto = vacio.inner_text().lower()
+        assert "se revisó" in texto or "se reviso" in texto, (
+            f"el aviso no dice cuándo se miró por última vez: {texto!r}"
+        )
+
+
+def test_el_filtro_de_pais_recorta_el_mapa_y_no_solo_la_lista(pagina: Any) -> None:
+    """Los filtros vivían debajo, dentro de la lista, y solo recortaban filas.
+
+    Elegir «Colombia» dejaba la lista con los suyos y el mapa con veintiún
+    epicentros repartidos por el continente: el filtro diciendo una cosa y el
+    mapa otra, que es la misma contradicción que el selector de amenaza existe
+    para evitar.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_selector("#campo-pais:not([hidden])", timeout=ESPERA_MS)
+
+    def en_la_lista() -> int:
+        n: int = pagina.locator("#lista-eventos li:not([hidden])").count()
+        return n
+
+    todos = en_la_lista()
+    pagina.select_option("#filtro-paises", "COL")
+    pagina.wait_for_timeout(1500)
+
+    # La expresión que MapLibre tiene puesta sobre la capa: es la prueba de que
+    # el mapa está filtrado y no solo la lista. Contar hexágonos en una captura
+    # no distingue «filtrado» de «la animación no avanzó».
+    expresion = pagina.evaluate("() => JSON.stringify(window.CENTINELA.filtroDeCapa('epicentros'))")
+    assert expresion and "COL" in expresion, (
+        f"la capa de epicentros no lleva el filtro del país: {expresion}"
+    )
+    assert en_la_lista() < todos, "la lista tampoco se recortó"
+
+
+def test_los_filtros_son_desplegables_y_estan_arriba(pagina: Any) -> None:
+    """Diecinueve países en una fila de pastillas son dos líneas de ruido que
+    empujan el mapa fuera de la pantalla.
+
+    Un desplegable ocupa lo mismo con uno que con cincuenta, y en un teléfono
+    abre el selector nativo. Y arriba, no debajo: un filtro que gobierna el mapa
+    tiene que verse junto al mapa.
+    """
+    barra = pagina.locator("#barra-filtros")
+    assert barra.is_visible()
+
+    orden = pagina.evaluate(
+        """() => {
+          const b = document.getElementById('barra-filtros').getBoundingClientRect();
+          const m = document.getElementById('mapa').getBoundingClientRect();
+          return b.top < m.top;
+        }"""
+    )
+    assert orden, "la barra de filtros está por debajo del mapa"
+
+    for campo in ("#filtro-paises", "#ventana-lista", "#orden-lista"):
+        assert pagina.locator(campo).evaluate("e => e.tagName") == "SELECT", (
+            f"{campo} no es un desplegable"
+        )
+
+
+def test_solo_se_ven_los_filtros_de_la_amenaza_al_mando(pagina: Any) -> None:
+    """Dos «País» uno al lado del otro serían dos amenazas hablando a la vez.
+
+    Pasó: el campo de la otra amenaza dependía de que su pintor corriera, y al
+    cambiar a fuego se quedaban Colombia y Brasil compitiendo en la misma barra.
+    """
+    _esperar_capa(pagina, "epicentros")
+    visibles = "() => [...document.querySelectorAll('#barra-filtros > *')]"
+    visibles += ".filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)"
+
+    en_sismos = pagina.evaluate(visibles)
+    assert "campo-ventana" in en_sismos
+    assert "campo-ventana-fuego" not in en_sismos
+    assert "campo-pais-fuego" not in en_sismos
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_timeout(1200)
+
+    en_fuego = pagina.evaluate(visibles)
+    assert "campo-ventana-fuego" in en_fuego
+    assert "campo-ventana" not in en_fuego, "el período de sismos sigue en modo fuego"
+    assert "campo-pais" not in en_fuego, "dos «País» a la vez"
+
+
+def test_quitar_filtros_aparece_solo_cuando_hay_algo_que_quitar(pagina: Any) -> None:
+    """Un botón de limpiar siempre visible no informa.
+
+    Visible solo cuando un filtro está actuando es además la señal de que lo
+    está — que es justo lo que se pierde de vista cuando los controles viven
+    lejos del mapa.
+    """
+    _esperar_capa(pagina, "epicentros")
+    boton = pagina.locator("#limpiar-filtros")
+    assert boton.is_hidden(), "sin filtros puestos ya ofrece quitarlos"
+
+    pagina.select_option("#ventana-lista", "ano")
+    pagina.wait_for_timeout(900)
+    assert boton.is_visible(), "con un filtro puesto no ofrece quitarlo"
+
+    boton.click()
+    pagina.wait_for_timeout(1200)
+
+    assert boton.is_hidden()
+    assert pagina.locator("#ventana-lista").input_value() == "todo", (
+        "el control se quedó enseñando el filtro que acaba de quitarse"
     )

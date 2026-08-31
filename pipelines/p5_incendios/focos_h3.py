@@ -35,6 +35,11 @@ class CeldaConFuego:
     frp_suma: float
     primera_utc: str
     ultima_utc: str
+    #: Pais de la celda, del activo. Cadena vacia si cae fuera de los activos
+    #: cargados — el fuego no respeta fronteras y una corrida regional siempre
+    #: tiene celdas de paises sin activo. "No se sabe" no es lo mismo que un
+    #: ISO3, y por eso no es None ni un pais por defecto.
+    iso3: str = ""
     #: Exposicion de la celda, del activo del pais. Cero si no hay activo.
     pop: float = 0.0
     bld: int = 0
@@ -70,6 +75,11 @@ HAVING count(*) FILTER (WHERE confianza <> 'low') > 0
 #: no tener poblacion seria confundir "no hay nadie" con "no hay fuego".
 SQL_CRUCE = """
 SELECT f.*,
+       -- El pais de la celda. El activo lo sabe y no se publicaba, asi que el
+       -- visor no podia filtrar el fuego por pais como si filtra los sismos.
+       -- Cadena vacia y no NULL cuando la celda cae fuera de los activos
+       -- cargados: "no se sabe" tiene que poder distinguirse de un ISO3.
+       COALESCE(e.iso3, '')                 AS iso3,
        COALESCE(e.pop_total, 0.0)           AS pop,
        COALESCE(e.bld_count, 0)             AS bld,
        COALESCE(e.health_count, 0)          AS salud,
@@ -130,7 +140,8 @@ def cruzar_con_exposicion(con: Any) -> list[CeldaConFuego]:
     except Exception:
         _log.warning("sin activo de exposicion registrado; se publica solo el fuego", extra={})
         filas = con.execute(
-            "SELECT *, 0.0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0 FROM focos_h3 ORDER BY frp_suma DESC"
+            "SELECT *, '', 0.0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0 "
+            "FROM focos_h3 ORDER BY frp_suma DESC"
         ).fetchall()
 
     import h3
@@ -144,15 +155,16 @@ def cruzar_con_exposicion(con: Any) -> list[CeldaConFuego]:
             frp_suma=round(float(f[4]), 1),
             primera_utc=str(f[5]),
             ultima_utc=str(f[6]),
-            pop=round(float(f[7]), 1),
-            bld=int(f[8]),
-            salud=int(f[9]),
-            edu=int(f[10]),
-            vias_km=round(float(f[11]), 1),
-            arbolado_pct=float(f[12]),
-            pastizal_pct=float(f[13]),
-            cultivo_pct=float(f[14]),
-            humedal_pct=float(f[15]),
+            iso3=str(f[7] or ""),
+            pop=round(float(f[8]), 1),
+            bld=int(f[9]),
+            salud=int(f[10]),
+            edu=int(f[11]),
+            vias_km=round(float(f[12]), 1),
+            arbolado_pct=float(f[13]),
+            pastizal_pct=float(f[14]),
+            cultivo_pct=float(f[15]),
+            humedal_pct=float(f[16]),
         )
         for f in filas
     ]

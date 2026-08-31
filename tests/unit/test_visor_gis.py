@@ -1237,3 +1237,41 @@ def test_la_medicion_de_la_rampa_queda_escrita() -> None:
     assert "perimetro" in plano.lower(), (
         "falta decir que la mitad util del hallazgo si se resolvio, y donde"
     )
+
+
+def test_el_pais_de_un_foco_sale_de_sus_celdas() -> None:
+    """El activo sabe de qué país es cada celda y no llegaba al visor.
+
+    Un incendio que cruza una frontera existe, pero partir el foco por eso sería
+    inventar dos incendios donde hay uno: se toma el país con más celdas.
+    """
+    bloque = cuerpo("paisDelFoco")
+
+    assert "c.iso3" in bloque, "no lee el país de las celdas"
+    assert "max" in bloque, "no elige el país mayoritario"
+
+
+def test_un_foco_sin_pais_no_desaparece_de_la_lista() -> None:
+    """El fuego no respeta fronteras: una corrida regional siempre tiene celdas
+    de países cuyo activo no está cargado.
+
+    Esas celdas son información. Lo correcto es que no aparezcan al filtrar por
+    un país concreto —no se sabe si son de ese— pero sí en «Todos».
+    """
+    bloque = cuerpo("pintarListaFocos")
+
+    assert "!estado.paisFuego || f.iso3 === estado.paisFuego" in bloque, (
+        "sin país sin filtro seleccionado, el foco tiene que pasar"
+    )
+
+
+def test_la_ventana_del_fuego_se_mide_en_horas_no_en_dias() -> None:
+    """FIRMS publica una foto de 24 h. Ofrecer «12 meses» aquí prometería un
+    archivo que no existe."""
+    fuente = APP
+
+    inicio = fuente.index("const VENTANAS_FUEGO")
+    bloque = fuente[inicio : fuente.index("};", inicio)]
+
+    assert "horas:" in bloque
+    assert "dias:" not in bloque, "la ventana del fuego no puede medirse en días"
