@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-08-31T13:10:21Z",
+  "generado_utc": "2026-08-31T15:30:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -12,7 +12,8 @@
       "depth_km": 10.0,
       "lugar": "3 km al NO de Yanacancha, Perú",
       "origen_utc": "2026-08-31T11:53:26Z",
-      "razon": "M4.7 < umbral M5.5"
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": "PER"
     },
     {
       "usgs_id": "us7000td1g",
@@ -22,7 +23,8 @@
       "depth_km": 59.4,
       "lugar": "71 km al OSO de Puerto Casma, Perú",
       "origen_utc": "2026-08-31T01:08:05Z",
-      "razon": "M4.5 < umbral M5.5"
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "PER"
     },
     {
       "usgs_id": "us7000tczt",
@@ -32,7 +34,8 @@
       "depth_km": 102.0,
       "lugar": "62 km al SSE de Palca, Perú",
       "origen_utc": "2026-08-30T16:04:07Z",
-      "razon": "M4.7 < umbral M5.5"
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": "PER"
     },
     {
       "usgs_id": "us7000tcwp",
@@ -42,7 +45,8 @@
       "depth_km": 52.1,
       "lugar": "26 km al OSO de Tocopilla, Chile",
       "origen_utc": "2026-08-30T05:19:51Z",
-      "razon": "M4.7 < umbral M5.5"
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": ""
     },
     {
       "usgs_id": "us7000tcvp",
@@ -52,7 +56,8 @@
       "depth_km": 158.9,
       "lugar": "70 km al ENE de San Pedro de Atacama, Chile",
       "origen_utc": "2026-08-29T23:26:17Z",
-      "razon": "M4.5 < umbral M5.5"
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": ""
     },
     {
       "usgs_id": "us7000tcth",
@@ -62,7 +67,8 @@
       "depth_km": 58.1,
       "lugar": "24 km al OSO de Sipí, Colombia",
       "origen_utc": "2026-08-29T10:50:24Z",
-      "razon": "M4.5 < umbral M5.5"
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": ""
     },
     {
       "usgs_id": "us7000tcpf",
@@ -72,7 +78,8 @@
       "depth_km": 88.0,
       "lugar": "38 km al NNE de Cuya, Chile",
       "origen_utc": "2026-08-28T20:44:36Z",
-      "razon": "M4.5 < umbral M5.5"
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": ""
     },
     {
       "usgs_id": "us7000tcjv",
@@ -82,7 +89,8 @@
       "depth_km": 131.4,
       "lugar": "26 km al O de Ollagüe, Chile",
       "origen_utc": "2026-08-28T14:11:54Z",
-      "razon": "M4.6 < umbral M5.5"
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": ""
     },
     {
       "usgs_id": "us7000tch3",
@@ -92,7 +100,8 @@
       "depth_km": 10.0,
       "lugar": "northern East Pacific Rise",
       "origen_utc": "2026-08-28T02:39:17Z",
-      "razon": "M5.0 < umbral M5.5"
+      "razon": "M5.0 < umbral M5.5",
+      "iso3": ""
     },
     {
       "usgs_id": "us7000tcc3",
@@ -102,7 +111,8 @@
       "depth_km": 142.0,
       "lugar": "42 km al E de Estique, Perú",
       "origen_utc": "2026-08-27T17:40:41Z",
-      "razon": "M4.5 < umbral M5.5"
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": ""
     },
     {
       "usgs_id": "us7000tbzn",
@@ -112,7 +122,8 @@
       "depth_km": 159.9,
       "lugar": "4 km al E de Jordán, Colombia",
       "origen_utc": "2026-08-26T16:45:14Z",
-      "razon": "M4.9 < umbral M5.5"
+      "razon": "M4.9 < umbral M5.5",
+      "iso3": ""
     }
   ]
 }
