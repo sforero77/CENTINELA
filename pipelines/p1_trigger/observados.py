@@ -24,6 +24,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Final
 
+from ..common.cobertura import NOMBRE_PAIS
 from ..common.constants import MIN_MAGNITUDE, USGS_FDSN_EVENT
 from ..common.geo import LATAM_BBOX, BBox
 from ..common.http import Fetcher
@@ -62,6 +63,16 @@ class EventoObservado:
     origen_utc: str
     #: Por que no se despacho, en las palabras del filtro.
     razon: str
+    #: Pais, sacado del toponimo. Cadena vacia si el sismo cayo en mar abierto
+    #: —"northern East Pacific Rise" no tiene pais— o si el nombre no es de los
+    #: diecinueve que cubre el sistema.
+    #:
+    #: NO se deduce de la caja envolvente del pais, que es como se elige que
+    #: activo bajar: esas cajas se solapan —la de Colombia y la de Venezuela
+    #: comparten miles de km²— y ahi el join contra las celdas desempata
+    #: despues. Aqui no habria nada que desempatara, y un pais inventado sobre
+    #: un mapa es peor que ninguno. El toponimo, en cambio, lo asigna USGS.
+    iso3: str = ""
 
     @classmethod
     def desde_candidato(cls, candidate: Any, razon: str) -> EventoObservado:
@@ -74,7 +85,44 @@ class EventoObservado:
             lugar=candidate.lugar,
             origen_utc=candidate.origen_utc,
             razon=razon,
+            iso3=pais_del_toponimo(candidate.lugar),
         )
+
+
+#: Nombre de pais -> ISO3, con las dos grafias que puede traer el toponimo.
+#:
+#: `traducir_lugar` deja el nombre en español —"Perú", "México"— pero un lugar
+#: sin traducir conserva el ingles, asi que la tabla admite los dos. Se
+#: construye del mapeo que ya publica la cobertura para no tener dos listas de
+#: paises que solo pueden divergir.
+_ISO_POR_NOMBRE: Final[dict[str, str]] = {
+    **{nombre.lower(): iso for iso, nombre in NOMBRE_PAIS.items()},
+    "peru": "PER",
+    "mexico": "MEX",
+    "brazil": "BRA",
+    "panama": "PAN",
+    "dominican republic": "DOM",
+}
+
+
+def pais_del_toponimo(lugar: str) -> str:
+    """El pais que USGS pone al final del lugar, como ISO3.
+
+    "26 km al OSO de Tocopilla, Chile" -> CHL.
+
+    Es el pais que asigna USGS, no una deduccion nuestra: el unico dato de pais
+    que estos eventos traen, y es autoritativo. Sin el, filtrar por pais obligaba
+    a apagar la capa entera —"de estos no se sabe de que pais son"— cuando el
+    dato estaba ahi, en el texto, desde el primer dia.
+
+    Cadena vacia cuando no hay pais que leer: "northern East Pacific Rise" es mar
+    abierto y no pertenece a ninguno. Eso no es un fallo del parseo, es la
+    respuesta correcta.
+    """
+    if not lugar or "," not in lugar:
+        return ""
+    cola = lugar.rsplit(",", 1)[-1].strip().lower()
+    return _ISO_POR_NOMBRE.get(cola, "")
 
 
 def _parse(ts: str) -> datetime | None:

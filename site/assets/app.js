@@ -1711,6 +1711,19 @@ function aplicarAmenaza() {
   }
   pintarLimpiar();
 
+  // Y LOS FILTROS SE VUELVEN A PONER SOBRE LAS CAPAS.
+  //
+  // Carrera de nacimiento, la misma que ya mordio al interruptor de observados y
+  // a la tarjeta viva: las capas se crean cuando llegan sus datos, que es
+  // despues de que un filtro se haya aplicado. `setFilter` sobre una capa que
+  // aun no existe no hace nada —`pon` lo avisa y sigue— y nadie volvia a
+  // intentarlo, asi que las tres capas de fuego nacian SIN la ventana de horas:
+  // el mapa ensenaba cuatro mil celdas y la lista contaba menos.
+  //
+  // Aqui es el sitio: los tres pintores terminan llamando a esta funcion, asi
+  // que cubre los tres nacimientos y ademas cada cambio de amenaza.
+  aplicarFiltrosAlMapa();
+
   const seccionEventos = $("eventos");
   const seccionFocos = $("focos");
   if (seccionEventos) seccionEventos.hidden = fuego;
@@ -2909,6 +2922,7 @@ function dibujarObservados(eventos) {
             depth_km: e.depth_km,
             origen_utc: e.origen_utc,
             razon: e.razon,
+            iso3: e.iso3 || "",
           },
         })),
       },
@@ -3015,15 +3029,6 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
   // crearse despues de que el selector de amenaza ya se aplico.
   caja.hidden = estado.amenaza === "fuego";
 
-  // Por que desaparecen al elegir un pais. Sin esta linea, encender la casilla
-  // con un pais puesto no hace nada visible y parece que el control esta roto.
-  const aviso = document.createElement("p");
-  aviso.className = "apunte aviso-observados";
-  aviso.id = "aviso-observados";
-  aviso.hidden = true;
-  aviso.textContent =
-    "No se dibujan con un país elegido: de estos no se sabe de qué país son.";
-  caja.insertAdjacentElement("afterend", aviso);
   anfitrion.appendChild(caja);
 
   caja.querySelector("input").addEventListener("change", (ev) => {
@@ -3477,36 +3482,26 @@ function aplicarFiltrosAlMapa() {
   const sismos = filtroDeEpicentros();
   for (const capa of ["epicentros", "epicentros-halo"]) pon(capa, sismos);
 
-  // LOS SISMOS MENORES TAMBIEN OBEDECEN, Y NO DE LA MISMA MANERA.
+  // LOS SISMOS MENORES OBEDECEN COMO TODO LO DEMAS.
   //
-  // Se quedaban fuera: con "Colombia" puesto el mapa dejaba un epicentro y
-  // seguian los diez menores repartidos por el continente. El filtro decia una
-  // cosa y el mapa otra, que es justo lo que estos filtros vinieron a arreglar.
+  // Se quedaban fuera del filtro: con "Colombia" puesto el mapa dejaba un
+  // epicentro y seguian los diez menores repartidos por el continente.
   //
-  // Por FECHA se filtran igual: `origen_utc` es un sello como cualquier otro.
-  //
-  // Por PAIS no, y no por descuido: `observados.json` no trae `iso3`. Se podria
-  // deducir de la caja envolvente del pais —el sistema ya lo hace para elegir
-  // que activo bajar— pero esas cajas se solapan: la de Colombia y la de
-  // Venezuela comparten miles de km². Para elegir un activo vale, porque el
-  // join contra las celdas desempata despues; aqui no habria nada que
-  // desempatara y estariamos publicando un pais inventado sobre un mapa.
-  //
-  // Asi que con un pais elegido la capa se apaga entera. Es lo unico que no
-  // miente: "de estos no sabemos de que pais son". El rotulo de la casilla lo
-  // dice.
+  // El primer intento fue apagar la capa entera al elegir pais, con la excusa
+  // de que "de estos no se sabe de que pais son". Era falso: el pais estaba en
+  // el dato desde el principio, al final del toponimo que publica USGS —"26 km
+  // al OSO de Tocopilla, Chile"—. P1 lo publica ahora como `iso3`, y aqui se
+  // filtra igual que los epicentros. Nueve de los diez observados de hoy tienen
+  // pais; el decimo es "northern East Pacific Rise", mar abierto, y con un pais
+  // elegido no aparece porque no es de ninguno.
   const menores = ["all"];
+  if (estado.paisFiltrado) menores.push(["==", ["get", "iso3"], estado.paisFiltrado]);
   const diasSismos = (VENTANAS[estado.ventana] || VENTANAS.todo).dias;
   const corteSismos = corteDeVentana(diasSismos);
   if (corteSismos !== null) {
     menores.push([">=", ["get", "origen_utc"], new Date(corteSismos).toISOString()]);
   }
-  const casilla = document.querySelector("#interruptor-observados input");
-  const encendida = Boolean(casilla && casilla.checked);
-  const verMenores = encendida && !estado.paisFiltrado && estado.amenaza !== "fuego";
-  pon("observados", verMenores ? (menores.length > 1 ? menores : TODO_PASA) : ["==", ["get", "usgs_id"], "__ninguno__"]);
-  const aviso = $("aviso-observados");
-  if (aviso) aviso.hidden = !(encendida && estado.paisFiltrado);
+  pon("observados", menores.length > 1 ? menores : TODO_PASA);
 
   const fuego = filtroDeFocos();
   for (const capa of ["incendios", "incendios-punto", "incendios-borde"]) pon(capa, fuego);

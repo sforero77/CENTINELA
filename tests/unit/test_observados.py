@@ -308,3 +308,61 @@ def test_rellenar_usa_fdsn_y_no_el_feed_en_vivo() -> None:
     rellenar(fdsn)
 
     assert fdsn.url.startswith(USGS_FDSN_EVENT)
+
+
+def test_el_pais_sale_del_toponimo_que_publica_usgs() -> None:
+    """El país estaba en el dato desde el principio y no llegaba al visor.
+
+    Filtrar por país obligaba a apagar la capa entera —«de estos no se sabe de
+    qué país son»— cuando el nombre venía al final del topónimo que asigna USGS:
+    «26 km al OSO de Tocopilla, Chile».
+    """
+    from pipelines.p1_trigger.observados import pais_del_toponimo
+
+    assert pais_del_toponimo("26 km al OSO de Tocopilla, Chile") == "CHL"
+    assert pais_del_toponimo("71 km al OSO de Puerto Casma, Perú") == "PER"
+    assert pais_del_toponimo("4 km al E de Jordán, Colombia") == "COL"
+    # Sin traducir, que es como llega si `traducir_lugar` no reconoce la forma.
+    assert pais_del_toponimo("20 km W of Catia La Mar, Venezuela") == "VEN"
+    assert pais_del_toponimo("15 km NE of Somewhere, Peru") == "PER"
+
+
+def test_un_sismo_en_mar_abierto_no_tiene_pais_y_no_es_un_fallo() -> None:
+    """«northern East Pacific Rise» y «Drake Passage» no pertenecen a ninguno.
+
+    Devolver cadena vacía es la respuesta correcta, no un parseo que falló: el
+    bbox de LATAM es un rectángulo y se cuela océano abierto a propósito.
+    """
+    from pipelines.p1_trigger.observados import pais_del_toponimo
+
+    assert pais_del_toponimo("northern East Pacific Rise") == ""
+    assert pais_del_toponimo("Drake Passage") == ""
+    assert pais_del_toponimo("") == ""
+
+
+def test_no_se_inventa_un_pais_que_el_sistema_no_cubre() -> None:
+    """Un sismo en un país fuera de los diecinueve no se le asigna al vecino."""
+    from pipelines.p1_trigger.observados import pais_del_toponimo
+
+    assert pais_del_toponimo("30 km al N de Kingston, Jamaica") == ""
+
+
+def test_el_pais_viaja_al_json_publicado() -> None:
+    """Escrito y no publicado sería el patrón que este repositorio persigue."""
+    from dataclasses import asdict
+
+    from pipelines.p1_trigger.observados import EventoObservado
+
+    e = EventoObservado(
+        usgs_id="us7000abc",
+        mag=4.7,
+        lon=-70.4,
+        lat=-22.2,
+        depth_km=52.1,
+        lugar="26 km al OSO de Tocopilla, Chile",
+        origen_utc="2026-08-30T05:19:51Z",
+        razon="M4.7 < umbral M5.5",
+        iso3="CHL",
+    )
+
+    assert asdict(e)["iso3"] == "CHL"
