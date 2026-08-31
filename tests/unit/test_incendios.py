@@ -296,7 +296,9 @@ def test_se_guarda_cuando_empezo_y_cuando_se_vio_por_ultima_vez(con: Any) -> Non
 # --- Lo que se publica ------------------------------------------------------
 
 
-def _celda(h3: str, *, pop: float = 0.0, frp: float = 1.0) -> CeldaConFuego:
+def _celda(
+    h3: str, *, pop: float = 0.0, frp: float = 1.0, ultima: str = "2026-08-25T12:00:00Z"
+) -> CeldaConFuego:
     return CeldaConFuego(
         h3=h3,
         detecciones=1,
@@ -305,7 +307,7 @@ def _celda(h3: str, *, pop: float = 0.0, frp: float = 1.0) -> CeldaConFuego:
         frp_suma=frp,
         brillo_max_k=340.0,
         primera_utc="2026-08-25T12:00:00Z",
-        ultima_utc="2026-08-25T12:00:00Z",
+        ultima_utc=ultima,
         pop=pop,
     )
 
@@ -654,3 +656,56 @@ def test_una_fila_sin_temperatura_no_revienta_la_lectura() -> None:
 
     assert len(focos) == 1
     assert focos[0].brillo_k == 0.0
+
+
+def test_el_fichero_no_publica_mas_horas_de_las_que_declara() -> None:
+    """Declaraba 24 h y traia treinta y una.
+
+    FIRMS publica un "active fire 24h" por satelite y por region, y los seis
+    ficheros no cortan a la misma hora. Al unirlos, el span real medido el
+    31-ago-2026 era de 30,9 h y nadie recortaba despues.
+
+    Consecuencia sobre esa corrida: **425 de 4.000 celdas —10,6 %— quedaban
+    fuera de las 24 h declaradas, y con ellas 130.754 personas**. La tarjeta
+    decia "personas en celdas con fuego activo en 24 h" contando detecciones de
+    hasta 31 horas antes.
+    """
+    dentro = _celda("88dentro", pop=10.0, ultima="2026-08-31T10:00:00Z")
+    justo = _celda("88justo", pop=20.0, ultima="2026-08-30T10:30:00Z")
+    fuera = _celda("88fuera", pop=1000.0, ultima="2026-08-30T03:00:00Z")
+
+    datos = build_incendios([dentro, justo, fuera], ventana_horas=24)
+
+    publicadas = {c["h3"] for c in datos["celdas"]}
+    assert publicadas == {"88dentro", "88justo"}, "no se recorto a la ventana declarada"
+    assert datos["totales"]["celdas"] == 2, "el total sigue contando lo que quedo fuera"
+    assert datos["totales"]["pop_en_celdas_con_fuego"] == 30, (
+        "las personas de una deteccion de hace 31 h siguen en la cifra de portada"
+    )
+
+
+def test_la_ventana_se_mide_desde_el_dato_y_no_desde_el_reloj() -> None:
+    """Misma regla que `referenciaDelFuego` en el visor, y por el mismo motivo.
+
+    Con el reloj, un fichero de FIRMS de hace cuatro horas dejaria la ventana de
+    6 h completamente vacia aunque el dato estuviera perfecto. Ya paso una vez
+    en el visor y se reporto como "el filtro de 6 h no muestra nada".
+    """
+    viejas = [
+        _celda(f"88v{i}", pop=5.0, ultima=sello)
+        for i, sello in enumerate(["2020-01-02T00:00:00Z", "2020-01-01T23:00:00Z"])
+    ]
+
+    datos = build_incendios(viejas, ventana_horas=24)
+
+    assert len(datos["celdas"]) == 2, "se recorto contra el reloj y no contra el dato"
+
+
+def test_un_sello_ilegible_no_tumba_la_corrida() -> None:
+    """Publicar sin recortar es peor que no publicar nada, pero mucho mejor que
+    reventar: es lo que se hacia hasta hoy."""
+    c = _celda("88malo", pop=1.0, ultima="esto no es una fecha")
+
+    datos = build_incendios([c], ventana_horas=24)
+
+    assert len(datos["celdas"]) == 1
