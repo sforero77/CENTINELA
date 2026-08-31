@@ -821,38 +821,6 @@ footer a { color: var(--tenue); }
  * movil las pastillas de orden ocupan la primera linea, el interruptor la
  * segunda y la cuenta cae debajo, sin que ninguna se salga.
  */
-.controles-lista {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.55rem 0.9rem;
-  margin: 0 0 1.4rem;
-}
-
-.orden-lista { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-
-/* Mismas pastillas que el filtro por pais: es el mismo gesto —acotar la
-   lista— y darle dos lenguajes distintos obligaria a aprender dos. */
-.orden-lista button {
-  font: inherit;
-  font-size: 0.82rem;
-  padding: 0.3rem 0.85rem;
-  border: 1px solid var(--borde-fuerte);
-  border-radius: var(--radio-pastilla);
-  background: var(--crema);
-  color: var(--tenue);
-  cursor: pointer;
-  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
-}
-
-.orden-lista button:hover { border-color: var(--verde); color: var(--bosque); }
-
-.orden-lista button[aria-pressed="true"] {
-  background: var(--verde);
-  border-color: var(--verde);
-  color: var(--crema);
-}
-
 .solo-en-vista {
   display: flex;
   align-items: center;
@@ -1783,9 +1751,6 @@ thead th {
 /* Las pastillas de orden se leian como una fila mas del filtro de paises:
    mismo lenguaje visual, seis pixeles de distancia. El aire es lo que dice
    "esto es otro grupo". */
-.controles-lista { margin-top: 1.15rem; }
-
-/* La pista de la tabla iba pegada a la nota de abajo. */
 .tabla-pista { margin-bottom: 0.9rem; }
 
 /* La seccion de cobertura no tenia canal lateral: en cualquier pantalla mas
@@ -1952,57 +1917,6 @@ thead th {
 /* En una lista de dos filas el icono compite con la cifra si pesa lo mismo. */
 .terreno .icono {
   opacity: 0.7;
-}
-
-/* --- Ventana temporal de la lista (31-ago-2026) -------------------------- */
-
-/* Hereda de `.orden-lista`: son dos grupos de pastillas en la misma fila y
-   verlos distintos sugeriría que hacen cosas de distinta clase. Lo que los
-   separa es el orden de lectura —primero cuándo, luego cómo ordenar— y un
-   separador tenue, no un estilo propio. */
-.ventana-lista {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.ventana-lista button {
-  font: inherit;
-  font-size: 0.78rem;
-  padding: 0.28rem 0.6rem;
-  border: 1px solid var(--borde);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--tinta-suave, #6b6862);
-  cursor: pointer;
-}
-
-.ventana-lista button:hover {
-  border-color: #1f6f4a;
-  color: #1f6f4a;
-}
-
-.ventana-lista button[aria-pressed="true"] {
-  background: #123c29;
-  border-color: #123c29;
-  color: #f4f1e8;
-}
-
-.ventana-lista button:focus-visible {
-  outline: 2px solid #1f6f4a;
-  outline-offset: 2px;
-}
-
-/* El separador entre "cuándo" y "cómo ordenar". En móvil los dos grupos caen en
-   líneas distintas y la raya sobraría. */
-@media (min-width: 700px) {
-  .ventana-lista::after {
-    content: "";
-    width: 1px;
-    height: 1.1rem;
-    margin: 0 4px 0 8px;
-    background: var(--borde);
-  }
 }
 
 /* --- La sección de focos, gemela de la de reportes (31-ago-2026) ---------- */
