@@ -237,6 +237,7 @@ def _foco(
         frp=frp,
         adquirido_utc=f"2026-08-25T{hora}:00Z",
         satelite="N",
+        brillo_k=320.0,
         dia_noche="D",
     )
 
@@ -302,6 +303,7 @@ def _celda(h3: str, *, pop: float = 0.0, frp: float = 1.0) -> CeldaConFuego:
         detecciones_baja=0,
         frp_max=frp,
         frp_suma=frp,
+        brillo_max_k=340.0,
         primera_utc="2026-08-25T12:00:00Z",
         ultima_utc="2026-08-25T12:00:00Z",
         pop=pop,
@@ -516,6 +518,7 @@ def test_la_celda_publica_de_que_pais_es() -> None:
         detecciones_baja=0,
         frp_max=12.0,
         frp_suma=30.0,
+        brillo_max_k=340.0,
         primera_utc="2026-08-30T00:00:00Z",
         ultima_utc="2026-08-30T06:00:00Z",
         iso3="BRA",
@@ -540,9 +543,56 @@ def test_una_celda_fuera_de_los_activos_no_finge_un_pais() -> None:
         detecciones_baja=0,
         frp_max=4.9,
         frp_suma=4.9,
+        brillo_max_k=340.0,
         primera_utc="2026-08-30T00:00:00Z",
         ultima_utc="2026-08-30T00:00:00Z",
     )
 
     assert celda.iso3 == ""
     assert celda.pop == 0.0
+
+
+def test_la_temperatura_de_brillo_se_lee_del_csv() -> None:
+    """FIRMS publica trece columnas y este pipeline leía ocho.
+
+    `bright_ti4` estaba en cada fila desde el primer día y se tiraba: la única
+    intensidad publicada era el FRP.
+    """
+    fila = "1.0,-70.0,305.13,0.66,0.73,2026-08-25,1230,N,nominal,2.0NRT,289.79,1.89,D"
+    focos = parse_csv(_csv(fila))
+
+    assert focos[0].brillo_k == 305.13
+
+
+def test_la_temperatura_es_del_pixel_y_el_maximo_es_el_agregado_correcto() -> None:
+    """Promediar el píxel más caliente de una celda con los tibios de al lado da
+    un número que no describe nada.
+
+    Y no es la temperatura de la llama: es la del píxel de 375 m, que mezcla el
+    fuego con el terreno frío. Los valores reales van de 299 a 367 K —26 a 94 °C—
+    mientras un incendio arde por encima de 600 °C. Publicarla como «temperatura
+    del incendio» sería una cifra creíble y falsa.
+    """
+    import re
+    from pathlib import Path
+
+    fuente = (
+        Path(__file__).parent.parent.parent / "pipelines" / "p5_incendios" / "focos_h3.py"
+    ).read_text(encoding="utf-8")
+    sql = re.search(r'SQL_CELDAS = """(.*?)"""', fuente, re.S)
+    assert sql is not None
+    assert "max(brillo_k)" in sql.group(1), "la celda no agrega por el máximo"
+    assert "avg(brillo_k)" not in sql.group(1), "promediar diluye el píxel caliente"
+
+
+def test_una_fila_sin_temperatura_no_revienta_la_lectura() -> None:
+    """Un CSV al que le falte la columna sigue dando focos.
+
+    Perder la región entera por un campo ausente sería peor que publicar sin él,
+    que es la misma regla por la que un fichero caído no tumba los otros cinco.
+    """
+    fila = "1.0,-70.0,,0.66,0.73,2026-08-25,1230,N,nominal,2.0NRT,289.79,1.89,D"
+    focos = parse_csv(_csv(fila))
+
+    assert len(focos) == 1
+    assert focos[0].brillo_k == 0.0

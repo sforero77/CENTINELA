@@ -1264,6 +1264,9 @@ const ICONOS = {
   // DETECCION. Lo que vio el satelite y con cuanta energia.
   detecciones: '<circle cx="12" cy="12" r="2.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="7.5"/>',
   potencia: '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>',
+  temperatura:
+    '<path d="M10 14.5V5a2 2 0 1 1 4 0v9.5"/><circle cx="12" cy="17.5" r="3.5"/>' +
+    '<path d="M16 7h2M16 10h2"/>',
 
   // TERRENO: las dos formas en que el suelo falla despues del sismo.
   deslizamiento: '<path d="M3 8l7 6 4-3 7 5"/><path d="M21 21H3"/><path d="M7 18l3-2M12 19l3-3"/>',
@@ -3191,6 +3194,9 @@ function resumirFoco(id, celdas) {
     deteccionesBaja: suma("detecciones_baja"),
     frpSuma: suma("frp_suma"),
     frpMax: celdas.reduce((t, c) => Math.max(t, Number(c.frp_max) || 0), 0),
+    // El maximo, como en la celda: promediar el pixel mas caliente del foco con
+    // los tibios de su borde da un numero que no describe nada.
+    brilloMaxK: celdas.reduce((t, c) => Math.max(t, Number(c.brillo_max_k) || 0), 0),
     suelo,
     celdasConSuelo: conSuelo.length,
     primeraUtc: primeros[0] || null,
@@ -3989,7 +3995,13 @@ function abrirFoco(foco) {
     `<span class="etiqueta">detecciones en 24 h</span></div>` +
     `<div class="metrica"><span class="cabeza">${iconoSvg("potencia")}` +
     `<span class="valor">${numero(Math.round(foco.frpSuma))}</span></span>` +
-    `<span class="etiqueta">MW de potencia radiativa</span></div>`;
+    `<span class="etiqueta">MW de potencia radiativa</span></div>` +
+    (foco.brilloMaxK > 0
+      ? `<div class="metrica"><span class="cabeza">${iconoSvg("temperatura")}` +
+        `<span class="valor">${numero(foco.brilloMaxK)}</span></span>` +
+        `<span class="etiqueta">K de temperatura de brillo</span>` +
+        `<span class="apunte">Del píxel de 375&nbsp;m, no de la llama</span></div>`
+      : "");
 
   $("fuego-apostilla").textContent =
     `Una detección no es un incendio: tres satélites sobre el mismo fuego producen tres ` +
@@ -4196,6 +4208,12 @@ function cuadroDeIncendio(p) {
   const filas = [
     ["Detecciones (24 h)", numero(p.detecciones)],
     ["Potencia radiativa", `${numero(p.frp_suma)}&nbsp;MW`],
+    // En kelvin, que es como lo publica FIRMS, y no convertido a grados.
+    // "94 °C" invita a leer "el fuego esta tibio" cuando lo que dice es que la
+    // llama ocupa una fraccion pequeña de un pixel de 375 m: el rango real de
+    // esta cifra va de 26 a 94 °C mientras el fuego arde a 600 o mas. El kelvin
+    // no se lee solo, y eso aqui es una ventaja.
+    p.brillo_max_k > 0 ? ["Temperatura de brillo", `${numero(p.brillo_max_k)}&nbsp;K`] : null,
     p.pop > 0 ? ["Población", numero(p.pop)] : null,
     p.bld > 0 ? ["Edificios", numero(p.bld)] : null,
     p.salud > 0 ? ["Salud", numero(p.salud)] : null,
@@ -4211,6 +4229,7 @@ function cuadroDeIncendio(p) {
       .join("")}</table>` +
     `<p class="mono menor">${escapar(p.h3)}</p>` +
     `<p class="nota-incendio">Detecciones de satélite, no área quemada. ` +
+    `${p.brillo_max_k > 0 ? "La temperatura es la del píxel de 375&nbsp;m, no la de la llama: mezcla el fuego con el terreno frío de alrededor. " : ""}` +
     `${p.detecciones_baja > 0 ? `${numero(p.detecciones_baja)} de baja confianza no contadas. ` : ""}` +
     `Último paso: ${escapar(comoFecha(p.ultima_utc))}.</p>` +
     `</div>`
