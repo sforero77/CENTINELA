@@ -943,7 +943,12 @@ def test_el_globo_de_una_celda_se_va_con_su_evento(pagina: Any) -> None:
         for fx in (0.35, 0.45, 0.55):
             pagina.mouse.click(caja["x"] + caja["width"] * fx, caja["y"] + caja["height"] * fy)
             pagina.wait_for_timeout(320)
-            if pagina.locator(".maplibregl-popup").count():
+            # El globo de la CELDA, no cualquier globo. El rotulo que sale al
+            # pasar por encima de un epicentro tambien es un `.maplibregl-popup`
+            # y esta busqueda lo daba por bueno: la prueba pasaba a la asercion
+            # del boton de cerrar sin haber abierto ninguna celda, y fallaba ahi
+            # por la razon equivocada.
+            if pagina.locator(".maplibregl-popup .popup-celda").count():
                 abierto = True
                 break
         if abierto:
@@ -2256,6 +2261,11 @@ def test_la_mascara_tapa_el_mapa_base_y_no_el_dato(pagina: Any) -> None:
     pintado todavia".
     """
     _esperar_capa(pagina, "epicentros")
+    # El velo lo pone `prepararEstilo` desde `styledata`/`idle`, que no van al
+    # paso de las capas de dato: se espera a el, no al reloj.
+    pagina.wait_for_function(
+        "() => window.CENTINELA.capasDelMapa().includes('mascara')", timeout=ESPERA_MS
+    )
     capas: list[str] = pagina.evaluate("() => window.CENTINELA.capasDelMapa()")
 
     assert "mascara" in capas, "no se puso el velo sobre lo que no es America Latina"
@@ -2351,18 +2361,21 @@ def test_el_boton_devuelve_el_encuadre(pagina: Any) -> None:
     _esperar_capa(pagina, "epicentros")
     pagina.wait_for_timeout(1500)
 
-    boton = pagina.locator("#volver-encuadre")
-    assert boton.is_hidden(), "el boton se ofrece sin nada que deshacer"
+    boton = pagina.locator(".ctrl-inicio")
+    assert boton.is_visible(), "el mapa no ofrece un boton de inicio"
 
     # Alejar a mano, como haria un arrastre desafortunado.
+    antes = pagina.evaluate("() => window.CENTINELA.encuadre().zoom")
     pagina.locator(".maplibregl-ctrl-zoom-out").click()
     pagina.locator(".maplibregl-ctrl-zoom-out").click()
-    pagina.wait_for_timeout(1200)
-    assert boton.is_visible(), "la vista se desvio y el boton no aparecio"
+    pagina.wait_for_timeout(1400)
+    assert pagina.evaluate("() => window.CENTINELA.encuadre().zoom") < antes - 0.5
 
     boton.click()
-    pagina.wait_for_timeout(1500)
-    assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "boton:encuadre"
+    pagina.wait_for_timeout(1800)
+    assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "boton:inicio"
+    despues = pagina.evaluate("() => window.CENTINELA.encuadre().zoom")
+    assert abs(despues - antes) < 0.15, f"el inicio no devolvio el encuadre: {antes} -> {despues}"
 
 
 @pytest.mark.visor
@@ -2689,3 +2702,242 @@ def test_una_reconstruccion_dice_de_cuando_son_sus_cifras(pagina: Any) -> None:
     assert epoca.is_visible(), "una reconstruccion no dice de cuando son sus cifras"
     texto = epoca.inner_text()
     assert "2025" in texto and "actuales" in texto, f"el aviso no dice lo que hace falta: {texto!r}"
+
+
+# --- La capa de fuego tiene que caber en el lienzo ---------------------------
+#
+# 12.767 simbolos con radio de 3 a 5,5 px suman 413.000 px² de tinta sobre una
+# franja util de 335.000: 1,23 veces el lienzo entero. La mancha no era mala
+# suerte, era aritmetica. Y el 69 % de las celdas cae, a zoom 2, sobre un pixel
+# ya ocupado por otra.
+
+
+@pytest.mark.visor
+def test_el_fuego_fuerte_se_dibuja_encima(pagina: Any) -> None:
+    """Sin `circle-sort-key` gana el que venga despues en el fichero.
+
+    Medido a zoom 2: las 150 celdas mas energeticas comparten pixel con otra
+    **sin una sola excepcion**, asi que los quince focos de mas de 1.000 MW
+    —lo que este mapa existe para enseñar— se sorteaban contra 12.752
+    competidores. La rampa de color estaba y no se podia leer.
+    """
+    _esperar_capa(pagina, "incendios")
+    orden = pagina.evaluate(
+        "() => JSON.stringify(window.CENTINELA.ordenDeDibujo('incendios-punto'))"
+    )
+    assert orden and orden != "null", "la capa de fuego no ordena por nada"
+    assert "frp_suma" in orden, f"no ordena por energia: {orden}"
+
+
+@pytest.mark.visor
+def test_la_tinta_del_fuego_cabe_en_el_mapa(pagina: Any) -> None:
+    """El area que suman los circulos, contra el area del mapa.
+
+    Se calcula con la MISMA expresion que MapLibre tiene puesta, evaluada sobre
+    los datos reales: una captura no distingue "la tinta cabe" de "la tinta se
+    solapa y parece que cabe".
+    """
+    _esperar_capa(pagina, "incendios")
+    medida = pagina.evaluate(
+        """() => {
+             const r = window.CENTINELA.tintaDelFuego(2);
+             return r;
+           }"""
+    )
+    assert medida, "el visor no sabe medir su propia tinta"
+    assert medida["veces"] < 0.6, (
+        f"la capa de fuego pone {medida['veces']:.2f} veces la tinta que cabe en el mapa: "
+        f"{medida['tinta']:.0f} px² sobre {medida['lienzo']:.0f} px²"
+    )
+    # Y la energia manda sobre el numero: las celdas debiles no pueden poner
+    # mucha mas tinta que las fuertes, que es lo que enterraba el dato.
+    assert medida["debilesSobreFuertes"] < 4, (
+        f"las celdas mas debiles ponen {medida['debilesSobreFuertes']:.1f} veces la tinta "
+        f"de las mas fuertes"
+    )
+
+
+# --- Nadie cuenta media persona ---------------------------------------------
+
+
+@pytest.mark.visor
+def test_las_personas_se_cuentan_enteras(pagina: Any) -> None:
+    """El panel de un foco pequeno publicaba «5,7 personas».
+
+    `comoTexto` conserva el decimal por debajo de diez, y tiene su razon —el
+    primer corte de la leyenda de vias es 0,5 km—, pero se aplicaba tambien a la
+    gente. GHS-POP es un raster desagregado, asi que el 5,7 es el dato; lo que
+    no es cierto es la precision que sugiere. Y al lado, el globo de la celda ya
+    escribia «Población 3» en entero: el mismo hecho con dos formatos.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    # Un foco pequeno es donde aparece: se abre por la puerta de las pruebas.
+    encontrado = False
+    for i in range(12):
+        pagina.evaluate("(i) => window.CENTINELA.abrirFoco(i)", i)
+        pagina.wait_for_timeout(400)
+        texto = pagina.locator("#fuego-metricas").inner_text()
+        if "personas" in texto.lower():
+            encontrado = True
+            cifras = re.findall(r"^([\d.,<]+)$", texto, re.M)
+            assert not any("," in c for c in cifras), (
+                f"el foco {i} publica una persona fraccionaria: {texto!r}"
+            )
+    assert encontrado, "ningun foco de los doce primeros publica personas"
+
+
+@pytest.mark.visor
+def test_sin_viento_no_hay_bloque_de_ambiente(pagina: Any) -> None:
+    """El rotulo «Ambiente» con su parrafo y debajo nada.
+
+    `cuadroDeViento` devuelve vacio cuando GFS no cubre el foco —correcto: un
+    cero ahi diria "no hace viento" cuando lo que pasa es que no se midio— pero
+    el `<section>` se quedaba en pie, y un bloque vacio con titulo se lee como
+    un fallo de carga.
+
+    CON EL FICHERO DE HOY NO PASA: los 3.337 puntos de la rejilla cubren los
+    6.239 focos. Asi que la prueba **provoca** el caso vaciando la rejilla, en
+    vez de esperar a que ocurra: una prueba que solo pasa porque el escenario no
+    se da no vigila nada, y este es el escenario del dia que GFS falle.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    # Con viento: el bloque esta y tiene cifras.
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_timeout(500)
+    assert pagina.locator("#bloque-fuego-ambiente").is_visible()
+    assert pagina.locator("#fuego-ambiente .metrica").count() > 0, "el bloque no trae viento"
+
+    # Sin rejilla de viento: el bloque entero desaparece.
+    pagina.evaluate("() => window.CENTINELA.olvidarElViento()")
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_timeout(500)
+    assert not pagina.locator("#bloque-fuego-ambiente").is_visible(), (
+        "sin viento se sigue enseñando el rotulo «Ambiente» y su párrafo, sin nada debajo"
+    )
+
+
+# --- Cambiar de mapa base no puede llevarse el dato -------------------------
+
+
+@pytest.mark.visor
+def test_cambiar_de_mapa_base_conserva_las_capas(pagina: Any) -> None:
+    """`setStyle` no cambia el fondo: tira el estilo entero.
+
+    Y con el se van **todas** las fuentes y todas las capas, incluidas las
+    nuestras. Un conmutador que solo llame a `setStyle` deja un mapa base bonito
+    y vacio: sin epicentros, sin fuego, sin velo. Por eso el cambio pasa por un
+    solo sitio, que repone lo que es dato.
+    """
+    _esperar_capa(pagina, "epicentros")
+    _esperar_capa(pagina, "incendios")
+    pagina.wait_for_timeout(1200)
+
+    pagina.locator(".ctrl-bases").click()
+    pagina.locator('[data-base="oscuro"]').click()
+    # El estilo entero viaja por red: se espera a que las capas vuelvan.
+    pagina.wait_for_function(
+        """() => {
+             const c = window.CENTINELA.capasDelMapa();
+             return ['epicentros', 'incendios-punto', 'mascara'].every((x) => c.includes(x));
+           }""",
+        timeout=ESPERA_MS,
+    )
+
+    capas = pagina.evaluate("() => window.CENTINELA.capasDelMapa()")
+    velo = capas.index("mascara")
+    assert velo < capas.index("epicentros"), "tras cambiar de base el velo tapa el dato"
+    assert pagina.evaluate("() => window.CENTINELA.pintado.epicentros.rasgos") == 21
+
+
+@pytest.mark.visor
+def test_el_mapa_base_no_se_lleva_el_evento_abierto(pagina: Any) -> None:
+    """Con un reporte delante, cambiar de base tiene que devolver su malla.
+
+    Es el caso que mas duele: se esta leyendo un evento, se toca el mapa base
+    por curiosidad y el mapa se queda sin la malla que sostiene las cifras del
+    panel — que siguen ahi, describiendo algo que ya no se dibuja.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(1000)
+
+    marca2 = _ahora(pagina)
+    pagina.locator(".ctrl-bases").click()
+    pagina.locator('[data-base="relieve"]').click()
+    anotacion = _esperar_capa(pagina, "celdas", desde=marca2)
+
+    assert anotacion["rasgos"] > 0, "la malla del evento no volvio tras cambiar de base"
+    assert pagina.locator("#lateral-detalle").is_visible(), "se perdio el panel del evento"
+
+
+@pytest.mark.visor
+def test_la_galeria_de_bases_dice_lo_que_cuesta_cada_una(pagina: Any) -> None:
+    """ "Con relieve" cuesta legibilidad del dato, y quien la elige tiene derecho
+    a saberlo antes y no despues."""
+    _esperar_capa(pagina, "epicentros")
+    pagina.locator(".ctrl-bases").click()
+    texto = pagina.locator("#galeria-bases").inner_text()
+
+    for nombre in ("Claro", "Oscuro", "Con relieve"):
+        assert nombre in texto, f"falta el mapa base {nombre!r}: {texto!r}"
+    assert "compita con el dato" in texto, "no se avisa de lo que cuesta el relieve"
+    # El que esta puesto, marcado.
+    assert pagina.locator('#galeria-bases [aria-pressed="true"]').count() == 1
+
+
+@pytest.mark.visor
+def test_la_barra_de_escala_no_cae_dentro_de_la_leyenda(navegador: Any, servidor: str) -> None:
+    """La esquina de arriba a la derecha del mapa tiene fondo, y en 390 px se acaba.
+
+    Medido con un evento abierto: la barra de escala caia **22 px dentro** de la
+    leyenda de intensidad ya antes de añadir los botones de inicio y mapa base,
+    y con ellos pasaba a 67. Se libera sitio escondiendo el zoom en pantalla
+    estrecha —el unico de los tres que tiene gesto equivalente— pero la holgura
+    resultante es de un pixel, asi que esto la vigila: cualquier control nuevo
+    en esa esquina, o un tipo mas grande, la vuelve negativa.
+
+    `SONDA_SOLAPES` no lo cazaba porque compara cajas de TEXTO, y aqui lo que se
+    monta encima es una barra sobre el fondo de un panel.
+    """
+    ctx = navegador.new_context(viewport=MOVIL)
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/index.html")
+    pg.wait_for_function(
+        """() => {
+             const p = window.CENTINELA && window.CENTINELA.pintado;
+             return !!(p && p.epicentros);
+           }""",
+        timeout=ESPERA_MS,
+    )
+    marca = _ahora(pg)
+    pg.select_option("select", "us6000tjl2")
+    pg.wait_for_function(
+        """([desde]) => {
+             const p = window.CENTINELA && window.CENTINELA.pintado;
+             return !!(p && p.celdas && p.celdas.utc > desde);
+           }""",
+        arg=[marca],
+        timeout=ESPERA_MS,
+    )
+    pg.wait_for_timeout(1500)
+
+    holgura = pg.evaluate(
+        """() => {
+             const escala = document.querySelector('.maplibregl-ctrl-scale');
+             const leyenda = document.querySelector('#leyenda');
+             if (!escala || !leyenda) return null;
+             return Math.round(leyenda.getBoundingClientRect().top
+                               - escala.getBoundingClientRect().bottom);
+           }"""
+    )
+    ctx.close()
+    assert holgura is not None, "no se encontraron la escala o la leyenda"
+    assert holgura >= 0, f"la barra de escala cae {abs(holgura)} px dentro de la leyenda"
