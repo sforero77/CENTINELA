@@ -46,6 +46,7 @@ uv run centinela lint-manifests       # valida licencias y vintages
 uv run centinela observados           # publica los vistos-y-no-despachados
 uv run centinela reindexar            # reconstruye reports/index.json
 uv run centinela regenerar-mapas      # re-renderiza los PNG
+uv run centinela regenerar-textos     # rehace report.md y hilo.txt
 uv run centinela contornos <usgs_id>  # extrae contornos MMI
 uv run centinela paises-candidatos    # ¿de qué país es este sismo?
 uv run centinela calibrar             # calibra contra referencia oficial

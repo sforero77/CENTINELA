@@ -133,3 +133,59 @@ def test_las_garantias_siguen_enlazadas() -> None:
 
     texto = garantias.read_text(encoding="utf-8")
     assert "Lo que NO está garantizado" in texto, "un documento de garantias sin la mitad incomoda"
+
+
+# --- El conteo de pruebas tambien es una cifra de la portada -----------------
+
+
+def _recolectadas(*argumentos: str) -> int:
+    """Cuantas pruebas recolecta pytest con esos argumentos.
+
+    Se lanza en un subproceso con `--collect-only`, que no ejecuta nada: la
+    recoleccion entera tarda decimas de segundo y no toca red ni navegador.
+    """
+    import re
+    import subprocess
+    import sys
+
+    salida = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", *argumentos],
+        cwd=RAIZ,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout
+    # "1064/1173 tests collected (109 deselected)" o "101 tests collected"
+    hallado = re.search(r"(\d+)(?:/\d+)? tests collected", salida)
+    assert hallado, f"pytest no dijo cuantas recolecto:\n{salida[-800:]}"
+    return int(hallado.group(1))
+
+
+def test_el_readme_no_miente_sobre_cuantas_pruebas_hay(readme: str) -> None:
+    """La portada decia «953 pruebas … 43 de navegador». Eran 1.064 y 101.
+
+    Nadie lo noto porque **nadie lo vigilaba**: las nueve cifras del backtest
+    tienen guardia desde que se descubrio que cinco estaban desfasadas, y estas
+    dos se quedaron fuera. Se separaron en cuanto la suite crecio, que es lo que
+    le pasa a toda cifra copiada a mano.
+
+    Es la misma leccion del resto del fichero, aplicada a la unica cifra del
+    README que habla del propio repositorio.
+    """
+    import re
+
+    pipeline = _recolectadas()
+    visor = _recolectadas("tests/visor", "-m", "visor")
+
+    hallado = re.search(
+        r"\*\*([\d.]+) pruebas\*\* sin red, mas \*\*([\d.]+) de navegador\*\*", readme
+    )
+    assert hallado, "el README ya no dice cuantas pruebas hay en la forma esperada"
+
+    dice_pipeline = int(hallado.group(1).replace(".", ""))
+    dice_visor = int(hallado.group(2).replace(".", ""))
+
+    assert dice_pipeline == pipeline, (
+        f"el README dice {dice_pipeline} pruebas sin red y hay {pipeline}"
+    )
+    assert dice_visor == visor, f"el README dice {dice_visor} de navegador y hay {visor}"

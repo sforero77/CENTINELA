@@ -66,6 +66,43 @@ activo porque arrastraría el share-alike al cubo entero; **AlphaEarth**
 (Google DeepMind, CC-BY) sí podría. La decisión ya está tomada y es de
 licencia, no de calidad.
 
+## Decisiones del visor, tomadas el 1-sep-2026
+
+Salieron de recorrer la pagina publicada como usuario final. Las tres se
+tomaron con medida, no con gusto.
+
+### Velar lo que no es America Latina, en vez de reencuadrar
+
+La caja de la region es alta —73° por 76°— y el panel del mapa es apaisado en
+todo escritorio: `fitBounds` encaja por la altura y el ancho sobra. Medido en la
+pagina publicada: 191° de longitud visibles en 1540 px, con la region ocupando
+el 38 % del ancho y Africa occidental **rotulada**.
+
+Llenar el ancho obliga a recortar latitud, y el primer recorte se lleva Ciudad
+de Mexico, Monterrey y Santiago. **Se ensena la region entera y se apaga lo
+demas.** Detalle en [`../visor/capas-y-modos.md`](../visor/capas-y-modos.md).
+
+### El fuego se dibuja con simbolos proporcionales, no con calor ni con bins
+
+La vista continental era una mancha porque **la tinta no cabia**: 12.767
+simbolos ponian 1,23 veces el lienzo. Se probaron cuatro alternativas sobre la
+pagina real y se descarto el mapa de calor **por medida**: con
+`heatmap-intensity` y `heatmap-radius` fijos, el mismo punto sale carmesi a zoom
+2, naranja a zoom 4 y del color del papel a zoom 6. `heatmap-density` cuenta
+vecinos por pixel de pantalla, no energia — no se puede rotular en MW.
+
+El clustering agrupa por proximidad **en pantalla**, y a escala continental el
+radio se traga paises: los conteos acaban flotando sobre el Pacifico.
+
+### Tres mapas base, no cinco
+
+OpenFreeMap publica cinco estilos. `liberty` y `fiord` son de colores saturados
+y sobre ellos las rampas de intensidad y de fuego dejan de leerse. Ofrecer un
+mapa base que estropea el dato no es dar una opcion, es dar una trampa. Los tres
+que quedan llevan escrito lo que cuestan.
+
+---
+
 ## Decisiones abiertas
 
 Estas no están cerradas y viven en [`PENDIENTES.md`](../../PENDIENTES.md):
@@ -75,3 +112,9 @@ Estas no están cerradas y viven en [`PENDIENTES.md`](../../PENDIENTES.md):
   ejecución. Contradice parcialmente el espíritu de D6.
 - **Coropletas r7/r6 en PMTiles**: declaradas en D1/D2, todavía no construidas.
   El resto del visor funciona sin ellas.
+- **El redondeo de prosa y el de tabla no coinciden.** RF-06 fija dos cifras
+  significativas en prosa, así que el `.md` publica «110 mil» donde el visor
+  publica «108.000». Las dos son ciertas y quien las compare sin saber la regla
+  concluye que una está mal. Por ahora el `.md` **dice** que va redondeado y
+  dónde están las cifras exactas; unificarlas rompería la regla de la
+  especificación y es una decisión editorial sin tomar.
