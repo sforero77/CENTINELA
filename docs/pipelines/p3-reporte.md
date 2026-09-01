@@ -133,15 +133,56 @@ pop MMI≥7: 340k → 355k
 
 ## Los mapas estáticos
 
-Dos variantes, distintas en tamaño y en cuerpo de letra:
+Dos variantes, y ahora distintas de verdad:
 
-| Variante | Píxeles | DPI |
-|---|---|---|
-| `general` | 1200 × 900 | 110 |
-| `prensa` | 1600 × 900 | 130 |
+| Variante | Píxeles | DPI | Para |
+|---|---|---|---|
+| `general` | 1100 × 900 | 110 | El panel y el markdown: compacta, para leerse dentro de otra cosa |
+| `prensa` | 1920 × 1080 | 140 | 16:9 y tipografía grande: una nota o una proyección |
 
-Se renderizan con matplotlib, sin dependencias de servicios de mapas.
+Antes sólo cambiaba el ancho máximo, y con `tight_layout` recortando al dato ni
+eso se notaba: los dos PNG de cada evento salían prácticamente idénticos,
+ofrecidos como dos descargas distintas.
+
+**Y no eran un mapa.** Eran una dispersión de matplotlib con los ejes en grados
+decimales —«−79.5», «0.5»—, sin costa, sin escala, sin norte y sin leyenda de
+tamaño, cuando el tamaño del círculo *es* la variable principal. Hoy llevan:
+
+- **La forma del evento**, de `contornos.json`. ShakeMap publica sus contornos
+  como líneas, no como áreas, pero los lazos vienen cerrados y las bandas están
+  anidadas: pintar de menor a mayor reproduce la estructura sin recortar
+  geometría. Un lazo abierto se descarta antes que inventar área.
+- **Barra de escala en km y flecha de norte**, en lugar de los ejes. Nadie lee
+  «−79.5» en un mapa de prensa, y una retícula de coordenadas sugiere una
+  precisión de posición que este producto no publica.
+- **Leyenda de tamaño**, con tres círculos de referencia.
+- **Marcadores en tinta neutra.** Iban coloreados por intensidad *sobre* un fondo
+  que ahora ya es la intensidad, así que un municipio en MMI 8 desaparecía. Una
+  variable por canal: el color es del fondo, el tamaño es del símbolo.
+
+No se toca T0.8: matplotlib solo, sin teselas, sin red y sin llaves. Y **sin
+`h3`**: la forma sale de los contornos, que son coordenadas planas en el JSON,
+para no atar el render del reporte al extra pesado `[geo]`.
+
 `centinela regenerar-mapas` los rehace sin recalcular el impacto.
+
+## Rehacer los textos de un reporte publicado
+
+`centinela regenerar-textos` es el gemelo de `regenerar-mapas`: rehace
+`report.md` y `hilo.txt` de un reporte publicado, o de todos, desde su
+`report.json` y su `adm2.csv`. No recomputa el impacto, que costaría bajar el
+activo de cada país.
+
+Existe por un descubrimiento incómodo. El generador llevaba las tildes puestas en
+el repositorio y **lo publicado no**: los veintiún paquetes se emitieron antes de
+esa corrección y nada volvía a tocarlos, así que el hilo para redes —el único
+artefacto que un humano publica a mano— abría con `Reporte automatico de
+EXPOSICION estimada` y cerraba con `Exposicion no es dano`.
+
+Un texto rancio no se distingue de uno recién generado mirándolo.
+`tests/unit/test_textos_publicados.py` vigila el generador con una lista negra de
+las formas que se colaron; comprobado que detecta las trece que estaban
+publicadas.
 
 ## El índice
 

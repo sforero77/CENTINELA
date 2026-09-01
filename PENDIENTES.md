@@ -353,6 +353,40 @@ golden— y publicar el delta. Si es menor del 3 %, la decisión queda defendida
 con un número en vez de con un argumento. Si es mayor, es un hallazgo y hay que
 cambiar el método. Los dos resultados valen más que la situación actual.
 
+### 2.1.septies El arreglo de A1 está en el código y no en el dato publicado
+
+`SQL_IMPACT_ADM2` ya lleva el corte de MMI≥6 y la columna se llama
+`lq_pop_expuesta_mmi6p`, pero **ningún `adm2.csv` se regeneró**: los veintiún
+publicados siguen sirviendo la columna vieja, calculada desde MMI 5,0.
+
+Medido contra la página publicada el 1-sep-2026, sumando la columna del CSV
+contra la cifra nacional del mismo evento:
+
+| Evento | Suma del CSV | Nacional | Diferencia |
+|---|---:|---:|---:|
+| Tehuantepec | 590.431 | 360.767 | **+229.663** |
+| Muisne | 1.348.531 | 1.160.483 | **+188.048** |
+| Chocó | 1.660.190 | 1.600.028 | +60.162 |
+
+**Quince de los veintiún** no cuadran. Quien baje el CSV para repartir ayuda y
+lo contraste contra la cifra nacional del reporte sigue encontrando hoy una
+diferencia que nadie sabe explicar — que es exactamente el problema que A1
+identificó.
+
+No se regeneraron porque rehacer un `adm2.csv` exige correr P2 entero por
+evento, y eso necesita el activo de exposición del país, que no vive en el
+repositorio. `regenerar-textos` y `regenerar-mapas` no llegan: los dos son
+derivados del `report.json`, y esta columna no.
+
+**Lo que lo cierra:** correr `centinela impact` sobre los veintiuno con los
+activos descargados, o publicar un aviso en el propio CSV mientras tanto. Y lo
+que lo vigila una vez hecho: una prueba que sume la columna de los CSV
+publicados y la compare con `pop_lq_alta` y `pop_ls_alta` del `report.json` de
+al lado. `test_ground_failure_cuadra.py` vigila el SQL; nadie vigila el
+artefacto.
+
+---
+
 ### 2.2 Coropletas r7/r6 del visor
 
 **Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salió primero de las
@@ -494,7 +528,43 @@ cumple, se documenta y se cierra; si no, se cambia el método.
   sale —`centinela calibrar`, que estrecha con lo medido y nunca ensancha sola—
   y por que el desvío de GHS-POP frente a una proyección demografica es
   esperable. Ese documento esta sin escribir.
-- **El área de un símbolo del mapa estático esta muy comprimida.** `_tamano` es
+### 2.6.1 Lo que dejó abierto el recorrido del visor (1-sep-2026)
+
+Salió de usar la página publicada como usuario final. Lo grave se arregló y está
+en `VERIFICACIONES.md`, ronda 6; esto es lo que **sigue abierto**, en orden de
+cuánto molesta.
+
+- **La portada prometía «menos de una hora» y `/status` mide 74,4 min de mediana
+  solo en detectar.** Se quitó de la portada en la revisión cruzada; queda la
+  causa: o baja la cadencia del vigía, o el objetivo de 60 min de RNF-02 no se
+  puede cumplir aunque el resto del pipeline fuera instantáneo.
+- **`/status` no cubre el fuego.** El panel de fuego enlazaba a Estado
+  prometiendo «la cadencia real»; se le quitó el enlace porque Estado solo
+  publica latencia sísmica y las revisiones del vigía. La frescura de P5 no se
+  publica en ningún sitio.
+- **`/status` publica «latencia 5346 d»** para las reconstrucciones, con una nota
+  debajo diciendo que no significa nada. La tabla se lee como un muro de
+  fracasos; la distancia sismo-reproceso merece su propia columna, más callada.
+- **Un foco de fuego no dice dónde está.** Ni país, ni región, ni el municipio
+  más cercano: se pulsa un incendio, el mapa vuela a un río sin nombre del
+  Amazonas y el panel dice «2 celdas contiguas ardiendo».
+- **El globo de una celda de fuego se recorta** contra los controles y la barra
+  de escala cuando el foco cae cerca del borde derecho del mapa. El dato está en
+  el DOM y no se lee en pantalla.
+- **La holgura entre la barra de escala y la leyenda es de 1 px** en 390 px con
+  un evento abierto. Sin solape, pero cualquier control nuevo en esa esquina —o
+  un cuerpo de letra mayor— la vuelve negativa.
+  `test_la_barra_de_escala_no_cae_dentro_de_la_leyenda` la vigila.
+- **Las etiquetas de las métricas miden 10,5–11,5 px.** Medido: contraste 5,2:1,
+  pasa AA. El problema es el tamaño, y son justo las que dicen qué es cada
+  número.
+- **La malla del evento se ve apolillada.** Los huecos blancos dentro de la
+  mancha son celdas sin exposición —honesto— pero se leen como un fallo de
+  render.
+- **En móvil la fila de filtros es una tira con `overflow-x: auto`** y no hay
+  ninguna señal visual de que hay más a la derecha. El control se alcanza
+  deslizando; comprobado.
+- **El área de un símbolo del mapa estático está muy comprimida.** `_tamano` es
   `12 + 4·sqrt(pop/1000)`: entre mil y 333.000 personas el área del círculo solo
   se multiplica por 5,3. Ahora que el PNG lleva leyenda de tamaño la compresión
   se ve. Un escalado proporcional al valor —área ∝ población, con mínimo
@@ -998,8 +1068,8 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
 - [docs/Garantías.md](docs/GARANTIAS.md) — que garantiza este sistema y que no,
   separando lo probado de lo supuesto. Es el documento que hay que leer antes de
-  decir que esto esta en producción.
-- [docs/FAMILIAS_DE_FALLO.md](docs/FAMILIAS_DE_FALLO.md) — las siete formas en
+  decir que esto está en producción.
+- [docs/FAMILIAS_DE_FALLO.md](docs/FAMILIAS_DE_FALLO.md) — las once formas en
   que este sistema se rompe sin ponerse rojo, con sus casos reales y la regla
   que cierra cada una. Es el resumen útil de tres días de auditoría.
 

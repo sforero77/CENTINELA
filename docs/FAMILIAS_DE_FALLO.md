@@ -1,10 +1,13 @@
-# Ocho formas de romper este sistema sin que nada se ponga rojo
+# Once formas de romper este sistema sin que nada se ponga rojo
 
 Escrito el 27-ago-2026, tras tres días de auditoría y unos cuarenta fallos
-encontrados. La octava se anadio el 31-ago, y se anadio mal: se encontró
+encontrados. La octava se añadió el 31-ago, y se añadió mal: se encontró
 validando producción en vez de antes del PR, que es justo lo que este documento
-existe para evitar. `AUDITORIA.md` los lista uno a uno; esto los agrupa por **causa**,
-que es lo que sirve para reconocer el siguiente antes de que muerda.
+existe para evitar. Las tres últimas salieron el 1-sep de una revisión del visor
+como usuario final, y **las tres estaban publicadas**: una frase que negaba sus
+propias cifras, un dibujo que corría dos veces y una prueba que no vigilaba nada.
+`AUDITORIA.md` los lista uno a uno; esto los agrupa por **causa**, que es lo que
+sirve para reconocer el siguiente antes de que muerda.
 
 El hilo común: **casi ninguno falla ruidosamente.** Producen resultados
 plausibles, corridas en verde y cifras creibles. Por eso hay que buscarlos.
@@ -247,16 +250,79 @@ tolera fallos, la prueba de «fallan todos» va con la de «falla uno».
 
 ---
 
-## Lo que estas ocho comparten
+## 9 · La nota escrita para un caso se imprime en el contrario
+
+`bandaDeTotales` devuelve 8 cuando hay población en MMI≥8 y 6 cuando la sacudida
+no llego a 7. Una sola rama cubria los dos y ponia la misma nota:
+
+    La sacudida no alcanzo MMI 7 sobre población: ninguna de las cifras de
+    abajo, que se cuentan en MMI≥7, aplica a este evento.
+
+En banda 6 es cierta. **En banda 8 dice lo contrario de lo que el propio panel
+ensena dos bloques más arriba**: Muisne tiene 2.283.454 personas en MMI≥7. Los
+tres eventos más fuertes del catalogo eran los que llevaban la frase que niega
+sus propias cifras.
+
+**La regla.** Una condicion escrita como "el caso raro" (`banda !== 7`) agrupa
+dos casos opuestos en cuanto aparece el tercero. Se enumeran, no se niegan.
+
+---
+
+## 10 · La red de seguridad no se cancela
+
+`cuandoElEstiloEsteListo` esperaba a que MapLibre terminara y ademas armaba un
+`setTimeout` de cuatro segundos por si ese momento no llegaba nunca. El camino
+normal quitaba los escuchadores **y dejaba el temporizador en pie**, asi que
+todo dibujo diferido corria dos veces.
+
+    fallo al dibujar sobre el mapa: Error: Source "celdas" already exists.
+
+No se veia al arrancar, porque ahi el estilo suele estar listo y se toma el
+atajo. Se veia con `?evento=` sobre estilo frio — el enlace profundo, que es
+como llega quien recibe un reporte compartido.
+
+**La regla.** Una red de seguridad tiene que apagarse cuando el camino bueno
+funciona. Si no, no es una red: es una segunda ejecucion.
+
+---
+
+## 11 · La prueba pasa porque el escenario no ocurre
+
+El bloque «Ambiente» del panel de fuego se quedaba con su titulo y su parrafo
+cuando GFS no cubria el foco. Se arreglo, se escribio una prueba que recorria
+doce focos buscando el caso… y pasaba siempre. Medido despues: **los 3.337
+puntos de la rejilla de viento cubren los 6.239 focos, ninguno a más de medio
+grado**. El caso no se da nunca.
+
+Una prueba asi da verde el dia que el arreglo se rompe, porque nunca lo ejecuto.
+La prueba buena **provoca** el escenario: vacia la rejilla y comprueba que el
+bloque desaparece.
+
+De la misma familia, y encontrado a la vez: recortar el código por un numero
+fijo de caracteres. Dos pruebas leian 900 caracteres desde el id de una capa; al
+crecer el bloque las aserciones quedaron fuera y siguieron en verde sobre código
+que ya no miraban.
+
+**La regla.** Ante una prueba nueva, romper el arreglo a proposito y comprobar
+que falla. Si no falla, no vigila nada.
+
+---
+
+## Lo que estas once comparten
 
 Ninguna se detecta leyendo el código de la pieza. Todas se detectan preguntando
-una de estas cuatro cosas:
+una de estas cosas:
 
-1. **¿Quien llama a esto?** (familia 1)
-2. **¿Que pasa si el dato de fuera cambia de forma?** (familias 3 y 5)
-3. **¿Que pasa cuando el país es seis veces más grande?** (familia 4)
-4. **¿Esto se puede leer como algo que no es?** (familias 2, 6 y 7)
+1. **¿Quién llama a esto?** (familia 1)
+2. **¿Qué pasa si el dato de fuera cambia de forma?** (familias 3 y 5)
+3. **¿Qué pasa cuando el país es seis veces más grande?** (familia 4)
+4. **¿Esto se puede leer como algo que no es?** (familias 2, 6, 7 y 9)
 5. **¿Y si falla todo a la vez, no solo una parte?** (familia 8)
+6. **¿Qué corre dos veces, o ninguna?** (familia 10)
+7. **¿Esta prueba falla si rompo el arreglo?** (familia 11)
+5. **¿Y si falla todo a la vez, no solo una parte?** (familia 8)
+6. **¿Que corre dos veces, o ninguna?** (familia 10)
+7. **¿Esta prueba falla si rompo el arreglo?** (familia 11)
 
 Y la regla que las cubre todas, que es del dueño del proyecto: **el sistema tiene
 que demostrar que funciona por si mismo, no porque alguien lo note y pregunte.**

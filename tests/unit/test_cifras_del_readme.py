@@ -209,3 +209,97 @@ def test_el_documento_dice_que_ningun_reporte_se_disparo_en_vivo(instituciones: 
             "Ya hay reportes disparados en vivo: §3 de PARA_INSTITUCIONES y el "
             "README siguen diciendo que no, y ahora hay algo mejor que contar."
         )
+
+
+# --- El recuento de pruebas también es una cifra de la portada ---------------
+
+#: Marca que ya estamos dentro del subproceso que cuenta. Sin ella, la prueba se
+#: llamaría a sí misma sin fin.
+_CONTANDO = "CENTINELA_CONTANDO_PRUEBAS"
+
+
+def _pasadas(*argumentos: str) -> int:
+    """Cuántas pruebas **pasan** con esos argumentos.
+
+    Pasadas y no recolectadas: la portada dice «1.152 pruebas» y eso tiene que
+    significar las que verifican algo, no las que se recolectan incluyendo 27 que
+    se saltan por falta de datos locales. Contar recolectadas inflaría la cifra
+    en justo esas 27.
+    """
+    import os
+    import re
+    import subprocess
+    import sys
+
+    entorno = {**os.environ, _CONTANDO: "1"}
+    salida = subprocess.run(
+        [sys.executable, "-m", "pytest", "--tb=no", "-p", "no:cacheprovider", *argumentos],
+        cwd=RAIZ,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=entorno,
+    ).stdout
+    hallado = re.search(r"(\d+) passed", salida)
+    assert hallado, f"pytest no dijo cuántas pasaron:\n{salida[-800:]}"
+    return int(hallado.group(1))
+
+
+def _recolectadas(*argumentos: str) -> int:
+    """Cuántas recolecta, para las suites que no se pueden correr aquí.
+
+    La de navegador arranca un Chromium y tarda ocho minutos: no cabe dentro de
+    otra prueba. Se recolecta, que es exacto mientras ninguna se salte — y si
+    alguna empezara a saltarse, esta misma cifra dejaría de cuadrar con la
+    portada y habría que mirarlo.
+    """
+    import re
+    import subprocess
+    import sys
+
+    salida = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", *argumentos],
+        cwd=RAIZ,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout
+    hallado = re.search(r"(\d+)(?:/\d+)? tests collected", salida)
+    assert hallado, f"pytest no dijo cuántas recolectó:\n{salida[-800:]}"
+    return int(hallado.group(1))
+
+
+def test_el_readme_no_miente_sobre_cuantas_pruebas_hay(readme: str) -> None:
+    """La portada decía «953 pruebas … 43 de navegador». Eran 1.152 y 101.
+
+    Nadie lo notó porque **nadie lo vigilaba**: las nueve cifras del backtest del
+    Chocó tienen guardia desde que se descubrió que cinco estaban desfasadas, y
+    estas dos se quedaron fuera. Se separaron en cuanto la suite creció, que es
+    lo que le pasa a toda cifra copiada a mano — la misma lección que enuncia la
+    cabecera de este fichero, aplicada a la única cifra del README que habla del
+    propio repositorio.
+    """
+    import os
+    import re
+
+    if os.environ.get(_CONTANDO):
+        pytest.skip("ya estamos dentro del subproceso que cuenta")
+
+    hallado = re.search(
+        r"\*\*([\d.]+) pruebas\*\* sin red, más \*\*([\d.]+) de navegador\*\*", readme
+    )
+    assert hallado, "el README ya no dice cuántas pruebas hay en la forma esperada"
+
+    dice_pipeline = int(hallado.group(1).replace(".", ""))
+    dice_visor = int(hallado.group(2).replace(".", ""))
+
+    # `+ 1` por esta misma prueba: dentro del subproceso se salta —si no, se
+    # llamaria a si misma sin fin— asi que el recuento que devuelve le falta una.
+    # La portada dice lo que ve quien corre `make check`, que si la incluye.
+    pipeline = _pasadas() + 1
+    visor = _recolectadas("tests/visor", "-m", "visor")
+
+    assert dice_pipeline == pipeline, (
+        f"el README dice {dice_pipeline} pruebas sin red y pasan {pipeline}"
+    )
+    assert dice_visor == visor, f"el README dice {dice_visor} de navegador y hay {visor}"

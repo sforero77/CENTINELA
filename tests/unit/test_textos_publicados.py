@@ -135,6 +135,36 @@ DOCUMENTOS: tuple[str, ...] = (
     "scripts/README.md",
     "tests/fixtures/golden/README.md",
     "tests/golden/README.md",
+    # Y los de subcarpeta, que quedaron fuera del primer pase: son veinticinco
+    # ficheros mas —toda la documentacion de arquitectura, datos, pipelines,
+    # acciones y visor— y ahi es donde vive lo que lee quien va a tocar el
+    # codigo. Una guardia que solo mira la raiz deja sin vigilar el doble de
+    # prosa de la que vigila.
+    "docs/acciones/README.md",
+    "docs/acciones/cadena-de-evento.md",
+    "docs/acciones/el-vigia.md",
+    "docs/acciones/mantenimiento.md",
+    "docs/acciones/orquestacion.md",
+    "docs/arquitectura/README.md",
+    "docs/arquitectura/contratos-de-datos.md",
+    "docs/arquitectura/decisiones.md",
+    "docs/arquitectura/flujo-de-datos.md",
+    "docs/datos/README.md",
+    "docs/datos/activo-h3.md",
+    "docs/datos/agregaciones.md",
+    "docs/datos/fuentes.md",
+    "docs/pipelines/README.md",
+    "docs/pipelines/common.md",
+    "docs/pipelines/p0-exposicion.md",
+    "docs/pipelines/p1-trigger.md",
+    "docs/pipelines/p2-impacto.md",
+    "docs/pipelines/p3-reporte.md",
+    "docs/pipelines/p4-brigada.md",
+    "docs/pipelines/p5-incendios.md",
+    "docs/visor/README.md",
+    "docs/visor/capas-y-modos.md",
+    "docs/visor/consumo-de-datos.md",
+    "docs/visor/validacion.md",
 )
 
 #: Formas que en estos documentos son siempre el verbo, nunca el adjetivo, y que
