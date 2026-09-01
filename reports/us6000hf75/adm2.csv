@@ -1,6 +1,6 @@
-usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta,lq_pop_expuesta,flags_calidad
-#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide,#population+liquefaction,#meta+flags
+usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
+#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
+us6000hf75,6,NI5535,San Rafael del Sur,-86.453829,11.853771,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
 us6000hf75,6,NI7520,Diriamba,-86.328515,11.769629,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us6000hf75,6,NI5535,San Rafael del Sur,-86.453829,11.853771,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,658.4280313402414,384.9097708463669,discrepancia_poblacional
-us6000hf75,6,NI3550,Nagarote,-86.630788,12.180891,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,32.3621034566313,33.03342383541167,"construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
-us6000hf75,6,NI5520,Villa El Carmen,-86.52545,12.021926,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,13.120193580165505,0.09315011836588383,
+us6000hf75,6,NI5520,Villa El Carmen,-86.52545,12.021926,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000hf75,6,NI3550,Nagarote,-86.630788,12.180891,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
