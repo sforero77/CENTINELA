@@ -372,6 +372,15 @@ de Caldas, que queda justo sobre la isolínea. El reporte publicado le atribuye
 al lado, pasa de 0 a 29.441. Cuando el borde cruza una ciudad densa, el método
 decide si la ciudad cuenta.
 
+**Un tercer efecto, del mismo mecanismo.** El `mmi_max` más alto que publica
+el reporte es **7,5** —el contorno más alto que trae `cont_mmi.json`— y el campo
+de `grid.xml` llega a **8,0**. Como el contorno asigna el suelo de la banda,
+`mmi_max` no puede superar nunca el nivel más alto dibujado: la banda MMI≥8 sale
+como **cero exacto** en un evento cuyo campo sí la alcanza. Aquí son 513
+personas, así que la cifra apenas se mueve; lo que importa es que ese cero se lee
+como «medido y da cero» cuando es «no representable», que es una familia de fallo
+que este proyecto ya tiene nombrada.
+
 **Y la justificación original ya no se sostiene.** Era de rendimiento. La
 medición completa —parsear 27 MB de rejilla, calcular 559.103 centros de celda y
 muestrear— tarda **6 segundos**. El coste que se quiso evitar no existe.
