@@ -13,7 +13,7 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 0,
-    "exposure_manifest": "per-v0.1"
+    "exposure_manifest": "per-v0.2"
   },
   "preliminar": false,
   "radios": [],
@@ -80,6 +80,12 @@
     "pop_discrepancia_pct": 11.6,
     "notas": []
   },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "",
+    "ls_pop_usgs": "",
+    "lq_alerta_usgs": "",
+    "lq_pop_usgs": ""
+  },
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",
@@ -88,11 +94,11 @@
   },
   "changelog": [],
   "disclaimers": [
-    "Exposicion estimada, no dano observado.",
-    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
-    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
-    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-08-25T17:53:42Z",
+  "generado_utc": "2026-09-01T23:16:36Z",
   "pipeline_version": "0.1.0"
 }
