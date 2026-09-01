@@ -14,6 +14,11 @@ Es la misma familia que este proyecto ya tiene nombrada —la defensa escrita y 
 artefacto sin tocar— y la única forma de que no se repita es comprobar el
 fichero, no el código que lo escribe.
 
+**Cerrado el 1-sep-2026.** Los veintiún eventos se re-emitieron con
+`impact.yml` y los veintiún CSV suman su cifra nacional. La re-emisión trajo
+además lo que nadie vigilaba: el Chocó publicaba el ShakeMap v7 cuando USGS ya
+servía el v8, y con él se movieron las nueve cifras que cita la portada.
+
 POR QUE HAY UNA LISTA DE PENDIENTES Y NO UNA TOLERANCIA. Rehacer un `adm2.csv`
 exige correr P2 entero por evento contra el activo de exposición de su país, que
 no vive en el repositorio: `regenerar-textos` y `regenerar-mapas` no llegan,
@@ -47,26 +52,11 @@ COLUMNAS: tuple[tuple[str, str], ...] = (
     ("ls_pop", "pop_ls_alta"),
 )
 
-#: Los que todavía llevan la columna calculada desde MMI 5,0. **Sólo puede
-#: encoger.** Se vacía re-emitiendo cada evento; ver el módulo.
-PENDIENTES_DE_REEMITIR: frozenset[str] = frozenset(
-    {
-        "us1000gez7",
-        "us20005j32",
-        "us2000ahv0",
-        "us2000bmhe",
-        "us2000j6hy",
-        "us60003sc0",
-        "us6000hf75",
-        "us6000t7zc",
-        "us6000t7zp",
-        "us70003t2n",
-        "us7000455l",
-        "us7000f93v",
-        "us7000jl3s",
-        "us7000nr0v",
-    }
-)
+#: Vacía desde el 1-sep-2026: los veintiuno re-emitidos, los veintiuno cuadran.
+#: Se deja el mecanismo —no la lista— porque la próxima vez que un arreglo del
+#: SQL deje atrás a los artefactos hará falta otra vez, y con él la prueba de
+#: abajo que impide que una excepción temporal se vuelva permanente.
+PENDIENTES_DE_REEMITIR: frozenset[str] = frozenset()
 
 
 def _eventos() -> list[str]:

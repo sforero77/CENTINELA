@@ -355,42 +355,44 @@ cambiar el método. Los dos resultados valen más que la situación actual.
 
 ### 2.1.septies El arreglo de A1 está en el código y no en el dato publicado
 
-`SQL_IMPACT_ADM2` ya lleva el corte de MMI≥6 y la columna se llama
-`lq_pop_expuesta_mmi6p`, pero **ningún `adm2.csv` se regeneró**: los veintiún
-publicados siguen sirviendo la columna vieja, calculada desde MMI 5,0.
+**Cerrado el 1-sep-2026.** Los veintiún eventos se re-emitieron con
+`impact.yml` (`backtest` + `reprocesar`) y los veintiún `adm2.csv` ya suman la
+cifra nacional de su reporte. `PENDIENTES_DE_REEMITIR` quedó vacía y
+`tests/unit/test_el_csv_cuadra_con_el_reporte.py` vigila los veintiuno sin
+excepciones.
 
-Medido contra la página publicada el 1-sep-2026, sumando la columna del CSV
-contra la cifra nacional del mismo evento:
+**Lo que salió de paso, y no se buscaba.** Re-emitir no es re-renderizar: el
+pipeline vuelve a preguntar a USGS. El Chocó publicaba el **ShakeMap v7 cuando
+USGS ya servía el v8**, y con él se movieron las nueve cifras del backtest que
+cita la portada —MMI≥6 de 6.960.086 a 7.194.540—. Dos guardias lo detuvieron; la
+tercera no existía: el README repite la tabla de contraste con PAGER y afirmaba
+que `test_contraste_con_pager.py` la vigilaba, cuando esa prueba sólo leía
+`docs/PARA_INSTITUCIONES.md`. Ahora vigila las dos copias.
 
-| Evento | Suma del CSV | Nacional | Diferencia |
-|---|---:|---:|---:|
-| Tehuantepec | 590.431 | 360.767 | **+229.663** |
-| Muisne | 1.348.531 | 1.160.483 | **+188.048** |
-| Chocó | 1.660.190 | 1.600.028 | +60.162 |
+Medido sobre los veintiuno: **sólo el Chocó iba atrasado** respecto a USGS. Los
+demás ya estaban en su versión vigente. El punto ciego era real, el daño no.
 
-**Quince de los veintiún** no cuadran. Quien baje el CSV para repartir ayuda y
-lo contraste contra la cifra nacional del reporte sigue encontrando hoy una
-diferencia que nadie sabe explicar — que es exactamente el problema que A1
-identificó.
+Queda anotado como pendiente propio en §2.1.octies.
 
-No se regeneraron porque rehacer un `adm2.csv` exige correr P2 entero por
-evento, y eso necesita el activo de exposición del país, que no vive en el
-repositorio. `regenerar-textos` y `regenerar-mapas` no llegan: los dos son
-derivados del `report.json`, y esta columna no.
+---
 
-**Lo que lo cierra:** un despacho de `impact.yml` por evento con `backtest` y
-`reprocesar`. La receta está en `docs/OPERACION.md`, §3.bis.
+### 2.1.octies Nadie vigila si un reporte publicado se quedó atrás
 
-**Lo que lo vigila mientras tanto:**
-`tests/unit/test_el_csv_cuadra_con_el_reporte.py` suma la columna de cada CSV
-publicado y la compara con `pop_lq_alta` y `pop_ls_alta` del `report.json` de al
-lado. Los quince pendientes están **enumerados** en `PENDIENTES_DE_REEMITIR`, no
-escondidos tras un margen, y hay una segunda prueba que falla si alguno ya cuadra
-y sigue en la lista. Cada evento re-emitido sale de ahí; cuando quede vacía, la
-guardia es total.
+El repaso RF-04 (`repaso.yml`, diario, ventana de 90 días) salta los backtest a
+propósito —`repaso.py:113`—, y los veintiún publicados **son todos** backtest.
+La decisión está razonada: re-emitir un histórico cada vez que USGS retoca su
+Atlas convertiría el catálogo en ruido. Pero su coste no estaba medido, y el
+resultado es que el repaso lleva días saliendo en verde con `"revisados": 0`.
 
-`test_ground_failure_cuadra.py` vigila el SQL. Esta vigila el artefacto, que es
-lo que faltaba.
+Así se enteró el sistema de que el Chocó llevaba una versión de retraso: porque
+alguien re-emitió a mano por otro motivo.
+
+**Lo que lo cerraría sin tocar la decisión:** una comprobación que compare, por
+reporte publicado, su `inputs.shakemap_version` y su `exposure_manifest` contra
+lo que USGS y el Release vigente sirven hoy, y que **informe sin despachar**.
+El `report.json` ya registra los tres campos y el repaso ya hace esa misma
+consulta al detail; lo único que sobra ahí es el filtro de backtest. Convierte
+«nadie sabe» en «hay N reportes atrasados, decide tú».
 
 ---
 
