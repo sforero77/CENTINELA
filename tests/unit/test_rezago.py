@@ -90,17 +90,20 @@ class _FetcherFalso:
         if uid in self.revientan:
             raise OSError("la red se cayo")
         sm, gf = self.versiones[uid]
-        producto = lambda v: [  # noqa: E731
-            {
-                "source": "us",
-                "status": "UPDATE",
-                "preferredWeight": 233,
-                "updateTime": 1,
-                "code": uid,
-                "properties": {"version": str(v)},
-                "contents": {},
-            }
-        ]
+
+        def producto(version: int) -> list[dict[str, Any]]:
+            return [
+                {
+                    "source": "us",
+                    "status": "UPDATE",
+                    "preferredWeight": 233,
+                    "updateTime": 1,
+                    "code": uid,
+                    "properties": {"version": str(version)},
+                    "contents": {},
+                }
+            ]
+
         return {
             "id": uid,
             "properties": {"products": {"shakemap": producto(sm), "groundfailure": producto(gf)}},

@@ -523,9 +523,7 @@ def _cmd_rezagados(args: argparse.Namespace) -> int:
     )
     _emit_github_output("hay_rezago", "true" if resultado.rezagados else "false")
     _emit_github_output("cuantos", str(len(resultado.rezagados)))
-    _emit_github_output(
-        "resumen", "\n".join(f"- {r.describir()}" for r in resultado.rezagados)
-    )
+    _emit_github_output("resumen", "\n".join(f"- {r.describir()}" for r in resultado.rezagados))
 
     if resultado.ciego:
         print(
