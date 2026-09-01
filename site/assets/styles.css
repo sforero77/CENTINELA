@@ -307,6 +307,86 @@ a:hover { color: var(--verde-vivo); }
   box-shadow: var(--sombra);
 }
 
+/* EN PANTALLA ESTRECHA, FUERA LOS BOTONES DE ZOOM.
+   La esquina de arriba a la derecha es la única libre del mapa, y en 390 px la
+   pila ya no cabe: medido con un evento abierto, la barra de escala caía 67 px
+   dentro de la leyenda de intensidad — y ya se metía 22 px antes de añadir los
+   botones de inicio y mapa base.
+
+   De los tres controles, el zoom es el prescindible: en una pantalla táctil se
+   hace pellizcando, y el propio aviso de gestos cooperativos que MapLibre pinta
+   sobre el mapa dice «Usa dos dedos para mover el mapa». Los otros dos no
+   tienen gesto equivalente.
+
+   `:has()` porque MapLibre no marca sus grupos: el que contiene los botones de
+   zoom es el suyo. */
+@media (max-width: 48rem) {
+  .maplibregl-ctrl-group:has(.maplibregl-ctrl-zoom-in) { display: none; }
+}
+
+/* Los dos botones propios del mapa —inicio y mapa base— y la galería que abre
+   el segundo. Viven en un solo `maplibregl-ctrl-group` para no gastar dos veces
+   los 10 px de margen que MapLibre da a cada grupo: en un móvil de 390 px esa
+   esquina ya llega hasta la leyenda. */
+.ctrl-centinela { position: relative; }
+
+/* `> button` y no `button`: la galería cuelga de este mismo grupo y sus
+   opciones NO son botones de 29 px. */
+.ctrl-centinela > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bosque);
+}
+
+/* Cuelga del grupo hacia la izquierda: hacia abajo taparía la barra de escala,
+   y hacia la derecha se saldría de la pantalla. */
+.galeria-bases {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 8px);
+  width: 15rem;
+  padding: 0.35rem;
+  border-radius: var(--radio-medio);
+  background: var(--crema);
+  border: 1px solid var(--borde);
+  box-shadow: var(--sombra);
+}
+
+/* `.galeria-bases .base-opcion` y no `.base-opcion` a secas: MapLibre define
+   `.maplibregl-ctrl-group button { width: 29px; height: 29px }`, que gana por
+   especificidad a una sola clase. Con esa regla encima, las tres opciones
+   salían aplastadas en cuadrados de 29 px con el texto encima del de al lado.
+   Medido en pantalla: ilegible. */
+.galeria-bases .base-opcion {
+  display: block;
+  width: 100%;
+  height: auto;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border: 0;
+  border-radius: var(--radio-chico);
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--bosque);
+  overflow: visible;
+}
+
+.galeria-bases .base-opcion + .base-opcion { margin-top: 0.15rem; }
+.galeria-bases .base-opcion:hover { background: var(--crema-alt); }
+.galeria-bases .base-opcion[aria-pressed="true"] { background: var(--bosque); color: var(--crema); }
+
+.base-nombre { display: block; font-size: 0.86rem; font-weight: 600; }
+.base-apunte {
+  display: block;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  margin-top: 0.1rem;
+  color: var(--tenue);
+}
+.galeria-bases .base-opcion[aria-pressed="true"] .base-apunte { color: rgba(244, 242, 234, 0.78); }
+
 /* El rotulo que sale al pasar por encima de un epicentro. Es un apunte, no una
    ficha: mas apretado que el resto de globos y sin puntero para el raton, para
    que no se robe a si mismo el `mouseleave` que lo cierra. */

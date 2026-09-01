@@ -144,20 +144,6 @@
       <p class="filtros-cuenta mono" id="cuenta-lista" aria-live="polite"></p>
       <p class="filtros-cuenta mono" id="cuenta-focos" hidden aria-live="polite"></p>
 
-      <!-- VOLVER AL ENCUADRE.
-           Habia tres formas de perder la vista de la region —rueda, arrastre, un
-           filtro que vuela a un pais— y ninguna de recuperarla sin recargar:
-           `volverAlEncuadre` solo lo llamaba `cerrarDetalle`, asi que en modo
-           panorama era inalcanzable.
-
-           Aqui y no sobre el mapa: en un movil de 390 px la esquina de arriba a
-           la derecha ya llega hasta la leyenda, y un boton mas empujaba la barra
-           de escala encima de ella. Ademas es de la misma familia que «Quitar
-           filtros» — las dos devuelven el tablero a como estaba. -->
-      <button type="button" class="filtros-limpiar" id="volver-encuadre" hidden>
-        Volver al encuadre
-      </button>
-
       <button type="button" class="filtros-limpiar" id="limpiar-filtros" hidden>
         Quitar filtros
       </button>
@@ -282,7 +268,7 @@
                que arde y cuanto, que es lo medido; el viento es del modelo y
                contextualiza. Vacio cuando no se pudo leer GFS, que es distinto
                de "no hace viento" y por eso no se pinta un cero. -->
-          <section class="bloque">
+          <section class="bloque" id="bloque-fuego-ambiente">
             <h3 class="eyebrow">Ambiente</h3>
             <p class="subtitulo-bloque">Hacia dónde empuja el viento y con qué sequedad. Viento de la zona según el modelo NOAA GFS, no medido en el incendio: su malla es de unos 27&nbsp;km y una celda son 0,74.</p>
             <div class="metricas" id="fuego-ambiente"></div>
