@@ -1,94 +1,94 @@
-usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta,lq_pop_expuesta,flags_calidad
-#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide,#population+liquefaction,#meta+flags
-us2000ahv0,1,MX20427,Santa María Petapa,-95.071976,16.88462,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,9.072519884444773,construido_no_mapeado
-us2000ahv0,1,MX07061,Ocozocoautla de Espinosa,-93.486587,16.819657,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,3.6227814750745893,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX07017,Cintalapa,-93.867503,16.71284,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1747.2879060748965,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07020,La Concordia,-92.771243,15.960895,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,4707.270048459992,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20305,San Pedro Comitancillo,-95.166545,16.463622,6.0,4.727894613519311,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20513,Santo Domingo Petapa,-95.218667,16.854083,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
-us2000ahv0,1,MX07069,Pijijiapan,-93.19173,15.670052,6.5,64443.639377167914,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,20.441309997346252,54131.08566241851,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX20025,Chahuites,-94.204645,16.273895,6.0,13942.13852614304,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,13434.83057910623,
-us2000ahv0,1,MX07008,Angel Albino Corzo,-92.680448,15.758148,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,10.474738149903715,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX20453,Santiago Astata,-95.612148,15.977576,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,8.837752737104893,78.21101408544928,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20515,Santo Domingo Tehuantepec,-95.391607,16.221756,6.0,71151.23822873516,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,588.6244098539464,3592.5823736656457,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07032,Escuintla,-92.558168,15.364432,6.0,491.87682092376053,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,6253.0110572669655,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20052,Magdalena Tequisistlán,-95.655311,16.347772,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us2000ahv0,1,MX30210,Uxpanapa,-94.355859,17.276873,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07106,Venustiano Carranza,-92.607897,16.317313,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
+#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
+us2000ahv0,1,MX07017,Cintalapa,-93.867503,16.71284,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20495,Santiago Xanica,-96.21861,16.004525,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX07108,Villaflores,-93.375188,16.346144,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX20413,Santa María Huatulco,-96.223488,15.796461,6.0,14375.726882462623,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,58.705288115888834,58.69195976853371,"construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX07020,La Concordia,-92.771243,15.960895,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX07089,Tapachula,-92.304663,14.934363,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20407,Santa María Chimalapa,-94.388596,16.946917,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07046,Jiquipilas,-93.672076,16.522736,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07117,Montecristo de Guerrero,-92.66439,15.671678,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us2000ahv0,1,MX20324,San Pedro Pochutla,-96.412807,15.789455,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us2000ahv0,1,MX07001,Acacoyagua,-92.681685,15.41414,6.0,3335.763190381229,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,2813.2679499862716,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX20427,Santa María Petapa,-95.071976,16.88462,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us2000ahv0,1,MX20036,Guevea de Humboldt,-95.389393,16.838769,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX07087,Suchiate,-92.227093,14.639646,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07003,Acapetahua,-92.772327,15.233736,6.0,37567.410551016685,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,122.01987851411104,34643.849095236044,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07040,Huixtla,-92.546804,15.097022,6.0,463.43872823379934,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.3679671883583069,463.43872823379934,discrepancia_poblacional
+us2000ahv0,1,MX20014,Ciudad Ixtepec,-95.089335,16.623388,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20557,Unión Hidalgo,-94.82312,16.487372,6.0,17354.592344975856,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,17337.00433217967,
+us2000ahv0,1,MX20066,Santiago Niltepec,-94.58807,16.519819,6.0,6635.152785366023,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1523.5781394909136,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20204,San Juan Lajarcia,-95.917909,16.511418,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20010,El Barrio de la Soledad,-95.043037,16.788277,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX20248,San Mateo del Mar,-95.047656,16.209301,6.0,18218.377668433823,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,38.782668963074684,1810.261854276061,"construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX07054,Mazatán,-92.497176,14.88047,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20141,San Francisco del Mar,-94.430909,16.220108,6.5,9616.744953387883,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,8780.853450242197,discrepancia_poblacional
+us2000ahv0,1,MX07035,Frontera Hidalgo,-92.213295,14.749991,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX07106,Venustiano Carranza,-92.607897,16.317313,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX30210,Uxpanapa,-94.355859,17.276873,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20327,San Pedro Tapanatepec,-94.19097,16.308343,6.5,17121.510841130046,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,397.7372920932248,12135.405633724993,discrepancia_poblacional
+us2000ahv0,1,MX07032,Escuintla,-92.558168,15.364432,6.0,491.87682092376053,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,491.87682092376053,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20130,San Dionisio del Mar,-94.728989,16.375127,6.0,5970.875132534595,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,102.76861523464322,0.017001161351799965,"construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX20515,Santo Domingo Tehuantepec,-95.391607,16.221756,6.0,71151.23822873516,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,588.4977676863782,3592.4557314980775,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX07008,Angel Albino Corzo,-92.680448,15.758148,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07030,Chicomuselo,-92.39129,15.799032,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
 us2000ahv0,1,MX20125,San Carlos Yautepec,-95.962233,16.414683,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07105,Unión Juárez,-92.104263,15.059723,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20130,San Dionisio del Mar,-94.728989,16.375127,6.0,5970.875132534595,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,102.76861523464322,0.017001161351799965,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX30091,Jesús Carranza,-94.90483,17.418165,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us2000ahv0,1,MX20453,Santiago Astata,-95.612148,15.977576,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us2000ahv0,1,MX20052,Magdalena Tequisistlán,-95.655311,16.347772,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us2000ahv0,1,MX07055,Metapa,-92.201651,14.82164,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
 us2000ahv0,1,MX20472,Santiago Laollaga,-95.261142,16.623114,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX07030,Chicomuselo,-92.39129,15.799032,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.011241918429732323,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20079,Salina Cruz,-95.22044,16.193692,6.0,102644.90687105703,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,131.1755568915978,1712.307018414649,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us2000ahv0,1,MX07083,Socoltenango,-92.375946,16.106428,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX30091,Jesús Carranza,-94.90483,17.418165,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us2000ahv0,1,MX20421,Santa María Mixtequilla,-95.275468,16.424694,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
 us2000ahv0,1,MX07098,Totolapa,-92.659963,16.515155,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
 us2000ahv0,1,MX20122,San Bartolo Yautepec,-95.928032,16.425504,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20421,Santa María Mixtequilla,-95.275468,16.424694,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,76.52676153508946,construido_no_mapeado
-us2000ahv0,1,MX20030,El Espinal,-95.039536,16.467172,6.0,9802.379350427305,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,7074.114468474174,
-us2000ahv0,1,MX07046,Jiquipilas,-93.672076,16.522736,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,232.915670722723,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07040,Huixtla,-92.546804,15.097022,6.0,463.43872823379934,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.3679671883583069,56762.44805916818,discrepancia_poblacional
-us2000ahv0,1,MX07054,Mazatán,-92.497176,14.88047,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,1046.8012375105172,24289.12573767407,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07117,Montecristo de Guerrero,-92.66439,15.671678,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us2000ahv0,1,MX07097,Tonalá,-93.653807,15.990788,6.0,77304.43236512115,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,601.2431598035619,53561.75529429113,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX20412,Santa María Guienagati,-95.351948,16.73667,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us2000ahv0,1,MX20418,Santa María Jalapa del Marqués,-95.474234,16.515815,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.41034045116975904,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07051,Mapastepec,-92.891435,15.461088,6.5,54492.09950208943,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,44645.31552466471,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX07101,Tuxtla Gutiérrez,-93.137285,16.739447,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20008,Asunción Tlacolulita,-95.766197,16.22612,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX07086,Suchiapa,-93.136332,16.585546,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20043,Heroica Ciudad de Juchitán de Zaragoza,-94.936679,16.442935,6.5,109669.97918312269,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,3.285615012049675,80118.37969571719,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07027,Chiapa de Corzo,-92.970632,16.598071,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX07105,Unión Juárez,-92.104263,15.059723,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20043,Heroica Ciudad de Juchitán de Zaragoza,-94.936679,16.442935,6.5,109669.97918312269,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,3.285615012049675,74994.48582266562,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20508,Santo Domingo Chihuitán,-95.173694,16.629979,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us2000ahv0,1,MX07102,Tuxtla Chico,-92.198799,14.894028,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us2000ahv0,1,MX07037,Huehuetán,-92.423773,15.009404,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us2000ahv0,1,MX20005,Asunción Ixtaltepec,-94.956452,16.661979,6.0,1263.321913698106,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1189.2557267706143,construido_no_mapeado
+us2000ahv0,1,MX20513,Santo Domingo Petapa,-95.218667,16.854083,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us2000ahv0,1,MX20440,Santa María Totolapilla,-95.615266,16.622925,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20265,San Miguel Chimalapa,-94.409857,16.65253,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX07080,Siltepec,-92.456223,15.54732,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
 us2000ahv0,1,MX07057,Motozintla,-92.331467,15.313827,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20124,San Blas Atempa,-95.146176,16.357894,6.0,19976.17078799894,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,4049.415910149459,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20053,Magdalena Tlacotepec,-95.252671,16.510838,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20248,San Mateo del Mar,-95.047656,16.209301,6.0,18218.377668433823,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,38.782668963074684,1810.261854276061,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20407,Santa María Chimalapa,-94.388596,16.946917,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,3.161993980407715,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX07087,Suchiate,-92.227093,14.639646,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,159.19426614046097,10038.578272834886,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07089,Tapachula,-92.304663,14.934363,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,694.8276610439643,28035.964477279224,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX07003,Acapetahua,-92.772327,15.233736,6.0,37567.410551016685,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,122.01987851411104,35289.12626716355,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX20014,Ciudad Ixtepec,-95.089335,16.623388,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,4678.319249368738,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20308,San Pedro Huilotepec,-95.147522,16.24286,6.0,3572.7549043795443,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,78.36270297138253,
-us2000ahv0,1,MX20204,San Juan Lajarcia,-95.917909,16.511418,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX07071,Villa Comaltitlán,-92.619566,15.165422,6.0,5649.963298142422,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,31241.717478421517,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20141,San Francisco del Mar,-94.430909,16.220108,6.5,9616.744953387883,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,8780.853450242197,discrepancia_poblacional
-us2000ahv0,1,MX20505,Santo Domingo Ingenio,-94.731557,16.579605,6.0,8545.80930698174,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,4304.37506667315,discrepancia_poblacional
-us2000ahv0,1,MX20057,Matías Romero Avendaño,-94.990969,17.155604,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX20470,Santiago Lachiguiri,-95.526118,16.773691,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20495,Santiago Xanica,-96.21861,16.004525,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX07108,Villaflores,-93.375188,16.346144,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,52.332375751808286,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20557,Unión Hidalgo,-94.82312,16.487372,6.0,17354.592344975856,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,17337.00433217967,
-us2000ahv0,1,MX07001,Acacoyagua,-92.681685,15.41414,6.0,3335.763190381229,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,3930.8909410256892,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20066,Santiago Niltepec,-94.58807,16.519819,6.0,6635.152785366023,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1523.5781394909136,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20324,San Pedro Pochutla,-96.412807,15.789455,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us2000ahv0,1,MX20413,Santa María Huatulco,-96.223488,15.796461,6.0,14375.726882462623,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,64.13793898001313,229.1876958105713,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX20010,El Barrio de la Soledad,-95.043037,16.788277,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07035,Frontera Hidalgo,-92.213295,14.749991,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,2393.6482408866286,
+us2000ahv0,1,MX07103,Tuzantán,-92.411564,15.140441,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us2000ahv0,1,MX07015,Cacahoatán,-92.164265,15.086366,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20266,San Miguel del Puerto,-96.096283,15.945292,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20124,San Blas Atempa,-95.146176,16.357894,6.0,19976.17078799894,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,4049.415910149459,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07086,Suchiapa,-93.136332,16.585546,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
 us2000ahv0,1,MX07012,Berriozábal,-93.319093,16.86674,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20266,San Miguel del Puerto,-96.096283,15.945292,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07037,Huehuetán,-92.423773,15.009404,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,20262.85967620369,discrepancia_poblacional
+us2000ahv0,1,MX07027,Chiapa de Corzo,-92.970632,16.598071,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
 us2000ahv0,1,MX20075,Reforma de Pineda,-94.445809,16.392526,6.0,3142.6366462428123,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,2579.3275934327394,
 us2000ahv0,1,MX20207,San Juan Mazatlán,-95.420772,17.132028,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20508,Santo Domingo Chihuitán,-95.173694,16.629979,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us2000ahv0,1,MX20440,Santa María Totolapilla,-95.615266,16.622925,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX07083,Socoltenango,-92.375946,16.106428,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20327,San Pedro Tapanatepec,-94.19097,16.308343,6.5,17121.510841130046,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,397.7372920932248,12135.405633724993,discrepancia_poblacional
-us2000ahv0,1,MX20079,Salina Cruz,-95.22044,16.193692,6.0,102644.90687105703,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,131.1755568915978,1712.307018414649,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07055,Metapa,-92.201651,14.82164,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,959.8001189175993,
-us2000ahv0,1,MX07107,Villa Corzo,-93.197607,16.112152,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,6357.5225432445295,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX07002,Acala,-92.840903,16.537753,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
-us2000ahv0,1,MX07009,Arriaga,-93.937439,16.248818,6.5,51136.6636810638,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,31.6247398853302,11690.795673870016,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20410,Santa María Ecatepec,-95.865058,16.233363,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20441,Santa María Xadani,-95.026182,16.363099,6.0,9630.794196078787,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,147.81065990310162,construido_no_mapeado
-us2000ahv0,1,MX20005,Asunción Ixtaltepec,-94.956452,16.661979,6.0,1263.321913698106,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,4279.326330047101,construido_no_mapeado
-us2000ahv0,1,MX20265,San Miguel Chimalapa,-94.409857,16.65253,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07080,Siltepec,-92.456223,15.54732,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX07102,Tuxtla Chico,-92.198799,14.894028,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,3405.341649957467,discrepancia_poblacional
-us2000ahv0,1,MX07103,Tuzantán,-92.411564,15.140441,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,11117.176872342825,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us2000ahv0,1,MX20025,Chahuites,-94.204645,16.273895,6.0,13942.13852614304,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,13434.83057910623,
 us2000ahv0,1,MX07034,Frontera Comalapa,-92.088011,15.762782,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX07015,Cacahoatán,-92.164265,15.086366,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20143,San Francisco Ixhuatán,-94.513083,16.352681,6.5,9753.297179709421,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,8396.650094880257,"construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20307,San Pedro Huamelula,-95.782081,15.97443,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,74.53980525187217,29.492518089944497,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20525,Santo Domingo Zanatepec,-94.332329,16.464516,6.0,13577.815242281882,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,2842.839387179818,discrepancia_poblacional
+us2000ahv0,1,MX20305,San Pedro Comitancillo,-95.166545,16.463622,6.0,4.727894613519311,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20053,Magdalena Tlacotepec,-95.252671,16.510838,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20008,Asunción Tlacolulita,-95.766197,16.22612,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX07069,Pijijiapan,-93.19173,15.670052,6.5,64443.639377167914,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,20.441309997346252,54128.44161961367,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX20308,San Pedro Huilotepec,-95.147522,16.24286,6.0,3572.7549043795443,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,78.36270297138253,
+us2000ahv0,1,MX07009,Arriaga,-93.937439,16.248818,6.5,51136.6636810638,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,31.6247398853302,11690.795673870016,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07107,Villa Corzo,-93.197607,16.112152,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07097,Tonalá,-93.653807,15.990788,6.0,77304.43236512115,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,566.2013418031856,40200.64127790398,"discrepancia_poblacional,construido_no_mapeado"
 us2000ahv0,1,MX20282,San Miguel Tenango,-95.547822,16.231934,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000ahv0,1,MX20198,San Juan Guichicovi,-95.112167,17.054069,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,8.722132425755262,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us2000ahv0,1,MX20036,Guevea de Humboldt,-95.389393,16.838769,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20143,San Francisco Ixhuatán,-94.513083,16.352681,6.5,9753.297179709421,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,8396.650094880257,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07061,Ocozocoautla de Espinosa,-93.486587,16.819657,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20470,Santiago Lachiguiri,-95.526118,16.773691,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20525,Santo Domingo Zanatepec,-94.332329,16.464516,6.0,13577.815242281882,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,2842.839387179818,discrepancia_poblacional
+us2000ahv0,1,MX20198,San Juan Guichicovi,-95.112167,17.054069,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07051,Mapastepec,-92.891435,15.461088,6.5,54492.09950208943,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,44645.31552466471,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20057,Matías Romero Avendaño,-94.990969,17.155604,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07071,Villa Comaltitlán,-92.619566,15.165422,6.0,5649.963298142422,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,5649.963298142422,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX07002,Acala,-92.840903,16.537753,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us2000ahv0,1,MX20307,San Pedro Huamelula,-95.782081,15.97443,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
+us2000ahv0,1,MX20505,Santo Domingo Ingenio,-94.731557,16.579605,6.0,8545.80930698174,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,4302.028388163308,discrepancia_poblacional
+us2000ahv0,1,MX20441,Santa María Xadani,-95.026182,16.363099,6.0,9630.794196078787,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,147.81065990310162,construido_no_mapeado
+us2000ahv0,1,MX20412,Santa María Guienagati,-95.351948,16.73667,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us2000ahv0,1,MX20410,Santa María Ecatepec,-95.865058,16.233363,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20418,Santa María Jalapa del Marqués,-95.474234,16.515815,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us2000ahv0,1,MX07101,Tuxtla Gutiérrez,-93.137285,16.739447,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000ahv0,1,MX20030,El Espinal,-95.039536,16.467172,6.0,9802.379350427305,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,7074.114468474174,
