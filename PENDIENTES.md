@@ -377,6 +377,42 @@ cumple, se documenta y se cierra; si no, se cambia el metodo.
   sale —`centinela calibrar`, que estrecha con lo medido y nunca ensancha sola—
   y por que el desvio de GHS-POP frente a una proyeccion demografica es
   esperable. Ese documento esta sin escribir.
+### 2.6.1 Lo que dejo abierto el recorrido del visor (1-sep-2026)
+
+Salio de usar la pagina publicada como usuario final. Lo grave se arreglo y esta
+en `VERIFICACIONES.md`, ronda 6; esto es lo que **sigue abierto**, en orden de
+cuanto molesta.
+
+- **La portada promete «menos de una hora» y `/status` mide 74,4 min de mediana
+  solo en detectar.** La resta esta publicada y es honesta, pero vive a un clic:
+  quien lee el README se queda con la promesa. O se baja la cadencia del vigia,
+  o la portada lo dice.
+- **`/status` no cubre el fuego.** El panel de fuego enlazaba a Estado
+  prometiendo «la cadencia real»; se le quito el enlace porque Estado solo
+  publica latencia sismica y las revisiones del vigia. La frescura de P5 no se
+  publica en ningun sitio.
+- **`/status` publica «latencia 5346 d»** para las reconstrucciones, con una nota
+  debajo diciendo que no significa nada. La tabla se lee como un muro de
+  fracasos; la distancia sismo-reproceso merece su propia columna, mas callada.
+- **Un foco de fuego no dice donde esta.** Ni pais, ni region, ni el municipio
+  mas cercano: se pulsa un incendio, el mapa vuela a un rio sin nombre del
+  Amazonas y el panel dice «2 celdas contiguas ardiendo».
+- **El globo de una celda de fuego se recorta** contra los controles y la barra
+  de escala cuando el foco cae cerca del borde derecho del mapa. El dato esta en
+  el DOM y no se lee en pantalla.
+- **La holgura entre la barra de escala y la leyenda es de 1 px** en 390 px con
+  un evento abierto. Sin solape, pero cualquier control nuevo en esa esquina —o
+  un cuerpo de letra mayor— la vuelve negativa.
+  `test_la_barra_de_escala_no_cae_dentro_de_la_leyenda` la vigila.
+- **Las etiquetas de las metricas miden 10,5–11,5 px.** Medido: contraste 5,2:1,
+  pasa AA. El problema es el tamano, y son justo las que dicen que es cada
+  numero.
+- **La malla del evento se ve apolillada.** Los huecos blancos dentro de la
+  mancha son celdas sin exposicion —honesto— pero se leen como un fallo de
+  render.
+- **En movil la fila de filtros es una tira con `overflow-x: auto`** y no hay
+  ninguna senal visual de que hay mas a la derecha. El control se alcanza
+  deslizando; comprobado.
 - **El area de un simbolo del mapa estatico esta muy comprimida.** `_tamano` es
   `12 + 4·sqrt(pop/1000)`: entre mil y 333.000 personas el area del circulo solo
   se multiplica por 5,3. Ahora que el PNG lleva leyenda de tamano la compresion
@@ -882,7 +918,7 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 - [docs/GARANTIAS.md](docs/GARANTIAS.md) — que garantiza este sistema y que no,
   separando lo probado de lo supuesto. Es el documento que hay que leer antes de
   decir que esto esta en produccion.
-- [docs/FAMILIAS_DE_FALLO.md](docs/FAMILIAS_DE_FALLO.md) — las siete formas en
+- [docs/FAMILIAS_DE_FALLO.md](docs/FAMILIAS_DE_FALLO.md) — las once formas en
   que este sistema se rompe sin ponerse rojo, con sus casos reales y la regla
   que cierra cada una. Es el resumen util de tres dias de auditoria.
 

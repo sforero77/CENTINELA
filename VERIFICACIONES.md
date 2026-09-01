@@ -1012,6 +1012,80 @@ ser una aspiracion y pasa a ser una ruta con fuentes nombradas.
 
 ---
 
+## Ronda 6 — el visor, recorrido como usuario final (31-ago / 1-sep-2026)
+
+Metodo: abrir la pagina publicada y usarla, con criterio de UX/UI y de
+cartografia digital, cruzando cada cifra contra `report.json`, `cobertura.json`,
+la API de USGS y el `report.md` que produce el propio pipeline. Las medidas de
+pantalla se tomaron con Playwright sobre el sitio armado igual que lo publica
+`site.yml`.
+
+**La pestana del MCP no sirve para esto.** Corre en `visibilityState: hidden`,
+MapLibre no llega a disparar `load` y el mapa parece vacio estando bien. Todo lo
+de abajo se midio con Playwright.
+
+### Cifras que decian lo que no era
+
+| Que | Como se comprobo | Resultado |
+|---|---|---|
+| «La sacudida no alcanzo MMI 7 sobre poblacion» en Muisne | `report.json` del evento | **Falso**: `pop_mmi7p` = 2.283.454. La nota estaba escrita para el caso contrario y salia en los 3 eventos que llegan a MMI 8 |
+| «Municipios mas expuestos» | `top_municipios` de los 21 reportes | Ordenaba por la banda cumbre: Quininde salia con **0** teniendo 164.691 en MMI≥7, y Portoviejo (333.075) no salia. Filas en cero en 12 de los 21 |
+| «Difiere del total nacional del mismo producto… remuestreo a hexagonos» | SQL de `p2_impact/pipeline.py` y `markdown.py` | Es el desacuerdo **GHS-POP vs WorldPop en el area afectada**. El `.md` lo decia bien y el visor al reves. Carupano publica 416,9 % |
+| «La malla de 5,2 km² con la que se calcula» | `H3_RES_COMPUTE` = 8, `H3_RES_VIEWER` = (7, 6) | El calculo va en r8 (0,74 km²); 5,2 km² es la resolucion de publicacion |
+| PAGER «naranja» del visor | API de USGS (`fdsnws/event/1/query`) | ✅ coincide. El `.md` lo publicaba sin traducir |
+| Suma de la malla vs totales del pipeline | 8.517 celdas de Muisne sumadas en el navegador | ✅ 4.311.562 contra `pop_mmi6p` = 4.311.549 |
+| Recorte de la malla al contorno MMI 6 | `querySourceFeatures` sobre `celdas` y `contornos` | ✅ Quito y Guayaquil quedan fuera, y **deben** quedar fuera |
+
+### Medidas de pantalla
+
+| Que | Antes | Despues |
+|---|---|---|
+| Longitud visible al abrir (1540 px) | 191° para una region de 73° | 126° a 1440×900; la region ocupa del 41 % al 88 % segun el tamano |
+| Tinta de la capa de fuego a zoom 2 | 413.000 px² — **1,23× el lienzo** | 117.000 px² — 0,15× |
+| Tinta de las celdas ≤10 MW frente a las ≥400 MW | 10,9 : 1 | 2,0 : 1 |
+| Celdas que caen sobre un pixel ya ocupado (z2) | 69 %, y las 150 mas energeticas **sin excepcion** | igual, pero ahora el fuego fuerte se dibuja encima |
+| Barra de escala vs leyenda en 390 px, con evento abierto | −22 px (solapando) | +1 px |
+| Rueda del raton sobre el mapa | zoom 2,05 → 1,65 **y** pagina 300 px, en un gesto | la rueda no toca el mapa |
+
+### El mapa de calor, descartado por medida
+
+Con `heatmap-intensity` y `heatmap-radius` **fijos**, se leyo el color del pixel
+del mismo punto geografico (un foco del Beni) a tres zooms:
+
+| zoom | color |
+|---|---|
+| 2 | `rgb(183, 39, 78)` — carmesi |
+| 4 | `rgb(238, 113, 21)` — naranja |
+| 6 | `rgb(223, 220, 209)` — el color del papel: desaparece |
+
+`heatmap-density` mide vecinos por pixel de pantalla, no energia. Una rampa que
+cambia de significado con el zoom no se puede rotular en MW.
+
+### Lo publicado estaba rancio
+
+`markdown.py`, `social.py` y `DISCLAIMERS` llevaban las tildes puestas en el
+repositorio; los veintiun paquetes servidos se emitieron antes de esa correccion
+y nadie volvia a tocarlos. Comprobado con la lista negra de
+`test_textos_publicados.py`: **13 formas sin tilde** en el `report.md`
+publicado y 8 en el `hilo.txt`, incluido «Exposicion no es dano» como cierre del
+hilo para redes.
+
+Se anadio `centinela regenerar-textos` y se re-emitieron los 21. Verificado
+contra la pagina publicada tras la fusion: 0 ficheros con formas sin tilde.
+
+### Un defecto que ya estaba en produccion
+
+Comparando el visor publicado contra el arreglado, con `?evento=` y estilo frio:
+
+    [main]  fallo al dibujar sobre el mapa: Error: Source "celdas" already exists.
+    [ahora] (sin errores)
+
+La red de seguridad de `cuandoElEstiloEsteListo` no se cancelaba cuando el
+camino normal funcionaba, asi que todo dibujo diferido corria dos veces. Ver la
+familia 10 de [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md).
+
+---
+
 ## Sigue abierto
 
 | Tarea | Que falta |

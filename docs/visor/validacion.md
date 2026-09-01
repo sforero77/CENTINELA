@@ -1,6 +1,6 @@
 # Validar el visor
 
-43 pruebas de Playwright que abren el visor en un Chromium de verdad.
+101 pruebas de Playwright que abren el visor en un Chromium de verdad.
 
 ```bash
 uv run --extra dev --extra visor pytest tests/visor -m visor
@@ -12,12 +12,12 @@ Corren en CI (`visor.yml`) en cada push y PR.
 
 ```mermaid
 flowchart TB
-  subgraph unit["Pruebas unitarias — 953"]
+  subgraph unit["Pruebas unitarias — 1.065"]
     U1["¿el cálculo es correcto?"]
     U2["¿el JSON valida?"]
     U3["¿la función está conectada?"]
   end
-  subgraph visor["Pruebas de navegador — 43"]
+  subgraph visor["Pruebas de navegador — 101"]
     V1["¿las pestañas reciben el clic?"]
     V2["¿algún texto se pisa con otro?"]
     V3["¿la leyenda promete lo que dibuja?"]
@@ -34,6 +34,19 @@ Ejemplos de fallos que **sólo** el navegador encontró:
 - La barra de escala "2000 km" pisando el título de la leyenda en móvil.
 - `maplibre-gl.css` declarando `z-index: 2` y ganándole a la regla propia.
 - El selector `> * + *` (0,1,0) perdiendo contra `border: 0` (0,2,0).
+- Las opciones del selector de mapa base aplastadas en cuadrados de 29 px:
+  `.maplibregl-ctrl-group button` gana por especificidad a una sola clase.
+
+Y dos trampas del propio banco de pruebas, que se pagaron dos veces cada una:
+
+- **Recortar el código por un número fijo de caracteres.** Dos pruebas leían 900
+  caracteres desde el id de una capa; al documentar la simbología el bloque
+  creció y las aserciones quedaron fuera, **pasando en verde sobre código que ya
+  no miraban**. Se delimita por la capa siguiente.
+- **Buscar «hay un globo abierto».** El rótulo que sale al pasar por encima de un
+  epicentro también es un `.maplibregl-popup`, así que una prueba del globo de
+  celda lo daba por bueno y fallaba después por la razón equivocada. Se busca la
+  clase del globo concreto.
 
 ## La instrumentación, no la captura
 
@@ -46,16 +59,41 @@ _esperar_capa(pagina, "incendios")  # espera a que el registro lo confirme
 
 **Nunca se mide desde una captura de pantalla.** Una pestaña que corre en
 segundo plano tiene `visibilityState: hidden`, y entonces
-`requestAnimationFrame` baja a ~1 fps: los vuelos animados de MapLibre no
-avanzan y el mapa *parece* vacío cuando está perfectamente pintado.
+`requestAnimationFrame` se congela: MapLibre **no llega a disparar `load`**, así
+que no se aplica el encuadre, no se quita el aviso de «cargando» y las capas
+parecen no pintarse.
 
 Reglas que se derivan de eso:
 
-1. Para forzar un repintado, despachar `window.dispatchEvent(new Event('resize'))`
-   en bucle antes de medir.
-2. La verdad está en `window.CENTINELA.pintado` y en la barra de escala, no en
-   el píxel.
-3. **Nunca** medir rendimiento ni estados `:focus` en una pestaña oculta.
+1. La verdad está en `window.CENTINELA`, no en el píxel.
+2. **Nunca** medir rendimiento ni estados `:focus` en una pestaña oculta.
+3. Para *ver* el mapa —juzgar cartografía, no comprobar estado— hay que renderizar
+   de verdad: un script de Playwright que copie `site/` y `reports/` a un temporal
+   como hace el fixture `_sitio`, lo sirva y capture. Pelearse con una pestaña
+   oculta no lleva a ninguna parte.
+
+## La superficie pública
+
+`window.CENTINELA` no es un gancho de pruebas: es el visor rindiendo cuentas, y
+sirve igual para diagnosticar desde la consola de quien reporte un fallo.
+
+| Sonda | Responde |
+|---|---|
+| `pintado` | Qué capas se pintaron y con cuántos rasgos |
+| `errores` | Lo que falló al dibujar, sin tener que mirar la consola |
+| `camara` | La última orden dada a la cámara, y por qué |
+| `encuadre()` | Qué caja está enseñando el mapa |
+| `capasDelMapa()` | Los ids del estilo **en orden de dibujo** |
+| `rotulosEnEspanol()` | Cuántas capas de rótulos hablan español y cuántas no |
+| `tintaDelFuego(zoom)` | Cuánta pantalla cubren los círculos de fuego, contra la que hay |
+| `ordenDeDibujo(capa)` | Por qué se apilan los símbolos de una capa |
+| `filtroDeCapa(capa)` | Qué filtro tiene puesto MapLibre |
+| `totalesDelTablero()` / `sumaDelVisor()` | Dos implementaciones de la misma suma, para poder compararlas |
+| `abrirFoco(i)` / `olvidarElViento()` | Puertas para provocar estados que no se dan solos |
+
+Las dos últimas existen por una regla: **una prueba que sólo pasa porque el
+escenario no ocurre no vigila nada**. Los 3.337 puntos de la rejilla de viento
+cubren hoy los 6.239 focos, así que el caso «GFS no llegó» hay que provocarlo.
 
 ## La sonda de solapes
 

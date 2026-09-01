@@ -88,8 +88,8 @@ https://sforero77.github.io/CENTINELA/. Lo que ya funciona y lo que falta:
 | Coropletas r7/r6 del visor en PMTiles | ⏳ el resto del visor funciona |
 | P4 brigada de imagen | ⏳ Fase 2 |
 
-**953 pruebas** sin red, mas **43 de navegador** que abren el visor en un
-Chromium de verdad, `ruff` y `mypy --strict` limpios. Medido el 30-ago-2026.
+**1.065 pruebas** sin red, mas **101 de navegador** que abren el visor en un
+Chromium de verdad, `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 
 Las etapas pendientes fallan de forma ruidosa y explicita — nunca devuelven un
 cero que acabaria publicado como cifra. `tests/unit/test_pendientes.py` es el

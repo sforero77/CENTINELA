@@ -111,8 +111,8 @@ un sismo.
 
 ```mermaid
 flowchart LR
-  PR(["push · pull request"]) --> CI["<b>ci.yml</b><br/>ruff format + check<br/>mypy --strict<br/>953 pruebas"]
-  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>43 pruebas de navegador"]
+  PR(["push · pull request"]) --> CI["<b>ci.yml</b><br/>ruff format + check<br/>mypy --strict<br/>1.065 pruebas"]
+  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>101 pruebas de navegador"]
   CI --> M{"ambas verdes"}
   VIS --> M
   M --> MERGE(["se puede fusionar"])
