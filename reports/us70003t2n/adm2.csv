@@ -1,28 +1,28 @@
-usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta,lq_pop_expuesta,flags_calidad
-#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide,#population+liquefaction,#meta+flags
-us70003t2n,1,SV06001,La Paz Centro,-88.952033,13.482202,6.0,7390.775697121397,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,1156.69885148108,31328.89664321579,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
-us70003t2n,1,SV10004,San Salvador Oeste,-89.209222,13.813499,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us70003t2n,1,SV10003,San Salvador Norte,-89.200046,13.963573,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us70003t2n,1,SV13001,Sonsonate Centro,-89.729817,13.637957,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,26.616700688377023,6.494174126535654,
-us70003t2n,1,SV06003,La Paz Oeste,-89.074863,13.489837,6.0,45419.331734268926,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,983.707195635885,13469.0593911428,discrepancia_poblacional
-us70003t2n,1,SV05003,La Libertad Este,-89.255334,13.583943,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us70003t2n,1,SV10005,San Salvador Sur,-89.16612,13.583791,6.0,3488.636115895584,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1483.1468291860074,
-us70003t2n,1,SV04002,Cuscatlán Sur,-88.938986,13.742925,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us70003t2n,1,SV06002,La Paz Este,-88.858291,13.448562,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1079.6911023929715,
-us70003t2n,1,SV05002,La Libertad Costa,-89.417532,13.539997,6.0,9970.592273000628,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,848.481214189902,6647.339364856482,discrepancia_poblacional
-us70003t2n,1,SV11001,San Vicente Norte,-88.684986,13.701684,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us70003t2n,1,SV05005,La Libertad Oeste,-89.420093,13.695491,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
-us70003t2n,1,SV11002,San Vicente Sur,-88.753753,13.510678,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
-us70003t2n,1,SV02002,Cabañas Oeste,-88.850909,13.860509,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us70003t2n,1,SV10002,San Salvador Este,-89.102467,13.738372,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us70003t2n,1,SV04001,Cuscatlán Norte,-89.064565,13.886531,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us70003t2n,1,SV10001,San Salvador Centro,-89.193639,13.715347,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us70003t2n,1,SV14002,Usulután Norte,-88.490431,13.554806,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us70003t2n,1,SV12002,Santa Ana Este,-89.478668,13.890497,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us70003t2n,1,SV10899,Lago de Llopango,-89.039792,13.668835,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
+#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
 us70003t2n,1,SV05001,La Libertad Centro,-89.379267,13.842757,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us70003t2n,1,SV14003,Usulután Oeste,-88.628592,13.333156,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,7.176298573613167,7.176298573613167,discrepancia_poblacional
+us70003t2n,1,SV14002,Usulután Norte,-88.490431,13.554806,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us70003t2n,1,SV10005,San Salvador Sur,-89.16612,13.583791,6.0,3488.636115895584,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,1483.1468291860074,
+us70003t2n,1,SV14003,Usulután Oeste,-88.628592,13.333156,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us70003t2n,1,SV06001,La Paz Centro,-88.952033,13.482202,6.0,7390.775697121397,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,13.881017655134201,3851.9238378964365,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us70003t2n,1,SV06003,La Paz Oeste,-89.074863,13.489837,6.0,45419.331734268926,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,983.707195635885,12966.325903700665,discrepancia_poblacional
 us70003t2n,1,SV05004,La Libertad Norte,-89.299552,13.915356,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us70003t2n,1,SV04001,Cuscatlán Norte,-89.064565,13.886531,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us70003t2n,1,SV05003,La Libertad Este,-89.255334,13.583943,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
 us70003t2n,1,SV02001,Cabañas Este,-88.629114,13.886295,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us70003t2n,1,SV05002,La Libertad Costa,-89.417532,13.539997,6.0,9970.592273000628,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,125.26819668151438,2797.0946883261204,discrepancia_poblacional
+us70003t2n,1,SV12002,Santa Ana Este,-89.478668,13.890497,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us70003t2n,1,SV05005,La Libertad Oeste,-89.420093,13.695491,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us70003t2n,1,SV11001,San Vicente Norte,-88.684986,13.701684,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us70003t2n,1,SV10899,Lago de Llopango,-89.039792,13.668835,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us70003t2n,1,SV10003,San Salvador Norte,-89.200046,13.963573,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us70003t2n,1,SV06002,La Paz Este,-88.858291,13.448562,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
 us70003t2n,1,SV05006,La Libertad Sur,-89.329524,13.625738,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us70003t2n,1,SV13002,Sonsonate Este,-89.595883,13.699435,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,160.99059078097343,141.53941330313683,discrepancia_poblacional
+us70003t2n,1,SV10004,San Salvador Oeste,-89.209222,13.813499,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us70003t2n,1,SV02002,Cabañas Oeste,-88.850909,13.860509,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us70003t2n,1,SV13001,Sonsonate Centro,-89.729817,13.637957,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us70003t2n,1,SV11002,San Vicente Sur,-88.753753,13.510678,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us70003t2n,1,SV04002,Cuscatlán Sur,-88.938986,13.742925,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us70003t2n,1,SV10002,San Salvador Este,-89.102467,13.738372,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us70003t2n,1,SV10001,San Salvador Centro,-89.193639,13.715347,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us70003t2n,1,SV13002,Sonsonate Este,-89.595883,13.699435,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional

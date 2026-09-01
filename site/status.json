@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-01T22:10:43Z",
+  "generado_utc": "2026-09-01T22:10:52Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -78,8 +78,8 @@
     {
       "usgs_id": "us70003t2n",
       "origen_utc": "2019-05-30T09:03:32Z",
-      "publicado_utc": "2026-08-25T17:54:05Z",
-      "minutos": 3807890.5,
+      "publicado_utc": "2026-09-01T22:10:51Z",
+      "minutos": 3818227.3,
       "backtest": true
     },
     {
