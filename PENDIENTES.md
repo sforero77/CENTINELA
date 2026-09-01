@@ -343,19 +343,45 @@ cumple, se documenta y se cierra; si no, se cambia el metodo.
   haria que el assert compare contra un numero y no contra un redondeo.
 - `admin_lookup` guarda el centroide como WKT en texto. Funciona, pero
   `GEOMETRY` seria mas limpio.
-- **Ortografia del generador de reportes.** El visor se acentuo entero en la
-  auditoria de UX/UI; `pipelines/p3_report/` sigue escribiendo sin tildes
-  ("Exposicion estimada", "Municipios mas expuestos"). Solo se corrigio ahi una
-  palabra: decia "65 anos o mas", que no es lo mismo que "65 años o mas" y salia
-  en un documento publico. Acentuar el resto cambia todos los `report.md` ya
-  emitidos y es una decision editorial, no una correccion tecnica: esta sin
-  tomar.
+- **✅ Ortografia del generador de reportes, cerrada el 31-ago-2026.** El
+  generador ya estaba acentuado; lo que estaba rancio era lo **publicado**. Los
+  veintiun `report.md` y `hilo.txt` se emitieron el 25-ago-2026, antes de esa
+  correccion, y nadie volvia a tocarlos: el hilo para redes —el unico artefacto
+  que un humano publica a mano— abria con "Reporte automatico de EXPOSICION
+  estimada" y cerraba con "Exposicion no es dano", que en espanol no es una
+  frase.
+
+  Quedaban tres restos reales en el codigo: "Intensidad maxima" en la leyenda
+  del PNG, "no estima victimas" en el markdown, y `format_count_prose`
+  escribiendo "1 millon". Corregidos.
+
+  El circuito, para la proxima: `centinela regenerar-textos` rehace los dos
+  ficheros de cada reporte publicado sin recomputar el impacto —el gemelo de
+  `regenerar-mapas`— y `tests/unit/test_textos_publicados.py` vigila el
+  generador con una lista negra de las formas que se colaron.
 - **El mapa base tarda 8-10 s en pintar teselas desde frio.** Ninguna cifra
   depende de ellas y el tablero es usable antes, pero la primera pantalla se
   siente lenta. Precargar el estilo o servir un encuadre estatico mientras
   llegan las teselas son las dos salidas obvias.
 - Las etiquetas largas del mapa estatico se pisan entre si: la separacion minima
   es de 0,25° y "Ocumare De La Costa De Oro" mide bastante mas.
+- **La tolerancia por pais no se ensena, y es una decision tomada.** El visor
+  publicaba "peor desvio vs. cifra oficial: +4,94 % — el de Venezuela, y esta
+  explicado" sin que la explicacion existiera en ninguna parte, y remataba la
+  nota de cobertura con "una tolerancia que nadie ve no vigila nada" en una
+  tabla que era justo lo unico que no ensenaba la tolerancia. Las dos frases se
+  quitaron del visor el 31-ago-2026.
+
+  El dato sigue publicado en `cobertura.json` (`tolerancia_pct` por pais) y en
+  cada manifiesto. Su sitio es un documento metodologico que explique de donde
+  sale —`centinela calibrar`, que estrecha con lo medido y nunca ensancha sola—
+  y por que el desvio de GHS-POP frente a una proyeccion demografica es
+  esperable. Ese documento esta sin escribir.
+- **El area de un simbolo del mapa estatico esta muy comprimida.** `_tamano` es
+  `12 + 4·sqrt(pop/1000)`: entre mil y 333.000 personas el area del circulo solo
+  se multiplica por 5,3. Ahora que el PNG lleva leyenda de tamano la compresion
+  se ve. Un escalado proporcional al valor —area ∝ poblacion, con minimo
+  visible— seria lo correcto.
 
 ---
 

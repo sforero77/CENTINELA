@@ -323,6 +323,27 @@ def _cmd_regenerar_mapas(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_regenerar_textos(args: argparse.Namespace) -> int:
+    """Rehace `report.md` y `hilo.txt` de un reporte ya publicado, o de todos.
+
+    El gemelo de `regenerar-mapas`. Los dos textos son derivados del
+    `report.json` y del `adm2.csv`, asi que una correccion de redaccion no
+    obliga a recomputar el impacto — que costaria bajar el activo de cada pais.
+    """
+    from .p3_report.run import regenerate_texts
+
+    escritos = regenerate_texts(
+        args.usgs_id or "",
+        reports_root=Path(args.reports) if args.reports else None,
+    )
+    if not escritos:
+        print("No se regenero ningun texto.", file=sys.stderr)
+        return 1
+    for nombre in sorted(escritos):
+        print(escritos[nombre])
+    return 0
+
+
 def _cmd_contornos(args: argparse.Namespace) -> int:
     """Trae de USGS el area de afectacion de un reporte publicado, o de todos.
 
@@ -714,6 +735,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_mapas.add_argument("usgs_id", nargs="?", default="", help="vacio = todos los publicados")
     p_mapas.add_argument("--reports", help="raiz de reports/")
     p_mapas.set_defaults(func=_cmd_regenerar_mapas)
+
+    p_textos = sub.add_parser(
+        "regenerar-textos",
+        help="rehace report.md y hilo.txt de un reporte publicado, o de todos",
+    )
+    p_textos.add_argument("usgs_id", nargs="?", default="", help="vacio = todos los publicados")
+    p_textos.add_argument("--reports", help="raiz de reports/")
+    p_textos.set_defaults(func=_cmd_regenerar_textos)
 
     p_contornos = sub.add_parser(
         "contornos", help="trae de USGS el area de afectacion de reportes ya publicados"

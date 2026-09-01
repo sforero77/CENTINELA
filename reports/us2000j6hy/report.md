@@ -1,49 +1,49 @@
-# Exposicion sismica — M6.7 10 km al SSO de Coquimbo, Chile
+# Exposición sísmica — M6,7 · 10 km al SSO de Coquimbo, Chile
 
 **Evento USGS:** `us2000j6hy` · **Origen:** 2019-01-20T01:32:52Z UTC · **Profundidad:** 63,0 km
 
-> **Reconstruccion retrospectiva.** Este reporte se calculo despues del evento, no en respuesta a el, y no cuenta para las metricas de latencia del sistema.
+> **Reconstrucción retrospectiva.** Este reporte se calculó después del evento, no en respuesta a él, y no cuenta para las métricas de latencia del sistema.
 >
-> La **poblacion** corresponde a la epoca indicada en el manifest de exposicion. Las **edificaciones, vias, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el historico. Leelas como "que infraestructura de hoy caeria en esa zona de intensidad", no como lo que habia entonces.
+> La **población** corresponde a la época indicada en el manifiesto de exposición. Las **edificaciones, vías, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el histórico. Léelas como "qué infraestructura de hoy caería en esa zona de intensidad", no como lo que había entonces.
 
-## Exposicion estimada
+## Exposición estimada
 
 | Indicador | Estimado |
 |---|---:|
-| Poblacion en MMI≥6 | 700 mil |
-| Poblacion en MMI≥7 | 470 mil |
-| Poblacion en MMI≥8 | 0 |
+| Población en MMI≥6 | 700 mil |
+| Población en MMI≥7 | 470 mil |
+| Población en MMI≥8 | 0 |
 | Edificaciones en MMI≥7 | 180 mil |
 | Sedes de salud en MMI≥7 | 126 |
 | Sedes educativas en MMI≥7 | 540 |
-| Vias primarias y secundarias en MMI≥7 | 210 km |
-| Vias locales en MMI≥7 | 1.400 km |
+| Vías primarias y secundarias en MMI≥7 | 210 km |
+| Vías locales en MMI≥7 | 1.400 km |
 | Superficie construida en MMI≥7 | 19,5 km² |
 
-De la poblacion en intensidad MMI≥7, alrededor de **56 mil** personas tienen 65 años o más.
+Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-## Municipios mas expuestos (top 15), por poblacion en MMI≥7
+De la población en intensidad MMI≥7, alrededor de **56 mil** personas tienen 65 años o más.
 
-| # | Municipio | Codigo | MMI max | Poblacion MMI≥7 |
+## Municipios más expuestos, por población en MMI≥7
+
+| # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
 | 1 | Elqui | `CL041` | 7,0 | 470 mil |
-| 2 | Limarí | `CL043` | 6,5 | 0 |
-| 3 | Huasco | `CL033` | 5,0 | 0 |
 
-## Deslizamiento y licuefaccion
+## Deslizamiento y licuefacción
 
-- Poblacion en celdas con probabilidad **alta de deslizamiento**: 1.200
-- Poblacion en celdas con probabilidad **alta de licuefaccion**: 210
+- Población en celdas con probabilidad **alta de deslizamiento**: 1.200
+- Población en celdas con probabilidad **alta de licuefacción**: 210
 
-Fuente: producto *Ground Failure* de USGS (v2), dominio publico.
+Fuente: producto *Ground Failure* de USGS (v2), dominio público.
 
 ## Referencia cruzada
 
-PAGER (USGS) estima para este evento una alerta **orange**. CENTINELA no estima victimas; la cifra se incluye solo como contraste.
+PAGER (USGS) estima para este evento una alerta **naranja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el area afectada: **10,4 %**.
+Discrepancia entre GHS-POP y WorldPop en el área afectada: **10,4 %**.
 
 ## Descargas
 
@@ -54,12 +54,12 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **10,4 %**.
 
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v2**
-- Manifest de exposicion: `chl-v0.1`
+- Manifiesto de exposición: `chl-v0.1`
 - Pipeline: `0.1.0` · Generado: 2026-08-25T17:40:12Z
 
 ## Advertencias
 
-- Exposicion estimada, no dano observado.
-- Este sistema no es una alerta temprana ni una recomendacion de evacuacion.
-- No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.
-- Fuentes, vintages y versiones consumidas: ver manifest enlazado.
+- Exposición estimada, no daño observado.
+- Este sistema no es una alerta temprana ni una recomendación de evacuación.
+- No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.
+- Fuentes, vintages y versiones consumidas: ver manifiesto enlazado.

@@ -33,6 +33,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+from ..common.formatting import format_count_prose, format_number_es
 from ..common.logging import get_logger
 from .model import Report
 
@@ -56,9 +57,17 @@ class MapSpec:
     max_bytes: int = 400_000
 
 
+#: Las dos variantes tenian el mismo alto, la misma tipografia y el mismo
+#: contenido: solo cambiaba el ancho maximo, y con `tight_layout` recortando al
+#: dato ni eso se notaba. Los dos PNG publicados de cada evento salian
+#: practicamente identicos, ofrecidos como dos descargas distintas.
+#:
+#: Ahora `general` es la del panel y el markdown —compacta, para leerse dentro de
+#: otra cosa— y `prensa` es 16:9 con tipografia grande, que es lo que se pega en
+#: una nota o se proyecta en una sala.
 SPECS: dict[MapVariant, MapSpec] = {
-    MapVariant.GENERAL: MapSpec(MapVariant.GENERAL, 1200, 900, 110),
-    MapVariant.PRENSA: MapSpec(MapVariant.PRENSA, 1600, 900, 130),
+    MapVariant.GENERAL: MapSpec(MapVariant.GENERAL, 1100, 900, 110),
+    MapVariant.PRENSA: MapSpec(MapVariant.PRENSA, 1920, 1080, 140),
 }
 
 #: Atribucion obligatoria al pie de todo mapa (§2.4 regla 2).
@@ -126,6 +135,7 @@ def render_map(
     path: Path,
     *,
     municipios: Sequence[Mapping[str, Any]] | None = None,
+    contornos: Mapping[str, Any] | None = None,
 ) -> Path:
     """Renderiza una variante del mapa.
 
@@ -136,8 +146,17 @@ def render_map(
         municipios: filas con ``nombre``, ``mmi_max``, ``pop_mmi7p`` y
             ``centroide`` (WKT ``POINT``). Sin ellas se dibuja solo el
             epicentro y la leyenda, que es el caso del reporte preliminar.
+        contornos: el GeoJSON de ``contornos.json``, si esta. Es lo que
+            convierte esto en un mapa y no en una dispersion: sin el, el lector
+            ve puntos de colores flotando sobre una reticula de grados
+            decimales y no tiene forma de saber que esta mirando. Se pasa ya
+            leido para no meter E/S aqui, y es opcional porque los reportes
+            emitidos antes de que ese fichero existiera no lo traen.
 
-    Requiere el extra ``[render]``.
+    Requiere el extra ``[render]``. **No** requiere ``[geo]``: la forma del
+    evento sale de los contornos, que son coordenadas planas en el JSON. Meter
+    ``h3`` aqui para dibujar la malla ataria el render del reporte al extra
+    pesado, y este modulo existe para no depender de nada que pueda faltar.
     """
     import matplotlib
 
@@ -155,16 +174,36 @@ def render_map(
     # flotando entre dos franjas vacias que no dicen nada.
     limites = _limites(puntos, epicentro)
     fig, ax = plt.subplots(figsize=_figsize(limites, spec), dpi=spec.dpi)
+
+    # LA FORMA DEL EVENTO, DEBAJO DE TODO.
+    #
+    # Es lo que faltaba para que esto fuera un mapa. Sin ella el lector veia
+    # circulos de colores sobre una reticula rotulada en grados decimales
+    # —"-79.5", "0.5"— y no habia manera de saber que pais era ni donde estaba
+    # el mar. Con los contornos rellenos, la mancha del ShakeMap da la silueta
+    # que el ojo reconoce y cada municipio queda dentro de su franja.
+    _dibujar_contornos(ax, contornos)
+
     if puntos:
+        # UNA VARIABLE POR CANAL.
+        #
+        # Los circulos iban coloreados por intensidad **sobre** un fondo que
+        # ahora ya es la intensidad: un municipio en MMI 8 salia rojo oscuro
+        # encima de la banda roja oscura y desaparecia. El color pasa a ser del
+        # fondo —donde cayo la sacudida— y el tamano del circulo queda como
+        # unica variable del simbolo: cuanta gente quedo dentro. Que es la
+        # pregunta del mapa.
+        #
         # Anillo blanco sobre el marcador: donde dos municipios quedan encima,
         # el borde los separa en vez de fundirlos en una mancha.
         ax.scatter(
             [p[0] for p in puntos],
             [p[1] for p in puntos],
             s=[_tamano(p[3]) for p in puntos],
-            c=[color_for_mmi(p[2]) for p in puntos],
+            c="#1c1b1a",
+            alpha=0.82,
             edgecolors="white",
-            linewidths=0.8,
+            linewidths=0.9,
             zorder=3,
         )
         for lon, lat, _mmi, _pob, nombre in _etiquetables(puntos, n_max=6):
@@ -202,26 +241,62 @@ def render_map(
 
     _encuadrar(ax, limites)
 
-    ax.set_title(
-        f"M{report.event.mag} · {report.event.lugar}",
-        fontsize=13 if variant is MapVariant.PRENSA else 11,
-        loc="left",
+    prensa = variant is MapVariant.PRENSA
+    escala_fuente = 9 if prensa else 7
+
+    # EL TITULAR Y SU SUBTITULO, LOS DOS EN LA FIGURA.
+    #
+    # `ax.set_title` los pisaba: dos llamadas seguidas dejan solo la segunda, y
+    # el mapa salio publicado sin decir de que sismo era. Y el subtitulo vivia
+    # antes en `set_xlabel` —el sitio donde va la unidad del eje—, debajo de una
+    # fila de grados decimales, asi que se leia como si esos numeros fueran
+    # poblacion.
+    fig.text(
+        0.012,
+        0.975,
+        f"M{format_number_es(report.event.mag, 1)} · {report.event.lugar}",
+        fontsize=19 if prensa else 12,
         color="#1c1b1a",
+        va="top",
+        ha="left",
+        weight="bold",
     )
-    ax.set_xlabel(
+    fig.text(
+        0.012,
+        0.932 if prensa else 0.925,
         f"Población en MMI≥7 por municipio · ShakeMap v{report.inputs.shakemap_version}"
         " · exposición estimada, no daño",
-        fontsize=8,
+        fontsize=11 if prensa else 8,
         color="#55524e",
+        va="top",
+        ha="left",
     )
+    ax.set_xlabel("")
     ax.set_ylabel("")
-    ax.tick_params(labelsize=7, colors="#55524e")
-    for lado in ("top", "right"):
-        ax.spines[lado].set_visible(False)
-    for lado in ("left", "bottom"):
-        ax.spines[lado].set_color("#dedad4")
-    ax.grid(color="#ece9e4", linewidth=0.5, zorder=0)
-    ax.set_axisbelow(True)
+
+    # FUERA LOS GRADOS DECIMALES.
+    #
+    # Nadie lee "-79.5" en un mapa de prensa, y una reticula de coordenadas
+    # sugiere una precision de posicion que este producto no publica. Lo que
+    # hace falta —cuanto mide esto, y hacia donde esta el norte— lo pone
+    # `_barra_de_escala`.
+    ax.set_axis_off()
+    # Un marco fino en su lugar. Sin ejes ni marco, el recorte de las bandas
+    # queda como un corte al aire y el mapa parece una imagen rota.
+    from matplotlib.patches import Rectangle
+
+    ax.add_patch(
+        Rectangle(
+            (limites[0], limites[1]),
+            limites[2] - limites[0],
+            limites[3] - limites[1],
+            fill=False,
+            edgecolor="#dedad4",
+            linewidth=1.0,
+            zorder=7,
+        )
+    )
+    _barra_de_escala(ax, limites, fuente=escala_fuente)
 
     # Las bandas presentes, no una lista fija. La version anterior rotulaba
     # siempre MMI 6 / 6,5 / 7 / 7,5: en el evento de Catia La Mar, que llega a
@@ -229,7 +304,8 @@ def render_map(
     # no pase de 7 sobraban dos muestras de color que no estaban en el mapa.
     bandas = sorted({banda_de_mmi(p[2]) for p in puntos})
     leyenda: list[Any] = [
-        Patch(facecolor=MMI_COLORS[v], edgecolor="white", label=f"MMI {v:g}") for v in bandas
+        Patch(facecolor=MMI_COLORS[v], edgecolor="white", alpha=0.55, label=f"MMI {v:g}")
+        for v in bandas
     ]
     if epicentro is not None:
         leyenda.append(
@@ -244,18 +320,45 @@ def render_map(
             )
         )
     if leyenda:
-        ax.legend(
+        # Arriba a la derecha: abajo a la izquierda es ahora de la barra de
+        # escala, y la leyenda se le montaba encima.
+        primera = ax.legend(
             handles=leyenda,
-            loc="lower left",
-            fontsize=7,
+            loc="upper right",
+            fontsize=escala_fuente,
             framealpha=0.95,
             edgecolor="#dedad4",
-            title="Intensidad maxima",
-            title_fontsize=7,
+            # Ya no rotula el color de los circulos —que son neutros— sino el
+            # del fondo: las franjas del ShakeMap.
+            title="Intensidad (ShakeMap)",
+            title_fontsize=escala_fuente,
+        )
+        ax.add_artist(primera)
+
+    # Y la escala de tamano, que es la variable principal del mapa.
+    tamanos = _leyenda_de_tamano(puntos, fuente=escala_fuente)
+    if tamanos:
+        ax.legend(
+            handles=tamanos,
+            loc="lower right",
+            fontsize=escala_fuente,
+            framealpha=0.95,
+            edgecolor="#dedad4",
+            title="Personas expuestas",
+            title_fontsize=escala_fuente,
+            labelspacing=1.1,
+            borderpad=0.9,
         )
 
-    fig.text(0.01, 0.012, ATTRIBUTION_LINE, fontsize=5.5, color="#8a857e", wrap=True)
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.text(
+        0.01,
+        0.012,
+        ATTRIBUTION_LINE,
+        fontsize=7 if prensa else 5.5,
+        color="#8a857e",
+        wrap=True,
+    )
+    fig.tight_layout(rect=(0, 0.035, 1, 0.905 if prensa else 0.9))
 
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=spec.dpi, facecolor="white")
@@ -275,6 +378,210 @@ def render_map(
             },
         )
     return path
+
+
+def _anillos(geometria: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
+    """Los anillos cerrados de una geometria de contorno, para poder rellenarla.
+
+    ShakeMap publica sus contornos como **lineas**, no como areas: cada banda es
+    un `MultiLineString` de lazos alrededor del epicentro. El visor las dibuja
+    tal cual, encima de la malla de hexagonos, y ahi tiene sentido. El PNG no
+    tiene malla debajo: si dibujara solo lineas seguiria sin haber una forma que
+    el ojo reconozca, que es justo lo que le faltaba.
+
+    Rellenarlas es correcto porque los lazos vienen cerrados —comprobado sobre
+    los contornos publicados: los nueve, y todos sus lazos secundarios— y porque
+    las bandas estan anidadas, asi que pintar de menor a mayor reproduce
+    exactamente la estructura sin recortar geometria.
+
+    Un lazo **abierto** se descarta: cerrarlo a la fuerza inventaria area
+    atravesando el mapa en linea recta, que es peor que no dibujarlo.
+    """
+    tipo = geometria.get("type")
+    coords = geometria.get("coordinates") or []
+    if tipo == "Polygon":
+        # Solo el exterior: un agujero de un contorno es una isla de intensidad
+        # menor, y la banda de encima ya vuelve a pintar por su cuenta.
+        lazos = [anillo[0] for anillo in [coords] if anillo]
+    elif tipo == "MultiPolygon":
+        lazos = [poligono[0] for poligono in coords if poligono]
+    elif tipo == "LineString":
+        lazos = [coords]
+    elif tipo == "MultiLineString":
+        lazos = list(coords)
+    else:
+        return []
+
+    anillos: list[list[tuple[float, float]]] = []
+    for lazo in lazos:
+        if len(lazo) < 4:
+            continue
+        puntos = [(float(x), float(y)) for x, y, *_ in lazo]
+        if puntos[0] != puntos[-1]:
+            continue
+        anillos.append(puntos)
+    return anillos
+
+
+def _dibujar_contornos(ax: Any, contornos: Mapping[str, Any] | None) -> None:
+    """Pinta las bandas de intensidad como areas, de la mas suave a la mas fuerte.
+
+    De menor a mayor **a proposito**: los contornos de ShakeMap son anidados
+    —el de MMI 8 esta dentro del de 7— asi que pintar en ese orden deja cada
+    banda encima de la anterior sin tener que recortar geometria.
+    """
+    if not contornos:
+        return
+    from matplotlib.patches import Polygon as ParchePoligono
+
+    rasgos = [
+        (float(r.get("properties", {}).get("mmi", 0)), r.get("geometry") or {})
+        for r in contornos.get("features", [])
+    ]
+    # Las bandas por debajo de MMI 6 no se dibujan, por la misma razon que en la
+    # rampa: su contraste contra el fondo es de 1,2:1 y el reporte no las cita.
+    dibujables = sorted(
+        ((mmi, geom) for mmi, geom in rasgos if mmi >= MMI_MIN_MAPPED and geom),
+        key=lambda par: par[0],
+    )
+    for mmi, geometria in dibujables:
+        color = color_for_mmi(mmi)
+        for anillo in _anillos(geometria):
+            ax.add_patch(
+                ParchePoligono(
+                    anillo,
+                    closed=True,
+                    facecolor=color,
+                    edgecolor="white",
+                    linewidth=0.4,
+                    # Translucido: los circulos de municipio van encima y tienen
+                    # que seguir leyendose sobre el rojo oscuro de MMI 8.
+                    alpha=0.55,
+                    zorder=1,
+                )
+            )
+
+
+def _barra_de_escala(ax: Any, limites: tuple[float, float, float, float], *, fuente: int) -> None:
+    """Una barra en kilometros, y el norte.
+
+    Los ejes en grados decimales —"-80.5", "1.0"— no los lee nadie fuera de un
+    SIG, y sin escala no hay forma de juzgar una distancia en un mapa cuyo
+    encuadre cambia con cada evento. Se quitan los ejes y se pone lo que un
+    lector necesita: cuanto mide esto y hacia donde esta el norte.
+    """
+    import math
+
+    lon_min, lat_min, lon_max, lat_max = limites
+    lat_media = (lat_min + lat_max) / 2
+    km_por_grado = 111.32 * max(math.cos(math.radians(lat_media)), 0.05)
+    ancho_km = (lon_max - lon_min) * km_por_grado
+    if ancho_km <= 0:
+        return
+
+    # Una longitud redonda que ocupe alrededor de un cuarto del ancho: 1, 2 o 5
+    # por una potencia de diez. Un "137 km" de barra no se lee de un vistazo.
+    objetivo = ancho_km / 4
+    exponente = math.floor(math.log10(objetivo)) if objetivo > 0 else 0
+    base = 10**exponente
+    for paso in (1, 2, 5, 10):
+        largo_km = paso * base
+        if largo_km >= objetivo:
+            break
+    largo_grados = largo_km / km_por_grado
+
+    x0 = lon_min + (lon_max - lon_min) * 0.045
+    y0 = lat_min + (lat_max - lat_min) * 0.055
+    ax.plot(
+        [x0, x0 + largo_grados],
+        [y0, y0],
+        color="#1c1b1a",
+        linewidth=2.2,
+        solid_capstyle="butt",
+        zorder=6,
+    )
+    tope = y0 + (lat_max - lat_min) * 0.012
+    for x in (x0, x0 + largo_grados):
+        ax.plot([x, x], [y0, tope], color="#1c1b1a", linewidth=2.2, zorder=6)
+    ax.annotate(
+        f"{format_number_es(largo_km)} km",
+        (x0 + largo_grados / 2, y0),
+        fontsize=fuente,
+        color="#1c1b1a",
+        ha="center",
+        va="bottom",
+        xytext=(0, 4),
+        textcoords="offset points",
+        zorder=6,
+    )
+
+    # El norte, encima del extremo izquierdo de la barra. La proyeccion es
+    # plate carree con la proporcion corregida, asi que el norte es exactamente
+    # hacia arriba y una flecha recta no miente.
+    #
+    # Estuvo abajo a la derecha y se metia dentro de la leyenda de tamano, que
+    # vive en esa esquina: la flecha salia atravesando la palabra "expuestas".
+    # Aqui comparte esquina con la escala, que es su familia —las dos dicen como
+    # se mide este mapa— y no tapa nada.
+    alto = lat_max - lat_min
+    ax.annotate(
+        "",
+        xy=(x0, y0 + alto * 0.155),
+        xytext=(x0, y0 + alto * 0.055),
+        arrowprops={"arrowstyle": "-|>", "color": "#1c1b1a", "linewidth": 1.2},
+        zorder=6,
+    )
+    ax.annotate(
+        "N",
+        (x0, y0 + alto * 0.16),
+        fontsize=fuente + 1,
+        color="#1c1b1a",
+        ha="center",
+        va="bottom",
+        zorder=6,
+    )
+
+
+def _leyenda_de_tamano(
+    puntos: list[tuple[float, float, float, float, str]], *, fuente: int
+) -> list[Any]:
+    """Tres circulos de referencia para el tamano de los marcadores.
+
+    El area del circulo **es** la variable principal de este mapa —cuanta gente
+    quedo dentro— y no habia forma de traducirla a una cifra: la unica leyenda
+    era la de color. Un simbolo proporcional sin escala de tamano es un simbolo
+    decorativo.
+    """
+    from matplotlib.lines import Line2D
+
+    if not puntos:
+        return []
+    mayor = max(p[3] for p in puntos)
+    referencias: list[float] = [
+        float(v) for v in (10_000, 100_000, 1_000_000) if v <= max(mayor, 1.0)
+    ]
+    # Un evento pequeno puede no llegar ni a la primera referencia: se rotula con
+    # su propio maximo, que sigue siendo una escala util.
+    if not referencias:
+        referencias = [mayor]
+    return [
+        Line2D(
+            [],
+            [],
+            marker="o",
+            linestyle="none",
+            # El mismo gris tinta que los marcadores del mapa: una leyenda de
+            # tamano con otro color no rotula lo que hay dibujado.
+            markerfacecolor="#1c1b1a",
+            markeredgecolor="white",
+            markeredgewidth=0.9,
+            alpha=0.82,
+            # `_tamano` da area en puntos²; `markersize` es diametro en puntos.
+            markersize=(_tamano(v) ** 0.5),
+            label=format_count_prose(v),
+        )
+        for v in referencias
+    ]
 
 
 def _limites(

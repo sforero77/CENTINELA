@@ -1,7 +1,7 @@
-1/4 Sismo M7.5 en 20 km al O de Catia La Mar, Venezuela (2026-06-24T22:05:04Z UTC, 10 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
+1/4 Sismo M7,5 · 20 km al O de Catia La Mar, Venezuela (2026-06-24T22:05:04Z UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
 2/4 Personas dentro de intensidad MMI≥6: 9,2 millones. Dentro de MMI≥7: 2,3 millones. Edificaciones en MMI≥7: 500 mil.
 
-3/4 Municipios mas expuestos: Vargas, Puerto Cabello, Veroes.
+3/4 Municipios más expuestos: Vargas, Puerto Cabello, Veroes.
 
-4/4 Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: ver el reporte completo.
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: ver el reporte completo.

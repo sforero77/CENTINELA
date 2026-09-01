@@ -20,9 +20,17 @@ def render_thread(report: Report) -> list[str]:
     tot = report.totales
     posts: list[str] = []
 
+    # «Sismo M7.8 **en** 27 km al SSE de Muisne» — la preposicion falla con los
+    # toponimos de USGS, que casi siempre son una distancia: "en 27 km al SSE de
+    # Muisne" no se puede leer. Con "Acapulco, México" si funcionaba, y de ahi
+    # que sobreviviera. Un separador no tiene ese problema con ninguno de los dos.
+    #
+    # Y la magnitud con coma: este hilo se publica en espanol y el visor ya
+    # escribe "M7,8". Que el mismo evento salga como "M7.8" en redes y "M7,8" en
+    # la pagina es una costura gratuita.
     cabeza = (
-        f"Sismo M{ev.mag} en {ev.lugar} ({ev.utc} UTC, "
-        f"{format_number_es(ev.depth_km, 0)} km de profundidad). "
+        f"Sismo M{format_number_es(ev.mag, 1)} · {ev.lugar} "
+        f"({ev.utc} UTC, {format_number_es(ev.depth_km, 0)} km de profundidad). "
         f"Reporte automático de EXPOSICIÓN estimada de CENTINELA. "
         f"No es un reporte de daños."
     )

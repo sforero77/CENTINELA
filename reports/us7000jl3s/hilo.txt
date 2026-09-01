@@ -1,7 +1,7 @@
-1/4 Sismo M6.8 en 14 km al NNO de Baláo, Ecuador (2023-03-18T17:12:52Z UTC, 68 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
+1/4 Sismo M6,8 · 14 km al NNO de Baláo, Ecuador (2023-03-18T17:12:52Z UTC, 68 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
 2/4 Personas dentro de intensidad MMI≥6: 4,8 millones. Dentro de MMI≥7: 0. Edificaciones en MMI≥7: 0.
 
-3/4 Municipios mas expuestos: Guayaquil, Durán, Machala.
+3/4 Municipios más expuestos: Guayaquil, Durán, Machala.
 
-4/4 Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: ver el reporte completo.
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: ver el reporte completo.

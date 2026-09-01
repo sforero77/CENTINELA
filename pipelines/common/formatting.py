@@ -28,7 +28,7 @@ def round_significant(value: float, digits: int = PROSE_SIGNIFICANT_DIGITS) -> f
         return float(value)
     # Via formato %g en vez de multiplicar y dividir por potencias de 10: el
     # camino aritmetico devuelve 999999.9999999999 para 1e6, y esa cifra se
-    # publicaria como "1.000,0 mil" en lugar de "1 millon".
+    # publicaria como "1.000,0 mil" en lugar de "1 millón".
     return float(f"{value:.{digits}g}")
 
 
@@ -64,7 +64,9 @@ def format_count_prose(value: float) -> str:
     if abs(rounded) >= 1_000_000:
         millions = rounded / 1_000_000
         decimals = 0 if millions == int(millions) else 1
-        unit = "millon" if abs(millions) == 1 else "millones"
+        # Con tilde: es la unica palabra de todo el generador que salia sin
+        # ella, y sale en la fila mas leida de la tabla de exposicion.
+        unit = "millón" if abs(millions) == 1 else "millones"
         return f"{format_number_es(millions, decimals)} {unit}"
     if abs(rounded) >= 10_000:
         # A dos cifras significativas, todo numero de cinco digitos o mas es
