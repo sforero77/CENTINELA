@@ -433,8 +433,10 @@ proposito es estar listo por adelantado, eso no es una carencia: es exactamente
 el estado que se persigue, y presentarlo como un vacio lo cuenta al reves.
 
 **Brasil no puede tener reporte, y no es por el activo.** Sus doce sismos
-M≥5,5 desde 2000 estan todos entre 534 y 603 km de profundidad, en Acre, y
-**USGS no publica contornos MMI para ninguno**. Un sistema que calcula sobre
+M≥5,5 desde 2000 estan todos entre 534 y **645** km de profundidad, en Acre, y
+**USGS no publica contornos MMI para ninguno**. (El tope decia 603 y estaba mal;
+recontado el 1-sep-2026, el mas profundo es `usp000fgsv` a 644,9 km. La
+conclusion no cambia: cuanto mas profundo, menos superficie que medir.) Un sistema que calcula sobre
 `cont_mmi` no tiene nada que calcular ahi. Construir su activo sigue teniendo
 sentido —un sismo somero raro en la costa cambiaria eso en un dia— pero
 conviene decir por que su casilla de reportes esta vacia.
@@ -445,10 +447,22 @@ las cajas envolventes de Argentina y Bolivia se llenan de sismos chilenos, que
 tapaban a los suyos al ordenar por relevancia. Ya tienen reporte: Pocito 2021
 (M6,4, San Juan) y Bani 2012 (M5,5).
 
-**Bolivia resulto ser el caso de Brasil.** Sus veintidos sismos M≥5,5 desde
-2000 estan entre 359 y 596 km, y el unico con contornos publicados no produjo
-una sola celda por encima de MMI 5. No es un hueco de cobertura: es que a esa
-profundidad no hay intensidad de superficie que medir.
+**Bolivia resulto NO ser el caso de Brasil, y esta seccion lo dijo al reves
+durante seis dias.** Decia que sus veintidos sismos M≥5,5 desde 2000 estaban
+«entre 359 y 596 km». Recontado el 1-sep-2026 contra el catalogo de USGS, van
+**de 33 a 608 km**, y el mas somero —`usp000ahzc`, M6,2 del 4-jul-2001, cerca de
+Colomi— tiene MMI modelada de 6,4 y publica `cont_mmi.json`.
+
+**La causa es la que esta misma seccion describe dos parrafos mas abajo**, y por
+eso duele: la busqueda se ordeno por relevancia sobre una caja envolvente que se
+llena de sismos chilenos. Se diagnostico para Argentina y Republica Dominicana,
+se corrigio para las dos, y a Bolivia se le aplico la conclusion de Brasil sin
+volver a mirar. Un sesgo identificado y no barrido hasta el final deja
+exactamente este residuo.
+
+Bolivia tiene un reporte pendiente de construir, no un silencio explicado: esta
+en `PENDIENTES.md` §2.1.bis, y `tests/integration/test_silencio_de_paises_live.py`
+vuelve a comprobarlo contra USGS en cada corrida nocturna.
 
 **Y el descarte por pais se estreno en real.** De los tres eventos dominicanos
 probados, dos —ambos frente a Punta Cana, a 77 y 102 km mar adentro— salieron
@@ -530,7 +544,8 @@ Vivia en una linea de metadatos, entre la fecha y la version del ShakeMap. A
 igual magnitud, la profundidad decide cuanto se siente en superficie — o sea que
 es **exactamente lo que explica los casos raros del catalogo**: Tehuantepec fue
 un M8,2 y su maximo sobre poblacion mexicana es MMI 6,5; los veintidos sismos
-bolivianos estan entre 359 y 596 km y ninguno produce una sola celda.
+bolivianos van de 33 a 608 km, y el mas somero si produce celdas: ver arriba y
+`PENDIENTES.md` §2.1.bis.
 
 Un lector que ve «M8,2» y «0 personas en MMI≥7» sin ver «47 km» no tiene con que
 entenderlo. Ahora es el primer distintivo, clasificado con los cortes estandar

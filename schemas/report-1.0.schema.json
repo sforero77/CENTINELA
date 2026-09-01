@@ -264,6 +264,24 @@
           }
         }
       }
+    },
+    "ground_failure_usgs": {
+      "type": "object",
+      "description": "Alertas del producto Ground Failure del propio USGS, como referencia cruzada. No son cifras de CENTINELA: USGS pondera la poblacion de cada celda por el valor de esa celda, y CENTINELA cuenta la poblacion entera de toda celda por encima del umbral. Opcional: los reportes emitidos antes del 1-sep-2026 no lo traen.",
+      "properties": {
+        "ls_alerta_usgs": {
+          "type": "string"
+        },
+        "ls_pop_usgs": {
+          "type": "string"
+        },
+        "lq_alerta_usgs": {
+          "type": "string"
+        },
+        "lq_pop_usgs": {
+          "type": "string"
+        }
+      }
     }
   }
 }

@@ -43,8 +43,27 @@ CRS_PUBLICATION: Final[str] = "EPSG:4326"
 MMI_BANDS: Final[tuple[int, ...]] = (6, 7, 8)
 MMI_BAND_AGE_BREAKDOWN: Final[int] = 7
 
-#: Umbral de probabilidad a partir del cual Ground Failure se considera
-#: "alta" para el conteo de poblacion expuesta.
+#: Umbral a partir del cual una celda entra en el conteo de poblacion expuesta
+#: a falla de terreno.
+#:
+#: **NO ES UN UMBRAL DE USGS Y NO SIGNIFICA LO MISMO EN LOS DOS MODELOS.** Era el
+#: unico valor de este modulo sin justificacion citada, en un modulo que promete
+#: que todo valor de aqui es una decision citada. Lo que hay que saber:
+#:
+#: * Jessee (2018), deslizamiento, entrega **probabilidad** de que la celda
+#:   falle. Un 0,10 es "una entre diez".
+#: * Zhu (2017), licuefaccion, entrega **cobertura areal**: la fraccion del area
+#:   de la celda que se espera cubierta. Un 0,10 es "el 10 % de la superficie",
+#:   que no es una probabilidad y no se lee como tal.
+#:
+#: Las dos distribuciones son distintas, asi que el mismo 0,10 no marca lo mismo
+#: en cada una y **"alta" no es una categoria que USGS publique** a este valor.
+#: El reporte por eso nombra la unidad de cada modelo en vez de decir "alta", y
+#: pone al lado la alerta que USGS si publica.
+#:
+#: El valor se conserva porque es el corte con el que se calculo todo el
+#: catalogo historico y cambiarlo mueve las veintiuna cifras publicadas a la vez;
+#: cuando se cambie, se cambia con el catalogo entero y el delta publicado.
 GROUND_FAILURE_HIGH_PROB: Final[float] = 0.10
 
 # --- Reintentos del reporte preliminar (RF-03) ----------------------------

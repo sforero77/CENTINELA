@@ -35,8 +35,14 @@ HXL_HEADERS: dict[str, str] = {
     "edu_mmi7p": "#infra+education+mmi7",
     "road_km_mmi7p": "#infra+roads+km+mmi7",
     "road_km_principal_mmi7p": "#infra+roads+km+primary+mmi7",
-    "ls_pop_expuesta": "#population+landslide",
-    "lq_pop_expuesta": "#population+liquefaction",
+    # El sufijo `_mmi6p` no es cosmetico: dice sobre que celdas se contaron.
+    # Sin el, esta columna sumaba sobre TODA `impact_h3` —que arranca en MMI
+    # 5,0— mientras la cifra nacional del `report.json` sumaba solo desde MMI 6,
+    # y las dos salian positivas y del orden correcto. Quien bajaba el CSV y lo
+    # contrastaba contra la cifra nacional encontraba una diferencia que nadie
+    # sabia explicar. Ahora el conjunto es el mismo y el nombre lo declara.
+    "ls_pop_expuesta_mmi6p": "#population+landslide+mmi6",
+    "lq_pop_expuesta_mmi6p": "#population+liquefaction+mmi6",
     "flags_calidad": "#meta+flags",
 }
 

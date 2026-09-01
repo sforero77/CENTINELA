@@ -1,49 +1,242 @@
 # CENTINELA
 
-**Sistema abierto de exposicion sismica automatizada para America Latina.**
+**Sistema abierto de exposición sísmica automatizada para América Latina.**
 
-Ante cualquier sismo relevante en la region, CENTINELA publica en menos de una
-hora un reporte de **exposicion**: cuantas personas, edificaciones, escuelas,
-hospitales y kilometros de via quedan dentro de cada franja de intensidad
-sismica, por municipio y por celda H3, con datos descargables y en espanol.
+Ante cualquier sismo relevante en la región, CENTINELA publica un reporte de
+**exposición**: cuántas personas, edificaciones, escuelas, hospitales y
+kilómetros de vía quedan dentro de cada franja de intensidad sísmica, por
+municipio y por celda H3, con datos descargables y en español.
 
-> **Exposicion no es dano.** Este sistema no es una alerta temprana, no estima
-> victimas, no dictamina habitabilidad y no reemplaza a los servicios
-> geologicos ni a las unidades de gestion del riesgo. Ver
+> **Exposición no es daño.** Este sistema no es una alerta temprana, no estima
+> víctimas, no dictamina habitabilidad y no reemplaza a los servicios
+> geológicos ni a las unidades de gestión del riesgo. Ver
 > [`DISCLAIMER.md`](DISCLAIMER.md).
 
-## Por que existe
+## Por qué existe
 
-En el terremoto del Choco (M7.4, 10 de agosto de 2026) el pais tardo **dias**
-en saber cuanta poblacion e infraestructura estaba en la zona de intensidad
-fuerte. Las cifras oficiales oscilaron durante semanas. La unica evaluacion de
-dano con IA cubrio una sola ciudad, y toda la capacidad analitica vino de fuera
-de la region. Siete semanas antes, en Venezuela, paso exactamente lo mismo.
+En el sismo de San José del Palmar (M7,4, 10 de agosto de 2026) el país supo
+pronto **cuánta** gente estaba en la zona de intensidad fuerte: PAGER lo estimó
+en media hora. Lo que tardó días fue saber **dónde**, con qué infraestructura y
+por municipio. Las cifras oficiales oscilaron durante semanas. Siete semanas
+antes, en Venezuela, pasó lo mismo.
 
-No existe memoria ni capacidad regional pre-posicionada. Este proyecto es esa
-capacidad.
+Capacidad regional hay, y conviene decirlo bien: el SGC calcula y publica sus
+propios mapas de intensidad instrumental de forma automática, el IGAC voló
+ortofoto de 10 cm, FUNVISIS habilitó reporte ciudadano de daño, el hub LAC de
+HOT coordinó con OSM Colombia desde el primer día, y GEM SARA se construyó con
+más de cincuenta expertos de diecisiete instituciones de la región.
 
-## Como funciona
+**Lo que no hay es la pieza del medio**: un activo de exposición ya construido,
+por municipio y por celda, que convierta la intensidad en cuánta gente e
+infraestructura —el mismo día, con el dato descargable y en español—. Este
+proyecto es esa pieza.
+
+### Qué añade sobre lo que ya existe
+
+Tres cosas, y las tres se pueden citar de documentos del propio USGS:
+
+* **PAGER corre sobre LandScan, que es licenciado.** Nadie fuera del USGS puede
+  rehacer, extender ni localizar su producto. El activo de CENTINELA se
+  reconstruye entero desde fuentes abiertas, sin credenciales, con un comando.
+  Es la razón estructural por la que este proyecto tiene que existir aparte.
+* **PAGER no cuenta escuelas, hospitales ni vías.** Está en su propio FAQ.
+  Estima población y pérdidas; el equipamiento expuesto no es su pregunta.
+* **PAGER no considera deslizamiento ni licuefacción.** Cita literal de
+  onePAGER: *«PAGER does not consider secondary effects such as landslides,
+  liquefaction, and tsunami in loss estimates at this time»*. CENTINELA sí
+  consume el producto Ground Failure, con las cautelas de la §Ground Failure
+  de cada reporte.
+
+Y una honestidad que el proyecto se debe a sí mismo: **la malla H3 no es la
+novedad**. [Kontur Population](https://data.humdata.org/dataset/kontur-population-dataset)
+publica hexágonos H3 globales de la misma resolución, CC BY, en HDX; y
+[Disaster Ninja](https://disaster.ninja/) hace exposición H3 disparada por
+GDACS, gratis y con el backend abierto. H3 aquí es un detalle de
+implementación, no un argumento. Lo que CENTINELA añade sobre eso es el activo
+por país reconstruible desde cero, el corte por municipio con el código
+administrativo nacional, el equipamiento de salud y educación, y el reporte en
+español con su procedencia.
+
+## La evidencia
+
+### El backtest de San José del Palmar
+
+[`reports/us6000tjl2/`](reports/us6000tjl2/) es la respuesta a la pregunta que
+motiva el proyecto: **esto es lo que el país habría sabido el 10 de agosto**, en
+vez de esperar días.
+
+| Indicador | Cifra |
+|---|---:|
+| Personas en MMI≥6 | **6.960.086** |
+| Personas en MMI≥7 | **2.415.793** |
+| De ellas, 65 años o más | **289.257** |
+| Edificaciones en MMI≥7 | **444.424** |
+| Sedes de salud en MMI≥7 | **518** |
+| Sedes educativas en MMI≥7 | **998** |
+| Kilómetros de vía en MMI≥7 | **8.503** |
+| De ellos, primarias y secundarias | **985** |
+| Personas en celdas con cobertura areal por licuefacción ≥ 0,10 | **1.600.028** |
+| Municipios alcanzados | **297** |
+
+Las cifras salen de `reports/us6000tjl2/report.json`, y
+`tests/unit/test_cifras_del_readme.py` falla si esta tabla se separa de él.
+Cinco de estas filas estuvieron desactualizadas hasta el 25-ago-2026 —los km de
+vía, por un factor de seis— porque se copiaron a mano y el activo se reconstruyó
+después. Una tabla de cifras escrita a mano se desincroniza; una tabla con
+prueba, no.
+
+**Dos cautelas sobre la tabla, que valen más que las cifras.**
+
+*Sobre la precisión.* Siete dígitos significativos sobre un modelo interpolado
+fingen una exactitud que no existe: el mismo reporte publica una banda de
+discrepancia del 3,1 %, o sea 6.960.086 ± ~215.000. La tabla reproduce el JSON
+al dígito porque su trabajo es ser trazable; **en prosa, estas cifras son «siete
+millones» y «2,4 millones»**, que es como las escribe el `report.md` generado.
+
+*Sobre la licuefacción.* 1,6 millones **no es la cifra de USGS y no se puede
+comparar con ella**. El modelo de Zhu (2017) entrega **cobertura areal** —la
+fracción del área de la celda que se espera cubierta—, no probabilidad; aquí se
+cuenta la población entera de toda celda por encima de 0,10, y USGS pondera la
+población de cada celda por esa cobertura, con lo que publica **~460 mil** para
+el mismo evento y el mismo producto. Son dos preguntas distintas sobre el mismo
+ráster. El reporte lo dice ahora en cada emisión.
+
+### El contraste con PAGER, en las mismas bandas
+
+Es la objeción que el proyecto recibe primero, y conviene resolverla antes de
+que la haga nadie. PAGER tabula por **MMI redondeado** —su fila «7» es todo lo
+que cae entre 6,5 y 7,49— y CENTINELA usa **bandas literales**. Puestas en el
+mismo eje, cada cifra de CENTINELA cae dentro del intervalo que las filas de
+PAGER acotan por arriba y por abajo:
+
+| Umbral literal | PAGER | CENTINELA |
+|---|---:|---:|
+| MMI ≥ 5,5 | 10.487.959 | — |
+| MMI ≥ 6,0 | — | **6.960.086** |
+| MMI ≥ 6,5 | 6.514.486 | — |
+| MMI ≥ 7,0 | — | **2.415.793** |
+| MMI ≥ 7,5 | 1.126.902 | — |
+
+Es el único acuerdo aritméticamente posible entre dos convenciones distintas, y
+`tests/unit/test_contraste_con_pager.py` falla si deja de cumplirse. El detalle,
+con la fuente de cada columna, está en
+[`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md).
+
+### La validación externa
+
+El Microsoft AI for Good Lab publicó evaluación de daño por imagen satelital
+para dos de los sismos que CENTINELA reconstruyó, usando además **las mismas
+huellas de edificación de Overture**. De las celdas que Microsoft evaluó,
+**ninguna falta del activo**, en dos países y dos sismos distintos. La lista de
+celdas la puso otro, así que es la verificación de cobertura más exigente que se
+le ha hecho a este sistema.
+
+Y la evaluación **no cubrió una sola ciudad**: corrió sobre Cali (imagen Airbus)
+y sobre Pereira (imagen Vantor), que es además el municipio más expuesto del
+evento según este mismo reporte. El gradiente entre las tres zonas evaluadas es
+la respuesta corta a por qué una cifra de exposición no se lee como una cifra de
+daño.
+
+### El catálogo histórico regional
+
+San José del Palmar no es una demostración aislada. El sistema reconstruyó
+**21 sismos de 15 países** del catálogo real de USGS, cada uno con los productos
+que USGS publicó entonces, cada uno contra el activo de su país:
+
+| | |
+|---|---|
+| Reportes publicados | **21**, en **15 países** |
+| Países con activo construido y medido | **19 de 19** |
+| Personas ya en la malla hexagonal | **649,8 millones** |
+| Peor desvío contra la cifra oficial de un país | **+4,94 %** (Venezuela, y está explicado) |
+
+**Los 21 son reconstrucciones.** El sistema no ha disparado todavía un reporte
+en vivo: `site/status.json` publica `eventos_publicados: 0` y
+`backtests_excluidos: 21`, y por eso la latencia medida extremo a extremo sigue
+en `null`. Decirlo es más útil que dejarlo ambiguo — el catálogo demuestra que
+el cálculo funciona sobre veintiún eventos reales, no que la cadena en vivo se
+haya ejercitado.
+
+Lo que enseña ese catálogo importa más que su tamaño: **once de los veintiún
+eventos no alcanzan MMI≥7 sobre población**, y tres de ellos tampoco MMI≥6. Son
+los profundos y los de mar adentro, que en esta región son la mitad.
+Tehuantepec 2017 —M8,2, 98 muertos— es uno de ellos: su máximo sobre población
+mexicana es MMI 6,5.
+
+Hasta que se corrieron, el producto entero daba por supuesto que MMI≥7 era *la*
+banda, y para esos once publicaba un titular de «0 personas» con una tabla de
+municipios ordenada alfabéticamente. Ahora se titula con la banda que el evento
+alcanzó de verdad. Ninguna cantidad de pruebas sintéticas habría encontrado eso:
+hizo falta correr la región entera.
+
+### Los cuatro países sin reporte
+
+Bolivia, Brasil, Paraguay y Uruguay **tienen su activo construido**. No son
+huecos del sistema, y no lo son por el mismo motivo. Se buscó para los cuatro,
+y `tests/integration/test_silencio_de_paises_live.py` vuelve a comprobarlo
+contra USGS:
+
+* **Paraguay y Uruguay** no registran un solo sismo M≥5,5 desde el año 2000. Su
+  activo está construido y esperando, que para un sistema de preparación es el
+  estado que se persigue, no una carencia.
+* **Brasil** tiene doce sismos M≥5,5 desde 2000, **todos entre 534 y 645 km de
+  profundidad** y todos en Acre. El ShakeMap de USGS no modela MMI≥5 en
+  superficie para ninguno —su máximo modelado es 3,0—, aunque el DYFI recoja
+  reportes de personas de hasta CDI 5,6. Un sistema que calcula sobre `cont_mmi`
+  no tiene ahí nada que calcular.
+* **Bolivia no es el caso de Brasil, y este README decía que sí.** Sus veintidós
+  sismos M≥5,5 desde 2000 no están «todos entre 359 y 596 km»: van **de 33 a
+  608 km**. El más somero es un M6,2 del 4-jul-2001 cerca de Colomi, con MMI
+  modelada de **6,4** y `cont_mmi.json` publicado. Bolivia no está en silencio
+  por profundidad: **tiene un reporte pendiente de construir**, y está en
+  [`PENDIENTES.md`](PENDIENTES.md). El error venía de una búsqueda ordenada por
+  relevancia sobre una caja envolvente que se llena de sismos chilenos — el
+  mismo sesgo que la auditoría del 25-ago-2026 ya había documentado para
+  Argentina y República Dominicana, y que en Bolivia no se notó.
+
+## Cómo funciona
 
 ```
-[Feed GeoJSON de USGS] ──(cron externo cada 5 min)──▶ P1 TRIGGER
+[Feed GeoJSON de USGS] ──(cron cada 10 min + disparo externo)──▶ P1 TRIGGER
      filtro bbox LATAM + M≥5.5 + dedupe por event_state
          │
          ▼
-     P2 IMPACTO   contornos MMI → celdas H3 r8 ⋈ activo de exposicion
-                  rasters de Ground Failure → muestreo por celda
+     P2 IMPACTO   contornos MMI → celdas H3 r8 ⋈ activo de exposición
+                  ráster de Ground Failure → muestreo por celda
          │
          ▼
      P3 REPORTE   report.json → md + mapa + CSV + parquet + PMTiles + hilo
                   (se re-emite solo cuando aparece ShakeMap v(n+1))
 
-[Trimestral]   P0 EXPOSICION  construye el activo por pais desde fuentes publicas
-[Por evento]   P4 BRIGADA     dano por edificacion con IA, cuando hay imagen abierta
+[Trimestral]   P0 EXPOSICIÓN  construye el activo por país desde fuentes públicas
+[Continuo]     P5 INCENDIOS   focos activos FIRMS ⋈ el mismo activo, con cobertura del suelo
+[Por evento]   P4 BRIGADA     daño por edificación con IA, cuando hay imagen abierta
 ```
 
-El principio rector es **~95 % automatico, ~5 % humano**: una comunidad no
-opera turnos, mantiene codigo y datos. El unico paso manual permitido en todo
-el sistema es dar clic para publicar el hilo en redes.
+El principio rector es **~95 % automático, ~5 % humano**: una comunidad no opera
+turnos, mantiene código y datos. El único paso manual permitido en todo el
+sistema es dar clic para publicar el hilo en redes.
+
+**El mismo activo sirve para fuego.** P5 cruza los focos activos de FIRMS con la
+malla y con la cobertura del suelo de ESA WorldCover, y publica la capa en el
+visor con su propio selector de amenaza. Un activo de exposición no es un
+producto sísmico: es la base sobre la que se responde «cuánta gente y qué hay
+aquí», sea cual sea la amenaza que llegue.
+
+### Sobre la latencia, con los números medidos
+
+El cálculo de un evento es la parte corta. La larga es enterarse: el cron de
+GitHub Actions declara diez minutos y entrega mucho menos. Medido entre el 25 y
+el 30 de agosto sobre 23 latidos, `site/status.json` publica **p50 157 min, p90
+462 y peor caso 766 min (12,8 h)**. Con un objetivo de 60 minutos extremo a
+extremo, **la detección sola se come el presupuesto entero**; el propio
+`.github/workflows/trigger.yml` lo dice así y por eso `repository_dispatch` está
+declarado, esperando un cron externo que lo dispare.
+
+Así que este README no promete «menos de una hora»: promete el contraste que sí
+controla —de días a segundos de cómputo— y publica la latencia real en
+[`/status`](https://sforero77.github.io/CENTINELA/status.json) para que se vea
+sin pedirla.
 
 ## Arranque
 
@@ -51,185 +244,115 @@ el sistema es dar clic para publicar el hilo en redes.
 make setup                 # instala todo con uv (Python 3.12)
 make check                 # lint + mypy + pruebas
 make trigger               # P1 en seco contra el feed vivo de USGS
-make country ISO=COL       # reconstruye el activo de exposicion de Colombia
+make country ISO=COL       # reconstruye el activo de exposición de Colombia
 ```
 
-Sin credenciales, sin servidor, sin cuenta en ningun servicio. Si algo del
-arranque no funciona en tu maquina, eso es un bug.
-
-## Estado del proyecto
-
-**Fase 0, semana 4 — el sistema esta operando.** Desde el 24-ago-2026 el
-trigger vigila el feed de USGS y el visor esta publicado en
-https://sforero77.github.io/CENTINELA/. Lo que ya funciona y lo que falta:
-
-| Componente | Estado |
-|---|---|
-| P1 trigger (feed, filtro, dedupe, `event_state`) | ✅ operando cada 5 min |
-| Contratos USGS (feed + productos) y su validacion | ✅ funcional |
-| Decision de impacto e idempotencia por version | ✅ funcional |
-| Reporte preliminar sin ShakeMap (RF-03) | ✅ funcional |
-| Changelog de deltas al re-emitir (RF-04) | ✅ funcional |
-| Modelo y render del reporte (json, md, CSV, mapas, hilo) | ✅ funcional |
-| Asserts de calidad §6.4 sobre el corte, en P0 y en P2 | ✅ funcional |
-| Regla de los tres cubos y lint de manifests | ✅ funcional, corre en CI |
-| Deriva de licencia de la fuente, contrastada en cada build | ✅ funcional |
-| Golden tests G1/G2/G3 con productos reales congelados | ✅ corren |
-| P0 pipeline completo: descarga → crosswalk → nueve capas → parquet | ✅ funcional |
-| P2 contornos MMI → celdas → Ground Failure → join en DuckDB | ✅ funcional |
-| Enrutado del evento al activo del pais correcto | ✅ funcional, con reintento |
-| Toponimos en espanol (RF-06) | ✅ funcional |
-| **Catalogo historico regional** | ✅ **21 reportes en 15 paises** |
-| **Activo de exposicion construido y publicado** | ✅ **19 de 19 paises** |
-| Visor con cobertura regional y filtro por pais | ✅ funcional |
-| Visor y `/status`, con latido del trigger publicado | ✅ funcional |
-| Reconstruccion trimestral de todos los activos publicados | ✅ funcional |
-| Selector de amenaza del visor (sismos / fuego) | ✅ funcional |
-| Coropletas r7/r6 del visor en PMTiles | ⏳ el resto del visor funciona |
-| P4 brigada de imagen | ⏳ Fase 2 |
-
-**953 pruebas** sin red, mas **43 de navegador** que abren el visor en un
-Chromium de verdad, `ruff` y `mypy --strict` limpios. Medido el 30-ago-2026.
-
-Las etapas pendientes fallan de forma ruidosa y explicita — nunca devuelven un
-cero que acabaria publicado como cifra. `tests/unit/test_pendientes.py` es el
-inventario vivo de esa deuda, y hoy esta vacio.
-
-Y hay una segunda guardia, de otra clase.
-`tests/unit/test_funciones_conectadas.py` recorre el grafo de llamadas y falla
-si una funcion publica se queda **sin llamador**. Existe porque el fallo que
-mas veces ha cazado este proyecto no es un calculo mal hecho sino una pieza
-correcta que nadie invoca: el reporte preliminar, el epicentro del mapa
-estatico, tres capas del activo, los asserts de §6.4. Todas estaban probadas —
-por eso la cobertura las daba por verdes— y ninguna estaba conectada.
-
-El cero silencioso tiene ademas su propia guardia. Una capa que no se construye
-entra vacia al ensamblaje, el `LEFT JOIN` la vuelve ceros y el activo se
-escribiria sin que nada proteste: el assert de total nacional solo mira
-poblacion. `validate_layer_coverage` detiene el build si **cualquier** capa
-requerida suma cero en todo el pais — es preferible no publicar activo que
-publicar uno que informa cero donde no midio nada.
-
-Los golden tests corren contra **productos reales congelados** de los dos
-eventos que motivan el proyecto: Chocó (`us6000tjl2`) y el doble mainshock de
-Venezuela (`us6000t7zp`, `us6000t7zc`). Ya cazaron dos bugs que ninguna prueba
-sintetica habria encontrado — ver `tests/fixtures/golden/README.md`.
-
-### El backtest del Chocó
-
-`reports/us6000tjl2/` es la respuesta a la pregunta que motiva el proyecto:
-**esto es lo que el pais habria sabido el 10 de agosto**, en vez de esperar dias.
-
-| Indicador | Cifra |
-|---|---|
-| Personas en MMI≥6 | **6.960.086** |
-| Personas en MMI≥7 | **2.415.793** |
-| De ellas, 65 anos o mas | **289.257** |
-| Edificaciones en MMI≥7 | **444.424** |
-| Sedes de salud en MMI≥7 | **518** |
-| Sedes educativas en MMI≥7 | **998** |
-| Kilometros de via en MMI≥7 | **8.503** |
-| De ellos, primarias y secundarias | **985** |
-| Personas en zona de licuefaccion alta | **1.600.028** |
-| Municipios alcanzados | **297** |
-
-Las cifras salen de `reports/us6000tjl2/report.json`, y
-`tests/unit/test_cifras_del_readme.py` falla si esta tabla se separa de el.
-Cinco de estas filas estuvieron desactualizadas hasta el 25-ago-2026 —los km de
-via, por un factor de seis— porque se copiaron a mano y el activo se
-reconstruyo despues. Una tabla de cifras escrita a mano se desincroniza; una
-tabla con prueba, no.
-
-El activo del que salen es el Release `exposure-col-20260824` (manifest
-`col-v0.5`): **559.103 celdas**, 52.620.466 habitantes, 15,3 millones de
-edificaciones, 9.888 sedes de salud, 45.710 sedes educativas y 307.314 km de
-via, en los 1.122 municipios del pais. Su desvio contra la referencia del DANE
-es **−0,72 %**, y solo el 0,32 % de la poblacion entra por celdas rescatadas.
-
-Y el dato que cambia la conversacion: los municipios mas expuestos no estaban en
-Chocó sino en el Eje Cafetero y el Valle — Pereira, Buenaventura, Armenia,
-Tuluá, Dosquebradas. La unica evaluacion de dano con IA que existio cubrio una
-sola ciudad.
-
-### El catalogo historico regional
-
-El Chocó no es una demostracion aislada. El sistema reconstruyo **21 sismos de
-15 paises** del catalogo real de USGS, cada uno con los productos que USGS
-publico entonces, cada uno contra el activo de su pais:
-
-| | |
-|---|---|
-| Reportes publicados | **21**, en **15 paises** |
-| Paises con activo construido y medido | **19 de 19** |
-| Personas ya en la malla hexagonal | **649,8 millones** |
-| Peor desvio contra la cifra oficial de un pais | **+4,94 %** (Venezuela, y esta explicado) |
-
-Los cuatro paises sin reporte —Bolivia, Brasil, Paraguay y Uruguay— **tienen su
-activo construido**: no son huecos del sistema, y no lo son por el mismo motivo.
-Se busco para los cuatro:
-
-* **Paraguay y Uruguay** no registran un solo sismo M≥5,5 desde el ano 2000.
-  Su activo esta construido y esperando, que para un sistema de preparacion es
-  el estado que se persigue, no una carencia.
-* **Bolivia y Brasil** si tienen sismos —22 y 12 desde 2000— pero **todos entre
-  359 y 603 km de profundidad**. A esa profundidad la sacudida no alcanza MMI 5
-  en superficie: USGS no publica contornos para los brasilenos, y los bolivianos
-  que si los traen no producen una sola celda. Un sistema que calcula sobre
-  `cont_mmi` no tiene ahi nada que calcular, y decirlo es mas util que forzar un
-  reporte de ceros.
-
-Lo que ensena ese catalogo importa mas que su tamano: **ocho de los diecinueve
-eventos no alcanzan MMI≥7 sobre poblacion**. Son los profundos y los de mar
-adentro, que en esta region son la mitad. Tehuantepec 2017 —M8,2, 98 muertos—
-es uno de ellos: su maximo sobre poblacion mexicana es MMI 6,5.
-
-Hasta que se corrieron, el producto entero daba por supuesto que MMI≥7 era *la*
-banda, y para esos ocho publicaba un titular de "0 personas" con una tabla de
-municipios ordenada alfabeticamente. Ahora se titula con la banda que el evento
-alcanzo de verdad. Ninguna cantidad de pruebas sinteticas habria encontrado eso:
-hizo falta correr la region entera.
+Sin credenciales, sin servidor, sin cuenta en ningún servicio. Si algo del
+arranque no funciona en tu máquina, eso es un bug.
 
 ## Estructura
 
 ```
-pipelines/       p0_exposure, p1_trigger, p2_impact, p3_report, p4_brigada, common
+pipelines/       p0_exposure, p1_trigger, p2_impact, p3_report, p4_brigada, p5_incendios, common
 schemas/         JSON Schema del reporte, del estado y de los contratos USGS
-data/manifests/  vintages por pais (fuente, url, licencia, hash, fecha) — los 19 de LATAM
+data/manifests/  vintages por país (fuente, url, licencia, hash, fecha) — los 19 de LATAM
 events/          event_state por evento — la base de datos del sistema, en git
 reports/         salidas publicadas (json + md + csv + png)
-site/            visor estatico (MapLibre + PMTiles, cero llaves de API)
+site/            visor estático (MapLibre + PMTiles, cero llaves de API)
 tests/           unit/, integration/, golden/, fixtures/
 ```
 
-## Documentacion
+## Estado del proyecto
+
+El sistema está operando. Desde el 24-ago-2026 el trigger vigila el feed de USGS
+y el visor está publicado en <https://sforero77.github.io/CENTINELA/>. Lo que
+falta:
+
+| Pendiente | Estado |
+|---|---|
+| Reporte en vivo (los 21 son reconstrucciones) | ⏳ esperando el primer evento |
+| Disparador externo para la latencia de detección | ⏳ falta el token y el cron |
+| Reporte de Bolivia (`usp000ahzc`, M6,2, 2001) | ⏳ el activo está; falta correrlo |
+| Coropletas r7/r6 del visor en PMTiles | ⏳ el resto del visor funciona |
+| P4 brigada de imagen | ⏳ Fase 2 |
+
+Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
+[`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
+garantizado.
+
+**1.062 pruebas** sin red, más **43 de navegador** que abren el visor en un
+Chromium de verdad, `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
+
+Las etapas pendientes fallan de forma ruidosa y explícita — nunca devuelven un
+cero que acabaría publicado como cifra. `tests/unit/test_pendientes.py` es el
+inventario vivo de esa deuda, y hoy está vacío.
+
+Y hay una segunda guardia, de otra clase.
+`tests/unit/test_funciones_conectadas.py` recorre el grafo de llamadas y falla
+si una función pública se queda **sin llamador**. Existe porque el fallo que más
+veces ha cazado este proyecto no es un cálculo mal hecho sino una pieza correcta
+que nadie invoca: el reporte preliminar, el epicentro del mapa estático, tres
+capas del activo, los asserts de §6.4. Todas estaban probadas —por eso la
+cobertura las daba por verdes— y ninguna estaba conectada.
+
+El cero silencioso tiene además su propia guardia. Una capa que no se construye
+entra vacía al ensamblaje, el `LEFT JOIN` la vuelve ceros y el activo se
+escribiría sin que nada proteste: el assert de total nacional solo mira
+población. `validate_layer_coverage` detiene el build si **cualquier** capa
+requerida suma cero en todo el país — es preferible no publicar activo que
+publicar uno que informa cero donde no midió nada.
+
+Los golden tests corren contra **productos reales congelados** de los dos
+eventos que motivan el proyecto: San José del Palmar (`us6000tjl2`) y el doble
+mainshock de Venezuela (`us6000t7zp`, `us6000t7zc`). Ya cazaron dos bugs que
+ninguna prueba sintética habría encontrado — ver
+[`tests/fixtures/golden/README.md`](tests/fixtures/golden/README.md).
+
+### El activo del que salen las cifras
+
+Release `exposure-col-20260824` (manifest `col-v0.5`): **559.103 celdas**,
+52.620.466 habitantes, 15,3 millones de edificaciones, 9.888 sedes de salud,
+45.710 sedes educativas y 307.314 km de vía, en los 1.122 municipios del país.
+Su desvío contra la referencia del DANE es **−0,72 %**, y solo el 0,32 % de la
+población entra por celdas rescatadas.
+
+Y el dato que cambia la conversación: los municipios más expuestos no estaban en
+el Chocó sino en el Eje Cafetero y el Valle — Pereira, Buenaventura, Armenia,
+Tuluá, Dosquebradas. Por eso este README dejó de llamarlo «el terremoto del
+Chocó»: el nombre contradecía la tesis del propio reporte.
+
+## Documentación
 
 **Empieza por [`docs/`](docs/)**, que es el mapa completo del sistema, con
 diagramas de cada componente:
 
-| Carpeta | Que explica |
+| Carpeta | Qué explica |
 |---|---|
 | [`docs/arquitectura/`](docs/arquitectura/) | La vista de conjunto, el viaje del dato y el contrato de cada fichero |
-| [`docs/acciones/`](docs/acciones/) | Las doce GitHub Actions: quien dispara a quien y con que reloj |
-| [`docs/pipelines/`](docs/pipelines/) | Los seis pipelines: que extrae, que calcula y que escribe cada uno |
+| [`docs/acciones/`](docs/acciones/) | Las doce GitHub Actions: quién dispara a quién y con qué reloj |
+| [`docs/pipelines/`](docs/pipelines/) | Los seis pipelines: qué extrae, qué calcula y qué escribe cada uno |
 | [`docs/datos/`](docs/datos/) | Fuentes, licencias, agregaciones y el esquema del activo |
-| [`docs/visor/`](docs/visor/) | Que consume el visor, como pinta y como se valida |
+| [`docs/visor/`](docs/visor/) | Qué consume el visor, cómo pinta y cómo se valida |
 
 Y los transversales:
 
-- [`docs/OPERACION.md`](docs/OPERACION.md) — **que vigilar ahora que el sistema opera**
-- [`PENDIENTES.md`](PENDIENTES.md) — que falta, quien puede hacerlo y en que orden
-- [`docs/AUDITORIA.md`](docs/AUDITORIA.md) — la auditoria del 25-ago-2026: que se encontro y como se cerro
-- [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) — las reglas de codigo del proyecto, con el caso real de cada una
-- [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificacion tecnica v0.10
-- [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — como publicar el activo y por que no va en git
-- [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con metodo y hallazgos
-- [`DISCLAIMER.md`](DISCLAIMER.md) — que informa y que no informa el sistema
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — como ayudar (incluye rol de mantenedor por pais)
+- [`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md) — **el documento de presentación, con las cifras y su procedencia**
+- [`docs/OPERACION.md`](docs/OPERACION.md) — qué vigilar ahora que el sistema opera
+- [`PENDIENTES.md`](PENDIENTES.md) — qué falta, quién puede hacerlo y en qué orden
+- [`docs/GARANTIAS.md`](docs/GARANTIAS.md) — qué está probado y qué no
+- [`docs/AUDITORIA.md`](docs/AUDITORIA.md) — la auditoría del 25-ago-2026: qué se encontró y cómo se cerró
+- [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md) — las siete formas en que este sistema falla
+- [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) — las reglas de código del proyecto, con el caso real de cada una
+- [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificación técnica v0.10
+- [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — cómo publicar el activo y por qué no va en git
+- [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con método y hallazgos
+- [`DISCLAIMER.md`](DISCLAIMER.md) — qué informa y qué no informa el sistema
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — cómo ayudar (incluye rol de mantenedor por país)
 - [`GOVERNANCE.md`](GOVERNANCE.md) — roles, decisiones, frontera comunidad ↔ empresa
-- [`ATTRIBUTION.md`](ATTRIBUTION.md) — creditos obligatorios de cada fuente
+- [`ATTRIBUTION.md`](ATTRIBUTION.md) — créditos obligatorios de cada fuente
 - [`LICENSES/`](LICENSES/) — la regla de los tres cubos
 
 ## Licencia
 
-Codigo: **Apache-2.0**. Datos derivados: **CC BY 4.0** en el nucleo, **ODbL**
+Código: **Apache-2.0**. Datos derivados: **CC BY 4.0** en el núcleo, **ODbL**
 donde entra OpenStreetMap u Overture. Detalle en [`LICENSES/`](LICENSES/).

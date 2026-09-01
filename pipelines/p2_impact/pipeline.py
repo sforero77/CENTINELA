@@ -29,6 +29,7 @@ from ..common.state import EventState
 from ..p3_report.model import (
     Descargas,
     Evento,
+    GroundFailureUSGS,
     Incertidumbre,
     Inputs,
     MunicipioTop,
@@ -240,6 +241,13 @@ JOIN mmi_cells AS m USING (h3_08)
 LEFT JOIN gf_cells AS g USING (h3_08)
 """
 
+#: Agregado municipal. **Toda** columna lleva su propio corte de MMI, incluidas
+#: las dos de Ground Failure: `impact_h3` arranca en MMI 5,0 y sin ese corte las
+#: celdas de 5-5,5 entraban solo en la exposicion a deslizamiento y licuefaccion,
+#: que es exactamente el conjunto que `SQL_TOTALES` no cuenta. La suma del CSV
+#: daba mas que la cifra nacional del mismo evento, las dos positivas y del orden
+#: correcto, asi que ninguna prueba lo veia. El corte va en los dos sitios y en
+#: el nombre de la columna.
 SQL_IMPACT_ADM2 = """
 CREATE OR REPLACE TABLE impact_adm2 AS
 SELECT
@@ -259,8 +267,10 @@ SELECT
     SUM(CASE WHEN mmi_max >= 7
              THEN road_km_primary + road_km_secondary
              ELSE 0 END) AS road_km_principal_mmi7p,
-    SUM(CASE WHEN ls_prob >= {gf} THEN pop_total ELSE 0 END) AS ls_pop_expuesta,
-    SUM(CASE WHEN lq_prob >= {gf} THEN pop_total ELSE 0 END) AS lq_pop_expuesta,
+    SUM(CASE WHEN mmi_max >= 6 AND ls_prob >= {gf}
+             THEN pop_total ELSE 0 END) AS ls_pop_expuesta_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 AND lq_prob >= {gf}
+             THEN pop_total ELSE 0 END) AS lq_pop_expuesta_mmi6p,
     NULLIF(STRING_AGG(DISTINCT flags_calidad, ','), '') AS flags_calidad
 FROM impact_h3
 GROUP BY ALL
@@ -283,8 +293,8 @@ SELECT
     SUM(CASE WHEN mmi_max >= 7
              THEN road_km_primary + road_km_secondary
              ELSE 0 END),
-    SUM(CASE WHEN ls_prob >= {gf} THEN pop_total ELSE 0 END),
-    SUM(CASE WHEN lq_prob >= {gf} THEN pop_total ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6 AND ls_prob >= {gf} THEN pop_total ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6 AND lq_prob >= {gf} THEN pop_total ELSE 0 END),
     100 * abs(SUM(pop_total) - SUM(pop_alt_worldpop))
         / NULLIF(SUM(pop_alt_worldpop), 0)
 FROM impact_h3
@@ -494,6 +504,7 @@ def build_report(
             exposure_manifest=manifest_id,
         ),
         totales=totales.to_totales(),
+        ground_failure_usgs=GroundFailureUSGS(**products.ground_failure_alerts()),
         # El estado del evento sabe si es una reconstruccion; el reporte tiene
         # que decirlo, porque cambia lo que sus cifras afirman.
         backtest=state.backtest,

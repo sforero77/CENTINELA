@@ -231,10 +231,40 @@ desde el 26. Cerrado el 28-ago-2026: la clave se inserta si falta, Brasil quedo
 en 3,35 % y la cobertura publicada pasa a 19 paises y 649.793.406 personas.
 
 **Y aunque este construido, Brasil no puede producir un reporte** con el pipeline
-actual. Sus doce sismos M≥5,5 desde 2000 estan entre 534 y 603 km de
-profundidad, y USGS no publica contornos MMI para ninguno. Se construye por
-preparacion —un somero raro en la costa cambiaria eso en un dia— no para obtener
-un backtest.
+actual. Sus doce sismos M≥5,5 desde 2000 estan entre 534 y **645** km de
+profundidad —el tope decia 603 y estaba mal; el mas profundo es `usp000fgsv`, a
+644,9 km— todos en Acre, y el maximo de MMI que USGS modela para cualquiera de
+ellos es 3,0. Se construye por preparacion —un somero raro en la costa cambiaria
+eso en un dia— no para obtener un backtest.
+
+### 2.1.bis Bolivia si puede producir un reporte, y no lo tiene
+
+**Abierto el 1-sep-2026.** Este documento, el README y `docs/AUDITORIA.md`
+decian que Bolivia era el caso de Brasil: sus veintidos sismos M≥5,5 desde 2000
+«entre 359 y 596 km», sin intensidad de superficie que medir.
+
+Es falso, y el error tiene la misma causa que el de Argentina y Republica
+Dominicana que la auditoria ya documento: la busqueda se hizo ordenando por
+relevancia sobre una caja envolvente que se llena de sismos chilenos, y la lista
+se leyo truncada. Recontado contra el catalogo de USGS, los veintidos van **de
+33 a 608 km**.
+
+El mas somero es **`usp000ahzc`, M6,2 del 4-jul-2001, a 33 km cerca de Colomi**,
+con MMI modelada de **6,4** y `download/cont_mmi.json` publicado. Es un evento
+que este pipeline puede calcular hoy: el activo boliviano esta construido y
+medido.
+
+Lo que falta es correrlo:
+
+```
+uv run centinela impact usp000ahzc
+```
+
+`tests/integration/test_silencio_de_paises_live.py` vuelve a comprobar contra
+USGS que Paraguay y Uruguay siguen sin un solo sismo, que los de Brasil siguen
+siendo todos profundos, y que el somero de Bolivia sigue ahi con sus contornos.
+Es la unica de las cuatro afirmaciones del README sobre paises en silencio que
+no era cierta, y ahora las cuatro tienen prueba.
 
 ### 2.2 Coropletas r7/r6 del visor
 

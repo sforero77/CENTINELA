@@ -363,6 +363,26 @@ def _cmd_contornos(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_alertas_terreno(args: argparse.Namespace) -> int:
+    """Trae de USGS su propia alerta de falla de terreno para reportes publicados.
+
+    Los emitidos antes de que el reporte supiera citarla no la traen, y
+    recomputar su impacto entero costaria bajar el activo de su pais para
+    obtener cuatro cadenas que USGS sigue sirviendo.
+    """
+    from .p3_report.falla_de_terreno import backfill_ground_failure_alerts
+
+    escritos = backfill_ground_failure_alerts(
+        args.usgs_id or "", reports_root=Path(args.reports) if args.reports else None
+    )
+    if not escritos:
+        print("No se actualizo ninguna alerta de falla de terreno.", file=sys.stderr)
+        return 1
+    for evento in sorted(escritos):
+        print(escritos[evento])
+    return 0
+
+
 def _cmd_observados(args: argparse.Namespace) -> int:
     """Rellena desde el catalogo historico la ventana de sismos vistos.
 
@@ -750,6 +770,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_contornos.add_argument("usgs_id", nargs="?", default="", help="vacio = todos")
     p_contornos.add_argument("--reports", help="raiz de reports/")
     p_contornos.set_defaults(func=_cmd_contornos)
+
+    p_alertas = sub.add_parser(
+        "alertas-terreno",
+        help="trae de USGS su alerta de falla de terreno para reportes ya publicados",
+    )
+    p_alertas.add_argument("usgs_id", nargs="?", default="", help="vacio = todos")
+    p_alertas.add_argument("--reports", help="raiz de reports/")
+    p_alertas.set_defaults(func=_cmd_alertas_terreno)
 
     p_observados = sub.add_parser(
         "observados",

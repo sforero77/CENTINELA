@@ -28,6 +28,7 @@ CELDA_COMPLETA = {
     "road_km_other": 3.1,
     "health_count": 2,
     "edu_count": 5,
+    "lulc_px": 9100,
 }
 
 
@@ -75,6 +76,9 @@ def test_un_activo_completo_pasa(con: Any) -> None:
         ({"health_count": 0}, "health"),
         ({"edu_count": 0}, "education"),
         ({"pop_alt_worldpop": 0.0}, "pop_worldpop_total"),
+        # La cobertura del suelo no pasa por `_verificar_insumos` —no se
+        # descarga— asi que este assert es la unica puerta que la vigila.
+        ({"lulc_px": 0}, "landcover"),
     ],
 )
 def test_una_capa_que_no_se_construyo_detiene_el_build(

@@ -20,17 +20,23 @@ class GroundFailureCell:
     """Probabilidades de falla de terreno en una celda."""
 
     h3_08: int
-    #: Probabilidad de deslizamiento (landslide), 0-1.
+    #: Probabilidad de deslizamiento del modelo de Jessee (2018), 0-1.
     ls_prob: float
-    #: Probabilidad de licuefaccion, 0-1.
+    #: **Cobertura areal** por licuefaccion del modelo de Zhu (2017), 0-1: la
+    #: fraccion del area de la celda que se espera cubierta. No es una
+    #: probabilidad, aunque el nombre de la columna lo sugiera —se conserva
+    #: porque es el nombre del contrato publicado.
     lq_prob: float
 
     @property
-    def ls_alta(self) -> bool:
+    def sobre_umbral_ls(self) -> bool:
+        """Por encima del corte de conteo. **No** es "probabilidad alta": USGS
+        no publica esa categoria a este valor. Ver `GROUND_FAILURE_HIGH_PROB`."""
         return self.ls_prob >= GROUND_FAILURE_HIGH_PROB
 
     @property
-    def lq_alta(self) -> bool:
+    def sobre_umbral_lq(self) -> bool:
+        """Idem, sobre cobertura areal y no sobre probabilidad."""
         return self.lq_prob >= GROUND_FAILURE_HIGH_PROB
 
 
@@ -54,10 +60,11 @@ def sample_rasters(
 
     Contrato, verificado contra los rasters reales del evento de Chocó:
 
-    * Ambos productos llegan en **EPSG:4326** con la probabilidad ya en [0, 1]
-      y ``nodata = NaN``. Las resoluciones difieren entre modelos (0,00208° el
-      de deslizamiento, 0,00417° el de licuefaccion), asi que se muestrean por
-      separado y no se asume una grilla comun.
+    * Ambos productos llegan en **EPSG:4326**, y eso ya no se supone: se
+      comprueba antes de muestrear. Las resoluciones difieren entre modelos
+      (0,00208° el de deslizamiento, 0,00417° el de licuefaccion), asi que se
+      muestrean por separado y no se asume una grilla comun. El valor llega ya
+      en [0, 1] con ``nodata = NaN``.
     * El muestreo se hace en el **centroide** de la celda. A r8 (~0,7 km²)
       frente a los ~230 m del raster de deslizamiento, muestrear el centro es
       suficiente y evita leer el raster entero.
@@ -88,6 +95,28 @@ def sample_rasters(
         if path is None:
             return vacio
         with rasterio.open(path) as src:
+            # EL CRS SE COMPRUEBA, NO SE SUPONE.
+            #
+            # `coords` son lon/lat. Si el raster no llega en geograficas, cada
+            # punto cae fuera de su extension, `sample` devuelve nodata para
+            # todos, `nan_to_num` lo convierte en 0.0 y se publica "0 personas
+            # en zona de licuefaccion" con la misma cara que una cifra real.
+            # No hay assert de cobertura para Ground Failure que lo cace
+            # despues, asi que la comprobacion tiene que estar aqui.
+            #
+            # El contrato esta verificado sobre los modelos vigentes (jessee
+            # 2018, zhu 2017) del evento del Choco. Los fallbacks historicos
+            # —godt_2008, nowicki_2014, zhu_2015— no se han verificado uno a
+            # uno: si alguno llega en otro CRS, este error lo dice en vez de
+            # publicar ceros.
+            if src.crs is None or not src.crs.is_geographic:
+                raise ValueError(
+                    f"El raster de Ground Failure {path.name} no llega en coordenadas "
+                    f"geograficas (crs={src.crs}). Se muestrea con lon/lat: en otro CRS "
+                    "cada punto cae fuera de la extension, el muestreo devuelve nodata "
+                    "y el reporte publicaria 0 personas expuestas como si fuera una "
+                    "medida. Hay que reproyectar los puntos antes de muestrear."
+                )
             valores = np.array([v[0] for v in src.sample(coords, indexes=1)], dtype="float64")
         # NaN = fuera de la huella del modelo. No es "probabilidad desconocida"
         # que haya que propagar: es "el modelo no cubre esto".

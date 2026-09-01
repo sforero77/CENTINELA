@@ -29,12 +29,18 @@ def test_sin_rasters_las_probabilidades_son_cero() -> None:
     assert celdas[BOGOTA_R8] == GroundFailureCell(BOGOTA_R8, 0.0, 0.0)
 
 
-def test_umbral_de_probabilidad_alta() -> None:
+def test_umbral_de_conteo() -> None:
+    """El corte a partir del cual una celda entra en el conteo.
+
+    Las propiedades se llamaban `ls_alta`/`lq_alta`, y "alta" afirmaba una
+    categoria que USGS no publica a este valor — ademas de tratar por igual dos
+    modelos que no entregan la misma magnitud. Ver `GROUND_FAILURE_HIGH_PROB`.
+    """
     baja = GroundFailureCell(1, ls_prob=0.05, lq_prob=0.05)
-    alta = GroundFailureCell(2, ls_prob=0.20, lq_prob=0.20)
-    assert not baja.ls_alta and not baja.lq_alta
-    assert alta.ls_alta and alta.lq_alta
-    assert GroundFailureCell(3, GROUND_FAILURE_HIGH_PROB, 0.0).ls_alta
+    sobre = GroundFailureCell(2, ls_prob=0.20, lq_prob=0.20)
+    assert not baja.sobre_umbral_ls and not baja.sobre_umbral_lq
+    assert sobre.sobre_umbral_ls and sobre.sobre_umbral_lq
+    assert GroundFailureCell(3, GROUND_FAILURE_HIGH_PROB, 0.0).sobre_umbral_ls
 
 
 def test_los_modelos_vigentes_son_los_que_usgs_prefiere() -> None:

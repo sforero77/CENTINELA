@@ -30,13 +30,16 @@ poblacion y edificaciones, cruzada con un modelo de intensidad.
 1. **Poblacion modelada, no censal.** GHS-POP es un producto derivado. La banda
    de discrepancia contra WorldPop se publica en cada reporte precisamente para
    que el lector vea el tamano de la incertidumbre.
-2. **Estructura etaria de 2020 sobre totales de 2025.** WorldPop solo publica
-   desglose por edad y sexo para 2020. El supuesto de estructura estable se
-   declara en los metadatos.
+2. **Dos modelos de poblacion en la misma celda.** Los totales vienen de
+   GHS-POP y el desglose por edad de WorldPop age-sex R2025A, epoca 2025 —no de
+   una estructura de 2020 proyectada, como decia esta limitacion hasta el
+   1-sep-2026. Los extremos (0-14 y 65+) son conteos de WorldPop; la banda
+   central de 15-64 es el residuo de `pop_total`, asi que absorbe la diferencia
+   entre ambos modelos. La banda de discrepancia publicada acota ese desvio.
 3. **Huecos de edificaciones.** Overture y OSM tienen cobertura desigual en
    asentamientos informales y zona rural dispersa. Las celdas sospechosas se
-   marcan con la bandera `revisar` y se publican asi: **nunca se oculta el
-   vacio**.
+   marcan en `flags_calidad` —`revisar_sin_edificios`, `construido_no_mapeado`,
+   `discrepancia_poblacional`— y se publican asi: **nunca se oculta el vacio**.
 4. **ShakeMap versionado.** Las cifras cambian entre versiones del ShakeMap.
    Cada reporte declara que version consumio, y se re-emite con changelog
    cuando aparece una nueva.

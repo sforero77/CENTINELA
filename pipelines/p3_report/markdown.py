@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from ..common.constants import DISCLAIMERS, TOP_ADM2_COUNT
+from ..common.constants import DISCLAIMERS, GROUND_FAILURE_HIGH_PROB, TOP_ADM2_COUNT
 from ..common.formatting import format_count_prose, format_number_es
 from .model import MunicipioTop, Report
 
@@ -28,7 +28,7 @@ PAGER_ES: Final[dict[str, str]] = {
 
 _ENCABEZADO_PRELIMINAR = (
     "> **Reporte preliminar sin ShakeMap.** El corte es por radios alrededor "
-    "del epicentro, no por intensidad modelada. Se actualiza automaticamente "
+    "del epicentro, no por intensidad modelada. Se actualiza automáticamente "
     "en cuanto USGS publique el ShakeMap del evento."
 )
 
@@ -116,7 +116,8 @@ def render_markdown(report: Report) -> str:
             f"## Referencia cruzada\n\n"
             f"PAGER (USGS) estima para este evento una alerta "
             f"**{PAGER_ES.get(ev.pager_alert, ev.pager_alert)}**. "
-            f"CENTINELA no estima víctimas; la cifra se incluye solo como contraste."
+            f"CENTINELA no estima víctimas; la cifra se incluye solo como contraste.\n\n"
+            + NOTA_BANDAS_PAGER
         )
 
     partes.append(_seccion_incertidumbre(report))
@@ -303,21 +304,102 @@ def _tabla_municipios(report: Report) -> str:
     return "\n".join(lineas)
 
 
+#: Como se nombra cada modelo en prosa. La palabra importa: el modelo de
+#: licuefaccion de Zhu (2017) no entrega probabilidad sino **cobertura areal**
+#: —la fraccion de la celda que se espera cubierta—, y llamarla "probabilidad
+#: alta" afirma algo que el modelo no dice.
+GF_UNIDAD: dict[str, str] = {
+    "ls": "probabilidad de deslizamiento",
+    "lq": "cobertura areal por licuefacción",
+}
+
+#: Alertas de USGS, en el idioma del reporte. La unica cifra ajena que el
+#: reporte cita ya sale traducida para PAGER; esta sale por el mismo sitio.
+GF_ALERTA_ES: dict[str, str] = {
+    "green": "verde",
+    "yellow": "amarilla",
+    "orange": "naranja",
+    "red": "roja",
+}
+
+
+def _linea_ground_failure(report: Report, tipo: str, propia: float) -> str:
+    """Una linea de falla de terreno: la cifra propia y la de USGS al lado.
+
+    Las dos, siempre que USGS publique alerta. Publicar la nuestra sola invita
+    a leerla como la de USGS, y son dos cortes distintos del mismo raster: aqui
+    se cuenta la poblacion **entera** de toda celda por encima del umbral; USGS
+    pondera la poblacion de cada celda **por** el valor de esa celda.
+    """
+    gf = report.ground_failure_usgs
+    etiqueta = "deslizamiento" if tipo == "ls" else "licuefacción"
+    umbral = format_number_es(GROUND_FAILURE_HIGH_PROB, 2)
+    linea = (
+        f"- **{etiqueta.capitalize()}.** Población en celdas donde el modelo espera "
+        f"≥ {umbral} de {GF_UNIDAD[tipo]}: **{format_count_prose(propia)}**."
+    )
+    if not gf.alerta_viva(tipo):
+        return linea
+
+    alerta = getattr(gf, f"{tipo}_alerta_usgs").lower()
+    pop_usgs = getattr(gf, f"{tipo}_pop_usgs")
+    color = GF_ALERTA_ES.get(alerta, alerta)
+    cruzada = f" USGS declara para este evento alerta **{color}**"
+    if pop_usgs:
+        cruzada += f", con {format_count_prose(float(pop_usgs))} expuestas"
+    # El caso que esta linea existe para tapar: nuestro conteo da cero y USGS
+    # no dice verde. El cero es cierto —ninguna celda llega al umbral— y solo
+    # se lee como "aqui no hay exposicion a esto".
+    if propia <= 0:
+        cruzada += (
+            ". El cero de arriba no dice que no haya exposición: dice que ninguna celda "
+            "llega al umbral"
+        )
+    return linea + cruzada + "."
+
+
+#: LA OBJECION QUE HUNDE EL PROYECTO EN UNA REUNION, RESUELTA EN DOS LINEAS.
+#:
+#: PAGER tabula su exposicion por **MMI redondeado**: su fila "7" es todo lo que
+#: cae entre 6,5 y 7,49. CENTINELA publica **bandas literales**: MMI≥7 es MMI≥7.
+#: Puestas una al lado de la otra sin decirlo, las dos cifras del mismo evento
+#: parecen contradecirse por un factor de casi tres, y la lectura por defecto es
+#: que CENTINELA subcuenta.
+#:
+#: No se contradicen. Para el Choco, las cifras de CENTINELA caen exactamente
+#: dentro del intervalo que las filas de PAGER acotan por arriba y por abajo:
+#: PAGER da 10.487.959 en su fila 6 (o sea ≥5,5) y 6.514.486 en la 7 (≥6,5), y
+#: CENTINELA da 6.960.086 en ≥6,0 y 2.415.793 en ≥7,0. Es el unico acuerdo
+#: aritmeticamente posible entre dos convenciones de banda distintas.
+NOTA_BANDAS_PAGER = (
+    "Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado "
+    "—su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas "
+    "literales, donde MMI≥7 es MMI≥7. Comparadas de frente parecen "
+    "discrepar; puestas en el mismo eje, cada cifra de aquí cae dentro del "
+    "intervalo que las filas de PAGER acotan por arriba y por abajo."
+)
+
+
 def _seccion_ground_failure(report: Report) -> str:
     """Seccion de falla de terreno; se omite con nota si no hay producto (G3)."""
     if report.inputs.groundfailure_version == 0:
         return (
             "## Deslizamiento y licuefacción\n\n"
             "USGS no ha publicado el producto *Ground Failure* para este evento. "
-            "La seccion se omite; el reporte se re-emite automaticamente si aparece."
+            "La sección se omite; el reporte se re-emite automáticamente si aparece."
         )
     tot = report.totales
     return (
         "## Deslizamiento y licuefacción\n\n"
-        f"- Población en celdas con probabilidad **alta de deslizamiento**: "
-        f"{format_count_prose(tot.pop_ls_alta)}\n"
-        f"- Población en celdas con probabilidad **alta de licuefacción**: "
-        f"{format_count_prose(tot.pop_lq_alta)}\n\n"
+        + _linea_ground_failure(report, "ls", tot.pop_ls_alta)
+        + "\n"
+        + _linea_ground_failure(report, "lq", tot.pop_lq_alta)
+        + "\n\n"
+        "Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). "
+        "**No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la "
+        "población entera de toda celda por encima del umbral, y USGS pondera la "
+        "población de cada celda por el valor de esa celda. Son dos preguntas "
+        "distintas sobre el mismo ráster.\n\n"
         "Fuente: producto *Ground Failure* de USGS "
         f"(v{report.inputs.groundfailure_version}), dominio público."
     )
@@ -328,7 +410,11 @@ def _seccion_incertidumbre(report: Report) -> str:
     lineas = [
         "## Incertidumbre y calidad",
         "",
-        f"Discrepancia entre GHS-POP y WorldPop en el área afectada: "
+        # "Área afectada" es vocabulario de dano, y es lo unico que el
+        # DISCLAIMER promete no decir que se colo en los veintiun reportes.
+        # Lo que se mide es la discrepancia dentro del corte publicado, que es
+        # donde hay celdas, no donde hay dano.
+        f"Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: "
         f"**{format_number_es(inc.pop_discrepancia_pct, 1)} %**.",
     ]
     if inc.notas:

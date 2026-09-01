@@ -29,7 +29,7 @@ Esto importa más que lo anterior, y está impreso en cada reporte:
 - **No es una alerta temprana.** Llega después del sismo, no antes.
 - **No estima víctimas.** Ni heridos, ni fallecidos, ni damnificados.
 - **No dictamina habitabilidad.** No dice si un edificio se puede ocupar.
-- **No mide daño.** Mide exposición, que es una pregunta distinta — ver §5.
+- **No mide daño.** Mide exposición, que es una pregunta distinta — ver §6.
 
 ## 3. Cobertura y estado
 
@@ -86,7 +86,44 @@ sola.** Si un desvío se sale de su tolerancia, el sistema falla el build y pide
 una decisión humana. Aflojar la alarma para que deje de sonar es lo que uno hace
 con prisa, y es lo único que este proyecto no automatiza.
 
-## 5. Exposición no es daño: la diferencia, medida
+## 5. Contraste con PAGER, en las mismas bandas
+
+Es la primera objeción que recibe este proyecto, y conviene resolverla antes de
+que la haga nadie: **para el sismo del Chocó, PAGER (USGS) publica 6.514.486
+personas en su fila «7» y CENTINELA publica 2.415.793 en MMI≥7.** Un factor de
+2,7. Leídas de frente, parece que CENTINELA subcuenta.
+
+No subcuenta. **Las dos no tabulan igual.** PAGER agrupa por MMI *redondeado*:
+su fila «7» es todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas
+*literales*: MMI≥7 es MMI≥7. Puestas en el mismo eje, cada cifra de CENTINELA
+cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo —
+que es el único acuerdo aritméticamente posible entre dos convenciones distintas:
+
+| Umbral literal | PAGER | CENTINELA |
+|---|---:|---:|
+| MMI ≥ 5,5 | 10.487.959 | — |
+| MMI ≥ 6,0 | — | **6.960.086** |
+| MMI ≥ 6,5 | 6.514.486 | — |
+| MMI ≥ 7,0 | — | **2.415.793** |
+| MMI ≥ 7,5 | 1.126.902 | — |
+| MMI ≥ 8,0 | — | **0** |
+
+Léase por parejas: 6.960.086 (≥6,0) tiene que quedar **entre** 6.514.486 (≥6,5)
+y 10.487.959 (≥5,5), y queda. 2.415.793 (≥7,0) tiene que quedar entre 1.126.902
+(≥7,5) y 6.514.486 (≥6,5), y queda. Si alguna se saliera del intervalo, una de
+las dos estaría mal — y esa es exactamente la comprobación que corre en CI.
+
+Las cifras de PAGER salen de `json/exposures.json` del producto `losspager` del
+evento, congelado en `tests/fixtures/golden/choco_2026_08_10/pager_exposures.json`;
+las de CENTINELA, de `reports/us6000tjl2/report.json`.
+`tests/unit/test_contraste_con_pager.py` falla si esta tabla se despega de
+cualquiera de los dos, y si el acotamiento deja de cumplirse.
+
+**Un aviso de honestidad.** GDACS publica para este mismo evento «5.4 million
+(in MMI>=VII)», que es otra convención más. Ninguna de las tres cifras es la
+misma pregunta, y ninguna corrige a las otras.
+
+## 6. Exposición no es daño: la diferencia, medida
 
 Es la confusión más costosa que puede provocar un reporte de este tipo, así que
 está medida contra fuentes independientes.
@@ -113,7 +150,7 @@ hecho.
 una cifra de exposición no se puede leer como una cifra de daño: son dos zonas
 del mismo rango de exposición con resultados que no se parecen.
 
-## 6. Cómo consumirlo
+## 7. Cómo consumirlo
 
 Todo es estático y público. No hay API que se caiga, ni llave que pedir, ni
 cuota que agotar.
@@ -136,7 +173,7 @@ separados y hay una comprobación automática que lo impide. Por eso, por ejempl
 la evaluación de escombros de UNEP/OCHA —excelente y CC BY-SA— se consume como
 referencia externa y no entra en el activo.
 
-## 7. Reproducibilidad
+## 8. Reproducibilidad
 
 Cualquiera puede reconstruir el activo de un país desde fuentes públicas, sin
 credenciales:
@@ -149,7 +186,7 @@ Cada país tiene un **manifest** que fija la versión exacta de cada fuente —n
 «la última»— con su licencia y su fecha. Un reporte publicado dice contra qué
 manifest se calculó.
 
-## 8. Límites conocidos
+## 9. Límites conocidos
 
 Están publicados porque son parte de la cifra:
 
@@ -168,7 +205,7 @@ Están publicados porque son parte de la cifra:
   OpenStreetMap no guarda el pasado. El reporte lo dice y esos eventos no
   cuentan para la latencia.
 
-## 9. Qué se pide
+## 10. Qué se pide
 
 Nada obligatorio. Lo que más valor añadiría, en orden:
 
