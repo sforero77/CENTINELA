@@ -22,10 +22,30 @@ on:
     # para eso, si.
     - cron: "23 7 * * 1"
   workflow_dispatch:
+    inputs:
+      reemitir:
+        description: "Re-emitir los rezagados que encuentre"
+        type: choice
+        default: "no"
+        options:
+          # `activo` re-emite los que solo van atras en la receta del activo:
+          # el salto de manifiesto anadio cobertura del suelo, que P2 no usa,
+          # asi que sus cifras apenas se mueven.
+          #
+          # `todos` incluye los que van atras en ShakeMap o Ground Failure.
+          # Esos SI mueven cifras publicadas —el Choco movio las nueve que el
+          # README cita a mano— y despues hay que revisar la portada. Se elige
+          # a proposito, no por defecto.
+          - "no"
+          - "activo"
+          - "todos"
 
 permissions:
   contents: read
   issues: write
+  # Solo para `gh workflow run impact.yml` cuando alguien pulsa el boton.
+  # La corrida programada nunca despacha: `reemitir` vale "no" por defecto.
+  actions: write
 
 concurrency:
   group: rezago
@@ -51,6 +71,49 @@ jobs:
       - name: Comparar cada reporte con lo que sus fuentes sirven hoy
         id: comprobar
         run: uv run centinela rezagados
+
+      # EL BOTON. Automatico el trabajo, humana la decision.
+      #
+      # Despachar solo seria automatizar el romper el build: re-emitir mueve
+      # cifras que viven en prosa escrita a mano —la tabla del README, el
+      # contraste con PAGER— y ningun workflow puede reescribir con verdad "un
+      # factor de 2,7". Lo que si se puede quitar de en medio es teclear seis
+      # comandos.
+      #
+      # Por eso esto solo corre en `workflow_dispatch` con `reemitir` puesto a
+      # mano: la corrida de los lunes lo deja en "no" y nunca despacha.
+      - name: Re-emitir los rezagados elegidos
+        if: inputs.reemitir != 'no' && steps.comprobar.outputs.hay_rezago == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTIVO: ${{ steps.comprobar.outputs.ids_exposicion }}
+          PRODUCTOS: ${{ steps.comprobar.outputs.ids_productos }}
+        run: |
+          if [ "${{ inputs.reemitir }}" = "todos" ]; then
+            OBJETIVO="$ACTIVO $PRODUCTOS"
+          else
+            OBJETIVO="$ACTIVO"
+            # Que se queda fuera se dice. Un tope silencioso se lee como
+            # "cubierto todo" cuando no lo esta.
+            if [ -n "$PRODUCTOS" ]; then
+              echo "::notice::No se re-emiten los que van atras en producto USGS:"                    "$PRODUCTOS. Mueven cifras publicadas; hace falta 'todos'."
+            fi
+          fi
+
+          if [ -z "$(echo "$OBJETIVO" | tr -d ' ')" ]; then
+            echo "Nada que re-emitir con la opcion elegida."
+            exit 0
+          fi
+
+          for ID in $OBJETIVO; do
+            gh workflow run impact.yml               -f usgs_id="$ID" -f backtest=true -f reprocesar=true
+            echo "despachado $ID"
+            # No por prudencia con el push —impact.yml rebasa— sino para no
+            # encolar veintiun runners a la vez.
+            sleep 20
+          done
+
+          echo "::notice::Re-emitidos. La comprobacion del proximo lunes dira"                "si la lista quedo vacia."
 
       # UNA SOLA INCIDENCIA, REESCRITA — NO COMENTADA.
       #

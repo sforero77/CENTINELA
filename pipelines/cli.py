@@ -523,6 +523,11 @@ def _cmd_rezagados(args: argparse.Namespace) -> int:
     )
     _emit_github_output("hay_rezago", "true" if resultado.rezagados else "false")
     _emit_github_output("cuantos", str(len(resultado.rezagados)))
+    # Separados porque deciden quien puede re-emitirlos sin mirar: los de
+    # activo casi no mueven cifras; los de producto mueven las que el README
+    # cita a mano. Ver `solo_exposicion` en el modulo.
+    _emit_github_output("ids_exposicion", " ".join(r.usgs_id for r in resultado.solo_exposicion))
+    _emit_github_output("ids_productos", " ".join(r.usgs_id for r in resultado.por_productos))
     _emit_github_output("resumen", "\n".join(f"- {r.describir()}" for r in resultado.rezagados))
 
     if resultado.ciego:

@@ -402,7 +402,10 @@ compran nada.
 
 Primera pasada real, 1-sep-2026: 21 revisados, 0 fallidos, **6 rezagados** —
 justo los seis que no se re-emitieron ese día, todos por activo de exposición
-(`v0.1` → `v0.2`), ninguno por productos de USGS.
+(`v0.1` → `v0.2`), ninguno por productos de USGS. Re-emitidos el mismo día, la
+segunda pasada dio **0 rezagados**: el catálogo entero quedó en la receta
+vigente y la incidencia semanal nace vacía, que es la única forma de que dentro
+de un mes alguien se la crea.
 
 ---
 

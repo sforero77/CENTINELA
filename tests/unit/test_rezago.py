@@ -373,3 +373,50 @@ def test_sin_runner_no_escribe_nada(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     _emit_github_output("resumen", "da igual\ncon saltos")
+
+
+# --- Los dos rezagos no son el mismo, y por eso van separados ----------------
+
+
+def test_el_de_producto_y_el_de_activo_se_reparten_en_dos_listas(tmp_path: Path) -> None:
+    """Deciden quien puede pulsar el boton, asi que no pueden ir revueltos.
+
+    Re-emitir un rezago de activo actualiza la etiqueta y poco mas: el salto de
+    manifiesto anadio cobertura del suelo, que P2 no usa. Re-emitir uno de
+    producto mueve cifras publicadas — con el Choco movio las nueve que el
+    README cita a mano.
+    """
+    _reporte(tmp_path / "reports", "us_activo", shakemap=8, manifiesto="chl-v0.1")
+    _reporte(tmp_path / "reports", "us_producto", shakemap=7, manifiesto="col-v0.6")
+    _reporte(tmp_path / "reports", "us_ambos", shakemap=7, manifiesto="per-v0.1")
+    manifiestos = _manifiestos(
+        tmp_path / "manifests", CHL="chl-v0.2", COL="col-v0.6", PER="per-v0.2"
+    )
+
+    resultado = comprobar(
+        _FetcherFalso({"us_activo": (8, 1), "us_producto": (8, 1), "us_ambos": (8, 1)}),
+        reports_dir=tmp_path / "reports",
+        manifests_dir=manifiestos,
+    )
+
+    assert [r.usgs_id for r in resultado.solo_exposicion] == ["us_activo"]
+    assert sorted(r.usgs_id for r in resultado.por_productos) == ["us_ambos", "us_producto"]
+
+
+def test_uno_que_va_atras_en_las_dos_cosas_no_cuenta_como_solo_activo(tmp_path: Path) -> None:
+    """`solo_exposicion` alimenta la opcion que re-emite sin revisar la portada.
+
+    Colar ahi uno que tambien cambio de ShakeMap moveria cifras citadas
+    creyendo que no se movia ninguna, que es peor que no tener el boton.
+    """
+    _reporte(tmp_path / "reports", "us1", shakemap=7, manifiesto="chl-v0.1")
+    manifiestos = _manifiestos(tmp_path / "manifests", CHL="chl-v0.2")
+
+    resultado = comprobar(
+        _FetcherFalso({"us1": (9, 1)}),
+        reports_dir=tmp_path / "reports",
+        manifests_dir=manifiestos,
+    )
+
+    assert resultado.solo_exposicion == []
+    assert [r.usgs_id for r in resultado.por_productos] == ["us1"]
