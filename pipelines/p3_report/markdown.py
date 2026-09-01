@@ -6,9 +6,25 @@ en zona de desastre. Markdown plano, sin imagenes embebidas, md + png < 500 KB.
 
 from __future__ import annotations
 
+from typing import Final
+
 from ..common.constants import DISCLAIMERS, TOP_ADM2_COUNT
 from ..common.formatting import format_count_prose, format_number_es
-from .model import Report
+from .model import MunicipioTop, Report
+
+#: El nivel de PAGER en espanol.
+#:
+#: USGS lo publica en ingles —"orange"— y este documento se lee en espanol:
+#: dejarlo crudo obliga a traducir mentalmente la unica cifra ajena que el
+#: reporte cita. El visor ya lo traducia, asi que los dos artefactos del mismo
+#: evento decian "orange" y "naranja" — la clase de costura que hace dudar del
+#: resto.
+PAGER_ES: Final[dict[str, str]] = {
+    "green": "verde",
+    "yellow": "amarilla",
+    "orange": "naranja",
+    "red": "roja",
+}
 
 _ENCABEZADO_PRELIMINAR = (
     "> **Reporte preliminar sin ShakeMap.** El corte es por radios alrededor "
@@ -41,7 +57,9 @@ def render_markdown(report: Report) -> str:
     tot = report.totales
     partes: list[str] = []
 
-    partes.append(f"# Exposición sísmica — M{ev.mag} {ev.lugar}")
+    # `M7,8` y no `M7.8`: el visor y el hilo ya escriben la magnitud con coma,
+    # y el mismo evento no puede salir de dos maneras segun donde se lea.
+    partes.append(f"# Exposición sísmica — M{format_number_es(ev.mag, 1)} · {ev.lugar}")
     partes.append(
         f"**Evento USGS:** `{ev.usgs_id}` · **Origen:** {ev.utc} UTC · "
         f"**Profundidad:** {format_number_es(ev.depth_km, 1)} km"
@@ -62,6 +80,19 @@ def render_markdown(report: Report) -> str:
     else:
         partes.append("## Exposición estimada")
         partes.append(_tabla_totales(report))
+        # DE CUÁNTO SON ESTAS CIFRAS.
+        #
+        # La regla es de la espec —RF-06, dos cifras significativas en prosa— y
+        # es la correcta: nadie necesita el 107.904 de un modelo de exposición.
+        # Lo que faltaba era decirlo. El visor publica el mismo dato con
+        # redondeo de tabla ("108.000") y este documento con redondeo de prosa
+        # ("110 mil"): las dos cifras son ciertas y quien las compare sin saber
+        # la regla concluye que una de las dos está mal.
+        partes.append(
+            "Las cifras de esta tabla van redondeadas a dos cifras "
+            "significativas, que es la precisión que un modelo de exposición "
+            "sostiene. Las exactas están en el CSV municipal y en `report.json`."
+        )
 
     if tot.pop_65p_mmi7p and not report.preliminar:
         partes.append(
@@ -70,9 +101,11 @@ def render_markdown(report: Report) -> str:
         )
 
     if report.top_municipios:
+        # El encabezado y la tabla, con la MISMA banda. Cada uno la calculaba por
+        # su cuenta, que es como se llega a un titulo que promete una columna y
+        # una columna que trae otra.
         partes.append(
-            f"## Municipios más expuestos (top {TOP_ADM2_COUNT}), "
-            f"por población en MMI≥{report.totales.banda_titular or 6}"
+            f"## Municipios más expuestos, por población en MMI≥{_banda_del_ranking(report)}"
         )
         partes.append(_tabla_municipios(report))
 
@@ -81,8 +114,9 @@ def render_markdown(report: Report) -> str:
     if ev.pager_alert:
         partes.append(
             f"## Referencia cruzada\n\n"
-            f"PAGER (USGS) estima para este evento una alerta **{ev.pager_alert}**. "
-            f"CENTINELA no estima victimas; la cifra se incluye solo como contraste."
+            f"PAGER (USGS) estima para este evento una alerta "
+            f"**{PAGER_ES.get(ev.pager_alert, ev.pager_alert)}**. "
+            f"CENTINELA no estima víctimas; la cifra se incluye solo como contraste."
         )
 
     partes.append(_seccion_incertidumbre(report))
@@ -192,6 +226,16 @@ def _nota_superficie(report: Report) -> str:
     )
 
 
+def _banda_del_ranking(report: Report) -> int:
+    """La banda por la que se ordenan los municipios.
+
+    MMI≥7 —donde estan todas las demas cifras del reporte— salvo que el evento
+    no llegue ahi sobre poblacion, y entonces MMI≥6. Ver el comentario largo de
+    :func:`_tabla_municipios`.
+    """
+    return 6 if (report.totales.banda_titular or 6) == 6 else 7
+
+
 def _tabla_municipios(report: Report) -> str:
     """Ranking municipal, rotulado con la banda que este evento alcanzo.
 
@@ -222,15 +266,36 @@ def _tabla_municipios(report: Report) -> str:
     lo que es —un codigo de municipio— y el país lo pone el manifest.
 
     """
-    banda = report.totales.banda_titular or 6
+    # LA BANDA DEL RANKING ES LA DEL RESTO DEL REPORTE.
+    #
+    # `banda_titular` devuelve 8 en cuanto alguien queda dentro de MMI≥8, y
+    # entonces la tabla ordenaba por esa porcion: en Muisne salia Muisne con
+    # 8.800 y Quinindé, Esmeraldas, Chone y Portoviejo con **0** — teniendo
+    # 164.691, 297.596, 150.742 y 333.075 personas en MMI≥7. Nueve de las quince
+    # filas eran ceros, y el municipio mas expuesto del evento era uno de ellos.
+    #
+    # Se ordena por MMI≥7, que es donde estan todas las demas cifras del
+    # reporte, y solo se baja a 6 cuando el evento no llego a 7 sobre poblacion
+    # — el caso para el que `pop_banda` se invento, y ahi sigue sirviendo.
+    banda = _banda_del_ranking(report)
+
+    def _cifra(m: MunicipioTop) -> float:
+        return m.pop_mmi7p if banda == 7 else (m.pop_banda or m.pop_mmi7p)
+
+    # Y sin filas en cero: una lista de "mas expuestos" rellenada hasta quince
+    # con ceros no dice donde se concentra, dice que se relleno.
+    ordenados = sorted(
+        (m for m in report.top_municipios if _cifra(m) > 0),
+        key=_cifra,
+        reverse=True,
+    )
+
     lineas = [
         f"| # | Municipio | Código | MMI max | Población MMI≥{banda} |",
         "|---:|---|---|---:|---:|",
     ]
-    for i, m in enumerate(report.top_municipios[:TOP_ADM2_COUNT], start=1):
-        # `pop_banda` no existia en los reportes anteriores: para ellos la banda
-        # es 7 y la cifra publicada es la de siempre.
-        cifra = m.pop_mmi7p if banda == 7 else m.pop_banda
+    for i, m in enumerate(ordenados[:TOP_ADM2_COUNT], start=1):
+        cifra = _cifra(m)
         lineas.append(
             f"| {i} | {m.nombre} | `{m.adm2_id}` | "
             f"{format_number_es(m.mmi_max, 1)} | {format_count_prose(cifra)} |"

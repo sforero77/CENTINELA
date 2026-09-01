@@ -1,26 +1,28 @@
-# Exposicion sismica — M6.4 26 km al SO de Pocito, Argentina
+# Exposición sísmica — M6,4 · 26 km al SO de Pocito, Argentina
 
 **Evento USGS:** `us7000d18q` · **Origen:** 2021-01-19T02:46:22Z UTC · **Profundidad:** 20,8 km
 
-> **Reconstruccion retrospectiva.** Este reporte se calculo despues del evento, no en respuesta a el, y no cuenta para las metricas de latencia del sistema.
+> **Reconstrucción retrospectiva.** Este reporte se calculó después del evento, no en respuesta a él, y no cuenta para las métricas de latencia del sistema.
 >
-> La **poblacion** corresponde a la epoca indicada en el manifest de exposicion. Las **edificaciones, vias, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el historico. Leelas como "que infraestructura de hoy caeria en esa zona de intensidad", no como lo que habia entonces.
+> La **población** corresponde a la época indicada en el manifiesto de exposición. Las **edificaciones, vías, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el histórico. Léelas como "qué infraestructura de hoy caería en esa zona de intensidad", no como lo que había entonces.
 
-## Exposicion estimada
+## Exposición estimada
 
 | Indicador | Estimado |
 |---|---:|
-| Poblacion en MMI≥6 | 580 mil |
-| Poblacion en MMI≥7 | 0 |
-| Poblacion en MMI≥8 | 0 |
+| Población en MMI≥6 | 580 mil |
+| Población en MMI≥7 | 0 |
+| Población en MMI≥8 | 0 |
 | Edificaciones en MMI≥7 | 0 |
 | Sedes de salud en MMI≥7 | 0 |
 | Sedes educativas en MMI≥7 | 0 |
 | Kilometros de via en MMI≥7 | 0 km |
 
-## Municipios mas expuestos (top 15), por poblacion en MMI≥6
+Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-| # | Municipio | Codigo | MMI max | Poblacion MMI≥6 |
+## Municipios más expuestos, por población en MMI≥6
+
+| # | Municipio | Código | MMI max | Población MMI≥6 |
 |---:|---|---|---:|---:|
 | 1 | Rawson | `AR070077` | 6,0 | 120 mil |
 | 2 | Capital | `AR070028` | 6,0 | 120 mil |
@@ -34,24 +36,21 @@
 | 10 | Zonda | `AR070133` | 6,5 | 650 |
 | 11 | Ullum | `AR070112` | 6,0 | 10 |
 | 12 | Albardón | `AR070007` | 6,0 | 5 |
-| 13 | San Martín | `AR070091` | 5,5 | 0 |
-| 14 | Angaco | `AR070014` | 5,5 | 0 |
-| 15 | Las Heras | `AR050049` | 5,5 | 0 |
 
-## Deslizamiento y licuefaccion
+## Deslizamiento y licuefacción
 
-- Poblacion en celdas con probabilidad **alta de deslizamiento**: 0
-- Poblacion en celdas con probabilidad **alta de licuefaccion**: 0
+- Población en celdas con probabilidad **alta de deslizamiento**: 0
+- Población en celdas con probabilidad **alta de licuefacción**: 0
 
-Fuente: producto *Ground Failure* de USGS (v4), dominio publico.
+Fuente: producto *Ground Failure* de USGS (v4), dominio público.
 
 ## Referencia cruzada
 
-PAGER (USGS) estima para este evento una alerta **yellow**. CENTINELA no estima victimas; la cifra se incluye solo como contraste.
+PAGER (USGS) estima para este evento una alerta **amarilla**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el area afectada: **2,9 %**.
+Discrepancia entre GHS-POP y WorldPop en el área afectada: **2,9 %**.
 
 ## Descargas
 
@@ -62,12 +61,12 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **2,9 %**.
 
 - ShakeMap consumido: **v8**
 - Ground Failure consumido: **v4**
-- Manifest de exposicion: `arg-v0.1`
+- Manifiesto de exposición: `arg-v0.1`
 - Pipeline: `0.1.0` · Generado: 2026-08-25T19:03:50Z
 
 ## Advertencias
 
-- Exposicion estimada, no dano observado.
-- Este sistema no es una alerta temprana ni una recomendacion de evacuacion.
-- No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.
-- Fuentes, vintages y versiones consumidas: ver manifest enlazado.
+- Exposición estimada, no daño observado.
+- Este sistema no es una alerta temprana ni una recomendación de evacuación.
+- No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.
+- Fuentes, vintages y versiones consumidas: ver manifiesto enlazado.

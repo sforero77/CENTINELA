@@ -1,7 +1,7 @@
-1/4 Sismo M8.0 en 78 km al NE de Navarro, Perú (2019-05-26T07:41:15Z UTC, 123 km de profundidad). Reporte automatico de EXPOSICION estimada de CENTINELA. No es un reporte de danos.
+1/4 Sismo M8,0 · 78 km al NE de Navarro, Perú (2019-05-26T07:41:15Z UTC, 123 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
 2/4 Personas dentro de intensidad MMI≥6: 1,1 millones. Dentro de MMI≥7: 250 mil. Edificaciones en MMI≥7: 130 mil.
 
-3/4 Municipios mas expuestos: Alto Amazonas, Ucayali, Requena.
+3/4 Municipios más expuestos: Alto Amazonas, Ucayali, Requena.
 
-4/4 Exposicion no es dano. CENTINELA no es alerta temprana ni reemplaza a los servicios geologicos ni a gestion del riesgo. Datos abiertos y metodologia: ver el reporte completo.
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: ver el reporte completo.

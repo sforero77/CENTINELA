@@ -95,6 +95,24 @@ def render_maps(
     Un fallo de render no puede tumbar la publicacion: el JSON y el markdown ya
     estan en disco y son lo que importa. Se avisa y se sigue.
     """
+    # Los contornos ya estan escritos al lado, y son lo que le da forma al mapa:
+    # sin ellos el PNG era una dispersion de circulos sobre una reticula de
+    # grados decimales. Se leen aqui —y no dentro de `render_map`— para que el
+    # render siga sin tocar disco y se pueda probar con datos en memoria.
+    #
+    # Los reportes emitidos antes de que `contornos.json` existiera no lo traen:
+    # esos siguen saliendo sin fondo, que es peor mapa pero mapa correcto.
+    contornos = None
+    origen_contornos = directory / "contornos.json"
+    if origen_contornos.is_file():
+        try:
+            contornos = json.loads(origen_contornos.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            _log.warning(
+                "no se pudieron leer los contornos para el mapa",
+                extra={"context": {"error": str(exc)}},
+            )
+
     escritos: dict[str, Path] = {}
     for variante in MapVariant:
         try:
@@ -103,6 +121,7 @@ def render_maps(
                 variante,
                 directory / f"mapa_{variante.value}.png",
                 municipios=municipios,
+                contornos=contornos,
             )
         except Exception as exc:  # el mapa es un derivado, no la verdad
             _log.warning(
@@ -161,6 +180,59 @@ def regenerate_maps(usgs_id: str = "", *, reports_root: Path | None = None) -> d
     _log.info(
         "mapas regenerados",
         extra={"context": {"eventos": len(directorios), "artefactos": sorted(escritos)}},
+    )
+    return escritos
+
+
+def regenerate_texts(usgs_id: str = "", *, reports_root: Path | None = None) -> dict[str, Path]:
+    """Rehace ``report.md`` y ``hilo.txt`` de un reporte ya publicado, o de todos.
+
+    El gemelo de :func:`regenerate_maps`, y existe por el mismo motivo. Los dos
+    textos son derivados de ``report.json`` y ``adm2.csv``: se pueden rehacer sin
+    recomputar el impacto, que costaria bajar el activo de cada pais.
+
+    Hizo falta al revisar los publicados. `markdown.py` y `social.py` llevaban
+    las tildes puestas en el repositorio y los ficheros servidos seguian
+    diciendo "Exposicion no es dano": se emitieron el 25-ago-2026, antes de esa
+    correccion, y nada volvia a tocarlos. Un texto rancio no se distingue de uno
+    recien generado mirandolo, y esa es exactamente la clase de deriva que este
+    proyecto no puede tener en su artefacto mas citable.
+
+    Args:
+        usgs_id: un evento concreto. Vacio = todos los publicados.
+        reports_root: raiz de ``reports/``. Los tests la redirigen.
+
+    Returns:
+        Mapa ``"<usgs_id>/<artefacto>" -> ruta``, de lo efectivamente escrito.
+
+    Raises:
+        FileNotFoundError: si el evento pedido no tiene ``report.json``.
+    """
+    root = reports_root or REPORTS_DIR
+    if usgs_id:
+        directorios = [root / validate_usgs_id(usgs_id)]
+    else:
+        directorios = sorted(p.parent for p in root.glob("*/report.json"))
+
+    escritos: dict[str, Path] = {}
+    for directory in directorios:
+        origen = directory / "report.json"
+        if not origen.is_file():
+            raise FileNotFoundError(f"No hay reporte publicado en {directory}")
+
+        report = Report.from_dict(json.loads(origen.read_text(encoding="utf-8")))
+
+        md_path = directory / "report.md"
+        md_path.write_text(render_markdown(report), encoding="utf-8")
+        escritos[f"{directory.name}/report_md"] = md_path
+
+        hilo_path = directory / "hilo.txt"
+        hilo_path.write_text(render_thread_text(report), encoding="utf-8")
+        escritos[f"{directory.name}/hilo_txt"] = hilo_path
+
+    _log.info(
+        "textos regenerados",
+        extra={"context": {"eventos": len(directorios), "artefactos": len(escritos)}},
     )
     return escritos
 

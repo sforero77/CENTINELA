@@ -1,60 +1,51 @@
-# Exposicion sismica — M7.0 Acapulco, México
+# Exposición sísmica — M7,0 · Acapulco, México
 
 **Evento USGS:** `us7000f93v` · **Origen:** 2021-09-08T01:47:47Z UTC · **Profundidad:** 20,0 km
 
-> **Reconstruccion retrospectiva.** Este reporte se calculo despues del evento, no en respuesta a el, y no cuenta para las metricas de latencia del sistema.
+> **Reconstrucción retrospectiva.** Este reporte se calculó después del evento, no en respuesta a él, y no cuenta para las métricas de latencia del sistema.
 >
-> La **poblacion** corresponde a la epoca indicada en el manifest de exposicion. Las **edificaciones, vias, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el historico. Leelas como "que infraestructura de hoy caeria en esa zona de intensidad", no como lo que habia entonces.
+> La **población** corresponde a la época indicada en el manifiesto de exposición. Las **edificaciones, vías, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el histórico. Léelas como "qué infraestructura de hoy caería en esa zona de intensidad", no como lo que había entonces.
 
-## Exposicion estimada
+## Exposición estimada
 
 | Indicador | Estimado |
 |---|---:|
-| Poblacion en MMI≥6 | 1,1 millones |
-| Poblacion en MMI≥7 | 910 mil |
-| Poblacion en MMI≥8 | 0 |
+| Población en MMI≥6 | 1,1 millones |
+| Población en MMI≥7 | 910 mil |
+| Población en MMI≥8 | 0 |
 | Edificaciones en MMI≥7 | 330 mil |
 | Sedes de salud en MMI≥7 | 152 |
 | Sedes educativas en MMI≥7 | 3.132 |
 | Kilometros de via en MMI≥7 | 0 km |
 | Superficie construida en MMI≥7 | 46,8 km² |
 
-De la poblacion en intensidad MMI≥7, alrededor de **81 mil** personas tienen 65 años o más.
+Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-## Municipios mas expuestos (top 15), por poblacion en MMI≥7
+De la población en intensidad MMI≥7, alrededor de **81 mil** personas tienen 65 años o más.
 
-| # | Municipio | Codigo | MMI max | Poblacion MMI≥7 |
+## Municipios más expuestos, por población en MMI≥7
+
+| # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
 | 1 | Acapulco De Juárez | `MX12001` | 7,5 | 880 mil |
 | 2 | Coyuca De Benítez | `MX12021` | 7,0 | 30 mil |
 | 3 | San Marcos | `MX12053` | 7,0 | 5.100 |
 | 4 | Juan R. Escudero | `MX12039` | 7,0 | 4 |
-| 5 | Tecoanapa | `MX12056` | 6,5 | 0 |
-| 6 | Chilpancingo De Los Bravo | `MX12029` | 6,5 | 0 |
-| 7 | Mochitlán | `MX12044` | 6,0 | 0 |
-| 8 | Ayutla De Los Libres | `MX12012` | 6,0 | 0 |
-| 9 | Benito Juárez | `MX12014` | 6,0 | 0 |
-| 10 | Leonardo Bravo | `MX12040` | 5,5 | 0 |
-| 11 | Cuautepec | `MX12025` | 5,5 | 0 |
-| 12 | Quechultenango | `MX12051` | 5,5 | 0 |
-| 13 | Atoyac De Álvarez | `MX12011` | 5,5 | 0 |
-| 14 | Florencio Villarreal | `MX12030` | 5,5 | 0 |
-| 15 | General Heliodoro Castillo | `MX12032` | 5,5 | 0 |
 
-## Deslizamiento y licuefaccion
+## Deslizamiento y licuefacción
 
-- Poblacion en celdas con probabilidad **alta de deslizamiento**: 2.400
-- Poblacion en celdas con probabilidad **alta de licuefaccion**: 67 mil
+- Población en celdas con probabilidad **alta de deslizamiento**: 2.400
+- Población en celdas con probabilidad **alta de licuefacción**: 67 mil
 
-Fuente: producto *Ground Failure* de USGS (v3), dominio publico.
+Fuente: producto *Ground Failure* de USGS (v3), dominio público.
 
 ## Referencia cruzada
 
-PAGER (USGS) estima para este evento una alerta **red**. CENTINELA no estima victimas; la cifra se incluye solo como contraste.
+PAGER (USGS) estima para este evento una alerta **roja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el area afectada: **9,9 %**.
+Discrepancia entre GHS-POP y WorldPop en el área afectada: **9,9 %**.
 
 ## Descargas
 
@@ -65,12 +56,12 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **9,9 %**.
 
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v3**
-- Manifest de exposicion: `mex-v0.1`
+- Manifiesto de exposición: `mex-v0.1`
 - Pipeline: `0.1.0` · Generado: 2026-08-25T18:31:59Z
 
 ## Advertencias
 
-- Exposicion estimada, no dano observado.
-- Este sistema no es una alerta temprana ni una recomendacion de evacuacion.
-- No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.
-- Fuentes, vintages y versiones consumidas: ver manifest enlazado.
+- Exposición estimada, no daño observado.
+- Este sistema no es una alerta temprana ni una recomendación de evacuación.
+- No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.
+- Fuentes, vintages y versiones consumidas: ver manifiesto enlazado.

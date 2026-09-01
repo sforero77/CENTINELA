@@ -942,9 +942,18 @@ def test_el_mapa_dice_que_es_cada_simbolo() -> None:
     assert "function pintarLeyendaSimbolos" in APP
     assert "pintarLeyendaSimbolos();" in APP, "la leyenda existe y nadie la llama"
 
-    bloque = cuerpo("pintarLeyendaSimbolos")
+    # Las entradas viven en `entradasDeLeyenda` desde que la caja dejo de ser
+    # fija: la leyenda listaba los tres simbolos siempre, y en modo fuego seguia
+    # explicando dos que ahi no se dibujan.
+    bloque = cuerpo("entradasDeLeyenda")
     for concepto in ("Sismo con reporte", "Sismo visto, sin reporte", "Foco activo"):
         assert concepto in bloque, f"la leyenda no explica: {concepto}"
+
+    # Y se repinta con cada cambio de amenaza: si no, vuelve a quedarse
+    # describiendo el mapa anterior.
+    assert "pintarLeyendaSimbolos();" in cuerpo("aplicarAmenaza"), (
+        "la leyenda no se rehace al cambiar de amenaza"
+    )
 
 
 def test_la_leyenda_de_simbolos_esta_siempre() -> None:
@@ -1089,8 +1098,11 @@ def test_cada_bloque_del_panel_dice_de_que_va() -> None:
     lenguaje llano.
     """
     html = (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
+    # El `<p>` puede llevar atributos —el de metricas tiene `id` desde que su
+    # texto se reescribe segun la banda del evento—, asi que no se exige que la
+    # etiqueta termine justo ahi.
     bloques = re.findall(
-        r'<h3 class="eyebrow"[^>]*>(.*?)</h3>\s*(<p class="subtitulo-bloque">)?', html
+        r'<h3 class="eyebrow"[^>]*>(.*?)</h3>\s*(<p class="subtitulo-bloque"[^>]*>)?', html
     )
 
     sin_explicar = [titulo for titulo, sub in bloques if not sub and titulo != "Descargas"]

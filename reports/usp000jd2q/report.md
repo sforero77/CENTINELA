@@ -1,36 +1,37 @@
-# Exposicion sismica — M5.5 5 km al NNO de Baní, República Dominicana
+# Exposición sísmica — M5,5 · 5 km al NNO de Baní, República Dominicana
 
 **Evento USGS:** `usp000jd2q` · **Origen:** 2012-01-05T09:35:32Z UTC · **Profundidad:** 39,8 km
 
-> **Reconstruccion retrospectiva.** Este reporte se calculo despues del evento, no en respuesta a el, y no cuenta para las metricas de latencia del sistema.
+> **Reconstrucción retrospectiva.** Este reporte se calculó después del evento, no en respuesta a él, y no cuenta para las métricas de latencia del sistema.
 >
-> La **poblacion** corresponde a la epoca indicada en el manifest de exposicion. Las **edificaciones, vias, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el historico. Leelas como "que infraestructura de hoy caeria en esa zona de intensidad", no como lo que habia entonces.
+> La **población** corresponde a la época indicada en el manifiesto de exposición. Las **edificaciones, vías, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el histórico. Léelas como "qué infraestructura de hoy caería en esa zona de intensidad", no como lo que había entonces.
 
-## Exposicion estimada
+## Exposición estimada
 
 | Indicador | Estimado |
 |---|---:|
-| Poblacion en MMI≥6 | 0 |
-| Poblacion en MMI≥7 | 0 |
-| Poblacion en MMI≥8 | 0 |
+| Población en MMI≥6 | 0 |
+| Población en MMI≥7 | 0 |
+| Población en MMI≥8 | 0 |
 | Edificaciones en MMI≥7 | 0 |
 | Sedes de salud en MMI≥7 | 0 |
 | Sedes educativas en MMI≥7 | 0 |
 | Kilometros de via en MMI≥7 | 0 km |
 
-## Municipios mas expuestos (top 15), por poblacion en MMI≥6
+Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-| # | Municipio | Codigo | MMI max | Poblacion MMI≥6 |
+## Municipios más expuestos, por población en MMI≥6
+
+| # | Municipio | Código | MMI max | Población MMI≥6 |
 |---:|---|---|---:|---:|
-| 1 | Provincia Peravia | `DO0902` | 5,0 | 0 |
 
-## Deslizamiento y licuefaccion
+## Deslizamiento y licuefacción
 
 USGS no ha publicado el producto *Ground Failure* para este evento. La seccion se omite; el reporte se re-emite automaticamente si aparece.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el area afectada: **0,0 %**.
+Discrepancia entre GHS-POP y WorldPop en el área afectada: **0,0 %**.
 
 ## Descargas
 
@@ -41,12 +42,12 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **0,0 %**.
 
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v0**
-- Manifest de exposicion: `dom-v0.1`
+- Manifiesto de exposición: `dom-v0.1`
 - Pipeline: `0.1.0` · Generado: 2026-08-25T19:06:00Z
 
 ## Advertencias
 
-- Exposicion estimada, no dano observado.
-- Este sistema no es una alerta temprana ni una recomendacion de evacuacion.
-- No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.
-- Fuentes, vintages y versiones consumidas: ver manifest enlazado.
+- Exposición estimada, no daño observado.
+- Este sistema no es una alerta temprana ni una recomendación de evacuación.
+- No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.
+- Fuentes, vintages y versiones consumidas: ver manifiesto enlazado.

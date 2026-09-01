@@ -1,61 +1,51 @@
-# Exposicion sismica — M6.8 42 km al SSO de Bartolomé Masó, Cuba
+# Exposición sísmica — M6,8 · 42 km al SSO de Bartolomé Masó, Cuba
 
 **Evento USGS:** `us7000nr0v` · **Origen:** 2024-11-10T16:49:50Z UTC · **Profundidad:** 14,0 km
 
-> **Reconstruccion retrospectiva.** Este reporte se calculo despues del evento, no en respuesta a el, y no cuenta para las metricas de latencia del sistema.
+> **Reconstrucción retrospectiva.** Este reporte se calculó después del evento, no en respuesta a él, y no cuenta para las métricas de latencia del sistema.
 >
-> La **poblacion** corresponde a la epoca indicada en el manifest de exposicion. Las **edificaciones, vias, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el historico. Leelas como "que infraestructura de hoy caeria en esa zona de intensidad", no como lo que habia entonces.
+> La **población** corresponde a la época indicada en el manifiesto de exposición. Las **edificaciones, vías, sedes de salud y educativas son las actuales**: OpenStreetMap y Overture publican el estado presente, no el histórico. Léelas como "qué infraestructura de hoy caería en esa zona de intensidad", no como lo que había entonces.
 
-## Exposicion estimada
+## Exposición estimada
 
 | Indicador | Estimado |
 |---|---:|
-| Poblacion en MMI≥6 | 170 mil |
-| Poblacion en MMI≥7 | 3.300 |
-| Poblacion en MMI≥8 | 0 |
+| Población en MMI≥6 | 170 mil |
+| Población en MMI≥7 | 3.300 |
+| Población en MMI≥8 | 0 |
 | Edificaciones en MMI≥7 | 2.000 |
 | Sedes de salud en MMI≥7 | 1 |
 | Sedes educativas en MMI≥7 | 7 |
-| Vias primarias y secundarias en MMI≥7 | 28 km |
-| Vias locales en MMI≥7 | 28 km |
+| Vías primarias y secundarias en MMI≥7 | 28 km |
+| Vías locales en MMI≥7 | 28 km |
 | Superficie construida en MMI≥7 | 0,1 km² |
 
-De la poblacion en intensidad MMI≥7, alrededor de **380** personas tienen 65 años o más.
+Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-## Municipios mas expuestos (top 15), por poblacion en MMI≥7
+De la población en intensidad MMI≥7, alrededor de **380** personas tienen 65 años o más.
 
-| # | Municipio | Codigo | MMI max | Poblacion MMI≥7 |
+## Municipios más expuestos, por población en MMI≥7
+
+| # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
 | 1 | Pilón | `CU0511` | 7,0 | 3.000 |
 | 2 | Guamá | `CU1502` | 7,0 | 280 |
 | 3 | Bartolomé Masó | `CU0501` | 7,0 | 55 |
-| 4 | Campechuela | `CU0504` | 6,5 | 0 |
-| 5 | Media Luna | `CU0509` | 6,5 | 0 |
-| 6 | Yara | `CU0513` | 6,0 | 0 |
-| 7 | Manzanillo | `CU0508` | 6,0 | 0 |
-| 8 | Buey Arriba | `CU0503` | 6,0 | 0 |
-| 9 | Niquero | `CU0510` | 6,0 | 0 |
-| 10 | Bayamo | `CU0502` | 5,5 | 0 |
-| 11 | Cauto Cristo | `CU0505` | 5,5 | 0 |
-| 12 | Jiguaní | `CU0507` | 5,5 | 0 |
-| 13 | Río Cauto | `CU0512` | 5,5 | 0 |
-| 14 | Guisa | `CU0506` | 5,5 | 0 |
-| 15 | Calixto García | `CU0705` | 5,0 | 0 |
 
-## Deslizamiento y licuefaccion
+## Deslizamiento y licuefacción
 
-- Poblacion en celdas con probabilidad **alta de deslizamiento**: 0
-- Poblacion en celdas con probabilidad **alta de licuefaccion**: 37 mil
+- Población en celdas con probabilidad **alta de deslizamiento**: 0
+- Población en celdas con probabilidad **alta de licuefacción**: 37 mil
 
-Fuente: producto *Ground Failure* de USGS (v9), dominio publico.
+Fuente: producto *Ground Failure* de USGS (v9), dominio público.
 
 ## Referencia cruzada
 
-PAGER (USGS) estima para este evento una alerta **yellow**. CENTINELA no estima victimas; la cifra se incluye solo como contraste.
+PAGER (USGS) estima para este evento una alerta **amarilla**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el area afectada: **0,8 %**.
+Discrepancia entre GHS-POP y WorldPop en el área afectada: **0,8 %**.
 
 ## Descargas
 
@@ -66,12 +56,12 @@ Discrepancia entre GHS-POP y WorldPop en el area afectada: **0,8 %**.
 
 - ShakeMap consumido: **v9**
 - Ground Failure consumido: **v9**
-- Manifest de exposicion: `cub-v0.1`
+- Manifiesto de exposición: `cub-v0.1`
 - Pipeline: `0.1.0` · Generado: 2026-08-25T17:40:54Z
 
 ## Advertencias
 
-- Exposicion estimada, no dano observado.
-- Este sistema no es una alerta temprana ni una recomendacion de evacuacion.
-- No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.
-- Fuentes, vintages y versiones consumidas: ver manifest enlazado.
+- Exposición estimada, no daño observado.
+- Este sistema no es una alerta temprana ni una recomendación de evacuación.
+- No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.
+- Fuentes, vintages y versiones consumidas: ver manifiesto enlazado.

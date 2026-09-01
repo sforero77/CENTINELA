@@ -68,6 +68,36 @@ const ENCUADRE_UTIL = [
   [-34.0, 30.0],
 ];
 
+//: LO QUE NO ES AMERICA LATINA SE APAGA.
+//:
+//: La caja de la region es **alta** —73° de ancho por 76° de alto— y el panel
+//: del mapa es apaisado: 1125 × 540 en un portatil, y esa proporcion no cambia
+//: en ningun escritorio. `fitBounds` encaja por la dimension que primero se
+//: agota, que aqui es siempre la altura, y el ancho sobrante se reparte a los
+//: dos lados. Medido en el sitio publicado: 163° de longitud visibles en una
+//: ventana de 1372 px y 191° en una de 1540. America Latina ocupaba el 38 % del
+//: ancho util y el resto era Atlantico y Africa occidental **rotulada**:
+//: Nigeria, Chad, Niger, Argelia, Senegal, Angola y Namibia en un tablero de
+//: exposicion sismica latinoamericana.
+//:
+//: No hay encuadre que arregle eso. Llenar el ancho obliga a recortar latitud, y
+//: el primer recorte que cabe se lleva Ciudad de Mexico, Monterrey y Santiago —
+//: tres de los sitios con reporte publicado. Entre ensenar la region entera y
+//: llenar el ancho, se ensena la region entera y **se apaga lo demas**.
+//:
+//: La caja va algo mas holgada que `ENCUADRE_LATAM` a proposito: el fuego no
+//: respeta fronteras y hay focos en Guyana y Surinam. Aun asi las capas de datos
+//: se dibujan **por encima** de la mascara, asi que nada del dato se pierde por
+//: caer fuera; lo unico que se atenua es el mapa base.
+const CAJA_MASCARA = [
+  [-122.0, -58.0],
+  [-28.0, 35.0],
+];
+
+//: El tono del papel del tablero. Velar con el color del fondo —y no con gris o
+//: con negro— hace que el sobrante lea como margen y no como sombra.
+const BASE_PAPEL = "#f4f2ea";
+
 // Mapa base: estilo Positron de OpenFreeMap.
 //
 // **Por qué este y no las teselas de Overture.** Overture tesela para el
@@ -197,6 +227,15 @@ const VUELO = REDUCIR_MOVIMIENTO ? 0 : 800;
 //
 // Si algun dia el mapa base pasa a un fondo oscuro, esta cuenta cambia entera y
 // merece rehacerse.
+//: De cuando es la poblacion que cuenta este visor.
+//:
+//: Vive en una constante porque la dicen dos sitios —la nota de la capa de
+//: poblacion y la apostilla de las reconstrucciones retrospectivas— y si se
+//: reconstruye el activo con otra epoca, los dos tienen que cambiar a la vez.
+//: Un visor que diga 2025 en un sitio y 2030 en otro es peor que uno que no lo
+//: diga.
+const EPOCA_POBLACION = "La población es GHS-POP época 2025";
+
 const CAPAS = {
   mmi: {
     titulo: "Intensidad",
@@ -515,14 +554,38 @@ function partirLinea(linea) {
 // en el mapa regional y tenía que volver a buscar el evento. En un producto
 // cuyo artefacto principal es un reporte por evento, eso sobra explicarlo.
 
+//: LOS FILTROS QUE ELIGEN **QUE** SE MIRA VIAJAN; LOS QUE ELIGEN **COMO**, NO.
+//:
+//: Pais y periodo recortan el conjunto de datos: "los reportes de Venezuela de
+//: los ultimos cinco anos" es una vista con contenido propio, y hasta ahora no
+//: habia forma de mandarsela a nadie —el enlace abria los veintiuno—. Van a la
+//: URL como ?evento= y ?capa=.
+//:
+//: Orden y "solo lo que se ve en el mapa" no: son preferencias de lectura, y ya
+//: estaba decidido en `estado.orden` que un enlace compartido tiene que abrir el
+//: mismo reporte, no la misma manera de mirarlo. Esa linea se respeta.
 function leerUrl() {
   const p = new URLSearchParams(location.search);
   const capa = p.get("capa");
+  const periodo = p.get("periodo");
+  const periodoF = p.get("periodof");
   return {
     evento: p.get("evento"),
     capa: CAPAS[capa] ? capa : null,
     // Solo "fuego" es un valor: "sismos" es el defecto y no viaja en la URL.
     amenaza: p.get("amenaza") === "fuego" ? "fuego" : null,
+    // Los ISO3 se validan contra los eventos cargados, que es lo unico que sabe
+    // cuales existen; aqui solo se normaliza la forma. Un valor que no case se
+    // ignora en silencio, como ya se hace con `capa`: un enlace viejo o mal
+    // copiado abre el panorama, no un error.
+    pais: /^[A-Z]{3}$/.test(String(p.get("pais") || "").toUpperCase())
+      ? String(p.get("pais")).toUpperCase()
+      : null,
+    paisFuego: /^[A-Z]{3}$/.test(String(p.get("paisf") || "").toUpperCase())
+      ? String(p.get("paisf")).toUpperCase()
+      : null,
+    periodo: VENTANAS[periodo] ? periodo : null,
+    periodoFuego: VENTANAS_FUEGO[periodoF] ? periodoF : null,
   };
 }
 
@@ -533,6 +596,15 @@ function escribirUrl() {
   // Compartible, como ?evento=: quien manda un enlace en modo fuego manda el
   // modo fuego. Un evento abierto implica sismos, asi que son excluyentes.
   if (!estado.seleccionado && estado.amenaza === "fuego") p.set("amenaza", "fuego");
+  // Solo lo que no es el defecto: una URL con `&periodo=todo&pais=` no dice
+  // nada y ensucia cada enlace que alguien copie.
+  if (estado.amenaza === "fuego") {
+    if (estado.paisFuego) p.set("paisf", estado.paisFuego);
+    if (estado.ventanaFuego !== "h24") p.set("periodof", estado.ventanaFuego);
+  } else {
+    if (estado.paisFiltrado) p.set("pais", estado.paisFiltrado);
+    if (estado.ventana !== "todo") p.set("periodo", estado.ventana);
+  }
   const cadena = p.toString();
   history.replaceState(null, "", cadena ? `?${cadena}` : location.pathname);
 }
@@ -716,6 +788,20 @@ async function cargarEventos() {
     // El mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica. La
     // lista de focos lo necesita igual que el filtro de reportes.
     estado.nombresPais = nombres;
+
+    // LOS FILTROS DEL ENLACE, ANTES DE PINTAR LOS CONTROLES.
+    //
+    // Asi los desplegables nacen ya enseñando lo que el enlace pidio, en vez de
+    // enseñar "Todos los países" y corregirse un instante despues. El ISO3 se
+    // valida contra los eventos que existen —`leerUrl` solo comprueba la forma—:
+    // un `?pais=XYZ` no puede dejar la lista vacia sin motivo.
+    const filtros = leerUrl();
+    const paisesConReporte = new Set(eventos.map((e) => e.iso3).filter(Boolean));
+    if (filtros.pais && paisesConReporte.has(filtros.pais)) estado.paisFiltrado = filtros.pais;
+    if (filtros.periodo) estado.ventana = filtros.periodo;
+    if (filtros.paisFuego) estado.paisFuego = filtros.paisFuego;
+    if (filtros.periodoFuego) estado.ventanaFuego = filtros.periodoFuego;
+
     pintarFiltroPaises(eventos, nombres);
     pintarControlesLista();
     refrescarLista({ anunciando: false });
@@ -763,10 +849,41 @@ function pintarPanorama(eventos) {
   const caja = $("panorama");
   if (!caja) return;
   if (!eventos.length) {
-    caja.innerHTML = `<p class="pista">Todavía no hay reportes publicados.</p>`;
+    // Dos vacios distintos, y decir cual es. "Todavía no hay reportes
+    // publicados" con un filtro puesto es falso —los hay, el filtro no los
+    // deja— y manda a esperar en vez de a soltar el filtro. El panel se quedaba
+    // ademas con las cifras del catalogo entero: se elegia Cuba + 90 dias, la
+    // cabecera decia "0 reportes publicados" y aqui seguian "21 reportes" y un
+    // sismo de Colombia.
+    caja.innerHTML = hayFiltros()
+      ? `<p class="pista">${escapar(motivoDeVacio())}</p>` +
+        `<p class="pista"><button type="button" class="filtros-limpiar" ` +
+        `data-limpiar="1">Quitar filtros</button></p>`
+      : `<p class="pista">Todavía no hay reportes publicados.</p>`;
+    const limpiar = caja.querySelector("[data-limpiar]");
+    if (limpiar) limpiar.addEventListener("click", () => quitarFiltros());
     return;
   }
-  const mayor = eventos.reduce((a, b) => ((b.pop_mmi7p || 0) > (a.pop_mmi7p || 0) ? b : a));
+  // LA CIFRA MAYOR DICE EN QUE BANDA ES MAYOR.
+  //
+  // Se compara `pop_mmi7p`, que es lo defendible —MMI≥7 es la franja que el
+  // resto del panel usa— pero la etiqueta no lo decia: se leia "2,4 M · mayor
+  // exposicion registrada" con "4,8 M en MMI≥6" tres filas mas abajo, en la
+  // misma columna. Un maximo mas pequeno que un numero visible al lado es una
+  // contradiccion aunque las dos cifras sean ciertas.
+  //
+  // Si ningun evento del conjunto llega a MMI≥7 —pasa al filtrar por un pais
+  // con un solo reporte suave— se compara en MMI≥6 y se rotula asi. Y si no hay
+  // nadie en ninguna banda, la metrica no se pinta: un "0 · mayor exposicion
+  // registrada" no informa de nada.
+  const conSiete = eventos.filter((e) => (e.pop_mmi7p || 0) > 0);
+  const conSeis = eventos.filter((e) => (e.pop_mmi6p || 0) > 0);
+  const candidatos = conSiete.length ? conSiete : conSeis;
+  const bandaMayor = conSiete.length ? 7 : 6;
+  const clave = bandaMayor === 7 ? "pop_mmi7p" : "pop_mmi6p";
+  const mayor = candidatos.length
+    ? candidatos.reduce((a, b) => ((b[clave] || 0) > (a[clave] || 0) ? b : a))
+    : null;
   const paises = new Set(eventos.map((e) => e.iso3).filter(Boolean)).size;
   const enVivo = eventos.filter((e) => !e.backtest).length;
 
@@ -775,10 +892,12 @@ function pintarPanorama(eventos) {
     `<div class="metrica"><span class="cabeza">${iconoSvg("reportes")}` +
     `<span class="valor">${eventos.length}</span></span>` +
     `<span class="etiqueta">reportes publicados</span></div>` +
-    `<div class="metrica"><span class="cabeza">${iconoSvg("personas")}` +
-    `<span class="valor">${comoTexto(mayor.pop_mmi7p)}</span></span>` +
-    `<span class="etiqueta">mayor exposición registrada</span>` +
-    `<span class="apunte">M${String(mayor.mag).replace(".", ",")} · ${escapar(mayor.lugar)}</span></div>` +
+    (mayor
+      ? `<div class="metrica"><span class="cabeza">${iconoSvg("personas")}` +
+        `<span class="valor">${comoTexto(mayor[clave])}</span></span>` +
+        `<span class="etiqueta">mayor exposición registrada en MMI≥${bandaMayor}</span>` +
+        `<span class="apunte">M${String(mayor.mag).replace(".", ",")} · ${escapar(mayor.lugar)}</span></div>`
+      : "") +
     (paises > 1
       ? `<div class="metrica"><span class="cabeza">${iconoSvg("paises")}` +
         `<span class="valor">${paises}</span></span>` +
@@ -925,6 +1044,9 @@ async function seleccionar(usgsId) {
   $("detalle-titulo").textContent = "Cargando…";
   $("lateral").scrollTop = 0;
   escribirUrl();
+  // Con un evento delante manda la leyenda de la capa; la de simbolos se pliega.
+  pintarLeyendaSimbolos();
+  pintarVolverAlEncuadre();
 
   try {
     const [reporte, csv, celdas, contornos] = await Promise.all([
@@ -982,6 +1104,54 @@ function volverAlEncuadre(m, duracion = 0) {
   }
 }
 
+//: Si la camara esta lejos del encuadre del panorama.
+//:
+//: Se compara contra `cameraForBounds` —la misma cuenta que hace
+//: `volverAlEncuadre`— y no contra un centro fijo, porque el encuadre depende
+//: del tamano de la ventana: lo que en un portatil es "estar en el panorama" en
+//: otro no lo es. Los umbrales son generosos a proposito; esto no decide nada,
+//: solo si vale la pena ofrecer el boton.
+function vistaDesviada(m) {
+  if (!m || !m.cameraForBounds) return false;
+  try {
+    const objetivo = m.cameraForBounds(ENCUADRE_UTIL, { padding: 24 });
+    if (!objetivo) return false;
+    const centro = m.getCenter();
+    return (
+      Math.abs(m.getZoom() - objetivo.zoom) > 0.35 ||
+      Math.abs(centro.lng - objetivo.center.lng) > 6 ||
+      Math.abs(centro.lat - objetivo.center.lat) > 6
+    );
+  } catch (error) {
+    return false;
+  }
+}
+
+//: El boton solo aparece cuando tiene algo que deshacer.
+//:
+//: Con un evento abierto no: ahi la camara esta sobre su malla a proposito, y
+//: quien quiera salir tiene «Volver al panorama», que ademas cierra el panel.
+//: Dos botones que devuelven cosas distintas al lado no se distinguen.
+function pintarVolverAlEncuadre() {
+  const boton = $("volver-encuadre");
+  if (!boton) return;
+  boton.hidden = Boolean(estado.seleccionado) || !vistaDesviada(estado.mapa);
+}
+
+function engancharVolverAlEncuadre(m) {
+  const boton = $("volver-encuadre");
+  if (!boton || boton.dataset.enganchado) return;
+  boton.dataset.enganchado = "1";
+  boton.addEventListener("click", () => {
+    volverAlEncuadre(m, VUELO);
+    anotarCamara("boton:encuadre");
+    anunciar("Vista devuelta al encuadre de América Latina.");
+    // El vuelo dura; el boton se recalcula cuando la camara para.
+  });
+  m.on("moveend", pintarVolverAlEncuadre);
+  pintarVolverAlEncuadre();
+}
+
 function cerrarDetalle() {
   estado.seleccionado = null;
   $("lateral-vacio").hidden = false;
@@ -995,6 +1165,7 @@ function cerrarDetalle() {
   // perimetro, que va en tinta oscura, el resto quedo a la vista: al volver al
   // panorama flotaba el borde de un area cuyo panel ya no existe.
   cerrarGlobo();
+  cerrarRotuloDeEpicentro();
   for (const capa of ["celdas", "contornos", "perimetro"]) quitarCapa(capa);
   estado.presentes = null;
   for (const capa of ["celdas", "contornos", "perimetro"]) anotarPintado(capa, 0);
@@ -1003,9 +1174,13 @@ function cerrarDetalle() {
   anunciar("Sin evento seleccionado. El panel muestra el panorama de los reportes publicados.");
   const selector = $("selector-evento");
   if (selector) selector.value = "";
+  // Ya no compite con ninguna leyenda de capa: se despliega otra vez.
+  pintarLeyendaSimbolos();
+  pintarVolverAlEncuadre();
   // Al mismo encuadre adaptado con el que abre, no al centro y zoom fijos:
   // volver al panorama tiene que devolver la vista que se tenia al llegar.
   volverAlEncuadre(estado.mapa, VUELO);
+  anotarCamara("panorama:cerrar-detalle");
 }
 
 // Tres formas de salir, porque hasta ahora habia media.
@@ -1138,6 +1313,25 @@ function pintarDistintivos(reporte) {
         `${escapar(m.texto)}</span></li>`
     )
     .join("");
+
+  // Y ESO MISMO, VISIBLE.
+  //
+  // El panel dice «cuánta gente vivía dentro de cada nivel de sacudida» sobre un
+  // sismo de 2016 y cuenta con población de la época del activo, que hoy es
+  // 2025. La advertencia existia solo en el `title` del distintivo y en el
+  // `report.md`; en pantalla no habia nada, y ese es el aviso que decide como se
+  // lee todo lo demas.
+  const epoca = $("detalle-epoca");
+  if (epoca) {
+    epoca.hidden = !reporte.backtest;
+    if (reporte.backtest) {
+      epoca.textContent =
+        `${EPOCA_POBLACION}. Las edificaciones, vías y equipamiento son los ` +
+        `actuales: OpenStreetMap y Overture publican el estado presente, no el ` +
+        `histórico. Léase como «qué quedaría hoy dentro de esa zona de ` +
+        `intensidad», no como lo que había entonces.`;
+    }
+  }
 }
 
 // El pipeline calcula tres franjas de intensidad y el panel solo enseñaba la de
@@ -1194,7 +1388,17 @@ function pintarArea(reporte, celdas) {
 
   // La cifra grande es la banda titular —la misma que rotula el resto del
   // panel—, para que "4.628 km²" y "2,4 M de personas" hablen del mismo sitio.
-  const titular = bandaDeTotales(reporte.totales) || 7;
+  //
+  // Esa promesa se rompio al arreglar el bloque de metricas y el de municipios:
+  // los dos pasaron a contar en MMI≥7 —que es donde estan las cifras del
+  // reporte— y este seguia sacando MMI≥8 en Muisne, Catia La Mar y San Felipe.
+  // Tres bloques seguidos con tres bandas distintas y una sola etiqueta cada
+  // uno es la manera mas silenciosa de que alguien compare lo que no se compara.
+  //
+  // Misma regla que `pintarMunicipios`: MMI≥7, y solo se baja a 6 cuando el
+  // evento no llego a 7 sobre poblacion.
+  const banda = bandaDeTotales(reporte.totales);
+  const titular = banda === 6 ? 6 : 7;
   const dentro = reparto.bandas.filter((b) => b.banda >= titular);
   const km2Titular = dentro.reduce((a, b) => a + b.km2, 0);
   const celdasTitular = dentro.reduce((a, b) => a + b.celdas, 0);
@@ -1384,21 +1588,65 @@ function pintarMetricas(reporte) {
   // personas: es la única que existe para las dos bandas, y con un evento que
   // no llega a 7 poner un 0 ahí es la frase que este tablero evita.
   const banda = bandaDeTotales(t);
-  $("titulo-metricas").textContent =
-    banda && banda !== 7 ? `Expuesto en MMI≥${banda} y MMI≥7` : "Expuesto en MMI≥7";
+  // UNA NOTA ESCRITA PARA UN CASO SE ESTABA IMPRIMIENDO EN EL CONTRARIO.
+  //
+  // `bandaDeTotales` devuelve 8 en cuanto hay alguien en MMI≥8 y 6 cuando la
+  // sacudida no llego a 7 sobre poblacion. La rama `banda !== 7` cubria los dos
+  // y ponia la misma frase: «La sacudida no alcanzó MMI 7 sobre población:
+  // ninguna de las cifras de abajo aplica a este evento».
+  //
+  // En banda 6 es cierta. En banda 8 dice exactamente lo contrario de lo que el
+  // propio panel enseña dos bloques mas arriba. Afectaba a los tres eventos mas
+  // fuertes del catalogo: Muisne (2.283.454 personas en MMI≥7), Catia La Mar
+  // (2.276.854) y San Felipe (491.581). Los reportes que mas importan eran los
+  // que llevaban la frase que niega sus propias cifras.
+  //
+  // Ahora banda 8 saca **dos** tarjetas —lo de MMI≥8 y lo de MMI≥7— y ninguna
+  // negacion: las cifras de abajo si aplican, y decirlo sobra cuando la cifra
+  // esta al lado.
+  const soloSeis = banda === 6;
+  $("titulo-metricas").textContent = banda
+    ? soloSeis
+      ? "Expuesto en MMI≥6"
+      : banda === 8
+        ? "Expuesto en MMI≥8 y MMI≥7"
+        : "Expuesto en MMI≥7"
+    : "Expuesto en MMI≥7";
+  // Y el subtitulo, que tambien hablaba siempre de MMI 7. En un evento que no
+  // llego a 7 sobre poblacion, «esto es lo que quedó dentro de esa franja»
+  // describe una franja vacia.
+  const subtitulo = $("subtitulo-metricas");
+  if (subtitulo) {
+    subtitulo.textContent = soloSeis
+      ? "MMI 6 se siente en todas partes y mueve objetos; el daño estructural " +
+        "empieza más arriba. Esto es lo que quedó dentro de esa franja — no lo que se dañó."
+      : "MMI 7 es la sacudida que asusta a todo el mundo y agrieta construcción " +
+        "corriente. Esto es lo que quedó dentro de esa franja — no lo que se dañó.";
+  }
+
   const km2 = Number.isFinite(t.built_m2_mmi7p) ? t.built_m2_mmi7p / 1e6 : null;
   const principal = t.road_km_principal_mmi7p;
 
   const tarjetas = [
-    banda && banda !== 7
+    soloSeis
       ? {
           clave: "personas",
-          valor: t[`pop_mmi${banda}p`],
-          etiqueta: `personas en MMI≥${banda}`,
-          apunte: "La sacudida no alcanzó MMI 7 sobre población: ninguna de las cifras de abajo, que se cuentan en MMI≥7, aplica a este evento.",
+          valor: t.pop_mmi6p,
+          etiqueta: "personas en MMI≥6",
+          apunte:
+            "La sacudida no alcanzó MMI 7 sobre población: ninguna de las cifras de abajo, " +
+            "que se cuentan en MMI≥7, aplica a este evento.",
           ancha: true,
         }
-      : { clave: "personas", valor: t.pop_mmi7p, etiqueta: "personas" },
+      : { clave: "personas", valor: t.pop_mmi7p, etiqueta: "personas en MMI≥7" },
+    // La banda alta, cuando existe, va inmediatamente detras y rotulada. Antes
+    // era la unica que se enseñaba, y el resto del bloque —mayores, salud,
+    // edificaciones— se contaba en MMI≥7 sin que nada lo dijera: se leia
+    // "108.000 personas" seguido de "174.000 de 65 años o más", que es un
+    // subconjunto mas grande que su conjunto.
+    ...(banda === 8
+      ? [{ clave: "personas", valor: t.pop_mmi8p, etiqueta: "de ellas, en MMI≥8" }]
+      : []),
     {
       clave: "mayores",
       valor: t.pop_65p_mmi7p,
@@ -1483,23 +1731,57 @@ function pintarMunicipios(reporte, municipios) {
   const fuente = (reporte.top_municipios && reporte.top_municipios.length)
     ? reporte.top_municipios
     : municipios;
-  // Se ordena por la banda que el evento alcanzó. Con `pop_mmi7p` a cero en
-  // todas las filas, el orden salía alfabético y las barras, todas vacías.
+  // «MÁS EXPUESTOS» TIENE QUE ORDENAR POR LO EXPUESTO, NO POR LA BANDA CUMBRE.
+  //
+  // Se ordenaba por `pop_banda`, que es la poblacion del municipio dentro de la
+  // banda MAS ALTA que el evento alcanzo. En un evento que llega a MMI 8 eso es
+  // la porcion ≥8, y el resultado era una lista falsa: en Muisne salia Muisne
+  // con 9.000 y Quinindé con **0** —teniendo 164.691 personas en MMI≥7— y
+  // Portoviejo, con 333.075, no salia. El bloque se titula «la misma cifra
+  // nacional repartida entre quienes tienen que responder»: a quien responde
+  // desde Portoviejo le decia cero.
+  //
+  // Se ordena por la banda en la que se cuenta el resto del panel —MMI≥7—, y
+  // solo se baja a MMI≥6 cuando el evento no llego a 7 sobre poblacion, que es
+  // el caso que `pop_banda` cubria bien. Ahi sigue siendo `pop_banda`.
   const banda = bandaDeTotales(reporte.totales);
-  const cifra = (m) => (banda && banda !== 7 ? (m.pop_banda ?? 0) : (m.pop_mmi7p || 0));
-  const top = [...fuente].sort((a, b) => cifra(b) - cifra(a)).slice(0, 8);
+  const bandaMostrada = banda === 6 ? 6 : 7;
+  const cifra = (m) =>
+    bandaMostrada === 7 ? (m.pop_mmi7p || 0) : (m.pop_banda ?? m.pop_mmi7p ?? 0);
+
+  // Y las filas en cero no se listan. Un ranking de «más expuestos» rematado
+  // con seis ceros —Carúpano tenia seis de ocho, Parrita siete de catorce— no
+  // ensena donde se concentra: ensena que la lista se relleno hasta ocho.
+  const top = [...fuente]
+    .filter((m) => cifra(m) > 0)
+    .sort((a, b) => cifra(b) - cifra(a))
+    .slice(0, 8);
   const maximo = Math.max(...top.map(cifra), 1);
+
+  // El titulo dice en que banda esta ordenando. El `.md` siempre lo decia
+  // —«top 15, por población en MMI≥8»— y el visor no, asi que la misma lista
+  // salia sin marco en la pantalla que mas gente mira.
+  const titulo = $("titulo-municipios");
+  if (titulo) titulo.textContent = `Municipios más expuestos · MMI≥${bandaMostrada}`;
+
+  // Sin ninguna fila con gente, el bloque entero sobra: es el caso de los tres
+  // eventos que no dejaron a nadie dentro, y ahi ya lo dice el panel de arriba.
+  const bloque = $("bloque-municipios");
+  if (bloque) bloque.hidden = !top.length;
 
   $("detalle-barras").innerHTML = top
     .map((m) => {
       const pct = (100 * cifra(m)) / maximo;
-      const banda = CAPAS.mmi.cortes.filter((c) => (m.mmi_max || 0) >= c).length - 1;
-      const color = CAPAS.mmi.colores[Math.max(0, banda)];
+      // `bandaColor` y no `banda`: sombreaba a la de fuera, que es la que decide
+      // que cifra se lee. Dos cosas distintas con el mismo nombre en el mismo
+      // ambito es como se cuela el error que este bloque acaba de tener.
+      const bandaColor = CAPAS.mmi.cortes.filter((c) => (m.mmi_max || 0) >= c).length - 1;
+      const color = CAPAS.mmi.colores[Math.max(0, bandaColor)];
       const nombre = escapar(capitalizar(m.nombre) || m.adm2_id);
       const mmi = Number.isFinite(m.mmi_max) ? numero(m.mmi_max, 1) : "—";
       // A partir de MMI 7,5 la rampa de ShakeMap ya es roja: el texto de la
       // ficha pasa a blanco o queda verde bosque sobre rojo oscuro.
-      const oscuro = banda >= 3;
+      const oscuro = bandaColor >= 3;
       return (
         `<li><div class="barra-fila"><span class="barra-nombre">` +
         `<span class="ficha-mmi${oscuro ? " sobre-oscuro" : ""}" style="background:${color}" ` +
@@ -1540,11 +1822,39 @@ function pintarIncertidumbre(reporte) {
   const bloque = $("bloque-incertidumbre");
   const partes = [];
   if (Number.isFinite(inc.pop_discrepancia_pct)) {
+    // EL VISOR EXPLICABA ESTA CIFRA AL REVES DE COMO LA CALCULA EL PIPELINE.
+    //
+    // El SQL que la produce (`p2_impact/pipeline.py`) es
+    // `100 * |Σ pop_total − Σ pop_alt_worldpop| / Σ pop_alt_worldpop` **sobre
+    // las celdas alcanzadas por el evento**: el desacuerdo entre GHS-POP y
+    // WorldPop dentro del area afectada. El `report.md` del mismo evento lo dice
+    // asi —«Discrepancia entre GHS-POP y WorldPop en el área afectada»— y este
+    // panel decia «difiere del total nacional del mismo producto» y lo atribuia
+    // al «remuestreo a hexágonos». Ni es nacional, ni es el mismo producto, ni
+    // es remuestreo. Dos artefactos del mismo sistema explicando el mismo numero
+    // de dos maneras incompatibles.
+    const pct = inc.pop_discrepancia_pct;
+    // Y CUANDO EL DESACUERDO ES ENORME, SE DICE QUE LO ES.
+    //
+    // Carúpano publica 416,9 % con la misma tipografia de nota al pie que un
+    // 0,8 %. Sobre 3.416 personas expuestas, dos productos de poblacion pueden
+    // discrepar en varias veces la cifra sin que ninguno este roto — pero
+    // enseñarlo como un apunte rutinario invita a leer las cifras del evento con
+    // una confianza que no tienen.
+    const enorme = pct >= 25;
     partes.push(
-      `La población de la malla difiere en <strong>${numero(inc.pop_discrepancia_pct, 1)} %</strong> ` +
-      `del total nacional del mismo producto. La diferencia viene del remuestreo a ` +
-      `hexágonos y se publica en vez de esconderse.`
+      `Dentro del área afectada, GHS-POP y WorldPop difieren en ` +
+      `<strong${enorme ? ' class="cifra-alerta"' : ""}>${numero(pct, 1)} %</strong>. ` +
+      `Son dos mediciones abiertas de la misma población, no un margen del ShakeMap, ` +
+      `y se publica en vez de esconderse.`
     );
+    if (enorme) {
+      partes.push(
+        `Un desacuerdo de este tamaño suele venir de un área afectada pequeña, ` +
+        `donde cualquier diferencia local pesa mucho sobre el total: léanse las ` +
+        `cifras de este reporte como un orden de magnitud.`
+      );
+    }
   }
   if (Array.isArray(inc.notas)) partes.push(...inc.notas.map(escapar));
   bloque.hidden = !partes.length;
@@ -1646,6 +1956,57 @@ window.CENTINELA = {
   //: en ningun log y pone todas las flechas al reves.
   vientoDelFocoAbierto: () =>
     estado.focoAbierto ? vientoDelFoco(estado.focoAbierto) : null,
+  //: Los ids del estilo en orden de dibujo. Es como se comprueba que la
+  //: mascara va **encima** del mapa base y **debajo** del dato: contar pixeles
+  //: en una captura no distingue "el velo esta bien puesto" de "todavia no se
+  //: ha pintado nada".
+  capasDelMapa: () => {
+    const m = estado.mapa;
+    try {
+      return m && m.getStyle() ? m.getStyle().layers.map((c) => c.id) : [];
+    } catch (error) {
+      return [];
+    }
+  },
+  //: Cuantas capas de rotulos hablan espanol y cuantas se quedaron en el idioma
+  //: local. Se mira la EXPRESION puesta en el estilo y no un texto pintado:
+  //: que tesela cae en pantalla depende del encuadre y de la red, y una prueba
+  //: que dependa de eso falla por el sitio equivocado.
+  rotulosEnEspanol: () => {
+    const m = estado.mapa;
+    const cuenta = { tocadas: 0, sinTraducir: 0 };
+    try {
+      for (const capa of m.getStyle().layers) {
+        if (capa.type !== "symbol") continue;
+        const campo = m.getLayoutProperty(capa.id, "text-field");
+        if (campo === undefined || campo === null) continue;
+        const texto = JSON.stringify(campo);
+        if (!texto.includes("name")) continue;
+        if (texto.includes("name:es")) cuenta.tocadas += 1;
+        else cuenta.sinTraducir += 1;
+      }
+    } catch (error) {
+      /* sin estilo cargado se devuelve lo contado hasta aqui */
+    }
+    return cuenta;
+  },
+  //: La caja que el mapa esta enseñando. Para poder afirmar que el encuadre
+  //: inicial mira a America Latina y no al Sahel.
+  encuadre: () => {
+    const m = estado.mapa;
+    try {
+      const b = m.getBounds();
+      return {
+        oeste: b.getWest(),
+        este: b.getEast(),
+        sur: b.getSouth(),
+        norte: b.getNorth(),
+        zoom: m.getZoom(),
+      };
+    } catch (error) {
+      return null;
+    }
+  },
   //: El filtro que MapLibre tiene puesto sobre una capa. Es como se comprueba
   //: que un filtro toca el MAPA y no solo la lista: contar hexagonos en una
   //: captura no distingue "filtrado" de "la animacion no avanzo".
@@ -1812,6 +2173,14 @@ function aplicarAmenaza() {
   } else if (!estado.seleccionado) {
     $("leyenda").hidden = true;
   }
+
+  // La leyenda de simbolos, al final y siempre: es la unica que sabe listar lo
+  // que hay AHORA, y "ahora" acaba de cambiar. Los tres pintores pasan por
+  // aqui, asi que tambien cubre el nacimiento de cada capa.
+  pintarLeyendaSimbolos();
+  // El aviso de cabecera habla de franjas de intensidad, que en modo fuego no
+  // significan nada. Ver `avisoDeLectura`.
+  pintarAvisoDeLectura();
 }
 
 function cambiarAmenaza(modo, { anunciando = true } = {}) {
@@ -2383,6 +2752,59 @@ function crearEstrella(m, nombre = "estrella", relleno = "#1c1b1a", borde = "#ff
 // proporcional es lo correcto; en cuanto se dibuja la malla del evento, la
 // extensión real ya está en el mapa y el círculo sobra: se apaga y queda la
 // estrella, que dice dónde fue y nada más.
+//: De los rasgos que el raton toca, el de menos poblacion.
+//:
+//: Es el criterio correcto para simbolos proporcionales solapados: el circulo
+//: pequeno esta contenido en el grande, asi que si el puntero toca los dos, el
+//: unico que el usuario podia estar apuntando es el pequeno — al grande le
+//: queda toda la corona de fuera para pulsarlo.
+function elMasPequeno(rasgos) {
+  return rasgos.reduce((a, b) =>
+    (Number(b.properties.pop) || 0) < (Number(a.properties.pop) || 0) ? b : a
+  );
+}
+
+//: El rotulo que aparece al pasar por encima de un epicentro.
+//:
+//: Antes no habia ninguno: con veintiun circulos amontonados sobre Centroamerica
+//: y el Pacifico, saber cual se iba a abrir exigia pulsarlo y ver que salia.
+let rotuloEpicentro = null;
+
+function rotularEpicentro(m, rasgo) {
+  const p = rasgo.properties;
+  if (rotuloEpicentro && rotuloEpicentro._centinelaId === p.usgs_id) return;
+  cerrarRotuloDeEpicentro();
+  const banda = Number(p.banda) || 0;
+  const cifra = banda
+    ? `${comoTexto(Number(p.pop) || 0)} en MMI≥${banda}`
+    : "sin población en MMI≥6";
+  rotuloEpicentro = new maplibregl.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    offset: 14,
+    // `rotulo-` y no `globo-`: `.globo` ya es el punto de la marca GeoAI LATAM
+    // en el pie, y compartir clase le habria dado 1,25 rem de lado a esto.
+    className: "rotulo-epicentro",
+  })
+    .setLngLat(rasgo.geometry.coordinates)
+    .setHTML(
+      `<p class="rotulo-epicentro-titulo">${escapar(p.etiqueta)} — ${escapar(p.lugar)}</p>` +
+      `<p class="rotulo-epicentro-cifra mono">${escapar(cifra)}</p>`
+    )
+    .addTo(m);
+  rotuloEpicentro._centinelaId = p.usgs_id;
+}
+
+function cerrarRotuloDeEpicentro() {
+  if (!rotuloEpicentro) return;
+  try {
+    rotuloEpicentro.remove();
+  } catch (error) {
+    /* ya se fue con su mapa */
+  }
+  rotuloEpicentro = null;
+}
+
 function dibujarEpicentros(eventos) {
   const m = estado.mapa;
   const conCoords = eventos.filter((e) => e.lon || e.lat);
@@ -2407,6 +2829,10 @@ function dibujarEpicentros(eventos) {
             iso3: e.iso3 || "",
             utc: e.utc || "",
             etiqueta: `M${String(e.mag).replace(".", ",")}`,
+            // Para el rotulo al pasar por encima: sin esto habria que volver a
+            // buscar el evento por id cada vez que el raton cruza un circulo.
+            lugar: e.lugar || "",
+            banda: bandaTitular(e).banda,
           },
         })),
       },
@@ -2415,6 +2841,20 @@ function dibujarEpicentros(eventos) {
       id: "epicentros-halo",
       type: "circle",
       source: "epicentros",
+      layout: {
+        // EL CIRCULO GRANDE VA DEBAJO.
+        //
+        // Sin esto MapLibre pinta en el orden de la fuente, y el ultimo que
+        // llega tapa a los anteriores. En Centroamerica y en el Pacifico los
+        // circulos se solapan sin remedio —son simbolos proporcionales sobre
+        // una region estrecha— y el resultado era que pulsar la estrella de un
+        // sismo abria otro: probado sobre el M7,4 de San Jose del Palmar y se
+        // abrio el M7,8 de Muisne, cuyo circulo pasaba por encima.
+        //
+        // Ordenados por poblacion descendente, el grande queda al fondo y el
+        // pequeno siempre tiene una corona propia donde se le puede pulsar.
+        "circle-sort-key": ["-", 0, ["get", "pop"]],
+      },
       paint: {
         "circle-radius": [
           "interpolate", ["linear"], ["sqrt", ["max", ["get", "pop"], 1]], 1, 6, 2000, 22,
@@ -2461,9 +2901,19 @@ function dibujarEpicentros(eventos) {
     aplicarAmenaza();
 
     for (const capa of ["epicentros", "epicentros-halo"]) {
-      m.on("click", capa, (ev) => seleccionar(ev.features[0].properties.usgs_id));
-      m.on("mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
-      m.on("mouseleave", capa, () => (m.getCanvas().style.cursor = ""));
+      // `elMasPequeno` y no `features[0]`: el orden de pintado ya deja al
+      // grande debajo, pero un clic dentro del circulo pequeno devuelve **los
+      // dos** rasgos, y el que el usuario quiso es el de menos poblacion — el
+      // que tiene el borde mas cerca del punto que pulso.
+      m.on("click", capa, (ev) => seleccionar(elMasPequeno(ev.features).properties.usgs_id));
+      m.on("mousemove", capa, (ev) => {
+        m.getCanvas().style.cursor = "pointer";
+        rotularEpicentro(m, elMasPequeno(ev.features));
+      });
+      m.on("mouseleave", capa, () => {
+        m.getCanvas().style.cursor = "";
+        cerrarRotuloDeEpicentro();
+      });
     }
   };
 
@@ -2501,6 +2951,95 @@ function avisarSinMapa() {
   anunciar("El mapa no está disponible. Las cifras y las descargas siguen completas.");
 }
 
+//: Todas las capas que dibujan **dato** del sistema, en el orden en que pueden
+//: aparecer. Existe para que la mascara sepa por debajo de quien tiene que
+//: colocarse: velar el mapa base es el objetivo, velar los hexagonos seria el
+//: fallo.
+const CAPAS_DE_DATO = [
+  "contornos",
+  "perimetro-borde",
+  "perimetro",
+  "celdas",
+  "celdas-borde",
+  "epicentros-halo",
+  "epicentros",
+  "observados",
+  "incendios-punto",
+  "incendios",
+  "incendios-borde",
+  "foco-perimetro-borde",
+  "foco-perimetro",
+];
+
+//: El mapa base habla en el idioma de cada sitio.
+//:
+//: Positron rotula con `name`, que es el toponimo local: "Gulf of Mexico",
+//: "Brazil", "Democratic Republic of the Congo", y Libia en arabe. En un
+//: producto escrito integramente en espanol para America Latina eso es una
+//: costura visible, y OpenMapTiles publica `name:es` y `name:latin` en la misma
+//: tesela — no cuesta una peticion mas.
+//:
+//: Solo se tocan las capas cuyo `text-field` ya menciona `name`: los escudos de
+//: carretera rotulan con `ref` y cambiarlos los dejaria en blanco.
+function rotularEnEspanol(m) {
+  const enEspanol = ["coalesce", ["get", "name:es"], ["get", "name:latin"], ["get", "name"]];
+  for (const capa of m.getStyle().layers) {
+    if (capa.type !== "symbol") continue;
+    try {
+      const actual = m.getLayoutProperty(capa.id, "text-field");
+      if (actual === undefined || actual === null) continue;
+      if (!JSON.stringify(actual).includes("name")) continue;
+      m.setLayoutProperty(capa.id, "text-field", enEspanol);
+    } catch (error) {
+      /* el estilo puede cambiar de una version a otra; no es crítico */
+    }
+  }
+}
+
+//: El velo sobre lo que no es America Latina. Ver `CAJA_MASCARA`.
+//:
+//: Un poligono del mundo con un agujero: se dibuja fuera de la caja y nunca
+//: dentro. Va **encima de todo el estilo base** —simbolos incluidos, que es de
+//: donde venian los rotulos de Nigeria y Argelia— y **debajo** de la primera
+//: capa de dato que exista, porque las capas de dato llegan cada una a su ritmo
+//: y alguna puede haberse adelantado a `style.load`.
+function ponerMascara(m) {
+  if (m.getLayer("mascara")) return;
+  const [[oeste, sur], [este, norte]] = CAJA_MASCARA;
+  try {
+    m.addSource("mascara", {
+      type: "geojson",
+      data: {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            // Anillo exterior: el mundo.
+            [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]],
+            // Agujero: la region. Sentido contrario al exterior, como pide GeoJSON.
+            [[oeste, sur], [oeste, norte], [este, norte], [este, sur], [oeste, sur]],
+          ],
+        },
+      },
+    });
+    const primeraDeDato = CAPAS_DE_DATO.find((id) => m.getLayer(id));
+    m.addLayer(
+      {
+        id: "mascara",
+        type: "fill",
+        source: "mascara",
+        paint: { "fill-color": BASE_PAPEL, "fill-opacity": 0.82 },
+      },
+      primeraDeDato
+    );
+  } catch (error) {
+    // Sin mascara el mapa sigue siendo correcto, solo mas ruidoso. No es motivo
+    // para tumbar el arranque.
+    console.warn("máscara:", error && error.message);
+  }
+}
+
 function iniciarMapa() {
   // La red de seguridad de abajo —`setTimeout(listo, 8000)`— vivia **despues**
   // de este `return`, asi que justamente en el caso que tenia que cubrir no
@@ -2528,6 +3067,24 @@ function iniciarMapa() {
       style: ESTILO_BASE,
       ...VISTA_INICIAL,
       attributionControl: false,
+      // LA RUEDA NO ES DEL MAPA, ES DE LA PAGINA.
+      //
+      // El mapa vive a media pantalla de un documento que sigue hacia abajo
+      // —los veintiun reportes, la cobertura, el pie—, y bajar a leerlos
+      // pasaba la rueda por encima del mapa. Medido: un solo gesto de tres
+      // clics movia el zoom de 2,05 a 1,65 **y** la pagina 300 px. Se llegaba
+      // a ver China y Etiopia en un tablero de America Latina, y sin forma de
+      // volver: los unicos controles eran + y −.
+      //
+      // Con `cooperativeGestures` la rueda desplaza y Ctrl+rueda acerca. El
+      // encuadre deja de destruirse por leer.
+      cooperativeGestures: true,
+      // MapLibre rotula esa ayuda en ingles.
+      locale: {
+        "CooperativeGesturesHandler.WindowsHelpText": "Usa Ctrl + rueda para acercar el mapa",
+        "CooperativeGesturesHandler.MacHelpText": "Usa ⌘ + rueda para acercar el mapa",
+        "CooperativeGesturesHandler.MobileHelpText": "Usa dos dedos para mover el mapa",
+      },
     });
   } catch (error) {
     console.warn("mapa:", error && error.message);
@@ -2565,6 +3122,7 @@ function iniciarMapa() {
   // Y hace falta: este sistema publica distancias —"41 km al SO de Quellon", "a
   // 27 km del epicentro" en cada celda— y sin escala no hay como juzgarlas.
   mapa.addControl(new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }), "top-right");
+  engancharVolverAlEncuadre(mapa);
 
   // Positron viene en gris neutro. Sobre un fondo de arena cálida canta, y su
   // agua es casi del mismo tono que su tierra — inservible para un sistema
@@ -2584,6 +3142,8 @@ function iniciarMapa() {
         /* el estilo puede cambiar; no es crítico */
       }
     }
+    rotularEnEspanol(mapa);
+    ponerMascara(mapa);
   });
 
   // El aviso se quita cuando el mapa dibuja algo, no cuando termina de cargarlo
@@ -2684,8 +3244,12 @@ function pintarResumenCobertura(datos, eventos) {
     `<span class="apunte">precalculadas, antes de que ocurra nada</span></div>` +
     `<div class="metrica"><span class="cabeza">${iconoSvg("desvio")}` +
     `<span class="valor">${porcentaje(resumen.peor_desvio_pct)}</span></span>` +
-    `<span class="etiqueta">peor desvío vs. cifra oficial</span>` +
-    `<span class="apunte">el de Venezuela, y está explicado</span></div>` +
+    // SIN APUNTE. Decia «el de Venezuela, y está explicado» y la explicacion no
+    // estaba en ninguna parte del visor: ni un enlace, ni una nota, ni una
+    // columna. Prometer una explicacion que no existe es peor que no ofrecerla.
+    // La tolerancia por pais vive en `cobertura.json` y en los manifiestos; su
+    // sitio es un documento metodologico, no esta tarjeta.
+    `<span class="etiqueta">peor desvío vs. cifra oficial</span></div>` +
     `<div class="metrica"><span class="cabeza">${iconoSvg("reportes")}` +
     `<span class="valor">${conReporte}</span></span>` +
     `<span class="etiqueta">países con reporte publicado</span></div>`;
@@ -2765,10 +3329,12 @@ async function cargarCobertura(eventos) {
     if (faltan.length) {
       frases.push(`Falta construir el activo de ${listar(faltan)}.`);
     }
+    // La frase terminaba en «una tolerancia que nadie ve no vigila nada», y la
+    // tolerancia era justo lo unico que esta tabla NO enseña. La maxima seguia
+    // siendo cierta y el parrafo que la decia era su contraejemplo.
     frases.push(
       "El desvío compara la población que mide el activo contra la cifra " +
-      "oficial de referencia del país. Se publica aunque incomode: una " +
-      "tolerancia que nadie ve no vigila nada."
+      "oficial de referencia del país, y se publica aunque incomode."
     );
     $("cobertura-nota").textContent = frases.join(" ");
 
@@ -2796,20 +3362,34 @@ async function cargarCobertura(eventos) {
 //: Los cortes no son redondos por gusto: 90 dias es la ventana en la que USGS
 //: sigue revisando un ShakeMap —la misma que usa el repaso de versiones— y doce
 //: meses es el marco en que se piensa "este ano".
+//: El catalogo va de enero de 2012 a agosto de 2026, y la ventana solo ofrecia
+//: "Todo", "12 meses" y "90 días": las dos ultimas devolvian los mismos tres
+//: reportes y dieciocho de veintiuno solo eran alcanzables con "Todo". Con cinco
+//: y diez anos la ventana empieza a separar el catalogo en vez de partirlo en
+//: "lo de este verano" y "el resto".
 const VENTANAS = {
   todo: { texto: "Todo", dias: null },
+  decada: { texto: "10 años", dias: 3653 },
+  lustro: { texto: "5 años", dias: 1826 },
   ano: { texto: "12 meses", dias: 365 },
   trimestre: { texto: "90 días", dias: 90 },
 };
 
-//: ¿Cae esta fila dentro de la ventana elegida?
+//: ¿Cae esto dentro de la ventana elegida?
+//:
+//: Acepta una fila de la lista o el objeto del evento: los dos llevan `utc`, y
+//: el `dataset` de la fila salio de ese mismo objeto. Existe asi porque el
+//: panorama del panel lateral tiene que filtrarse con **exactamente** el mismo
+//: criterio que la rejilla de tarjetas, y dos implementaciones del mismo filtro
+//: divergen en cuanto nadie las compara — que es justo lo que habia pasado: la
+//: rejilla obedecia y el panel de al lado seguia diciendo "21 reportes".
 //:
 //: Sin sello de fecha se deja pasar. Un reporte cuyo `utc` no se pudo leer es un
 //: fallo del dato, no algo que deba desaparecer de la lista sin decir nada.
-function enLaVentana(li) {
+function enLaVentana(cosa) {
   const dias = (VENTANAS[estado.ventana] || VENTANAS.todo).dias;
   if (!dias) return true;
-  const utc = li.dataset.utc;
+  const utc = cosa.dataset ? cosa.dataset.utc : cosa.utc;
   if (!utc) return true;
   const t = Date.parse(utc);
   if (!Number.isFinite(t)) return true;
@@ -2827,16 +3407,30 @@ const ORDENES = {
 //: `getBounds` puede devolver una caja que cruza el antimeridiano cuando el
 //: mapa da la vuelta; a la escala de este visor no pasa, pero se compara con
 //: `contains` de MapLibre en vez de a mano para no tener que decidirlo.
-function enElEncuadre(li) {
+function enElEncuadre(cosa) {
   const m = estado.mapa;
-  const lon = Number(li.dataset.lon);
-  const lat = Number(li.dataset.lat);
+  const datos = cosa.dataset || cosa;
+  const lon = Number(datos.lon);
+  const lat = Number(datos.lat);
   if (!m || !Number.isFinite(lon) || !Number.isFinite(lat)) return true;
   try {
     return m.getBounds().contains([lon, lat]);
   } catch (error) {
     return true;
   }
+}
+
+//: Los tres filtros de la lista de reportes, en un solo sitio.
+//:
+//: Se aplica igual a una fila de la lista que al objeto del evento. Que sea uno
+//: solo es el punto: el panel lateral quedo un mes diciendo "21 reportes
+//: publicados" y nombrando un sismo de Colombia mientras la cabecera decia "3
+//: reportes" y el mapa ensenaba solo Venezuela.
+function pasaFiltros(cosa) {
+  const datos = cosa.dataset || cosa;
+  const suyo = !estado.paisFiltrado || datos.iso3 === estado.paisFiltrado;
+  const dentro = !estado.soloEnVista || enElEncuadre(cosa);
+  return suyo && dentro && enLaVentana(cosa);
 }
 
 //: Un solo sitio que decide que se ve y en que orden.
@@ -2863,9 +3457,7 @@ function refrescarLista({ anunciando = true } = {}) {
 
   let visibles = 0;
   for (const li of filas) {
-    const suyo = !estado.paisFiltrado || li.dataset.iso3 === estado.paisFiltrado;
-    const dentro = !estado.soloEnVista || enElEncuadre(li);
-    li.hidden = !(suyo && dentro && enLaVentana(li));
+    li.hidden = !pasaFiltros(li);
     if (!li.hidden) visibles += 1;
   }
 
@@ -2893,23 +3485,42 @@ function refrescarLista({ anunciando = true } = {}) {
 
   const vacio = $("sin-resultados");
   vacio.hidden = visibles > 0;
-  if (!visibles) {
-    // El aviso nombra el filtro que dejo la lista vacia, y no uno cualquiera.
-    // Decir "ese pais no tiene reportes" cuando lo que sobra es la ventana
-    // temporal manda a cambiar lo que no era.
-    const ventana = VENTANAS[estado.ventana] || VENTANAS.todo;
-    vacio.textContent = estado.soloEnVista
-      ? "Ningún reporte cae dentro de lo que el mapa está enseñando. Aleja o mueve el mapa."
-      : ventana.dias
-        ? `Ningún reporte en los últimos ${ventana.texto.toLowerCase()}` +
-          `${estado.paisFiltrado ? " en ese país" : ""}. Prueba con «Todo».`
-        : "Ese país todavía no tiene reportes publicados.";
-  }
+  if (!visibles) vacio.textContent = motivoDeVacio();
+
+  // Y EL PANEL DE AL LADO, CON EL MISMO FILTRO.
+  //
+  // `pintarPanorama` se llamaba una sola vez al arrancar y nunca mas. Con
+  // "Venezuela (3)" puesto, la cabecera decia "3 reportes publicados", el mapa
+  // dejaba tres epicentros, la rejilla de abajo dejaba tres tarjetas — y el
+  // panel pegado al mapa seguia diciendo "21 reportes publicados", "mayor
+  // exposicion registrada: San Jose del Palmar, Colombia" y listando los
+  // veintiuno. Dos cifras contradictorias a diez centimetros una de otra.
+  pintarPanorama((estado.eventos || []).filter(pasaFiltros));
+
   aplicarFiltrosAlMapa();
   pintarLimpiar();
   if (anunciando) {
     anunciar(`${visibles} ${visibles === 1 ? "reporte" : "reportes"} en la lista.`);
   }
+}
+
+//: Por que la lista se quedo vacia, nombrando el filtro culpable.
+//:
+//: Decir "ese pais no tiene reportes" cuando lo que sobra es la ventana temporal
+//: manda a cambiar lo que no era. Vive aparte porque lo usan dos sitios: la
+//: rejilla de tarjetas y el panorama del panel lateral.
+function motivoDeVacio() {
+  if (estado.soloEnVista) {
+    return "Ningún reporte cae dentro de lo que el mapa está enseñando. Aleja o mueve el mapa.";
+  }
+  const ventana = VENTANAS[estado.ventana] || VENTANAS.todo;
+  if (ventana.dias) {
+    return (
+      `Ningún reporte en los últimos ${ventana.texto.toLowerCase()}` +
+      `${estado.paisFiltrado ? " en ese país" : ""}. Prueba con «Todo».`
+    );
+  }
+  return "Ese país todavía no tiene reportes publicados.";
 }
 
 function aplicarFiltro(iso3) {
@@ -3047,8 +3658,75 @@ function dibujarObservados(eventos) {
 //
 // Va junta porque la pregunta que se hace quien mira es una sola: "¿que es
 // esto?". Tres cajas separadas obligan a buscar en cual esta la respuesta.
+//: El aviso de cabecera dice como leer LO QUE SE ESTA ENSENANDO.
+//:
+//: Era fijo y hablaba de "cada franja de intensidad". En modo fuego el mapa no
+//: dibuja ninguna franja de intensidad: dibuja celdas donde un satelite vio
+//: calor en 24 h. El aviso mas importante del tablero —el que separa exposicion
+//: de dano— quedaba describiendo otro mapa.
+//:
+//: Lo que **no** cambia es la primera frase. "Exposicion no es dano" vale para
+//: las dos amenazas y es la razon de ser del aviso; lo que se adapta es que
+//: cuenta la cifra debajo.
+function pintarAvisoDeLectura() {
+  const texto = $("aviso-lectura-texto");
+  if (!texto) return;
+  texto.innerHTML =
+    estado.amenaza === "fuego"
+      ? `<strong>Exposición no es daño.</strong> Un foco es lo que un satélite ` +
+        `vio arder en 24 h: ni área quemada, ni un incendio confirmado, ni una ` +
+        `evacuación. Informa cuánta población e infraestructura hay <em>dentro</em> ` +
+        `de esas celdas.`
+      : `<strong>Exposición no es daño.</strong> No es una alerta temprana, no ` +
+        `estima víctimas y no dictamina habitabilidad. Informa cuánta población e ` +
+        `infraestructura quedó <em>dentro</em> de cada franja de intensidad.`;
+}
+
+//: Las entradas de la leyenda, para el estado en que esta el mapa AHORA.
+//:
+//: La caja listaba las tres siempre. En modo fuego seguia explicando "Sismo con
+//: reporte" y "Sismo visto, sin reporte" —dos simbolos que ahi no se dibujan— y
+//: con un evento abierto explicaba el panorama mientras el mapa ensenaba una
+//: malla de intensidad, compitiendo ademas con la leyenda de la capa activa.
+//:
+//: Una leyenda que nombra lo que no esta ensena a no leer la leyenda.
+//:
+//: Los textos dicen **como distinguirlos**, no solo que son. "El círculo crece
+//: con la población expuesta" no ayudaba a separar un reporte sin exposicion de
+//: un sismo menor: los dos son una estrella. El color y el tamano son la
+//: diferencia, asi que se nombran.
+function entradasDeLeyenda() {
+  const epicentro = {
+    sim: "sim-epicentro",
+    titulo: "Sismo con reporte",
+    nota: "Estrella roja con círculo. El círculo crece con la población expuesta",
+  };
+  const observado = {
+    sim: "sim-observado",
+    titulo: "Sismo visto, sin reporte",
+    nota: "Estrella gris pequeña. Por debajo de M5,5: se vio y no se midió su impacto",
+  };
+  const foco = {
+    sim: "sim-fuego",
+    titulo: "Foco activo",
+    nota: "Detección de satélite en 24 h. El color es la energía",
+  };
+
+  if (estado.amenaza === "fuego") {
+    // En modo fuego los epicentros se quedan de contexto tenue —lo dice
+    // `aplicarAmenaza`—, asi que siguen mereciendo una linea. Los observados no
+    // se dibujan y no la merecen.
+    return [foco, epicentro];
+  }
+  const entradas = [epicentro];
+  const interruptor = $("interruptor-observados");
+  // La entrada del sismo menor solo si su capa puede estar encendida. Explicar
+  // un simbolo que el usuario no tiene forma de ver es ruido.
+  if (interruptor && !interruptor.hidden) entradas.push(observado);
+  return entradas;
+}
+
 function pintarLeyendaSimbolos() {
-  if ($("leyenda-simbolos")) return;
   const anfitrion = $("controles-mapa") || $("lienzo");
   if (!anfitrion) return;
 
@@ -3058,24 +3736,44 @@ function pintarLeyendaSimbolos() {
   // Abierta en pantalla ancha, donde sobra sitio y la pregunta "¿que es esto?"
   // merece respuesta sin pedirla. El `open` se decide en JS porque CSS no puede
   // ponerlo ni quitarlo.
-  const caja = document.createElement("details");
-  caja.className = "leyenda leyenda-simbolos";
-  caja.id = "leyenda-simbolos";
-  caja.open = window.matchMedia("(min-width: 48rem)").matches;
+  let caja = $("leyenda-simbolos");
+  if (!caja) {
+    caja = document.createElement("details");
+    caja.className = "leyenda leyenda-simbolos";
+    caja.id = "leyenda-simbolos";
+    caja.open = window.matchMedia("(min-width: 48rem)").matches;
+    anfitrion.appendChild(caja);
+  }
+
+  // Con un evento abierto manda la leyenda de la capa: la caja se pliega para
+  // no discutirle el sitio, pero no se quita —el epicentro sigue en el mapa y
+  // quien lo pregunte tiene donde mirar.
+  //
+  // El plegado se marca, y solo se deshace lo que se hizo: si el usuario la
+  // cerro a mano, al volver al panorama sigue cerrada. Un panel que se reabre
+  // solo cada vez que cambia algo es un panel que hay que cerrar dos veces.
+  if (estado.seleccionado) {
+    if (caja.open) {
+      caja.open = false;
+      caja.dataset.plegadaPorEvento = "1";
+    }
+  } else if (caja.dataset.plegadaPorEvento) {
+    delete caja.dataset.plegadaPorEvento;
+    caja.open = window.matchMedia("(min-width: 48rem)").matches;
+  }
+
   caja.innerHTML =
     `<summary class="leyenda-titulo mono">Qué hay en el mapa</summary>` +
     `<ul class="leyenda-simbolos-lista">` +
-    `<li><span class="sim sim-epicentro" aria-hidden="true"></span>` +
-    `<span><strong>Sismo con reporte</strong><br>` +
-    `<span class="menor">El círculo crece con la población expuesta</span></span></li>` +
-    `<li><span class="sim sim-observado" aria-hidden="true"></span>` +
-    `<span><strong>Sismo visto, sin reporte</strong><br>` +
-    `<span class="menor">Por debajo de M5,5. Se vio y no se midió su impacto</span></span></li>` +
-    `<li><span class="sim sim-fuego" aria-hidden="true"></span>` +
-    `<span><strong>Foco activo</strong><br>` +
-    `<span class="menor">Detección de satélite en 24 h. El color es la energía</span></span></li>` +
+    entradasDeLeyenda()
+      .map(
+        (e) =>
+          `<li><span class="sim ${e.sim}" aria-hidden="true"></span>` +
+          `<span><strong>${e.titulo}</strong><br>` +
+          `<span class="menor">${e.nota}</span></span></li>`
+      )
+      .join("") +
     `</ul>`;
-  anfitrion.appendChild(caja);
 }
 
 function pintarInterruptorObservados(eventos, ventanaDias) {
@@ -3094,6 +3792,9 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
   caja.hidden = estado.amenaza === "fuego";
 
   anfitrion.appendChild(caja);
+  // La leyenda solo explica el sismo menor si su interruptor existe, y acaba de
+  // nacer.
+  pintarLeyendaSimbolos();
 
   caja.querySelector("input").addEventListener("change", (ev) => {
     const m = estado.mapa;
@@ -3443,10 +4144,19 @@ function pintarListaFocos({ anunciando = true } = {}) {
 
   const cuenta = $("cuenta-focos");
   if (cuenta) {
+    // LOS FOCOS SIN PAIS SE CUENTAN EN VOZ ALTA.
+    //
+    // `paisDelFoco` ya explica por que un foco fuera de los activos construidos
+    // no aparece al elegir un pais: no se sabe si es de ese. Lo que faltaba era
+    // decir CUANTOS son. Medido en la pagina publicada: los diecisiete paises
+    // del desplegable sumaban 4.104 y el total era 6.239 — un tercio de los
+    // focos no lo alcanza ningun filtro, y nada en pantalla lo insinuaba.
+    const sinPais = estado.focos.filter((f) => enLaVentanaFuego(f) && !f.iso3).length;
+    const apunte = !estado.paisFuego && sinPais ? ` · ${numero(sinPais)} sin país asignado` : "";
     cuenta.textContent = dentro.length
-      ? listados.length < dentro.length
-        ? numero(listados.length) + " de " + numero(dentro.length) + " focos"
-        : numero(dentro.length) + (dentro.length === 1 ? " foco" : " focos")
+      ? (listados.length < dentro.length
+          ? numero(listados.length) + " de " + numero(dentro.length) + " focos"
+          : numero(dentro.length) + (dentro.length === 1 ? " foco" : " focos")) + apunte
       : "";
   }
 
@@ -3623,6 +4333,7 @@ function encuadrarLoFiltrado() {
       }
     }
     if (encuadrarPuntos(puntos, { maxZoom: 8 })) anotarCamara("filtro:fuego");
+    else devolverAlPanoramaVacio();
     return;
   }
 
@@ -3633,6 +4344,23 @@ function encuadrarLoFiltrado() {
     if (Number.isFinite(lon) && Number.isFinite(lat)) puntos.push([lon, lat]);
   }
   if (encuadrarPuntos(puntos, { maxZoom: 7 })) anotarCamara("filtro:sismos");
+  else devolverAlPanoramaVacio();
+}
+
+//: UN FILTRO SIN RESULTADOS TAMBIEN MUEVE LA CAMARA.
+//:
+//: `encuadrarPuntos` devuelve `false` cuando no le queda ni un punto, y nadie
+//: recogia ese `false`: la camara se quedaba donde la habia dejado el filtro
+//: anterior. Medido en la pagina publicada: con Cuba + 90 dias el mapa se
+//: quedaba mirando Venezuela y Colombia, vacio, sin un solo simbolo y sin
+//: ningun aviso encima. Se lee como una pagina rota, no como un filtro que no
+//: encontro nada.
+//:
+//: Volver a la region es la unica respuesta honesta: "aqui es donde habria algo
+//: si lo hubiera".
+function devolverAlPanoramaVacio() {
+  volverAlEncuadre(estado.mapa, VUELO);
+  anotarCamara("filtro:vacio");
 }
 
 //: Cuantos rasgos deja ver el filtro, para poder decirlo al lado del control.
@@ -3718,6 +4446,8 @@ function filtroCambio() {
   // de toda América Latina con Brasil seleccionado.
   refrescarTablero();
   encuadrarLoFiltrado();
+  // Y la barra de direcciones, para que la vista filtrada se pueda mandar.
+  escribirUrl();
 }
 
 function sincronizarFiltros() {
@@ -3729,36 +4459,44 @@ function sincronizarFiltros() {
   pintarLimpiar();
 }
 
+//: Deja los filtros de la amenaza activa como al llegar.
+//:
+//: Vive suelta y no dentro del `click` de su boton porque ahora hay dos sitios
+//: que la ofrecen: la barra de filtros y el aviso de "ningun reporte" del panel
+//: lateral. Quien se queda sin resultados tiene que poder salir desde donde
+//: esta mirando.
+function quitarFiltros() {
+  if (estado.amenaza === "fuego") {
+    estado.paisFuego = "";
+    estado.ventanaFuego = "h24";
+  } else {
+    estado.paisFiltrado = "";
+    estado.ventana = "todo";
+  }
+  // La extensión se limpia en las dos amenazas: la casilla es una sola y
+  // ahora filtra las dos. Dejarla marcada al "quitar filtros" era dejar un
+  // filtro puesto con el botón diciendo que no queda ninguno.
+  estado.soloEnVista = false;
+  const casilla = $("solo-en-vista");
+  if (casilla) casilla.checked = false;
+  // Por `filtroCambio` y no repintando a mano: es el punto que mueve lista,
+  // mapa Y tablero a la vez. Duplicarlo aquí es como se quedó el tablero
+  // fuera del resto durante todo este tiempo.
+  filtroCambio();
+  // Los desplegables se repintan: limpiar el estado y dejar el control
+  // enseñando "Colombia" es la misma divergencia que este visor persigue
+  // entre lo que un control dice y lo que el sistema hace.
+  sincronizarFiltros();
+  anunciar("Filtros quitados.");
+}
+
 function pintarLimpiar() {
   const boton = $("limpiar-filtros");
   if (!boton) return;
   boton.hidden = !hayFiltros();
   if (!boton.dataset.enganchado) {
     boton.dataset.enganchado = "1";
-    boton.addEventListener("click", () => {
-      if (estado.amenaza === "fuego") {
-        estado.paisFuego = "";
-        estado.ventanaFuego = "h24";
-      } else {
-        estado.paisFiltrado = "";
-        estado.ventana = "todo";
-      }
-      // La extensión se limpia en las dos amenazas: la casilla es una sola y
-      // ahora filtra las dos. Dejarla marcada al "quitar filtros" era dejar un
-      // filtro puesto con el botón diciendo que no queda ninguno.
-      estado.soloEnVista = false;
-      const casilla = $("solo-en-vista");
-      if (casilla) casilla.checked = false;
-      // Por `filtroCambio` y no repintando a mano: es el punto que mueve lista,
-      // mapa Y tablero a la vez. Duplicarlo aquí es como se quedó el tablero
-      // fuera del resto durante todo este tiempo.
-      filtroCambio();
-      // Los desplegables se repintan: limpiar el estado y dejar el control
-      // enseñando "Colombia" es la misma divergencia que este visor persigue
-      // entre lo que un control dice y lo que el sistema hace.
-      sincronizarFiltros();
-      anunciar("Filtros quitados.");
-    });
+    boton.addEventListener("click", () => quitarFiltros());
   }
 }
 
@@ -3776,7 +4514,12 @@ function pintarFiltroPaises(eventos, nombres) {
   );
   poblarSelect(
     "filtro-paises",
-    [["", "Todos los países", eventos.length], ...orden.map(([iso, n]) => [iso, nombres.get(iso) || iso, n])],
+    // Sin cuenta en la opcion "todos": el numero que llevaba eran los REPORTES
+    // —"Todos los países (21)" con quince paises en la lista—, y la fila ya
+    // publica esa cifra en `#cuenta-lista`, a dos palmos. Las opciones de cada
+    // pais si la llevan: ahi "(3)" son los reportes de ese pais y no hay con que
+    // confundirla.
+    [["", "Todos los países", null], ...orden.map(([iso, n]) => [iso, nombres.get(iso) || iso, n])],
     estado.paisFiltrado,
     (valor) => {
       estado.paisFiltrado = valor;
@@ -3874,7 +4617,10 @@ function pintarControlesFocos() {
   );
   poblarSelect(
     "filtro-paises-fuego",
-    [["", "Todos los países", estado.focos.length], ...orden.map(([iso, n]) => [iso, nombrePais(iso), n])],
+    // Igual que en sismos, y aqui ademas la cuenta era enganosa por partida
+    // doble: los focos con pais suman 4.104 de 6.239, asi que "(6239)" no era ni
+    // siquiera la suma de las opciones de debajo. `#cuenta-focos` lo dice.
+    [["", "Todos los países", null], ...orden.map(([iso, n]) => [iso, nombrePais(iso), n])],
     estado.paisFuego,
     (valor) => {
       estado.paisFuego = valor;
@@ -4697,12 +5443,23 @@ function pintarEnVivo() {
   // a la Fase 1 no la traen, y publicar ceros diria "no hay bosque" donde lo
   // honesto es no decir nada.
   const suelo = v.suelo || {};
-  const reparto = [
+  const clases = [
     ["arbolado", suelo.arbolado],
     ["pastizal", suelo.pastizal],
     ["cultivo", suelo.cultivo],
     ["humedal", suelo.humedal],
-  ].filter(([, pct]) => Number(pct) >= 1);
+  ];
+  // LAS BARRAS TIENEN QUE SUMAR CIEN, O DECIR QUE NO SUMAN.
+  //
+  // Se enseñaban tres —arbolado 50 %, pastizal 24 %, cultivo 8 %— y se leian
+  // como un reparto completo del fuego. Suman 82: el resto es matorral, suelo
+  // desnudo, urbano y las clases que el activo no nombra, mas el humedal cuando
+  // no llega al 1 % y se descarta. Un reparto al que le falta una quinta parte
+  // sin decirlo hace pensar que la mitad de America Latina arde en bosque
+  // cuando la cifra honesta es "la mitad de la energia MEDIDA".
+  const nombradas = clases.reduce((t, [, pct]) => t + (Number(pct) || 0), 0);
+  const resto = Math.max(0, 100 - nombradas);
+  const reparto = [...clases, ["otros", resto]].filter(([, pct]) => Number(pct) >= 1);
 
   if (v.incendios && v.incendios.celdas) {
     partes.push(
@@ -4785,8 +5542,15 @@ function pintarEnVivo() {
   caja.innerHTML =
     `<p class="eyebrow eyebrow-vivo"><span class="pulso" aria-hidden="true"></span>Ahora mismo</p>` +
     `<div class="metricas">${partes.join("")}</div>` +
-    `<p class="pie-vivo">Cada cifra lleva cuándo se revisó. La cadencia real ` +
-    `—medida, no la prometida— está en <a href="status.html">Estado</a>.</p>`;
+    // El enlace a Estado solo donde Estado responde. En modo fuego la frase
+    // prometia "la cadencia real está en Estado" y Estado no publica nada del
+    // pipeline de fuego: solo latencia sismica y las revisiones del vigia. Una
+    // promesa que el enlace no cumple gasta la confianza del resto de la
+    // pagina, que es justo lo que este tablero no puede permitirse.
+    (estado.amenaza === "fuego"
+      ? `<p class="pie-vivo">Cada cifra lleva cuándo se revisó.</p>`
+      : `<p class="pie-vivo">Cada cifra lleva cuándo se revisó. La cadencia real ` +
+        `—medida, no la prometida— está en <a href="status.html">Estado</a>.</p>`);
   caja.hidden = false;
 
   for (const boton of caja.querySelectorAll(".metrica-viva")) {

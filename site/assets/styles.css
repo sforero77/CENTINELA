@@ -307,6 +307,23 @@ a:hover { color: var(--verde-vivo); }
   box-shadow: var(--sombra);
 }
 
+/* El rotulo que sale al pasar por encima de un epicentro. Es un apunte, no una
+   ficha: mas apretado que el resto de globos y sin puntero para el raton, para
+   que no se robe a si mismo el `mouseleave` que lo cierra. */
+.rotulo-epicentro { pointer-events: none; }
+.rotulo-epicentro .maplibregl-popup-content { padding: 0.45rem 0.65rem; }
+.rotulo-epicentro-titulo {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--bosque);
+}
+.rotulo-epicentro-cifra {
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  color: var(--tenue);
+}
+
 .lateral {
   border-left: 1px solid var(--borde);
   background: var(--crema);
@@ -953,6 +970,10 @@ thead th {
 .num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--tipo-mono); font-size: 0.8rem; }
 .cumple { color: var(--verde-vivo); }
 .incumple { color: var(--alarma); }
+
+/* Una discrepancia enorme entre los dos productos de poblacion no puede leerse
+   con la misma tipografia que un 0,8 %. Ver `pintarIncertidumbre`. */
+.cifra-alerta { color: var(--alarma); }
 
 .latidos { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
 
