@@ -1,4 +1,4 @@
-# Exposición sísmica — M7,4 · 5 km al S de San José del Palmar, Colombia
+# Exposición sísmica — M7,4 · 2 km al SE de San José del Palmar, Colombia
 
 **Evento USGS:** `us6000tjl2` · **Origen:** 2026-08-10T12:34:28Z UTC · **Profundidad:** 110,3 km
 
@@ -10,17 +10,17 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 7 millones |
+| Población en MMI≥6 | 7,2 millones |
 | Población en MMI≥7 | 2,4 millones |
 | Población en MMI≥8 | 0 |
-| Edificaciones en MMI≥7 | 440 mil |
-| Sedes de salud en MMI≥7 | 518 |
-| Sedes educativas en MMI≥7 | 998 |
-| Vías primarias y secundarias en MMI≥7 | 980 km |
-| Vías locales en MMI≥7 | 7.500 km |
-| Superficie construida en MMI≥7 | 69,8 km² |
+| Edificaciones en MMI≥7 | 450 mil |
+| Sedes de salud en MMI≥7 | 516 |
+| Sedes educativas en MMI≥7 | 1.003 |
+| Vías primarias y secundarias en MMI≥7 | 1.000 km |
+| Vías locales en MMI≥7 | 7.800 km |
+| Superficie construida en MMI≥7 | 70,3 km² |
 
-El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 440 mil edificaciones registradas. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 450 mil edificaciones registradas. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
@@ -44,16 +44,16 @@ De la población en intensidad MMI≥7, alrededor de **290 mil** personas tienen
 | 12 | La Unión | `76400` | 7,5 | 35 mil |
 | 13 | Montenegro | `63470` | 7,0 | 32 mil |
 | 14 | Quimbaya | `63594` | 7,0 | 32 mil |
-| 15 | Chinchiná | `17174` | 7,0 | 29 mil |
+| 15 | Chinchiná | `17174` | 7,0 | 30 mil |
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **0**. USGS declara para este evento alerta **naranja**, con 1.400 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
+- **Deslizamiento.** Población en celdas donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **0**. USGS declara para este evento alerta **naranja**, con 1.700 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
 - **Licuefacción.** Población en celdas donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **1,6 millones**. USGS declara para este evento alerta **roja**, con 460 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
-Fuente: producto *Ground Failure* de USGS (v7), dominio público.
+Fuente: producto *Ground Failure* de USGS (v8), dominio público.
 
 ## Referencia cruzada
 
@@ -63,7 +63,14 @@ Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado —su fi
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,3 %**.
+
+## Cambios frente a la versión anterior
+
+- ShakeMap: v7 → v8
+- Ground Failure: v7 → v8
+- Población en MMI≥6: 7 millones → 7,2 millones
+- Edificaciones en MMI≥7: 440 mil → 450 mil
 
 ## Descargas
 
@@ -72,10 +79,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v7**
-- Ground Failure consumido: **v7**
-- Manifiesto de exposición: `col-v0.5`
-- Pipeline: `0.1.0` · Generado: 2026-08-25T17:40:39Z
+- ShakeMap consumido: **v8**
+- Ground Failure consumido: **v8**
+- Manifiesto de exposición: `col-v0.6`
+- Pipeline: `0.1.0` · Generado: 2026-09-01T21:53:34Z
 
 ## Advertencias
 

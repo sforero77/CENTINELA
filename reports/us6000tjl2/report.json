@@ -5,61 +5,61 @@
     "mag": 7.4,
     "depth_km": 110.285,
     "utc": "2026-08-10T12:34:28Z",
-    "lugar": "5 km al S de San José del Palmar, Colombia",
+    "lugar": "2 km al SE de San José del Palmar, Colombia",
     "pager_alert": "red",
     "lon": -76.2422,
     "lat": 4.8436
   },
   "inputs": {
-    "shakemap_version": 7,
-    "groundfailure_version": 7,
-    "exposure_manifest": "col-v0.5"
+    "shakemap_version": 8,
+    "groundfailure_version": 8,
+    "exposure_manifest": "col-v0.6"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 6960085.743641048,
-    "pop_mmi7p": 2415793.4590726923,
+    "pop_mmi6p": 7194539.766747381,
+    "pop_mmi7p": 2424287.2030194234,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 289256.92600052594,
-    "bld_mmi7p": 444424.0,
-    "built_m2_mmi7p": 69814813.0,
-    "health_mmi7p": 518.0,
-    "edu_mmi7p": 998.0,
-    "road_km_mmi7p": 8502.889960662429,
-    "road_km_principal_mmi7p": 984.736810568096,
+    "pop_65p_mmi7p": 289947.45064393966,
+    "bld_mmi7p": 448789.0,
+    "built_m2_mmi7p": 70306557.0,
+    "health_mmi7p": 516.0,
+    "edu_mmi7p": 1003.0,
+    "road_km_mmi7p": 8791.335779124453,
+    "road_km_principal_mmi7p": 1015.2104602015536,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 1600028.0208497662
+    "pop_lq_alta": 1602162.1454312252
   },
   "top_municipios": [
     {
       "adm2_id": "66001",
       "nombre": "Pereira",
       "mmi_max": 7.5,
-      "pop_mmi7p": 498099.9250317244,
-      "pop_banda": 498099.9250317244
+      "pop_mmi7p": 498353.04256354645,
+      "pop_banda": 498353.04256354645
     },
     {
       "adm2_id": "76109",
       "nombre": "Buenaventura",
       "mmi_max": 7.0,
-      "pop_mmi7p": 401081.3250222858,
-      "pop_banda": 401081.3250222858
+      "pop_mmi7p": 401098.31587321125,
+      "pop_banda": 401098.31587321125
     },
     {
       "adm2_id": "63001",
       "nombre": "Armenia",
       "mmi_max": 7.0,
-      "pop_mmi7p": 339027.23267125804,
-      "pop_banda": 339027.23267125804
+      "pop_mmi7p": 337713.9560095044,
+      "pop_banda": 337713.9560095044
     },
     {
       "adm2_id": "76834",
       "nombre": "Tuluá",
       "mmi_max": 7.0,
-      "pop_mmi7p": 256921.917987613,
-      "pop_banda": 256921.917987613
+      "pop_mmi7p": 263098.86719076894,
+      "pop_banda": 263098.86719076894
     },
     {
       "adm2_id": "66170",
@@ -79,22 +79,22 @@
       "adm2_id": "27001",
       "nombre": "Quibdó",
       "mmi_max": 7.0,
-      "pop_mmi7p": 111742.45586497057,
-      "pop_banda": 111742.45586497057
+      "pop_mmi7p": 111747.45435422566,
+      "pop_banda": 111747.45435422566
     },
     {
       "adm2_id": "66682",
       "nombre": "Santa Rosa De Cabal",
       "mmi_max": 7.0,
-      "pop_mmi7p": 67775.61170557514,
-      "pop_banda": 67775.61170557514
+      "pop_mmi7p": 68465.74396868609,
+      "pop_banda": 68465.74396868609
     },
     {
       "adm2_id": "63401",
       "nombre": "La Tebaida",
       "mmi_max": 7.0,
-      "pop_mmi7p": 54247.76072970964,
-      "pop_banda": 54247.76072970964
+      "pop_mmi7p": 54234.688553707674,
+      "pop_banda": 54234.688553707674
     },
     {
       "adm2_id": "76895",
@@ -135,17 +135,17 @@
       "adm2_id": "17174",
       "nombre": "Chinchiná",
       "mmi_max": 7.0,
-      "pop_mmi7p": 29454.54325528536,
-      "pop_banda": 29454.54325528536
+      "pop_mmi7p": 29636.281944232993,
+      "pop_banda": 29636.281944232993
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 3.1,
+    "pop_discrepancia_pct": 2.3,
     "notas": []
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "orange",
-    "ls_pop_usgs": "1400",
+    "ls_pop_usgs": "1700",
     "lq_alerta_usgs": "red",
     "lq_pop_usgs": "460000"
   },
@@ -155,13 +155,18 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
-  "disclaimers": [
-    "Exposicion estimada, no dano observado.",
-    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
-    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
-    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+  "changelog": [
+    "ShakeMap: v7 → v8",
+    "Ground Failure: v7 → v8",
+    "Población en MMI≥6: 7 millones → 7,2 millones",
+    "Edificaciones en MMI≥7: 440 mil → 450 mil"
   ],
-  "generado_utc": "2026-08-25T17:40:39Z",
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-01T21:53:34Z",
   "pipeline_version": "0.1.0"
 }
