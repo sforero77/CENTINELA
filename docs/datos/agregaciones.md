@@ -18,7 +18,7 @@ flowchart TB
     P1["HOTOSM salud/edu<br/>OurAirports"] --> P2["conteo de puntos<br/>por celda"]
   end
   subgraph L["Líneas y polígonos → celda"]
-    L1["Overture vías"] --> L2["longitud <b>recortada</b><br/>por celda, en<br/>proyección equiárea"]
+    L1["Overture vías"] --> L2["longitud geodésica<br/>repartida entre los<br/>subtramos densificados"]
     L3["Overture edificios"] --> L4["conteo y área<br/>por celda del<br/><b>centroide</b>"]
   end
 
@@ -31,8 +31,21 @@ flowchart TB
 ### Vías: recortadas, no asignadas al centroide
 
 Una carretera de 40 km cruza muchas celdas. Asignarla entera a la celda de su
-centroide daría 40 km en una celda y 0 en las vecinas. Se **recorta el segmento
-por celda** y se mide cada trozo en proyección equiárea local.
+centroide daría 40 km en una celda y 0 en las vecinas.
+
+Lo que se hace —y este documento lo describía mal— es **densificar y repartir**:
+la longitud se mide entera con `ST_Length_Spheroid`, que es geodésica sobre el
+elipsoide (no hay ninguna reproyección equiárea en el repositorio, y una
+equiárea sería además la clase equivocada para medir longitud), la vía se parte
+en *n* subtramos de ~200 m, y cada subtramo aporta `km/n` a la celda de **su
+punto medio**.
+
+El punto medio, no el extremo: `ST_LineInterpolatePoints(geom, 1/n, true)`
+devuelve las fracciones 1/n … 1,0, o sea el final de cada subtramo y nunca el
+principio, con un sesgo sistemático de medio subtramo siempre en la dirección
+del trazado. Se piden 2n puntos en medios pasos y se conservan los impares.
+`test_vector_h3.py` lo comprueba, y comprueba también que `sum(km/n)` sigue
+siendo `km`.
 
 > Esta cifra estuvo mal en el README por un factor de seis, porque se copió a
 > mano y el activo se reconstruyó después. Hoy `test_cifras_del_readme.py`

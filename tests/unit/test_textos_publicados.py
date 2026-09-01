@@ -1,28 +1,40 @@
-"""Lo que se publica en espanol se publica **con** tildes y con enes.
+"""Lo que se publica en español se publica **con** tildes y con eñes.
 
 EL HUECO QUE CIERRA. `markdown.py`, `social.py` y `DISCLAIMERS` llevaban las
-tildes puestas en el repositorio y los ficheros servidos seguian diciendo
-"Exposicion no es dano": se emitieron el 25-ago-2026, antes de esa correccion, y
-nada volvia a tocarlos. El hilo para redes —el unico artefacto de todo el
-sistema que un humano publica a mano— abria con "Reporte automatico de
-EXPOSICION estimada" y cerraba con "Exposicion no es dano", que en espanol no es
+tildes puestas en el repositorio y los ficheros servidos seguían diciendo
+"Exposicion no es dano": se emitieron el 25-ago-2026, antes de esa corrección, y
+nada volvía a tocarlos. El hilo para redes —el único artefacto de todo el
+sistema que un humano publica a mano— abría con "Reporte automatico de
+EXPOSICION estimada" y cerraba con "Exposicion no es dano", que en español no es
 una frase: "dano" no es una palabra.
 
 Esta prueba no comprueba el fichero publicado, que puede estar rancio: comprueba
-el generador. Que lo publicado se ponga al dia es trabajo de
+el generador. Que lo publicado se ponga al día es trabajo de
 `centinela regenerar-textos`, y `test_frescura` es quien vigila que se haya
 corrido.
 
-POR QUE UNA LISTA NEGRA Y NO UN DETECTOR GENERICO. "Se publica" y "se publico"
+Y EL SEGUNDO HUECO, CERRADO EL 1-SEP-2026. El guardia solo miraba a los
+generadores. Los veintiún `report.md` salían perfectamente acentuados —de 17 a
+26 acentos por cada 100 palabras— mientras el README, que es la vitrina,
+violaba **veinte de las veintidós formas** de la lista negra, y la frase que
+enuncia la misión escribía mal la palabra de la misión: «con datos descargables
+y en espanol», dos veces. El producto público estaba bien escrito; la
+documentación a mano, no. `DOCUMENTOS` es lo que faltaba vigilar.
+
+POR QUÉ UNA LISTA NEGRA Y NO UN DETECTOR GENÉRICO. "Se publica" y "se publico"
 son las dos correctas y solo se distinguen por el sentido; un detector de
-"palabras que deberian llevar tilde" daria falsos positivos en cada linea. La
+"palabras que deberían llevar tilde" daría falsos positivos en cada línea. La
 lista son las formas que de verdad se colaron, que es contra lo que hay que
-defenderse.
+defenderse. Para las dos que dependen del contexto —`publica` y `publico`, que
+también son el verbo— la lista es de **colocaciones**, no de palabras.
 """
 
 from __future__ import annotations
 
 import re
+from pathlib import Path
+
+import pytest
 
 from pipelines.common.constants import DISCLAIMERS
 from pipelines.p3_report.markdown import render_markdown
@@ -54,6 +66,24 @@ SIN_TILDE: dict[str, str] = {
     "millon": "millón",
 }
 
+#: Formas adicionales que solo se vigilan en la documentacion escrita a mano.
+#:
+#: **`publica` y `publico` no estan en la lista de arriba por una razon**: son
+#: tambien el verbo, que es correcto sin tilde («USGS publica el ShakeMap»). En
+#: prosa la forma que se colaba era la adjetiva, y se distingue por lo que lleva
+#: delante — no por la palabra suelta. Un detector generico daria un falso
+#: positivo en cada linea.
+COLOCACIONES_MALAS: dict[str, str] = {
+    "dominio publico": "dominio público",
+    "repositorio publico": "repositorio público",
+    "discusion publica": "discusión pública",
+    "funcion publica": "función pública",
+    "pagina publica": "página pública",
+    "cifra publica": "cifra pública",
+    "api publica": "API pública",
+    "camino critico": "camino crítico",
+}
+
 
 def _palabras_malas(texto: str) -> list[str]:
     """Las formas de la lista negra que aparecen como palabra suelta.
@@ -70,6 +100,129 @@ def _palabras_malas(texto: str) -> list[str]:
         if re.search(rf"(?<![\w-]){re.escape(mala)}(?![\w-])", limpio, flags=re.IGNORECASE):
             encontradas.add(mala)
     return sorted(encontradas)
+
+
+#: Los documentos escritos a mano. **Esta prueba existe porque el guardia solo
+#: miraba a los generadores**, y el README —la vitrina— violaba veinte de las
+#: veintidos formas de la lista negra mientras los veintiun `report.md`
+#: generados salian perfectamente acentuados. El producto publico estaba bien
+#: escrito; la documentacion, no.
+#:
+#: La defensa de "ASCII por compatibilidad" no estaba disponible: el mismo
+#: README usa ──▶, ⋈, ✅ y ≥. No era una politica, era un teclado.
+RAIZ = Path(__file__).parent.parent.parent
+DOCUMENTOS: tuple[str, ...] = (
+    "README.md",
+    "DISCLAIMER.md",
+    "CONTRIBUTING.md",
+    "GOVERNANCE.md",
+    "ATTRIBUTION.md",
+    "PENDIENTES.md",
+    "VERIFICACIONES.md",
+    "ESPECIFICACION.md",
+    "LICENSES/README.md",
+    "docs/AUDITORIA.md",
+    "docs/CLEAN_CODE.md",
+    "docs/FAMILIAS_DE_FALLO.md",
+    "docs/GARANTIAS.md",
+    "docs/OPERACION.md",
+    "docs/PARA_INSTITUCIONES.md",
+    "docs/PUBLICAR_ACTIVO.md",
+    "docs/PUESTA_EN_MARCHA.md",
+    "docs/README.md",
+    "events/README.md",
+    "reports/README.md",
+    "scripts/README.md",
+    "tests/fixtures/golden/README.md",
+    "tests/golden/README.md",
+    # Y los de subcarpeta, que quedaron fuera del primer pase: son veinticinco
+    # ficheros mas —toda la documentacion de arquitectura, datos, pipelines,
+    # acciones y visor— y ahi es donde vive lo que lee quien va a tocar el
+    # codigo. Una guardia que solo mira la raiz deja sin vigilar el doble de
+    # prosa de la que vigila.
+    "docs/acciones/README.md",
+    "docs/acciones/cadena-de-evento.md",
+    "docs/acciones/el-vigia.md",
+    "docs/acciones/mantenimiento.md",
+    "docs/acciones/orquestacion.md",
+    "docs/arquitectura/README.md",
+    "docs/arquitectura/contratos-de-datos.md",
+    "docs/arquitectura/decisiones.md",
+    "docs/arquitectura/flujo-de-datos.md",
+    "docs/datos/README.md",
+    "docs/datos/activo-h3.md",
+    "docs/datos/agregaciones.md",
+    "docs/datos/fuentes.md",
+    "docs/pipelines/README.md",
+    "docs/pipelines/common.md",
+    "docs/pipelines/p0-exposicion.md",
+    "docs/pipelines/p1-trigger.md",
+    "docs/pipelines/p2-impacto.md",
+    "docs/pipelines/p3-reporte.md",
+    "docs/pipelines/p4-brigada.md",
+    "docs/pipelines/p5-incendios.md",
+    "docs/visor/README.md",
+    "docs/visor/capas-y-modos.md",
+    "docs/visor/consumo-de-datos.md",
+    "docs/visor/validacion.md",
+)
+
+#: Formas que en estos documentos son siempre el verbo, nunca el adjetivo, y que
+#: por eso se sacan de la lista negra al mirar prosa a mano.
+SOLO_EN_GENERADORES: frozenset[str] = frozenset({"publica", "publico"})
+
+
+def _prosa(texto: str) -> str:
+    """El documento sin lo que no es prosa.
+
+    Los bloques de tres backticks hay que quitarlos **antes** que los
+    identificadores entre acentos graves: sin eso, el `re.sub` de una sola
+    comilla los parte por la mitad y deja dentro trozos de codigo que disparan
+    falsos positivos con `mas`, `dano` y compania.
+    """
+    texto = re.sub(r"```.*?```", " ", texto, flags=re.S)
+    texto = re.sub(r"`[^`]*`", " ", texto)
+    texto = re.sub(r"\]\([^)]*\)", "] ", texto)  # destinos de enlace
+    texto = re.sub(r"https?://\S+", " ", texto)
+    return re.sub(r"<[^>\n]+>", " ", texto)
+
+
+@pytest.mark.parametrize("documento", DOCUMENTOS)
+def test_la_documentacion_escrita_a_mano_va_con_tildes(documento: str) -> None:
+    """El README violaba veinte de las veintidos formas de la lista negra.
+
+    Y la frase que enuncia la mision escribia mal la palabra de la mision:
+    «con datos descargables y en espanol». Dos veces.
+    """
+    ruta = RAIZ / documento
+    assert ruta.exists(), f"{documento} ya no existe: actualiza DOCUMENTOS"
+
+    malas = [
+        m
+        for m in _palabras_malas(_prosa(ruta.read_text(encoding="utf-8")))
+        if m not in SOLO_EN_GENERADORES
+    ]
+
+    assert not malas, f"{documento} sin tildes: {[(m, SIN_TILDE[m]) for m in malas]}"
+
+
+@pytest.mark.parametrize("documento", DOCUMENTOS)
+def test_la_documentacion_no_usa_publico_ni_publica_como_adjetivo(documento: str) -> None:
+    """La mitad que la lista negra no puede ver sin contexto.
+
+    Con frontera de palabra, no como subcadena: «cifra publicada» contiene
+    «cifra publica» y es correcta. Es la misma trampa que `_palabras_malas`
+    documenta para "publicas", y buscar la colocacion a pelo la reintroducia.
+    """
+    prosa = _prosa((RAIZ / documento).read_text(encoding="utf-8"))
+
+    malas = [
+        mala
+        for mala in COLOCACIONES_MALAS
+        if re.search(rf"(?<![\w-]){re.escape(mala)}(?![\w-])", prosa, flags=re.IGNORECASE)
+    ]
+
+    assert not malas, f"{documento}: {[(m, COLOCACIONES_MALAS[m]) for m in malas]}"
 
 
 def test_los_disclaimers_van_en_espanol_completo() -> None:

@@ -102,7 +102,10 @@ LAYERS: tuple[LayerSpec, ...] = (
         titulo="Vias — Overture Maps theme=transportation",
         license="ODbL-1.0",
         columnas=("road_km_primary", "road_km_secondary", "road_km_other"),
-        agregacion="longitud de segmento recortada por celda, proyeccion equiarea local",
+        agregacion=(
+            "longitud geodesica sobre el elipsoide (ST_Length_Spheroid), repartida "
+            "entre las celdas que atraviesa el segmento"
+        ),
     ),
     LayerSpec(
         id="health",
@@ -148,6 +151,34 @@ LAYERS: tuple[LayerSpec, ...] = (
             "OCHA da adm1/adm2 de los 19 paises de LATAM con una sola licencia "
             "y una sola forma, en vez de pelear con diecinueve geoportales "
             "nacionales. Verificado pais por pais el 23-ago-2026."
+        ),
+    ),
+    LayerSpec(
+        id="landcover",
+        titulo="Cobertura del suelo — ESA WorldCover v200 (2021), 10 m",
+        license="CC-BY-4.0",
+        columnas=(
+            "lulc_arbolado_pct",
+            "lulc_arbustos_pct",
+            "lulc_pastizal_pct",
+            "lulc_cultivo_pct",
+            "lulc_construido_pct",
+            "lulc_humedal_pct",
+            "lulc_px",
+        ),
+        agregacion=(
+            "conteo de pixeles por clase sobre la overview /8 (~80 m) -> celda "
+            "r8; las fracciones se derivan al final, sobre pixeles clasificados"
+        ),
+        limitacion=(
+            "No se descarga: se leen las overviews del COG por rangos HTTP, asi "
+            "que no hay fichero en el manifest ni hash de insumo. Entra igual en "
+            "este catalogo porque su ausencia era invisible: sin declararla aqui "
+            "ni en `REQUIRED_COVERAGE`, un cambio de version o de bucket en el "
+            "origen —las URL son constantes fijas— dejaba `lulc_h3` vacia, el "
+            "LEFT JOIN ponia 0.0 en las siete columnas y el activo se publicaba "
+            "con '0 % arbolado' pasando todos los asserts. Esos ceros salen a la "
+            "calle en los reportes de incendio."
         ),
     ),
     LayerSpec(

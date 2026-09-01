@@ -31,16 +31,21 @@ REPORTE_GOLDEN = RAIZ / "reports" / "us6000tjl2" / "report.json"
 #: Fila del README -> campo de `totales` en el reporte. El README redondea al
 #: entero, que es como se lee una cifra de exposicion: nadie publica "2.415.793,46
 #: personas".
+#: Las etiquetas van **con tildes**: el README las llevaba sin ellas y el
+#: proyecto tiene una prueba que exige lo contrario en todo lo publicado. La
+#: fila de licuefaccion ademas cambio de nombre: decia "zona de licuefaccion
+#: alta", y "alta" afirmaba una categoria que USGS no publica a ese umbral
+#: sobre una magnitud —cobertura areal— que no es una probabilidad.
 FILAS: tuple[tuple[str, str], ...] = (
     ("Personas en MMI≥6", "pop_mmi6p"),
     ("Personas en MMI≥7", "pop_mmi7p"),
-    ("De ellas, 65 anos o mas", "pop_65p_mmi7p"),
+    ("De ellas, 65 años o más", "pop_65p_mmi7p"),
     ("Edificaciones en MMI≥7", "bld_mmi7p"),
     ("Sedes de salud en MMI≥7", "health_mmi7p"),
     ("Sedes educativas en MMI≥7", "edu_mmi7p"),
-    ("Kilometros de via en MMI≥7", "road_km_mmi7p"),
+    ("Kilómetros de vía en MMI≥7", "road_km_mmi7p"),
     ("De ellos, primarias y secundarias", "road_km_principal_mmi7p"),
-    ("Personas en zona de licuefaccion alta", "pop_lq_alta"),
+    ("Personas en celdas con cobertura areal por licuefacción ≥ 0,10", "pop_lq_alta"),
 )
 
 
@@ -135,14 +140,118 @@ def test_las_garantias_siguen_enlazadas() -> None:
     assert "Lo que NO está garantizado" in texto, "un documento de garantias sin la mitad incomoda"
 
 
-# --- El conteo de pruebas tambien es una cifra de la portada -----------------
+# --- La tabla de poblacion que va a instituciones --------------------------
+
+INSTITUCIONES = RAIZ / "docs" / "PARA_INSTITUCIONES.md"
+MANIFESTS = RAIZ / "data" / "manifests"
+
+#: Los diecinueve, por ISO3. El fichero es la fuente; la tabla, el derivado.
+ISO3 = sorted(p.stem for p in MANIFESTS.glob("*.yaml"))
+
+
+@pytest.fixture(scope="module")
+def instituciones() -> str:
+    return INSTITUCIONES.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("iso3", ISO3)
+def test_la_tabla_de_instituciones_no_se_despega_de_los_manifests(
+    iso3: str, instituciones: str
+) -> None:
+    """El documento decia 18 de 19 paises, 3 reportes y Brasil pendiente.
+
+    Eran 19, 21 y construido. Y una cifra de poblacion —la de Argentina— se
+    habia movido en el manifest sin que la tabla se enterara. Es el mismo fallo
+    que el resto de este fichero vigila para el README: una tabla copiada a mano
+    se desincroniza, y esta va a instituciones.
+    """
+    referencia = yaml.safe_load((MANIFESTS / f"{iso3}.yaml").read_text("utf-8"))[
+        "referencia_oficial"
+    ]
+    medido = format_number_es(int(referencia["medido_ghs_pop"]))
+
+    assert medido in instituciones, (
+        f"§4 no cita la poblacion medida de {iso3} ({medido}). El manifest la movio."
+    )
+
+
+@pytest.mark.parametrize("iso3", ISO3)
+def test_el_desvio_publicado_es_el_que_sale_de_las_dos_cifras(
+    iso3: str, instituciones: str
+) -> None:
+    """El desvio no es un dato del manifest: es la resta. Publicado a mano, se
+    queda contradiciendo a las dos cifras de su propia fila."""
+    referencia = yaml.safe_load((MANIFESTS / f"{iso3}.yaml").read_text("utf-8"))[
+        "referencia_oficial"
+    ]
+    medido, oficial = int(referencia["medido_ghs_pop"]), int(referencia["poblacion_2025"])
+    desvio = 100.0 * (medido - oficial) / oficial
+    # El menos del documento es U+2212, no un guion: es prosa, no codigo.
+    signo = "+" if desvio >= 0 else "\u2212"
+    esperado = f"| {signo}{abs(desvio):.2f} %".replace(".", ",")
+
+    assert esperado in instituciones, f"§4 no publica {esperado.strip()} para {iso3}"
+
+
+def test_el_documento_dice_que_ningun_reporte_se_disparo_en_vivo(instituciones: str) -> None:
+    """El silencio sobre esto se lee como ambiguedad deliberada.
+
+    `site/status.json` publica `eventos_publicados: 0`. Si algun dia deja de ser
+    cero, esta prueba falla y toca reescribir el parrafo — que es exactamente el
+    dia en que hay algo mejor que contar.
+    """
+    estado = json.loads((RAIZ / "site" / "status.json").read_text(encoding="utf-8"))
+
+    if int(estado["medido"]["eventos_publicados"]) == 0:
+        assert "los 21 son reconstrucciones" in instituciones.lower()
+    else:
+        raise AssertionError(
+            "Ya hay reportes disparados en vivo: §3 de PARA_INSTITUCIONES y el "
+            "README siguen diciendo que no, y ahora hay algo mejor que contar."
+        )
+
+
+# --- El recuento de pruebas también es una cifra de la portada ---------------
+
+#: Marca que ya estamos dentro del subproceso que cuenta. Sin ella, la prueba se
+#: llamaría a sí misma sin fin.
+_CONTANDO = "CENTINELA_CONTANDO_PRUEBAS"
+
+
+def _pasadas(*argumentos: str) -> int:
+    """Cuántas pruebas **pasan** con esos argumentos.
+
+    Pasadas y no recolectadas: la portada dice «1.152 pruebas» y eso tiene que
+    significar las que verifican algo, no las que se recolectan incluyendo 27 que
+    se saltan por falta de datos locales. Contar recolectadas inflaría la cifra
+    en justo esas 27.
+    """
+    import os
+    import re
+    import subprocess
+    import sys
+
+    entorno = {**os.environ, _CONTANDO: "1"}
+    salida = subprocess.run(
+        [sys.executable, "-m", "pytest", "--tb=no", "-p", "no:cacheprovider", *argumentos],
+        cwd=RAIZ,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=entorno,
+    ).stdout
+    hallado = re.search(r"(\d+) passed", salida)
+    assert hallado, f"pytest no dijo cuántas pasaron:\n{salida[-800:]}"
+    return int(hallado.group(1))
 
 
 def _recolectadas(*argumentos: str) -> int:
-    """Cuantas pruebas recolecta pytest con esos argumentos.
+    """Cuántas recolecta, para las suites que no se pueden correr aquí.
 
-    Se lanza en un subproceso con `--collect-only`, que no ejecuta nada: la
-    recoleccion entera tarda decimas de segundo y no toca red ni navegador.
+    La de navegador arranca un Chromium y tarda ocho minutos: no cabe dentro de
+    otra prueba. Se recolecta, que es exacto mientras ninguna se salte — y si
+    alguna empezara a saltarse, esta misma cifra dejaría de cuadrar con la
+    portada y habría que mirarlo.
     """
     import re
     import subprocess
@@ -155,37 +264,42 @@ def _recolectadas(*argumentos: str) -> int:
         text=True,
         check=False,
     ).stdout
-    # "1064/1173 tests collected (109 deselected)" o "101 tests collected"
     hallado = re.search(r"(\d+)(?:/\d+)? tests collected", salida)
-    assert hallado, f"pytest no dijo cuantas recolecto:\n{salida[-800:]}"
+    assert hallado, f"pytest no dijo cuántas recolectó:\n{salida[-800:]}"
     return int(hallado.group(1))
 
 
 def test_el_readme_no_miente_sobre_cuantas_pruebas_hay(readme: str) -> None:
-    """La portada decia «953 pruebas … 43 de navegador». Eran 1.064 y 101.
+    """La portada decía «953 pruebas … 43 de navegador». Eran 1.152 y 101.
 
-    Nadie lo noto porque **nadie lo vigilaba**: las nueve cifras del backtest
-    tienen guardia desde que se descubrio que cinco estaban desfasadas, y estas
-    dos se quedaron fuera. Se separaron en cuanto la suite crecio, que es lo que
-    le pasa a toda cifra copiada a mano.
-
-    Es la misma leccion del resto del fichero, aplicada a la unica cifra del
-    README que habla del propio repositorio.
+    Nadie lo notó porque **nadie lo vigilaba**: las nueve cifras del backtest del
+    Chocó tienen guardia desde que se descubrió que cinco estaban desfasadas, y
+    estas dos se quedaron fuera. Se separaron en cuanto la suite creció, que es
+    lo que le pasa a toda cifra copiada a mano — la misma lección que enuncia la
+    cabecera de este fichero, aplicada a la única cifra del README que habla del
+    propio repositorio.
     """
+    import os
     import re
 
-    pipeline = _recolectadas()
-    visor = _recolectadas("tests/visor", "-m", "visor")
+    if os.environ.get(_CONTANDO):
+        pytest.skip("ya estamos dentro del subproceso que cuenta")
 
     hallado = re.search(
-        r"\*\*([\d.]+) pruebas\*\* sin red, mas \*\*([\d.]+) de navegador\*\*", readme
+        r"\*\*([\d.]+) pruebas\*\* sin red, más \*\*([\d.]+) de navegador\*\*", readme
     )
-    assert hallado, "el README ya no dice cuantas pruebas hay en la forma esperada"
+    assert hallado, "el README ya no dice cuántas pruebas hay en la forma esperada"
 
     dice_pipeline = int(hallado.group(1).replace(".", ""))
     dice_visor = int(hallado.group(2).replace(".", ""))
 
+    # `+ 1` por esta misma prueba: dentro del subproceso se salta —si no, se
+    # llamaria a si misma sin fin— asi que el recuento que devuelve le falta una.
+    # La portada dice lo que ve quien corre `make check`, que si la incluye.
+    pipeline = _pasadas() + 1
+    visor = _recolectadas("tests/visor", "-m", "visor")
+
     assert dice_pipeline == pipeline, (
-        f"el README dice {dice_pipeline} pruebas sin red y hay {pipeline}"
+        f"el README dice {dice_pipeline} pruebas sin red y pasan {pipeline}"
     )
     assert dice_visor == visor, f"el README dice {dice_visor} de navegador y hay {visor}"

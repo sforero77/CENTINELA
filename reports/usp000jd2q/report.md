@@ -27,11 +27,11 @@ Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la 
 
 ## Deslizamiento y licuefacción
 
-USGS no ha publicado el producto *Ground Failure* para este evento. La seccion se omite; el reporte se re-emite automaticamente si aparece.
+USGS no ha publicado el producto *Ground Failure* para este evento. La sección se omite; el reporte se re-emite automáticamente si aparece.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el área afectada: **0,0 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,0 %**.
 
 ## Descargas
 

@@ -46,8 +46,10 @@ De la población en intensidad MMI≥7, alrededor de **230 mil** personas tienen
 
 ## Deslizamiento y licuefacción
 
-- Población en celdas con probabilidad **alta de deslizamiento**: 29 mil
-- Población en celdas con probabilidad **alta de licuefacción**: 560 mil
+- **Deslizamiento.** Población en celdas donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **29 mil**. USGS declara para este evento alerta **roja**, con 13 mil expuestas.
+- **Licuefacción.** Población en celdas donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **560 mil**. USGS declara para este evento alerta **roja**, con 190 mil expuestas.
+
+Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 Fuente: producto *Ground Failure* de USGS (v12), dominio público.
 
@@ -55,9 +57,11 @@ Fuente: producto *Ground Failure* de USGS (v12), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **roja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
+Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Comparadas de frente parecen discrepar; puestas en el mismo eje, cada cifra de aquí cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo.
+
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el área afectada: **11,8 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
 
 ## Cambios frente a la versión anterior
 

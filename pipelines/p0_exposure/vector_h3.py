@@ -217,6 +217,19 @@ def aggregate_lines_to_h3(
     DuckDB no tiene ``ST_Densify``; ``ST_LineInterpolatePoints`` hace lo mismo
     pidiendo la fraccion de recorrido entre punto y punto, que aqui se deriva de
     la longitud real de cada via.
+
+    **SE MUESTREA EL CENTRO DE CADA SUBTRAMO, NO SU EXTREMO.** Con
+    ``fraction = 1/n`` y ``repeat = true`` DuckDB devuelve exactamente n puntos,
+    en las fracciones 1/n, 2/n ... 1,0 — o sea el **final** de cada subtramo, y
+    nunca el principio. La masa conservaba —n trozos de km/n suman km— pero
+    cada trozo aportaba a la celda de su punto final, con un sesgo sistematico
+    de medio subtramo **siempre en la misma direccion**, la del trazado de la
+    via. A un paso de 200 m eso son ~100 m, del orden de una quinta parte del
+    lado de una celda r8, y no se compensa entre vias porque no es aleatorio.
+
+    Se pide el doble de puntos, en pasos de 1/2n, y se conservan los de indice
+    impar: son las fracciones 1/2n, 3/2n ... (2n-1)/2n, que son exactamente los
+    centros. Siguen siendo n, asi que el reparto de km/n sigue sumando km.
     """
     con.execute(f"DROP TABLE IF EXISTS {tabla}")
     con.execute(
@@ -243,12 +256,20 @@ def aggregate_lines_to_h3(
                    )::BIGINT AS n_puntos
             FROM vias
         ),
-        puntos AS (
+        densificadas AS (
+            -- El doble de puntos, en medios pasos. `ST_Dump` numera cada uno en
+            -- `path`, que es lo que permite quedarse con los centros.
             SELECT clase, km, n_puntos,
                    unnest(ST_Dump(
-                       ST_LineInterpolatePoints(geometry, 1.0 / n_puntos, true)
+                       ST_LineInterpolatePoints(geometry, 0.5 / n_puntos, true)
                    )) AS p
             FROM con_paso
+        ),
+        puntos AS (
+            -- Los impares: fracciones 1/2n, 3/2n ... (2n-1)/2n, o sea el centro
+            -- de cada subtramo. Los pares son los extremos, que es donde caia
+            -- toda la masa antes.
+            SELECT clase, km, n_puntos, p FROM densificadas WHERE p.path[1] % 2 = 1
         )
         SELECT h3_latlng_to_cell(ST_Y(p.geom), ST_X(p.geom), {resolution}) AS h3_08,
                sum(CASE WHEN clase='primary'   THEN km / n_puntos ELSE 0 END) AS road_km_primary,

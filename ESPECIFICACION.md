@@ -56,7 +56,7 @@
 ### 1.2 No-objetivos (línea roja, se documentan en el sitio)
 
 - ❌ Alerta temprana o notificación de emergencia a población.
-- ❌ Estimación de víctimas (eso es PAGER; solo lo referenciamos).
+- ❌ Estimación de víctimas (eso es PAGER; el sistema solo lo referencia).
 - ❌ Dictamen de daño estructural o habitabilidad (la brigada IA produce *priorización*, jamás veredicto).
 - ❌ Datos personales de cualquier tipo (desaparecidos, censos nominales): fuera de alcance permanente.
 - ❌ Operación 24/7 con humanos en el circuito crítico.
@@ -138,7 +138,7 @@ Tres hechos que no son detalles de implementación, porque cambian lo que el sis
 
 ### 3.1 Identificadores y convenciones
 
-- CRS de publicación: EPSG:4326. Cómputo de áreas: proyección equiárea local por país.
+- CRS de publicación: EPSG:4326. Longitudes y áreas: **geodésicas sobre el elipsoide** (`ST_Length_Spheroid`, `ST_Area_Spheroid`). No hay reproyección equiárea; la espec la pedía y el código nunca la tuvo, y para longitud sería además la clase equivocada.
 - `h3_08` como `UINT64`. Agregados publicados: r8 (análisis), r7 y r6 (visor).
 - Llave administrativa: `adm2_id` (CO: código DIVIPOLA de 5 dígitos, `VARCHAR`), `adm1_id`, `iso3`.
 - Todo timestamp en UTC ISO-8601; hora local solo en la capa de presentación.
@@ -199,7 +199,7 @@ Salidas derivadas del JSON: `report.md` (ES), `mapa.png` (estático, 2 variantes
 ### 4.1 Diagrama lógico
 
 ```
-[USGS feed 4.5_hour GeoJSON] ──(cron GH Actions */10, best-effort)──▶ P1 TRIGGER
+[USGS feed 4.5_hour GeoJSON] ──(cron GH Actions */30, best-effort)──▶ P1 TRIGGER
    │ filtro bbox LATAM + M≥5.5 + dedupe vs event_state
    ▼
 P1 crea/actualiza event_state ──▶ dispara P2 por repository_dispatch
@@ -291,7 +291,7 @@ centinela/
 ### 6.3 Golden tests (regresión, corren en cada PR)
 
 - **G1 — Chocó 10-ago-2026 · `us6000tjl2`:** M7.4, 2026-08-10T12:34:28Z, 5 km al S de San José del Palmar, **110 km de profundidad**, PAGER rojo. ShakeMap y Ground Failure con **7 versiones cada uno**, todas obtenibles con `includesuperseded=true` sobre FDSN. Aserciones: (a) el trigger habría disparado — **ya verificado contra el evento real**; (b) `pop_mmi7p` estable ±0.5% entre commits; (c) top-15 municipios estable; (d) el reporte v-final referencia la última versión de ShakeMap.
-- **G2 — Venezuela 24-jun-2026 · `us6000t7zp` + `us6000t7zc`:** M7.5 (Catia La Mar, ShakeMap v14) y M7.2 (San Felipe, ShakeMap v9), ambos a 10 km de profundidad y **separados por 33 segundos**. Ídem G1; además valida bbox y el manejo de evento doble: dos `usgs_id` distintos, dos reportes, con áreas de intensidad que se solapan. El sistema no debe fusionarlos ni tratar el segundo como réplica.
+- **G2 — Venezuela 24-jun-2026 · `us6000t7zp` + `us6000t7zc`:** M7.2 (San Felipe, ShakeMap v9) y, **32,2 segundos después**, M7.5 (Catia La Mar, ShakeMap v15) — el segundo es el mayor, que es justo lo que hace peligroso tratarlo como réplica. Ambos a 10 km de profundidad. Ídem G1; además valida bbox y el manejo de evento doble: dos `usgs_id` distintos, dos reportes, con áreas de intensidad que se solapan. El sistema no debe fusionarlos ni tratar el segundo como réplica.
 - **G3 — Evento sin Ground Failure publicado:** el reporte omite la sección con nota explícita, no falla. (Nota: Chocó, pese a sus 110 km, **sí** tiene Ground Failure, así que G3 necesita otro evento o una fixture sintética.)
 
 ### 6.4 Calidad de datos (asserts SQL en DuckDB, corren en P0 y P2)

@@ -1,7 +1,7 @@
 """G2 — Venezuela, 24 de junio de 2026 · `us6000t7zp` + `us6000t7zc` (§6.3).
 
 Ademas de las aserciones de G1, este caso valida el **evento doble**: dos
-mainshocks separados por 33 segundos y 145 km, no un sismo con replica. El
+mainshocks separados por 32,2 segundos y 145 km, no un sismo con replica. El
 sistema debe emitir dos reportes independientes y no fusionarlos.
 
 Aqui se cazo el bug de seleccion de version de producto: ver
@@ -41,7 +41,7 @@ def test_ambos_mainshocks_pasan_el_filtro(venezuela_feed: dict[str, Any]) -> Non
 
 
 def test_estan_separados_por_segundos(venezuela_feed: dict[str, Any]) -> None:
-    """33 segundos: lo bastante cerca para confundirlos, y son dos eventos."""
+    """32,2 segundos: lo bastante cerca para confundirlos, y son dos eventos."""
     from datetime import datetime
 
     tiempos = {

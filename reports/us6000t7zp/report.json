@@ -143,6 +143,12 @@
     "pop_discrepancia_pct": 11.8,
     "notas": []
   },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "red",
+    "ls_pop_usgs": "13000",
+    "lq_alerta_usgs": "red",
+    "lq_pop_usgs": "190000"
+  },
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",

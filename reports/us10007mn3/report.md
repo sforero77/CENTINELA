@@ -33,15 +33,17 @@ De la población en intensidad MMI≥7, alrededor de **4.200** personas tienen 6
 
 ## Deslizamiento y licuefacción
 
-USGS no ha publicado el producto *Ground Failure* para este evento. La seccion se omite; el reporte se re-emite automaticamente si aparece.
+USGS no ha publicado el producto *Ground Failure* para este evento. La sección se omite; el reporte se re-emite automáticamente si aparece.
 
 ## Referencia cruzada
 
 PAGER (USGS) estima para este evento una alerta **amarilla**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
+Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Comparadas de frente parecen discrepar; puestas en el mismo eje, cada cifra de aquí cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo.
+
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en el área afectada: **36,2 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **36,2 %**.
 
 ## Descargas
 

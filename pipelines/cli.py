@@ -266,7 +266,15 @@ def _cmd_cobertura(args: argparse.Namespace) -> int:
 
 
 def _cmd_contraste(args: argparse.Namespace) -> int:
-    """Compara el activo contra una evaluacion de dano externa (Fase 2)."""
+    """Compara el activo contra una evaluacion de dano externa (Fase 2).
+
+    `--salida` no es un extra. El resultado se imprimia y se perdia, y sus
+    cifras acabaron citadas a mano en `docs/PARA_INSTITUCIONES.md` —el documento
+    que abre diciendo «todo lo que afirma esta medido, y dice donde esta la
+    medida»— sin que quedara en el repositorio un fichero al que apuntar.
+    Persistirlo es lo que convierte esa seccion en algo que un tercero puede
+    comprobar en vez de creer.
+    """
     from .p0_exposure.overture_h3 import ensure_httpfs
     from .p2_impact.contraste import contrastar
     from .p2_impact.exposure_join import connect
@@ -281,7 +289,17 @@ def _cmd_contraste(args: argparse.Namespace) -> int:
         crs_origen=args.crs,
         columna_danado=args.columna,
     )
-    print(json.dumps(resultado.to_dict(), ensure_ascii=False, indent=2))
+    volcado = json.dumps(
+        {**resultado.to_dict(), "fuente": args.fuente, "crs_origen": args.crs},
+        ensure_ascii=False,
+        indent=2,
+    )
+    if args.salida:
+        destino = Path(args.salida)
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        destino.write_text(volcado + "\n", encoding="utf-8")
+        print(destino)
+    print(volcado)
     # Una celda evaluada que el activo no tiene es un hueco de cobertura, no un
     # matiz: se distingue con codigo 2 para que un workflow pueda pararse.
     return 2 if resultado.celdas_sin_activo else 0
@@ -291,7 +309,7 @@ def _cmd_reindexar(args: argparse.Namespace) -> int:
     """Rehace `reports/index.json` desde los reportes en disco.
 
     Existe por un conflicto real: dos eventos publicados a la vez —el caso de
-    G2, dos mainshocks separados por 33 segundos— chocan en este fichero al
+    G2, dos mainshocks separados por 32,2 segundos— chocan en este fichero al
     empujar a la misma rama. Fusionarlo linea a linea no tiene sentido porque es
     un **derivado**: la verdad son los `report.json` del directorio. Se
     regenera y se sigue.
@@ -357,6 +375,26 @@ def _cmd_contornos(args: argparse.Namespace) -> int:
     )
     if not escritos:
         print("No se escribio ningun contorno.", file=sys.stderr)
+        return 1
+    for evento in sorted(escritos):
+        print(escritos[evento])
+    return 0
+
+
+def _cmd_alertas_terreno(args: argparse.Namespace) -> int:
+    """Trae de USGS su propia alerta de falla de terreno para reportes publicados.
+
+    Los emitidos antes de que el reporte supiera citarla no la traen, y
+    recomputar su impacto entero costaria bajar el activo de su pais para
+    obtener cuatro cadenas que USGS sigue sirviendo.
+    """
+    from .p3_report.falla_de_terreno import backfill_ground_failure_alerts
+
+    escritos = backfill_ground_failure_alerts(
+        args.usgs_id or "", reports_root=Path(args.reports) if args.reports else None
+    )
+    if not escritos:
+        print("No se actualizo ninguna alerta de falla de terreno.", file=sys.stderr)
         return 1
     for evento in sorted(escritos):
         print(escritos[evento])
@@ -721,6 +759,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_contraste.add_argument("--etiqueta", required=True, help="quien publica la evaluacion")
     p_contraste.add_argument("--crs", required=True, help="EPSG del vector de dano")
     p_contraste.add_argument("--columna", default="damaged", help="columna binaria de dano")
+    p_contraste.add_argument(
+        "--salida", help="fichero donde persistir el resultado (para poder citarlo)"
+    )
     p_contraste.set_defaults(func=_cmd_contraste)
 
     p_reindexar = sub.add_parser(
@@ -750,6 +791,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_contornos.add_argument("usgs_id", nargs="?", default="", help="vacio = todos")
     p_contornos.add_argument("--reports", help="raiz de reports/")
     p_contornos.set_defaults(func=_cmd_contornos)
+
+    p_alertas = sub.add_parser(
+        "alertas-terreno",
+        help="trae de USGS su alerta de falla de terreno para reportes ya publicados",
+    )
+    p_alertas.add_argument("usgs_id", nargs="?", default="", help="vacio = todos")
+    p_alertas.add_argument("--reports", help="raiz de reports/")
+    p_alertas.set_defaults(func=_cmd_alertas_terreno)
 
     p_observados = sub.add_parser(
         "observados",

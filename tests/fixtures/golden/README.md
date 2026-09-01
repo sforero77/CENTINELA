@@ -1,7 +1,7 @@
 # Fixtures golden
 
-Productos reales de ComCat congelados, no sinteticos. Son la unica forma de que
-el sistema pueda afirmar «esto habria salido a las 08:3X del 10 de agosto».
+Productos reales de ComCat congelados, no sinteticos. Son la única forma de que
+el sistema pueda afirmar «esto habría salido a las 08:3X del 10 de agosto».
 
 | Directorio | Evento | `usgs_id` |
 |---|---|---|
@@ -24,7 +24,7 @@ curl "$FD&starttime=2026-08-10T12:00:00&endtime=2026-08-10T13:30:00&$BBOX" \
 ```
 
 **`includesuperseded=true` funciona directo sobre FDSN.** La espec v0.9 asumia
-que hacia falta `libcomcat`; no es asi, y eso quita una dependencia del
+que hacia falta `libcomcat`; no es así, y eso quita una dependencia del
 procedimiento de congelado.
 
 El feed se reconstruye con una **consulta** FDSN, no con el *detail* del evento:
@@ -32,13 +32,13 @@ el detail devuelve un `Feature` suelto y sin la propiedad `detail`, mientras que
 una consulta devuelve un `FeatureCollection` con la misma forma que el feed en
 tiempo real. Es lo que permite pasar la fixture por `parse_feed` sin trucos.
 
-## Por que estan recortadas
+## Por que están recortadas
 
 Sin recortar pesan **8,4 MB**; recortadas, **244 KB**. Se conservan solo los
 productos que el pipeline consume (`shakemap`, `ground-failure`, `losspager`) y,
-dentro de cada version, solo los contenidos que pide por nombre (`cont_mmi.json`,
-`grid.xml`, los `.tif` de Ground Failure). Lo demas —`phase-data`,
-`moment-tensor`, cientos de archivos auxiliares por version— es peso que pagaria
+dentro de cada versión, solo los contenidos que pide por nombre (`cont_mmi.json`,
+`grid.xml`, los `.tif` de Ground Failure). Lo demás —`phase-data`,
+`moment-tensor`, cientos de archivos auxiliares por versión— es peso que pagaria
 cada clon del repositorio para siempre sin que nada lo lea.
 
 Se conserva el **historial completo de versiones**: sin el no se puede probar el
@@ -48,7 +48,7 @@ changelog entre ShakeMap v(n) y v(n+1) que exige RF-04.
 
 `us6000t7zp` tiene 14 versiones de ShakeMap, y las de junio (v1-v4) declaran
 `preferredWeight` **232** mientras la vigente v14, de agosto, declara **228**.
-El parser ordenaba por peso y elegia v4: un ShakeMap de hace mes y medio, sin
-que ninguna prueba fallara y sin que el reporte diera senal de nada. La leccion
-quedo escrita en `pipelines/p2_impact/products.py` y la regresion vive en
+El parser ordenaba por peso y elegía v4: un ShakeMap de hace mes y medio, sin
+que ninguna prueba fallara y sin que el reporte diera señal de nada. La lección
+quedó escrita en `pipelines/p2_impact/products.py` y la regresión vive en
 `tests/golden/test_g2_venezuela.py::test_no_se_elige_una_version_obsoleta`.

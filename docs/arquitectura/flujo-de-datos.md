@@ -8,7 +8,7 @@ ambos hasta el píxel.
 ```mermaid
 sequenceDiagram
   autonumber
-  participant CRON as Cron externo<br/>(cada 5 min)
+  participant CRON as Cron externo<br/>(previsto; hoy cron GH */30)
   participant GH as GitHub Actions
   participant P1 as P1 trigger
   participant USGS as USGS
@@ -97,7 +97,7 @@ resolverse a celda H3 —inundación, ceniza volcánica— entra por el mismo jo
 
 | Pipeline | Cadencia | Quién lo dispara |
 |---|---|---|
-| **P1 trigger** | cada 5 min | cron externo → `repository_dispatch`; respaldo interno cada 30 min |
+| **P1 trigger** | cron GH `*/30` | el cron externo → `repository_dispatch` está declarado y sin conectar; lo que corre hoy es el interno |
 | **P2 + P3** | por evento | el propio P1, cuando el filtro deja pasar algo |
 | **P5 incendios** | cada 6 h | cron propio, y P1 lo despierta si lleva más de 6 h |
 | **Frescura** | cada 3 h | cron propio, y P1 lo despierta si lleva más de 3 h |

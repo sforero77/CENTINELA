@@ -230,3 +230,90 @@ def test_un_municipio_menor_que_una_tesela_no_se_trocea() -> None:
     from pipelines.p0_exposure.crosswalk import _teselas
 
     assert _teselas(-74.1, 4.5, -74.0, 4.6) == [(-74.1, 4.5, -74.0, 4.6)]
+
+
+# --- Que celdas llegan siquiera a ser candidatas ---------------------------
+
+
+@pytest.fixture
+def costa() -> Any:
+    """Un municipio, y dos celdas r8 **distintas** justo fuera de su borde: una
+    con gente y otra con un hospital y nada mas. Las dos caen fuera del
+    poligono, como una celda partida por la linea de costa.
+
+    Que sean distintas importa: puestas a 0,002° la una de la otra caian en la
+    misma celda r8 —unos 460 m de lado— y la prueba del hospital pasaba por el
+    rescate de la poblacion, sin comprobar nada."""
+    from pipelines.p0_exposure.crosswalk import TABLAS_CANDIDATAS
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE TABLE crosswalk_h3_adm (h3_08 UBIGINT, adm2_id VARCHAR, "
+        "frac_area DOUBLE, rescatada BOOLEAN)"
+    )
+    con.execute(
+        "CREATE TABLE admin_geom AS SELECT '05001' AS adm2_id, ST_GeomFromText("
+        "'POLYGON((-75.0 4.0, -74.9 4.0, -74.9 4.1, -75.0 4.1, -75.0 4.0))') AS geom"
+    )
+    # `h3_latlng_to_cell` da celdas reales, que es lo que el rescate indexa.
+    con.execute(
+        """
+        CREATE TABLE pop_h3 AS
+        SELECT h3_latlng_to_cell(4.02, -74.893, 8) AS h3_08, 500.0 AS pop_total
+        """
+    )
+    con.execute(
+        """
+        CREATE TABLE health_h3 AS
+        SELECT h3_latlng_to_cell(4.08, -74.893, 8) AS h3_08, 1::BIGINT AS health_count
+        """
+    )
+    for tabla in TABLAS_CANDIDATAS:
+        con.execute(f"CREATE TABLE IF NOT EXISTS {tabla} (h3_08 UBIGINT)")
+    return con
+
+
+@pytest.mark.geo
+def test_una_celda_con_hospital_y_sin_poblacion_se_rescata(costa: Any) -> None:
+    """EL HUECO QUE CIERRA.
+
+    `rescue_unassigned` se llamaba con `tabla_datos="pop_h3"` y nada mas, asi
+    que una celda costera con un hospital dentro y sin poblacion modelada no
+    llegaba a ser candidata: no entraba al crosswalk y desaparecia del activo
+    con el hospital. Es la misma leccion que el ensamblaje ya habia aprendido
+    —«una escuela remota... es justo el sitio que un reporte de exposicion no
+    puede permitirse perder»— aplicada solo en la puerta de abajo.
+    """
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    rescue_unassigned(costa)
+
+    celda_hospital: int = costa.execute(
+        "SELECT h3_08 FROM health_h3 WHERE health_count IS NOT NULL"
+    ).fetchone()[0]
+    asignadas = {r[0] for r in costa.execute("SELECT h3_08 FROM crosswalk_h3_adm").fetchall()}
+
+    assert celda_hospital in asignadas, "la celda del hospital no llego ni a candidata"
+
+
+@pytest.mark.geo
+def test_el_rescate_de_poblacion_sigue_funcionando(costa: Any) -> None:
+    """La ampliacion no puede costar el caso que ya funcionaba."""
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    rescatadas = rescue_unassigned(costa)
+
+    celda_pop: int = costa.execute("SELECT h3_08 FROM pop_h3").fetchone()[0]
+    asignadas = {r[0] for r in costa.execute("SELECT h3_08 FROM crosswalk_h3_adm").fetchall()}
+
+    assert celda_pop in asignadas
+    assert rescatadas == 2
+
+
+@pytest.mark.geo
+def test_pasar_una_sola_tabla_sigue_valiendo(costa: Any) -> None:
+    """La firma acepta una cadena suelta: hay llamadas y pruebas que la pasan asi."""
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    assert rescue_unassigned(costa, tabla_datos="pop_h3") == 1

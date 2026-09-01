@@ -1861,8 +1861,8 @@ function pintarIncertidumbre(reporte) {
     // El SQL que la produce (`p2_impact/pipeline.py`) es
     // `100 * |Σ pop_total − Σ pop_alt_worldpop| / Σ pop_alt_worldpop` **sobre
     // las celdas alcanzadas por el evento**: el desacuerdo entre GHS-POP y
-    // WorldPop dentro del area afectada. El `report.md` del mismo evento lo dice
-    // asi —«Discrepancia entre GHS-POP y WorldPop en el área afectada»— y este
+    // WorldPop dentro de las bandas MMI publicadas. El `report.md` del mismo
+    // evento lo dice asi —«en las bandas MMI publicadas»— y este
     // panel decia «difiere del total nacional del mismo producto» y lo atribuia
     // al «remuestreo a hexágonos». Ni es nacional, ni es el mismo producto, ni
     // es remuestreo. Dos artefactos del mismo sistema explicando el mismo numero
@@ -1877,14 +1877,14 @@ function pintarIncertidumbre(reporte) {
     // una confianza que no tienen.
     const enorme = pct >= 25;
     partes.push(
-      `Dentro del área afectada, GHS-POP y WorldPop difieren en ` +
+      `Dentro de las bandas MMI publicadas, GHS-POP y WorldPop difieren en ` +
       `<strong${enorme ? ' class="cifra-alerta"' : ""}>${numero(pct, 1)} %</strong>. ` +
       `Son dos mediciones abiertas de la misma población, no un margen del ShakeMap, ` +
       `y se publica en vez de esconderse.`
     );
     if (enorme) {
       partes.push(
-        `Un desacuerdo de este tamaño suele venir de un área afectada pequeña, ` +
+        `Un desacuerdo de este tamaño suele venir de un corte pequeño, ` +
         `donde cualquier diferencia local pesa mucho sobre el total: léanse las ` +
         `cifras de este reporte como un orden de magnitud.`
       );

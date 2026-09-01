@@ -115,7 +115,7 @@ lo que necesita quien va a recalcular.
 
 ## El changelog de deltas (RF-04)
 
-Un ShakeMap se revisa muchas veces —el de Venezuela llegó a **v14**—. Quien ya
+Un ShakeMap se revisa muchas veces —el de Venezuela llegó a **v15**—. Quien ya
 leyó la versión anterior necesita saber qué cambió, no volver a leerlo entero
 durante una emergencia.
 
@@ -176,8 +176,8 @@ activo de cada país.
 Existe por un descubrimiento incómodo. El generador llevaba las tildes puestas en
 el repositorio y **lo publicado no**: los veintiún paquetes se emitieron antes de
 esa corrección y nada volvía a tocarlos, así que el hilo para redes —el único
-artefacto que un humano publica a mano— abría con «Reporte automatico de
-EXPOSICION estimada» y cerraba con «Exposicion no es dano».
+artefacto que un humano publica a mano— abría con `Reporte automatico de
+EXPOSICION estimada` y cerraba con `Exposicion no es dano`.
 
 Un texto rancio no se distingue de uno recién generado mirándolo.
 `tests/unit/test_textos_publicados.py` vigila el generador con una lista negra de

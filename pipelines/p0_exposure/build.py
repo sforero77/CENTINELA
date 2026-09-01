@@ -291,6 +291,11 @@ REQUIRED_COVERAGE: tuple[tuple[str, str, str], ...] = (
     ),
     ("sum(health_count)", "sedes de salud", "health"),
     ("sum(edu_count)", "sedes educativas", "education"),
+    # La cobertura del suelo no se descarga —se lee por rangos HTTP— asi que
+    # `_verificar_insumos` sale antes de mirarla: esta es la unica puerta que le
+    # queda. `lulc_px` es el conteo de pixeles clasificados, que es cero
+    # exactamente cuando no se leyo una sola tesela.
+    ("sum(lulc_px)", "cobertura del suelo", "landcover"),
 )
 
 
@@ -814,13 +819,19 @@ def build_country(
     # runner de CI tiene ~14 GB libres. Se leen las overviews del COG por rangos
     # HTTP, asi que el pico de memoria es el mismo para Colombia que para
     # Brasil — que es la leccion que costo tres intentos de build.
-    build_landcover_layer(conexion, bbox=caja)
+    celdas_lulc = build_landcover_layer(conexion, bbox=caja)
+    _log.info(
+        "cobertura del suelo agregada",
+        extra={"context": {"iso3": plan.iso3, "celdas": celdas_lulc}},
+    )
 
     # El rescate de costa necesita saber que celdas tienen dato, asi que va
     # despues de la poblacion y antes del ensamblaje.
     ensure_layer_tables(conexion)
     load_country_neighbours(conexion, plan.iso3, bbox=caja, fetcher=fetcher)
-    rescue_unassigned(conexion, tabla_datos="pop_h3")
+    # Sin argumento: se rescata sobre **todas** las capas con contenido, no solo
+    # sobre poblacion. Ver `TABLAS_CANDIDATAS`.
+    rescue_unassigned(conexion)
     rescate = poblacion_rescatada(conexion, "pop_h3")
 
     resumen = assemble_exposure(conexion, iso3=plan.iso3, manifest_id=plan.manifest.manifest_id)

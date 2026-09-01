@@ -185,6 +185,22 @@ def aggregate_categorical_to_h3(
                 raise
             ausentes += 1
 
+    # UNA TESELA AUSENTE NO ES UN FALLO; TODAS AUSENTES SI LO ES.
+    #
+    # El proveedor solo publica las teselas con tierra, asi que un 404 suelto es
+    # oceano y se salta. Pero si **ninguna** responde, la causa no es el mar: es
+    # que la coleccion se movio de bucket o cambio de version —las URL son
+    # constantes fijas—. La tabla quedaria vacia, el LEFT JOIN del ensamblaje
+    # pondria 0.0 en las siete columnas de cobertura de todas las celdas, y el
+    # activo se publicaria con "0 % arbolado" en la Amazonia pasando todos los
+    # asserts. Es el cero silencioso, por la unica puerta que no lo vigilaba.
+    if fuentes and ausentes == len(fuentes):
+        raise ValueError(
+            f"Ninguna de las {len(fuentes)} teselas de '{tabla}' respondio: todas dieron 404. "
+            "Una tesela ausente es oceano; todas ausentes es la coleccion movida de sitio. "
+            f"Revisar la URL de la fuente antes de reconstruir. Primera: {fuentes[0]}"
+        )
+
     con.execute(
         f"CREATE OR REPLACE TABLE {tabla} AS "
         f"SELECT h3_08, clase, sum(pixeles) AS pixeles FROM {tabla} GROUP BY 1, 2"

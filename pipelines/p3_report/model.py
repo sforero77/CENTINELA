@@ -213,6 +213,53 @@ class PoblacionEnRadio:
 
 
 @dataclass(frozen=True, slots=True)
+class GroundFailureUSGS:
+    """Lo que el propio USGS publica sobre falla de terreno. Referencia cruzada.
+
+    No es una cifra de CENTINELA y no se presenta como tal. Va al lado de la
+    nuestra porque **las dos responden preguntas distintas** y sin el contraste
+    se leen como si respondieran la misma:
+
+    * CENTINELA cuenta la poblacion de toda celda cuyo valor supera el umbral.
+    * USGS pondera la poblacion de cada celda **por** el valor de esa celda.
+
+    Para el Choco eso son 1,6 millones frente a ~460 mil en licuefaccion. El
+    numero de USGS no es el nuestro corregido ni al reves: son dos cortes.
+
+    Y resuelve el caso peor. En ese mismo evento el conteo por umbral de
+    deslizamiento da **0** —ninguna celda llega al 0,10— junto a una alerta
+    naranja de USGS con ~1.400 personas. Un "0" solo se lee como "no hay
+    exposicion a deslizamiento", que en un M7,4 sobre la cordillera Occidental
+    es falso. La guardia que ya existia protege el NaN de fuera de la huella del
+    modelo; el cero por debajo del umbral es el que engana, y lo tapa esto.
+    """
+
+    #: ``green`` / ``yellow`` / ``orange`` / ``red``. Vacio si no hay producto.
+    ls_alerta_usgs: str = ""
+    #: Poblacion expuesta que publica USGS, ya ponderada. Cadena tal cual viene.
+    ls_pop_usgs: str = ""
+    lq_alerta_usgs: str = ""
+    lq_pop_usgs: str = ""
+
+    @property
+    def vacio(self) -> bool:
+        return not any((self.ls_alerta_usgs, self.lq_alerta_usgs))
+
+    def alerta_viva(self, tipo: str) -> bool:
+        """True si USGS declara algo distinto de verde para ese tipo."""
+        alerta = self.ls_alerta_usgs if tipo == "ls" else self.lq_alerta_usgs
+        return bool(alerta) and alerta.lower() != "green"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ls_alerta_usgs": self.ls_alerta_usgs,
+            "ls_pop_usgs": self.ls_pop_usgs,
+            "lq_alerta_usgs": self.lq_alerta_usgs,
+            "lq_pop_usgs": self.lq_pop_usgs,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class Report:
     """Reporte completo, serializable a ``report.json``."""
 
@@ -235,6 +282,8 @@ class Report:
     #: edificaciones, vias y equipamiento son los de hoy, porque OSM y
     #: Overture no guardan el pasado.
     backtest: bool = False
+    #: Alertas del propio USGS para Ground Failure. Referencia cruzada.
+    ground_failure_usgs: GroundFailureUSGS = field(default_factory=GroundFailureUSGS)
     #: Deltas frente a la version anterior del reporte (RF-04).
     changelog: tuple[str, ...] = ()
     schema: str = REPORT_SCHEMA_ID
@@ -252,6 +301,7 @@ class Report:
             "totales": self.totales.to_dict(),
             "top_municipios": [m.to_dict() for m in self.top_municipios],
             "incertidumbre": self.incertidumbre.to_dict(),
+            "ground_failure_usgs": self.ground_failure_usgs.to_dict(),
             "descargas": self.descargas.to_dict(),
             "changelog": list(self.changelog),
             "disclaimers": list(DISCLAIMERS),
@@ -279,6 +329,7 @@ class Report:
                 pop_discrepancia_pct=data["incertidumbre"]["pop_discrepancia_pct"],
                 notas=tuple(data["incertidumbre"].get("notas", [])),
             ),
+            ground_failure_usgs=GroundFailureUSGS(**data.get("ground_failure_usgs", {})),
             descargas=Descargas(**data.get("descargas", {})),
             preliminar=bool(data.get("preliminar", False)),
             backtest=bool(data.get("backtest", False)),

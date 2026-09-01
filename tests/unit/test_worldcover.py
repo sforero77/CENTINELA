@@ -251,3 +251,62 @@ def test_saltarse_una_tesela_no_materializa_la_siguiente() -> None:
 
     assert "list(clases_por_celda" not in fuente
     assert "for bloque in clases_por_celda(" in fuente
+
+
+def test_todas_las_teselas_ausentes_si_tumban_el_build(monkeypatch: Any) -> None:
+    """La otra mitad de la leccion, que faltaba.
+
+    Una tesela ausente es oceano y se salta. **Todas** ausentes no es oceano:
+    es que la coleccion cambio de version o de bucket —las URL de este modulo
+    son constantes fijas—. Sin esta guardia, `lulc_h3` quedaba vacia, el LEFT
+    JOIN del ensamblaje ponia 0.0 en las siete columnas de cobertura de todas
+    las celdas del pais, y el activo se publicaba con "0 % arbolado" en la
+    Amazonia pasando todos los asserts. Esos ceros salen a la calle en los
+    reportes de incendio.
+    """
+    import duckdb
+
+    from pipelines.p0_exposure import raster_categorico_h3
+
+    def solo_404(*_args: Any, **_kwargs: Any) -> Any:
+        raise RuntimeError("HTTP response code: 404")
+
+    monkeypatch.setattr(raster_categorico_h3, "clases_por_celda", solo_404)
+    con = duckdb.connect()
+    con.execute("INSTALL h3 FROM community; LOAD h3")
+
+    with pytest.raises(ValueError, match="Ninguna de las 3 teselas"):
+        raster_categorico_h3.aggregate_categorical_to_h3(
+            con,
+            ["/vsicurl/a.tif", "/vsicurl/b.tif", "/vsicurl/c.tif"],
+            tabla="lulc_h3",
+        )
+
+
+def test_una_sola_tesela_ausente_de_varias_sigue_sin_tumbar_nada(monkeypatch: Any) -> None:
+    """Y la guardia nueva no puede comerse el caso que la anterior resolvio."""
+    import duckdb
+    import pyarrow as pa
+
+    from pipelines.p0_exposure import raster_categorico_h3
+
+    def una_falla(fuente: str, **_kwargs: Any) -> Any:
+        if fuente.endswith("b.tif"):
+            raise RuntimeError("HTTP response code: 404")
+        yield pa.table(
+            {
+                "lon": pa.array([-75.7], pa.float64()),
+                "lat": pa.array([4.8], pa.float64()),
+                "clase": pa.array(["arbolado"], pa.string()),
+            }
+        )
+
+    monkeypatch.setattr(raster_categorico_h3, "clases_por_celda", una_falla)
+    con = duckdb.connect()
+    con.execute("INSTALL h3 FROM community; LOAD h3")
+
+    resumen = raster_categorico_h3.aggregate_categorical_to_h3(
+        con, ["/vsicurl/a.tif", "/vsicurl/b.tif"], tabla="lulc_h3"
+    )
+
+    assert resumen.celdas == 1

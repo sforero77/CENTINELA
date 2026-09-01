@@ -102,6 +102,35 @@ class ProductSet:
             "download/contours.json",
         )
 
+    def ground_failure_alerts(self) -> dict[str, str]:
+        """Alertas del propio USGS para el producto Ground Failure.
+
+        Se publican como **referencia cruzada**, por la misma razon que el nivel
+        PAGER: son la cifra de otro, no la nuestra. Y aqui hacen ademas un
+        trabajo concreto.
+
+        CENTINELA cuenta la poblacion de toda celda cuyo valor supera el umbral;
+        USGS pondera la poblacion por el valor de la celda. Son dos preguntas
+        distintas y dan dos numeros distintos —para el Choco, 1,6 millones
+        contra ~460 mil en licuefaccion—, asi que publicar el nuestro sin el
+        suyo al lado invita a leer uno como si fuera el otro.
+
+        Y resuelven el caso peor: un conteo por umbral que da **0** junto a una
+        alerta naranja de USGS. El cero es cierto —ninguna celda llega al
+        umbral— y se lee como "no hay exposicion a deslizamiento", que en un
+        M7,4 sobre cordillera es falso. Con la alerta al lado, no.
+        """
+        if self.ground_failure is None:
+            return {}
+        props = self.ground_failure.props
+        alertas = {
+            "ls_alerta_usgs": props.get("landslide-alert", ""),
+            "ls_pop_usgs": props.get("landslide-population-alert-value", ""),
+            "lq_alerta_usgs": props.get("liquefaction-alert", ""),
+            "lq_pop_usgs": props.get("liquefaction-population-alert-value", ""),
+        }
+        return {k: v for k, v in alertas.items() if v}
+
     def pager_alert(self) -> str:
         """Nivel de alerta PAGER (``green``/``yellow``/``orange``/``red``).
 
