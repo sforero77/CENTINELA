@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-01T16:00:25Z",
+  "generado_utc": "2026-09-01T17:45:25Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -123,17 +123,6 @@
       "lugar": "northern East Pacific Rise",
       "origen_utc": "2026-08-28T02:39:17Z",
       "razon": "M5.0 < umbral M5.5",
-      "iso3": ""
-    },
-    {
-      "usgs_id": "us7000tcc3",
-      "mag": 4.5,
-      "lon": -69.6195,
-      "lat": -17.5572,
-      "depth_km": 142.0,
-      "lugar": "42 km al E de Estique, Perú",
-      "origen_utc": "2026-08-27T17:40:41Z",
-      "razon": "M4.5 < umbral M5.5",
       "iso3": ""
     }
   ]
