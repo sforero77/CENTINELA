@@ -300,7 +300,7 @@ ahora que el valor sea finito, y la agregación descarta longitudes infinitas o
 mayores de 2.000 km — Overture parte las vías en segmentos mucho más cortos, así
 que por encima de eso no hay carretera sino geometría rota.
 
-### El sesgo de población era nuestro, no de GHS-POP
+### El sesgo de población era del pipeline, no de GHS-POP
 
 Medidos los 18 países, los desvios de GHS-POP frente a World Population
 Prospects van de **-0,80 % (Chile) a +6,59 % (Paraguay)**, y quince de dieciocho

@@ -91,7 +91,7 @@ esta en [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md).
   acuerda. Conservar algo sin llamador exige declararlo con su motivo, y «esta
   probada» no es un motivo.
 
-## Lo que no aceptamos
+## Lo que el proyecto no acepta
 
 - Nada que requiera un servidor vivo en el camino crítico.
 - Nada que requiera credenciales privadas para reproducir un resultado.

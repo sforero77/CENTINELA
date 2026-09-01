@@ -75,3 +75,13 @@ Estas no están cerradas y viven en [`PENDIENTES.md`](../../PENDIENTES.md):
   ejecución. Contradice parcialmente el espíritu de D6.
 - **Coropletas r7/r6 en PMTiles**: declaradas en D1/D2, todavía no construidas.
   El resto del visor funciona sin ellas.
+- **`cont_mmi.json` en vez de `grid.xml`, sin delta medido.** Es la crítica
+  metodológica más seria que este sistema puede recibir, y la justificación
+  actual es de rendimiento, no científica: las isolíneas son órdenes de magnitud
+  menos geometría que la malla, y se rellenan con un polyfill directo. Pero
+  rellenar entre isolíneas de paso 0,5 asigna a cada celda el valor de la banda
+  que contiene su centro, y `grid.xml` trae el campo continuo. **No está medido
+  cuánto se separan las dos.** Lo que cierra la discusión es correr las dos sobre
+  el mismo evento y publicar el delta: si es menor del 3 %, hay una defensa
+  cerrada; si es mayor, hay un hallazgo. Cualquiera de los dos resultados vale
+  más que el argumento de rendimiento. Ver `PENDIENTES.md`.

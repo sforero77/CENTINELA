@@ -14,7 +14,7 @@ población y edificaciones, cruzada con un modelo de intensidad.
 
 - ❌ **No es alerta temprana.** El reporte se publica *después* del sismo. No
   notifica a la población ni recomienda evacuar.
-- ❌ **No estima víctimas.** Eso lo hace PAGER (USGS) y solo lo referenciamos.
+- ❌ **No estima víctimas.** Eso lo hace PAGER (USGS), y este sistema solo lo referencia.
 - ❌ **No dictamina daño.** Exposición no es daño. Una edificación dentro de
   MMI≥7 esta *expuesta*; si se daño o no, este sistema no lo sabe.
 - ❌ **No dictamina habitabilidad.** La brigada de imagen produce

@@ -56,7 +56,7 @@
 ### 1.2 No-objetivos (línea roja, se documentan en el sitio)
 
 - ❌ Alerta temprana o notificación de emergencia a población.
-- ❌ Estimación de víctimas (eso es PAGER; solo lo referenciamos).
+- ❌ Estimación de víctimas (eso es PAGER; el sistema solo lo referencia).
 - ❌ Dictamen de daño estructural o habitabilidad (la brigada IA produce *priorización*, jamás veredicto).
 - ❌ Datos personales de cualquier tipo (desaparecidos, censos nominales): fuera de alcance permanente.
 - ❌ Operación 24/7 con humanos en el circuito crítico.

@@ -336,6 +336,23 @@ máximo de las isolíneas que la intersecan. Cambia las veintiuna cifras
 publicadas a la vez, así que se hace con el catálogo entero y publicando el
 delta, igual que se hizo con `col-v0.5`.
 
+### 2.1.sexies Medir el delta entre `cont_mmi.json` y `grid.xml`
+
+**Abierto el 1-sep-2026.** El sistema calcula sobre las isolíneas del ShakeMap y
+no sobre su malla. La justificación escrita es de rendimiento —las isolíneas son
+órdenes de magnitud menos geometría— y esa es una razón de ingeniería, no una de
+método.
+
+Rellenar entre isolíneas de paso 0,5 le da a cada celda el valor de la banda que
+contiene su centro. `grid.xml` trae el campo continuo, así que produciría otra
+cifra. **Cuánto otra no está medido**, y es la primera pregunta que hará
+cualquiera que revise esto con criterio.
+
+Correr las dos sobre el mismo evento —el Chocó, que tiene todo congelado en
+golden— y publicar el delta. Si es menor del 3 %, la decisión queda defendida
+con un número en vez de con un argumento. Si es mayor, es un hallazgo y hay que
+cambiar el método. Los dos resultados valen más que la situación actual.
+
 ### 2.2 Coropletas r7/r6 del visor
 
 **Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salió primero de las
