@@ -381,6 +381,11 @@ personas, así que la cifra apenas se mueve; lo que importa es que ese cero se l
 como «medido y da cero» cuando es «no representable», que es una familia de fallo
 que este proyecto ya tiene nombrada.
 
+Es el mismo sesgo que §2.1.quinquies ya declara —`mmi_max` nunca sobreestima—
+pero por otro mecanismo: allí es el centro de la celda frente a sus esquinas,
+aquí es el nivel más alto que el fichero de contornos llega a dibujar. Lo que
+añade esta medición es el contraste contra el campo, que hasta ahora no existía.
+
 **Y la justificación original ya no se sostiene.** Era de rendimiento. La
 medición completa —parsear 27 MB de rejilla, calcular 559.103 centros de celda y
 muestrear— tarda **6 segundos**. El coste que se quiso evitar no existe.
@@ -388,24 +393,6 @@ muestrear— tarda **6 segundos**. El coste que se quiso evitar no existe.
 Reproducible: `scripts/delta_contornos_vs_grid.py us6000tjl2 COL`.
 
 Lo que abre, en §2.1.nonies.
-
-### 2.1.nonies Cambiar el método de contornos a `grid.xml`
-
-**Abierto el 1-sep-2026**, por lo medido en §2.1.sexies. No es una corrección de
-un fallo: es un cambio de método, y mueve **todas** las cifras publicadas —en el
-Chocó, +11,8 % en MMI≥7—. Por eso se anota en vez de hacerse en caliente.
-
-Lo que hay que resolver antes:
-
-1. **Medirlo en más de un evento.** El delta del Chocó está dominado por una
-   ciudad sobre la isolínea, así que su *magnitud* no se generaliza. El
-   mecanismo sí. Correr el script sobre Venezuela (v15, doble mainshock) y
-   Muisne da tres puntos en vez de uno.
-2. **Decidir qué se muestrea.** Hoy el contorno da el suelo de la banda y
-   `mmi_mean` y `mmi_max` valen lo mismo —la docstring de `MmiCell` ya lo
-   admite—. Con la rejilla se puede dar a cada celda su media y su máximo de
-   verdad, que son dos cifras distintas y hoy no lo son.
-3. **Re-emitir los veintiuno** y actualizar la portada, como el 1-sep.
 
 ### 2.1.septies El arreglo de A1 está en el código y no en el dato publicado
 
@@ -462,6 +449,24 @@ vigente y la incidencia semanal nace vacía, que es la única forma de que dentr
 de un mes alguien se la crea.
 
 ---
+
+### 2.1.nonies Cambiar el método de contornos a `grid.xml`
+
+**Abierto el 1-sep-2026**, por lo medido en §2.1.sexies. No es una corrección de
+un fallo: es un cambio de método, y mueve **todas** las cifras publicadas —en el
+Chocó, +11,8 % en MMI≥7—. Por eso se anota en vez de hacerse en caliente.
+
+Lo que hay que resolver antes:
+
+1. **Medirlo en más de un evento.** El delta del Chocó está dominado por una
+   ciudad sobre la isolínea, así que su *magnitud* no se generaliza. El
+   mecanismo sí. Correr el script sobre Venezuela (v15, doble mainshock) y
+   Muisne da tres puntos en vez de uno.
+2. **Decidir qué se muestrea.** Hoy el contorno da el suelo de la banda y
+   `mmi_mean` y `mmi_max` valen lo mismo —la docstring de `MmiCell` ya lo
+   admite—. Con la rejilla se puede dar a cada celda su media y su máximo de
+   verdad, que son dos cifras distintas y hoy no lo son.
+3. **Re-emitir los veintiuno** y actualizar la portada, como el 1-sep.
 
 ### 2.2 Coropletas r7/r6 del visor
 
