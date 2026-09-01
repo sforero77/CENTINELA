@@ -338,20 +338,65 @@ delta, igual que se hizo con `col-v0.5`.
 
 ### 2.1.sexies Medir el delta entre `cont_mmi.json` y `grid.xml`
 
-**Abierto el 1-sep-2026.** El sistema calcula sobre las isolíneas del ShakeMap y
-no sobre su malla. La justificación escrita es de rendimiento —las isolíneas son
-órdenes de magnitud menos geometría— y esa es una razón de ingeniería, no una de
-método.
+**Medido el 1-sep-2026, y es un hallazgo.** El criterio estaba fijado antes de
+medir —por debajo del 3 % la decisión queda defendida, por encima hay que
+cambiar el método— y el resultado se sale por un factor de cuatro.
 
-Rellenar entre isolíneas de paso 0,5 le da a cada celda el valor de la banda que
-contiene su centro. `grid.xml` trae el campo continuo, así que produciría otra
-cifra. **Cuánto otra no está medido**, y es la primera pregunta que hará
-cualquiera que revise esto con criterio.
+Sobre el Chocó (us6000tjl2, ShakeMap v8), replicando el cómputo real —r8,
+`MMI_MIN_POLYFILL`, y el mismo umbral `mmi_max >= X` de `SQL_TOTALES`— contra el
+mismo activo de exposición:
 
-Correr las dos sobre el mismo evento —el Chocó, que tiene todo congelado en
-golden— y publicar el delta. Si es menor del 3 %, la decisión queda defendida
-con un número en vez de con un argumento. Si es mayor, es un hallazgo y hay que
-cambiar el método. Los dos resultados valen más que la situación actual.
+| Umbral | Contornos (lo publicado) | `grid.xml` | Delta | |
+|---|---:|---:|---:|---:|
+| MMI≥6 | 7.194.540 | 7.218.530 | +23.990 | **+0,3 %** |
+| MMI≥7 | 2.424.287 | 2.709.216 | +284.929 | **+11,8 %** |
+| Edificaciones MMI≥7 | 448.789 | 503.516 | +54.727 | +12,2 % |
+
+La cifra de MMI≥6 por contornos sale idéntica a la publicada, que es lo que
+acredita que la réplica del método es fiel y no una aproximación.
+
+**El mecanismo, que importa más que el número.** `cont_mmi.json` describe el
+borde de MMI 7 —una región de unos 3.900 km²— con **103 vértices**, paso mediano
+de **4,2 km**. La rejilla de `grid.xml` es de **1 km**. El pipeline calcula sobre
+una simplificación de cuatro kilómetros de un campo de uno: `cont_mmi.json` es un
+producto de dibujo y se está consumiendo como producto de análisis.
+
+**No se pierde área.** De las celdas que la rejilla pone en MMI≥7, **cero** se
+quedan sin contorno. El relleno cubre todo lo que tiene que cubrir; lo que falla
+es el valor que asigna, no su alcance. Son dos fallos muy distintos y convenía
+separarlos.
+
+**Dónde duele.** El 68 % del delta es **un solo municipio**: Manizales, capital
+de Caldas, que queda justo sobre la isolínea. El reporte publicado le atribuye
+1.932 personas en MMI≥7; muestreando la rejilla salen unas 219.000. Villamaría,
+al lado, pasa de 0 a 29.441. Cuando el borde cruza una ciudad densa, el método
+decide si la ciudad cuenta.
+
+**Y la justificación original ya no se sostiene.** Era de rendimiento. La
+medición completa —parsear 27 MB de rejilla, calcular 559.103 centros de celda y
+muestrear— tarda **6 segundos**. El coste que se quiso evitar no existe.
+
+Reproducible: `scripts/delta_contornos_vs_grid.py us6000tjl2 COL`.
+
+Lo que abre, en §2.1.nonies.
+
+### 2.1.nonies Cambiar el método de contornos a `grid.xml`
+
+**Abierto el 1-sep-2026**, por lo medido en §2.1.sexies. No es una corrección de
+un fallo: es un cambio de método, y mueve **todas** las cifras publicadas —en el
+Chocó, +11,8 % en MMI≥7—. Por eso se anota en vez de hacerse en caliente.
+
+Lo que hay que resolver antes:
+
+1. **Medirlo en más de un evento.** El delta del Chocó está dominado por una
+   ciudad sobre la isolínea, así que su *magnitud* no se generaliza. El
+   mecanismo sí. Correr el script sobre Venezuela (v15, doble mainshock) y
+   Muisne da tres puntos en vez de uno.
+2. **Decidir qué se muestrea.** Hoy el contorno da el suelo de la banda y
+   `mmi_mean` y `mmi_max` valen lo mismo —la docstring de `MmiCell` ya lo
+   admite—. Con la rejilla se puede dar a cada celda su media y su máximo de
+   verdad, que son dos cifras distintas y hoy no lo son.
+3. **Re-emitir los veintiuno** y actualizar la portada, como el 1-sep.
 
 ### 2.1.septies El arreglo de A1 está en el código y no en el dato publicado
 
