@@ -33,7 +33,18 @@ H3_RES_COMPUTE: Final[int] = 8
 #: Resoluciones agregadas que consume el visor.
 H3_RES_VIEWER: Final[tuple[int, ...]] = (7, 6)
 
-#: CRS de publicacion. El computo de areas usa proyeccion equiarea local.
+#: CRS de publicacion. **No hay ninguna reproyeccion en el repositorio.**
+#:
+#: Este comentario decia "el computo de areas usa proyeccion equiarea local", y
+#: eran dos cosas mal a la vez. Una: no existe tal reproyeccion; longitudes y
+#: areas se calculan con `ST_Length_Spheroid` y `ST_Area_Spheroid`, que es
+#: **geodesico sobre el elipsoide**, no proyectado. Dos: una equiarea conserva
+#: superficie a costa de la distancia, asi que seria la clase equivocada para
+#: medir longitud — y `road_km` es una cifra titular.
+#:
+#: Los numeros estan bien: nadie calcula en grados, y las columnas estan bien
+#: nombradas. Lo que estaba mal era lo que el codigo decia de si mismo, que en
+#: `layers.py` ademas no era un comentario sino metadato publicado.
 CRS_PUBLICATION: Final[str] = "EPSG:4326"
 
 # --- Bandas de intensidad publicadas (RF-05) ------------------------------

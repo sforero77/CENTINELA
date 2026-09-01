@@ -35,6 +35,11 @@ class IncendiosResult:
     #: ninguna, que **no** tumba la corrida: el fuego se publica igual. El
     #: viento es contexto util, no el dato; perderlo degrada, no invalida.
     ciclo_viento: str = ""
+    #: Lo que el activo consumido no traia y salio como cero. No tumba la
+    #: corrida —un cero declarado sigue siendo publicable— pero tiene que
+    #: llegar a quien la lea, que es lo que no pasaba: `register_exposure_view`
+    #: devolvia la lista y este llamador la tiraba.
+    avisos: tuple[str, ...] = ()
 
     @property
     def ciego(self) -> bool:
@@ -92,7 +97,17 @@ def run_incendios(
     result.celdas = registrar_focos(conexion, en_latam)
 
     if exposure_glob:
-        register_exposure_view(conexion, exposure_glob)
+        # El retorno se descartaba, y aqui duele mas que en el sismo: las siete
+        # columnas de cobertura del suelo son justo las que un activo anterior a
+        # `col-v0.5` no trae, y sin este aviso un incendio en la Amazonia se
+        # publica con "0 % arbolado" sin que nada lo distinga de una medida.
+        ausentes = register_exposure_view(conexion, exposure_glob)
+        if ausentes:
+            result.avisos = (
+                *result.avisos,
+                f"El activo consumido no trae {len(ausentes)} columna(s) que esta capa sabe "
+                f"publicar ({', '.join(ausentes)}); salen como cero y no estan medidas.",
+            )
 
     celdas = cruzar_con_exposicion(conexion)
 
@@ -110,5 +125,7 @@ def run_incendios(
         )
     result.ciclo_viento = viento.ciclo
 
-    result.publicado = write_incendios(celdas, site_dir=site_dir, viento=viento)
+    result.publicado = write_incendios(
+        celdas, site_dir=site_dir, viento=viento, avisos=result.avisos
+    )
     return result

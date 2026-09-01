@@ -20,14 +20,20 @@ Cuatro cosas caducan solas, sin avisar. Estan por orden de cercania.
 | **Trimestral** | El activo de exposicion | Los datos envejecen; no falla nada | `exposure_quarterly.yml` lo reconstruye solo |
 | **Anual** | Las epocas de GHS-POP y WorldPop | Las cifras se alejan de la realidad | Nadie. Revisar a mano si sale un release nuevo |
 
-**El reloj que no es un reloj: el cron.** `trigger.yml` declara `*/10` y no
-corre cada diez minutos. Medido el 24-ago-2026 sobre 22 corridas programadas en
+**El reloj que no es un reloj: el cron.** `trigger.yml` declaraba `*/10` y no
+corria cada diez minutos. Medido el 24-ago-2026 sobre 22 corridas programadas en
 dieciseis horas seguidas:
 
 | | Minutos entre corridas |
 |---|---|
 | Declarado | 10 |
 | Real | min **25,0** · mediana **45,7** · p90 **56,9** · max **73,3** |
+
+Bajo a `*/30` el 27-ago-2026, cuando se vio que GitHub reparte unos pocos turnos
+**por repositorio** y no uno por workflow. Vuelto a medir entre el 25 y el 30 de
+agosto sobre 23 latidos: **p50 157 min · p90 462 · peor 766 (12,8 h)**. La cifra
+que vale es esa; la tabla de arriba se conserva porque es la que explica por que
+se bajo el intervalo.
 
 Entre cuatro y siete veces lo declarado, y peor que el rango de 5-30 min que
 documenta GitHub. Importa porque el objetivo es p50 ≤ 60 min desde el origen del
@@ -61,7 +67,8 @@ sirviendo— pero si para *reconstruir*.
 gh run list --limit 10          # nada en rojo
 ```
 
-Mira sobre todo que el **trigger siga corriendo cada 10 minutos**. Si dejo de
+Mira sobre todo que el **trigger siga latiendo**. Declara `*/30` y entrega mucho
+menos; lo que importa es que no se pare del todo. Si dejó de
 aparecer, el cron se desactivo.
 
 ### Ante un issue automatico

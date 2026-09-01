@@ -115,7 +115,7 @@ lo que necesita quien va a recalcular.
 
 ## El changelog de deltas (RF-04)
 
-Un ShakeMap se revisa muchas veces —el de Venezuela llegó a **v14**—. Quien ya
+Un ShakeMap se revisa muchas veces —el de Venezuela llegó a **v15**—. Quien ya
 leyó la versión anterior necesita saber qué cambió, no volver a leerlo entero
 durante una emergencia.
 

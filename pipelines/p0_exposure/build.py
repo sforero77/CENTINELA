@@ -829,7 +829,9 @@ def build_country(
     # despues de la poblacion y antes del ensamblaje.
     ensure_layer_tables(conexion)
     load_country_neighbours(conexion, plan.iso3, bbox=caja, fetcher=fetcher)
-    rescue_unassigned(conexion, tabla_datos="pop_h3")
+    # Sin argumento: se rescata sobre **todas** las capas con contenido, no solo
+    # sobre poblacion. Ver `TABLAS_CANDIDATAS`.
+    rescue_unassigned(conexion)
     rescate = poblacion_rescatada(conexion, "pop_h3")
 
     resumen = assemble_exposure(conexion, iso3=plan.iso3, manifest_id=plan.manifest.manifest_id)

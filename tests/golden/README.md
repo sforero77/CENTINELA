@@ -16,7 +16,7 @@ las siete congeladas, y que un estado atrasado dispara re-emision mientras uno
 al dia no (RF-04).
 
 **G2 — Venezuela.** Lo mismo, mas el **evento doble**: dos mainshocks separados
-por 33 segundos y 145 km deben producir dos `event_state` y dos reportes, nunca
+por 32,2 segundos y 145 km deben producir dos `event_state` y dos reportes, nunca
 uno tratado como replica del otro. Incluye la regresion del bug de seleccion de
 version que esta fixture destapo.
 

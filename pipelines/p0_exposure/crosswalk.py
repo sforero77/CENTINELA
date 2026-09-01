@@ -28,7 +28,7 @@ vez hace falta.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -463,10 +463,24 @@ def build_crosswalk(
     return celdas
 
 
-#: Distancia maxima, en grados, a la que una celda sin asignar puede seguir
-#: siendo del pais. ~0,02 grados son unos 2,2 km en el ecuador: mas que
-#: suficiente para una celda r8 (~0,7 km²) partida por la linea de costa, y muy
-#: poco para alcanzar el pais vecino.
+#: Distancia maxima, **en grados**, a la que una celda sin asignar puede seguir
+#: siendo del pais. Se aplica con operadores planares (`ST_DWithin`,
+#: `ST_Distance` sobre coordenadas geograficas), asi que un grado no mide lo
+#: mismo en toda la region:
+#:
+#:   * en el ecuador, 0,02° de longitud son ~2,2 km;
+#:   * en Cabo de Hornos (-56°), ~1,2 km.
+#:
+#: O sea que la cota se estrecha casi a la mitad justo donde `geo.py` pone el
+#: limite sur para cubrir Chile, y justo donde hay mas costa fragmentada. Chile
+#: rescata el 31 % de su poblacion y esta bien —su rescate es mar— pero lo hace
+#: con la mitad de margen que Colombia.
+#:
+#: **No se convierte a metros aqui a proposito.** Cambiarlo mueve el activo de
+#: los diecinueve paises y su desvio contra la referencia oficial, o sea las
+#: cifras publicadas de todos. El embudo del log registra ahora
+#: `fuera_por_la_cota`, que es la medida que dice si el estrechamiento austral
+#: esta dejando celdas fuera; cuando haya numero, se decide con el.
 RESCUE_MAX_DEGREES = 0.02
 
 #: Paso 2, en dos tiempos. Primero se acota a las celdas que estan **junto al
@@ -486,7 +500,7 @@ CREATE OR REPLACE TEMP TABLE candidatas_rescate AS
 SELECT DISTINCT d.h3_08,
        h3_cell_to_lng(d.h3_08) AS lng,
        h3_cell_to_lat(d.h3_08) AS lat
-FROM {tabla_datos} d
+FROM ({union_de_tablas}) d
 WHERE d.h3_08 NOT IN (SELECT h3_08 FROM crosswalk_h3_adm)
 """
 
@@ -546,17 +560,48 @@ JOIN LATERAL (
 """
 
 
+#: Tablas de capa que aportan candidatas al rescate. **No solo poblacion.**
+#:
+#: Esta era la mitad que faltaba de una leccion que el ensamblaje ya habia
+#: aprendido: `SQL_EXPOSURE` descartaba las celdas "sin nada" mirando solo
+#: poblacion, edificaciones y vias, y se arreglo para mirar las nueve capas
+#: porque «una escuela remota, sin poblacion censada alrededor y sin via
+#: mapeada, es justo el sitio que un reporte de exposicion no puede permitirse
+#: perder».
+#:
+#: La puerta de mas arriba seguia igual. `rescue_unassigned` solo miraba
+#: `pop_h3`, asi que una celda costera con un hospital dentro y sin poblacion
+#: modelada no llegaba siquiera a ser candidata: no entraba al crosswalk y
+#: desaparecia del activo con el hospital. Arreglar el WHERE del ensamblaje sin
+#: arreglar esto deja el hueco a medio cerrar.
+TABLAS_CANDIDATAS: tuple[str, ...] = (
+    "pop_h3",
+    "bld_h3",
+    "built_h3",
+    "health_h3",
+    "edu_h3",
+    "roads_h3",
+)
+
+
 def rescue_unassigned(
     con: Any,
     *,
-    tabla_datos: str = "pop_h3",
+    tabla_datos: str | Sequence[str] = TABLAS_CANDIDATAS,
     max_grados: float = RESCUE_MAX_DEGREES,
 ) -> int:
     """Asigna municipio a las celdas con datos que el polyfill dejo fuera.
 
     Son celdas costeras y de frontera: su centro cae fuera de todo poligono
-    municipal pero su parte terrestre tiene poblacion. Sin este paso esa gente
-    desaparece del reporte municipal, y el invariante de suma se rompe.
+    municipal pero su parte terrestre tiene **algo**: poblacion, un hospital,
+    una escuela, un tramo de via. Sin este paso eso desaparece del reporte
+    municipal, y el invariante de suma se rompe.
+
+    Args:
+        tabla_datos: tabla o tablas de las que salen las candidatas. Por defecto
+            `TABLAS_CANDIDATAS`, o sea todas las que aportan contenido. Se
+            acepta una cadena suelta para no romper a quien la pase asi.
+        max_grados: cota de distancia al pais. Ver `RESCUE_MAX_DEGREES`.
 
     **La cota de distancia no es una optimizacion, es correccion.** El activo se
     construye desde teselas globales que cubren tambien los paises vecinos, y
@@ -585,7 +630,13 @@ def rescue_unassigned(
     )
     antes: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
 
-    con.execute(SQL_CANDIDATAS.format(tabla_datos=tabla_datos))
+    tablas = (tabla_datos,) if isinstance(tabla_datos, str) else tuple(tabla_datos)
+    # Solo las que existen: `ensure_layer_tables` corre antes, pero esta funcion
+    # tambien se llama desde pruebas que montan una tabla sola.
+    presentes = {r[0] for r in con.execute("SELECT table_name FROM duckdb_tables()").fetchall()}
+    usadas = [t for t in tablas if t in presentes] or list(tablas)
+    union = " UNION ".join(f"SELECT h3_08 FROM {t}" for t in usadas)
+    con.execute(SQL_CANDIDATAS.format(union_de_tablas=union))
     candidatas: int = con.execute("SELECT count(*) FROM candidatas_rescate").fetchone()[0]
     con.execute(SQL_ACOTAR_AL_PAIS.format(max_grados=max_grados))
     junto: int = con.execute("SELECT count(*) FROM junto_al_pais").fetchone()[0]
@@ -601,7 +652,7 @@ def rescue_unassigned(
     # frente a la ONU va de -0,80 % (Chile) a +6,59 % (Paraguay) y **se ordena
     # por cuanta frontera tiene cada pais en proporcion a su area**. Si la
     # hipotesis es correcta, esta fraccion deberia seguir el mismo orden.
-    poblacion = poblacion_rescatada(con, tabla_datos)
+    poblacion = poblacion_rescatada(con, usadas[0])
     _log.info(
         "celdas rescatadas junto a la linea de costa o frontera",
         extra={
@@ -610,9 +661,14 @@ def rescue_unassigned(
                 "max_grados": max_grados,
                 # El embudo, para que se vea de un vistazo si el descarte de
                 # vecinos hizo algo o paso de largo.
+                "tablas": usadas,
                 "candidatas": candidatas,
                 "junto_al_pais": junto,
                 "descartadas_por_vecino": junto - tras_vecinos,
+                # Lo que **no** se rescato por quedar mas lejos que la cota. El
+                # embudo registraba cuantas entraron y no cuantas se quedaron
+                # fuera, que es la mitad que dice si la cota esta bien puesta.
+                "fuera_por_la_cota": candidatas - junto,
                 **poblacion,
             }
         },

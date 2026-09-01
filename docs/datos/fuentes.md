@@ -13,7 +13,7 @@ sistema declara públicamente sobre ella.
 | **Productos** | ShakeMap (`cont_mmi.json`), Ground Failure (rásters) |
 | **Licencia** | Dominio público (obra del gobierno de EE. UU.) |
 | **Cadencia** | Continua |
-| **Limitación** | ShakeMap se revisa muchas veces; el de Venezuela llegó a v14 |
+| **Limitación** | ShakeMap se revisa muchas veces; el de Venezuela llegó a v15 |
 
 > **FDSN está prohibido en el camino crítico.** El propio USGS recomienda los
 > feeds GeoJSON para aplicaciones automatizadas y desaconseja el polling a
@@ -71,7 +71,7 @@ Descartadas y por qué: **REPS** (sin geometría utilizable, T0.5);
 | Fuente | Qué aporta | Licencia |
 |---|---|---|
 | **MGN del DANE** | División administrativa de Colombia | CC-BY 4.0 |
-| **COD-AB de OCHA** | División administrativa del resto | CC-BY 4.0 |
+| **COD-AB de OCHA** | División administrativa del resto | CC-BY 3.0 IGO |
 | **Overture `divisions`** | Complemento | ODbL 1.0 |
 | **ESA WorldCover 2021** | `lulc_*_pct`, `lulc_px` | CC-BY 4.0 |
 

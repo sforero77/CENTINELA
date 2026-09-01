@@ -138,3 +138,74 @@ def test_las_garantias_siguen_enlazadas() -> None:
 
     texto = garantias.read_text(encoding="utf-8")
     assert "Lo que NO está garantizado" in texto, "un documento de garantias sin la mitad incomoda"
+
+
+# --- La tabla de poblacion que va a instituciones --------------------------
+
+INSTITUCIONES = RAIZ / "docs" / "PARA_INSTITUCIONES.md"
+MANIFESTS = RAIZ / "data" / "manifests"
+
+#: Los diecinueve, por ISO3. El fichero es la fuente; la tabla, el derivado.
+ISO3 = sorted(p.stem for p in MANIFESTS.glob("*.yaml"))
+
+
+@pytest.fixture(scope="module")
+def instituciones() -> str:
+    return INSTITUCIONES.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("iso3", ISO3)
+def test_la_tabla_de_instituciones_no_se_despega_de_los_manifests(
+    iso3: str, instituciones: str
+) -> None:
+    """El documento decia 18 de 19 paises, 3 reportes y Brasil pendiente.
+
+    Eran 19, 21 y construido. Y una cifra de poblacion —la de Argentina— se
+    habia movido en el manifest sin que la tabla se enterara. Es el mismo fallo
+    que el resto de este fichero vigila para el README: una tabla copiada a mano
+    se desincroniza, y esta va a instituciones.
+    """
+    referencia = yaml.safe_load((MANIFESTS / f"{iso3}.yaml").read_text("utf-8"))[
+        "referencia_oficial"
+    ]
+    medido = format_number_es(int(referencia["medido_ghs_pop"]))
+
+    assert medido in instituciones, (
+        f"§4 no cita la poblacion medida de {iso3} ({medido}). El manifest la movio."
+    )
+
+
+@pytest.mark.parametrize("iso3", ISO3)
+def test_el_desvio_publicado_es_el_que_sale_de_las_dos_cifras(
+    iso3: str, instituciones: str
+) -> None:
+    """El desvio no es un dato del manifest: es la resta. Publicado a mano, se
+    queda contradiciendo a las dos cifras de su propia fila."""
+    referencia = yaml.safe_load((MANIFESTS / f"{iso3}.yaml").read_text("utf-8"))[
+        "referencia_oficial"
+    ]
+    medido, oficial = int(referencia["medido_ghs_pop"]), int(referencia["poblacion_2025"])
+    desvio = 100.0 * (medido - oficial) / oficial
+    # El menos del documento es U+2212, no un guion: es prosa, no codigo.
+    signo = "+" if desvio >= 0 else "\u2212"
+    esperado = f"| {signo}{abs(desvio):.2f} %".replace(".", ",")
+
+    assert esperado in instituciones, f"§4 no publica {esperado.strip()} para {iso3}"
+
+
+def test_el_documento_dice_que_ningun_reporte_se_disparo_en_vivo(instituciones: str) -> None:
+    """El silencio sobre esto se lee como ambiguedad deliberada.
+
+    `site/status.json` publica `eventos_publicados: 0`. Si algun dia deja de ser
+    cero, esta prueba falla y toca reescribir el parrafo — que es exactamente el
+    dia en que hay algo mejor que contar.
+    """
+    estado = json.loads((RAIZ / "site" / "status.json").read_text(encoding="utf-8"))
+
+    if int(estado["medido"]["eventos_publicados"]) == 0:
+        assert "los 21 son reconstrucciones" in instituciones.lower()
+    else:
+        raise AssertionError(
+            "Ya hay reportes disparados en vivo: §3 de PARA_INSTITUCIONES y el "
+            "README siguen diciendo que no, y ahora hay algo mejor que contar."
+        )

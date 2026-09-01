@@ -36,9 +36,16 @@ flowchart TB
 
 ## De contornos a celdas
 
-ShakeMap publica `cont_mmi.json`: polígonos de isointensidad. Son órdenes de
-magnitud menos geometría que la malla, así que se convierten a H3 con polyfill
-directamente.
+ShakeMap publica `cont_mmi.json`: **isolíneas** de intensidad en pasos de 0,5,
+como `MultiLineString` — no polígonos, aunque este documento lo dijo así hasta
+el 1-sep-2026. La diferencia no es cosmética: la isolínea de MMI 7,0 es la
+*frontera* de la región ≥7, así que antes de rellenar hay que cerrarla en
+anillos y resolver el anidamiento (una isla de MMI 8 dentro de la de 7 es un
+agujero para el nivel 7, no una región nueva). De eso se ocupa
+`rings_to_geometry`; el diagrama de arriba ya lo decía bien.
+
+Aun cerradas, son órdenes de magnitud menos geometría que la malla, así que se
+convierten a H3 con polyfill directamente.
 
 **Se rellena desde MMI 5,0**, no desde 6. El reporte publica desde MMI 6, pero
 rellenar un nivel más abajo cuesta poco y evita perder el borde. Rellenar

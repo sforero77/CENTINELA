@@ -19,10 +19,27 @@ from ..common.constants import H3_RES_COMPUTE
 
 @dataclass(frozen=True, slots=True)
 class MmiCell:
-    """Intensidad asignada a una celda H3."""
+    """Intensidad asignada a una celda H3.
+
+    **LOS DOS CAMPOS VALEN LO MISMO, Y NO SON LO QUE SU NOMBRE PROMETE.** Ambos
+    llevan el valor de la isolinea mas alta que **contiene el centro** de la
+    celda. Eso hace de `mmi_max` una **cota inferior** de la intensidad maxima
+    dentro de la celda: una celda de 0,74 km² cuyo centro cae en la banda de 7,0
+    puede tener una esquina dentro de la de 7,5, y aqui sale como 7,0.
+
+    Se conserva el nombre porque es el del contrato publicado —viaja al
+    `adm2.csv` con la etiqueta HXL `#indicator+mmi+max` y al ranking municipal—
+    y renombrarlo rompe a quien ya lo consume. Pero lo que afirma esta escrito
+    aqui, y el sesgo va en una sola direccion: nunca sobreestima.
+
+    Corregirlo de verdad pide muestrear la celda, no su centro, y eso cambia las
+    veintiuna cifras publicadas a la vez; esta en `PENDIENTES.md`.
+    """
 
     h3_08: int
+    #: Valor de la isolinea que contiene el centro de la celda.
     mmi_mean: float
+    #: El mismo valor. Cota inferior del maximo real dentro de la celda.
     mmi_max: float
 
 
@@ -156,4 +173,6 @@ def contours_to_h3(
             # Recorrido de menor a mayor: el ultimo en escribir es el mayor MMI.
             celdas[entero] = contorno.value
 
+    # Los dos campos con el mismo valor: es lo que hay con un muestreo por
+    # centro de celda. Ver la docstring de `MmiCell`.
     return {h: MmiCell(h3_08=h, mmi_mean=v, mmi_max=v) for h, v in celdas.items()}

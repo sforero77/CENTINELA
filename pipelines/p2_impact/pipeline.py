@@ -12,7 +12,7 @@ end-to-end sin intervencion*.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -96,6 +96,20 @@ class ImpactTotals:
     pop_ls_alta: float = 0.0
     pop_lq_alta: float = 0.0
     discrepancia_pct: float = 0.0
+    #: Columnas que el activo no traia y `register_exposure_view` sustituyo por
+    #: cero. Va **al final** y con valor por defecto a proposito: las de arriba
+    #: se rellenan por posicion desde la fila de `SQL_TOTALES`, y esta no.
+    #:
+    #: Existe porque el aviso se perdia. `register_exposure_view` devolvia la
+    #: lista y los tres llamadores de produccion descartaban el retorno; solo
+    #: una prueba lo miraba. El `report.json` publicaba `built_m2_mmi7p: 0.0`
+    #: sin distinguir "no medido" de "medido y da cero", y el CSV igual. El
+    #: markdown escondia la fila, que tapa el problema para quien lee y lo deja
+    #: intacto para quien integra — que es el consumidor al que mas dano hace.
+    #:
+    #: `kw_only` para que `*fila` no pueda desbordar hasta aqui: las de arriba se
+    #: rellenan por posicion desde el SQL, y esta no sale del SQL.
+    columnas_ausentes: tuple[str, ...] = field(default=(), kw_only=True)
 
     def to_totales(self) -> Totales:
         return Totales(
@@ -337,7 +351,7 @@ def compute_impact(
             gf_cells=celdas_gf,
         ),
     )
-    register_exposure_view(con, exposure_glob)
+    ausentes = register_exposure_view(con, exposure_glob)
     con.execute(SQL_IMPACT_H3, [products.usgs_id, products.shakemap_version])
 
     # El activo y el sismo tienen que ser del mismo pais. Si no lo son, el join
@@ -364,7 +378,12 @@ def compute_impact(
     fila = con.execute(
         SQL_TOTALES.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB)
     ).fetchone()
-    totales = ImpactTotals(*(float(v or 0.0) for v in fila))
+    # `replace` y no un positional mas: las cifras se rellenan por posicion desde
+    # la fila del SQL, y mezclar las dos formas en la misma llamada deja a mypy
+    # sin poder contar los argumentos.
+    totales = replace(
+        ImpactTotals(*(float(v or 0.0) for v in fila)), columnas_ausentes=tuple(ausentes)
+    )
     _log.info(
         "impacto calculado",
         extra={
@@ -451,6 +470,23 @@ def build_preliminary_report(
 # --- Construccion del reporte ----------------------------------------------
 
 
+def nota_de_columnas_ausentes(columnas: tuple[str, ...]) -> tuple[str, ...]:
+    """Convierte el aviso de `register_exposure_view` en una nota publicada.
+
+    Sin esto, una columna que el activo no trae sale como `0.0` en el JSON y en
+    el CSV, indistinguible de una medida que da cero. El markdown esconde la
+    fila —que es lo correcto para quien lee— y por eso el problema solo lo
+    sufria quien integra, que es a quien mas le cuesta.
+    """
+    if not columnas:
+        return ()
+    return (
+        f"El activo consumido no trae {len(columnas)} columna(s) que este reporte sabe "
+        f"publicar ({', '.join(columnas)}); salen como cero y **no estan medidas**. "
+        "Se corrige reconstruyendo y republicando el activo del pais.",
+    )
+
+
 def build_report(
     con: Any,
     state: EventState,
@@ -510,7 +546,8 @@ def build_report(
         backtest=state.backtest,
         top_municipios=tuple(top),
         incertidumbre=Incertidumbre(
-            pop_discrepancia_pct=round(totales.discrepancia_pct, 1), notas=notas
+            pop_discrepancia_pct=round(totales.discrepancia_pct, 1),
+            notas=notas + nota_de_columnas_ausentes(totales.columnas_ausentes),
         ),
         descargas=Descargas(csv_adm2="adm2.csv", mapa_png="mapa_general.png"),
     )

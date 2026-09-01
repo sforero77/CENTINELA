@@ -2,7 +2,9 @@
 
 **Qué hace:** vigila el feed de USGS, decide qué merece un reporte, y deja
 constancia de todo lo que vio.
-**Cadencia:** cada 5 minutos.
+**Cadencia:** cron de GitHub Actions `*/30`, más `repository_dispatch` para un cron
+externo que todavía no está conectado. Lo declarado no es lo que corre: medido entre
+el 25 y el 30 de agosto sobre 23 latidos, `p50 157 min · p90 462 · peor 766`.
 **Comando:** `uv run centinela trigger [--dry-run]`
 **Código:** `pipelines/p1_trigger/` (feed, filters, observados, run)
 
@@ -101,7 +103,7 @@ los veinte eventos publicados, días desde el sismo hasta la última revisión:
 |---|---|
 | Mediana | **63 días** |
 | Chocó (M7,4) | 11,5 días, hasta v7 |
-| Venezuela (M6,3) | 61,2 días, hasta **v15** |
+| Venezuela, Catia La Mar (M7,5) | 61,2 días, hasta **v15** |
 | Noviembre 2024 | 75,1 días, hasta v9 |
 
 **Ninguno terminó de revisarse dentro de las 24 h del feed.** De ese hueco se

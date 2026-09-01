@@ -61,9 +61,9 @@ def _nacional(con: Any) -> tuple[float, float]:
 
 
 def test_la_suma_municipal_de_licuefaccion_es_la_cifra_nacional(con: Any) -> None:
-    municipal: float = con.execute(
-        "SELECT sum(lq_pop_expuesta_mmi6p) FROM impact_adm2"
-    ).fetchone()[0]
+    municipal: float = con.execute("SELECT sum(lq_pop_expuesta_mmi6p) FROM impact_adm2").fetchone()[
+        0
+    ]
     _, nacional = _nacional(con)
 
     assert municipal == pytest.approx(nacional), (
@@ -73,9 +73,9 @@ def test_la_suma_municipal_de_licuefaccion_es_la_cifra_nacional(con: Any) -> Non
 
 
 def test_la_suma_municipal_de_deslizamiento_es_la_cifra_nacional(con: Any) -> None:
-    municipal: float = con.execute(
-        "SELECT sum(ls_pop_expuesta_mmi6p) FROM impact_adm2"
-    ).fetchone()[0]
+    municipal: float = con.execute("SELECT sum(ls_pop_expuesta_mmi6p) FROM impact_adm2").fetchone()[
+        0
+    ]
     nacional, _ = _nacional(con)
 
     assert municipal == pytest.approx(nacional)
@@ -83,8 +83,8 @@ def test_la_suma_municipal_de_deslizamiento_es_la_cifra_nacional(con: Any) -> No
 
 def test_la_celda_por_debajo_de_mmi6_no_entra_en_ninguna_de_las_dos(con: Any) -> None:
     """El contrato que el sufijo `_mmi6p` declara: 2.000, no 3.000."""
-    municipal: float = con.execute(
-        "SELECT sum(lq_pop_expuesta_mmi6p) FROM impact_adm2"
-    ).fetchone()[0]
+    municipal: float = con.execute("SELECT sum(lq_pop_expuesta_mmi6p) FROM impact_adm2").fetchone()[
+        0
+    ]
 
     assert municipal == pytest.approx(2000.0)

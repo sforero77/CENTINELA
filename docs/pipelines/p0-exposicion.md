@@ -53,7 +53,7 @@ verdad** para el lint de manifests, para el sitio y para la documentación.
 | `pop_worldpop_total` | WorldPop constrained R2025 | CC-BY 4.0 | `pop_alt_worldpop` | suma de píxeles 100 m |
 | `buildings` | Overture `buildings` | ODbL 1.0 | `bld_count`, `bld_area_m2` | conteo y área por celda del centroide |
 | `built_ghsl` | GHS-BUILT-S R2023A ép. 2025 | EC reuse | `built_m2` | suma de superficie construida |
-| `roads` | Overture `transportation` | ODbL 1.0 | `road_km_primary/secondary/other` | longitud **recortada por celda**, en proyección equiárea local |
+| `roads` | Overture `transportation` | ODbL 1.0 | `road_km_primary/secondary/other` | longitud **geodésica** (`ST_Length_Spheroid`) repartida entre los subtramos densificados, por su punto medio |
 | `health` | HOTOSM vía HDX | ODbL 1.0 | `health_count` | conteo de puntos |
 | `education` | HOTOSM vía HDX | ODbL 1.0 | `edu_count` | conteo de puntos |
 | `divisions` | MGN del DANE + COD-AB de OCHA + Overture | CC-BY 4.0 | `iso3`, `adm1_id`, `adm2_id` | centroide + tabla de fracciones en frontera |

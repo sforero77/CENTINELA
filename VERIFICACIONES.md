@@ -651,7 +651,7 @@ de cada producto. Una dependencia menos en el procedimiento de congelado.
 | San Felipe | `us6000t7zc` | 2026-06-24T22:04:31Z | M7.2, 10 km, ShakeMap v9 |
 
 Dos cosas que la espec no anticipaba. Los eventos de Venezuela estan separados
-por **33 segundos** y 145 km: ese es el «evento doble» de G2, y el sistema debe
+por **32,2 segundos** y 145 km: ese es el «evento doble» de G2, y el sistema debe
 producir dos reportes con areas de intensidad solapadas sin fusionarlos. Y Chocó
 fue **profundo** (110 km) pero **si** tiene Ground Failure, asi que G3 no puede
 definirse como «evento profundo» — lo que hay que probar es la ausencia del

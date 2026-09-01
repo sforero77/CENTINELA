@@ -1,6 +1,6 @@
 # CENTINELA para instituciones
 
-*Documento de presentación. Estado al 25 de agosto de 2026.*
+*Documento de presentación. Estado al 1 de septiembre de 2026.*
 
 CENTINELA publica, de forma automática y en abierto, **cuánta población e
 infraestructura quedó dentro de cada franja de intensidad** después de un sismo
@@ -40,10 +40,18 @@ es la fuente de verdad del código DIVIPOLA.
 
 | | |
 |---|---|
-| Activos de exposición publicados | 18 de 19 |
-| Reportes emitidos de punta a punta | 3 (reconstrucciones históricas) |
-| Tiempo de cálculo, evento completo | **27 segundos** |
-| Latencia objetivo, sismo → reporte | p50 ≤ 60 min |
+| Activos de exposición publicados | **19 de 19** |
+| Reportes emitidos de punta a punta | **21**, en 15 países |
+| De ellos, disparados en vivo | **0** — los 21 son reconstrucciones |
+| Personas ya en la malla hexagonal | **649,8 millones** |
+| Latencia objetivo, sismo → reporte | p50 ≤ 60 min (aún sin medir en vivo) |
+
+**Los 21 reportes son reconstrucciones históricas.** El sistema no ha disparado
+todavía un reporte en vivo: `site/status.json` publica `eventos_publicados: 0` y
+`backtests_excluidos: 21`, y por eso su latencia medida sigue en `null`. El
+catálogo demuestra que el cálculo funciona sobre veintiún eventos reales del
+catálogo de USGS; no que la cadena en vivo se haya ejercitado. Decirlo es más
+útil que dejarlo ambiguo.
 
 ## 4. Qué tan buena es la cifra de población
 
@@ -63,18 +71,26 @@ mantenedor de país puede sustituirla — Colombia ya usa las proyecciones del D
 | Paraguay | 7.019.481 | 7.013.078 | +0,09 % |
 | Rep. Dominicana | 11.558.381 | 11.520.487 | +0,33 % |
 | Panamá | 4.590.423 | 4.571.189 | +0,42 % |
-| Argentina | 46.282.965 | 45.851.378 | +0,94 % |
+| Argentina | 46.284.585 | 45.851.378 | +0,94 % |
 | El Salvador | 6.442.983 | 6.365.503 | +1,22 % |
 | Uruguay | 3.429.034 | 3.384.688 | +1,31 % |
 | Ecuador | 18.571.110 | 18.289.896 | +1,54 % |
 | Bolivia | 12.804.990 | 12.581.843 | +1,77 % |
 | Cuba | 11.152.627 | 10.937.203 | +1,97 % |
 | Costa Rica | 5.280.695 | 5.152.950 | +2,48 % |
+| Brasil | 218.881.538 | 212.812.405 | +2,85 % |
 | Nicaragua | 7.240.789 | 7.007.502 | +3,33 % |
 | Venezuela | 29.924.657 | 28.516.896 | +4,94 % |
 
-*Brasil pendiente de reconstrucción; su cifra se publicará medida, no
-estimada.*
+*`tests/unit/test_cifras_del_readme.py` compara esta tabla contra los
+diecinueve manifests: si un `centinela calibrar` mueve una cifra, la tabla falla
+antes de quedarse rancia.*
+
+*Brasil entró en esta tabla el 28-ago-2026, cuando se cerró el fallo que lo
+declaraba con `poblacion_medida: 0` —219 millones de personas de menos en una
+cifra pública— con el activo en el Release desde el 26. Su casilla de reportes
+sigue vacía por otra razón, explicada en el README: sus doce sismos M≥5,5 desde
+2000 están todos entre 534 y 645 km de profundidad.*
 
 **Venezuela es el caso que conviene mirar de frente.** Su desvío de +4,94 % es
 el mayor de la región y tiene una causa conocida: GHS-POP desagrega la ronda
@@ -123,32 +139,46 @@ cualquiera de los dos, y si el acotamiento deja de cumplirse.
 (in MMI>=VII)», que es otra convención más. Ninguna de las tres cifras es la
 misma pregunta, y ninguna corrige a las otras.
 
-## 6. Exposición no es daño: la diferencia, medida
+## 6. Exposición no es daño: la diferencia, y cómo se comprueba
 
 Es la confusión más costosa que puede provocar un reporte de este tipo, así que
-está medida contra fuentes independientes.
+el proyecto no la explica: la contrasta contra fuentes independientes.
 
-El Microsoft AI for Good Lab publicó evaluaciones de daño por imagen satelital
-para dos de los sismos que CENTINELA reconstruyó, usando además **las mismas
-huellas de edificación de Overture**. Comparadas sobre las mismas celdas:
+El Microsoft AI for Good Lab publicó en HDX evaluaciones de daño por imagen
+satelital para dos de los sismos que CENTINELA reconstruyó —Cali, del sismo de
+San José del Palmar, y La Guaira, del de Catia La Mar— las dos **CC BY** y las
+dos sobre **las mismas huellas de edificación de Overture** que usa este
+proyecto. Eso hace la comparación interpretable y no anecdótica.
 
-| | Cali, sismo del Chocó | La Guaira, sismo de Catia La Mar |
-|---|---:|---:|
-| Edificaciones evaluadas | 97.351 | 26.143 |
-| **Con daño detectado** | **266 (0,27 %)** | **965 (3,69 %)** |
-| Edificaciones en el activo | 107.252 | 35.611 |
-| Celdas evaluadas fuera del activo | **0** | **0** |
+El contraste corre sobre las **mismas celdas H3**, no sobre áreas dibujadas a
+ojo: cada edificación evaluada se lleva a su celda r8 por el centroide, igual
+que hace el activo. Así la única diferencia entre las dos cifras es lo que cada
+uno metió en la celda, no cómo se recortó el mapa. Dos cosas salen de ahí:
 
-Dos lecturas.
+1. **Cuántas celdas evaluadas faltan del activo.** Cualquier valor mayor que
+   cero es un hueco de cobertura, y el comando sale con código 2 para que un
+   workflow pueda pararse. Es la verificación de cobertura más exigente que se
+   le puede hacer al activo, porque la lista de celdas la pone otro.
+2. **Qué fracción de lo expuesto resultó dañada**, en cada zona. Es la respuesta
+   corta a por qué una cifra de exposición no se lee como una de daño.
 
-**La cobertura del activo es completa.** Ninguna de las 402 celdas que Microsoft
-evaluó falta del activo, en dos países y dos sismos distintos. La lista de celdas
-la puso otro, así que es la verificación de cobertura más exigente que se le ha
-hecho.
+Se reproduce así, con el activo del país descargado del Release:
 
-**Y el factor de trece entre 0,27 % y 3,69 %** es la respuesta corta a por qué
-una cifra de exposición no se puede leer como una cifra de daño: son dos zonas
-del mismo rango de exposición con resultados que no se parecen.
+```
+uv run centinela contraste <url-del-vector-de-dano> \
+  --exposure 'data/exposure/COL/*.parquet' \
+  --crs EPSG:32618 --etiqueta "Microsoft AI for Good · Cali" \
+  --salida data/contrastes/cali.json
+```
+
+**Esta sección no publica todavía la tabla de resultados.** La publicó hasta el
+1-sep-2026 —con cifras de edificaciones evaluadas, dañadas y celdas fuera del
+activo— y ninguna de ellas apuntaba a un fichero del repositorio: el comando
+imprimía su resultado y lo perdía. En un documento que abre diciendo que todo lo
+que afirma está medido y dice dónde está la medida, eso no se sostiene. El
+comando ya persiste su salida (`--salida`); la tabla vuelve cuando el
+`data/contrastes/*.json` de cada zona esté en el repositorio y se pueda enlazar
+fila por fila. Está anotado en [`PENDIENTES.md`](../PENDIENTES.md).
 
 ## 7. Cómo consumirlo
 
@@ -194,10 +224,13 @@ Están publicados porque son parte de la cifra:
   edificaciones se queda corto. El reporte lo detecta comparando contra la
   superficie construida que ve el satélite y **lo dice en el propio reporte**
   cuando la diferencia pasa de 1,5 veces.
-- **La detección depende del cron de GitHub.** Declarado cada 10 minutos, la
-  mediana real medida sobre 22 corridas es de **45,7 minutos** y el peor caso
-  73,3. Con un objetivo de 60 minutos extremo a extremo, la detección sola puede
-  consumir el presupuesto. La salida documentada es un disparador externo.
+- **La detección depende del cron de GitHub.** El vigía declara `*/30` —bajó
+  de `*/10` el 27-ago-2026, cuando se midió que GitHub reparte turnos por
+  repositorio y no por workflow— y entrega mucho menos: sobre 23 latidos entre
+  el 25 y el 30 de agosto, **p50 157 min, p90 462 y peor caso 766 (12,8 h)**.
+  Con un objetivo de 60 minutos extremo a extremo, **la detección sola se come
+  el presupuesto entero**. La salida documentada es un disparador externo, ya
+  declarado en el workflow y pendiente de conectar.
 - **Un reporte sin ShakeMap publica radios, no intensidades.** Y lo advierte:
   un radio no es una banda de intensidad.
 - **Una reconstrucción histórica mezcla épocas.** La población puede ser de la

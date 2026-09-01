@@ -197,7 +197,7 @@ contra USGS:
 ## Cómo funciona
 
 ```
-[Feed GeoJSON de USGS] ──(cron cada 10 min + disparo externo)──▶ P1 TRIGGER
+[Feed GeoJSON de USGS] ──(cron GH `*/30` + repository_dispatch)──▶ P1 TRIGGER
      filtro bbox LATAM + M≥5.5 + dedupe por event_state
          │
          ▼

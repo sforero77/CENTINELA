@@ -102,7 +102,10 @@ LAYERS: tuple[LayerSpec, ...] = (
         titulo="Vias — Overture Maps theme=transportation",
         license="ODbL-1.0",
         columnas=("road_km_primary", "road_km_secondary", "road_km_other"),
-        agregacion="longitud de segmento recortada por celda, proyeccion equiarea local",
+        agregacion=(
+            "longitud geodesica sobre el elipsoide (ST_Length_Spheroid), repartida "
+            "entre las celdas que atraviesa el segmento"
+        ),
     ),
     LayerSpec(
         id="health",

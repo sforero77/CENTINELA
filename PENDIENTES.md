@@ -266,6 +266,76 @@ siendo todos profundos, y que el somero de Bolivia sigue ahi con sus contornos.
 Es la unica de las cuatro afirmaciones del README sobre paises en silencio que
 no era cierta, y ahora las cuatro tienen prueba.
 
+### 2.1.ter La tabla del contraste con Microsoft, sin fuente
+
+**Abierto el 1-sep-2026.** `docs/PARA_INSTITUCIONES.md` §6 publicaba una tabla
+con edificaciones evaluadas, danadas y celdas fuera del activo para Cali y La
+Guaira. De ahi salia el argumento del "factor de trece", que es de los mas
+citables del proyecto.
+
+Ninguna de esas cifras apuntaba a un fichero del repositorio. `centinela
+contraste` imprimia su resultado por stdout y lo perdia, asi que la seccion no
+decia que subconjunto de celdas tomo ni contra que version del vector. En un
+documento que abre con «todo lo que afirma esta medido, y dice donde esta la
+medida», y que ademas va a instituciones, eso no se sostiene.
+
+Hecho: el comando ya persiste con `--salida`. Falta correrlo y comprometer el
+resultado:
+
+```
+uv run centinela contraste <url-del-vector> --exposure 'data/exposure/COL/*.parquet' \
+  --crs EPSG:32618 --etiqueta "Microsoft AI for Good · Cali" \
+  --salida data/contrastes/cali.json
+```
+
+La tabla vuelve al documento cuando cada fila pueda enlazar su
+`data/contrastes/*.json`. Mientras tanto, §6 explica el metodo y no publica
+cifras.
+
+### 2.1.quater Ocho de las diez capas no se contrastan contra nada externo
+
+**Abierto el 1-sep-2026.** `validate_layer_coverage` comprueba que ninguna capa
+requerida sume cero, y `validate_national_total` contrasta **solo la poblacion**
+contra una referencia oficial del manifest. Las otras ocho capas pasan por
+«distinto de cero y finito» y nada mas.
+
+Un error sistematico del 20 % en `road_km` pasaria entero. Y son cifras
+publicadas y contrastables: Colombia sale con **307.314 km de via** y **9.888
+sedes de salud**, y hay referencias nacionales para las dos —INVIAS para la red
+vial, el REPS de MinSalud para los prestadores— que este mismo repositorio ya
+nombra: `layers.py` describe el REPS como «referencia de completitud municipal
+en una tabla aparte».
+
+El mecanismo esta a mano: `referencia_oficial` del manifest ya tiene la forma
+(`valor`, `fuente`, `tolerancia_pct`) y `centinela calibrar` ya sabe estrechar
+una tolerancia con lo medido. Falta generalizarla a
+`referencias_por_capa: {capa: {valor, fuente, tolerancia_pct}}` y que
+`validate_national_total` recorra las que existan.
+
+**Lo que NO se hace hasta que haya mantenedor de pais:** poner cifras de
+referencia inventadas o copiadas sin verificar. Una tolerancia contra un numero
+que nadie comprobo es peor que no tener alarma, porque parece que la hay. La
+mecanica se construye cuando haya al menos un par (capa, referencia) verificado
+por alguien que responda por el.
+
+### 2.1.quinquies `mmi_max` no es un maximo
+
+**Abierto el 1-sep-2026.** `contours_to_h3` asigna el mismo valor a `mmi_mean` y
+a `mmi_max`: el de la isolinea que contiene el **centro** de la celda. Eso hace
+de `mmi_max` una cota inferior de la intensidad maxima dentro de la celda —una
+celda de 0,74 km² cuyo centro cae en la banda de 7,0 puede tener una esquina
+dentro de la de 7,5— y sale publicado con ese nombre y con la etiqueta HXL
+`#indicator+mmi+max` en `adm2.csv`, en `celdas.json` y en el ranking municipal.
+
+El sesgo va en una sola direccion: nunca sobreestima. Eso lo hace tolerable
+mientras este declarado —lo esta, en la docstring de `MmiCell`— y no lo hace
+correcto.
+
+Arreglarlo pide muestrear la celda y no su centro: los siete vertices, o el
+maximo de las isolineas que la intersecan. Cambia las veintiuna cifras
+publicadas a la vez, asi que se hace con el catalogo entero y publicando el
+delta, igual que se hizo con `col-v0.5`.
+
 ### 2.2 Coropletas r7/r6 del visor
 
 **Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salio primero de las

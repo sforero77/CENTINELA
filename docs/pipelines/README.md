@@ -6,7 +6,7 @@ CLI (`uv run centinela <comando>`) y ninguno necesita credenciales.
 | Pipeline | Documento | Qué hace | Cadencia |
 |---|---|---|---|
 | **P0** | [`p0-exposicion.md`](p0-exposicion.md) | Construye el activo de exposición por país | trimestral |
-| **P1** | [`p1-trigger.md`](p1-trigger.md) | Vigila el feed de USGS y decide qué merece reporte | cada 5 min |
+| **P1** | [`p1-trigger.md`](p1-trigger.md) | Vigila el feed de USGS y decide qué merece reporte | cron `*/30` |
 | **P2** | [`p2-impacto.md`](p2-impacto.md) | Cruza intensidad sísmica con exposición | por evento |
 | **P3** | [`p3-reporte.md`](p3-reporte.md) | Emite los artefactos publicables | por evento |
 | **P4** | [`p4-brigada.md`](p4-brigada.md) | Daño por edificación con IA | Fase 2 |
