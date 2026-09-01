@@ -13,16 +13,16 @@
   "inputs": {
     "shakemap_version": 7,
     "groundfailure_version": 3,
-    "exposure_manifest": "mex-v0.1"
+    "exposure_manifest": "mex-v0.2"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 1115170.996424166,
-    "pop_mmi7p": 910714.4594508423,
+    "pop_mmi6p": 1115170.9964241656,
+    "pop_mmi7p": 910714.4594508422,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 81266.60504518471,
+    "pop_65p_mmi7p": 81266.60504518496,
     "bld_mmi7p": 331809.0,
     "built_m2_mmi7p": 46814341.0,
     "health_mmi7p": 152.0,
@@ -37,8 +37,8 @@
       "adm2_id": "MX12001",
       "nombre": "Acapulco De Juárez",
       "mmi_max": 7.5,
-      "pop_mmi7p": 876143.871341917,
-      "pop_banda": 876143.871341917
+      "pop_mmi7p": 876143.8713419172,
+      "pop_banda": 876143.8713419172
     },
     {
       "adm2_id": "MX12021",
@@ -157,11 +157,11 @@
   },
   "changelog": [],
   "disclaimers": [
-    "Exposicion estimada, no dano observado.",
-    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
-    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
-    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-08-25T18:31:59Z",
+  "generado_utc": "2026-09-01T22:11:43Z",
   "pipeline_version": "0.1.0"
 }

@@ -96,13 +96,13 @@
     "iso3": "MEX",
     "lon": -99.753,
     "lat": 16.9465,
-    "pop_mmi7p": 910714.4594508423,
-    "pop_mmi6p": 1115170.996424166,
+    "pop_mmi7p": 910714.4594508422,
+    "pop_mmi6p": 1115170.9964241656,
     "utc": "2021-09-08T01:47:47Z",
     "shakemap_version": 7,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-08-25T18:31:59Z"
+    "generado_utc": "2026-09-01T22:11:43Z"
   },
   {
     "usgs_id": "us7000d18q",

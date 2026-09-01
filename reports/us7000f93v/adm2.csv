@@ -1,25 +1,25 @@
-usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta,lq_pop_expuesta,flags_calidad
-#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide,#population+liquefaction,#meta+flags
-us7000f93v,7,MX12001,Acapulco de Juárez,-99.714525,16.957543,7.5,880198.9725385157,876143.871341917,0.0,77871.85780084536,307397.0,44198657.0,144,3096,0.0,0.0,1720.0746660419973,47787.31011700636,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional,construido_no_mapeado"
-us7000f93v,7,MX12021,Coyuca de Benítez,-100.058966,17.142553,7.0,82033.93610494724,29502.848212338053,0.0,2751.0123015880517,19520.0,1998723.0,8,9,0.0,0.0,622.6784357670695,14859.239157850854,"discrepancia_poblacional,construido_no_mapeado"
-us7000f93v,7,MX12053,San Marcos,-99.408695,16.808876,7.0,50236.73604598065,5063.2659500993905,0.0,642.0360047460093,4883.0,616357.0,0,27,0.0,0.0,40.798594046384096,4323.318781247828,"discrepancia_poblacional,construido_no_mapeado"
+usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
+#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
+us7000f93v,7,MX12001,Acapulco de Juárez,-99.714525,16.957543,7.5,880198.9725385159,876143.8713419172,0.0,77871.8578008457,307397.0,44198657.0,144,3096,0.0,0.0,1720.0746660419973,47787.31011700636,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us7000f93v,7,MX12021,Coyuca de Benítez,-100.058966,17.142553,7.0,82033.93610494724,29502.848212338053,0.0,2751.0123015880517,19520.0,1998723.0,8,9,0.0,0.0,622.6784357670695,14859.239157850854,"construido_no_mapeado,discrepancia_poblacional"
+us7000f93v,7,MX12053,San Marcos,-99.408695,16.808876,7.0,50236.73604598065,5063.2659500993905,0.0,642.0360047460093,4883.0,616357.0,0,27,0.0,0.0,40.28933643177152,3848.159982823301,"construido_no_mapeado,discrepancia_poblacional"
 us7000f93v,7,MX12039,Juan R. Escudero,-99.472925,17.142133,7.0,30123.298050853424,4.473946487531066,0.0,1.6989380052218621,9.0,604.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000f93v,7,MX12029,Chilpancingo de los Bravo,-99.697447,17.390834,6.5,28837.176801305584,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
-us7000f93v,7,MX12014,Benito Juárez,-100.427119,17.096543,6.0,62.99494190933183,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,142.56247240584344,3951.6025579008274,"construido_no_mapeado,discrepancia_poblacional,discrepancia_poblacional"
-us7000f93v,7,MX12040,Leonardo Bravo,-99.795794,17.631936,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
-us7000f93v,7,MX12075,Eduardo Neri,-99.609775,17.801492,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
-us7000f93v,7,MX12044,Mochitlán,-99.370598,17.336841,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
-us7000f93v,7,MX12012,Ayutla de los Libres,-99.067536,16.957271,6.0,3.1360487937927246,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
-us7000f93v,7,MX12057,Técpan de Galeana,-100.74436,17.405947,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,52.81815019901842,29.61988005321473,"discrepancia_poblacional,construido_no_mapeado"
-us7000f93v,7,MX12030,Florencio Villarreal,-99.139923,16.702976,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,154.67734339367598,2349.2294449377805,discrepancia_poblacional
-us7000f93v,7,MX12011,Atoyac de Álvarez,-100.342068,17.332822,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,403.12709878385067,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
-us7000f93v,7,MX12052,San Luis Acatlán,-98.751077,16.876358,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us7000f93v,7,MX12018,Copala,-98.930975,16.608111,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,37.06270307768136,3.0117803420871496,discrepancia_poblacional
-us7000f93v,7,MX12054,San Miguel Totolapan,-100.318245,17.83981,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000f93v,7,MX12076,Acatepec,-98.976033,17.174816,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000f93v,7,MX12028,Chilapa de Álvarez,-99.11236,17.523691,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us7000f93v,7,MX12032,General Heliodoro Castillo,-100.026936,17.733801,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
 us7000f93v,7,MX12056,Tecoanapa,-99.294887,16.980455,6.5,43674.745891859755,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
 us7000f93v,7,MX12061,Tixtla de Guerrero,-99.367468,17.59935,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000f93v,7,MX12051,Quechultenango,-99.185217,17.312823,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
 us7000f93v,7,MX12025,Cuautepec,-98.963709,16.718542,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
-us7000f93v,7,MX12051,Quechultenango,-99.185217,17.312823,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us7000f93v,7,MX12054,San Miguel Totolapan,-100.318245,17.83981,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000f93v,7,MX12018,Copala,-98.930975,16.608111,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000f93v,7,MX12029,Chilpancingo de los Bravo,-99.697447,17.390834,6.5,28837.176801305584,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado"
+us7000f93v,7,MX12076,Acatepec,-98.976033,17.174816,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000f93v,7,MX12032,General Heliodoro Castillo,-100.026936,17.733801,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us7000f93v,7,MX12014,Benito Juárez,-100.427119,17.096543,6.0,62.99494190933183,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,16.942213944159448,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us7000f93v,7,MX12040,Leonardo Bravo,-99.795794,17.631936,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000f93v,7,MX12028,Chilapa de Álvarez,-99.11236,17.523691,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us7000f93v,7,MX12011,Atoyac de Álvarez,-100.342068,17.332822,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,construido_no_mapeado,discrepancia_poblacional"
+us7000f93v,7,MX12057,Técpan de Galeana,-100.74436,17.405947,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
+us7000f93v,7,MX12030,Florencio Villarreal,-99.139923,16.702976,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000f93v,7,MX12052,San Luis Acatlán,-98.751077,16.876358,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us7000f93v,7,MX12012,Ayutla de los Libres,-99.067536,16.957271,6.0,3.1360487937927246,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us7000f93v,7,MX12044,Mochitlán,-99.370598,17.336841,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us7000f93v,7,MX12075,Eduardo Neri,-99.609775,17.801492,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
