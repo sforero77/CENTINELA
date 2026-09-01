@@ -378,12 +378,19 @@ evento, y eso necesita el activo de exposición del país, que no vive en el
 repositorio. `regenerar-textos` y `regenerar-mapas` no llegan: los dos son
 derivados del `report.json`, y esta columna no.
 
-**Lo que lo cierra:** correr `centinela impact` sobre los veintiuno con los
-activos descargados, o publicar un aviso en el propio CSV mientras tanto. Y lo
-que lo vigila una vez hecho: una prueba que sume la columna de los CSV
-publicados y la compare con `pop_lq_alta` y `pop_ls_alta` del `report.json` de
-al lado. `test_ground_failure_cuadra.py` vigila el SQL; nadie vigila el
-artefacto.
+**Lo que lo cierra:** un despacho de `impact.yml` por evento con `backtest` y
+`reprocesar`. La receta está en `docs/OPERACION.md`, §3.bis.
+
+**Lo que lo vigila mientras tanto:**
+`tests/unit/test_el_csv_cuadra_con_el_reporte.py` suma la columna de cada CSV
+publicado y la compara con `pop_lq_alta` y `pop_ls_alta` del `report.json` de al
+lado. Los quince pendientes están **enumerados** en `PENDIENTES_DE_REEMITIR`, no
+escondidos tras un margen, y hay una segunda prueba que falla si alguno ya cuadra
+y sigue en la lista. Cada evento re-emitido sale de ahí; cuando quede vacía, la
+guardia es total.
+
+`test_ground_failure_cuadra.py` vigila el SQL. Esta vigila el artefacto, que es
+lo que faltaba.
 
 ---
 

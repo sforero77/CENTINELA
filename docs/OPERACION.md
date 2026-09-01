@@ -186,6 +186,63 @@ publicado para X", eso es el sistema funcionando**: construye el país con
 
 ---
 
+## 3.bis Re-emitir el catálogo cuando cambia el pipeline
+
+Ha hecho falta tres veces: al arreglar la simbología del mapa estático, al
+acentuar los textos y al corregir el corte de MMI de Ground Failure. Las tres
+veces la pregunta fue la misma —«el código está bien, ¿y lo publicado?»— y las
+tres veces la respuesta dependió de **qué artefacto** cambia.
+
+| Qué cambió | Con qué se rehace | Cuesta |
+|---|---|---|
+| Simbología del PNG | `centinela regenerar-mapas` | Segundos, en local |
+| Prosa del `.md` o del hilo | `centinela regenerar-textos` | Segundos, en local |
+| **Cualquier cifra** | Volver a correr P2 por evento | Un despacho de `impact.yml` cada uno |
+
+Los dos primeros son derivados del `report.json`, que ya está en el repositorio.
+El tercero no: las cifras salen del join contra el activo de exposición del país,
+que **no vive en git** —unos 19 MB por país— y se publica como Release. Por eso
+no hay un `regenerar-cifras`: rehacerlas es correr el pipeline, no re-renderizar.
+
+### Cómo se re-emite
+
+`impact.yml` ya hace todo lo que hace falta: elige el país por el epicentro
+probando los candidatos contra el join, descarga el Release de su activo, corre
+P2/P3 y empuja con rebase —endurecido para empujes concurrentes desde el doble
+mainshock de Venezuela—.
+
+```bash
+# Uno:
+gh workflow run impact.yml -f usgs_id=us6000tjl2 -f backtest=true -f reprocesar=true
+
+# El catálogo entero, uno por uno. `sleep` no por prudencia con el push —el
+# workflow ya rebasa— sino para no encolar veintiún runners a la vez.
+for ID in $(jq -r '.[].usgs_id' reports/index.json); do
+  gh workflow run impact.yml -f usgs_id="$ID" -f backtest=true -f reprocesar=true
+  sleep 20
+done
+```
+
+`reprocesar=true` es obligatorio: sin él el pipeline no reemite nada, porque
+USGS no ha publicado ninguna versión nueva del producto. `backtest=true` mantiene
+los veintiuno fuera de la estadística de latencia, que es lo que ya son.
+
+Cada corrida empuja a `main` y eso dispara `site.yml`, que republica la página.
+
+### Qué comprobar después
+
+```bash
+uv run pytest tests/unit/test_el_csv_cuadra_con_el_reporte.py
+```
+
+Esa prueba lleva la lista `PENDIENTES_DE_REEMITIR` con los eventos cuyo
+`adm2.csv` todavía arrastra el corte viejo. **Cada evento re-emitido hay que
+sacarlo de la lista**, y hay una segunda prueba que falla si alguno ya cuadra y
+sigue dentro — para que una excepción temporal no se vuelva permanente sin que
+nadie lo decida. Cuando la lista quede vacía, la guardia es total.
+
+---
+
 ## 4. Deuda por país
 
 Los 19 manifests están escritos y sus fuentes verificadas, y **18 países están
