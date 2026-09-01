@@ -79,9 +79,13 @@
       </nav>
     </header>
 
-    <p class="aviso" role="note">
+    <!-- El aviso es del modo, no de la página. En fuego hablaba de "franjas de
+         intensidad" sobre un mapa de incendios, que es una frase sin referente.
+         El texto lo escribe `pintarAvisoDeLectura`; esto es el de arranque, para
+         que sea correcto también sin JavaScript. -->
+    <p class="aviso" role="note" id="aviso-lectura">
       <span class="mono">Léase así</span>
-      <span>
+      <span id="aviso-lectura-texto">
         <strong>Exposición no es daño.</strong> No es una alerta temprana, no
         estima víctimas y no dictamina habitabilidad. Informa cuánta población e
         infraestructura quedó <em>dentro</em> de cada franja de intensidad.
@@ -139,6 +143,20 @@
 
       <p class="filtros-cuenta mono" id="cuenta-lista" aria-live="polite"></p>
       <p class="filtros-cuenta mono" id="cuenta-focos" hidden aria-live="polite"></p>
+
+      <!-- VOLVER AL ENCUADRE.
+           Habia tres formas de perder la vista de la region —rueda, arrastre, un
+           filtro que vuela a un pais— y ninguna de recuperarla sin recargar:
+           `volverAlEncuadre` solo lo llamaba `cerrarDetalle`, asi que en modo
+           panorama era inalcanzable.
+
+           Aqui y no sobre el mapa: en un movil de 390 px la esquina de arriba a
+           la derecha ya llega hasta la leyenda, y un boton mas empujaba la barra
+           de escala encima de ella. Ademas es de la misma familia que «Quitar
+           filtros» — las dos devuelven el tablero a como estaba. -->
+      <button type="button" class="filtros-limpiar" id="volver-encuadre" hidden>
+        Volver al encuadre
+      </button>
 
       <button type="button" class="filtros-limpiar" id="limpiar-filtros" hidden>
         Quitar filtros
@@ -202,9 +220,15 @@
             <p class="eyebrow">Panorama</p>
             <div id="panorama"></div>
             <p class="pista">
+              <!-- Decía «la malla hexagonal de 5,2 km² con la que se calcula», y
+                   el cálculo no va en esa malla: va en H3 r8 (0,74 km², la
+                   constante `H3_RES_COMPUTE`) y se agrega a r7 para dibujarlo
+                   (`H3_RES_VIEWER`). La frase daba por medido a 5,2 km² un dato
+                   que se mide siete veces más fino. -->
               Elige un evento arriba, pulsa un epicentro en el mapa o abre uno de
-              la lista. Cada evento se dibuja sobre la malla hexagonal de 5,2&nbsp;km²
-              con la que se calcula.
+              la lista. Cada evento se dibuja sobre una malla hexagonal de
+              5,2&nbsp;km²; el cálculo va una resolución más fina —celdas de
+              0,74&nbsp;km²— y se agrega para pintarlo.
             </p>
           </div>
 
@@ -279,6 +303,15 @@
           <p class="detalle-meta" id="detalle-meta"></p>
           <ul class="distintivos" id="detalle-distintivos"></ul>
 
+          <!-- DE CUÁNDO SON LAS CIFRAS DE UNA RECONSTRUCCIÓN.
+               Esto vivía sólo como `title` del distintivo «reconstrucción
+               retrospectiva»: invisible sin ratón e inalcanzable en un móvil. Y
+               es el aviso interpretativo más importante del panel — el `.md` lo
+               publica en prosa desde siempre y el visor no. Sin él, «cuánta
+               gente vivía dentro» se lee como la población de 2016 cuando es la
+               de hoy. -->
+          <p class="apostilla" id="detalle-epoca" hidden></p>
+
           <!-- Cuanto territorio, antes de cuanta gente. El visor contaba
                personas, edificaciones y vias y no decia nunca sobre que
                superficie: "2,4 M en MMI≥7" no distingue una ciudad sacudida de
@@ -297,7 +330,7 @@
 
           <section class="bloque">
             <h3 class="eyebrow" id="titulo-metricas">Expuesto en MMI≥7</h3>
-            <p class="subtitulo-bloque">MMI 7 es la sacudida que asusta a todo el mundo y agrieta construcción corriente. Esto es lo que quedó dentro de esa franja — no lo que se dañó.</p>
+            <p class="subtitulo-bloque" id="subtitulo-metricas">MMI 7 es la sacudida que asusta a todo el mundo y agrieta construcción corriente. Esto es lo que quedó dentro de esa franja — no lo que se dañó.</p>
             <div class="metricas" id="detalle-metricas"></div>
           </section>
 
@@ -307,8 +340,8 @@
             <ul class="terreno" id="detalle-terreno"></ul>
           </section>
 
-          <section class="bloque">
-            <h3 class="eyebrow">Municipios más expuestos</h3>
+          <section class="bloque" id="bloque-municipios">
+            <h3 class="eyebrow" id="titulo-municipios">Municipios más expuestos</h3>
             <p class="subtitulo-bloque">Dónde se concentra. La misma cifra nacional repartida entre quienes tienen que responder.</p>
             <ol class="barras" id="detalle-barras"></ol>
           </section>
@@ -321,7 +354,7 @@
 
           <section class="bloque" id="bloque-incertidumbre" hidden>
             <h3 class="eyebrow">Incertidumbre</h3>
-            <p class="subtitulo-bloque">Cuánto se movería la cifra si el ShakeMap se corrigiera. No es un margen de error del conteo, sino de la amenaza.</p>
+            <p class="subtitulo-bloque">Dos productos de población abiertos no cuentan lo mismo en la misma zona. Ésta es la distancia entre ellos, publicada en vez de escondida.</p>
             <p class="apostilla" id="detalle-incertidumbre"></p>
           </section>
 

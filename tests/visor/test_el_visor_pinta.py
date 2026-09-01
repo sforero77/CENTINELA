@@ -2231,3 +2231,461 @@ def test_ver_en_el_mapa_dice_algo_aunque_la_vista_no_cambie(pagina: Any) -> None
 
     anuncio = pagina.locator("#anuncio").inner_text()
     assert "celdas con fuego en el mapa" in anuncio, f"el boton no anuncio nada util: {anuncio!r}"
+
+
+# --- El encuadre: lo primero que se ve --------------------------------------
+#
+# La caja de America Latina es alta —73° por 76°— y el panel del mapa es
+# apaisado en todo escritorio. `fitBounds` encaja por la altura y el ancho
+# sobrante cae en el Atlantico y en Africa occidental **rotulada**. Medido en la
+# pagina publicada: 191° de longitud visibles en una ventana de 1540 px, con
+# LATAM ocupando el 38 % del ancho util y Nigeria, Argelia, Senegal y Namibia
+# compitiendo por la atencion en un tablero de exposicion sismica latinoamericana.
+#
+# La respuesta no es recortar latitud —eso deja fuera Ciudad de Mexico y
+# Santiago— sino apagar lo que no es la region.
+
+
+@pytest.mark.visor
+def test_la_mascara_tapa_el_mapa_base_y_no_el_dato(pagina: Any) -> None:
+    """El velo va encima del estilo base y debajo de todo lo que es dato.
+
+    Al reves taparia los epicentros y la malla, que es lo unico que la pagina
+    tiene que dejar ver. Se comprueba el ORDEN de las capas y no la captura: en
+    una pestana de fondo una captura no distingue "no se dibujo" de "no se ha
+    pintado todavia".
+    """
+    _esperar_capa(pagina, "epicentros")
+    capas: list[str] = pagina.evaluate("() => window.CENTINELA.capasDelMapa()")
+
+    assert "mascara" in capas, "no se puso el velo sobre lo que no es America Latina"
+    velo = capas.index("mascara")
+
+    # Debajo de todo lo que es dato.
+    for capa in ("epicentros", "epicentros-halo"):
+        assert capa in capas, f"la capa de dato {capa!r} no esta en el estilo"
+        assert velo < capas.index(capa), f"el velo tapa {capa!r}"
+
+    # Y encima de todo lo que es mapa base: la ultima capa del estilo de
+    # OpenFreeMap tiene que quedar por debajo. Se identifica como "lo que no es
+    # nuestro", que es lo unico estable entre versiones del estilo.
+    nuestras = {
+        "mascara",
+        "contornos",
+        "perimetro",
+        "perimetro-borde",
+        "celdas",
+        "celdas-borde",
+        "epicentros",
+        "epicentros-halo",
+        "observados",
+        "incendios",
+        "incendios-punto",
+        "incendios-borde",
+        "foco-perimetro",
+        "foco-perimetro-borde",
+    }
+    del_estilo = [i for i, c in enumerate(capas) if c not in nuestras]
+    assert del_estilo, "el estilo base no trajo ninguna capa"
+    assert velo > max(del_estilo), (
+        "hay capas del mapa base por encima del velo: sus rotulos siguen compitiendo con la region"
+    )
+
+
+@pytest.mark.visor
+def test_el_encuadre_inicial_mira_a_america_latina(pagina: Any) -> None:
+    """El borde este de la vista no puede llegar al continente africano.
+
+    Dakar esta en -17,4. Medido en la pagina publicada antes del velo: la vista
+    llegaba a +24,8 en una ventana de 1540 px, con Nigeria, Argelia, Chad y
+    Namibia rotuladas. El velo apaga el mapa base de fuera, pero el encuadre
+    tiene que seguir centrado en la region: si `ENCUADRE_UTIL` o el reparto de
+    columnas cambian y la vista se va al este, esto lo dice.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1500)
+    caja = pagina.evaluate("() => window.CENTINELA.encuadre()")
+
+    assert caja, "el mapa no supo decir que esta enseñando"
+    # La region entera, de Tijuana a Chiloe, tiene que caber.
+    assert caja["norte"] >= 25, f"el encuadre corta el norte de Mexico: {caja}"
+    assert caja["sur"] <= -42, f"el encuadre corta el sur de Chile: {caja}"
+    assert caja["oeste"] <= -95, f"el encuadre corta el Pacifico americano: {caja}"
+
+
+@pytest.mark.visor
+def test_la_rueda_no_se_lleva_por_delante_el_encuadre(pagina: Any) -> None:
+    """Bajar a leer la lista no puede destruir la vista del mapa.
+
+    Medido en la pagina publicada: un solo gesto de tres clics sobre el mapa
+    movia el zoom de 2,05 a 1,65 **y** desplazaba la pagina 300 px. Se llegaba a
+    ver China y Etiopia en un tablero de America Latina, y sin forma de volver.
+
+    Con `cooperativeGestures` la rueda desplaza y solo Ctrl+rueda acerca.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1500)
+
+    caja = pagina.locator("#mapa").bounding_box()
+    assert caja
+    centro = (caja["x"] + caja["width"] / 2, caja["y"] + caja["height"] / 2)
+
+    antes = pagina.evaluate("() => window.CENTINELA.encuadre().zoom")
+    pagina.mouse.move(*centro)
+    pagina.mouse.wheel(0, 400)
+    pagina.wait_for_timeout(900)
+    despues = pagina.evaluate("() => window.CENTINELA.encuadre().zoom")
+
+    assert despues == pytest.approx(antes, abs=0.01), (
+        f"la rueda sobre el mapa cambio el zoom de {antes} a {despues}"
+    )
+
+
+@pytest.mark.visor
+def test_el_boton_devuelve_el_encuadre(pagina: Any) -> None:
+    """Perder la vista de la region tenia que dejar de ser irreversible.
+
+    `volverAlEncuadre` existia desde siempre y solo lo llamaba `cerrarDetalle`:
+    en modo panorama no habia forma de llegar a el salvo recargando.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1500)
+
+    boton = pagina.locator("#volver-encuadre")
+    assert boton.is_hidden(), "el boton se ofrece sin nada que deshacer"
+
+    # Alejar a mano, como haria un arrastre desafortunado.
+    pagina.locator(".maplibregl-ctrl-zoom-out").click()
+    pagina.locator(".maplibregl-ctrl-zoom-out").click()
+    pagina.wait_for_timeout(1200)
+    assert boton.is_visible(), "la vista se desvio y el boton no aparecio"
+
+    boton.click()
+    pagina.wait_for_timeout(1500)
+    assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "boton:encuadre"
+
+
+@pytest.mark.visor
+def test_los_toponimos_del_mapa_base_estan_en_espanol(pagina: Any) -> None:
+    """ "Gulf of Mexico" y "Brazil" en un producto escrito entero en espanol.
+
+    OpenMapTiles publica `name:es` en la misma tesela; no cuesta una peticion
+    mas. Se comprueba la EXPRESION puesta en el estilo y no un rotulo pintado:
+    que tesela cae en pantalla depende del encuadre y de la red.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1500)
+    espanol = pagina.evaluate("() => window.CENTINELA.rotulosEnEspanol()")
+    assert espanol["tocadas"] > 0, "no se retradujo ni una capa de rotulos"
+    assert espanol["sinTraducir"] == 0, (
+        f"quedan capas rotulando en el idioma local: {espanol['sinTraducir']}"
+    )
+
+
+# --- El panel de al lado tiene que obedecer al mismo filtro ------------------
+
+
+@pytest.mark.visor
+def test_el_panorama_del_panel_obedece_al_filtro(pagina: Any) -> None:
+    """Dos cifras contradictorias a diez centimetros una de otra.
+
+    Con "Venezuela (3)" puesto, la cabecera decia "3 reportes publicados", el
+    mapa dejaba tres epicentros y la rejilla de abajo tres tarjetas — y el panel
+    pegado al mapa seguia diciendo "21 reportes publicados", "mayor exposicion
+    registrada: San Jose del Palmar, Colombia" y listando los veintiuno.
+    `pintarPanorama` se llamaba una sola vez al arrancar y nunca mas.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Venezuela"))
+    pagina.wait_for_timeout(1500)
+
+    # La cifra de la metrica, no el texto entero: en el panel hay fechas
+    # ("21 ago 2018") donde un `"21" not in` daria un falso positivo.
+    cuenta = pagina.locator("#panorama .metrica .valor").first.inner_text()
+    assert cuenta.strip() == "3", f"el panel sigue contando el catalogo entero: {cuenta!r}"
+
+    panorama = pagina.locator("#panorama").inner_text()
+    assert "Colombia" not in panorama, (
+        f"con Venezuela elegido el panel sigue nombrando un evento de Colombia: {panorama[:200]!r}"
+    )
+    filas = pagina.locator("#panorama .panorama-lista li").count()
+    assert filas == 3, f"el panel lista {filas} eventos con un filtro que deja 3"
+
+
+@pytest.mark.visor
+def test_la_cifra_mayor_dice_en_que_banda_es_mayor(pagina: Any) -> None:
+    """ "2,4 M · mayor exposicion registrada" con "4,8 M en MMI≥6" tres filas abajo.
+
+    Las dos cifras eran ciertas y se comparaban en bandas distintas. Un maximo
+    mas pequeno que un numero visible al lado se lee como un error aunque no lo
+    sea.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1200)
+    # El CSS pone las etiquetas en versalitas, asi que `inner_text` las devuelve
+    # en mayusculas: se compara sin caso.
+    etiquetas = pagina.locator("#panorama .metrica .etiqueta").all_inner_texts()
+    mayor = [e for e in etiquetas if "mayor exposición" in e.lower()]
+    assert mayor, f"no esta la metrica de mayor exposicion: {etiquetas}"
+    assert "MMI≥" in mayor[0], f"la cifra mayor no dice su banda: {mayor[0]!r}"
+
+
+@pytest.mark.visor
+def test_un_filtro_sin_resultados_lo_dice_y_devuelve_la_camara(pagina: Any) -> None:
+    """Cuba + 90 dias dejaba una pagina que parecia rota.
+
+    "0 REPORTES PUBLICADOS" en mono pequeno arriba a la derecha, el mapa
+    mirando Venezuela —donde lo habia dejado el filtro anterior— sin un solo
+    simbolo, y el panel de al lado con las cifras del catalogo entero.
+    `encuadrarPuntos` devuelve `false` cuando no le queda ni un punto y nadie
+    recogia ese `false`.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Cuba"))
+    pagina.wait_for_timeout(1500)
+    pagina.select_option("#ventana-lista", "trimestre")
+    pagina.wait_for_timeout(1800)
+
+    assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "filtro:vacio", (
+        "la camara se quedo donde la dejo el filtro anterior"
+    )
+    panorama = pagina.locator("#panorama").inner_text()
+    assert "Ningún reporte" in panorama, f"el panel no dice por que esta vacio: {panorama!r}"
+    assert pagina.locator("#panorama [data-limpiar]").count() == 1, (
+        "no se ofrece salir del filtro desde donde se esta mirando"
+    )
+
+
+@pytest.mark.visor
+def test_los_filtros_viajan_en_la_url(pagina: Any) -> None:
+    """Una vista filtrada no se podia mandar a nadie.
+
+    `?evento=` y `?capa=` y `?amenaza=` viajaban; pais y periodo no, y son los
+    que eligen QUE se mira. Orden y "solo lo que se ve" siguen sin viajar a
+    proposito: son preferencias de lectura, no contenido.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Chile"))
+    pagina.wait_for_timeout(1200)
+    pagina.select_option("#ventana-lista", "decada")
+    pagina.wait_for_timeout(1200)
+
+    url = pagina.evaluate("() => location.search")
+    assert "pais=CHL" in url, f"el pais no viaja en la URL: {url!r}"
+    assert "periodo=decada" in url, f"el periodo no viaja en la URL: {url!r}"
+    assert "orden=" not in url and "envista=" not in url, (
+        f"la manera de mirar no deberia viajar: {url!r}"
+    )
+
+
+@pytest.mark.visor
+def test_un_enlace_con_filtros_abre_ya_filtrado(navegador: Any, servidor: str) -> None:
+    """Y al abrirlo, los desplegables tienen que nacer diciendo la verdad."""
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/index.html?pais=VEN")
+    pg.wait_for_function(
+        """() => {
+             const p = window.CENTINELA && window.CENTINELA.pintado;
+             return !!(p && p.epicentros);
+           }""",
+        timeout=ESPERA_MS,
+    )
+    pg.wait_for_timeout(1500)
+
+    assert pg.locator("#filtro-paises").input_value() == "VEN"
+    assert "3" in pg.locator("#cuenta-lista").inner_text()
+    ctx.close()
+
+
+@pytest.mark.visor
+def test_la_opcion_de_todos_los_paises_no_cuenta_reportes(pagina: Any) -> None:
+    """Decia "Todos los países (21)" con quince paises en la lista.
+
+    El 21 eran los reportes, y la misma fila ya publica esa cifra dos palmos a
+    la derecha.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1200)
+    primera = pagina.locator("#filtro-paises option").first.inner_text()
+    assert primera.strip() == "Todos los países", f"la opcion sigue llevando cuenta: {primera!r}"
+
+
+# --- La leyenda no puede nombrar lo que no esta ------------------------------
+
+
+@pytest.mark.visor
+def test_la_leyenda_de_simbolos_cambia_con_la_amenaza(pagina: Any) -> None:
+    """En modo fuego seguia explicando "Sismo visto, sin reporte".
+
+    Una leyenda que nombra simbolos que no se dibujan ensena a no leer la
+    leyenda.
+    """
+    _esperar_capa(pagina, "incendios")
+    pagina.wait_for_timeout(1200)
+
+    sismos = pagina.locator("#leyenda-simbolos").inner_text()
+    assert "Foco activo" not in sismos, f"en modo sismos explica el fuego: {sismos!r}"
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+    fuego = pagina.locator("#leyenda-simbolos").inner_text()
+    assert "Foco activo" in fuego, f"en modo fuego no explica el fuego: {fuego!r}"
+    assert "sin reporte" not in fuego, (
+        f"en modo fuego sigue explicando el sismo menor, que no se dibuja: {fuego!r}"
+    )
+
+
+@pytest.mark.visor
+def test_el_aviso_de_cabecera_habla_de_lo_que_se_ensena(pagina: Any) -> None:
+    """ "cada franja de intensidad" sobre un mapa de incendios.
+
+    Es el aviso mas importante del tablero —el que separa exposicion de dano— y
+    en modo fuego describia otro mapa.
+    """
+    _esperar_capa(pagina, "incendios")
+    assert "franja de intensidad" in pagina.locator("#aviso-lectura").inner_text()
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1000)
+    fuego = pagina.locator("#aviso-lectura").inner_text()
+    assert "Exposición no es daño" in fuego, "se perdio la frase que sostiene el aviso"
+    assert "franja de intensidad" not in fuego, f"el aviso sigue siendo el de sismos: {fuego!r}"
+
+
+# --- Un reporte no puede contradecirse a si mismo ---------------------------
+#
+# Es el modo de fallo que este proyecto persigue en todas partes: una cifra
+# plausible y equivocada. Estos tres estaban publicados.
+
+
+@pytest.mark.visor
+def test_un_evento_que_llega_a_mmi8_no_niega_su_mmi7(pagina: Any) -> None:
+    """La frase estaba escrita para un caso y se imprimia en el contrario.
+
+    `bandaDeTotales` devuelve 8 en cuanto hay alguien en MMI≥8 y 6 cuando la
+    sacudida no llego a 7 sobre poblacion; la rama cubria los dos y ponia la
+    misma nota: "La sacudida no alcanzo MMI 7 sobre poblacion: ninguna de las
+    cifras de abajo aplica a este evento".
+
+    En Muisne hay 2.283.454 personas en MMI≥7 y el propio panel lo dice dos
+    bloques mas arriba. Afectaba a los tres eventos mas fuertes del catalogo.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")  # M7,8 Muisne, llega a MMI 8
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    bloque = pagina.locator("#detalle-metricas").inner_text()
+    assert "no alcanzó MMI 7" not in bloque, (
+        f"el panel niega el MMI≥7 de un evento que lo tiene: {bloque!r}"
+    )
+    # Y las dos bandas se enseñan rotuladas, para que "174.000 de 65 años o mas"
+    # no quede debajo de una cifra menor que el.
+    assert "MMI≥7" in bloque and "MMI≥8" in bloque, f"falta alguna banda: {bloque!r}"
+
+
+@pytest.mark.visor
+def test_un_evento_que_no_llega_a_mmi7_si_lo_dice(pagina: Any) -> None:
+    """Y el caso para el que la nota se escribio sigue teniendola."""
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us2000ahv0")  # Tehuantepec: nadie en MMI≥7
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    # El CSS pone el titulo en versalitas: se compara en mayusculas.
+    assert "EXPUESTO EN MMI≥6" in pagina.locator("#titulo-metricas").inner_text().upper()
+    assert "no alcanzó MMI 7" in pagina.locator("#detalle-metricas").inner_text()
+
+
+@pytest.mark.visor
+def test_los_municipios_mas_expuestos_lo_estan(pagina: Any) -> None:
+    """El ranking ordenaba por la banda cumbre y escondia a los mas expuestos.
+
+    En Muisne salia Muisne con 9.000 y Quinindé con **0** —teniendo 164.691
+    personas en MMI≥7— y Portoviejo, con 333.075, no salia. El bloque se titula
+    "la misma cifra nacional repartida entre quienes tienen que responder": a
+    quien responde desde Portoviejo le decia cero.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    filas = pagina.locator("#detalle-barras li").all_inner_texts()
+    assert filas, "el bloque de municipios se quedo vacio"
+
+    # Ni una fila en cero: un ranking rematado con ceros no ensena donde se
+    # concentra, ensena que se relleno hasta ocho.
+    valores = pagina.locator("#detalle-barras .barra-valor").all_inner_texts()
+    assert all(v.strip() != "0" for v in valores), f"hay municipios en cero: {valores}"
+
+    # Y el primero es el que de verdad tiene mas gente dentro.
+    assert "Portoviejo" in filas[0], f"el mas expuesto no encabeza la lista: {filas[0]!r}"
+
+    # El titulo dice en que banda ordena. El `.md` siempre lo decia y el visor no.
+    assert "MMI≥7" in pagina.locator("#titulo-municipios").inner_text().upper()
+
+
+@pytest.mark.visor
+def test_la_incertidumbre_nombra_las_dos_fuentes(pagina: Any) -> None:
+    """El visor explicaba esta cifra al reves de como la calcula el pipeline.
+
+    El SQL es el desacuerdo entre GHS-POP y WorldPop dentro del area afectada, y
+    el `report.md` del mismo evento lo dice asi. El panel decia "difiere del
+    total nacional del mismo producto" y lo atribuia al "remuestreo a
+    hexagonos". Ni nacional, ni el mismo producto, ni remuestreo.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    texto = pagina.locator("#bloque-incertidumbre").inner_text()
+    assert "GHS-POP" in texto and "WorldPop" in texto, f"no nombra las dos fuentes: {texto!r}"
+    assert "remuestreo" not in texto, f"sigue culpando al remuestreo: {texto!r}"
+    assert "total nacional" not in texto, f"sigue diciendo que es nacional: {texto!r}"
+
+
+@pytest.mark.visor
+def test_una_discrepancia_enorme_no_se_publica_como_nota_al_pie(pagina: Any) -> None:
+    """Carupano publica 416,9 % con la tipografia de un 0,8 %.
+
+    Sobre 3.416 personas expuestas dos productos de poblacion pueden discrepar
+    en varias veces la cifra sin que ninguno este roto, pero enseñarlo como un
+    apunte rutinario invita a leer el reporte con una confianza que no tiene.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us1000gez7")  # Carupano
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    assert pagina.locator("#bloque-incertidumbre .cifra-alerta").count() == 1, (
+        "una discrepancia de tres cifras se publica con el mismo peso que un 0,8 %"
+    )
+    assert "orden de magnitud" in pagina.locator("#bloque-incertidumbre").inner_text()
+
+
+@pytest.mark.visor
+def test_una_reconstruccion_dice_de_cuando_son_sus_cifras(pagina: Any) -> None:
+    """El aviso vivia solo como `title` de un distintivo.
+
+    Invisible sin raton, inalcanzable en un movil, y es el que decide como se lee
+    todo lo demas: el panel dice "cuanta gente vivia dentro" sobre un sismo de
+    2016 y cuenta con poblacion de 2025.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    epoca = pagina.locator("#detalle-epoca")
+    assert epoca.is_visible(), "una reconstruccion no dice de cuando son sus cifras"
+    texto = epoca.inner_text()
+    assert "2025" in texto and "actuales" in texto, f"el aviso no dice lo que hace falta: {texto!r}"
