@@ -22,10 +22,30 @@ on:
     # para eso, si.
     - cron: "23 7 * * 1"
   workflow_dispatch:
+    inputs:
+      reemitir:
+        description: "Re-emitir los rezagados que encuentre"
+        type: choice
+        default: "no"
+        options:
+          # `activo` re-emite los que solo van atras en la receta del activo:
+          # el salto de manifiesto anadio cobertura del suelo, que P2 no usa,
+          # asi que sus cifras apenas se mueven.
+          #
+          # `todos` incluye los que van atras en ShakeMap o Ground Failure.
+          # Esos SI mueven cifras publicadas —el Choco movio las nueve que el
+          # README cita a mano— y despues hay que revisar la portada. Se elige
+          # a proposito, no por defecto.
+          - "no"
+          - "activo"
+          - "todos"
 
 permissions:
   contents: read
   issues: write
+  # Solo para `gh workflow run impact.yml` cuando alguien pulsa el boton.
+  # La corrida programada nunca despacha: `reemitir` vale "no" por defecto.
+  actions: write
 
 concurrency:
   group: rezago
@@ -52,6 +72,64 @@ jobs:
         id: comprobar
         run: uv run centinela rezagados
 
+      # EL BOTON. Automatico el trabajo, humana la decision.
+      #
+      # Despachar solo seria automatizar el romper el build: re-emitir mueve
+      # cifras que viven en prosa escrita a mano —la tabla del README, el
+      # contraste con PAGER— y ningun workflow puede reescribir con verdad "un
+      # factor de 2,7". Lo que si se puede quitar de en medio es teclear seis
+      # comandos.
+      #
+      # SE COMPRUEBA EL EVENTO, NO SOLO EL INPUT.
+      #
+      # En un evento `schedule` el contexto `inputs` no existe: `inputs.reemitir`
+      # es nulo, y en las reglas de comparacion de Actions `null != 'no'` da
+      # **true**. Con solo esa condicion, la corrida de los lunes habria
+      # despachado re-emisiones sola — justo lo que este paso existe para evitar.
+      #
+      # `github.event_name` es lo unico que distingue "nadie pulso nada" de
+      # "alguien eligio no".
+      - name: Re-emitir los rezagados elegidos
+        id: reemitir
+        if: >-
+          github.event_name == 'workflow_dispatch'
+          && inputs.reemitir != 'no'
+          && steps.comprobar.outputs.hay_rezago == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTIVO: ${{ steps.comprobar.outputs.ids_exposicion }}
+          PRODUCTOS: ${{ steps.comprobar.outputs.ids_productos }}
+        run: |
+          if [ "${{ inputs.reemitir }}" = "todos" ]; then
+            OBJETIVO="$ACTIVO $PRODUCTOS"
+          else
+            OBJETIVO="$ACTIVO"
+            # Que se queda fuera se dice. Un tope silencioso se lee como
+            # "cubierto todo" cuando no lo esta.
+            if [ -n "$PRODUCTOS" ]; then
+              echo "::notice::No se re-emiten los que van atras en producto USGS:"                    "$PRODUCTOS. Mueven cifras publicadas; hace falta 'todos'."
+            fi
+          fi
+
+          if [ -z "$(echo "$OBJETIVO" | tr -d ' ')" ]; then
+            echo "Nada que re-emitir con la opcion elegida."
+            exit 0
+          fi
+
+          for ID in $OBJETIVO; do
+            gh workflow run impact.yml               -f usgs_id="$ID" -f backtest=true -f reprocesar=true
+            echo "despachado $ID"
+            # No por prudencia con el push —impact.yml rebasa— sino para no
+            # encolar veintiun runners a la vez.
+            sleep 20
+          done
+
+          # Lo sabe el paso de la incidencia, que corre despues y si no
+          # escribiria una lista que acaba de dejar de ser cierta.
+          echo "despachados=$(echo $OBJETIVO | wc -w)" >> "$GITHUB_OUTPUT"
+
+          echo "::notice::Re-emitidos. La comprobacion del proximo lunes dira"                "si la lista quedo vacia."
+
       # UNA SOLA INCIDENCIA, REESCRITA — NO COMENTADA.
       #
       # `frescura.yml` comenta en la suya porque describe una averia que deberia
@@ -66,6 +144,7 @@ jobs:
           TITULO: Hay reportes publicados atras de sus fuentes
           CUANTOS: ${{ steps.comprobar.outputs.cuantos }}
           RESUMEN: ${{ steps.comprobar.outputs.resumen }}
+          DESPACHADOS: ${{ steps.reemitir.outputs.despachados }}
         run: |
           gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
           gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
@@ -93,6 +172,14 @@ jobs:
           cierra sola en cuanto no quede ninguno.
 
           Corrida: $CORRIDA"
+
+          if [ -n "$DESPACHADOS" ] && [ "$DESPACHADOS" != "0" ]; then
+            CUERPO="$CUERPO
+
+          **Nota:** en esta misma corrida se despacharon $DESPACHADOS
+          re-emision(es). La lista de arriba es la de ANTES de despacharlas; la
+          comprobacion del proximo lunes dira cuales quedaron resueltas."
+          fi
 
           ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
             --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)

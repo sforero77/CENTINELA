@@ -133,11 +133,26 @@ class ResultadoRezago:
 
     @property
     def por_productos(self) -> list[Rezago]:
+        """Los que van atras en ciencia: USGS revisó el ShakeMap o el Ground Failure.
+
+        Re-emitir uno de estos **mueve cifras publicadas**. El 1-sep-2026, con
+        el Choco, movio las nueve que el README cita a mano. Son los que piden
+        una persona detras.
+        """
         return [r for r in self.rezagados if r.productos]
 
     @property
-    def por_exposicion(self) -> list[Rezago]:
-        return [r for r in self.rezagados if r.exposicion]
+    def solo_exposicion(self) -> list[Rezago]:
+        """Los que solo van atras en la receta del activo, no en la ciencia.
+
+        El salto `v0.1` -> `v0.2` de los diecinueve manifiestos anadio ESA
+        WorldCover, que alimenta las columnas `lulc_*` — y P2 no las usa: son
+        del bloque de incendios. Las fuentes de poblacion, edificaciones y vias
+        no cambiaron. Re-emitir uno de estos actualiza la etiqueta y poco mas.
+
+        La distincion no es cosmetica: decide quien puede pulsar el boton.
+        """
+        return [r for r in self.rezagados if r.exposicion and not r.productos]
 
 
 def _manifiesto_vigente(iso3: str, manifests_dir: Path | None) -> str:
