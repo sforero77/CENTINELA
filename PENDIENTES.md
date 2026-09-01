@@ -387,12 +387,22 @@ resultado es que el repaso lleva días saliendo en verde con `"revisados": 0`.
 Así se enteró el sistema de que el Chocó llevaba una versión de retraso: porque
 alguien re-emitió a mano por otro motivo.
 
-**Lo que lo cerraría sin tocar la decisión:** una comprobación que compare, por
-reporte publicado, su `inputs.shakemap_version` y su `exposure_manifest` contra
-lo que USGS y el Release vigente sirven hoy, y que **informe sin despachar**.
-El `report.json` ya registra los tres campos y el repaso ya hace esa misma
-consulta al detail; lo único que sobra ahí es el filtro de backtest. Convierte
-«nadie sabe» en «hay N reportes atrasados, decide tú».
+**Cerrado el mismo día.** `centinela rezagados`
+(`pipelines/p1_trigger/rezago.py`) compara cada reporte publicado con lo que
+sus fuentes sirven hoy y devuelve la lista. **Informa; no despacha** — la
+decisión de re-emitir un histórico sigue siendo de una persona, porque cambia
+cifras ya publicadas y ya citadas. `rezago.yml` lo corre los lunes y mantiene
+una sola incidencia, reescrita con la lista del día y cerrada sola cuando no
+queda ninguno.
+
+Semanal y no diario porque esto se mueve despacio: el activo se reconstruye
+cada trimestre y la mediana hasta la última revisión de un ShakeMap son 63
+días. Veintiuna peticiones diarias a USGS para enterarse un día antes no
+compran nada.
+
+Primera pasada real, 1-sep-2026: 21 revisados, 0 fallidos, **6 rezagados** —
+justo los seis que no se re-emitieron ese día, todos por activo de exposición
+(`v0.1` → `v0.2`), ninguno por productos de USGS.
 
 ---
 
