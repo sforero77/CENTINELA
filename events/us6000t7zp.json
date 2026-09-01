@@ -13,7 +13,7 @@
   },
   "timestamps": {
     "detectado": "2026-08-24T21:09:12Z",
-    "publicado": "2026-08-25T17:54:22Z",
+    "publicado": "2026-09-01T22:10:41Z",
     "usgs_origen": "2026-06-24T22:05:04Z"
   },
   "hashes": {},
@@ -22,6 +22,7 @@
   "notas": [
     "Backtest: reconstruccion retrospectiva de 2026-06-24, no una respuesta en vivo.",
     "ShakeMap v0 -> v14",
+    "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos"

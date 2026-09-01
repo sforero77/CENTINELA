@@ -63,11 +63,6 @@ Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado —su fi
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
 
-## Cambios frente a la versión anterior
-
-- ShakeMap: v14 → v15
-- Ninguna cifra publicada cambia frente a la version anterior.
-
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -77,8 +72,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
 
 - ShakeMap consumido: **v15**
 - Ground Failure consumido: **v12**
-- Manifiesto de exposición: `ven-v0.1`
-- Pipeline: `0.1.0` · Generado: 2026-08-25T17:54:22Z
+- Manifiesto de exposición: `ven-v0.2`
+- Pipeline: `0.1.0` · Generado: 2026-09-01T22:10:40Z
 
 ## Advertencias
 
