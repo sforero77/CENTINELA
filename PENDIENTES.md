@@ -541,10 +541,17 @@ Salió de usar la página publicada como usuario final. Lo grave se arregló y e
 en `VERIFICACIONES.md`, ronda 6; esto es lo que **sigue abierto**, en orden de
 cuánto molesta.
 
-- **La portada prometía «menos de una hora» y `/status` mide 74,4 min de mediana
-  solo en detectar.** Se quitó de la portada en la revisión cruzada; queda la
-  causa: o baja la cadencia del vigía, o el objetivo de 60 min de RNF-02 no se
-  puede cumplir aunque el resto del pipeline fuera instantáneo.
+- **✅ La cadencia del vigía, cerrada el 1-sep-2026.** La portada prometía «menos
+  de una hora» mientras `/status` medía 74,4 min de mediana **solo en detectar**:
+  el objetivo de 60 min de RNF-02 no se podía cumplir aunque el resto del
+  pipeline fuera instantáneo. La revisión cruzada quitó la promesa de la portada
+  y el aviso de `/status` pasó a aparecer sólo si la cadencia supera el objetivo.
+
+  Y la causa se cerró desde fuera: el cron externo arrancó ese mismo día a las
+  05:01 UTC y lleva 196 revisiones por `repository_dispatch` cada cinco minutos.
+  **La mediana bajó de 74,4 a 5,0 min**, seis veces por debajo de los 30
+  declarados. El p90 sigue en 445 min porque arrastra las corridas viejas, que
+  las concedía la cola de GitHub; se limpiará solo.
 - **`/status` no cubre el fuego.** El panel de fuego enlazaba a Estado
   prometiendo «la cadencia real»; se le quitó el enlace porque Estado solo
   publica latencia sísmica y las revisiones del vigía. La frescura de P5 no se
