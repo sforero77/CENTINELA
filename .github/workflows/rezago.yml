@@ -1,0 +1,124 @@
+name: Rezago de los reportes publicados
+
+# EL REPASO SALTA LOS BACKTEST Y LOS VEINTIUNO SON BACKTEST.
+#
+# `repaso.yml` cumple RF-04 para los eventos vivos. Los publicados quedan
+# fuera a proposito —re-emitir un historico cada vez que USGS retoca su Atlas
+# convertiria el catalogo en ruido— y esa decision sigue siendo buena. Su coste
+# no estaba medido: el 1-sep-2026 se descubrio que el Choco publicaba el
+# ShakeMap v7 con el v8 ya servido, y se supo porque alguien re-emitio a mano
+# por otro motivo.
+#
+# Esto no cambia la decision: **informa y no despacha**. Convierte "nadie sabe"
+# en "hay N reportes atrasados, decide tu".
+
+on:
+  schedule:
+    # Lunes a las 07:23 UTC. Semanal y no diario porque esto se mueve despacio:
+    # el activo de exposicion se reconstruye cada trimestre y la mediana desde
+    # un sismo hasta la ultima revision de su ShakeMap son 63 dias (medido
+    # sobre los veinte del catalogo, ver `repaso.py`). Un dia de retraso en
+    # enterarse no cambia ninguna decision; veintiuna peticiones diarias a USGS
+    # para eso, si.
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: rezago
+  cancel-in-progress: false
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo
+        run: uv sync --python 3.12 --no-dev
+
+      # Sale distinto de cero solo si no se pudo consultar NINGUNO. Que haya
+      # rezago no es un fallo: es trabajo pendiente para una persona, y pintarlo
+      # de rojo enseñaria a ignorar el rojo.
+      - name: Comparar cada reporte con lo que sus fuentes sirven hoy
+        id: comprobar
+        run: uv run centinela rezagados
+
+      # UNA SOLA INCIDENCIA, REESCRITA — NO COMENTADA.
+      #
+      # `frescura.yml` comenta en la suya porque describe una averia que deberia
+      # durar minutos. Esta describe trabajo que puede seguir pendiente semanas
+      # con toda razon, hasta que alguien decida re-emitir. Comentar cada lunes
+      # convertiria la incidencia en un hilo que nadie lee; reescribir el cuerpo
+      # deja siempre a la vista la lista de hoy y solo la de hoy.
+      - name: Anotar que reportes van atras
+        if: steps.comprobar.outputs.hay_rezago == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: Hay reportes publicados atras de sus fuentes
+          CUANTOS: ${{ steps.comprobar.outputs.cuantos }}
+          RESUMEN: ${{ steps.comprobar.outputs.resumen }}
+        run: |
+          gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          CUERPO="$CUANTOS reporte(s) publicados se calcularon con una version
+          de sus fuentes que ya no es la vigente:
+
+          $RESUMEN
+
+          **Esto no se arregla solo, y no deberia.** Re-emitir un historico es
+          una decision con consecuencias: cambia cifras ya publicadas y ya
+          citadas. Cuando se decida, la receta esta en
+          \`docs/OPERACION.md\` §3.bis:
+
+          \`\`\`
+          gh workflow run impact.yml -f usgs_id=<ID> -f backtest=true -f reprocesar=true
+          \`\`\`
+
+          Y despues, comprobar que la portada sigue diciendo la verdad: las
+          cifras del Choco que cita el README salen de \`us6000tjl2\`.
+
+          Esta incidencia se reescribe cada lunes con la lista del dia y se
+          cierra sola en cuanto no quede ninguno.
+
+          Corrida: $CORRIDA"
+
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            gh issue edit "$ABIERTA" --body "$CUERPO"
+            echo "Actualizada la incidencia #$ABIERTA con la lista de hoy."
+          else
+            gh issue create --title "$TITULO" \
+              --label "pipeline,automatico" --body "$CUERPO" \
+              || gh issue create --title "$TITULO" --body "$CUERPO"
+          fi
+
+      # La otra mitad: saber decir "ya no queda ninguno". Sin esto la alarma
+      # solo sabe encenderse, y una que no se apaga deja de leerse.
+      - name: Cerrar la incidencia si ya no queda ninguno
+        if: steps.comprobar.outputs.hay_rezago == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: Hay reportes publicados atras de sus fuentes
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          if [ -n "$ABIERTA" ]; then
+            gh issue close "$ABIERTA" --comment "Los reportes publicados vuelven a estar en la version vigente de sus fuentes."
+            echo "Cerrada la incidencia #$ABIERTA."
+          else
+            echo "Nada que cerrar: no habia incidencia abierta."
+          fi

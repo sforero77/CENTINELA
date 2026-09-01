@@ -494,6 +494,50 @@ def _cmd_repasar(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_rezagados(args: argparse.Namespace) -> int:
+    """Reportes publicados que se quedaron atras de sus fuentes.
+
+    Informa; no despacha. Ver `pipelines/p1_trigger/rezago.py`.
+    """
+    from .p1_trigger.rezago import comprobar
+
+    resultado = comprobar(HttpFetcher(timeout_s=60.0))
+    print(
+        json.dumps(
+            {
+                "revisados": resultado.revisados,
+                "rezagados": [
+                    {
+                        "usgs_id": r.usgs_id,
+                        "shakemap": [r.shakemap_publicado, r.shakemap_vigente],
+                        "groundfailure": [r.groundfailure_publicado, r.groundfailure_vigente],
+                        "exposicion": [r.manifiesto_publicado, r.manifiesto_vigente],
+                        "detalle": r.describir(),
+                    }
+                    for r in resultado.rezagados
+                ],
+                "fallidos": resultado.fallidos,
+            },
+            ensure_ascii=False,
+        )
+    )
+    _emit_github_output("hay_rezago", "true" if resultado.rezagados else "false")
+    _emit_github_output("cuantos", str(len(resultado.rezagados)))
+    _emit_github_output("resumen", "\n".join(f"- {r.describir()}" for r in resultado.rezagados))
+
+    if resultado.ciego:
+        print(
+            f"No se pudo consultar ninguno de los {len(resultado.fallidos)} reportes: "
+            "la comprobacion no llego a correr.",
+            file=sys.stderr,
+        )
+        return 1
+    # Que haya rezago NO es un fallo: es informacion para una persona. Salir
+    # distinto de cero convertiria "hay trabajo pendiente" en "algo se rompio",
+    # y en dos semanas nadie miraria el aviso.
+    return 0
+
+
 def _cmd_frescura(args: argparse.Namespace) -> int:
     """Comprueba que la pagina publicada sirve lo que hay en el repositorio.
 
@@ -657,14 +701,33 @@ def _cmd_paises(args: argparse.Namespace) -> int:
 
 
 def _emit_github_output(key: str, value: str) -> None:
-    """Escribe en ``$GITHUB_OUTPUT`` si el runner lo expone."""
+    """Escribe en ``$GITHUB_OUTPUT`` si el runner lo expone.
+
+    UN VALOR CON SALTOS DE LINEA ROMPE EL FICHERO ENTERO.
+
+    El formato ``clave=valor`` solo admite una linea: la segunda se lee como
+    otra clave, y a partir de ahi el runner interpreta basura. Ningun llamador
+    lo hacia hasta que ``rezagados`` quiso emitir una lista, asi que el fallo
+    llevaba ahi desde el principio sin poder dispararse.
+
+    GitHub tiene formato para esto —``clave<<DELIM``— y pide que el delimitador
+    no aparezca en el valor. Se comprueba en vez de suponerlo: un valor que lo
+    contuviera podria cerrar el bloque antes de tiempo y escribir las claves
+    que quisiera.
+    """
     import os
 
     path = os.environ.get("GITHUB_OUTPUT")
     if not path:
         return
     with Path(path).open("a", encoding="utf-8") as fh:
-        fh.write(f"{key}={value}\n")
+        if "\n" not in value:
+            fh.write(f"{key}={value}\n")
+            return
+        delimitador = "CENTINELA_EOF"
+        while delimitador in value:
+            delimitador += "_"
+        fh.write(f"{key}<<{delimitador}\n{value}\n{delimitador}\n")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -826,6 +889,12 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     p_repasar.set_defaults(func=_cmd_repasar)
+
+    p_rezagados = sub.add_parser(
+        "rezagados",
+        help="reportes publicados cuya fuente sirve hoy algo mas nuevo (informa, no despacha)",
+    )
+    p_rezagados.set_defaults(func=_cmd_rezagados)
 
     p_frescura = sub.add_parser(
         "frescura", help="comprueba que la pagina publicada no quedo detras del repositorio"
