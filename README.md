@@ -44,8 +44,8 @@ Tres cosas, y las tres se pueden citar de documentos del propio USGS:
 * **PAGER no considera deslizamiento ni licuefacción.** Cita literal de
   onePAGER: *«PAGER does not consider secondary effects such as landslides,
   liquefaction, and tsunami in loss estimates at this time»*. CENTINELA sí
-  consume el producto Ground Failure, con las cautelas de la §Ground Failure
-  de cada reporte.
+  consume el producto Ground Failure — con las cautelas que cada reporte
+  imprime en su sección «Deslizamiento y licuefacción», que no son pocas.
 
 Y una honestidad que el proyecto se debe a sí mismo: **la malla H3 no es la
 novedad**. [Kontur Population](https://data.humdata.org/dataset/kontur-population-dataset)
@@ -280,8 +280,9 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.062 pruebas** sin red, más **43 de navegador** que abren el visor en un
-Chromium de verdad, `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
+**1.152 pruebas** sin red, más **101 de navegador** que abren el visor en un
+Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
+`ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 
 Las etapas pendientes fallan de forma ruidosa y explícita — nunca devuelven un
 cero que acabaría publicado como cifra. `tests/unit/test_pendientes.py` es el
