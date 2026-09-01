@@ -54,7 +54,7 @@ Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado —su fi
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,9 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
 
 ## Descargas
 
@@ -65,8 +65,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,9 %**.
 
 - ShakeMap consumido: **v8**
 - Ground Failure consumido: **v4**
-- Manifiesto de exposición: `arg-v0.1`
-- Pipeline: `0.1.0` · Generado: 2026-08-25T19:03:50Z
+- Manifiesto de exposición: `arg-v0.2`
+- Pipeline: `0.1.0` · Generado: 2026-09-01T23:16:57Z
 
 ## Advertencias
 
