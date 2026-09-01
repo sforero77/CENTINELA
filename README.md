@@ -67,16 +67,16 @@ vez de esperar días.
 
 | Indicador | Cifra |
 |---|---:|
-| Personas en MMI≥6 | **6.960.086** |
-| Personas en MMI≥7 | **2.415.793** |
-| De ellas, 65 años o más | **289.257** |
-| Edificaciones en MMI≥7 | **444.424** |
-| Sedes de salud en MMI≥7 | **518** |
-| Sedes educativas en MMI≥7 | **998** |
-| Kilómetros de vía en MMI≥7 | **8.503** |
-| De ellos, primarias y secundarias | **985** |
-| Personas en celdas con cobertura areal por licuefacción ≥ 0,10 | **1.600.028** |
-| Municipios alcanzados | **297** |
+| Personas en MMI≥6 | **7.194.540** |
+| Personas en MMI≥7 | **2.424.287** |
+| De ellas, 65 años o más | **289.947** |
+| Edificaciones en MMI≥7 | **448.789** |
+| Sedes de salud en MMI≥7 | **516** |
+| Sedes educativas en MMI≥7 | **1.003** |
+| Kilómetros de vía en MMI≥7 | **8.791** |
+| De ellos, primarias y secundarias | **1.015** |
+| Personas en celdas con cobertura areal por licuefacción ≥ 0,10 | **1.602.162** |
+| Municipios alcanzados | **299** |
 
 Las cifras salen de `reports/us6000tjl2/report.json`, y
 `tests/unit/test_cifras_del_readme.py` falla si esta tabla se separa de él.
@@ -89,8 +89,8 @@ prueba, no.
 
 *Sobre la precisión.* Siete dígitos significativos sobre un modelo interpolado
 fingen una exactitud que no existe: el mismo reporte publica una banda de
-discrepancia del 3,1 %, o sea 6.960.086 ± ~215.000. La tabla reproduce el JSON
-al dígito porque su trabajo es ser trazable; **en prosa, estas cifras son «siete
+discrepancia del 2,3 %, o sea 7.194.540 ± ~165.000. La tabla reproduce el JSON
+al dígito porque su trabajo es ser trazable; **en prosa, estas cifras son «7,2
 millones» y «2,4 millones»**, que es como las escribe el `report.md` generado.
 
 *Sobre la licuefacción.* 1,6 millones **no es la cifra de USGS y no se puede
@@ -112,9 +112,9 @@ PAGER acotan por arriba y por abajo:
 | Umbral literal | PAGER | CENTINELA |
 |---|---:|---:|
 | MMI ≥ 5,5 | 10.487.959 | — |
-| MMI ≥ 6,0 | — | **6.960.086** |
+| MMI ≥ 6,0 | — | **7.194.540** |
 | MMI ≥ 6,5 | 6.514.486 | — |
-| MMI ≥ 7,0 | — | **2.415.793** |
+| MMI ≥ 7,0 | — | **2.424.287** |
 | MMI ≥ 7,5 | 1.126.902 | — |
 
 Es el único acuerdo aritméticamente posible entre dos convenciones distintas, y
@@ -280,7 +280,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.211 pruebas** sin red, más **101 de navegador** que abren el visor en un
+**1.214 pruebas** sin red, más **101 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 

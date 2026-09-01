@@ -131,3 +131,33 @@ def test_el_reporte_publicado_lleva_la_misma_advertencia() -> None:
 
     assert "no se tabulan igual" in md
     assert "6,5 y 7,49" in md
+
+
+# --- La misma tabla vive en dos sitios, y solo uno estaba vigilado -----------
+
+PORTADA = RAIZ / "README.md"
+
+
+@pytest.mark.parametrize("campo", ["pop_mmi6p", "pop_mmi7p"])
+def test_la_portada_publica_la_misma_tabla_que_el_documento(
+    campo: str, centinela: dict[str, float]
+) -> None:
+    """El README repite la tabla de PAGER y afirma que esta prueba la vigila.
+
+    No era verdad: la prueba solo leia `PARA_INSTITUCIONES.md`, asi que la copia
+    de la portada podia envejecer sola. Se descubrio al re-emitir us6000tjl2 con
+    un activo de exposicion mas nuevo: las cifras del documento fallaron y las
+    de la portada, identicas y ahora desfasadas, pasaron.
+
+    Es la familia de fallo que este proyecto ya tiene nombrada —el mismo hecho
+    afirmado en dos sitios y comprobado en uno— aplicada a la tabla que existe
+    precisamente para resistir la primera objecion que recibe el proyecto.
+    """
+    esperado = format_number_es(centinela[campo])
+    portada = PORTADA.read_text(encoding="utf-8")
+
+    assert esperado in portada, (
+        f"la portada no publica {esperado} para {campo}. Si acabas de re-emitir "
+        "el evento, la tabla de §«El contraste con PAGER» hay que actualizarla "
+        "en README.md y en docs/PARA_INSTITUCIONES.md a la vez."
+    )

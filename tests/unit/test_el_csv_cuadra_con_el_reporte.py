@@ -60,7 +60,6 @@ PENDIENTES_DE_REEMITIR: frozenset[str] = frozenset(
         "us6000hf75",
         "us6000t7zc",
         "us6000t7zp",
-        "us6000tjl2",
         "us70003t2n",
         "us7000455l",
         "us7000f93v",

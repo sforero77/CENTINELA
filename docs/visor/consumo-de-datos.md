@@ -86,7 +86,7 @@ flowchart LR
 
 El botón "descargar" del panel lateral apunta **a los mismos ficheros que el
 visor acaba de pintar**. No hay una capa de presentación que reformatee cifras
-por su cuenta: si el visor dice 2.415.793, ese número está literalmente en el
+por su cuenta: si el visor dice 2.424.287, ese número está literalmente en el
 JSON que se descarga.
 
 La única transformación que hace el visor es de **formato**, no de valor:

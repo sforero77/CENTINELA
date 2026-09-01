@@ -106,7 +106,7 @@ con prisa, y es lo único que este proyecto no automatiza.
 
 Es la primera objeción que recibe este proyecto, y conviene resolverla antes de
 que la haga nadie: **para el sismo del Chocó, PAGER (USGS) publica 6.514.486
-personas en su fila «7» y CENTINELA publica 2.415.793 en MMI≥7.** Un factor de
+personas en su fila «7» y CENTINELA publica 2.424.287 en MMI≥7.** Un factor de
 2,7. Leídas de frente, parece que CENTINELA subcuenta.
 
 No subcuenta. **Las dos no tabulan igual.** PAGER agrupa por MMI *redondeado*:
@@ -118,14 +118,14 @@ que es el único acuerdo aritméticamente posible entre dos convenciones distint
 | Umbral literal | PAGER | CENTINELA |
 |---|---:|---:|
 | MMI ≥ 5,5 | 10.487.959 | — |
-| MMI ≥ 6,0 | — | **6.960.086** |
+| MMI ≥ 6,0 | — | **7.194.540** |
 | MMI ≥ 6,5 | 6.514.486 | — |
-| MMI ≥ 7,0 | — | **2.415.793** |
+| MMI ≥ 7,0 | — | **2.424.287** |
 | MMI ≥ 7,5 | 1.126.902 | — |
 | MMI ≥ 8,0 | — | **0** |
 
-Léase por parejas: 6.960.086 (≥6,0) tiene que quedar **entre** 6.514.486 (≥6,5)
-y 10.487.959 (≥5,5), y queda. 2.415.793 (≥7,0) tiene que quedar entre 1.126.902
+Léase por parejas: 7.194.540 (≥6,0) tiene que quedar **entre** 6.514.486 (≥6,5)
+y 10.487.959 (≥5,5), y queda. 2.424.287 (≥7,0) tiene que quedar entre 1.126.902
 (≥7,5) y 6.514.486 (≥6,5), y queda. Si alguna se saliera del intervalo, una de
 las dos estaría mal — y esa es exactamente la comprobación que corre en CI.
 

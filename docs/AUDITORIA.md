@@ -261,7 +261,7 @@ Venezuela llegó a v14— y quien ya leyó la versión anterior necesita saber q
 cambio, no releerla entera.
 
 Se compara la cifra **ya redondeada**, no la exacta: si una revisión mueve la
-población de 2.415.793 a 2.415.802, el reporte dice "2,4 millones" en los dos
+población de 2.424.287 a 2.424.296, el reporte dice "2,4 millones" en los dos
 sitios y anunciarlo sería inventar una diferencia que nadie puede ver.
 
 ## A13 · La licencia de la fuente no se contrastaba nunca
