@@ -13,7 +13,7 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 2,
-    "exposure_manifest": "chl-v0.1"
+    "exposure_manifest": "chl-v0.2"
   },
   "preliminar": false,
   "radios": [],
@@ -22,13 +22,13 @@
     "pop_mmi6p": 697680.3248557751,
     "pop_mmi7p": 467130.3538479116,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 56008.816694387795,
+    "pop_65p_mmi7p": 56008.81669438782,
     "bld_mmi7p": 176857.0,
     "built_m2_mmi7p": 19491798.0,
     "health_mmi7p": 126.0,
     "edu_mmi7p": 540.0,
-    "road_km_mmi7p": 1571.9927921600201,
-    "road_km_principal_mmi7p": 207.08703789871547,
+    "road_km_mmi7p": 1571.9927921600192,
+    "road_km_principal_mmi7p": 207.0870378987154,
     "pop_ls_alta": 1199.2567775519565,
     "pop_lq_alta": 214.4236927209422
   },
@@ -73,11 +73,11 @@
   },
   "changelog": [],
   "disclaimers": [
-    "Exposicion estimada, no dano observado.",
-    "Este sistema no es una alerta temprana ni una recomendacion de evacuacion.",
-    "No reemplaza a los servicios geologicos ni a las unidades de gestion del riesgo.",
-    "Fuentes, vintages y versiones consumidas: ver manifest enlazado."
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-08-25T17:40:12Z",
+  "generado_utc": "2026-09-01T22:09:13Z",
   "pipeline_version": "0.1.0"
 }
