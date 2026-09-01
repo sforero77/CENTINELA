@@ -455,7 +455,13 @@ def test_los_focos_se_ven_a_escala_continental() -> None:
     """
     assert "const FUEGO_ZOOM_HEX" in APP
     hex_capa = APP[APP.index('id: "incendios",') :][:400]
-    punto = APP[APP.index('id: "incendios-punto"') :][:900]
+    # Delimitado por la capa siguiente y no por un numero de caracteres, por lo
+    # mismo que `test_los_simbolos_de_fuego_llevan_contorno_oscuro`: el bloque
+    # crecio al documentar la simbologia y el corte de 900 dejo la asercion del
+    # radio fuera, dando verde sobre codigo que ya no miraba. Es la segunda vez
+    # que este fichero tropieza con la misma piedra.
+    ini_punto = APP.index('id: "incendios-punto"')
+    punto = APP[ini_punto : APP.index('id: "incendios",', ini_punto)]
 
     assert "minzoom: FUEGO_ZOOM_HEX" in hex_capa, "el hexagono se dibuja donde no se ve"
     assert "maxzoom: FUEGO_ZOOM_HEX" in punto, "el punto no cede el sitio al hexagono"
@@ -796,20 +802,30 @@ def test_ninguna_clase_se_confunde_con_el_suelo_del_mapa() -> None:
     assert peor >= 1.6, f"la clase mas floja da {peor:.2f}:1 contra el suelo {suelo}"
 
 
-def test_los_simbolos_de_fuego_llevan_contorno_oscuro() -> None:
-    """Sin el, las clases bajas no se separan del fondo por mucho que se sature.
+def test_el_contorno_del_fuego_aparece_donde_ayuda_y_no_donde_estorba() -> None:
+    """El contorno era figura-fondo, y a escala continental era la mancha.
 
-    Es figura-fondo: sobre un mapa base claro, el borde es lo que hace simbolo a
-    una mancha de color.
+    La razon original sigue siendo cierta de cerca: sobre un mapa base claro, el
+    borde es lo que hace simbolo a una mancha de color, y donde dos celdas se
+    tocan es lo que las separa.
+
+    Pero se puso fijo en 1 px sin mirar lo que cuesta cuando el simbolo mide 2.
+    Ahi el contorno **es** el simbolo: se come el relleno —que es lo que lleva
+    el color— y los contornos solapados tejen una malla oscura. Medido sobre el
+    dato real: 12.767 celdas ponian 413.000 px² de tinta sobre una franja util
+    de 335.000, o sea 1,23 veces el lienzo entero.
+
+    Asi que se queda, pero por zoom: cero donde amontona, entero donde separa.
     """
-    # Delimitado por la capa siguiente y no por un numero de caracteres: el
-    # bloque crecio al anadir una parada de zoom y el corte fijo dejo las
-    # aserciones fuera, dando verde sobre codigo que ya no miraba.
     ini = APP.index('id: "incendios-punto"')
     bloque = APP[ini : APP.index('id: "incendios",', ini)]
 
-    assert '"circle-stroke-color": FUEGO_CONTORNO' in bloque
-    assert '"circle-stroke-width": 1' in bloque
+    assert '"circle-stroke-color": FUEGO_CONTORNO' in bloque, "se perdio el contorno"
+    # Codicioso y sin `re.S`: la expresion cabe en una linea, y perezoso paraba
+    # en el primer `]` —el de `["linear"]`— y daba por buena media expresion.
+    ancho = re.search(r'"circle-stroke-width": (\[.*\]),', bloque)
+    assert ancho, f"el contorno volvio a ser un numero fijo: {bloque[-400:]}"
+    assert '"zoom"' in ancho.group(1), "el contorno no depende del zoom"
 
 
 def test_el_encuadre_inicial_muestra_toda_latam() -> None:

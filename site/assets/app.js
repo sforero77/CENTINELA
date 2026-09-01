@@ -113,6 +113,50 @@ const BASE_PAPEL = "#f4f2ea";
 // Positron y no un estilo de colores a propósito: el mapa es el fondo del dato.
 const ESTILO_BASE = "https://tiles.openfreemap.org/styles/positron";
 
+//: Los mapas base que se ofrecen, y por que solo tres.
+//:
+//: OpenFreeMap publica cinco —positron, liberty, bright, dark y fiord— y aqui
+//: no estan los cinco: `liberty` y `fiord` son estilos de colores saturados, y
+//: sobre ellos la rampa de MMI y la del fuego dejan de leerse. Ofrecer un mapa
+//: base que estropea el dato no es dar una opcion, es dar una trampa.
+//:
+//: Los tres que quedan responden a tres preguntas distintas:
+//:
+//:   claro     el de siempre, y el unico contra el que estan medidos los
+//:             contrastes de las dos rampas. Es el defecto por eso.
+//:   oscuro    para una sala a media luz, y porque las rampas calidas del fuego
+//:             ganan contraste sobre fondo oscuro.
+//:   relieve   cuando la pregunta es "¿por que ahi?": el terreno explica donde
+//:             se acumula la intensidad y por donde corre un incendio.
+//:
+//: `retinta` solo en positron: los colores de la identidad estan elegidos
+//: contra su gris neutro, y aplicarlos a un estilo oscuro lo dejaria a medias.
+//: `velo` es el tono con el que se apaga lo que no es America Latina, y tiene
+//: que ser el del papel de CADA estilo o el borde de la mascara se ve.
+const ESTILOS_BASE = {
+  claro: {
+    nombre: "Claro",
+    apunte: "El de siempre. Los contrastes de las rampas están medidos contra él.",
+    url: "https://tiles.openfreemap.org/styles/positron",
+    retinta: true,
+    velo: "#f4f2ea",
+  },
+  oscuro: {
+    nombre: "Oscuro",
+    apunte: "Para pantallas a media luz. El fuego gana contraste.",
+    url: "https://tiles.openfreemap.org/styles/dark",
+    retinta: false,
+    velo: "#14171a",
+  },
+  relieve: {
+    nombre: "Con relieve",
+    apunte: "Más detalle de terreno, a costa de que el mapa compita con el dato.",
+    url: "https://tiles.openfreemap.org/styles/bright",
+    retinta: false,
+    velo: "#f4f2ea",
+  },
+};
+
 // El mapa base se retinta a la paleta de la identidad. El agua estaba en
 // #cdd9d4, a un paso de la tierra en luminosidad: la costa no se distinguía, y
 // la mitad de la exposición de este sistema es costera. Ahora hay separación
@@ -416,6 +460,27 @@ function comoTexto(v) {
   return numero(Math.round(v));
 }
 
+//: Lo mismo, para cosas que se cuentan de una en una.
+//:
+//: `comoTexto` conserva el decimal por debajo de diez, y tiene su razon: el
+//: primer corte de la leyenda de vias es 0,5 km y redondeado chocaba con el
+//: segundo. Pero esa regla se aplicaba tambien a las personas, y el panel de un
+//: foco pequeno publicaba **«5,7 personas»**.
+//:
+//: GHS-POP es un raster desagregado, asi que el 5,7 es el dato de verdad; lo
+//: que no es verdad es la precision que sugiere. Nadie cuenta media persona, y
+//: al lado el globo de la celda ya escribia «Población 3» en entero: el mismo
+//: hecho con dos formatos.
+//:
+//: Por debajo de media persona se escribe «<1» y no «0»: hay alguien, y un cero
+//: ahi se leeria como "no hay nadie medido", que es lo que este visor distingue
+//: en todas partes.
+function comoConteo(v) {
+  if (!Number.isFinite(v) || v <= 0) return "0";
+  if (v < 0.5) return "<1";
+  return comoTexto(Math.round(v));
+}
+
 // Los nombres del CSV municipal vienen en mayúsculas ("PEREIRA"); los de
 // `report.json` no. Se normalizan aquí para que las barras no griten.
 function capitalizar(nombre) {
@@ -458,6 +523,13 @@ const escapar = (s) =>
 
 const estado = {
   paisFiltrado: "",
+  //: Que mapa base esta puesto. Ver `ESTILOS_BASE`.
+  estiloBase: "claro",
+  //: Los sismos vistos y no despachados, enteros. Se guardaban solo sus
+  //: coordenadas, y con eso no se puede volver a dibujar la capa — que es lo
+  //: que hay que hacer cada vez que se cambia de mapa base, porque `setStyle`
+  //: se lleva por delante todas las fuentes y todas las capas.
+  observadosDatos: null,
   //: Que amenaza manda en el mapa. La otra queda de contexto discreto.
   //:
   //: El fuego vivia detras de un checkbox apagado en una esquina: 745.000
@@ -894,7 +966,7 @@ function pintarPanorama(eventos) {
     `<span class="etiqueta">reportes publicados</span></div>` +
     (mayor
       ? `<div class="metrica"><span class="cabeza">${iconoSvg("personas")}` +
-        `<span class="valor">${comoTexto(mayor[clave])}</span></span>` +
+        `<span class="valor">${comoConteo(mayor[clave])}</span></span>` +
         `<span class="etiqueta">mayor exposición registrada en MMI≥${bandaMayor}</span>` +
         `<span class="apunte">M${String(mayor.mag).replace(".", ",")} · ${escapar(mayor.lugar)}</span></div>`
       : "") +
@@ -912,7 +984,7 @@ function pintarPanorama(eventos) {
           `<span class="titulo">M${String(e.mag).replace(".", ",")} — ${escapar(e.lugar)}</span>` +
           `<span class="pie">${comoFecha(e.utc, false)} · ${
             bandaTitular(e).banda
-              ? `${comoTexto(bandaTitular(e).pop)} en MMI≥${bandaTitular(e).banda}`
+              ? `${comoConteo(bandaTitular(e).pop)} en MMI≥${bandaTitular(e).banda}`
               : "sin población en MMI≥6"
           }${e.backtest ? " · retrospectivo" : ""}</span></button></li>`
       )
@@ -1016,7 +1088,7 @@ function filaEvento(evento) {
   const cifra = document.createElement("span");
   cifra.className = "evento-cifra";
   cifra.innerHTML = titular.banda
-    ? `${comoTexto(titular.pop)}<small>personas en MMI≥${titular.banda}</small>`
+    ? `${comoConteo(titular.pop)}<small>personas en MMI≥${titular.banda}</small>`
     : `<span class="sin-alcance">Sin población</span><small>en MMI≥6 o mayor</small>`;
   li.append(cifra);
   li.addEventListener("click", (ev) => {
@@ -1046,7 +1118,6 @@ async function seleccionar(usgsId) {
   escribirUrl();
   // Con un evento delante manda la leyenda de la capa; la de simbolos se pliega.
   pintarLeyendaSimbolos();
-  pintarVolverAlEncuadre();
 
   try {
     const [reporte, csv, celdas, contornos] = await Promise.all([
@@ -1104,54 +1175,6 @@ function volverAlEncuadre(m, duracion = 0) {
   }
 }
 
-//: Si la camara esta lejos del encuadre del panorama.
-//:
-//: Se compara contra `cameraForBounds` —la misma cuenta que hace
-//: `volverAlEncuadre`— y no contra un centro fijo, porque el encuadre depende
-//: del tamano de la ventana: lo que en un portatil es "estar en el panorama" en
-//: otro no lo es. Los umbrales son generosos a proposito; esto no decide nada,
-//: solo si vale la pena ofrecer el boton.
-function vistaDesviada(m) {
-  if (!m || !m.cameraForBounds) return false;
-  try {
-    const objetivo = m.cameraForBounds(ENCUADRE_UTIL, { padding: 24 });
-    if (!objetivo) return false;
-    const centro = m.getCenter();
-    return (
-      Math.abs(m.getZoom() - objetivo.zoom) > 0.35 ||
-      Math.abs(centro.lng - objetivo.center.lng) > 6 ||
-      Math.abs(centro.lat - objetivo.center.lat) > 6
-    );
-  } catch (error) {
-    return false;
-  }
-}
-
-//: El boton solo aparece cuando tiene algo que deshacer.
-//:
-//: Con un evento abierto no: ahi la camara esta sobre su malla a proposito, y
-//: quien quiera salir tiene «Volver al panorama», que ademas cierra el panel.
-//: Dos botones que devuelven cosas distintas al lado no se distinguen.
-function pintarVolverAlEncuadre() {
-  const boton = $("volver-encuadre");
-  if (!boton) return;
-  boton.hidden = Boolean(estado.seleccionado) || !vistaDesviada(estado.mapa);
-}
-
-function engancharVolverAlEncuadre(m) {
-  const boton = $("volver-encuadre");
-  if (!boton || boton.dataset.enganchado) return;
-  boton.dataset.enganchado = "1";
-  boton.addEventListener("click", () => {
-    volverAlEncuadre(m, VUELO);
-    anotarCamara("boton:encuadre");
-    anunciar("Vista devuelta al encuadre de América Latina.");
-    // El vuelo dura; el boton se recalcula cuando la camara para.
-  });
-  m.on("moveend", pintarVolverAlEncuadre);
-  pintarVolverAlEncuadre();
-}
-
 function cerrarDetalle() {
   estado.seleccionado = null;
   $("lateral-vacio").hidden = false;
@@ -1176,7 +1199,6 @@ function cerrarDetalle() {
   if (selector) selector.value = "";
   // Ya no compite con ninguna leyenda de capa: se despliega otra vez.
   pintarLeyendaSimbolos();
-  pintarVolverAlEncuadre();
   // Al mismo encuadre adaptado con el que abre, no al centro y zoom fijos:
   // volver al panorama tiene que devolver la vista que se tenia al llegar.
   volverAlEncuadre(estado.mapa, VUELO);
@@ -1194,6 +1216,16 @@ function engancharSalidas() {
   conectarVolverDelFoco();
   document.addEventListener("keydown", (ev) => {
     if (ev.key !== "Escape") return;
+    // El panel de mapas base primero: es el mas superficial de los tres y el
+    // unico que se abre encima de lo demas. Cerrar el evento con la galeria
+    // abierta dejaria el panel flotando sobre un mapa que ya cambio.
+    const galeria = $("galeria-bases");
+    if (galeria && !galeria.hidden) {
+      cerrarGaleriaDeBases();
+      const boton = document.querySelector(".ctrl-bases");
+      if (boton) boton.focus();
+      return;
+    }
     // Escape cierra lo que este abierto, y solo hay uno de los dos: abrir un
     // evento fuerza el modo sismos, que a su vez cierra el foco.
     if (estado.seleccionado) cerrarDetalle();
@@ -1234,7 +1266,7 @@ function pintarLateral(reporte, municipios, celdas) {
       : (() => {
           const b = bandaDeTotales(t);
           return b
-            ? `${comoTexto(t[`pop_mmi${b}p`])} personas expuestas a intensidad ${b} o mayor.`
+            ? `${comoConteo(t[`pop_mmi${b}p`])} personas expuestas a intensidad ${b} o mayor.`
             : "Su sacudida no alcanzó intensidad 6 sobre población.";
         })())
   );
@@ -1442,7 +1474,7 @@ function pintarFranjas(reporte) {
         `<li class="franja"><span class="franja-nombre">${f.nombre}</span>` +
         `<span class="franja-pista"><span class="franja-relleno" style="width:` +
         `${((100 * (f.valor || 0)) / maximo).toFixed(1)}%;background:${f.color}"></span></span>` +
-        `<span class="franja-valor">${comoTexto(f.valor)}</span></li>`
+        `<span class="franja-valor">${comoConteo(f.valor)}</span></li>`
     )
     .join("");
 }
@@ -1517,15 +1549,17 @@ const ICONOS = {
 };
 
 //: `clave -> icono, etiqueta, cortes medidos y formato`.
+//: `formato: comoConteo` en lo que se cuenta de una en una —personas,
+//: edificaciones— y `comoTexto` solo en magnitudes continuas. Ver `comoConteo`.
 const INDICADORES = {
-  personas: { icono: "personas", cortes: [247720, 910714], formato: comoTexto },
-  mayores: { icono: "mayores", cortes: [15016, 81267], formato: comoTexto },
+  personas: { icono: "personas", cortes: [247720, 910714], formato: comoConteo },
+  mayores: { icono: "mayores", cortes: [15016, 81267], formato: comoConteo },
   salud: { icono: "salud", cortes: [31, 152], formato: numero },
   educacion: { icono: "educacion", cortes: [92, 998], formato: numero },
-  edificaciones: { icono: "edificaciones", cortes: [130938, 331809], formato: comoTexto },
+  edificaciones: { icono: "edificaciones", cortes: [130938, 331809], formato: comoConteo },
   superficie: { icono: "superficie", cortes: [8.3, 46.8] },
   vias: { icono: "vias", cortes: [1572, 5266] },
-  fuego: { icono: "fuego", cortes: [50000, 300000], formato: comoTexto },
+  fuego: { icono: "fuego", cortes: [50000, 300000], formato: comoConteo },
 };
 
 const NIVELES = { bajo: "bajo para el catálogo", medio: "medio", alto: "alto para el catálogo" };
@@ -1716,7 +1750,7 @@ function pintarTerreno(reporte) {
           `<li><span>${iconoSvg(f.icono)}${f.etiqueta}` +
           (cuota ? ` <span class="cuota-apunte">· <strong>${cuota}</strong> de los expuestos</span>` : "") +
           `</span><span class="cifra${(f.valor || 0) > 0 ? "" : " cero"}">` +
-          `${comoTexto(f.valor)}</span></li>`
+          `${comoConteo(f.valor)}</span></li>`
         );
       })
       .join("") +
@@ -1787,7 +1821,7 @@ function pintarMunicipios(reporte, municipios) {
         `<span class="ficha-mmi${oscuro ? " sobre-oscuro" : ""}" style="background:${color}" ` +
         `title="Intensidad máxima ${mmi}">${mmi}</span>` +
         `${nombre}</span>` +
-        `<span class="barra-valor">${comoTexto(cifra(m))}</span></div>` +
+        `<span class="barra-valor">${comoConteo(cifra(m))}</span></div>` +
         `<div class="barra-pista"><div class="barra-relleno" ` +
         `style="width:${pct.toFixed(1)}%;background:${color}"></div></div></li>`
       );
@@ -1810,7 +1844,7 @@ function pintarContraste(usgsId, totales) {
   if (!c) return;
   const pct = ((100 * c.danadas) / c.evaluadas).toFixed(2).replace(".", ",");
   $("detalle-contraste").innerHTML =
-    `Este reporte publica <strong>${comoTexto(totales.bld_mmi7p)} edificaciones ` +
+    `Este reporte publica <strong>${comoConteo(totales.bld_mmi7p)} edificaciones ` +
     `expuestas</strong> a MMI≥7 en todo el país. En ${c.zona}, ${c.fuente} evaluó ` +
     `${numero(c.evaluadas)} por imagen satelital y detectó daño en ` +
     `<strong>${numero(c.danadas)} (${pct} %)</strong>. Son dos preguntas distintas: ` +
@@ -1921,6 +1955,64 @@ function anotarCapaActiva(id, columna) {
   pintado.capa = { id, columna, utc: new Date().toISOString() };
 }
 
+//: Evalua una expresion de estilo de MapLibre sobre unas variables dadas.
+//:
+//: Existe para `tintaDelFuego`, que necesita saber cuanto mide cada circulo sin
+//: copiar la formula: copiarla seria tener dos definiciones del mismo radio, y
+//: dos definiciones divergen en cuanto nadie las compara — que es la regla que
+//: este fichero se aplica en todas partes.
+//:
+//: Cubre solo los operadores que la capa usa. Si alguien mete uno nuevo, esto
+//: lanza en vez de devolver un numero plausible: un cero silencioso aqui
+//: pasaria la prueba de tinta con la simbologia rota.
+function evaluarExpresion(exp, vars) {
+  if (typeof exp === "number") return exp;
+  if (!Array.isArray(exp)) throw new Error("expresión no soportada: " + JSON.stringify(exp));
+  const [op, ...args] = exp;
+  const ev = (x) => evaluarExpresion(x, vars);
+  if (op === "zoom") return vars.zoom;
+  if (op === "get") return Number(vars[args[0]]) || 0;
+  if (op === "coalesce") {
+    for (const a of args) {
+      const v = ev(a);
+      if (v !== null && v !== undefined && !Number.isNaN(v)) return v;
+    }
+    return 0;
+  }
+  if (op === "+") return args.reduce((t, a) => t + ev(a), 0);
+  if (op === "*") return args.reduce((t, a) => t * ev(a), 1);
+  if (op === "-") return args.length === 1 ? -ev(args[0]) : ev(args[0]) - ev(args[1]);
+  if (op === "sqrt") return Math.sqrt(ev(args[0]));
+  if (op === "step") {
+    const v = ev(args[0]);
+    let salida = ev(args[1]);
+    for (let i = 2; i < args.length; i += 2) {
+      if (v >= args[i]) salida = ev(args[i + 1]);
+    }
+    return salida;
+  }
+  if (op === "interpolate") {
+    // Solo lineal, que es la unica que usa esta capa.
+    const [tipo, entrada, ...paradas] = args;
+    if (tipo[0] !== "linear") throw new Error("interpolación no lineal sin soporte");
+    const x = ev(entrada);
+    const puntos = [];
+    for (let i = 0; i < paradas.length; i += 2) puntos.push([paradas[i], paradas[i + 1]]);
+    if (x <= puntos[0][0]) return ev(puntos[0][1]);
+    const ultimo = puntos[puntos.length - 1];
+    if (x >= ultimo[0]) return ev(ultimo[1]);
+    for (let i = 0; i < puntos.length - 1; i += 1) {
+      const [x0, y0] = puntos[i];
+      const [x1, y1] = puntos[i + 1];
+      if (x >= x0 && x <= x1) {
+        const t = (x - x0) / (x1 - x0);
+        return ev(y0) + t * (ev(y1) - ev(y0));
+      }
+    }
+  }
+  throw new Error("operador no soportado: " + op);
+}
+
 // Superficie publica y estable. No lleva guiones bajos ni `__test__`: no es un
 // gancho de pruebas, es el visor rindiendo cuentas — y sirve igual para
 // diagnosticar desde la consola del navegador de quien reporte un fallo.
@@ -1989,6 +2081,57 @@ window.CENTINELA = {
       /* sin estilo cargado se devuelve lo contado hasta aqui */
     }
     return cuenta;
+  },
+  //: Tira la rejilla de viento, para poder ver el visor sin ella.
+  //:
+  //: Con el fichero de hoy los 3.337 puntos cubren los 6.239 focos, asi que el
+  //: caso "GFS no llego" no se da nunca y una prueba que lo espere pasa sin
+  //: comprobar nada. Esto lo provoca. No hay otra forma de llegar ahi desde
+  //: fuera, y el dia que `p5_incendios/viento.py` se rinda tras sus cuatro
+  //: reintentos es el estado en el que quedara el visor.
+  olvidarElViento: () => {
+    if (estado.fuegoDatos) estado.fuegoDatos.viento = null;
+  },
+  //: En que orden se apilan los simbolos de una capa. Sin esto no hay forma de
+  //: comprobar que el fuego fuerte queda encima: contar pixeles de un color en
+  //: una captura no distingue "esta debajo" de "no se ha pintado".
+  ordenDeDibujo: (capa) => {
+    const m = estado.mapa;
+    try {
+      return m && m.getLayer(capa) ? m.getLayoutProperty(capa, "circle-sort-key") : null;
+    } catch (error) {
+      return null;
+    }
+  },
+  //: Cuanta superficie de pantalla cubren los circulos de fuego, contra la que
+  //: hay. Ver el comentario largo de `incendios-punto`: la mancha era
+  //: aritmetica, no mala suerte, y una prueba que mire una captura no la
+  //: distingue de un solape afortunado.
+  //:
+  //: Se evalua la expresion que la capa tiene puesta AHORA —no una copia— para
+  //: que la medida siga a la simbologia si alguien la cambia.
+  tintaDelFuego: (zoom) => {
+    const m = estado.mapa;
+    const datos = estado.fuegoDatos;
+    if (!m || !datos || !m.getLayer("incendios-punto")) return null;
+    let radio;
+    try {
+      radio = m.getPaintProperty("incendios-punto", "circle-radius");
+    } catch (error) {
+      return null;
+    }
+    const r = (frp) => evaluarExpresion(radio, { zoom, frp_suma: frp });
+    const tinta = (celdas) => celdas.reduce((t, c) => t + Math.PI * r(c.frp_suma || 0) ** 2, 0);
+    const celdas = datos.celdas || [];
+    const lienzo = m.getCanvas().clientWidth * m.getCanvas().clientHeight;
+    const debiles = celdas.filter((c) => (c.frp_suma || 0) < 10);
+    const fuertes = celdas.filter((c) => (c.frp_suma || 0) >= 400);
+    return {
+      tinta: tinta(celdas),
+      lienzo,
+      veces: tinta(celdas) / lienzo,
+      debilesSobreFuertes: fuertes.length ? tinta(debiles) / tinta(fuertes) : 0,
+    };
   },
   //: La caja que el mapa esta enseñando. Para poder afirmar que el encuadre
   //: inicial mira a America Latina y no al Sahel.
@@ -2260,11 +2403,32 @@ function cuandoElEstiloEsteListo(m, fn) {
     seguro();
     return;
   }
-  const reintentar = () => {
-    if (!m.isStyleLoaded()) return;
+
+  // UNA VEZ, Y SOLO UNA.
+  //
+  // La red de seguridad de abajo no se cancelaba cuando el camino normal
+  // funcionaba: se quitaban los dos escuchadores y el `setTimeout` seguia en
+  // pie, asi que **todo dibujo diferido corria dos veces**. La segunda pasada
+  // llega a un `addSource` que ya existe y lanza.
+  //
+  // No se veia al arrancar porque ahi el estilo suele estar listo y se toma el
+  // atajo de arriba. Se veia con `?evento=` sobre estilo frio —el enlace
+  // profundo, que es como llega quien recibe un reporte compartido— y dejaba
+  // `Source "celdas" already exists.` en el registro publico de errores.
+  let hecho = false;
+  let red = 0;
+  const unaVez = () => {
+    if (hecho) return;
+    hecho = true;
+    clearTimeout(red);
     m.off("styledata", reintentar);
     m.off("idle", reintentar);
     seguro();
+  };
+
+  const reintentar = () => {
+    if (!m.isStyleLoaded()) return;
+    unaVez();
   };
   m.on("styledata", reintentar);
   m.on("idle", reintentar);
@@ -2272,11 +2436,9 @@ function cuandoElEstiloEsteListo(m, fn) {
   // Y una red por si `isStyleLoaded()` no llega a ser cierto nunca — pasa
   // cuando una fuente se queda a medias. Sin esto el callback no corre jamas y
   // el visor se queda a medio pintar sin decir nada.
-  setTimeout(() => {
+  red = setTimeout(() => {
     if (!m.getStyle()) return;
-    m.off("styledata", reintentar);
-    m.off("idle", reintentar);
-    seguro();
+    unaVez();
   }, 4000);
 }
 
@@ -2662,7 +2824,11 @@ function engancharCeldas(m) {
         // El indice es la clave con la que esta celda se encuentra en el
         // `celdas.json` descargable, y en el parquet del activo. Sin el, lo
         // que se lee en pantalla no se puede citar ni comprobar.
-        `<p class="mono" style="margin:0 0 .15rem">Celda H3 · r7 · 5,2 km²</p>` +
+        // `popup-celda` no es decorativa: es como se distingue este globo del
+        // rotulo que sale al pasar por encima de un epicentro, que tambien es
+        // un `.maplibregl-popup`. Una prueba los confundio durante dos
+        // ejecuciones.
+        `<p class="mono popup-celda" style="margin:0 0 .15rem">Celda H3 · r7 · 5,2 km²</p>` +
         `<p class="mono ficha-h3" style="margin:0 0 .45rem">${escapar(String(p.h3 ?? ""))}</p>` +
         fila("Intensidad", numero(Number(p.mmi), 1)) +
         // La distancia al epicentro es lo primero que se pregunta ante una
@@ -2674,8 +2840,8 @@ function engancharCeldas(m) {
               `${numero(distanciaKm(estado.epicentro[0], estado.epicentro[1], ev.lngLat.lng, ev.lngLat.lat))} km`
             )
           : "") +
-        fila("Personas", comoTexto(Number(p.pop))) +
-        fila("Edificaciones", comoTexto(Number(p.bld))) +
+        fila("Personas", comoConteo(Number(p.pop))) +
+        fila("Edificaciones", comoConteo(Number(p.bld))) +
         fila("Construido", `${numero(Number(p.built_m2) / 1e6, 2)} km²`) +
         fila("Vías", `${numero(Number(p.vias_km), 1)} km`) +
         fila("Salud", numero(Number(p.salud))) +
@@ -2771,12 +2937,22 @@ function elMasPequeno(rasgos) {
 let rotuloEpicentro = null;
 
 function rotularEpicentro(m, rasgo) {
+  // CON UN EVENTO ABIERTO, NO.
+  //
+  // El rotulo existe para desambiguar entre epicentros solapados —cual de los
+  // veintiuno se va a abrir al pulsar— y con uno abierto no hay nada que
+  // desambiguar: su nombre y su cifra estan en el panel, a la derecha. Lo unico
+  // que hacia era tapar la malla del evento con un dato que ya se esta leyendo.
+  //
+  // Lo destapo una prueba que llevaba dos ejecuciones fallando: buscaba "hay un
+  // globo abierto" para comprobar el de una celda, y encontraba este.
+  if (estado.seleccionado) return;
   const p = rasgo.properties;
   if (rotuloEpicentro && rotuloEpicentro._centinelaId === p.usgs_id) return;
   cerrarRotuloDeEpicentro();
   const banda = Number(p.banda) || 0;
   const cifra = banda
-    ? `${comoTexto(Number(p.pop) || 0)} en MMI≥${banda}`
+    ? `${comoConteo(Number(p.pop) || 0)} en MMI≥${banda}`
     : "sin población en MMI≥6";
   rotuloEpicentro = new maplibregl.Popup({
     closeButton: false,
@@ -2996,6 +3172,224 @@ function rotularEnEspanol(m) {
   }
 }
 
+//: El ultimo estilo base que se dejo listo. Ver `prepararEstilo`.
+let estiloPreparado = null;
+
+//: Deja un estilo base recien cargado en condiciones de servir de fondo.
+//:
+//: Tres cosas, y las tres tienen que rehacerse con CADA estilo, no solo con el
+//: primero: el retinte de la identidad, los toponimos en espanol y el velo
+//: sobre lo que no es America Latina.
+//:
+//: Corre desde `styledata`, que llega muchas veces por estilo, asi que lleva su
+//: propia memoria: sin ella recorreria las ~200 capas del estilo en cada aviso.
+function prepararEstilo(m) {
+  if (!m.isStyleLoaded()) return;
+  const estilo = ESTILOS_BASE[estado.estiloBase] || ESTILOS_BASE.claro;
+  if (estiloPreparado === estilo.url) return;
+  estiloPreparado = estilo.url;
+
+  // El retinte es solo del claro: los colores de la identidad estan elegidos
+  // contra el gris neutro de Positron, y sobre un estilo oscuro dejarian el
+  // mapa a medio pintar. Ver `ESTILOS_BASE`.
+  if (estilo.retinta) {
+    for (const capa of m.getStyle().layers) {
+      if (capa.type !== "fill" && capa.type !== "background") continue;
+      const agua = capa.id === "water" || capa.id.startsWith("water_");
+      const tierra = capa.id === "background" || capa.id === "landcover" ||
+                     capa.id.startsWith("landuse") || capa.id.startsWith("landcover");
+      if (!agua && !tierra) continue;
+      const prop = capa.type === "background" ? "background-color" : "fill-color";
+      try {
+        m.setPaintProperty(capa.id, prop, agua ? BASE_AGUA : BASE_TIERRA);
+      } catch (e) {
+        /* el estilo puede cambiar; no es crítico */
+      }
+    }
+  }
+  rotularEnEspanol(m);
+  ponerMascara(m, estilo.velo);
+}
+
+//: Los dos botones que faltaban en el mapa, en un solo grupo.
+//:
+//: UN SOLO GRUPO Y NO DOS. Cada `maplibregl-ctrl-group` trae 10 px de margen
+//: propio, y la esquina de arriba a la derecha es la unica libre —abajo estan
+//: las leyendas, la atribucion y las pestanas de capa—. En un movil de 390 px
+//: esa pila ya llegaba hasta la leyenda de intensidad, y dos grupos mas
+//: empujaban la barra de escala encima de ella. En uno solo caben los dos
+//: botones por el precio de uno.
+class ControlesDelMapa {
+  onAdd(m) {
+    this._mapa = m;
+    const caja = document.createElement("div");
+    caja.className = "maplibregl-ctrl maplibregl-ctrl-group ctrl-centinela";
+
+    caja.appendChild(
+      this._boton(
+        "ctrl-inicio",
+        "Volver a la vista de América Latina",
+        // Una casa, que es lo que todo el mundo espera de este boton.
+        `<path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/>` +
+          `<path d="M9.5 20v-6h5v6"/>`,
+        () => {
+          volverAlEncuadre(m, VUELO);
+          anotarCamara("boton:inicio");
+          anunciar("Vista devuelta al encuadre de América Latina.");
+        }
+      )
+    );
+
+    const boton = this._boton(
+      "ctrl-bases",
+      "Cambiar el mapa base",
+      // Tres hojas apiladas.
+      `<path d="M12 3 3 7.5l9 4.5 9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/>` +
+        `<path d="M3 16.5 12 21l9-4.5"/>`,
+      () => this._alternar()
+    );
+    boton.setAttribute("aria-expanded", "false");
+    boton.setAttribute("aria-controls", "galeria-bases");
+    caja.appendChild(boton);
+
+    const galeria = document.createElement("div");
+    galeria.className = "galeria-bases";
+    galeria.id = "galeria-bases";
+    galeria.hidden = true;
+    galeria.setAttribute("role", "group");
+    galeria.setAttribute("aria-label", "Mapa base");
+    caja.appendChild(galeria);
+
+    this._caja = caja;
+    this._galeria = galeria;
+    this._boton_bases = boton;
+    pintarGaleriaDeBases(galeria);
+    return caja;
+  }
+
+  _boton(clase, titulo, trazo, alPulsar) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = clase;
+    b.title = titulo;
+    b.setAttribute("aria-label", titulo);
+    b.innerHTML =
+      `<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" ` +
+      `stroke="currentColor" stroke-width="1.7" stroke-linecap="round" ` +
+      `stroke-linejoin="round">${trazo}</svg>`;
+    b.addEventListener("click", alPulsar);
+    return b;
+  }
+
+  _alternar() {
+    const abrir = this._galeria.hidden;
+    this._galeria.hidden = !abrir;
+    this._boton_bases.setAttribute("aria-expanded", String(abrir));
+    if (abrir) {
+      const primera = this._galeria.querySelector("button");
+      if (primera) primera.focus();
+    }
+  }
+
+  onRemove() {
+    if (this._caja && this._caja.parentNode) this._caja.parentNode.removeChild(this._caja);
+    this._mapa = null;
+  }
+}
+
+//: Las opciones del mapa base, con la puesta marcada.
+//:
+//: Cada una lleva su apunte: "Con relieve" cuesta legibilidad del dato y quien
+//: la elige tiene derecho a saberlo antes, no despues.
+//: `nodo` porque en `onAdd` la caja todavia no esta en el documento —MapLibre
+//: la inserta al volver— y `getElementById` no la encuentra: la galeria salia
+//: vacia y el conmutador no tenia nada que pulsar.
+function pintarGaleriaDeBases(nodo) {
+  const galeria = nodo || $("galeria-bases");
+  if (!galeria) return;
+  galeria.innerHTML = Object.entries(ESTILOS_BASE)
+    .map(
+      ([clave, e]) =>
+        `<button type="button" data-base="${clave}" class="base-opcion"` +
+        `${clave === estado.estiloBase ? ' aria-pressed="true"' : ' aria-pressed="false"'}>` +
+        `<span class="base-nombre">${e.nombre}</span>` +
+        `<span class="base-apunte">${e.apunte}</span></button>`
+    )
+    .join("");
+  for (const b of galeria.querySelectorAll("[data-base]")) {
+    b.addEventListener("click", () => {
+      cambiarEstiloBase(b.dataset.base);
+      // Y se cierra. Un panel de 15 rem que se queda abierto sobre el mapa
+      // despues de elegir tapa justo lo que se acaba de ir a mirar.
+      cerrarGaleriaDeBases();
+    });
+  }
+}
+
+//: Cierra el panel de mapas base, venga de donde venga la orden.
+function cerrarGaleriaDeBases() {
+  const galeria = $("galeria-bases");
+  if (!galeria || galeria.hidden) return;
+  galeria.hidden = true;
+  const boton = document.querySelector(".ctrl-bases");
+  if (boton) boton.setAttribute("aria-expanded", "false");
+}
+
+//: Cambia el mapa base y vuelve a poner encima todo lo que es dato.
+//:
+//: `setStyle` no es "cambiar el fondo": tira el estilo entero y con el **todas
+//: las fuentes y todas las capas**, incluidas las nuestras. Un conmutador que
+//: solo llame a `setStyle` deja un mapa base bonito y vacio: sin epicentros,
+//: sin malla, sin fuego. Por eso este es el unico sitio desde donde se cambia.
+//:
+//: El evento abierto se vuelve a seleccionar en vez de reconstruirse a mano:
+//: `seleccionar` ya sabe traer su malla, sus contornos y su perimetro, y
+//: duplicar aqui ese camino es como acaban divergiendo.
+function cambiarEstiloBase(clave) {
+  const m = estado.mapa;
+  const estilo = ESTILOS_BASE[clave];
+  if (!m || !estilo || clave === estado.estiloBase) return;
+  estado.estiloBase = clave;
+
+  const abierto = estado.seleccionado;
+  const capaAbierta = estado.capa;
+
+  // `styledata` y despues `cuandoElEstiloEsteListo`: `setStyle` no emite
+  // `style.load` —solo `data`, `styledata` e `idle`— y el estilo no esta listo
+  // en el primer `styledata`. El ayudante ya sabe esperar a `isStyleLoaded()`,
+  // con su red de seguridad, que es el mismo problema que resuelve al arrancar.
+  m.once("styledata", () => cuandoElEstiloEsteListo(m, () => {
+    // El velo y los rotulos primero: `prepararEstilo` es idempotente y aqui se
+    // asegura de que estan puestos ANTES de que vuelva el dato, para que la
+    // mascara quede debajo y no encima.
+    prepararEstilo(m);
+    if (estado.eventos) dibujarEpicentros(estado.eventos);
+    if (estado.observadosDatos) dibujarObservados(estado.observadosDatos);
+    if (estado.fuegoDatos) dibujarIncendios(estado.fuegoDatos);
+    // El interruptor de sismos menores sobrevive en el DOM, pero su capa acaba
+    // de nacer apagada: se le devuelve lo que la casilla dice.
+    const casilla = $("interruptor-observados");
+    const marcada = casilla && casilla.querySelector("input") && casilla.querySelector("input").checked;
+    try {
+      if (m.getLayer("observados")) {
+        m.setLayoutProperty("observados", "visibility", marcada ? "visible" : "none");
+      }
+    } catch (error) {
+      /* la capa puede no haber llegado; `aplicarAmenaza` la recoge */
+    }
+    aplicarAmenaza();
+    aplicarFiltrosAlMapa();
+    if (abierto) {
+      estado.capa = capaAbierta;
+      seleccionar(abierto);
+    }
+    anunciar(`Mapa base: ${estilo.nombre}.`);
+  }));
+
+  m.setStyle(estilo.url);
+  pintarGaleriaDeBases();
+}
+
 //: El velo sobre lo que no es America Latina. Ver `CAJA_MASCARA`.
 //:
 //: Un poligono del mundo con un agujero: se dibuja fuera de la caja y nunca
@@ -3003,7 +3397,7 @@ function rotularEnEspanol(m) {
 //: donde venian los rotulos de Nigeria y Argelia— y **debajo** de la primera
 //: capa de dato que exista, porque las capas de dato llegan cada una a su ritmo
 //: y alguna puede haberse adelantado a `style.load`.
-function ponerMascara(m) {
+function ponerMascara(m, velo = BASE_PAPEL) {
   if (m.getLayer("mascara")) return;
   const [[oeste, sur], [este, norte]] = CAJA_MASCARA;
   try {
@@ -3029,7 +3423,9 @@ function ponerMascara(m) {
         id: "mascara",
         type: "fill",
         source: "mascara",
-        paint: { "fill-color": BASE_PAPEL, "fill-opacity": 0.82 },
+        // El tono lo pone el estilo: velar un mapa base oscuro con el color del
+        // papel dibujaria un rectangulo claro alrededor de la region.
+        paint: { "fill-color": velo, "fill-opacity": 0.82 },
       },
       primeraDeDato
     );
@@ -3121,30 +3517,35 @@ function iniciarMapa() {
   //
   // Y hace falta: este sistema publica distancias —"41 km al SO de Quellon", "a
   // 27 km del epicentro" en cada celda— y sin escala no hay como juzgarlas.
+  // Entre la navegacion y la escala: los dos de arriba mueven la camara, y la
+  // escala es la ultima porque es la que hay que poder leer sin que nada se le
+  // apile debajo.
+  mapa.addControl(new ControlesDelMapa(), "top-right");
   mapa.addControl(new maplibregl.ScaleControl({ maxWidth: 110, unit: "metric" }), "top-right");
-  engancharVolverAlEncuadre(mapa);
 
   // Positron viene en gris neutro. Sobre un fondo de arena cálida canta, y su
   // agua es casi del mismo tono que su tierra — inservible para un sistema
   // cuya mitad de la exposición es costera. Se retintan tierra y agua a la
   // paleta de la identidad, sin tocar el resto del estilo.
-  mapa.on("style.load", () => {
-    for (const capa of mapa.getStyle().layers) {
-      if (capa.type !== "fill" && capa.type !== "background") continue;
-      const agua = capa.id === "water" || capa.id.startsWith("water_");
-      const tierra = capa.id === "background" || capa.id === "landcover" ||
-                     capa.id.startsWith("landuse") || capa.id.startsWith("landcover");
-      if (!agua && !tierra) continue;
-      const prop = capa.type === "background" ? "background-color" : "fill-color";
-      try {
-        mapa.setPaintProperty(capa.id, prop, agua ? BASE_AGUA : BASE_TIERRA);
-      } catch (e) {
-        /* el estilo puede cambiar; no es crítico */
-      }
-    }
-    rotularEnEspanol(mapa);
-    ponerMascara(mapa);
-  });
+  // `styledata` y NO `style.load`.
+  //
+  // `style.load` se dispara **solo con el estilo inicial**: `setStyle` no lo
+  // emite. Medido con MapLibre 4.7.1, los eventos que llegan al cambiar de mapa
+  // base son `data`, `styledata` e `idle`, y ninguno mas. Con `style.load` el
+  // primer cambio de base dejaba un mapa sin retintar, con los toponimos otra
+  // vez en ingles, sin velo y —lo peor— sin una sola capa de dato encima.
+  //
+  // `prepararEstilo` es idempotente y lleva su propia memoria, asi que puede
+  // correr en cada aviso sin repetir trabajo.
+  //
+  // Y los DOS eventos, no solo `styledata`: el ultimo `styledata` puede llegar
+  // con `isStyleLoaded()` todavia en false, y entonces no hay ninguno mas. Con
+  // solo `styledata` el estilo inicial se quedaba sin retintar, sin velo y con
+  // los toponimos en ingles. Es la misma pareja que ya escucha
+  // `cuandoElEstiloEsteListo`, y por el mismo motivo.
+  for (const evento of ["styledata", "idle"]) {
+    mapa.on(evento, () => prepararEstilo(mapa));
+  }
 
   // El aviso se quita cuando el mapa dibuja algo, no cuando termina de cargarlo
   // todo: `idle` no llega mientras siguen entrando teselas, y dejarlo puesto
@@ -3239,7 +3640,7 @@ function pintarResumenCobertura(datos, eventos) {
     `<span class="etiqueta">países con activo publicado</span>` +
     `<span class="apunte">de ${resumen.paises_con_manifest} con fuentes fijadas</span></div>` +
     `<div class="metrica"><span class="cabeza">${iconoSvg("malla")}` +
-    `<span class="valor">${comoTexto(resumen.poblacion_en_la_malla)}</span></span>` +
+    `<span class="valor">${comoConteo(resumen.poblacion_en_la_malla)}</span></span>` +
     `<span class="etiqueta">personas en la malla hexagonal</span>` +
     `<span class="apunte">precalculadas, antes de que ocurra nada</span></div>` +
     `<div class="metrica"><span class="cabeza">${iconoSvg("desvio")}` +
@@ -3271,7 +3672,7 @@ function filaCobertura(pais, cuantos) {
 
   const pob = document.createElement("td");
   pob.className = "num";
-  pob.textContent = pais.construido ? comoTexto(pais.poblacion_medida) : "—";
+  pob.textContent = pais.construido ? comoConteo(pais.poblacion_medida) : "—";
 
   const desvio = document.createElement("td");
   desvio.className = "num";
@@ -3579,6 +3980,10 @@ function dibujarObservados(eventos) {
   //: necesita para encuadrarlas, y sin esto el boton solo podia encender una
   //: capa y confiar en que se notara.
   estado.observadosGeo = eventos.map((e) => [Number(e.lon), Number(e.lat)]);
+  // Y los eventos enteros, para poder repintar la capa tras un cambio de mapa
+  // base: `setStyle` borra fuentes y capas, y con solo las coordenadas no se
+  // puede reconstruir el globo de cada sismo.
+  estado.observadosDatos = eventos;
   if (!m) return;
 
   const pintar = () => {
@@ -3709,7 +4114,10 @@ function entradasDeLeyenda() {
   const foco = {
     sim: "sim-fuego",
     titulo: "Foco activo",
-    nota: "Detección de satélite en 24 h. El color es la energía",
+    // El tamaño tambien, desde que el radio va por la raiz del FRP. Decir solo
+    // "el color es la energia" con un simbolo que ahora crece con ella deja al
+    // lector sin la mitad de la clave.
+    nota: "Detección de satélite en 24 h. El color y el tamaño son la energía",
   };
 
   if (estado.amenaza === "fuego") {
@@ -4109,7 +4517,7 @@ function filaFoco(foco) {
   // poblacion de una celda es una suma dasimetrica, no un censo.
   cifra.innerHTML =
     foco.pop >= 1
-      ? iconoSvg("personas") + comoTexto(foco.pop) + " personas dentro"
+      ? iconoSvg("personas") + comoConteo(foco.pop) + " personas dentro"
       : '<span class="sin-alcance">Sin población medida en estas celdas</span>';
 
   li.append(cabecera, meta, cifra);
@@ -4687,26 +5095,54 @@ function dibujarIncendios(datos) {
         type: "circle",
         source: "incendios-puntos",
         maxzoom: FUEGO_ZOOM_HEX,
-        layout: { visibility: "none" },
+        layout: {
+          visibility: "none",
+          // EL FUEGO FUERTE SE DIBUJA ENCIMA.
+          //
+          // Sin esto gana el que venga despues en el fichero. Medido a zoom 2:
+          // el 69 % de las celdas cae sobre un pixel ya ocupado, y **las 150
+          // mas energeticas comparten pixel con otra sin una sola excepcion**.
+          // Los quince focos de mas de 1.000 MW —lo que este mapa existe para
+          // enseñar— se sorteaban contra 12.752 competidores.
+          "circle-sort-key": ["coalesce", ["get", "frp_suma"], 0],
+        },
         paint: {
-          // El radio va en pixeles de pantalla, asi que no se encoge con el
-          // zoom: es lo que hace la capa visible a escala continental.
-          // Radio minimo de 3 px: por debajo el contorno se come el relleno y
-          // el simbolo deja de tener color, que es justo lo que lo hacia legible.
-          // Tres paradas y no dos. Con solo la de zoom 3, a escala continental
-          // los cuatro mil puntos se amontonaban en una mancha uniforme:
-          // legible como "aqui arde" e ilegible como dato. Mas pequenos, la
-          // misma nube se lee como densidad.
+          // EL TAMAÑO LO LLEVA LA ENERGIA, Y LA TINTA TIENE QUE CABER.
+          //
+          // El radio iba de 3 a 5,5 px —1,8 veces— para un rango de energia de
+          // 350. Con 12.767 simbolos eso son 413.000 px² de tinta sobre una
+          // franja util de 335.000: **1,23 veces el lienzo entero**. La mancha
+          // no era mala suerte, era aritmetica. Y las 5.221 celdas mas debiles
+          // —≤10 MW, que juntas no llegan al 1 % de la energia— ponian once
+          // veces mas tinta que las 150 mas fuertes.
+          //
+          // Raiz cuadrada del FRP, que es como se escala un simbolo
+          // proporcional: el AREA del circulo sigue a la energia, no el radio.
+          // Con suelo de 0,8 px, para que una celda debil sea polvo y no
+          // desaparezca. Resultado medido: 117.000 px² de tinta, 0,35 veces el
+          // lienzo, y la proporcion debiles:fuertes baja de 10,9:1 a 2,0:1.
           "circle-radius": [
             "interpolate", ["linear"], ["zoom"],
-            2, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 2, 500, 4.5],
-            4, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 3, 500, 7],
-            8, ["interpolate", ["linear"], ["coalesce", ["get", "frp_suma"], 0], 0, 5, 500, 13],
+            2, ["+", 0.8, ["*", 0.16, ["sqrt", ["coalesce", ["get", "frp_suma"], 0]]]],
+            5, ["+", 1.2, ["*", 0.30, ["sqrt", ["coalesce", ["get", "frp_suma"], 0]]]],
+            8, ["+", 2.5, ["*", 0.55, ["sqrt", ["coalesce", ["get", "frp_suma"], 0]]]],
           ],
           "circle-color": colorDeFuego(),
-          "circle-opacity": 0.9,
+          // La clase mas debil, translucida. Sigue estando —no se oculta nada—
+          // y deja de competir: se lee como la textura de fondo que es.
+          "circle-opacity": [
+            "step", ["coalesce", ["get", "frp_suma"], 0],
+            0.4, 10, 0.65, 50, 0.88,
+          ],
+          // EL CONTORNO SOLO CUANDO EL SIMBOLO DA PARA TENERLO.
+          //
+          // Con radio 2 px, un contorno de 1 px **es** el simbolo: se comia el
+          // relleno —justo lo que lleva el color— y los contornos solapados
+          // tejian una malla oscura que era la mancha que se veia. A zoom
+          // cercano, donde los circulos son grandes y pocos, sigue separando
+          // los que se tocan, que es para lo que estaba.
           "circle-stroke-color": FUEGO_CONTORNO,
-          "circle-stroke-width": 1,
+          "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0, 7, 0.8],
           "circle-stroke-opacity": 0.85,
         },
       },
@@ -4811,7 +5247,7 @@ function abrirFoco(foco) {
         .map(
           ([nombre, n, icono]) =>
             `<div class="metrica"><span class="cabeza">${icono ? iconoSvg(icono) : ""}` +
-            `<span class="valor">${comoTexto(n)}</span></span>` +
+            `<span class="valor">${comoConteo(n)}</span></span>` +
             `<span class="etiqueta">${nombre}</span></div>`
         )
         .join("")
@@ -4833,7 +5269,23 @@ function abrirFoco(foco) {
       .join("");
   }
 
-  $("fuego-ambiente").innerHTML = cuadroDeViento(vientoDelFoco(foco));
+  // SIN VIENTO NO HAY BLOQUE, NI SIQUIERA SU TITULO.
+  //
+  // `cuadroDeViento` devuelve cadena vacia cuando GFS no cubre el foco, y eso
+  // esta bien —un cero ahi diria "no hace viento" cuando lo que pasa es que no
+  // se midio—. Pero el `<section>` se quedaba en pie con su rotulo «Ambiente» y
+  // su parrafo sobre el modelo NOAA, y debajo nada: se lee como un fallo de
+  // carga y no como una ausencia de dato.
+  //
+  // **Con el fichero de hoy no pasa**: los 3.337 puntos de la rejilla cubren
+  // los 6.239 focos, ninguno a mas de medio grado. Esto es la guarda para
+  // cuando GFS falle —`p5_incendios/viento.py` reintenta cuatro corridas y
+  // puede rendirse— que es exactamente el caso que el comentario del HTML ya
+  // anticipaba y que nadie habia cubierto.
+  const ambiente = cuadroDeViento(vientoDelFoco(foco));
+  $("fuego-ambiente").innerHTML = ambiente;
+  const bloqueAmbiente = $("bloque-fuego-ambiente");
+  if (bloqueAmbiente) bloqueAmbiente.hidden = !ambiente;
 
   $("fuego-deteccion").innerHTML =
     `<div class="metrica"><span class="cabeza">${iconoSvg("detecciones")}` +
@@ -5226,7 +5678,9 @@ function pintarLeyendaFuego(datos) {
     : "";
   $("leyenda-nota").textContent =
     "Energía medida por satélite en 24 h. No es área quemada: el propio FIRMS " +
-    "desaconseja estimarla desde detecciones." + corte;
+    "desaconseja estimarla desde detecciones. A escala continental el círculo " +
+    "crece con la raíz de esa energía, así que su área la sigue de frente: un " +
+    "punto pequeño es una detección débil, no una lejana." + corte;
 }
 
 // --- Lo que el sistema esta viendo ahora ------------------------------------
@@ -5468,7 +5922,7 @@ function pintarEnVivo() {
           ? ` data-nivel="${nivelDe(v.incendios.pop_en_celdas_con_fuego, INDICADORES.fuego.cortes)}"`
           : ""}>` +
         `<span class="cabeza">${iconoSvg("personas")}` +
-        `<span class="valor">${comoTexto(v.incendios.pop_en_celdas_con_fuego)}</span></span>` +
+        `<span class="valor">${comoConteo(v.incendios.pop_en_celdas_con_fuego)}</span></span>` +
         `<span class="etiqueta">personas en celdas con fuego activo</span>` +
         // EL ALCANCE, QUE AHORA ADEMAS CAMBIA.
         //
