@@ -2,8 +2,8 @@
   "usgs_id": "us6000t7zp",
   "estado": "publicado",
   "mag": 7.5,
-  "lon": -67.2167,
-  "lat": 10.6054,
+  "lon": -67.2205,
+  "lat": 10.5955,
   "depth_km": 10.0,
   "lugar": "20 km al O de Catia La Mar, Venezuela",
   "origen_utc": "2026-06-24T22:05:04Z",
@@ -13,7 +13,7 @@
   },
   "timestamps": {
     "detectado": "2026-08-24T21:09:12Z",
-    "publicado": "2026-09-01T22:10:41Z",
+    "publicado": "2026-09-02T02:45:23Z",
     "usgs_origen": "2026-06-24T22:05:04Z"
   },
   "hashes": {},
@@ -22,6 +22,7 @@
   "notas": [
     "Backtest: reconstruccion retrospectiva de 2026-06-24, no una respuesta en vivo.",
     "ShakeMap v0 -> v14",
+    "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",

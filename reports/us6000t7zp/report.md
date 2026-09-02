@@ -37,7 +37,7 @@ De la población en intensidad MMI≥7, alrededor de **230 mil** personas tienen
 | 7 | Juan José Mora | `VE0805` | 8,5 | 58 mil |
 | 8 | Palmasola | `VE1116` | 7,5 | 31 mil |
 | 9 | Manuel Monge | `VE2208` | 7,5 | 13 mil |
-| 10 | Ocumare De La Costa De Oro | `VE0518` | 8,0 | 11 mil |
+| 10 | Ocumare de la Costa de Oro | `VE0518` | 8,0 | 11 mil |
 | 11 | Silva | `VE1120` | 8,0 | 10 mil |
 | 12 | Bolívar | `VE2202` | 7,5 | 2.600 |
 | 13 | Girardot | `VE0503` | 7,5 | 1.600 |
@@ -63,6 +63,11 @@ Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado —su fi
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
 
+## Cambios frente a la versión anterior
+
+- Epicentro: reubicado 1 km
+- Ninguna cifra publicada cambia frente a la versión anterior.
+
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -73,7 +78,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
 - ShakeMap consumido: **v15**
 - Ground Failure consumido: **v12**
 - Manifiesto de exposición: `ven-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T22:10:40Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:45:21Z
 
 ## Advertencias
 
