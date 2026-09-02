@@ -16,7 +16,7 @@
 | Edificaciones en MMI≥7 | 0 |
 | Sedes de salud en MMI≥7 | 0 |
 | Sedes educativas en MMI≥7 | 0 |
-| Kilometros de via en MMI≥7 | 0 km |
+| Kilómetros de vía en MMI≥7 | 0 km |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
@@ -51,7 +51,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,6 %**.
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v0**
 - Manifiesto de exposición: `per-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T23:16:36Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:43:19Z
 
 ## Advertencias
 

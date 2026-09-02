@@ -2,7 +2,7 @@ usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_
 #meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
 us2000cjfy,1,PE0403,Caraveli,-73.963582,-15.688905,6.5,24069.96234550327,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional,construido_no_mapeado"
 us2000cjfy,1,PE1103,Nasca,-75.078774,-14.940155,6.0,12863.079909861088,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
-us2000cjfy,1,PE1104,Palpa,-75.17417,-14.370949,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us2000cjfy,1,PE0506,Lucanas,-74.346004,-14.616476,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"construido_no_mapeado,discrepancia_poblacional"
 us2000cjfy,1,PE0507,Parinacochas,-73.635586,-15.032622,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,construido_no_mapeado
+us2000cjfy,1,PE0506,Lucanas,-74.346004,-14.616476,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
 us2000cjfy,1,PE1101,Ica,-75.643722,-14.29974,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us2000cjfy,1,PE1104,Palpa,-75.17417,-14.370949,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
