@@ -119,7 +119,7 @@
     },
     {
       "adm2_id": "SV10899",
-      "nombre": "Lago De Llopango",
+      "nombre": "Lago de Llopango",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -162,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-01T22:10:49Z",
+  "generado_utc": "2026-09-02T02:45:47Z",
   "pipeline_version": "0.1.0"
 }
