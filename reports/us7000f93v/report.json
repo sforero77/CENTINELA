@@ -19,10 +19,10 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 1115170.9964241656,
-    "pop_mmi7p": 910714.4594508422,
+    "pop_mmi6p": 1115170.996424166,
+    "pop_mmi7p": 910714.4594508425,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 81266.60504518496,
+    "pop_65p_mmi7p": 81266.6050451849,
     "bld_mmi7p": 331809.0,
     "built_m2_mmi7p": 46814341.0,
     "health_mmi7p": 152.0,
@@ -35,14 +35,14 @@
   "top_municipios": [
     {
       "adm2_id": "MX12001",
-      "nombre": "Acapulco De Juárez",
+      "nombre": "Acapulco de Juárez",
       "mmi_max": 7.5,
       "pop_mmi7p": 876143.8713419172,
       "pop_banda": 876143.8713419172
     },
     {
       "adm2_id": "MX12021",
-      "nombre": "Coyuca De Benítez",
+      "nombre": "Coyuca de Benítez",
       "mmi_max": 7.0,
       "pop_mmi7p": 29502.848212338053,
       "pop_banda": 29502.848212338053
@@ -70,7 +70,7 @@
     },
     {
       "adm2_id": "MX12029",
-      "nombre": "Chilpancingo De Los Bravo",
+      "nombre": "Chilpancingo de los Bravo",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -84,7 +84,7 @@
     },
     {
       "adm2_id": "MX12012",
-      "nombre": "Ayutla De Los Libres",
+      "nombre": "Ayutla de los Libres",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -119,7 +119,7 @@
     },
     {
       "adm2_id": "MX12011",
-      "nombre": "Atoyac De Álvarez",
+      "nombre": "Atoyac de Álvarez",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -162,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-01T22:11:43Z",
+  "generado_utc": "2026-09-02T02:46:55Z",
   "pipeline_version": "0.1.0"
 }

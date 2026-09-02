@@ -16,7 +16,7 @@
 | Edificaciones en MMI≥7 | 330 mil |
 | Sedes de salud en MMI≥7 | 152 |
 | Sedes educativas en MMI≥7 | 3.132 |
-| Kilometros de via en MMI≥7 | 0 km |
+| Kilómetros de vía en MMI≥7 | 0 km |
 | Superficie construida en MMI≥7 | 46,8 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
@@ -27,8 +27,8 @@ De la población en intensidad MMI≥7, alrededor de **81 mil** personas tienen 
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Acapulco De Juárez | `MX12001` | 7,5 | 880 mil |
-| 2 | Coyuca De Benítez | `MX12021` | 7,0 | 30 mil |
+| 1 | Acapulco de Juárez | `MX12001` | 7,5 | 880 mil |
+| 2 | Coyuca de Benítez | `MX12021` | 7,0 | 30 mil |
 | 3 | San Marcos | `MX12053` | 7,0 | 5.100 |
 | 4 | Juan R. Escudero | `MX12039` | 7,0 | 4 |
 
@@ -61,7 +61,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **9,9 %**.
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v3**
 - Manifiesto de exposición: `mex-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T22:11:43Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:46:55Z
 
 ## Advertencias
 
