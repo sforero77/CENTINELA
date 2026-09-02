@@ -379,6 +379,7 @@ def compute_impact(
     contornos: Path,
     deslizamiento: Path | None,
     licuefaccion: Path | None,
+    aunque_no_alcance: bool = False,
 ) -> ImpactTotals:
     """Corre el computo completo y deja ``impact_h3`` e ``impact_adm2``."""
     import json
@@ -409,13 +410,25 @@ def compute_impact(
     ausentes = register_exposure_view(con, exposure_glob)
     con.execute(SQL_IMPACT_H3, [products.usgs_id, products.shakemap_version])
 
-    # El activo y el sismo tienen que ser del mismo pais. Si no lo son, el join
-    # no encuentra una sola celda, `SQL_TOTALES` devuelve NULL en cada columna,
-    # `float(v or 0.0)` los convierte en ceros y **se publica un reporte
-    # diciendo que no hay nadie expuesto**. Durante un terremoto real, en el
-    # visor publico. Es preferible no publicar nada.
+    # CERO CELDAS SIGNIFICA DOS COSAS MUY DISTINTAS.
+    #
+    # **Pais equivocado**: el join no encuentra una sola celda porque el activo
+    # es de otro pais. `SQL_TOTALES` devuelve NULL en cada columna, se
+    # convierten en ceros y se publicaria un reporte diciendo que no hay nadie
+    # expuesto, durante un terremoto real, en el visor publico. Ahi hay que
+    # reintentar con el siguiente candidato, y por eso esto eleva.
+    #
+    # **Pais correcto y la sacudida no llego a poblacion**: un M5,6 a 71 km mar
+    # adentro cuyo contorno MMI≥5 se queda sobre el agua. Eso **no es un
+    # fallo**: es el resultado, y uno que hay que publicar — porque el ShakeMap
+    # se revisa y la version siguiente puede alcanzar tierra, y solo se seguira
+    # mirando si el evento esta en el catalogo. Descartarlo es dejar de mirar.
+    #
+    # Desde fuera no se distinguen; quien sabe cual es cual es el llamador, que
+    # es el que ha agotado los candidatos. Por eso lo decide `aunque_no_alcance`
+    # y no una heuristica de aqui dentro.
     alcanzadas: int = con.execute("SELECT count(*) FROM impact_h3").fetchone()[0]
-    if alcanzadas == 0:
+    if alcanzadas == 0 and not aunque_no_alcance:
         raise ExposureCountryMismatchError(
             f"El ShakeMap de {products.usgs_id} no toca ninguna celda del activo "
             f"({exposure_glob}). Significa que el sismo cayo en un pais distinto al "

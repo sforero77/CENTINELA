@@ -69,9 +69,30 @@ COLECCIONES: Final[dict[str, str]] = {"reports/index.json": "usgs_id"}
 #: la cadencia buscada— porque GitHub estrangula los crones de este repositorio
 #: y una alarma que salta por un retraso normal se aprende a ignorar. Lo que se
 #: persigue aqui es el silencio de un dia, no el de una hora.
+#: NO TODOS SE ESCRIBEN IGUAL, Y EL UMBRAL TIENE QUE SABERLO.
+#:
+#: `status.json` es un **latido**: se escribe cada corrida del vigia lo haya o
+#: no habido novedad, asi que doce horas de silencio significan que el cron se
+#: paro. `observados.json` es **escritura por cambio**: `cli.py` compara la
+#: lista de `usgs_id` y solo commitea si entro o salio algun evento. Un dia sin
+#: sismos menores en LATAM deja el fichero quieto **con toda razon**.
+#:
+#: Compartian umbral —12 h— y eso convertia una noche tranquila en una alarma.
+#: Medido sobre los 68 huecos entre escrituras reales desde el 26-ago-2026:
+#:
+#:     mediana 1,1 h · p90 7,4 h · **maximo 12,8 h**
+#:
+#: El maximo ya se paso del umbral una vez. No salto de milagro —`frescura.yml`
+#: corre cada tres horas y el hueco cayo entre dos pasadas— pero habria abierto
+#: una incidencia diciendo que la capa estaba congelada cuando lo unico que
+#: pasaba es que no habia temblado. Y una alarma que se equivoca es peor que no
+#: tenerla: la siguiente vez que acierte, nadie ira a mirar.
+#:
+#: 24 h da casi el doble del maximo medido, y es lo mismo que ya lleva
+#: `incendios.json`, que tambien depende de que haya algo que contar.
 MAX_HORAS_SIN_REGENERAR: Final[dict[str, float]] = {
     "status.json": 12.0,
-    "observados.json": 12.0,
+    "observados.json": 24.0,
     "incendios.json": 24.0,
 }
 

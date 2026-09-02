@@ -133,6 +133,39 @@ jobs:
             DESCARTADOS="$DESCARTADOS $ISO3"
           done
 
+          # AGOTAR LOS CANDIDATOS NO ES LO MISMO QUE FALLAR.
+          #
+          # Si todos se descartaron por **no alcanzar celdas** —y ninguno por
+          # faltar el activo— el enrutado acerto y lo que pasa es que la
+          # sacudida no llego a poblacion. Es el caso de un M5,6 a 71 km mar
+          # adentro, y hay que publicarlo: el ShakeMap se revisa, la version
+          # siguiente puede alcanzar tierra, y solo se seguira mirando si el
+          # evento esta en el catalogo. Descartarlo es dejar de mirar.
+          #
+          # Se reintenta con el primer candidato, el mejor por epicentro.
+          PRIMERO=$(echo $PAISES | awk '{print $1}')
+          if [ -z "$SIN_ACTIVO" ] && [ -n "$PRIMERO" ]; then
+            echo "::notice::Ningun activo alcanza celdas para $USGS_ID: la sacudida no llego a poblacion. Se publica con ceros usando $PRIMERO."
+            PREFIJO="exposure-$(echo "$PRIMERO" | tr '[:upper:]' '[:lower:]')-"
+            TAG=$(gh release list --limit 100 --json tagName \
+                   --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
+                         | sort_by(.tagName) | last | .tagName")
+            rm -rf data/build && mkdir -p data/build
+            gh release download "$TAG" --dir data/build --clobber
+            MANIFEST=$(ISO3="$PRIMERO" uv run python -c "
+          import os
+          from pipelines.common.manifest import Manifest
+          print(Manifest.load(os.environ['ISO3']).manifest_id)")
+            uv run centinela impact "$USGS_ID" $BACKTEST $REPROCESAR \
+              --detail-url "$DETAIL_URL" \
+              --exposure "data/build/exposure_h3.parquet" \
+              --manifest "$MANIFEST" \
+              --aunque-no-alcance
+            echo "tag=$TAG"      >> "$GITHUB_OUTPUT"
+            echo "iso3=$PRIMERO" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           echo "::error::Ningun activo sirvio para $USGS_ID. Candidatos: [$PAISES].\
           Descartados por no alcanzar celdas:[$DESCARTADOS]. Sin activo publicado:\
           [$SIN_ACTIVO]. Si falta un pais, construyelo con: \
@@ -261,7 +294,32 @@ jobs:
           # fallo, y encima uno que solo se nota cuando ya hay un problema.
           gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
           gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
-          CUERPO="El pipeline de impacto fallo. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          gh issue create --title "P2 fallo para $USGS_ID" \
+          # UNA INCIDENCIA POR EVENTO, NO UNA POR FALLO.
+          #
+          # El vigia reintenta cada cinco minutos, asi que un evento que falla
+          # abre una incidencia nueva cada cinco minutos. El 2-sep-2026 fueron
+          # **seis en once minutos para dos eventos**, todas describiendo la
+          # misma causa. Una alarma que se repite se lee como ruido y se
+          # silencia entera, con lo que la siguiente que importe tampoco se ve.
+          #
+          # `frescura.yml` ya resolvio esto: buscar por titulo exacto, comentar
+          # si existe y crear solo si no. Se busca por titulo y no por etiqueta
+          # porque la creacion tiene un camino de respaldo **sin etiquetas**
+          # para cuando `gh label` falla, y filtrar por etiqueta dejaria
+          # escapar justo esas.
+          TITULO="P2 fallo para $USGS_ID"
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            echo "Ya hay una abierta (#$ABIERTA): se anota y no se duplica."
+            gh issue comment "$ABIERTA" --body "Vuelve a fallar. Corrida: $CORRIDA"
+            exit 0
+          fi
+
+          CUERPO="El pipeline de impacto fallo. Corrida: $CORRIDA"
+          gh issue create --title "$TITULO" \
                           --label "pipeline,automatico" --body "$CUERPO" \
-            || gh issue create --title "P2 fallo para $USGS_ID" --body "$CUERPO"
+            || gh issue create --title "$TITULO" --body "$CUERPO"
