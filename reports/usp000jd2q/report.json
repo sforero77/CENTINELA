@@ -42,7 +42,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 0.0,
+    "pop_discrepancia_pct": null,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -64,6 +64,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-01T23:17:15Z",
+  "generado_utc": "2026-09-02T02:48:02Z",
   "pipeline_version": "0.1.0"
 }
