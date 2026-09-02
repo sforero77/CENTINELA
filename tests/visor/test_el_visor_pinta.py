@@ -2838,9 +2838,7 @@ def test_cambiar_de_mapa_base_conserva_las_capas(pagina: Any) -> None:
     _esperar_capa(pagina, "incendios")
     pagina.wait_for_timeout(1200)
 
-    pintados_al_arrancar = pagina.evaluate(
-        "() => window.CENTINELA.pintado.epicentros.rasgos"
-    )
+    pintados_al_arrancar = pagina.evaluate("() => window.CENTINELA.pintado.epicentros.rasgos")
 
     pagina.locator(".ctrl-bases").click()
     pagina.locator('[data-base="oscuro"]').click()
