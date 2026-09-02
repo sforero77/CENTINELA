@@ -1,7 +1,7 @@
-1/4 Sismo M6,7 · 10 km al SSO de Coquimbo, Chile (2019-01-20T01:32:52Z UTC, 63 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+1/4 Sismo M6,7 · 10 km al SSO de Coquimbo, Chile (2019-01-20 01:32 UTC, 63 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
 2/4 Personas dentro de intensidad MMI≥6: 700 mil. Dentro de MMI≥7: 470 mil. Edificaciones en MMI≥7: 180 mil.
 
-3/4 Municipios más expuestos: Elqui, Limarí, Huasco.
+3/4 Municipios más expuestos (MMI≥7): Elqui.
 
-4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: ver el reporte completo.
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/reports/us2000j6hy/
