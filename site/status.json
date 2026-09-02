@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "generado_utc": "2026-09-02T20:00:58Z",
+=======
+  "generado_utc": "2026-09-02T20:01:00Z",
+>>>>>>> 96ce2ba (P1: eventos detectados ["us7000tdms", "us7000tdmp"])
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -388,7 +392,11 @@
       "revisiones": 1
     },
     {
+<<<<<<< HEAD
       "utc": "2026-09-02T20:00:24Z",
+=======
+      "utc": "2026-09-02T20:01:00Z",
+>>>>>>> 96ce2ba (P1: eventos detectados ["us7000tdms", "us7000tdmp"])
       "revisados": 17,
       "relevantes": 2,
       "revisiones": 2

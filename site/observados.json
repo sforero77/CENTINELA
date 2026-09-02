@@ -1,6 +1,10 @@
 {
   "schema": "centinela/observados/1.0",
+<<<<<<< HEAD
   "generado_utc": "2026-09-02T20:00:24Z",
+=======
+  "generado_utc": "2026-09-02T20:01:00Z",
+>>>>>>> 96ce2ba (P1: eventos detectados ["us7000tdms", "us7000tdmp"])
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
