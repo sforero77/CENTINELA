@@ -118,6 +118,7 @@ def _cmd_impact(args: argparse.Namespace) -> int:
             manifest_id=args.manifest,
             backtest=args.backtest,
             forzar=args.reprocesar,
+            aunque_no_alcance=args.aunque_no_alcance,
         )
     except ExposureCountryMismatchError as exc:
         # Las cajas envolventes de los paises se solapan y ordenarlas por area
@@ -759,6 +760,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--exposure",
         required=True,
         help="ruta o glob del activo de exposicion (GeoParquet)",
+    )
+    p_impact.add_argument(
+        "--aunque-no-alcance",
+        action="store_true",
+        help=(
+            "publica el reporte aunque el ShakeMap no alcance ninguna celda del "
+            "activo. Solo tras agotar los candidatos: entonces el pais es el "
+            "correcto y lo que pasa es que la sacudida no llego a poblacion"
+        ),
     )
     p_impact.add_argument(
         "--manifest",

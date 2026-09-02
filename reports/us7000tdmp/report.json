@@ -1,0 +1,66 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000tdmp",
+    "mag": 5.6,
+    "depth_km": 10.0,
+    "utc": "2026-09-02T12:28:31Z",
+    "lugar": "71 km al OSO de Puerto Madero, México",
+    "pager_alert": "green",
+    "lon": -92.9873,
+    "lat": 14.3909
+  },
+  "inputs": {
+    "shakemap_version": 2,
+    "groundfailure_version": 0,
+    "exposure_manifest": "mex-v0.2"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": false,
+  "totales": {
+    "pop_mmi6p": 0.0,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [],
+  "incertidumbre": {
+    "pop_discrepancia_pct": null,
+    "notas": [
+      "El epicentro está a 68 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
+    ]
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "",
+    "ls_pop_usgs": "",
+    "lq_alerta_usgs": "",
+    "lq_pop_usgs": ""
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [
+    "ShakeMap: v0 → v2",
+    "Ninguna cifra publicada cambia frente a la versión anterior."
+  ],
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-02T13:57:34Z",
+  "pipeline_version": "0.1.0"
+}

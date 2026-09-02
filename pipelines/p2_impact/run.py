@@ -213,6 +213,7 @@ def run_impact(
     workdir: Path | None = None,
     admin_lookup_parquet: str | None = None,
     backtest: bool = False,
+    aunque_no_alcance: bool = False,
     forzar: bool = False,
 ) -> Decision:
     """Procesa un evento de punta a punta: productos -> impacto -> reporte.
@@ -328,12 +329,33 @@ def run_impact(
         contornos=contornos,
         deslizamiento=deslizamiento,
         licuefaccion=licuefaccion,
+        aunque_no_alcance=aunque_no_alcance,
     )
     # §6.4 pide estos asserts "en P0 y P2". En P2 no corrian: vivian en una
     # funcion sin llamador, llamada desde otra funcion sin llamador cuya
     # docstring afirmaba que si. Van aqui, en la orquestacion, porque no
     # preguntan si el calculo salio bien —de eso se ocupa `compute_impact`—
     # sino si lo calculado se puede publicar.
+    # CUANDO NO ALCANZA, SE PUBLICA **CUANTO** NO ALCANZA.
+    #
+    # Un M5,6 a 85 km de la costa de Chiapas y un M5,9 a 876 km de Rapa Nui
+    # producen el mismo reporte de ceros, y no son lo mismo: el primero puede
+    # alcanzar tierra en la revision siguiente del ShakeMap y el segundo no lo
+    # hara nunca. En vez de inventar un umbral que decida por el lector, se
+    # mide la distancia a la poblacion mas cercana del pais y se publica.
+    #
+    # Se usa el propio activo, que ya esta cargado: no hace falta una linea de
+    # costa ni una fuente nueva.
+    avisos_extra: list[str] = []
+    if aunque_no_alcance and not totales.pop_mmi6p:
+        lejania = _km_a_la_poblacion_mas_cercana(con, state.lon, state.lat)
+        if lejania is not None:
+            avisos_extra.append(
+                f"El epicentro está a {lejania:,.0f} km de la población más cercana "
+                f"del país con la que se comparó. La sacudida no alcanzó territorio "
+                f"habitado.".replace(",", ".")
+            )
+
     calidad = check_quality(con)
     calidad.raise_if_blocking()
     if calidad.avisos:
@@ -349,7 +371,12 @@ def run_impact(
     del_activo = manifiesto_del_activo(con, manifest_id)
 
     reporte = build_report(
-        con, state, products, totales, manifest_id=del_activo, notas=calidad.avisos
+        con,
+        state,
+        products,
+        totales,
+        manifest_id=del_activo,
+        notas=(*calidad.avisos, *avisos_extra),
     )
 
     # RF-04: al re-emitir por un ShakeMap nuevo hay que decir **que cambio**.
@@ -604,3 +631,37 @@ def _enriquecer_con_admin(con: Any, filas: list[dict[str, Any]]) -> list[dict[st
         fila["lon"] = round(lon, 6)
         fila["lat"] = round(lat, 6)
     return filas
+
+
+def _km_a_la_poblacion_mas_cercana(con: Any, lon: float, lat: float) -> float | None:
+    """Del epicentro a la celda poblada mas cercana del activo, en km.
+
+    Haversine en SQL sobre los centroides que DuckDB puede derivar del indice
+    H3. Solo se llama cuando el reporte sale con ceros, asi que recorrer el
+    activo entero una vez es asumible — y evita depender de una linea de costa
+    que este proyecto no consume.
+    """
+    try:
+        fila = con.execute(
+            """
+            SELECT MIN(
+                6371.0 * 2 * asin(sqrt(
+                    pow(sin(radians(lat - ?) / 2), 2)
+                    + cos(radians(?)) * cos(radians(lat))
+                      * pow(sin(radians(lon - ?) / 2), 2)
+                ))
+            )
+            FROM (
+                SELECT h3_cell_to_lat(h3_08) AS lat, h3_cell_to_lng(h3_08) AS lon
+                FROM exposure WHERE pop_total > 0
+            )
+            """,
+            [lat, lat, lon],
+        ).fetchone()
+    except Exception as error:  # la extension H3 puede no estar cargada
+        _log.warning(
+            "no se pudo medir la distancia a la poblacion mas cercana",
+            extra={"context": {"error": str(error)}},
+        )
+        return None
+    return None if not fila or fila[0] is None else float(fila[0])
