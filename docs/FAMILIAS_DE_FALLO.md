@@ -321,7 +321,7 @@ una de estas cosas:
 6. **¿Qué corre dos veces, o ninguna?** (familia 10)
 7. **¿Esta prueba falla si rompo el arreglo?** (familia 11)
 5. **¿Y si falla todo a la vez, no solo una parte?** (familia 8)
-6. **¿Que corre dos veces, o ninguna?** (familia 10)
+6. **¿Qué corre dos veces, o ninguna?** (familia 10)
 7. **¿Esta prueba falla si rompo el arreglo?** (familia 11)
 
 Y la regla que las cubre todas, que es del dueño del proyecto: **el sistema tiene

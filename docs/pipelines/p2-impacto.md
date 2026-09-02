@@ -59,8 +59,15 @@ publicada.
 | Deslizamiento | `jessee_2018_model.tif` | `nowicki_2014_global_model.tif`, `godt_2008_model.tif` |
 | Licuefacción | `zhu_2017_general_model.tif` | `zhu_2015_model.tif` |
 
-Se muestrea el ráster por celda. Una probabilidad ≥ **0,10** cuenta como "alta"
-para el conteo de población expuesta.
+Se muestrea el ráster por celda. Un valor ≥ **0,10** cuenta como "alto" para el
+conteo de población expuesta.
+
+El ráster de licuefacción **no es probabilidad**: el producto de USGS deriva
+por calibración una **cobertura areal** —la fracción de la celda que se espera
+cubierta por manifestaciones de licuefacción—, y el de deslizamiento sí es
+probabilidad. Llamarlas igual afirma de una lo que sólo vale para la otra, y el
+`report.md` ya las distingue (`GF_UNIDAD`). El umbral 0,10 se aplica a las dos,
+pero significa cosas distintas en cada una.
 
 `NaN` significa **fuera de la huella del modelo**, no "probabilidad
 desconocida" ni cero. La distinción importa: un cero fabricado ahí sería una

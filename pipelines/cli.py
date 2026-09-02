@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .common.frescura import SITIO_PUBLICADO
+from .common.constants import SITIO_PUBLICADO
 from .common.http import HttpFetcher
 from .common.logging import get_logger
 from .common.manifest import Manifest, fijar_insumos_en_manifest, lint_manifest_file

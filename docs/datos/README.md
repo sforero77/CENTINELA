@@ -40,8 +40,16 @@ reporte es reproducible: dice exactamente qué vintage consumió.
 
 ## La unidad
 
-Todo se resuelve a **celda H3 r8**: hexágonos de **~0,74 km²** (D1). El visor
-consume agregados r7/r6 donde los hay, y ahí cada hexágono son **~5,2 km²**.
+Todo se resuelve a **celda H3 r8**: hexágonos de **~0,74 km²** de media (D1). El
+visor consume agregados r7 y r6 donde los hay, y **no miden lo mismo**: r7 son
+~5,2 km² y r6 son **~36,1 km²**, siete veces más. Escribirlos juntos bajo una
+sola cifra es exactamente el error que cuenta el recuadro de abajo, cometido una
+resolución más arriba.
+
+Y «~0,74 km²» es una **media**, no una constante: H3 no es equiárea. Sobre
+LATAM, una celda r8 va de 0,48 a 0,89 km² según la latitud. Para sumar población
+da igual —se suma lo que hay en la celda, no su área— pero para cualquier cifra
+por unidad de superficie no da igual, y `cell_area` existe para eso.
 
 > **Esas dos cifras se confundieron durante meses, y costó caro.** Este mismo
 > documento decía que una celda r8 medía 5,2 km², que es el área de r7. El visor

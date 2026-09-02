@@ -8,7 +8,10 @@ from typing import Any, Self
 
 from ..common.constants import USGS_FEED_BASE
 from ..common.http import Fetcher
+from ..common.logging import get_logger
 from ..common.toponimos import traducir_lugar
+
+_log = get_logger(__name__)
 
 
 class FeedContractError(Exception):
@@ -88,16 +91,52 @@ def epoch_ms_to_iso(value: Any) -> str:
 def parse_feed(payload: dict[str, Any]) -> list[EventCandidate]:
     """Parsea un feed completo.
 
-    Las features individuales que rompen el contrato se descartan con
-    excepcion propagada: preferimos fallar ruidosamente y degradar, antes que
-    publicar un reporte con un evento mal leido.
+    UNA FEATURE ROTA TUMBABA LA PASADA ENTERA.
+
+    El principio sigue siendo el mismo —antes fallar que publicar un evento mal
+    leido— pero el radio era el equivocado: esto es un feed **mundial**, y un
+    `mag: null` en un sismo de Indonesia dejaba a LATAM sin vigilancia hasta que
+    alguien mirara. La excepcion subia hasta `cli.main`, que solo atrapa
+    `NotImplementedError`, asi que salia como caida sin diagnostico.
+
+    Se aplica la distincion que este proyecto ya usa en el repaso, en FIRMS, en
+    la frescura y en el rezago: **que falle alguna es tolerable —se descarta,
+    se nombra y las demas valen— y que fallen todas es no haber leido el
+    feed**, y eso si sube. Un feed que llega entero y no produce ni un
+    candidato legible es una ruptura de contrato, no una noche tranquila.
     """
     if payload.get("type") != "FeatureCollection":
         raise FeedContractError(f"El feed no es una FeatureCollection: {payload.get('type')!r}")
     features = payload.get("features")
     if not isinstance(features, list):
         raise FeedContractError("El feed no trae lista 'features'")
-    return [EventCandidate.from_feature(f) for f in features]
+
+    candidatos: list[EventCandidate] = []
+    rotas: list[str] = []
+    for feature in features:
+        try:
+            candidatos.append(EventCandidate.from_feature(feature))
+        except (FeedContractError, KeyError, TypeError, ValueError) as error:
+            # Se nombra con su identificador si lo tiene: "una feature rota" no
+            # se puede investigar, `us7000abcd` si.
+            cual = str((feature or {}).get("id", "sin id")) if isinstance(feature, dict) else "?"
+            rotas.append(cual)
+            _log.warning(
+                "feature descartada del feed",
+                extra={"context": {"id": cual, "error": str(error)}},
+            )
+
+    if rotas and not candidatos:
+        raise FeedContractError(
+            f"Ninguna de las {len(features)} features del feed se pudo leer. "
+            "No es que no haya sismos: es que el feed cambio de forma."
+        )
+    if rotas:
+        _log.warning(
+            "el feed traia features ilegibles",
+            extra={"context": {"descartadas": len(rotas), "leidas": len(candidatos)}},
+        )
+    return candidatos
 
 
 def fetch_feed(fetcher: Fetcher, feed: str) -> list[EventCandidate]:

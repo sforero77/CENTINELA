@@ -303,3 +303,40 @@ def test_el_readme_no_miente_sobre_cuantas_pruebas_hay(readme: str) -> None:
         f"el README dice {dice_pipeline} pruebas sin red y pasan {pipeline}"
     )
     assert dice_visor == visor, f"el README dice {dice_visor} de navegador y hay {visor}"
+
+
+# --- La portada tiene que explicarse antes de usarse -------------------------
+
+
+def test_la_portada_define_mmi_antes_de_usarlo(readme: str) -> None:
+    """MMI aparecia veinte veces y no se definia nunca.
+
+    LA CONFUSION MAGNITUD-INTENSIDAD ES EL ERROR DE LECTURA MAS CARO QUE ESTE
+    SISTEMA PUEDE PROVOCAR. La magnitud es una cifra para el sismo entero; la
+    intensidad es un mapa. Quien las confunda reparte ayuda por la cifra
+    equivocada, y el documento que mas gente lee daba por sabida la diferencia.
+
+    Se comprueba que la definicion existe **y que llega antes** del primer uso
+    en una cifra: una glosa al final no evita la mala lectura de arriba.
+    """
+    assert "Mercalli" in readme, "el README usa MMI sin decir nunca qué es"
+
+    definicion = readme.index("Mercalli")
+    primer_uso = readme.index("MMI≥")
+    assert definicion < primer_uso, (
+        "el README define MMI después de usarlo en una banda; quien lea de "
+        "arriba abajo se encuentra la cifra antes que la explicación"
+    )
+
+
+def test_la_portada_enlaza_el_visor_antes_de_la_mitad(readme: str) -> None:
+    """El enlace vivia en la linea 255 de un documento de 3.150 palabras.
+
+    Un sistema que publica una pagina y no la enlaza hasta el ultimo tercio
+    obliga a leerse el argumento entero para llegar al producto.
+    """
+    enlace = readme.find("https://sforero77.github.io/CENTINELA/")
+    assert enlace > 0, "el README no enlaza el visor"
+    assert enlace < len(readme) // 3, (
+        "el enlace al visor queda pasado el primer tercio del documento"
+    )

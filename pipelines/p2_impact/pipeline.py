@@ -22,6 +22,7 @@ from ..common.constants import (
     PRELIMINARY_RADII_KM,
     TOP_ADM2_COUNT,
 )
+from ..common.formatting import titulo_es
 from ..common.geo import haversine_km
 from ..common.http import Fetcher
 from ..common.logging import get_logger
@@ -95,7 +96,14 @@ class ImpactTotals:
     road_km_principal_mmi7p: float = 0.0
     pop_ls_alta: float = 0.0
     pop_lq_alta: float = 0.0
-    discrepancia_pct: float = 0.0
+    #: `None` cuando **no se pudo medir**, que no es lo mismo que cero.
+    #:
+    #: El SQL divide por `SUM(pop_alt_worldpop)` con `NULLIF(...,0)`: si ninguna
+    #: celda alcanzada tiene poblacion de WorldPop, el resultado es NULL. Con
+    #: `float(v or 0.0)` salia **0,0 %**, y "los dos productos coinciden
+    #: perfectamente" es lo contrario de "no habia con que compararlos". Tres
+    #: reportes publicados lo decian: us1000c2zy, us6000hf75 y usp000jd2q.
+    discrepancia_pct: float | None = None
     #: Columnas que el activo no traia y `register_exposure_view` sustituyo por
     #: cero. Va **al final** y con valor por defecto a proposito: las de arriba
     #: se rellenan por posicion desde la fila de `SQL_TOTALES`, y esta no.
@@ -209,6 +217,53 @@ COLUMNAS_OPCIONALES: dict[str, str] = {
     "lulc_humedal_pct": "0.0",
     "lulc_px": "0",
 }
+
+
+def manifiesto_del_activo(con: Any, declarado: str) -> str:
+    """El manifiesto que el activo **dice traer**, no el que le pasaron al CLI.
+
+    EL REPORTE DECLARABA UNA RECETA QUE PODIA NO HABER CONSUMIDO.
+
+    `impact.yml` lee `data/manifests/<ISO3>.yaml` del repositorio y se lo pasa a
+    P2 por `--manifest`; P2 lo escribia tal cual en `inputs.exposure_manifest`.
+    Pero el activo que se descarga es un Release, y el Release puede ser mas
+    viejo que el YAML: el reporte declaraba `col-v0.6` habiendose calculado
+    contra un activo `col-v0.5`, y nadie podia saberlo.
+
+    Eso rompe RNF-04 por donde mas duele —la trazabilidad de un reporte a sus
+    insumos— y ademas dejaba ciego a `rezago.py`: comparaba el manifiesto del
+    reporte contra `data/manifests/`, que es de donde habia salido, asi que
+    comparaba el repositorio consigo mismo.
+
+    El parquet trae `src_manifest`, escrito por P0 al construirlo. Esa es la
+    fuente. El declarado solo se usa si el activo no lo trae —los anteriores a
+    Fase 1— y entonces se avisa.
+    """
+    try:
+        filas = con.execute("SELECT DISTINCT src_manifest FROM exposure").fetchall()
+    except Exception:  # activo sin la columna
+        _log.warning(
+            "el activo no declara src_manifest; se usa el manifiesto del CLI",
+            extra={"context": {"declarado": declarado}},
+        )
+        return declarado
+
+    valores = sorted({str(f[0]) for f in filas if f[0]})
+    if not valores:
+        return declarado
+    if len(valores) > 1:
+        # Un join contra dos activos de recetas distintas no es un reporte: es
+        # dos reportes sumados. Se nombra en vez de elegir uno.
+        raise ValueError(
+            f"El activo mezcla manifiestos distintos: {valores}. "
+            "Un reporte no puede declarar dos recetas."
+        )
+    if declarado and declarado != valores[0]:
+        _log.warning(
+            "el manifiesto declarado no es el del activo; manda el del activo",
+            extra={"context": {"declarado": declarado, "activo": valores[0]}},
+        )
+    return valores[0]
 
 
 def register_exposure_view(con: Any, exposure_glob: str) -> list[str]:
@@ -381,8 +436,14 @@ def compute_impact(
     # `replace` y no un positional mas: las cifras se rellenan por posicion desde
     # la fila del SQL, y mezclar las dos formas en la misma llamada deja a mypy
     # sin poder contar los argumentos.
+    # La discrepancia se saca aparte: es la unica columna donde NULL significa
+    # "no se pudo medir" y no "cero". Ver `ImpactTotals.discrepancia_pct`.
+    crudos = list(fila)
+    discrepancia = crudos[-1]
     totales = replace(
-        ImpactTotals(*(float(v or 0.0) for v in fila)), columnas_ausentes=tuple(ausentes)
+        ImpactTotals(*(float(v or 0.0) for v in crudos)),
+        columnas_ausentes=tuple(ausentes),
+        discrepancia_pct=None if discrepancia is None else float(discrepancia),
     )
     _log.info(
         "impacto calculado",
@@ -510,7 +571,7 @@ def build_report(
     top = [
         MunicipioTop(
             adm2_id=str(r[0]),
-            nombre=str(r[1]).title(),
+            nombre=titulo_es(str(r[1])),
             mmi_max=float(r[2]),
             pop_mmi7p=float(r[3]),
             pop_banda=float(r[4]),
@@ -546,7 +607,9 @@ def build_report(
         backtest=state.backtest,
         top_municipios=tuple(top),
         incertidumbre=Incertidumbre(
-            pop_discrepancia_pct=round(totales.discrepancia_pct, 1),
+            pop_discrepancia_pct=(
+                None if totales.discrepancia_pct is None else round(totales.discrepancia_pct, 1)
+            ),
             notas=notas + nota_de_columnas_ausentes(totales.columnas_ausentes),
         ),
         descargas=Descargas(csv_adm2="adm2.csv", mapa_png="mapa_general.png"),

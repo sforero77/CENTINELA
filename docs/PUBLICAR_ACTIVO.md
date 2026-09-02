@@ -87,7 +87,7 @@ Dos cifras de v0.4 se mueven además por correcciones, no por datos nuevos:
 Al republicar hay que actualizar la tabla de arriba con las cifras que imprima
 el build y el `sha256` nuevo.
 
-## Como publicarlo
+## Cómo publicarlo
 
 ```bash
 gh release create exposure-col-20260823 exposure_h3.parquet admin_lookup.parquet \

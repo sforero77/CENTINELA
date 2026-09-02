@@ -3,20 +3,20 @@
 Este documento es parte del producto, no un anexo legal. Si algo de lo que
 sigue deja de ser cierto, el sistema esta mal.
 
-## Que informa CENTINELA
+## Qué informa CENTINELA
 
 **Exposición estimada.** Cuantas personas, edificaciones, escuelas, hospitales
 y kilómetros de vía quedan **dentro** de cada franja de intensidad sísmica
 modelada por el ShakeMap de USGS. Es una estimación basada en datos abiertos de
 población y edificaciones, cruzada con un modelo de intensidad.
 
-## Que NO informa
+## Qué NO informa
 
 - ❌ **No es alerta temprana.** El reporte se publica *después* del sismo. No
   notifica a la población ni recomienda evacuar.
 - ❌ **No estima víctimas.** Eso lo hace PAGER (USGS), y este sistema solo lo referencia.
 - ❌ **No dictamina daño.** Exposición no es daño. Una edificación dentro de
-  MMI≥7 esta *expuesta*; si se daño o no, este sistema no lo sabe.
+  MMI≥7 esta *expuesta*; si se dañó o no, este sistema no lo sabe.
 - ❌ **No dictamina habitabilidad.** La brigada de imagen produce
   *priorización* para inspección, jamás un veredicto estructural.
 - ❌ **No reemplaza** a los servicios geológicos nacionales (SGC, SSN, CSN,
@@ -43,11 +43,14 @@ población y edificaciones, cruzada con un modelo de intensidad.
 4. **ShakeMap versionado.** Las cifras cambian entre versiones del ShakeMap.
    Cada reporte declara que versión consumió, y se re-emite con changelog
    cuando aparece una nueva.
-5. **Latencia dependiente de terceros.** El disparador corre sobre GitHub
-   Actions, cuyo cron tiene demoras documentadas de 5 a 30 minutos. La latencia
-   real medida se publica en `/status`.
+5. **Latencia dependiente de terceros.** La detección la dispara un cron
+   externo cada cinco minutos; el cron de GitHub Actions —con demoras
+   documentadas de 5 a 30 minutos— queda como respaldo. La cadencia real
+   **medida** y la latencia de punta a punta se publican en `/status`, y
+   mientras no haya ocurrido un sismo en vivo esa segunda cifra aparece vacía:
+   no hay con qué medirla todavía.
 
-## Como citar una cifra de este sistema
+## Cómo citar una cifra de este sistema
 
 Siempre con las tres cosas: el número, la versión de ShakeMap que lo produjo, y
 la palabra **expuesta**.

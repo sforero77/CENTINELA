@@ -113,7 +113,7 @@ No subcuenta. **Las dos no tabulan igual.** PAGER agrupa por MMI *redondeado*:
 su fila «7» es todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas
 *literales*: MMI≥7 es MMI≥7. Puestas en el mismo eje, cada cifra de CENTINELA
 cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo —
-que es el único acuerdo aritméticamente posible entre dos convenciones distintas:
+que es la única comparación que las dos convenciones admiten:
 
 | Umbral literal | PAGER | CENTINELA |
 |---|---:|---:|
@@ -128,6 +128,17 @@ Léase por parejas: 7.194.540 (≥6,0) tiene que quedar **entre** 6.514.486 (≥
 y 10.487.959 (≥5,5), y queda. 2.424.287 (≥7,0) tiene que quedar entre 1.126.902
 (≥7,5) y 6.514.486 (≥6,5), y queda. Si alguna se saliera del intervalo, una de
 las dos estaría mal — y esa es exactamente la comprobación que corre en CI.
+
+**Y conviene no vender esto como más de lo que es.** El intervalo de MMI≥7 va de
+1,1 a 6,5 millones: un factor de 5,8, dentro del cual cabría casi cualquier
+cifra. Que una cifra caiga dentro es una condición necesaria, no una validación.
+
+**En los dos casos CENTINELA queda en el cuarto inferior del intervalo** —al
+17 % y al 24 % contando desde abajo—, es decir sistemáticamente por debajo del
+punto medio y siempre en la misma dirección. Eso es lo que se puede afirmar sin
+elegir un método: cuánto por debajo depende de cómo se interpole entre las filas
+de PAGER, y la respuesta va del 11 % al 37 % según se haga lineal o logarítmica.
+Publicar una sola de esas cifras sería elegir la que conviene.
 
 Las cifras de PAGER salen de `json/exposures.json` del producto `losspager` del
 evento, congelado en `tests/fixtures/golden/choco_2026_08_10/pager_exposures.json`;
@@ -255,3 +266,19 @@ Nada obligatorio. Lo que más valor añadiría, en orden:
 *Código, datos y el registro completo de verificaciones:*
 <https://github.com/sforero77/CENTINELA> · *Reportes:*
 <https://sforero77.github.io/CENTINELA/>
+
+---
+
+## La evidencia de que la pieza del medio falta
+
+No es un argumento del proyecto: es lo que hicieron **a mano** otros, sin ella.
+
+El sitrep de **OIM/DTM del 17 de agosto de 2026** fusionó manualmente los
+productos de daño de **Copernicus EMS** con las huellas de edificación de
+**Microsoft AI for Good** sobre la base de **Overture** — exactamente las tres
+piezas que este activo ya trae unidas, ensambladas de urgencia durante una
+emergencia y para un solo evento.
+
+Que un equipo con recursos tuviera que hacer ese join a mano, una semana después
+del sismo, dice mejor que cualquier justificación por qué el activo tiene que
+estar construido **antes**.

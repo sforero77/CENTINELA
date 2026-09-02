@@ -33,7 +33,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from ..common.formatting import format_count_prose, format_number_es
+from ..common.formatting import format_count_prose, format_number_es, titulo_es
 from ..common.logging import get_logger
 from .model import Report
 
@@ -208,7 +208,7 @@ def render_map(
         )
         for lon, lat, _mmi, _pob, nombre in _etiquetables(puntos, n_max=6):
             ax.annotate(
-                nombre.title(),
+                titulo_es(nombre),
                 (lon, lat),
                 fontsize=9 if variant is MapVariant.PRENSA else 8,
                 color="#1c1b1a",

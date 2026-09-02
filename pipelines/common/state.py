@@ -30,6 +30,11 @@ class EventStatus(StrEnum):
     DETECTADO = "detectado"
     PRELIMINAR = "preliminar"
     PUBLICADO = "publicado"
+    #: DECLARADO Y NUNCA ASIGNADO. Ninguna transicion lo produce: aparece en
+    #: los conjuntos de estados validos y en ningun `save`. No se borra porque
+    #: es un valor de un fichero versionado y quitarlo romperia la lectura de
+    #: cualquier estado antiguo que lo llevara — pero mientras nadie lo escriba,
+    #: leer "no hay eventos degradados" no significa nada.
     DEGRADADO = "degradado"
     DESCARTADO = "descartado"
 
@@ -103,6 +108,11 @@ class EventState:
     origen_utc: str
     versiones_procesadas: ProcessedVersions = field(default_factory=ProcessedVersions)
     timestamps: dict[str, str] = field(default_factory=dict)
+    #: DECLARADO Y SIEMPRE VACIO. Nada lo escribe: se serializa y se lee, pero
+    #: ningun paso del pipeline le mete un digest. Se conserva porque el
+    #: `event_state` es un fichero versionado y quitarlo cambiaria la forma de
+    #: los veintiun estados publicados; lo que no se puede es leerlo como si
+    #: dijera algo. Llenarlo esta anotado en PENDIENTES.
     hashes: dict[str, str] = field(default_factory=dict)
     intentos_preliminar: int = 0
     #: Reconstruccion retrospectiva, no una respuesta en vivo. Un backtest se

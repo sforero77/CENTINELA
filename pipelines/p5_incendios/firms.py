@@ -34,6 +34,9 @@ _BASE: Final[str] = "https://firms.modaps.eosdis.nasa.gov/data/active_fire"
 #: mismo sensor a 375 m y se reparten las horas de paso, asi que usar los tres
 #: no es redundancia: es cobertura temporal.
 SATELITES: Final[tuple[tuple[str, str], ...]] = (
+    # NASA cesa Suomi-NPP el 1-nov-2026 a las 13:00 UTC. Cuando deje de
+    # responder hay que quitarlo de aqui y corregir la documentacion de P5,
+    # que afirma que se usan tres satelites. Ver PENDIENTES 2.1.decies.
     ("suomi-npp-viirs-c2", "SUOMI_VIIRS_C2"),
     ("noaa-20-viirs-c2", "J1_VIIRS_C2"),
     ("noaa-21-viirs-c2", "J2_VIIRS_C2"),

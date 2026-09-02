@@ -195,7 +195,8 @@
       "additionalProperties": false,
       "properties": {
         "pop_discrepancia_pct": {
-          "type": "number"
+          "type": ["number", "null"],
+          "description": "Desacuerdo entre GHS-POP y WorldPop dentro de las bandas publicadas. null = no se pudo medir; no es cero."
         },
         "notas": {
           "type": "array",

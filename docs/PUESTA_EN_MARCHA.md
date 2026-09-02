@@ -137,7 +137,7 @@ se escribe primero en un `.parcial` que solo se renombra al terminar: un corte
 de red no deja un ráster a medias que la siguiente corrida daría por bueno.
 Volver a lanzar el comando continua donde iba.
 
-**Que esperar en el log**, en este orden: plan de construcción resuelto ->
+**Qué esperar en el log**, en este orden: plan de construcción resuelto ->
 GHS-POP descargado (9 teselas) -> bandas etarias descargadas -> recursos de HDX
 -> geometría administrativa cargada (**1.122 municipios**) -> crosswalk
 construido -> ficheros de Overture seleccionados (**11**) -> activo ensamblado

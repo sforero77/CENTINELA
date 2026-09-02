@@ -10,7 +10,13 @@ from typing import Final
 
 from ..common.constants import DISCLAIMERS, GROUND_FAILURE_HIGH_PROB, TOP_ADM2_COUNT
 from ..common.formatting import format_count_prose, format_number_es
-from .model import MunicipioTop, Report
+from .model import (
+    MunicipioTop,
+    Report,
+    banda_del_ranking,
+    municipios_del_ranking,
+    poblacion_del_ranking,
+)
 
 #: El nivel de PAGER en espanol.
 #:
@@ -177,13 +183,13 @@ def _tabla_totales(report: Report) -> str:
         )
         filas.append(("Vías locales en MMI≥7", format_count_prose(local) + " km"))
     else:
-        filas.append(("Kilometros de via en MMI≥7", format_count_prose(tot.road_km_mmi7p) + " km"))
+        filas.append(("Kilómetros de vía en MMI≥7", format_count_prose(tot.road_km_mmi7p) + " km"))
     if tot.built_m2_mmi7p > 0:
         km2 = tot.built_m2_mmi7p / 1_000_000.0
         filas.append(("Superficie construida en MMI≥7", f"{format_number_es(km2, 1)} km²"))
     lineas = ["| Indicador | Estimado |", "|---|---:|"]
     lineas += [f"| {nombre} | {valor} |" for nombre, valor in filas]
-    return "\n".join(lineas) + _nota_superficie(report)
+    return "\n".join(lineas) + _nota_del_muro_de_ceros(report) + _nota_superficie(report)
 
 
 #: Superficie media de una edificacion, en m², para contrastar el conteo de
@@ -227,14 +233,36 @@ def _nota_superficie(report: Report) -> str:
     )
 
 
-def _banda_del_ranking(report: Report) -> int:
-    """La banda por la que se ordenan los municipios.
+def _nota_del_muro_de_ceros(report: Report) -> str:
+    """Por que la tabla entera vale cero, cuando vale cero.
 
-    MMI≥7 —donde estan todas las demas cifras del reporte— salvo que el evento
-    no llegue ahi sobre poblacion, y entonces MMI≥6. Ver el comentario largo de
-    :func:`_tabla_municipios`.
+    SIETE CEROS SEGUIDOS NO INFORMAN: SE LEEN COMO "NO SE PUDO CALCULAR".
+
+    `us1000c2zy` es un M7,5 cuyo ShakeMap llega a MMI 8, y publicaba siete
+    filas en cero sin una palabra. Se pudo calcular perfectamente: la sacudida
+    fue mar adentro y la intensidad no alcanza banda sobre territorio habitado.
+    Es un resultado, y uno que le importa a quien decide si moviliza.
+
+    Es el mismo remedio que :func:`_linea_ground_failure` ya aplica a su propio
+    cero, aqui aplicado al que ocupa la tabla entera.
     """
-    return 6 if (report.totales.banda_titular or 6) == 6 else 7
+    if report.preliminar or report.totales.banda_titular:
+        return ""
+    return (
+        "\n\n> **Todas las cifras en cero es un resultado, no un fallo.** El "
+        "ShakeMap de este evento sí dibuja intensidad, pero no alcanza MMI≥6 "
+        "sobre territorio habitado del país: la sacudida quedó mar adentro o "
+        "sobre zona despoblada. El cálculo corrió entero."
+    )
+
+
+def _banda_del_ranking(report: Report) -> int:
+    """La banda por la que se ordenan los municipios. Vive en el modelo.
+
+    Estuvo aqui, y el `hilo.txt` calculaba la suya: el mismo evento salia con
+    dos rankings distintos. Ver :func:`model.municipios_del_ranking`.
+    """
+    return banda_del_ranking(report)
 
 
 def _tabla_municipios(report: Report) -> str:
@@ -279,17 +307,22 @@ def _tabla_municipios(report: Report) -> str:
     # reporte, y solo se baja a 6 cuando el evento no llego a 7 sobre poblacion
     # — el caso para el que `pop_banda` se invento, y ahi sigue sirviendo.
     banda = _banda_del_ranking(report)
+    ordenados = municipios_del_ranking(report)
+
+    # UNA CABECERA SIN FILAS NO ES UNA TABLA VACIA: ES UNA PREGUNTA SIN
+    # RESPONDER. `us1000c2zy` publicaba exactamente eso —dos lineas de cabecera
+    # y nada debajo— siendo un M7,5 cuyo ShakeMap llega a MMI 8 mar adentro. La
+    # respuesta existe y es interesante: la intensidad si alcanzo esa banda,
+    # pero no sobre poblacion de este pais.
+    if not ordenados:
+        return (
+            f"Ningún municipio del país alcanza población dentro de MMI≥{banda}. "
+            "No es que falte el dato: la intensidad que el ShakeMap dibuja para "
+            "este evento no llega a esa banda sobre territorio habitado."
+        )
 
     def _cifra(m: MunicipioTop) -> float:
-        return m.pop_mmi7p if banda == 7 else (m.pop_banda or m.pop_mmi7p)
-
-    # Y sin filas en cero: una lista de "mas expuestos" rellenada hasta quince
-    # con ceros no dice donde se concentra, dice que se relleno.
-    ordenados = sorted(
-        (m for m in report.top_municipios if _cifra(m) > 0),
-        key=_cifra,
-        reverse=True,
-    )
+        return poblacion_del_ranking(report, m)
 
     lineas = [
         f"| # | Municipio | Código | MMI max | Población MMI≥{banda} |",
@@ -414,8 +447,17 @@ def _seccion_incertidumbre(report: Report) -> str:
         # DISCLAIMER promete no decir que se colo en los veintiun reportes.
         # Lo que se mide es la discrepancia dentro del corte publicado, que es
         # donde hay celdas, no donde hay dano.
-        f"Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: "
-        f"**{format_number_es(inc.pop_discrepancia_pct, 1)} %**.",
+        # "0,0 %" se lee como "los dos productos coinciden perfectamente", y
+        # cuando el valor es nulo significa lo contrario: no habia con que
+        # comparar. Tres reportes publicaban ese cero.
+        (
+            "Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: "
+            f"**{format_number_es(inc.pop_discrepancia_pct, 1)} %**."
+            if inc.pop_discrepancia_pct is not None
+            else "Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. "
+            "Ninguna celda dentro de las bandas publicadas tiene población de "
+            "WorldPop con la que contrastar."
+        ),
     ]
     if inc.notas:
         lineas += ["", *[f"- {nota}" for nota in inc.notas]]

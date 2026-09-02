@@ -122,3 +122,7 @@ DISCLAIMERS: Final[tuple[str, ...]] = (
 
 PHASE_0_COUNTRIES: Final[tuple[str, ...]] = ("COL",)
 PHASE_1_COUNTRIES: Final[tuple[str, ...]] = ("COL", "MEX", "PER", "ECU", "CHL", "VEN", "GTM")
+
+#: Raiz de la pagina publicada. Vivia en `frescura.py`, que era el unico que la
+#: usaba; el hilo tambien la necesita para poder enlazar el reporte que promete.
+SITIO_PUBLICADO: Final[str] = "https://sforero77.github.io/CENTINELA"

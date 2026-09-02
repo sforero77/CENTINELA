@@ -8,7 +8,7 @@ Pruebas de regresión contra eventos reales congelados. Corren en cada PR (§6.3
 | G2 | Venezuela, doble mainshock, 24-jun-2026 | `us6000t7zp`, `us6000t7zc` | ✅ corre |
 | G3 | Evento sin Ground Failure publicado | sintético | ✅ corre |
 
-## Que fija cada uno
+## Qué fija cada uno
 
 **G1 — Chocó.** Que el trigger habría disparado (verificado contra el evento
 real), los datos del evento, que se elige la versión vigente del ShakeMap entre
@@ -35,7 +35,7 @@ los rasters de Ground Failure— que necesitara el polyfill H3. Las fixtures
 actuales congelan la estructura de productos y su historial de versiones, que
 es lo que el contrato de P2 consume hoy.
 
-## Como congelar
+## Cómo congelar
 
 Ver `tests/fixtures/golden/README.md`: comandos exactos, por que se recortan de
 8,4 MB a 244 KB, y por que el feed se reconstruye con una consulta FDSN y no con

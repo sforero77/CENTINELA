@@ -496,6 +496,84 @@ Lo que hay que resolver antes:
    verdad, que son dos cifras distintas y hoy no lo son.
 3. **Re-emitir los veintiuno** y actualizar la portada, como el 1-sep.
 
+### 2.1.decies Suomi-NPP se apaga el 1-nov-2026 y P5 lo consume
+
+**Abierto el 1-sep-2026.** Es el único pendiente del repositorio con **fecha y
+hora concretas**: NASA anuncia el cese de Suomi-NPP el 1 de noviembre de 2026 a
+las 13:00 UTC. P5 lee `SUOMI_VIIRS_C2` entre sus tres fuentes de FIRMS.
+
+No tumba el pipeline —quedan NOAA-20 y NOAA-21 con el mismo sensor VIIRS a
+375 m— pero sí baja la cadencia de revisita en un tercio, y la documentación de
+P5 afirma que se usan tres satélites. Las dos cosas dejan de ser ciertas ese día.
+
+**Lo que hay que hacer, en este orden:** comprobar antes de esa fecha que
+`SUOMI_VIIRS_C2` sigue respondiendo; quitarlo de las fuentes cuando deje de
+hacerlo; y corregir `docs/pipelines/p5-incendios.md`, que pasa a describir dos
+satélites y no tres.
+
+**Lo que lo vigila mientras tanto:** nada automático. `contract_drift.yml` mira
+la forma de las respuestas, no si una fuente se retira en una fecha anunciada.
+Un cron que compruebe la fecha sería más ruido que utilidad para un aviso único;
+lo que sí cierra el hueco es que esté escrito aquí, que es donde se mira.
+
+---
+
+### 2.1.undecies Tres invariantes que se rompen sin que nada avise
+
+**Abierto el 1-sep-2026.** Los tres mueven cifras publicadas, así que **no se
+tocan sin medir el delta antes** — la misma disciplina que se aplicó a
+`grid.xml` en §2.1.sexies, y por la misma razón: cambiar un método y publicar el
+resultado a la vez impide saber cuál de las dos cosas movió la cifra.
+
+**El tope de 2.000 puntos por vía.** `MAX_POINTS_PER_LINE = 2000` en
+`vector_h3.py`. La prueba comprueba **la constante**, no el paso efectivo: una
+vía larga se remuestrea hasta caber en el tope, y el paso resultante puede
+superar el tamaño de una celda r8 —0,74 km², unos 900 m de lado— con lo que la
+línea salta celdas y sus kilómetros no se cuentan en ninguna. Nadie sabe en
+cuántas vías pasa.
+*Medir:* distribución del paso efectivo por país, y kilómetros perdidos.
+
+**`ORDER BY ST_Distance` en grados.** `crosswalk.py:557` ordena por distancia
+euclídea sobre coordenadas geográficas. Un grado de longitud mide 111 km en el
+ecuador y 71 km a 50° S, así que **la celda puede asignarse al municipio que no
+es el más cercano** en el rescate fronterizo. El propio fichero ya advierte que
+un grado no mide lo mismo (línea 468) y aun así ordena en grados.
+El rescate mueve el 6,15 % de las celdas en Colombia —medido, ronda 4— y
+explica el 93 % del exceso frente a la referencia oficial: no es marginal.
+*Medir:* cuántas asignaciones cambian con `ST_Distance_Sphere`, por país.
+
+**`GREATEST(..., 0)` en `pop_15_64`.** `build.py:107` recorta a cero un residuo
+que puede ser negativo. Recortar en silencio convierte una inconsistencia entre
+productos de población en un cero plausible — y el proyecto entero se define
+contra eso. Puede ser correcto; lo que no puede es no saberse.
+*Medir:* en cuántas celdas y por cuánta población se activa el recorte.
+
+Las tres mediciones son locales, contra los activos ya publicados, y no
+necesitan re-emitir nada.
+
+---
+
+### 2.1.duodecies Dos campos del estado que no dicen nada
+
+**Abierto el 1-sep-2026.** `EventStatus.DEGRADADO` está declarado y **ninguna
+transición lo asigna**; `EventState.hashes` se serializa y se lee, y nada lo
+escribe: los veintiún estados publicados lo tienen vacío.
+
+No son código muerto inocuo. Un estado que nadie asigna hace que «no hay eventos
+degradados» no signifique nada, y un diccionario de digests siempre vacío invita
+a leerlo como «no hubo cambios en los insumos» cuando dice «nadie miró». Es la
+familia de fallo que este proyecto nombra: la defensa escrita y el mecanismo sin
+conectar.
+
+**Lo que lo cierra:** o se conectan —`DEGRADADO` cuando P2 publica con columnas
+sustituidas o con avisos de calidad, `hashes` con los digests que
+`download_products` ya calcula— o se retiran. Retirarlos cambia la forma de un
+fichero versionado, así que no es gratis. Mientras tanto, quedan **declarados
+como vacíos en el propio código**, que es lo que impide leerlos como si
+dijeran algo.
+
+---
+
 ### 2.2 Coropletas r7/r6 del visor
 
 **Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salió primero de las
@@ -1191,7 +1269,7 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
 | | |
 |---|---|
-| [`docs/OPERACION.md`](docs/OPERACION.md) | **Que vigilar ahora que el sistema corre: relojes, fallos silenciosos, deuda por país** |
+| [`docs/OPERACION.md`](docs/OPERACION.md) | **Qué vigilar ahora que el sistema corre: relojes, fallos silenciosos, deuda por país** |
 | [`docs/AUDITORIA.md`](docs/AUDITORIA.md) | **La auditoría del 25 y 26 de agosto: los 27 hallazgos, con evidencia y criterio de aceptación** |
 | [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) | Las reglas de código del proyecto, con el caso real que justifica cada una |
 | [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md) | Los pasos de arranque, por si hay que repetirlos |
@@ -1199,6 +1277,6 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 | [`VERIFICACIONES.md`](VERIFICACIONES.md) | Como se verifico cada fuente, con evidencia |
 | [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) | Publicar el activo y por que no va en git |
 | [`DISCLAIMER.md`](DISCLAIMER.md) | Que informa y que no informa el sistema |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Como contribuir, rol de mantenedor por país |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Cómo contribuir, rol de mantenedor por país |
 | [`GOVERNANCE.md`](GOVERNANCE.md) | Roles, decisiones, frontera comunidad ↔ empresa |
 | [`LICENSES/`](LICENSES/) | La regla de los tres cubos |

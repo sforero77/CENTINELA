@@ -11,7 +11,7 @@ todo lo demás.
 | `odbl/` | Todo lo que toque OSM / Overture `buildings` o `transportation` | **ODbL** (share-alike cumplido publicando el derivado bajo ODbL) |
 | `nc/` | Vantor, GEM, derivados de xBD | Su licencia original. **No redistribuible** bajo las anteriores |
 
-## Que consume cada cosa
+## Qué consume cada cosa
 
 - **El reporte automático** consume `core/` + `odbl/`. Jamás `nc/`.
 - **El visor** puede mostrar capas de contexto de `nc/`, siempre etiquetadas.
@@ -19,7 +19,7 @@ todo lo demás.
   (entrenados solo con Copernicus EMS y etiquetas propias), y en `nc/` si
   heredan de xBD.
 
-## Como se hace cumplir
+## Cómo se hace cumplir
 
 No con documentación. Con código:
 
