@@ -16,7 +16,7 @@
 | Edificaciones en MMI≥7 | 0 |
 | Sedes de salud en MMI≥7 | 0 |
 | Sedes educativas en MMI≥7 | 0 |
-| Kilometros de via en MMI≥7 | 0 km |
+| Kilómetros de vía en MMI≥7 | 0 km |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
@@ -24,7 +24,7 @@ Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la 
 
 | # | Municipio | Código | MMI max | Población MMI≥6 |
 |---:|---|---|---:|---:|
-| 1 | Heroica Ciudad De Juchitán De Zaragoza | `MX20043` | 6,5 | 110 mil |
+| 1 | Heroica Ciudad de Juchitán de Zaragoza | `MX20043` | 6,5 | 110 mil |
 | 2 | Salina Cruz | `MX20079` | 6,0 | 100 mil |
 | 3 | Tonalá | `MX07097` | 6,0 | 77 mil |
 | 4 | Santo Domingo Tehuantepec | `MX20515` | 6,0 | 71 mil |
@@ -33,7 +33,7 @@ Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la 
 | 7 | Arriaga | `MX07009` | 6,5 | 51 mil |
 | 8 | Acapetahua | `MX07003` | 6,0 | 38 mil |
 | 9 | San Blas Atempa | `MX20124` | 6,0 | 20 mil |
-| 10 | San Mateo Del Mar | `MX20248` | 6,0 | 18 mil |
+| 10 | San Mateo del Mar | `MX20248` | 6,0 | 18 mil |
 | 11 | Unión Hidalgo | `MX20557` | 6,0 | 17 mil |
 | 12 | San Pedro Tapanatepec | `MX20327` | 6,5 | 17 mil |
 | 13 | Santa María Huatulco | `MX20413` | 6,0 | 14 mil |
@@ -69,7 +69,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,1 %**.
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v1**
 - Manifiesto de exposición: `mex-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T22:08:25Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:42:49Z
 
 ## Advertencias
 

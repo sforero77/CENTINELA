@@ -30,12 +30,12 @@
     "road_km_mmi7p": 0.0,
     "road_km_principal_mmi7p": 0.0,
     "pop_ls_alta": 2061.6080413851887,
-    "pop_lq_alta": 360767.28644302784
+    "pop_lq_alta": 360767.2864430278
   },
   "top_municipios": [
     {
       "adm2_id": "MX20043",
-      "nombre": "Heroica Ciudad De Juchitán De Zaragoza",
+      "nombre": "Heroica Ciudad de Juchitán de Zaragoza",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 109669.97918312269
@@ -98,7 +98,7 @@
     },
     {
       "adm2_id": "MX20248",
-      "nombre": "San Mateo Del Mar",
+      "nombre": "San Mateo del Mar",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 18218.377668433823
@@ -162,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-01T22:08:25Z",
+  "generado_utc": "2026-09-02T02:42:49Z",
   "pipeline_version": "0.1.0"
 }
