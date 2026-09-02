@@ -204,11 +204,24 @@ def test_el_documento_dice_que_ningun_reporte_se_disparo_en_vivo(instituciones: 
 
     if int(estado["medido"]["eventos_publicados"]) == 0:
         assert "los 21 son reconstrucciones" in instituciones.lower()
-    else:
-        raise AssertionError(
-            "Ya hay reportes disparados en vivo: §3 de PARA_INSTITUCIONES y el "
-            "README siguen diciendo que no, y ahora hay algo mejor que contar."
-        )
+        return
+
+    # YA LLEGO EL DIA, Y LA GUARDIA TIENE QUE PODER PASAR.
+    #
+    # Escrita como estaba, elevaba siempre que hubiera un reporte en vivo: era
+    # un aviso de un solo sentido, sin estado de "ya esta reescrito". Cumplio su
+    # trabajo el 2-sep-2026 —hizo saltar los dos parrafos rancios en cuanto
+    # `eventos_publicados` paso a 1— y despues no podia volver a verde nunca.
+    #
+    # Ahora comprueba lo que de verdad importa: que los dos documentos hablen
+    # del reporte en vivo en vez de seguir diciendo que no lo hay.
+    assert "los 21 son reconstrucciones" not in instituciones.lower(), (
+        "§3 de PARA_INSTITUCIONES sigue diciendo que ninguno se disparo en vivo, "
+        "y `status.json` publica que si."
+    )
+    assert "en vivo" in instituciones.lower(), (
+        "§3 no menciona el reporte en vivo, que es lo mejor que este documento tiene que contar"
+    )
 
 
 # --- El recuento de pruebas también es una cifra de la portada ---------------

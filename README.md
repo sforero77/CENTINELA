@@ -196,12 +196,22 @@ que USGS publicó entonces, cada uno contra el activo de su país:
 | Personas ya en la malla hexagonal | **649,8 millones** |
 | Peor desvío contra la cifra oficial de un país | **+4,94 %** (Venezuela, y está explicado) |
 
-**Los 21 son reconstrucciones.** El sistema no ha disparado todavía un reporte
-en vivo: `site/status.json` publica `eventos_publicados: 0` y
-`backtests_excluidos: 21`, y por eso la latencia medida extremo a extremo sigue
-en `null`. Decirlo es más útil que dejarlo ambiguo — el catálogo demuestra que
-el cálculo funciona sobre veintiún eventos reales, no que la cadena en vivo se
-haya ejercitado.
+**El primero en vivo llegó el 2-sep-2026, y costó 89 minutos.** Un M5,6 a 71 km
+al OSO de Puerto Madero, México. El vigía lo detectó y despachó en minutos —esa
+mitad de la cadena funcionó a la primera— y P2 lo rechazó veinte veces seguidas:
+trataba «el ShakeMap no alcanza ninguna celda» como error incluso con el país
+bien enrutado, cuando lo que pasaba es que la sacudida se quedó mar adentro. El
+reporte salió cuando se arregló esa distinción.
+
+Así que `medido.p50_min` publica **89,1 min** y esa cifra hay que leerla por lo
+que es: no mide la cadena en régimen, mide lo que tardó en arreglarse un fallo
+que sólo podía aparecer con un sismo real. El siguiente evento en vivo dará la
+primera medida limpia, y hasta entonces conviene no citar los 89 minutos como
+latencia del sistema.
+
+Los otros veintiún reportes siguen siendo reconstrucciones históricas: prueban
+que el cálculo funciona sobre eventos reales de USGS, no que la cadena en vivo
+esté ejercitada. Ahora está ejercitada una vez, y enseñó algo.
 
 Lo que enseña ese catálogo importa más que su tamaño: **once de los veintiún
 eventos no alcanzan MMI≥7 sobre población**, y tres de ellos tampoco MMI≥6. Son
@@ -333,7 +343,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.387 pruebas** sin red, más **101 de navegador** que abren el visor en un
+**1.438 pruebas** sin red, más **101 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 
