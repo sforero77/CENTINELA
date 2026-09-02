@@ -2838,6 +2838,10 @@ def test_cambiar_de_mapa_base_conserva_las_capas(pagina: Any) -> None:
     _esperar_capa(pagina, "incendios")
     pagina.wait_for_timeout(1200)
 
+    pintados_al_arrancar = pagina.evaluate(
+        "() => window.CENTINELA.pintado.epicentros.rasgos"
+    )
+
     pagina.locator(".ctrl-bases").click()
     pagina.locator('[data-base="oscuro"]').click()
     # El estilo entero viaja por red: se espera a que las capas vuelvan.
@@ -2852,7 +2856,18 @@ def test_cambiar_de_mapa_base_conserva_las_capas(pagina: Any) -> None:
     capas = pagina.evaluate("() => window.CENTINELA.capasDelMapa()")
     velo = capas.index("mascara")
     assert velo < capas.index("epicentros"), "tras cambiar de base el velo tapa el dato"
-    assert pagina.evaluate("() => window.CENTINELA.pintado.epicentros.rasgos") == 21
+    # EL VEINTIUNO ESTABA ESCRITO A MANO Y CADUCO.
+    #
+    # Era cierto cuando se escribio y dejo de serlo el 2-sep-2026, en cuanto el
+    # catalogo crecio con el primer evento en vivo: la prueba fallo diciendo
+    # "23 == 21" sin que el visor tuviera nada mal. Lo que comprueba es que
+    # **no se pierde ningun epicentro** al cambiar de base, y eso se pregunta
+    # contra el dato, no contra una constante que hay que recordar actualizar.
+    antes = pagina.evaluate("() => window.CENTINELA.pintado.epicentros.rasgos")
+    assert antes > 0, "el visor no pinto ningun epicentro"
+    assert antes == pintados_al_arrancar, (
+        f"cambiar de base perdio epicentros: {pintados_al_arrancar} antes, {antes} despues"
+    )
 
 
 @pytest.mark.visor
