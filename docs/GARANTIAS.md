@@ -115,10 +115,14 @@ a `*/30` para dejar de acaparar una cola que no podía ganar.
 
 La ruta que lo arregla —un cron externo que dispare `repository_dispatch`— está
 hecha desde el 31-ago-2026 y despacha cada cinco minutos; el cron de GitHub
-quedó de respaldo. **La cadencia con el disparador nuevo todavía no está
-medida:** el historial de latidos se reinició el 1-sep-2026 al re-emitir el
-catálogo entero, y `/status` lo vuelve a llenar solo. Hasta que haya latidos, la
-cifra de arriba es lo último medido y no describe el sistema de hoy.
+quedó de respaldo. Los primeros latidos con el disparador nuevo dan **p50 5,0
+min · p90 5,0 · peor 5,0**, o sea la cadencia declarada, exactamente. Son pocos
+—la serie se reinició el 1-sep-2026 al re-emitir el catálogo entero— así que
+valen como orden de magnitud y no como percentil estable, y la cifra de arriba
+se conserva por lo que documenta: lo que daba la cola de GitHub sola.
+
+Lo que sigue sin medirse es **la latencia de punta a punta**, que necesita un
+sismo en vivo. `/status` la publica en `null` mientras tanto.
 
 ### La corrección de una cifra publicada
 

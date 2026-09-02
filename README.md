@@ -279,12 +279,17 @@ extremo, **la detección sola se comía el presupuesto entero**. Por eso desde e
 31-ago-2026 un cron externo dispara `repository_dispatch` cada cinco minutos y
 el cron de GitHub quedó de respaldo.
 
-La cadencia nueva se está volviendo a medir desde cero: el historial de latidos
-se reinició el 1-sep-2026 al re-emitir el catálogo entero, así que
-[`/status`](https://sforero77.github.io/CENTINELA/status.json) publica hoy la
-cadencia vacía y se rellena solo. Este README no promete «menos de una hora»:
-promete el contraste que sí controla —de días a segundos de cómputo— y publica
-en `/status` la latencia real, incluida la que todavía no tiene.
+Y el cambio es de otro orden: sobre los primeros latidos con el disparador
+externo, `/status` publica **p50 5,0 min, p90 5,0 y peor caso 5,0** — el cron
+externo entrega exactamente lo que declara. Son pocos latidos todavía, y la
+serie se reinició el 1-sep-2026 al re-emitir el catálogo entero, así que esa
+cifra vale como orden de magnitud y no como percentil estable.
+
+Este README sigue sin prometer «menos de una hora»: promete el contraste que sí
+controla —de días a segundos de cómputo— y publica en
+[`/status`](https://sforero77.github.io/CENTINELA/status.json) la latencia real,
+incluida la que todavía no tiene. `eventos_publicados` sigue en **0** y la
+latencia de punta a punta en `null` hasta que ocurra el primer sismo en vivo.
 
 ## Arranque
 
