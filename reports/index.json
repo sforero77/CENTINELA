@@ -1,5 +1,20 @@
 [
   {
+    "usgs_id": "us7000tdms",
+    "mag": 5.9,
+    "lugar": "southern East Pacific Rise",
+    "iso3": "CHL",
+    "lon": -109.0259,
+    "lat": -34.9815,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2026-09-02T12:35:56Z",
+    "shakemap_version": 1,
+    "preliminar": false,
+    "backtest": false,
+    "generado_utc": "2026-09-02T14:11:01Z"
+  },
+  {
     "usgs_id": "us7000tdmp",
     "mag": 5.6,
     "lugar": "71 km al OSO de Puerto Madero, México",

@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000tdms",
-  "estado": "detectado",
+  "estado": "publicado",
   "mag": 5.9,
   "lon": -109.0259,
   "lat": -34.9815,
@@ -8,15 +8,18 @@
   "lugar": "southern East Pacific Rise",
   "origen_utc": "2026-09-02T12:35:56Z",
   "versiones_procesadas": {
-    "shakemap": 0,
+    "shakemap": 1,
     "groundfailure": 0
   },
   "timestamps": {
     "detectado": "2026-09-02T13:00:25Z",
+    "publicado": "2026-09-02T14:11:03Z",
     "usgs_origen": "2026-09-02T12:35:56Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "ShakeMap v0 -> v1"
+  ]
 }
