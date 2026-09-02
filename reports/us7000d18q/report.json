@@ -84,14 +84,14 @@
     },
     {
       "adm2_id": "AR070063",
-      "nombre": "9 De Julio",
+      "nombre": "9 de Julio",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 7463.2202634187415
     },
     {
       "adm2_id": "AR070126",
-      "nombre": "25 De Mayo",
+      "nombre": "25 de Mayo",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 671.9175411388278
@@ -162,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-01T23:16:57Z",
+  "generado_utc": "2026-09-02T02:46:39Z",
   "pipeline_version": "0.1.0"
 }

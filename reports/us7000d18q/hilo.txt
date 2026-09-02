@@ -1,7 +1,7 @@
-1/4 Sismo M6,4 · 26 km al SO de Pocito, Argentina (2021-01-19T02:46:22Z UTC, 21 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+1/4 Sismo M6,4 · 26 km al SO de Pocito, Argentina (2021-01-19 02:46 UTC, 21 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
 2/4 Personas dentro de intensidad MMI≥6: 580 mil. Dentro de MMI≥7: 0. Edificaciones en MMI≥7: 0.
 
-3/4 Municipios más expuestos: Rawson, Capital, Chimbas.
+3/4 Municipios más expuestos (MMI≥6): Rawson, Capital, Chimbas.
 
-4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: ver el reporte completo.
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/reports/us7000d18q/

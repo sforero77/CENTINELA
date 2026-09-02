@@ -16,7 +16,7 @@
 | Edificaciones en MMI≥7 | 0 |
 | Sedes de salud en MMI≥7 | 0 |
 | Sedes educativas en MMI≥7 | 0 |
-| Kilometros de via en MMI≥7 | 0 km |
+| Kilómetros de vía en MMI≥7 | 0 km |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
@@ -31,8 +31,8 @@ Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la 
 | 5 | Pocito | `AR070070` | 6,0 | 65 mil |
 | 6 | Santa Lucía | `AR070098` | 6,0 | 51 mil |
 | 7 | Sarmiento | `AR070105` | 6,5 | 21 mil |
-| 8 | 9 De Julio | `AR070063` | 6,0 | 7.500 |
-| 9 | 25 De Mayo | `AR070126` | 6,0 | 670 |
+| 8 | 9 de Julio | `AR070063` | 6,0 | 7.500 |
+| 9 | 25 de Mayo | `AR070126` | 6,0 | 670 |
 | 10 | Zonda | `AR070133` | 6,5 | 650 |
 | 11 | Ullum | `AR070112` | 6,0 | 10 |
 | 12 | Albardón | `AR070007` | 6,0 | 5 |
@@ -66,7 +66,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
 - ShakeMap consumido: **v8**
 - Ground Failure consumido: **v4**
 - Manifiesto de exposición: `arg-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T23:16:57Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:46:39Z
 
 ## Advertencias
 
