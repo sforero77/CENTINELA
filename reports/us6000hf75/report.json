@@ -35,7 +35,7 @@
   "top_municipios": [
     {
       "adm2_id": "NI5535",
-      "nombre": "San Rafael Del Sur",
+      "nombre": "San Rafael del Sur",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -49,7 +49,7 @@
     },
     {
       "adm2_id": "NI5520",
-      "nombre": "Villa El Carmen",
+      "nombre": "Villa el Carmen",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -63,7 +63,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 0.0,
+    "pop_discrepancia_pct": null,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -85,6 +85,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-01T22:09:42Z",
+  "generado_utc": "2026-09-02T02:44:26Z",
   "pipeline_version": "0.1.0"
 }
