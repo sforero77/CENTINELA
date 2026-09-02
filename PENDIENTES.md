@@ -468,6 +468,28 @@ Lo que hay que resolver antes:
    verdad, que son dos cifras distintas y hoy no lo son.
 3. **Re-emitir los veintiuno** y actualizar la portada, como el 1-sep.
 
+### 2.1.decies Suomi-NPP se apaga el 1-nov-2026 y P5 lo consume
+
+**Abierto el 1-sep-2026.** Es el único pendiente del repositorio con **fecha y
+hora concretas**: NASA anuncia el cese de Suomi-NPP el 1 de noviembre de 2026 a
+las 13:00 UTC. P5 lee `SUOMI_VIIRS_C2` entre sus tres fuentes de FIRMS.
+
+No tumba el pipeline —quedan NOAA-20 y NOAA-21 con el mismo sensor VIIRS a
+375 m— pero sí baja la cadencia de revisita en un tercio, y la documentación de
+P5 afirma que se usan tres satélites. Las dos cosas dejan de ser ciertas ese día.
+
+**Lo que hay que hacer, en este orden:** comprobar antes de esa fecha que
+`SUOMI_VIIRS_C2` sigue respondiendo; quitarlo de las fuentes cuando deje de
+hacerlo; y corregir `docs/pipelines/p5-incendios.md`, que pasa a describir dos
+satélites y no tres.
+
+**Lo que lo vigila mientras tanto:** nada automático. `contract_drift.yml` mira
+la forma de las respuestas, no si una fuente se retira en una fecha anunciada.
+Un cron que compruebe la fecha sería más ruido que utilidad para un aviso único;
+lo que sí cierra el hueco es que esté escrito aquí, que es donde se mira.
+
+---
+
 ### 2.2 Coropletas r7/r6 del visor
 
 **Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salió primero de las

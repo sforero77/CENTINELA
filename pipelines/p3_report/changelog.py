@@ -17,7 +17,11 @@ Venezuela llego a v14— y quien ya leyo la versión anterior necesita saber
 
 from __future__ import annotations
 
-from ..common.formatting import format_count_prose, format_delta_prose
+from ..common.formatting import (
+    format_count_prose,
+    format_delta_prose,
+    format_number_es,
+)
 from .model import Report
 
 #: Cifras que se comparan, con su etiqueta. Es un subconjunto deliberado de
@@ -55,10 +59,13 @@ def build_changelog(anterior: Report | None, nuevo: Report) -> tuple[str, ...]:
         return ()
 
     versiones = _cambios_de_version(anterior, nuevo)
+    solucion = _cambios_de_solucion(anterior, nuevo)
     cifras = _cambios_de_cifras(anterior, nuevo)
 
-    if not versiones and not cifras:
+    if not versiones and not solucion and not cifras:
         return ()
+
+    versiones = [*versiones, *solucion]
 
     # Una version nueva sin ninguna cifra debajo se lee como un changelog a
     # medias. Que la revision de USGS no mueva nada publicable **es** el
@@ -84,6 +91,51 @@ def _cambios_de_version(anterior: Report, nuevo: Report) -> list[str]:
         if antes != ahora:
             cambios.append(f"{etiqueta}: v{antes} → v{ahora}")
     return cambios
+
+
+def _cambios_de_solucion(anterior: Report, nuevo: Report) -> list[str]:
+    """Magnitud, profundidad y epicentro, cuando USGS los revisa.
+
+    EL REPORTE PODIA TITULARSE M6,6 CON INTENSIDADES DE UN M7,2.
+
+    `mag`, `depth_km`, `lon` y `lat` no se refrescaban a proposito, y el motivo
+    escrito en `_refrescar_lugar` es bueno: reescribirlos en silencio borraria
+    el registro de que el sistema alguna vez dijo otra cosa. Pero no
+    refrescarlos deja el artefacto **internamente incoherente** —el titular de
+    una solucion y las cifras de otra— y eso es peor, porque nadie puede verlo.
+
+    La salida no es elegir entre las dos: es refrescar **y** registrarlo aqui,
+    que es exactamente para lo que existe el changelog. Asi el titular es el
+    vigente y el registro de que cambio sigue publicado.
+    """
+    cambios: list[str] = []
+    a, n = anterior.event, nuevo.event
+    if abs(a.mag - n.mag) >= 0.05:
+        cambios.append(f"Magnitud: M{format_number_es(a.mag, 1)} → M{format_number_es(n.mag, 1)}")
+    if abs(a.depth_km - n.depth_km) >= 0.5:
+        cambios.append(
+            f"Profundidad: {format_number_es(a.depth_km, 0)} → {format_number_es(n.depth_km, 0)} km"
+        )
+    # El epicentro se mide en km y no en grados: "0,03°" no le dice nada a
+    # nadie, y a esta latitud son tres kilometros.
+    dkm = _distancia_km(a.lat, a.lon, n.lat, n.lon)
+    if dkm >= 1.0:
+        cambios.append(f"Epicentro: reubicado {format_number_es(dkm, 0)} km")
+    return cambios
+
+
+def _distancia_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Haversine. Solo para decir cuanto se movio un epicentro."""
+    import math
+
+    r = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+    )
+    return 2 * r * math.asin(math.sqrt(a))
 
 
 def _cambios_de_cifras(anterior: Report, nuevo: Report) -> list[str]:

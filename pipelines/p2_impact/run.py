@@ -475,7 +475,7 @@ def _publicar_preliminar(
 def _refrescar_lugar(
     state: EventState, detail: dict[str, Any], events_dir: Path | None
 ) -> EventState:
-    """Vuelve a leer el lugar del detail y lo guarda si cambio.
+    """Vuelve a leer del detail lo que USGS puede revisar, y lo guarda si cambio.
 
     `lugar` es lo unico del `event_state` que es **descripcion y no medida**: no
     identifica el evento ni entra en ningun calculo, solo se lee. Y depende del
@@ -487,22 +487,47 @@ def _refrescar_lugar(
     —el unico sitio que lo traducia— solo corre cuando el estado **no** existe.
     Reemitir arreglaba las cifras y dejaba el titulo como estaba.
 
-    Lo demas no se refresca: `mag`, `origen_utc`, `lon` y `lat` son lo que el
-    sistema afirma haber visto, y reescribirlos en cada corrida borraria el
-    registro de que alguna vez dijo otra cosa.
+    Y DESDE HOY TAMBIEN LA SOLUCION. `mag`, `depth_km`, `lon` y `lat` no se
+    refrescaban por una razon buena —reescribirlos en silencio borraria el
+    registro de que el sistema alguna vez dijo otra cosa— pero el precio era
+    peor: un M6,6 revisado a M7,2 seguia titulandose M6,6 en el markdown, en el
+    PNG y en el indice, **con las intensidades de la solucion revisada**. El
+    artefacto quedaba internamente incoherente, y eso nadie puede verlo.
+
+    No hay que elegir entre las dos cosas: se refresca **y** se registra.
+    `changelog._cambios_de_solucion` publica "Magnitud: M6,6 → M7,2" en el
+    propio reporte, asi que el titular es el vigente y el registro de que
+    cambio sigue a la vista.
+
+    `origen_utc` sigue sin tocarse: identifica el evento y es la referencia de
+    la latencia.
     """
     try:
         nuevo = traducir_lugar(str(detail["properties"].get("place") or ""))
     except (KeyError, TypeError):
         return state
-    if not nuevo or nuevo == state.lugar:
+    solucion: dict[str, float] = {}
+    props = detail.get("properties") or {}
+    geo = (detail.get("geometry") or {}).get("coordinates") or []
+    for campo, valor in (
+        ("mag", props.get("mag")),
+        ("lon", geo[0] if len(geo) > 0 else None),
+        ("lat", geo[1] if len(geo) > 1 else None),
+        ("depth_km", geo[2] if len(geo) > 2 else None),
+    ):
+        if isinstance(valor, int | float) and abs(float(valor) - getattr(state, campo)) > 1e-9:
+            solucion[campo] = float(valor)
+
+    if (not nuevo or nuevo == state.lugar) and not solucion:
         return state
+    if nuevo and nuevo != state.lugar:
+        solucion["lugar"] = nuevo  # type: ignore[assignment]
 
     _log.info(
-        "lugar actualizado desde el detail",
-        extra={"context": {"usgs_id": state.usgs_id, "antes": state.lugar, "ahora": nuevo}},
+        "el detail trae una solución revisada",
+        extra={"context": {"usgs_id": state.usgs_id, "campos": sorted(solucion)}},
     )
-    refrescado = replace(state, lugar=nuevo)
+    refrescado = replace(state, **solucion)  # type: ignore[arg-type]
     refrescado.save(events_dir)
     return refrescado
 
