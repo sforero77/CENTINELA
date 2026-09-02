@@ -269,3 +269,70 @@ def test_la_alerta_de_pager_se_traduce(reporte_completo) -> None:  # type: ignor
     md = render_markdown(reporte_completo)
     assert "naranja" in md, "la alerta de PAGER sigue sin traducirse"
     assert "**orange**" not in md
+
+
+# --- La familia que la lista negra no cubria ---------------------------------
+
+#: Interrogativos sin tilde. **No pueden ir en la lista negra**: `que`, `como`,
+#: `cuando` y `donde` son palabras corrientes sin tilde —«el fichero que
+#: falta», «cuando llegue el sismo»— y prohibirlas a secas llenaria el
+#: repositorio de falsos positivos.
+#:
+#: Se vigilan por colocacion, igual que ya se hace con `publico`/`publica`: solo
+#: cuentan cuando encabezan un titulo, van tras `¿`, o preceden a un
+#: infinitivo. Ahi son interrogativos y llevan tilde siempre.
+#:
+#: Habia dieciseis en el repositorio, entre ellos «## Que informa CENTINELA» en
+#: el documento cuya unica funcion es decir que informa y que no.
+_INTERROGATIVOS: dict[str, str] = {
+    "Que": "Qué",
+    "Como": "Cómo",
+    "Cuando": "Cuándo",
+    "Cuanto": "Cuánto",
+    "Cuantos": "Cuántos",
+    "Cuantas": "Cuántas",
+    "Donde": "Dónde",
+    "Quien": "Quién",
+    "Quienes": "Quiénes",
+    "Cual": "Cuál",
+    "Cuales": "Cuáles",
+}
+
+
+def _interrogativos_sin_tilde(texto: str) -> list[str]:
+    """Las lineas donde un interrogativo aparece sin su tilde."""
+    import re
+
+    formas = "|".join(_INTERROGATIVOS)
+    # Titulo, tras signo de apertura, o delante de un infinitivo.
+    patrones = [
+        re.compile(rf"^#+\s+({formas})\b", re.MULTILINE),
+        re.compile(rf"¿\s*({formas})\b"),
+        re.compile(rf"(?<![a-záéíóúñ])({formas})\s+[a-záéíóúñ]+(?:ar|er|ir)(?:se)?\b"),
+    ]
+    fallos = []
+    for linea in texto.splitlines():
+        for patron in patrones:
+            hallado = patron.search(linea)
+            if hallado:
+                mala = hallado.group(1)
+                fallos.append(
+                    f"«{mala}» debería ser «{_INTERROGATIVOS[mala]}»: {linea.strip()[:70]}"
+                )
+                break
+    return fallos
+
+
+@pytest.mark.parametrize("ruta", DOCUMENTOS, ids=[str(d) for d in DOCUMENTOS])
+def test_los_interrogativos_llevan_tilde(ruta: Path) -> None:
+    """«## Que informa CENTINELA» en el documento que define qué informa.
+
+    Se comprueba por colocación y no por lista negra, porque estas palabras son
+    correctas sin tilde en su otro uso: «el fichero que falta» y «cuando llegue
+    el sismo» no llevan ninguna. Solo se marcan donde el uso es interrogativo.
+    """
+    completa = RAIZ / ruta
+    if not completa.is_file():
+        pytest.skip(f"{ruta} no existe")
+    fallos = _interrogativos_sin_tilde(completa.read_text(encoding="utf-8"))
+    assert not fallos, f"{ruta}:\n  " + "\n  ".join(fallos)

@@ -59,7 +59,7 @@ sirviendo— pero si para *reconstruir*.
 
 ---
 
-## 2. Que revisar y cada cuanto
+## 2. Qué revisar y cada cuánto
 
 ### Semanal, un minuto
 
@@ -80,9 +80,9 @@ El sistema abre issues solo. Cada etiqueta significa algo distinto:
 | `contrato` | Una fuente cambio de forma: USGS, Overture o WorldPop | Antes del próximo sismo |
 | `pipeline` | P2 fallo procesando un evento **real** | Inmediata: hay un sismo sin reporte |
 
-### Cuando llegue el primer sismo M≥5.5 en LATAM
+### Al llegar el primer sismo M≥5.5 en LATAM
 
-Es lo que cierra Fase 0. Que esperar:
+Es lo que cierra Fase 0. Qué esperar:
 
 1. El trigger lo detecta en la siguiente corrida (≤10 min, más la demora del
    cron de GitHub, que su documentación situa entre 5 y 30 min).

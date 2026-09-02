@@ -161,3 +161,47 @@ def test_la_portada_publica_la_misma_tabla_que_el_documento(
         "el evento, la tabla de §«El contraste con PAGER» hay que actualizarla "
         "en README.md y en docs/PARA_INSTITUCIONES.md a la vez."
     )
+
+
+# --- Acotar no es coincidir --------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("campo", "umbral_inferior", "umbral_superior"),
+    ACOTAMIENTOS,
+    ids=[c for c, _, _ in ACOTAMIENTOS],
+)
+def test_la_cifra_cae_en_el_cuarto_inferior_del_intervalo(
+    campo: str,
+    umbral_inferior: float,
+    umbral_superior: float,
+    centinela: dict[str, float],
+    pager: dict[float, int],
+) -> None:
+    """Lo que se puede afirmar sin elegir un metodo de interpolacion.
+
+    EL SUPERLATIVO GASTABA LA CREDIBILIDAD QUE QUERIA COMPRAR. Los documentos
+    decian que el acotamiento era «el unico acuerdo aritmeticamente posible».
+    Pero el intervalo de MMI≥7 va de 1,1 a 6,5 millones —un factor de 5,8— y
+    dentro cabe casi cualquier cifra: caer dentro es una condicion necesaria, no
+    una validacion.
+
+    Lo que si dice algo es **donde** cae. CENTINELA queda al 17 % y al 24 %
+    contando desde abajo: sistematicamente por debajo del punto medio y siempre
+    en la misma direccion. Cuanto por debajo depende de como se interpole entre
+    las filas de PAGER —del 11 % al 37 % segun sea lineal o logaritmica— y por
+    eso no se publica ninguna de esas dos cifras como si fuera la respuesta.
+
+    Esta prueba fija lo unico independiente del metodo. Si un ShakeMap nuevo
+    moviera la cifra a la mitad alta del intervalo, la afirmacion publicada
+    dejaria de ser cierta y hay que reescribirla.
+    """
+    nuestra = centinela[campo]
+    piso, techo = pager[umbral_inferior], pager[umbral_superior]
+    posicion = (nuestra - piso) / (techo - piso)
+
+    assert 0.0 <= posicion <= 0.25, (
+        f"{campo} cae al {posicion:.0%} del intervalo de PAGER, y los documentos "
+        f"publican que queda «en el cuarto inferior». Si el ShakeMap cambio, hay "
+        f"que reescribir esa frase en README.md y docs/PARA_INSTITUCIONES.md."
+    )

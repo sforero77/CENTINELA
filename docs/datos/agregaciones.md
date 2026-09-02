@@ -114,9 +114,16 @@ sería mayor que la señal.
 
 ### Ground Failure
 
-Se muestrea el ráster de probabilidad por celda. Una probabilidad ≥ **0,10**
-cuenta como "alta" para el conteo de población expuesta. `NaN` significa fuera
-de la huella del modelo — no cero, no "sin riesgo".
+Se muestrea el ráster por celda. Un valor ≥ **0,10** cuenta como "alto" para el
+conteo de población expuesta. `NaN` significa fuera de la huella del modelo — no
+cero, no "sin riesgo".
+
+El ráster de licuefacción **no es probabilidad**: el producto de USGS deriva
+por calibración una **cobertura areal** —la fracción de la celda que se espera
+cubierta por manifestaciones de licuefacción—, y el de deslizamiento sí es
+probabilidad. Llamarlas igual afirma de una lo que sólo vale para la otra, y el
+`report.md` ya las distingue (`GF_UNIDAD`). El umbral 0,10 se aplica a las dos,
+pero significa cosas distintas en cada una.
 
 ## La banda de discrepancia
 
@@ -129,15 +136,16 @@ Es el reconocimiento explícito de que la cifra tiene un intervalo, en un
 producto cuyo riesgo principal es que alguien lea un número redondo como si
 fuera un censo.
 
-## Ocho de diecinueve eventos no llegan a MMI ≥ 7
+## Once de veintiún eventos no llegan a MMI ≥ 7
 
 Correr el catálogo regional entero enseñó algo que ninguna prueba sintética
-habría encontrado: **ocho de los diecinueve eventos no alcanzan MMI ≥ 7 sobre
-población**. Son los profundos y los de mar adentro, que en esta región son la
+habría encontrado: **once de los veintiún eventos no alcanzan MMI ≥ 7 sobre
+población** —eran ocho de diecinueve cuando se midió por primera vez, y la
+proporción se ha mantenido al crecer el catálogo—. Son los profundos y los de mar adentro, que en esta región son la
 mitad. Tehuantepec 2017 —M8,2, 98 muertos— tiene su máximo sobre población
 mexicana en **MMI 6,5**.
 
 Hasta que se corrieron, el producto daba por supuesto que MMI ≥ 7 era *la*
-banda y publicaba para esos ocho un titular de "0 personas" con una tabla de
+banda y publicaba para esos once un titular de "0 personas" con una tabla de
 municipios ordenada alfabéticamente. Ahora **se titula con la banda que el
 evento alcanzó de verdad**.

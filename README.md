@@ -41,7 +41,7 @@ Tres cosas, y las tres se pueden citar de documentos del propio USGS:
   Es la razón estructural por la que este proyecto tiene que existir aparte.
 * **PAGER no cuenta escuelas, hospitales ni vías.** Está en su propio FAQ.
   Estima población y pérdidas; el equipamiento expuesto no es su pregunta.
-* **PAGER no considera deslizamiento ni licuefacción.** Cita literal de
+* **PAGER no considera deslizamiento ni licuefacción _en sus estimaciones de pérdida_.** Cita literal de
   onePAGER: *«PAGER does not consider secondary effects such as landslides,
   liquefaction, and tsunami in loss estimates at this time»*. CENTINELA sí
   consume el producto Ground Failure — con las cautelas que cada reporte
@@ -117,8 +117,16 @@ PAGER acotan por arriba y por abajo:
 | MMI ≥ 7,0 | — | **2.424.287** |
 | MMI ≥ 7,5 | 1.126.902 | — |
 
-Es el único acuerdo aritméticamente posible entre dos convenciones distintas, y
-`tests/unit/test_contraste_con_pager.py` falla si deja de cumplirse. El detalle,
+El acotamiento se cumple, y `tests/unit/test_contraste_con_pager.py` falla si
+deja de cumplirse. Pero **acotar no es coincidir**: el intervalo de MMI≥7 va de
+1,1 a 6,5 millones, un factor de 5,8, y casi cualquier cifra cabría dentro.
+
+**En los dos casos CENTINELA queda en el cuarto inferior del intervalo** —al
+17 % y al 24 % contando desde abajo—, es decir sistemáticamente por debajo del
+punto medio y siempre en la misma dirección. Eso es lo que se puede afirmar sin
+elegir un método: cuánto por debajo depende de cómo se interpole entre las filas
+de PAGER, y la respuesta va del 11 % al 37 % según se haga lineal o logarítmica.
+Publicar una sola de esas cifras sería elegir la que conviene. El detalle,
 con la fuente de cada columna, está en
 [`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md).
 
@@ -280,7 +288,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.318 pruebas** sin red, más **101 de navegador** que abren el visor en un
+**1.369 pruebas** sin red, más **101 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 
@@ -342,7 +350,7 @@ Y los transversales:
 - [`PENDIENTES.md`](PENDIENTES.md) — qué falta, quién puede hacerlo y en qué orden
 - [`docs/GARANTIAS.md`](docs/GARANTIAS.md) — qué está probado y qué no
 - [`docs/AUDITORIA.md`](docs/AUDITORIA.md) — la auditoría del 25-ago-2026: qué se encontró y cómo se cerró
-- [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md) — las siete formas en que este sistema falla
+- [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md) — las once formas en que este sistema falla
 - [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) — las reglas de código del proyecto, con el caso real de cada una
 - [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificación técnica v0.10
 - [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — cómo publicar el activo y por qué no va en git

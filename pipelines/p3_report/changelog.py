@@ -31,8 +31,11 @@ CIFRAS_COMPARADAS: tuple[tuple[str, str], ...] = (
     ("bld_mmi7p", "Edificaciones en MMI≥7"),
     ("health_mmi7p", "Sedes de salud en MMI≥7"),
     ("edu_mmi7p", "Sedes educativas en MMI≥7"),
-    ("pop_ls_alta", "Población en deslizamiento alto"),
-    ("pop_lq_alta", "Población en licuefacción alta"),
+    # La palabra importa y son dos unidades distintas: deslizamiento es
+    # probabilidad y licuefaccion es cobertura areal. `GF_UNIDAD` en
+    # `markdown.py` ya las separa; aqui decian las dos "alto" a secas.
+    ("pop_ls_alta", "Población en probabilidad alta de deslizamiento"),
+    ("pop_lq_alta", "Población en cobertura areal alta por licuefacción"),
 )
 
 

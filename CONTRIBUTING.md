@@ -1,7 +1,10 @@
-# Como contribuir
+# Cómo contribuir
 
-Gracias por venir. Este proyecto existe porque a la región le falto capacidad
-propia dos veces en dos meses. Toda ayuda cuenta.
+Gracias por venir. Capacidad regional hay —el README la enumera con nombres— y
+lo que faltó dos veces en dos meses fue **la pieza del medio**: un activo de
+exposición ya construido que convierta la intensidad en cuánta gente y qué
+infraestructura, por municipio, el mismo día. Eso es lo que este proyecto
+intenta. Toda ayuda cuenta.
 
 ## Arranque rápido
 

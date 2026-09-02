@@ -34,9 +34,12 @@ flowchart TB
 
 ## Detecciones, no incendios
 
-Los tres satélites llevan el mismo sensor VIIRS a 375 m y se reparten las horas
-de paso: usar los tres no es redundancia, es **cobertura temporal**. Pero
-significa que el mismo fuego produce varias filas.
+Los tres satélites llevan el mismo sensor VIIRS a 375 m. **No se reparten las
+horas del día**: van en el mismo plano heliosíncrono, separados unos 50 minutos
+en órbita, así que sus pasadas caen casi a la misma hora solar. Lo que aportan
+los tres no es cobertura horaria sino más oportunidades de ver el mismo fuego
+—y de que una nube no lo tape en las tres—. Y significa que el mismo fuego
+produce varias filas.
 
 Medido el 26-ago-2026, antes del pico de temporada:
 

@@ -114,7 +114,7 @@ la cadencia real para que la próxima decisión salga de datos.
 La ruta que lo arregla —cron externo que dispare `repository_dispatch`— está
 documentada y sin hacer.
 
-### Que un reporte publicado sea correcto
+### La corrección de una cifra publicada
 
 Los asserts de §6.4 y el contraste con evaluación de daño externa cubren lo
 comprobable. Pero **si P2 publica una cifra equivocada y plausible, nadie avisa**.

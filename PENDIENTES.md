@@ -1163,7 +1163,7 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 
 | | |
 |---|---|
-| [`docs/OPERACION.md`](docs/OPERACION.md) | **Que vigilar ahora que el sistema corre: relojes, fallos silenciosos, deuda por país** |
+| [`docs/OPERACION.md`](docs/OPERACION.md) | **Qué vigilar ahora que el sistema corre: relojes, fallos silenciosos, deuda por país** |
 | [`docs/AUDITORIA.md`](docs/AUDITORIA.md) | **La auditoría del 25 y 26 de agosto: los 27 hallazgos, con evidencia y criterio de aceptación** |
 | [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) | Las reglas de código del proyecto, con el caso real que justifica cada una |
 | [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md) | Los pasos de arranque, por si hay que repetirlos |
@@ -1171,6 +1171,6 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 | [`VERIFICACIONES.md`](VERIFICACIONES.md) | Como se verifico cada fuente, con evidencia |
 | [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) | Publicar el activo y por que no va en git |
 | [`DISCLAIMER.md`](DISCLAIMER.md) | Que informa y que no informa el sistema |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Como contribuir, rol de mantenedor por país |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Cómo contribuir, rol de mantenedor por país |
 | [`GOVERNANCE.md`](GOVERNANCE.md) | Roles, decisiones, frontera comunidad ↔ empresa |
 | [`LICENSES/`](LICENSES/) | La regla de los tres cubos |

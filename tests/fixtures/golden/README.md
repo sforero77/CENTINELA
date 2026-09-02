@@ -9,7 +9,7 @@ el sistema pueda afirmar «esto habría salido a las 08:3X del 10 de agosto».
 | `venezuela_2026_06_24/` | M7.5, 2026-06-24T22:05:04Z, Catia La Mar, 10 km | `us6000t7zp` |
 | | M7.2, 2026-06-24T22:04:31Z, San Felipe, 10 km | `us6000t7zc` |
 
-## Como se obtuvieron
+## Cómo se obtuvieron
 
 ```bash
 FD="https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson"
