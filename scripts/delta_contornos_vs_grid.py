@@ -79,8 +79,20 @@ def leer_grid(ruta: pathlib.Path) -> tuple[np.ndarray, float, float, float, floa
     lat_min, lat_max = float(attrs["lat_min"]), float(attrs["lat_max"])
     nlon, nlat = int(attrs["nlon"]), int(attrs["nlat"])
 
+    # CUANTAS COLUMNAS TRAE LA REJILLA SE PREGUNTA, NO SE SUPONE.
+    #
+    # Asumir diez —las que trae un ShakeMap moderno— revienta contra los
+    # historicos: el de Muisne (2016, v1) trae otras, y el reshape falla con un
+    # "cannot reshape array of size N". El propio fichero declara sus campos.
+    campos = texto.count("<grid_field")
+    columna_mmi = next(
+        int(i) - 1
+        for i, nombre in re.findall(r'<grid_field index="(\d+)" name="(\w+)"', texto)
+        if nombre.upper() == "MMI"
+    )
+
     inicio = texto.index("<grid_data>") + len("<grid_data>")
-    datos = np.fromstring(texto[inicio : texto.index("</grid_data>")], sep=" ").reshape(-1, 10)
+    datos = np.fromstring(texto[inicio : texto.index("</grid_data>")], sep=" ").reshape(-1, campos)
     if datos.shape[0] != nlon * nlat:
         raise ValueError(f"{datos.shape[0]} filas, la especificacion dice {nlon * nlat}")
     if not (
@@ -91,7 +103,7 @@ def leer_grid(ruta: pathlib.Path) -> tuple[np.ndarray, float, float, float, floa
     ):
         raise ValueError("el orden de las filas no es el que declara grid_specification")
 
-    return datos[:, 2].reshape(nlat, nlon), lon_min, lon_max, lat_min, lat_max, nlon, nlat
+    return datos[:, columna_mmi].reshape(nlat, nlon), lon_min, lon_max, lat_min, lat_max, nlon, nlat
 
 
 def muestrear(

@@ -115,15 +115,23 @@ Estas no están cerradas y viven en [`PENDIENTES.md`](../../PENDIENTES.md):
 - **`cont_mmi.json` en vez de `grid.xml`: medido, y el argumento no se
   sostiene.** Era la crítica metodológica más seria que este sistema podía
   recibir, y la justificación era de rendimiento, no científica. El 1-sep-2026 se
-  midió sobre el Chocó, con el criterio fijado de antemano —3 %—: MMI≥6 coincide
-  (**+0,3 %**), pero **MMI≥7 se separa un +11,8 %**, unas 285.000 personas.
+  midió sobre **cuatro eventos**, con el criterio fijado de antemano —3 %—:
+  cinco de las ocho medidas se salen, y los cuatro se salen en al menos un
+  umbral. En MMI≥7: Chocó **+11,8 %**, Venezuela **+34,0 %** y **+31,1 %**,
+  Muisne +1,5 % —pero +11,0 % en MMI≥6—.
 
   El mecanismo importa más que la cifra: `cont_mmi.json` describe el borde de
   MMI 7 con **103 vértices y paso mediano de 4,2 km**, sobre una rejilla de
   **1 km**. Es un producto de dibujo consumido como producto de análisis. No se
   pierde área —cero celdas sin contorno— pero el valor asignado difiere, y donde
   el borde cruza una ciudad densa decide si la ciudad cuenta: el 68 % del delta
-  es Manizales.
+  del Chocó es Manizales.
+
+  El signo es siempre el mismo —la rejilla da más, como predice el suelo de
+  banda— y en los cuatro eventos no se pierde área. Lo que no se predice es la
+  **magnitud**: va del 1,5 % al 34 % y no sigue al grosor del contorno. Por eso
+  no cabe publicar una corrección ni una banda de error; no hay factor estable
+  que aplicar.
 
   Y el coste que se quiso evitar no existe: la medición completa tarda **6
   segundos**. Cambiar el método queda anotado en `PENDIENTES.md` §2.1.nonies —no

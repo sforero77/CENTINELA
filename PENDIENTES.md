@@ -366,11 +366,39 @@ quedan sin contorno. El relleno cubre todo lo que tiene que cubrir; lo que falla
 es el valor que asigna, no su alcance. Son dos fallos muy distintos y convenía
 separarlos.
 
-**Dónde duele.** El 68 % del delta es **un solo municipio**: Manizales, capital
-de Caldas, que queda justo sobre la isolínea. El reporte publicado le atribuye
-1.932 personas en MMI≥7; muestreando la rejilla salen unas 219.000. Villamaría,
-al lado, pasa de 0 a 29.441. Cuando el borde cruza una ciudad densa, el método
-decide si la ciudad cuenta.
+**Dónde duele.** El 68 % del delta del Chocó es **un solo municipio**:
+Manizales, capital de Caldas, justo sobre la isolínea. El reporte publicado le
+atribuye 1.932 personas en MMI≥7; muestreando la rejilla salen unas 219.000.
+Villamaría, al lado, pasa de 0 a 29.441. Cuando el borde cruza una ciudad densa,
+el método decide si la ciudad cuenta.
+
+**Y no era Manizales.** Al ver ese reparto se anotó que la magnitud quizá no se
+generalizara. Medidos tres eventos más, esa cautela era falsa:
+
+| Evento | Paso del contorno / rejilla | MMI≥6 | MMI≥7 |
+|---|---|---:|---:|
+| Chocó (v8) | 4,2 / 1,00 km | +0,3 % | **+11,8 %** |
+| Venezuela `us6000t7zp` (v15) | 12,6 / 1,85 km | +2,6 % | **+34,0 %** |
+| Venezuela `us6000t7zc` (v9) | 12,2 / 1,85 km | **+32,2 %** | **+31,1 %** |
+| Muisne `us20005j32` (v1) | 18,8 / 1,85 km | **+11,0 %** | +1,5 % |
+
+**Cinco de las ocho medidas se salen del 3 %, y los cuatro eventos se salen en
+al menos un umbral.** Tres cosas se repiten en los cuatro:
+
+- **El signo.** La rejilla siempre da más. Es lo que predice el suelo de banda, y
+  confirma que el sesgo va en una sola dirección —la misma que §2.1.quinquies ya
+  declaraba—.
+- **Cero pérdida de área**, en los cuatro. El relleno cubre lo que debe; falla el
+  valor.
+- **La magnitud no se predice.** Va de +1,5 % a +34,0 % y no sigue al paso del
+  contorno: Muisne tiene los contornos más gruesos (18,8 km) y el menor desvío en
+  MMI≥7. Depende de dónde caiga el borde respecto a la gente, que cambia con cada
+  sismo.
+
+Eso último es lo que cierra la discusión: **no se puede publicar una corrección
+ni una banda de error**, porque no hay un factor estable que aplicar. O se
+muestrea el campo, o cada evento arrastra un desvío desconocido de entre el 1 %
+y el 34 %.
 
 **Un tercer efecto, del mismo mecanismo.** El `mmi_max` más alto que publica
 el reporte es **7,5** —el contorno más alto que trae `cont_mmi.json`— y el campo
