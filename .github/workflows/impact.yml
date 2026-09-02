@@ -294,7 +294,32 @@ jobs:
           # fallo, y encima uno que solo se nota cuando ya hay un problema.
           gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
           gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
-          CUERPO="El pipeline de impacto fallo. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          gh issue create --title "P2 fallo para $USGS_ID" \
+          # UNA INCIDENCIA POR EVENTO, NO UNA POR FALLO.
+          #
+          # El vigia reintenta cada cinco minutos, asi que un evento que falla
+          # abre una incidencia nueva cada cinco minutos. El 2-sep-2026 fueron
+          # **seis en once minutos para dos eventos**, todas describiendo la
+          # misma causa. Una alarma que se repite se lee como ruido y se
+          # silencia entera, con lo que la siguiente que importe tampoco se ve.
+          #
+          # `frescura.yml` ya resolvio esto: buscar por titulo exacto, comentar
+          # si existe y crear solo si no. Se busca por titulo y no por etiqueta
+          # porque la creacion tiene un camino de respaldo **sin etiquetas**
+          # para cuando `gh label` falla, y filtrar por etiqueta dejaria
+          # escapar justo esas.
+          TITULO="P2 fallo para $USGS_ID"
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            echo "Ya hay una abierta (#$ABIERTA): se anota y no se duplica."
+            gh issue comment "$ABIERTA" --body "Vuelve a fallar. Corrida: $CORRIDA"
+            exit 0
+          fi
+
+          CUERPO="El pipeline de impacto fallo. Corrida: $CORRIDA"
+          gh issue create --title "$TITULO" \
                           --label "pipeline,automatico" --body "$CUERPO" \
-            || gh issue create --title "P2 fallo para $USGS_ID" --body "$CUERPO"
+            || gh issue create --title "$TITULO" --body "$CUERPO"
