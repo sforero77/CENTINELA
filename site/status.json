@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-02T02:40:50Z",
+  "generado_utc": "2026-09-02T02:41:07Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -113,8 +113,8 @@
     {
       "usgs_id": "us1000c2zy",
       "origen_utc": "2018-01-10T02:51:33Z",
-      "publicado_utc": "2026-09-01T23:15:48Z",
-      "minutos": 4545864.2,
+      "publicado_utc": "2026-09-02T02:41:05Z",
+      "minutos": 4546069.5,
       "backtest": true
     },
     {
