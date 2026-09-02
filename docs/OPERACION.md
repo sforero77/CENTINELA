@@ -13,7 +13,7 @@ para detectar cosas que no producen ningún error.
 
 Cuatro cosas caducan solas, sin avisar. Están por orden de cercanía.
 
-| Cada | Que caduca | Que pasa si se pasa | Quien avisa |
+| Cada | Qué caduca | Qué pasa si se pasa | Quién avisa |
 |---|---|---|---|
 | **~2 meses** | El release de Overture fijado en los manifests | `make country` deja de poder reconstruir: Overture solo conserva **dos** releases y la URL desaparece | La prueba nocturna de contrato abre un issue |
 | **60 días** | Los workflows programados, si no hay actividad en el repo | El trigger **deja de mirar**, en silencio. Es el modo de falla más probable del proyecto | `keepalive.yml` late el día 1 y el 15; healthchecks.io avisa si aun así se cae |
@@ -113,7 +113,7 @@ requerida suma cero en todo el país.
 
 **Dos fuentes de lo mismo cuentan doble.** HOTOSM y healthsites.io derivan las
 dos de OSM: el 96,6 % de los puntos de la segunda son la misma sede. La
-deduplicacion por proximidad (20 m) esta en `aggregate_points_to_h3`, y el
+deduplicacion por proximidad (20 m) está en `aggregate_points_to_h3`, y el
 orden del manifest importa — la principal va primera.
 
 **Una caja envolvente corta pierde territorio en silencio.** Recorta teselas y
@@ -164,7 +164,7 @@ no debe automatizarse.
 **Una función escrita no es una función conectada.** El cálculo del reporte
 preliminar (RF-03) estaba escrito, comentado y probado, y no lo llamaba nadie:
 el evento pasaba a estado `preliminar` y no se publicaba nada. Ninguna prueba lo
-veia porque todas probaban la función, no el camino. Mismo patrón que las tres
+veía porque todas probaban la función, no el camino. Mismo patrón que las tres
 capas del activo que se agregaban a tablas que nadie leia. Cuando algo "ya esta
 hecho", conviene comprobar quien lo llama.
 
@@ -276,7 +276,7 @@ site/                        El visor. Sin backend, sin llaves de API.
 data/build/                  Efimero, NO va en git. Se pierde en cada clon.
 ```
 
-**El activo de exposición no esta en el repositorio.** Vive en los Releases
+**El activo de exposición no está en el repositorio.** Vive en los Releases
 (`exposure-col-<fecha>`) porque pesa 17 MB por país y crecera. Esa copia, con su
 `sha256`, es la que sostiene la reproducibilidad — no la URL de origen, que
 caduca.

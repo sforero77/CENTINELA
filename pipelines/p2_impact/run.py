@@ -467,6 +467,7 @@ def _publicar_preliminar(
     vuelve a pasar por aqui en quince minutos. Se registra y se sigue.
     """
     from .pipeline import (
+        ExposureCountryMismatchError,
         build_preliminary_report,
         compute_preliminary,
         manifiesto_del_activo,
@@ -480,6 +481,13 @@ def _publicar_preliminar(
             state, products, por_radio, manifest_id=manifiesto_del_activo(con, manifest_id)
         )
         escritos = write_report_bundle(reporte, [], reports_root=reports_root)
+    except ExposureCountryMismatchError:
+        # LA UNICA QUE NO SE TRAGA. No es un fallo del preliminar: es la senal
+        # de que el activo es de otro pais, y quien tiene que actuar es el
+        # orquestador probando el siguiente candidato. Tragarsela aqui deja
+        # `run_impact` saliendo con exito y el bucle de `impact.yml` cerrado en
+        # el primer candidato, que es como se publica un cero de otro pais.
+        raise
     except Exception as exc:
         _log.warning(
             "no se pudo publicar el preliminar; se reintenta en la proxima corrida",

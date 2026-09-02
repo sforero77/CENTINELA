@@ -71,7 +71,7 @@ feed horario ya no alcanza; el diario garantiza que no se pierda nada. Los
 duplicados se descartan por `usgs_id`.
 
 > `USGS_FDSN_EVENT` existe en las constantes pero **está prohibido en el camino
-> crítico**: sólo para backtests e históricos. El propio USGS desaconseja el
+> crítico**: solo para backtests e históricos. El propio USGS desaconseja el
 > polling a FDSN para aplicaciones automatizadas (D7).
 
 ## Los observados: la prueba de que el vigía miró
@@ -113,7 +113,7 @@ eventos de los últimos 90 días **por su identificador**, sin depender del feed
 ## Idempotencia (RF-02)
 
 Correr P1 dos veces sobre el mismo feed no crea trabajo duplicado. El estado
-vive en `events/<usgs_id>.json` y sólo `descartado` es terminal: un evento ya
+vive en `events/<usgs_id>.json` y solo `descartado` es terminal: un evento ya
 publicado se **revisita** en cada corrida por si USGS sacó un ShakeMap nuevo,
 y es P2 quien decide si hay trabajo real.
 

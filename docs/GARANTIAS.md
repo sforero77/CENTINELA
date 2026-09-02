@@ -79,8 +79,11 @@ Tres cosas que ese ensayo dejó demostradas de paso:
   reconstrucción manual, con un activo distinto por debajo.
 - **El changelog de RF-04 no inventa cambios.** Detectó que nada se movía y no
   anunció nada.
-- **El desfase de versión es visible.** El reporte declara `col-v0.5` porque el
-  activo se construyó antes del bump a `v0.6`, exactamente como estaba escrito.
+- **El desfase de versión es visible.** El reporte declaró `col-v0.5` con
+  `COL.yaml` ya en `v0.6`, porque el activo se construyó antes del bump:
+  exactamente como estaba escrito. Desde que P2 lee `src_manifest` del propio
+  parquet, esa declaración sale del activo consumido y no de un argumento del
+  CLI, así que ya no puede desviarse por copia.
 
 Lo que sigue sin ejercitarse es la **cadena completa desde el feed**: que el
 vigía detecte un sismo nuevo y despache P2 solo. Eso necesita un M≥5,5 real.
@@ -102,17 +105,24 @@ publicado.
 
     objetivo del sistema      p50 ≤ 60 min, origen → reporte publicado
     cadencia del vigía sola   p50 95 min · p90 358 · peor 663
+                              (27-ago-2026, con el cron de GitHub como
+                              único disparador)
 
-**Solo la detección se come más que el presupuesto entero.** Esto no se cumple
-hoy y depende de la cola de GitHub Actions, que no controlamos.
+**Con el cron de GitHub solo, la detección se comía más que el presupuesto
+entero.** Medido el 27-ago: el repositorio recibe unos pocos turnos de cron **al
+día**, repartidos entre los cinco workflows programados. El vigía bajó de `*/10`
+a `*/30` para dejar de acaparar una cola que no podía ganar.
 
-Medido el 27-ago: el repositorio recibe unos pocos turnos de cron **al día**,
-repartidos entre los cinco workflows programados. El vigía bajó de `*/10` a
-`*/30` para dejar de acaparar una cola que no podía ganar, y `/status` publica
-la cadencia real para que la próxima decisión salga de datos.
+La ruta que lo arregla —un cron externo que dispare `repository_dispatch`— está
+hecha desde el 31-ago-2026 y despacha cada cinco minutos; el cron de GitHub
+quedó de respaldo. Los primeros latidos con el disparador nuevo dan **p50 5,0
+min · p90 5,0 · peor 5,0**, o sea la cadencia declarada, exactamente. Son pocos
+—la serie se reinició el 1-sep-2026 al re-emitir el catálogo entero— así que
+valen como orden de magnitud y no como percentil estable, y la cifra de arriba
+se conserva por lo que documenta: lo que daba la cola de GitHub sola.
 
-La ruta que lo arregla —cron externo que dispare `repository_dispatch`— está
-documentada y sin hacer.
+Lo que sigue sin medirse es **la latencia de punta a punta**, que necesita un
+sismo en vivo. `/status` la publica en `null` mientras tanto.
 
 ### La corrección de una cifra publicada
 

@@ -35,13 +35,13 @@ flowchart TB
 
 ## Las tres decisiones que este workflow documenta en su propio código
 
-### 1. El latido se publica siempre, no sólo cuando hay evento
+### 1. El latido se publica siempre, no solo cuando hay evento
 
 El paso *Publicar estado y latido* **no lleva condición de `hay_trabajo`**, y es
 deliberado. La llevaba, y el latido nunca llegaba a publicarse:
 
 > La ausencia de latidos es la señal de que el cron se desactivó, que es el
-> modo de falla más probable de todo el sistema. Pero el commit sólo ocurría
+> modo de falla más probable de todo el sistema. Pero el commit solo ocurría
 > cuando había evento. O sea que **el único caso que el latido vigila era justo
 > el caso en que no se publicaba**: tras 20+ corridas verdes, `site/status.json`
 > seguía con `"latidos": []`.

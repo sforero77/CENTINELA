@@ -70,7 +70,7 @@ equivocado. Ver [`../arquitectura/decisiones.md`](../arquitectura/decisiones.md)
 
 Tres decisiones en esa estructura:
 
-1. **`objetivo` y `medido` son campos distintos.** Publicar sólo el objetivo
+1. **`objetivo` y `medido` son campos distintos.** Publicar solo el objetivo
    sería publicar una promesa como si fuera un hecho.
 2. **`medido.p50_min` es `null`, no 0.** Todavía no ha habido un evento en
    vivo. Un cero ahí se leería como "latencia cero", que es lo contrario de

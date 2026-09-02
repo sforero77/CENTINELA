@@ -63,12 +63,16 @@ proyecto es esa pieza.
 
 Tres cosas, y las tres se pueden citar de documentos del propio USGS:
 
-* **PAGER corre sobre LandScan, que es licenciado.** Nadie fuera del USGS puede
-  rehacer, extender ni localizar su producto. El activo de CENTINELA se
-  reconstruye entero desde fuentes abiertas, sin credenciales, con un comando.
-  Es la razón estructural por la que este proyecto tiene que existir aparte.
-* **PAGER no cuenta escuelas, hospitales ni vías.** Está en su propio FAQ.
-  Estima población y pérdidas; el equipamiento expuesto no es su pregunta.
+* **PAGER no publica el corte.** Estima población por banda de MMI
+  *redondeada* y pérdidas, para el país entero: sin municipio, sin celda y sin
+  equipamiento. Su insumo de población —LandScan Global— es abierto desde 2022
+  (CC BY 4.0, ORNL), así que el argumento nunca fue la licencia del dato: es que
+  la cadena de PAGER no la rehace nadie de fuera. El activo de CENTINELA se
+  reconstruye entero desde fuentes abiertas, sin credenciales, con un comando, y
+  sale cortado por el código administrativo nacional.
+* **PAGER no cuenta escuelas, hospitales ni vías.** No aparecen ni en su FAQ ni
+  en su *Scientific Background*: estima población y pérdidas, y el equipamiento
+  expuesto no es su pregunta.
 * **PAGER no considera deslizamiento ni licuefacción _en sus estimaciones de pérdida_.** Cita literal de
   onePAGER: *«PAGER does not consider secondary effects such as landslides,
   liquefaction, and tsunami in loss estimates at this time»*. CENTINELA sí
@@ -160,18 +164,24 @@ con la fuente de cada columna, está en
 
 ### La validación externa
 
-El Microsoft AI for Good Lab publicó evaluación de daño por imagen satelital
-para dos de los sismos que CENTINELA reconstruyó, usando además **las mismas
-huellas de edificación de Overture**. De las celdas que Microsoft evaluó,
-**ninguna falta del activo**, en dos países y dos sismos distintos. La lista de
-celdas la puso otro, así que es la verificación de cobertura más exigente que se
-le ha hecho a este sistema.
+El Microsoft AI for Good Lab publicó en HDX evaluación de daño por imagen
+satelital para **los dos** sismos que este proyecto tiene congelados como
+golden: Cali, del sismo de San José del Palmar, y la costa de La Guaira, del de
+Catia La Mar. Las dos son CC BY, y la de Cali se publica además sobre **las
+mismas huellas de edificación de Overture** que usa el activo, lo que hace la
+comparación interpretable y no anecdótica. De las **402 celdas** que Microsoft
+evaluó, **ninguna falta del activo**, en dos países y dos sismos distintos. La
+lista de celdas la puso otro, así que es la verificación de cobertura más
+exigente que se le ha hecho a este sistema.
 
-Y la evaluación **no cubrió una sola ciudad**: corrió sobre Cali (imagen Airbus)
-y sobre Pereira (imagen Vantor), que es además el municipio más expuesto del
-evento según este mismo reporte. El gradiente entre las tres zonas evaluadas es
-la respuesta corta a por qué una cifra de exposición no se lee como una cifra de
-daño.
+Y ahí está la respuesta corta a por qué una cifra de exposición no se lee como
+una cifra de daño. Sobre las edificaciones que Microsoft evaluó, la tasa de daño
+detectado fue de **0,273 % en Cali** (266 de 97.351) y de **3,69 % en La Guaira**
+(965 de 26.143): **un factor de trece entre dos zonas que el activo cubre
+igual de bien**. La exposición dice cuántos estaban dentro; cuántos resultaron
+dañados es otra pregunta, y su respuesta cambia trece veces de un sitio a otro.
+El detalle de las dos, con sus efectos de borde, está en
+[`VERIFICACIONES.md`](VERIFICACIONES.md).
 
 ### El catálogo histórico regional
 
@@ -186,12 +196,22 @@ que USGS publicó entonces, cada uno contra el activo de su país:
 | Personas ya en la malla hexagonal | **649,8 millones** |
 | Peor desvío contra la cifra oficial de un país | **+4,94 %** (Venezuela, y está explicado) |
 
-**Los 21 son reconstrucciones.** El sistema no ha disparado todavía un reporte
-en vivo: `site/status.json` publica `eventos_publicados: 0` y
-`backtests_excluidos: 21`, y por eso la latencia medida extremo a extremo sigue
-en `null`. Decirlo es más útil que dejarlo ambiguo — el catálogo demuestra que
-el cálculo funciona sobre veintiún eventos reales, no que la cadena en vivo se
-haya ejercitado.
+**El primero en vivo llegó el 2-sep-2026, y costó 89 minutos.** Un M5,6 a 71 km
+al OSO de Puerto Madero, México. El vigía lo detectó y despachó en minutos —esa
+mitad de la cadena funcionó a la primera— y P2 lo rechazó veinte veces seguidas:
+trataba «el ShakeMap no alcanza ninguna celda» como error incluso con el país
+bien enrutado, cuando lo que pasaba es que la sacudida se quedó mar adentro. El
+reporte salió cuando se arregló esa distinción.
+
+Así que `medido.p50_min` publica **89,1 min** y esa cifra hay que leerla por lo
+que es: no mide la cadena en régimen, mide lo que tardó en arreglarse un fallo
+que sólo podía aparecer con un sismo real. El siguiente evento en vivo dará la
+primera medida limpia, y hasta entonces conviene no citar los 89 minutos como
+latencia del sistema.
+
+Los otros veintiún reportes siguen siendo reconstrucciones históricas: prueban
+que el cálculo funciona sobre eventos reales de USGS, no que la cadena en vivo
+esté ejercitada. Ahora está ejercitada una vez, y enseñó algo.
 
 Lo que enseña ese catálogo importa más que su tamaño: **once de los veintiún
 eventos no alcanzan MMI≥7 sobre población**, y tres de ellos tampoco MMI≥6. Son
@@ -261,18 +281,25 @@ aquí», sea cual sea la amenaza que llegue.
 
 ### Sobre la latencia, con los números medidos
 
-El cálculo de un evento es la parte corta. La larga es enterarse: el cron de
-GitHub Actions declara diez minutos y entrega mucho menos. Medido entre el 25 y
-el 30 de agosto sobre 23 latidos, `site/status.json` publica **p50 157 min, p90
-462 y peor caso 766 min (12,8 h)**. Con un objetivo de 60 minutos extremo a
-extremo, **la detección sola se come el presupuesto entero**; el propio
-`.github/workflows/trigger.yml` lo dice así y por eso `repository_dispatch` está
-declarado, esperando un cron externo que lo dispare.
+El cálculo de un evento es la parte corta. La larga es enterarse. Con el cron
+de GitHub Actions solo —declara diez minutos y entrega mucho menos—, medido
+entre el 25 y el 30 de agosto sobre 23 latidos, la detección daba **p50 157 min,
+p90 462 y peor caso 766 min (12,8 h)**: con un objetivo de 60 minutos extremo a
+extremo, **la detección sola se comía el presupuesto entero**. Por eso desde el
+31-ago-2026 un cron externo dispara `repository_dispatch` cada cinco minutos y
+el cron de GitHub quedó de respaldo.
 
-Así que este README no promete «menos de una hora»: promete el contraste que sí
-controla —de días a segundos de cómputo— y publica la latencia real en
-[`/status`](https://sforero77.github.io/CENTINELA/status.json) para que se vea
-sin pedirla.
+Y el cambio es de otro orden: sobre los primeros latidos con el disparador
+externo, `/status` publica **p50 5,0 min, p90 5,0 y peor caso 5,0** — el cron
+externo entrega exactamente lo que declara. Son pocos latidos todavía, y la
+serie se reinició el 1-sep-2026 al re-emitir el catálogo entero, así que esa
+cifra vale como orden de magnitud y no como percentil estable.
+
+Este README sigue sin prometer «menos de una hora»: promete el contraste que sí
+controla —de días a segundos de cómputo— y publica en
+[`/status`](https://sforero77.github.io/CENTINELA/status.json) la latencia real,
+incluida la que todavía no tiene. `eventos_publicados` sigue en **0** y la
+latencia de punta a punta en `null` hasta que ocurra el primer sismo en vivo.
 
 ## Arranque
 
@@ -307,7 +334,7 @@ falta:
 | Pendiente | Estado |
 |---|---|
 | Reporte en vivo (los 21 son reconstrucciones) | ⏳ esperando el primer evento |
-| Disparador externo para la latencia de detección | ⏳ falta el token y el cron |
+| Cadencia real del disparador externo | ⏳ remidiéndose desde el 1-sep |
 | Reporte de Bolivia (`usp000ahzc`, M6,2, 2001) | ⏳ el activo está; falta correrlo |
 | Coropletas r7/r6 del visor en PMTiles | ⏳ el resto del visor funciona |
 | P4 brigada de imagen | ⏳ Fase 2 |
@@ -316,7 +343,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.387 pruebas** sin red, más **101 de navegador** que abren el visor en un
+**1.452 pruebas** sin red, más **101 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 
@@ -347,7 +374,8 @@ ninguna prueba sintética habría encontrado — ver
 
 ### El activo del que salen las cifras
 
-Release `exposure-col-20260824` (manifest `col-v0.5`): **559.103 celdas**,
+Release `exposure-col-20260824` (manifest `col-v0.6`, el que declaran los
+reportes): **559.103 celdas**,
 52.620.466 habitantes, 15,3 millones de edificaciones, 9.888 sedes de salud,
 45.710 sedes educativas y 307.314 km de vía, en los 1.122 municipios del país.
 Su desvío contra la referencia del DANE es **−0,72 %**, y solo el 0,32 % de la

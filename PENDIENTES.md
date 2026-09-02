@@ -53,7 +53,7 @@ Corre en `visor.yml` cuando cambia `site/`, no por cron: los turnos que GitHub
 concede al repositorio los necesita el vigía.
 
 Se saltan 21, y todas por la misma razón legítima:
-`test_el_visor_se_republica` esta parametrizada por workflow y omite los que no
+`test_el_visor_se_republica` está parametrizada por workflow y omite los que no
 publican nada que el visor lea. No hay ninguna saltada por estar rota.
 
 **El cron declara `*/30` y no corre cada treinta minutos.** La cabecera de
@@ -116,8 +116,8 @@ sistema calculaba la latencia correctamente y no la publicaba nunca. Un `git
 add` incompleto llevaba semanas haciendo pasar por «esperando un sismo» algo que
 no dependia de ningún sismo.
 
-Cerrado eso, las dos las cierra el primer M≥5,5 en LATAM. El camino esta probado
-sobre 21 eventos históricos en 15 países: cuando ocurra, lo único manual sera
+Cerrado eso, las dos las cierra el primer M≥5,5 en LATAM. El camino está probado
+sobre 21 eventos históricos en 15 países: cuando ocurra, lo único manual será
 publicar el hilo.
 
 ---
@@ -151,7 +151,7 @@ repetirlo, sigue en
 
 ## 2. Lo que falta
 
-Ordenado por lo que más desbloquea. Lo ya cerrado esta en §3, en una línea cada
+Ordenado por lo que más desbloquea. Lo ya cerrado está en §3, en una línea cada
 cosa, porque este documento es la lista de trabajo y no el registro de lo hecho.
 
 ### 2.1 ✅ Brasil, el país 19 · cerrado el 28-ago-2026
@@ -251,7 +251,7 @@ se leyó truncada. Recontado contra el catálogo de USGS, los veintidós van **d
 
 El más somero es **`usp000ahzc`, M6,2 del 4-jul-2001, a 33 km cerca de Colomi**,
 con MMI modelada de **6,4** y `download/cont_mmi.json` publicado. Es un evento
-que este pipeline puede calcular hoy: el activo boliviano esta construido y
+que este pipeline puede calcular hoy: el activo boliviano está construido y
 medido.
 
 Lo que falta es correrlo:
@@ -276,7 +276,7 @@ citables del proyecto.
 Ninguna de esas cifras apuntaba a un fichero del repositorio. `centinela
 contraste` imprimía su resultado por stdout y lo perdía, así que la sección no
 decía que subconjunto de celdas tomo ni contra que versión del vector. En un
-documento que abre con «todo lo que afirma esta medido, y dice donde esta la
+documento que abre con «todo lo que afirma está medido, y dice dónde está la
 medida», y que además va a instituciones, eso no se sostiene.
 
 Hecho: el comando ya persiste con `--salida`. Falta correrlo y comprometer el
@@ -306,7 +306,7 @@ vial, el REPS de MinSalud para los prestadores— que este mismo repositorio ya
 nombra: `layers.py` describe el REPS como «referencia de completitud municipal
 en una tabla aparte».
 
-El mecanismo esta a mano: `referencia_oficial` del manifest ya tiene la forma
+El mecanismo está a mano: `referencia_oficial` del manifest ya tiene la forma
 (`valor`, `fuente`, `tolerancia_pct`) y `centinela calibrar` ya sabe estrechar
 una tolerancia con lo medido. Falta generalizarla a
 `referencias_por_capa: {capa: {valor, fuente, tolerancia_pct}}` y que
@@ -314,7 +314,7 @@ una tolerancia con lo medido. Falta generalizarla a
 
 **Lo que NO se hace hasta que haya mantenedor de país:** poner cifras de
 referencia inventadas o copiadas sin verificar. Una tolerancia contra un número
-que nadie comprobo es peor que no tener alarma, porque parece que la hay. La
+que nadie comprobó es peor que no tener alarma, porque parece que la hay. La
 mecánica se construye cuando haya al menos un par (capa, referencia) verificado
 por alguien que responda por el.
 
@@ -435,10 +435,10 @@ pipeline vuelve a preguntar a USGS. El Chocó publicaba el **ShakeMap v7 cuando
 USGS ya servía el v8**, y con él se movieron las nueve cifras del backtest que
 cita la portada —MMI≥6 de 6.960.086 a 7.194.540—. Dos guardias lo detuvieron; la
 tercera no existía: el README repite la tabla de contraste con PAGER y afirmaba
-que `test_contraste_con_pager.py` la vigilaba, cuando esa prueba sólo leía
+que `test_contraste_con_pager.py` la vigilaba, cuando esa prueba solo leía
 `docs/PARA_INSTITUCIONES.md`. Ahora vigila las dos copias.
 
-Medido sobre los veintiuno: **sólo el Chocó iba atrasado** respecto a USGS. Los
+Medido sobre los veintiuno: **solo el Chocó iba atrasado** respecto a USGS. Los
 demás ya estaban en su versión vigente. El punto ciego era real, el daño no.
 
 Queda anotado como pendiente propio en §2.1.octies.
@@ -701,7 +701,7 @@ cumple, se documenta y se cierra; si no, se cambia el método.
   depende de ellas y el tablero es usable antes, pero la primera pantalla se
   siente lenta. Precargar el estilo o servir un encuadre estático mientras
   llegan las teselas son las dos salidas obvias.
-- Las etiquetas largas del mapa estático se pisan entre si: la separación minima
+- Las etiquetas largas del mapa estático se pisan entre si: la separación mínima
   es de 0,25° y "Ocumare De La Costa De Oro" mide bastante más.
 - **La tolerancia por país no se ensena, y es una decisión tomada.** El visor
   publicaba "peor desvío vs. cifra oficial: +4,94 % — el de Venezuela, y esta
@@ -714,7 +714,7 @@ cumple, se documenta y se cierra; si no, se cambia el método.
   cada manifiesto. Su sitio es un documento metodológico que explique de donde
   sale —`centinela calibrar`, que estrecha con lo medido y nunca ensancha sola—
   y por que el desvío de GHS-POP frente a una proyección demografica es
-  esperable. Ese documento esta sin escribir.
+  esperable. Ese documento está sin escribir.
 ### 2.6.1 Lo que dejó abierto el recorrido del visor (1-sep-2026)
 
 Salió de usar la página publicada como usuario final. Lo grave se arregló y está
@@ -725,7 +725,7 @@ cuánto molesta.
   de una hora» mientras `/status` medía 74,4 min de mediana **solo en detectar**:
   el objetivo de 60 min de RNF-02 no se podía cumplir aunque el resto del
   pipeline fuera instantáneo. La revisión cruzada quitó la promesa de la portada
-  y el aviso de `/status` pasó a aparecer sólo si la cadencia supera el objetivo.
+  y el aviso de `/status` pasó a aparecer solo si la cadencia supera el objetivo.
 
   Y la causa se cerró desde fuera: el cron externo arrancó ese mismo día a las
   05:01 UTC y lleva 196 revisiones por `repository_dispatch` cada cinco minutos.
@@ -802,7 +802,7 @@ la rompe.
 porque promedia toda la historia, incluidos los meses sin cron. No es un fallo
 —es la mediana real de lo vivido— pero describe un problema que ya no existe, y
 bajara sola conforme se acumulen latidos. Separar "cadencia histórica" de
-"cadencia de los últimos 7 días" esta sin hacer.
+"cadencia de los últimos 7 días" está sin hacer.
 
 Lo que sigue es el diagnóstico original, que explica por que hizo falta.
 
@@ -811,13 +811,13 @@ un clon.** El objetivo O1 es p50 <= 60 min desde el origen hasta el reporte
 publicado. La detección sola tiene una mediana de 45,6 min y un máximo medido de
 **11,1 h**: el presupuesto entero se lo puede comer el primer paso.
 
-La causa esta cerrada y no admite arreglo interno. GitHub concede unos pocos
+La causa está cerrada y no admite arreglo interno. GitHub concede unos pocos
 turnos de cron **por repositorio**, no por workflow, y los reparte cuando quiere.
-Se comprobo lo obvio y no era: los dos peores huecos tuvieron 2 % y 0 % de solape
+Se comprobó lo obvio y no era: los dos peores huecos tuvieron 2 % y 0 % de solape
 con builds de exposición, así que **no es que nuestras propias corridas saturen
 la cola**. Es el planificador.
 
-Lo que ya esta puesto y funciona:
+Lo que ya está puesto y funciona:
 
 * El vigía es el reloj del repositorio: despacha `frescura` e `incendios` por
   `workflow_dispatch`, que no pasa por esa cola.
@@ -856,7 +856,7 @@ donde va. Velocidad y dirección del viento, y humedad relativa, son las
 variables que convierten "hay fuego aquí" en "va hacia allá" — es lo que hace
 útil al Wildfire Aware de Living Atlas, que fue de donde salió la idea.
 
-**Por que no Open-Meteo, que era el camino obvio.** Su nivel gratuito es **no
+**Por qué no Open-Meteo, que era el camino obvio.** Su nivel gratuito es **no
 comercial**. Meterlo haría del cubo NC de D8 —hoy vacío a propósito— el primer
 cubo con algo dentro, y contaminaría el activo publicado: el mismo dataset que
 hoy se puede redistribuir bajo CC BY 4.0 dejaria de poderse. La regla de los
@@ -867,14 +867,14 @@ llave —lo que respeta D6— y con cobertura global cada 6 h. El coste es que h
 que leer GRIB2 en vez de un JSON, y elegir la retícula: GFS va a 0,25°, unos 27
 km, contra los 5,2 km² de una celda H3 r8. **Una dirección de viento de 27 km
 aplicada a una celda de 5 km es una interpolación, y hay que rotularla como
-tal** o sera otra cifra creíble y falsa, como lo habría sido publicar la
+tal** o será otra cifra creíble y falsa, como lo habría sido publicar la
 temperatura de brillo en grados.
 
 **Sin empezar.** Lo único hecho es descartar Open-Meteo y elegir la fuente.
 
 ---
 
-## 3. Cerrado, y donde esta el detalle
+## 3. Cerrado, y dónde está el detalle
 
 Lo que este documento listaba como pendiente y ya no lo esta. Cada línea tiene
 su historia completa —evidencia, criterio de aceptación y como se cerro— en
@@ -994,7 +994,7 @@ Cerrado con `gh workflow run site.yml` tras el push —`workflow_dispatch` es la
 excepción documentada a la regla, y es el mismo mecanismo con el que P1 ya
 dispara P2— más `actions: write` en los dos jobs. Sin PAT.
 
-El guardia esta en `tests/unit/test_el_visor_se_republica.py`, y **deriva las
+El guardia está en `tests/unit/test_el_visor_se_republica.py`, y **deriva las
 rutas del propio `site.yml`**: escritas a mano se quedan viejas, y un guardia con
 la lista desactualizada da un verde peor que no tener guardia.
 
@@ -1040,7 +1040,7 @@ el estado real:
 | **F1** | >= 4 reportes reales publicados | ❌ **0 de 4** |
 | **F1** | 2+ mantenedores país activos que no sean Sebastián | ❌ **0 de 2** |
 | **F2** | Un GeoPackage publicado con métricas | ❌ falta T2.4 |
-| **F2** | Protocolo probado en simulacro | ⚠️ `simulacro.yml` corre; el protocolo de brigada no esta escrito |
+| **F2** | Protocolo probado en simulacro | ⚠️ `simulacro.yml` corre; el protocolo de brigada no está escrito |
 
 **Los 21 reportes del catálogo son backtest, los 21.** `/status` los excluye a
 propósito del cálculo de latencia —`eventos_publicados: 0`,
@@ -1049,7 +1049,7 @@ sobre productos de USGS ya asentados, así que su latencia no dice nada sobre lo
 que tardaria un evento vivo. La cifra honesta es que **todavía no hay ninguna**.
 
 **El proyecto esta desbalanceado, y conviene verlo claro.** El trabajo de datos
-de Fase 1 esta hecho al 271 % —diecinueve países donde la puerta pedia siete— y
+de Fase 1 está hecho al 271 % —diecinueve países donde la puerta pedia siete— y
 las tres puertas que quedan abiertas no dependen de código:
 
 * Dos esperan a que ocurra un sismo M>=5,5 en LATAM. No se pueden forzar y no
@@ -1070,13 +1070,13 @@ desde buckets sin credenciales.
 Y el orden de la fase cambio. Buscando el GeoPackage de Cali aparecieron
 evaluaciones de daño abiertas de **los dos sismos golden**, del Microsoft AI for
 Good Lab y usando huellas de Overture — la misma fuente de este proyecto. Así
-que el primer hito no es entrenar un modelo, es **contrastar**, y ya esta hecho:
+que el primer hito no es entrenar un modelo, es **contrastar**, y ya está hecho:
 `centinela contraste` compara sobre las mismas celdas H3 y hay un workflow que
 lo corre en CI. Medido, la cobertura del activo es completa en los dos eventos
 y la fracción dañada va de 0,27 % a 3,69 %.
 
 Queda T2.4: la rama de pesos limpia, que ya tiene de que alimentarse (EMS para
-etiquetas, Umbra y Capella para imagen, todas CC BY) pero no esta construida.
+etiquetas, Umbra y Capella para imagen, todas CC BY) pero no está construida.
 
 **Fase 3 — Institucional.** T3.1 cerrada: AlphaEarth Foundations es CC-BY 4.0 y
 puede agregarse al activo con su atribución; Major TOM es CC-BY-SA 4.0 y no
@@ -1086,7 +1086,7 @@ miraba nadie y había derivado.
 
 Queda lo que no es código: presentar el sistema. Para eso esta
 [`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md), escrito con las
-cifras medidas y con los limites publicados al lado de lo que el sistema hace
+cifras medidas y con los límites publicados al lado de lo que el sistema hace
 bien.
 
 ---
@@ -1132,7 +1132,7 @@ Sin ellos las pruebas correspondientes **se saltan con razón explicita** en vez
 de fallar — pero `mypy` si falla, porque necesita ver `numpy` de verdad. Es
 justo el fallo que tumbo la primera corrida de CI.
 
-Comandos utiles:
+Comandos útiles:
 
 ```bash
 make country ISO=COL   # reconstruye el activo (~20 min)
@@ -1249,7 +1249,7 @@ corrida con la hora de descargas ya pagada.
 
 **Un build de un país falla tarde, así que reanudar tiene que ser barato.**
 Son ~1 GB y el paso que más falla es el último. Las seis rutas de descarga
-saltan lo que ya esta en disco, y escriben en `.parcial` para que un corte no
+saltan lo que ya está en disco, y escriben en `.parcial` para que un corte no
 deje un ráster truncado que la siguiente corrida de por bueno.
 → `pipelines/p0_exposure/download.py::write_atomic` · `_hdx_en_disco`
 
@@ -1274,9 +1274,9 @@ disclaimers, y el hilo para redes se genera pero **no se publica solo**.
 | [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) | Las reglas de código del proyecto, con el caso real que justifica cada una |
 | [`docs/PUESTA_EN_MARCHA.md`](docs/PUESTA_EN_MARCHA.md) | Los pasos de arranque, por si hay que repetirlos |
 | [`ESPECIFICACION.md`](ESPECIFICACION.md) | Espec técnica v0.10 |
-| [`VERIFICACIONES.md`](VERIFICACIONES.md) | Como se verifico cada fuente, con evidencia |
+| [`VERIFICACIONES.md`](VERIFICACIONES.md) | Cómo se verificó cada fuente, con evidencia |
 | [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) | Publicar el activo y por que no va en git |
-| [`DISCLAIMER.md`](DISCLAIMER.md) | Que informa y que no informa el sistema |
+| [`DISCLAIMER.md`](DISCLAIMER.md) | Qué informa y qué no informa el sistema |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Cómo contribuir, rol de mantenedor por país |
 | [`GOVERNANCE.md`](GOVERNANCE.md) | Roles, decisiones, frontera comunidad ↔ empresa |
 | [`LICENSES/`](LICENSES/) | La regla de los tres cubos |

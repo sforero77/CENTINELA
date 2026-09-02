@@ -72,18 +72,18 @@ def test_municipios_desde_columnas_lon_lat() -> None:
         {"lon": -75.7, "lat": 4.8, "mmi_max": 7.5, "pop_mmi7p": 498099.0, "nombre": "PEREIRA"},
         {"lon": -77.1, "lat": 3.6, "mmi_max": 7.0, "pop_mmi7p": 401081.0, "nombre": "BUENAVENTURA"},
     ]
-    puntos = _puntos_municipales(filas)
+    puntos = _puntos_municipales(filas, 7)
     assert len(puntos) == 2
     assert puntos[0][:3] == (-75.7, 4.8, 7.5)
 
 
 def test_municipios_acepta_wkt_como_respaldo() -> None:
     filas = [{"centroide": "POINT (-74.1 4.6)", "mmi_max": 6.5, "pop_mmi7p": 10.0, "nombre": "X"}]
-    assert _puntos_municipales(filas)[0][:2] == (-74.1, 4.6)
+    assert _puntos_municipales(filas, 7)[0][:2] == (-74.1, 4.6)
 
 
 def test_municipio_sin_coordenadas_se_descarta() -> None:
-    assert _puntos_municipales([{"mmi_max": 7.0, "nombre": "X"}]) == []
+    assert _puntos_municipales([{"mmi_max": 7.0, "nombre": "X"}], 7) == []
     assert _coordenada({"lon": "", "lat": ""}) is None
 
 
@@ -135,3 +135,26 @@ def test_render_dibuja_los_municipios(reporte: Report, tmp_path: Path) -> None:
     render_map(reporte, MapVariant.GENERAL, con, municipios=filas)
     render_map(reporte, MapVariant.GENERAL, sin, municipios=[])
     assert con.stat().st_size > sin.stat().st_size
+
+
+def test_el_mapa_dimensiona_por_la_banda_del_reporte_no_siempre_por_siete() -> None:
+    """El PNG rotulaba MMI≥7 aunque el `report.md` del mismo evento dijera 6.
+
+    Once de los veintiun eventos del catalogo no alcanzan MMI≥7 sobre poblacion.
+    Para ellos `pop_mmi7p` es cero en cada fila, asi que todos los circulos
+    salian al tamano minimo y la leyenda rotulaba "Personas expuestas: 0"
+    mientras la tabla del reporte hablaba de MMI≥6. Dos artefactos del mismo
+    evento contando cosas distintas.
+    """
+    filas = [
+        {
+            "lon": -95.1,
+            "lat": 16.2,
+            "mmi_max": 6.5,
+            "pop_mmi6p": 74000.0,
+            "pop_mmi7p": 0.0,
+            "nombre": "X",
+        },
+    ]
+    assert _puntos_municipales(filas, 6)[0][3] == 74000.0
+    assert _puntos_municipales(filas, 7)[0][3] == 0.0

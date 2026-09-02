@@ -2,7 +2,7 @@
 
 Utilidades que se corren a mano, no en el camino crítico.
 
-| Script | Que hace |
+| Script | Qué hace |
 |---|---|
 | `freeze_event.py` | Congela los productos de un evento real como fixture golden (T0.2) |
 

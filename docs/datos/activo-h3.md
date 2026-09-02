@@ -33,7 +33,7 @@ Contrato completo: [`schemas/parquet/tables.yaml`](../../schemas/parquet/tables.
 | `pop_0_14` | DOUBLE | WorldPop age-sex |
 | `pop_15_64` | DOUBLE | **residuo** de los otros dos |
 | `pop_65p` | DOUBLE | WorldPop age-sex |
-| `pop_alt_worldpop` | DOUBLE | WorldPop total — **sólo alimenta la banda de discrepancia** |
+| `pop_alt_worldpop` | DOUBLE | WorldPop total — **solo alimenta la banda de discrepancia** |
 
 ### Construcción
 
@@ -86,7 +86,7 @@ Se calculan **una sola vez**, al construir el activo, en
 `p0_exposure.build.SQL_FLAGS`, y viajan en `flags_calidad`.
 
 > Aquí había una segunda copia, idéntica y sin llamador: dos definiciones de la
-> misma regla que sólo pueden divergir. La que manda es la de P0.
+> misma regla que solo pueden divergir. La que manda es la de P0.
 
 ## Cómo lo consulta P2
 

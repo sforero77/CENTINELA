@@ -4,7 +4,7 @@ El activo construido no va en git: pesa unos 19 MB por país y crecera con cada
 país de Fase 1. Va como **Release de GitHub**, y esa copia —no la URL de la
 fuente original— es la que sostiene RNF-04.
 
-Por que importa: Overture conserva solo los **dos releases más recientes** en su
+Por qué importa: Overture conserva solo los **dos releases más recientes** en su
 bucket. Pasados unos dos meses la URL que declara el manifest deja de existir, y
 sin una copia propia nadie puede rehacer el build de un reporte de hace seis
 meses. El Release con su `sha256` es lo que hace re-derivable un número
@@ -81,7 +81,7 @@ Dos cifras de v0.4 se mueven además por correcciones, no por datos nuevos:
   primera. Las 9.615 de v0.4 salieron de usar solo HOTOSM; con las dos fuentes
   ya deduplicadas la cifra sube en unas 290 sedes reales. Sin el arreglo habría
   sido 18.061, casi el doble.
-- **Limites municipales.** El recurso del COD-AB que se descargaba eran
+- **Límites municipales.** El recurso del COD-AB que se descargaba eran
   secciones urbanas del MGN, no municipios. Ahora va fijado con `hdx_resource`.
 
 Al republicar hay que actualizar la tabla de arriba con las cifras que imprima

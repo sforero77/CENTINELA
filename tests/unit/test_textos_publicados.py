@@ -64,6 +64,69 @@ SIN_TILDE: dict[str, str] = {
     "vias": "vías",
     "mas": "más",
     "millon": "millón",
+    # SEGUNDA TANDA, 2-sep-2026. La lista negra solo caza lo que ya se filtro
+    # una vez, y por eso hay que ampliarla cuando se filtra algo nuevo. Estas
+    # son las que aparecieron en el barrido de los 46 documentos: ninguna es
+    # correcta sin tilde en ningun contexto, asi que no necesitan colocacion.
+    "numero": "número",
+    "numeros": "números",
+    "metodo": "método",
+    "metodos": "métodos",
+    "medicion": "medición",
+    "deteccion": "detección",
+    "resolucion": "resolución",
+    "interpolacion": "interpolación",
+    "publicacion": "publicación",
+    "produccion": "producción",
+    "condicion": "condición",
+    "opcion": "opción",
+    "version": "versión",
+    "region": "región",
+    "razon": "razón",
+    "energia": "energía",
+    "logica": "lógica",
+    "modulo": "módulo",
+    "parametro": "parámetro",
+    "parametros": "parámetros",
+    "categoria": "categoría",
+    "epoca": "época",
+    "pagina": "página",
+    "historico": "histórico",
+    "geografico": "geográfico",
+    "sismicos": "sísmicos",
+    "tecnico": "técnico",
+    "tecnica": "técnica",
+    "analisis": "análisis",
+    "minima": "mínima",
+    "minimo": "mínimo",
+    "unico": "único",
+    "unica": "única",
+    "ultimo": "último",
+    "ultima": "última",
+    "proximo": "próximo",
+    "limites": "límites",
+    "paises": "países",
+    "pais": "país",
+    "dia": "día",
+    "dias": "días",
+    "asi": "así",
+    "aqui": "aquí",
+    "despues": "después",
+    "utiles": "útiles",
+    "creible": "creíble",
+    "creibles": "creíbles",
+    "mios": "míos",
+    "sera": "será",
+    "seran": "serán",
+    "podria": "podría",
+    "habria": "habría",
+    "veia": "veía",
+    "decia": "decía",
+    "abria": "abría",
+    "comprobo": "comprobó",
+    "verifico": "verificó",
+    "detecto": "detectó",
+    "ejecuto": "ejecutó",
 }
 
 #: Formas adicionales que solo se vigilan en la documentacion escrita a mano.
@@ -181,6 +244,11 @@ def _prosa(texto: str) -> str:
     falsos positivos con `mas`, `dano` y compania.
     """
     texto = re.sub(r"```.*?```", " ", texto, flags=re.S)
+    # Y los bloques indentados, que en markdown tambien son codigo. Ahi vive
+    # `{"detecciones": 0, "utiles": 0}` de `FAMILIAS_DE_FALLO.md`, que es la
+    # salida literal de `firms.py:210`: "utiles" es una clave, no una palabra
+    # mal escrita, y "corregirla" habria roto la cita.
+    texto = re.sub(r"^(?:[ ]{4}|	).*$", " ", texto, flags=re.M)
     texto = re.sub(r"`[^`]*`", " ", texto)
     texto = re.sub(r"\]\([^)]*\)", "] ", texto)  # destinos de enlace
     texto = re.sub(r"https?://\S+", " ", texto)
@@ -336,3 +404,46 @@ def test_los_interrogativos_llevan_tilde(ruta: Path) -> None:
         pytest.skip(f"{ruta} no existe")
     fallos = _interrogativos_sin_tilde(completa.read_text(encoding="utf-8"))
     assert not fallos, f"{ruta}:\n  " + "\n  ".join(fallos)
+
+
+#: Los interrogativos, que **no se pueden vigilar como palabra suelta**: «lo que
+#: hace» y «como el visor» son correctas, y un detector generico daria un falso
+#: positivo por linea. Pero un encabezado y una cabecera de tabla que empiezan
+#: por «Que» o «Como» son siempre interrogativos, y ahi es exactamente donde se
+#: colaron: `## Que informa CENTINELA`, `| Rol | Que hace | Cuantos |`,
+#: `**Por que pasa.**`. Es lo primero que se lee de cada documento.
+INTERROGATIVOS: dict[str, str] = {
+    "Que": "Qué",
+    "Como": "Cómo",
+    "Cuantos": "Cuántos",
+    "Cuantas": "Cuántas",
+    "Cuanto": "Cuánto",
+    "Cuanta": "Cuánta",
+    "Quien": "Quién",
+    "Cuando": "Cuándo",
+    "Donde": "Dónde",
+}
+_EN_TITULO = re.compile(r"^#{1,6}\s+(" + "|".join(INTERROGATIVOS) + r")", re.M)
+_EN_CELDA = re.compile(r"\|\s*(" + "|".join(INTERROGATIVOS) + r")(?=\s*(?:\||\w))")
+_POR_QUE = re.compile(r"(?:^|\*\*)(Por que)", re.M)
+
+
+@pytest.mark.parametrize("documento", DOCUMENTOS)
+def test_los_interrogativos_de_titulos_y_cabeceras_llevan_tilde(documento: str) -> None:
+    """El hueco que la lista negra no puede cubrir.
+
+    `DISCLAIMER.md` —el documento cuya unica funcion es distinguir exposicion de
+    dano— titulaba «Que informa CENTINELA» y «Como citar una cifra». La lista
+    negra no lo veia y no puede verlo: `que` y `como` son palabras correctas.
+    Lo que no es correcto es abrir un titulo o una cabecera con ellas sin tilde.
+    """
+    texto = _prosa((RAIZ / documento).read_text(encoding="utf-8"))
+    malas = sorted(
+        {m.group(1) for m in _EN_TITULO.finditer(texto)}
+        | {m.group(1) for m in _EN_CELDA.finditer(texto)}
+        | {m.group(1) for m in _POR_QUE.finditer(texto)}
+    )
+    assert not malas, (
+        f"{documento} abre un titulo o una cabecera con un interrogativo sin "
+        f"tilde: {[(m, INTERROGATIVOS.get(m, 'Por qué')) for m in malas]}"
+    )

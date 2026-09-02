@@ -492,6 +492,34 @@ def compute_preliminary(con: Any, state: EventState, *, exposure_glob: str) -> d
         for radio in PRELIMINARY_RADII_KM:
             if d <= radio:
                 por_radio[radio] += float(pop or 0.0)
+
+    # EL PRELIMINAR TAMBIEN PUEDE CAER SOBRE EL ACTIVO EQUIVOCADO, Y NO MIRABA.
+    #
+    # El camino completo lo comprueba treinta lineas mas arriba y este no lo
+    # hacia. Con el activo de otro pais ninguna celda entra en el radio mayor y
+    # la funcion devolvia {25: 0, 50: 0, 100: 0}: `run_impact` salia con exito,
+    # `impact.yml` daba el evento por resuelto en el primer candidato y no
+    # probaba los demas. Publicar "0 personas a 100 km" en la primera hora de un
+    # sismo real es la cifra falsa y creible que este sistema no se permite en
+    # ningun otro sitio, y ademas se queda: el bucle reintenta siempre el mismo.
+    #
+    # LO QUE ESTE CRITERIO NO SEPARA, Y HAY QUE SABERLO. "Cero dentro de 100 km"
+    # tambien es la respuesta verdadera de un sismo mar adentro con el activo
+    # correcto. Los dos casos se tratan igual —no se publica y se prueba el
+    # siguiente pais— porque el resultado util es el mismo: sin ShakeMap y sin
+    # nadie cerca, un preliminar no informa. Si se agotan los candidatos,
+    # `impact.yml` abre error; para un evento oceanico eso es ruido, y la
+    # decision de suavizarlo es de operacion, no de calculo.
+    if not any(por_radio.values()):
+        raise ExposureCountryMismatchError(
+            f"Ninguna celda del activo ({exposure_glob}) queda a menos de "
+            f"{max(PRELIMINARY_RADII_KM)} km del epicentro de {state.usgs_id}. "
+            f"O el sismo cayo en un pais distinto al del activo descargado, o "
+            f"cayo lo bastante mar adentro para que no haya nadie cerca. En los "
+            f"dos casos un preliminar de ceros seria una respuesta falsa y "
+            f"creible: hay que reintentar con el siguiente candidato."
+        )
+
     _log.info(
         "corte preliminar por radios",
         extra={

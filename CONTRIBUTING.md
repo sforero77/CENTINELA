@@ -25,7 +25,7 @@ make format     # ruff --fix + formato
 make check      # lo mismo que corre CI
 ```
 
-- Las pruebas no tocan la red. La única excepción esta marcada `network` y solo
+- Las pruebas no tocan la red. La única excepción está marcada `network` y solo
   la corre el workflow nocturno.
 - Si cambias una cifra publicada, actualiza los golden tests **en el mismo PR**
   y explica por que la cifra cambio.
@@ -44,7 +44,7 @@ del país:
 1. **Construir y medir.** `uv run centinela country <ISO3>` (~1 GB de descarga).
    El manifest lleva una `tolerancia_pct` **provisional del 5 %** que no es una
    medición: al terminar, anota el desvío real como `medido_ghs_pop` y ajusta la
-   tolerancia, explicando el cambio en el PR. Colombia, que si esta medida, usa
+   tolerancia, explicando el cambio en el PR. Colombia, que sí está medida, usa
    1 %.
 2. **Validar los topónimos y su codificacion.** Salen impresos en el reporte y
    en el hilo. En Venezuela el COD-AB los devuelve mal codificados («Falc?n» por
@@ -74,7 +74,7 @@ abre un issue y te avisamos en la proxima activacion.
 ## Estilo
 
 Lo esencial cabe aquí; el detalle, con el caso real que justifica cada regla,
-esta en [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md).
+está en [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md).
 
 - **Código en inglés, dominio en español.** Los nombres de columnas, estados y
   campos del reporte están en español porque son parte del producto; el resto
