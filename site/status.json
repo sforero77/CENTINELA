@@ -1,24 +1,17 @@
 {
-  "generado_utc": "2026-09-02T13:57:37Z",
+  "generado_utc": "2026-09-02T14:00:26Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
   },
   "medido": {
-    "eventos_publicados": 1,
+    "eventos_publicados": 0,
     "backtests_excluidos": 21,
-    "p50_min": 89.1,
-    "p95_min": 89.1,
-    "peor_min": 89.1
+    "p50_min": null,
+    "p95_min": null,
+    "peor_min": null
   },
   "eventos": [
-    {
-      "usgs_id": "us7000tdmp",
-      "origen_utc": "2026-09-02T12:28:31Z",
-      "publicado_utc": "2026-09-02T13:57:37Z",
-      "minutos": 89.1,
-      "backtest": false
-    },
     {
       "usgs_id": "us6000tjl2",
       "origen_utc": "2026-08-10T12:34:28Z",
@@ -172,8 +165,8 @@
     "p50_min": 5.0,
     "p90_min": 5.0,
     "peor_min": 9.6,
-    "revisiones": 105,
-    "latidos": 23
+    "revisiones": 106,
+    "latidos": 24
   },
   "latidos": [
     {
@@ -310,6 +303,12 @@
     },
     {
       "utc": "2026-09-02T13:55:18Z",
+      "revisados": 19,
+      "relevantes": 2,
+      "revisiones": 1
+    },
+    {
+      "utc": "2026-09-02T14:00:26Z",
       "revisados": 19,
       "relevantes": 2,
       "revisiones": 1
