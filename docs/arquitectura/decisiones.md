@@ -112,16 +112,23 @@ Estas no están cerradas y viven en [`PENDIENTES.md`](../../PENDIENTES.md):
   ejecución. Contradice parcialmente el espíritu de D6.
 - **Coropletas r7/r6 en PMTiles**: declaradas en D1/D2, todavía no construidas.
   El resto del visor funciona sin ellas.
-- **`cont_mmi.json` en vez de `grid.xml`, sin delta medido.** Es la crítica
-  metodológica más seria que este sistema puede recibir, y la justificación
-  actual es de rendimiento, no científica: las isolíneas son órdenes de magnitud
-  menos geometría que la malla, y se rellenan con un polyfill directo. Pero
-  rellenar entre isolíneas de paso 0,5 asigna a cada celda el valor de la banda
-  que contiene su centro, y `grid.xml` trae el campo continuo. **No está medido
-  cuánto se separan las dos.** Lo que cierra la discusión es correr las dos sobre
-  el mismo evento y publicar el delta: si es menor del 3 %, hay una defensa
-  cerrada; si es mayor, hay un hallazgo. Cualquiera de los dos resultados vale
-  más que el argumento de rendimiento. Ver `PENDIENTES.md`.
+- **`cont_mmi.json` en vez de `grid.xml`: medido, y el argumento no se
+  sostiene.** Era la crítica metodológica más seria que este sistema podía
+  recibir, y la justificación era de rendimiento, no científica. El 1-sep-2026 se
+  midió sobre el Chocó, con el criterio fijado de antemano —3 %—: MMI≥6 coincide
+  (**+0,3 %**), pero **MMI≥7 se separa un +11,8 %**, unas 285.000 personas.
+
+  El mecanismo importa más que la cifra: `cont_mmi.json` describe el borde de
+  MMI 7 con **103 vértices y paso mediano de 4,2 km**, sobre una rejilla de
+  **1 km**. Es un producto de dibujo consumido como producto de análisis. No se
+  pierde área —cero celdas sin contorno— pero el valor asignado difiere, y donde
+  el borde cruza una ciudad densa decide si la ciudad cuenta: el 68 % del delta
+  es Manizales.
+
+  Y el coste que se quiso evitar no existe: la medición completa tarda **6
+  segundos**. Cambiar el método queda anotado en `PENDIENTES.md` §2.1.nonies —no
+  es un fallo que se arregle en caliente, porque mueve todas las cifras
+  publicadas—. Reproducible con `scripts/delta_contornos_vs_grid.py`.
 - **El redondeo de prosa y el de tabla no coinciden.** RF-06 fija dos cifras
   significativas en prosa, así que el `.md` publica «110 mil» donde el visor
   publica «108.000». Las dos son ciertas y quien las compare sin saber la regla
