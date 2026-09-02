@@ -223,7 +223,17 @@ def build_status(
     }
 
 
-def _latidos_previos(destino: Path) -> list[dict[str, Any]]:
+@dataclass(frozen=True)
+class HistorialPrevio:
+    """Los latidos que habia, y lo que hubo que tirar para llegar a ellos."""
+
+    latidos: list[dict[str, Any]]
+    #: Solo cuando `--recuperar` aparto un fichero ilegible. Viaja al JSON.
+    perdido_por: str | None = None
+    apartado_en: str | None = None
+
+
+def _latidos_previos(destino: Path, *, recuperar: bool = False) -> HistorialPrevio:
     """El historial que ya hay, o vacio **solo si el fichero no existe**.
 
     ESTE `except` BORRO EL LATIDO ENTERO DURANTE HORAS.
@@ -248,17 +258,38 @@ def _latidos_previos(destino: Path) -> list[dict[str, Any]]:
     de que el vigia esta vivo.
     """
     if not destino.exists():
-        return []
+        return HistorialPrevio(latidos=[])
     try:
         crudo = json.loads(destino.read_text(encoding="utf-8"))
     except (ValueError, OSError) as error:
-        raise ValueError(
-            f"{destino} existe y no se puede leer ({error}). No se reescribe: "
-            f"hacerlo publicaria un historial de latidos vacio y borraria la "
-            f"unica senal de que el vigia sigue vivo. Si viene de un rebase, "
-            f"resuelve el conflicto del fichero antes de regenerarlo."
-        ) from error
-    return list(crudo.get("latidos", []))
+        if not recuperar:
+            raise ValueError(
+                f"{destino} existe y no se puede leer ({error}). No se reescribe: "
+                f"hacerlo publicaria un historial de latidos vacio y borraria la "
+                f"unica senal de que el vigia sigue vivo. Para salir de aqui: "
+                f"`centinela status --recuperar`, que aparta el fichero ilegible "
+                f"y arranca historial nuevo dejando constancia de la perdida."
+            ) from error
+        # LA SALIDA DEL BLOQUEO, Y POR QUE ES EXPLICITA.
+        #
+        # La negativa de arriba cerro el hallazgo A1 y es correcta. Lo que no
+        # tenia era salida: **todo** camino que escribe este fichero pasa por
+        # aqui, incluido `centinela status`, asi que el unico comando capaz de
+        # repararlo se negaba a correr mientras estuviera roto. El 2-sep-2026
+        # un conflicto de dos lineas dejo al vigia dos horas ciego por eso.
+        #
+        # La salida no se toma sola: la pide una persona con `--recuperar`. Se
+        # aparta el original en vez de borrarlo —el historial perdido es
+        # evidencia— y la perdida viaja al JSON publicado, que es donde alguien
+        # la va a ver.
+        apartado = destino.with_suffix(f".ilegible-{utcnow_iso().replace(':', '')}.json")
+        destino.rename(apartado)
+        _log.error(
+            "status.json ilegible: se aparta y se arranca historial nuevo",
+            extra={"context": {"apartado": str(apartado), "error": str(error)}},
+        )
+        return HistorialPrevio(latidos=[], perdido_por=str(error), apartado_en=apartado.name)
+    return HistorialPrevio(latidos=list(crudo.get("latidos", [])))
 
 
 def write_status(
@@ -267,15 +298,28 @@ def write_status(
     site_dir: Path | None = None,
     latido: dict[str, Any] | None = None,
     reports_root: Path | None = None,
+    recuperar: bool = False,
 ) -> Path:
-    """Escribe ``site/status.json``, conservando el historial de latidos."""
+    """Escribe ``site/status.json``, conservando el historial de latidos.
+
+    Con ``recuperar`` se sale del bloqueo que deja un fichero ilegible: se
+    aparta, se arranca historial nuevo y la perdida se declara en el JSON.
+    """
     destino = (site_dir or SITE_DIR) / STATUS_FILENAME
-    previos: list[dict[str, Any]] = _latidos_previos(destino)
-    if latido:
-        previos.append(latido)
+    historial = _latidos_previos(destino, recuperar=recuperar)
+    previos = [*historial.latidos, latido] if latido else list(historial.latidos)
 
     destino.parent.mkdir(parents=True, exist_ok=True)
     datos = build_status(events_dir=events_dir, reports_root=reports_root, latidos=previos)
+    if historial.perdido_por:
+        # LA PERDIDA SE PUBLICA. Un historial que arranca de cero sin decir por
+        # que es indistinguible de un vigia recien estrenado, y esa ambiguedad
+        # es justo la que la guarda de `_latidos_previos` existe para evitar.
+        datos["historial_reiniciado"] = {
+            "utc": datos["generado_utc"],
+            "motivo": historial.perdido_por,
+            "fichero_apartado": historial.apartado_en,
+        }
     destino.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     _log.info(
         "estado publicado",

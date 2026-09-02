@@ -119,8 +119,31 @@ def test_una_etapa_pendiente_sale_con_codigo_2(monkeypatch: pytest.MonkeyPatch) 
 
 def test_status_escribe_la_pagina(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     destino = tmp_path / "status.json"
-    monkeypatch.setattr(cli, "write_status", lambda: destino)
+    monkeypatch.setattr(cli, "write_status", lambda **_: destino)
     assert cli.main(["status"]) == 0
+
+
+def test_status_recuperar_llega_hasta_write_status(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """El flag no sirve de nada si se queda en el parser.
+
+    Es la salida del bloqueo que dejo al vigia dos horas ciego el 2-sep-2026:
+    si no viaja hasta `write_status`, el operador cree que la tiene y no.
+    """
+    visto: dict[str, bool] = {}
+
+    def falso(**kwargs: object) -> Path:
+        visto["recuperar"] = bool(kwargs.get("recuperar"))
+        return tmp_path / "status.json"
+
+    monkeypatch.setattr(cli, "write_status", falso)
+
+    assert cli.main(["status"]) == 0
+    assert visto["recuperar"] is False
+
+    assert cli.main(["status", "--recuperar"]) == 0
+    assert visto["recuperar"] is True
 
 
 def test_trigger_publica_el_latido_aunque_no_haya_eventos(

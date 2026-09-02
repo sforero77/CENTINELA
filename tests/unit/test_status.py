@@ -343,3 +343,68 @@ def test_el_historial_sobrevive_a_una_escritura_sin_latido(tmp_path: Path) -> No
 
     latidos = json.loads(destino.read_text(encoding="utf-8"))["latidos"]
     assert [x["utc"] for x in latidos] == ["2026-09-02T12:00:00Z"]
+
+
+# --- La salida del bloqueo por `status.json` ilegible -----------------------
+#
+# La negativa a reescribir un fichero ilegible es correcta y cerro el hallazgo
+# A1. Lo que no tenia era salida: **todo** camino que escribe el fichero pasa
+# por `_latidos_previos`, incluido `centinela status`, asi que el unico comando
+# capaz de repararlo se negaba a correr mientras estuviera roto. El 2-sep-2026
+# un conflicto de rebase de dos lineas dejo al vigia dos horas sin mirar el
+# feed por eso, y solo se salio editando el JSON a mano.
+
+CORRUPTO = '{\n<<<<<<< HEAD\n  "generado_utc": "a"\n=======\n  "generado_utc": "b"\n>>>>>>> x\n}'
+
+
+def test_sin_recuperar_se_niega_y_dice_como_salir(tmp_path: Path) -> None:
+    """La negativa se queda, pero el mensaje tiene que ser accionable.
+
+    Antes remitia a "resuelve el conflicto antes de regenerarlo", y no habia
+    comando capaz de regenerarlo: el consejo no se podia seguir.
+    """
+    (tmp_path / "status.json").write_text(CORRUPTO, encoding="utf-8")
+
+    with pytest.raises(ValueError, match="--recuperar"):
+        write_status(site_dir=tmp_path)
+
+
+def test_recuperar_aparta_el_ilegible_y_no_lo_borra(tmp_path: Path) -> None:
+    """El historial perdido es evidencia: se aparta, no se destruye."""
+    (tmp_path / "status.json").write_text(CORRUPTO, encoding="utf-8")
+
+    write_status(site_dir=tmp_path, recuperar=True)
+
+    apartados = [f for f in tmp_path.iterdir() if "ilegible" in f.name]
+    assert len(apartados) == 1
+    assert apartados[0].read_text(encoding="utf-8") == CORRUPTO
+
+
+def test_recuperar_declara_la_perdida_en_el_json_publicado(tmp_path: Path) -> None:
+    """Un historial que arranca de cero sin decir por que.
+
+    Es indistinguible de un vigia recien estrenado, y esa ambiguedad es justo
+    la que la guarda existe para evitar. Si se pierde, se publica que se perdio.
+    """
+    (tmp_path / "status.json").write_text(CORRUPTO, encoding="utf-8")
+
+    destino = write_status(site_dir=tmp_path, recuperar=True)
+    datos = json.loads(destino.read_text(encoding="utf-8"))
+
+    assert datos["latidos"] == []
+    assert "historial_reiniciado" in datos
+    assert datos["historial_reiniciado"]["motivo"]
+    assert datos["historial_reiniciado"]["fichero_apartado"].startswith("status.ilegible-")
+
+
+def test_un_fichero_sano_no_declara_perdida_ni_aparta_nada(tmp_path: Path) -> None:
+    """`--recuperar` sobre algo legible no es destructivo: no hace nada."""
+    previos = {"latidos": [{"utc": "2026-09-02T10:00:00Z", "revisados": 3}]}
+    (tmp_path / "status.json").write_text(json.dumps(previos), encoding="utf-8")
+
+    destino = write_status(site_dir=tmp_path, recuperar=True)
+    datos = json.loads(destino.read_text(encoding="utf-8"))
+
+    assert len(datos["latidos"]) == 1
+    assert "historial_reiniciado" not in datos
+    assert not [f for f in tmp_path.iterdir() if "ilegible" in f.name]
