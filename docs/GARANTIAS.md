@@ -121,8 +121,26 @@ min · p90 5,0 · peor 5,0**, o sea la cadencia declarada, exactamente. Son poco
 valen como orden de magnitud y no como percentil estable, y la cifra de arriba
 se conserva por lo que documenta: lo que daba la cola de GitHub sola.
 
-Lo que sigue sin medirse es **la latencia de punta a punta**, que necesita un
-sismo en vivo. `/status` la publica en `null` mientras tanto.
+**La latencia de punta a punta ya está medida, y no se cumple.** Los dos
+primeros sismos en vivo, el 2-sep-2026, dan **p50 185,7 min · p95 238,0 · peor
+243,8** — tres veces el objetivo. `/status` lo publica.
+
+Dónde se va el tiempo, con los dos únicos casos que hay:
+
+    us7000tdmp   deteccion  21,9 min   total  127,6 min
+    us7000tdms   deteccion  24,5 min   total  243,8 min
+
+La detección ya no es el cuello de botella: son veintitantos minutos, y de esos
+la mayor parte es lo que tarda USGS en listar el evento en su feed. **Lo que se
+come el presupuesto es esperar el ShakeMap**, que es de USGS y no se controla
+desde aquí. El primero suma además las veinte corridas que P2 rechazó antes de
+distinguir «no alcanza celdas» de «activo equivocado».
+
+Con dos eventos no hay percentil: son dos medidas, no una distribución. Pero ya
+son suficientes para decir que **el objetivo de 60 minutos no depende de esta
+infraestructura** — depende de cuándo publique USGS. Mientras no se decida
+medirlo contra el ShakeMap en vez de contra el origen, el objetivo se declara
+aquí como lo que es: no cumplido.
 
 ### La corrección de una cifra publicada
 
