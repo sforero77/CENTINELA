@@ -89,7 +89,7 @@ sale en verde. Confundirlo pondría el workflow en rojo todos los días.
 ## `keepalive.yml` — que GitHub no apague los crons
 
 Días 1 y 15, 07:00 UTC. GitHub **desactiva los workflows programados de repos
-sin actividad durante 60 días**. Este workflow existe sólo para que ese
+sin actividad durante 60 días**. Este workflow existe solo para que ese
 contador no llegue nunca.
 
 ## `simulacro.yml` — el ensayo mensual

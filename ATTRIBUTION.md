@@ -28,7 +28,7 @@ especificación) y se verifica en CI.
   hex↔DIVIPOLA en Colombia. CC BY 4.0 (esta es la fórmula de atribución que el
   propio Geoportal DANE pide).
 - **OCHA — Common Operational Datasets (COD-AB)**, publicados en el
-  Humanitarian Data Exchange. Limites administrativos adm1/adm2 de todos los
+  Humanitarian Data Exchange. Límites administrativos adm1/adm2 de todos los
   países salvo Colombia, que usa el MGN. **CC BY-IGO**, que exige atribución.
   https://data.humdata.org/dataset/cod-ab-<iso3>
 - **Humanitarian OpenStreetMap Team (HOT)** — extractos

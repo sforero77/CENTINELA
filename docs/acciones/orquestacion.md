@@ -53,7 +53,7 @@ flowchart TB
 
 | Mecanismo | Quién lo usa | Por qué ese y no otro |
 |---|---|---|
-| `repository_dispatch` | el cron externo → `trigger.yml` | Es el único que un servicio de fuera puede invocar con un token, y **sólo corre sobre la rama por defecto**, que es donde vive el vigía |
+| `repository_dispatch` | el cron externo → `trigger.yml` | Es el único que un servicio de fuera puede invocar con un token, y **solo corre sobre la rama por defecto**, que es donde vive el vigía |
 | `gh workflow run` (`workflow_dispatch`) | vigía → impact, frescura, incendios, site | Permite pasar `inputs` (el `usgs_id`) y no depende de que haya push |
 | `push` | site.yml, ci.yml, visor.yml | Reacciona a cambios de contenido, no de reloj |
 
@@ -85,7 +85,7 @@ despachar_si_toca repaso.yml   24   # diario
 ```
 
 Con el cron externo a 5 minutos, esta comprobación ocurre 288 veces al día pero
-sólo dispara 8 veces `incendios.yml` y 8 veces `frescura.yml`. La consulta de
+solo dispara 8 veces `incendios.yml` y 8 veces `frescura.yml`. La consulta de
 edad es una llamada barata a `gh run list --limit 1`; el trabajo real sigue
 gobernado por su propia cadencia.
 

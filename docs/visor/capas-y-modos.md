@@ -31,7 +31,7 @@ flowchart TB
 | Capa | Qué dibuja |
 |---|---|
 | `epicentros` | Los 21 reportes. El círculo crece con la población expuesta |
-| `epicentros-halo` | Halo proporcional, sólo en la vista panorámica |
+| `epicentros-halo` | Halo proporcional, solo en la vista panorámica |
 | `observados` | Sismos vistos y no despachados. Estrella hueca |
 | `celdas` / `celdas-borde` | La malla H3 del evento abierto, coloreada por la variable elegida |
 | `contornos` | Las líneas de isointensidad de ShakeMap |
@@ -127,7 +127,7 @@ Tres propiedades, y cada una su razón:
 2. **Radio por raíz del FRP, con suelo de 0,8 px.** El *área* del círculo sigue a
    la energía, que es como se escala un símbolo proporcional. Una celda débil pasa
    a ser polvo: sigue estando y deja de competir.
-3. **Contorno sólo desde zoom 7.** Con radio 2 px el contorno **es** el símbolo:
+3. **Contorno solo desde zoom 7.** Con radio 2 px el contorno **es** el símbolo:
    se come el relleno —que es lo que lleva el color— y los contornos solapados
    tejen la malla oscura que se veía. De cerca sigue separando los que se tocan.
 
@@ -150,7 +150,7 @@ Van en un **solo** `maplibregl-ctrl-group`: cada grupo trae 10 px de margen
 propio, y la esquina de arriba a la derecha es la única libre.
 
 - **Inicio.** Devuelve el encuadre de la región. `volverAlEncuadre` existía desde
-  siempre y sólo lo llamaba `cerrarDetalle`, así que en modo panorama era
+  siempre y solo lo llamaba `cerrarDetalle`, así que en modo panorama era
   inalcanzable.
 - **Mapa base.** Tres estilos de OpenFreeMap, de los cinco que publica:
 
@@ -167,7 +167,7 @@ opción, es dar una trampa.
 > **`setStyle` no cambia el fondo: tira el estilo entero**, y con él todas las
 > fuentes y todas las capas, incluidas las nuestras. El cambio pasa por
 > `cambiarEstiloBase`, que repone el dato y vuelve a seleccionar el evento
-> abierto. Y **`setStyle` no emite `style.load`** (MapLibre 4.7.1: sólo `data`,
+> abierto. Y **`setStyle` no emite `style.load`** (MapLibre 4.7.1: solo `data`,
 > `styledata` e `idle`), así que la preparación del estilo escucha `styledata`
 > **e** `idle`.
 

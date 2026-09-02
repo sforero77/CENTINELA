@@ -8,7 +8,7 @@ posterior al evento.
 
 Porque el hueco es deliberado y conviene que se vea. El sistema publica
 **exposición**, no daño; P4 sería la única pieza que se acercaría a estimar
-daño, y sólo cuando haya imagen abierta que lo permita.
+daño, y solo cuando haya imagen abierta que lo permita.
 
 ```mermaid
 flowchart LR

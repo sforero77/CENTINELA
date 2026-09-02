@@ -32,7 +32,7 @@ el detail devuelve un `Feature` suelto y sin la propiedad `detail`, mientras que
 una consulta devuelve un `FeatureCollection` con la misma forma que el feed en
 tiempo real. Es lo que permite pasar la fixture por `parse_feed` sin trucos.
 
-## Por que están recortadas
+## Por qué están recortadas
 
 Sin recortar pesan **8,4 MB**; recortadas, **244 KB**. Se conservan solo los
 productos que el pipeline consume (`shakemap`, `ground-failure`, `losspager`) y,

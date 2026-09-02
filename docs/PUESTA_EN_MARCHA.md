@@ -3,7 +3,7 @@
 Los pasos que **solo puede hacer quien administra el repositorio**, en orden.
 Cada uno dice como comprobar que quedó bien y como se ve si fallo.
 
-Estado al empezar: el código funciona y esta probado, pero el sistema no ha
+Estado al empezar: el código funciona y está probado, pero el sistema no ha
 operado nunca solo. Estos cinco pasos son los que lo encienden.
 
 ---
@@ -132,7 +132,7 @@ minutos con cinco reintentos (`HTTPFS_SETTINGS`), pero si ves
 `_duckdb.Error: Timeout was reached` en una red especialmente lenta, ahí esta
 la perilla.
 
-**Se puede cortar y reanudar.** Cada descarga salta lo que ya esta en disco, y
+**Se puede cortar y reanudar.** Cada descarga salta lo que ya está en disco, y
 se escribe primero en un `.parcial` que solo se renombra al terminar: un corte
 de red no deja un ráster a medias que la siguiente corrida daría por bueno.
 Volver a lanzar el comando continua donde iba.
@@ -179,7 +179,7 @@ build en la descarga en vez de fallar dos horas después. No se anota a mano: co
 ### Se puede reanudar
 
 Da igual por que vía: **una descarga cortada no se repite**. Las seis rutas
-saltan lo que ya esta en disco y escriben primero en un `.parcial` que solo se
+saltan lo que ya está en disco y escriben primero en un `.parcial` que solo se
 renombra al terminar, así que un ráster a medias nunca se da por bueno. Volver
 a lanzar el comando continua donde iba.
 
@@ -263,7 +263,7 @@ cuestión de días:
 
 - un reporte real publicado end-to-end sin intervención;
 - latencia medida y publicada (`site/status.json` hoy mide 0 eventos porque el
-  único que hay esta marcado `backtest: true` y se excluye del p50/p95 a
+  único que hay está marcado `backtest: true` y se excluye del p50/p95 a
   propósito).
 
 Cuando ocurra, el único paso manual permitido en todo el sistema es dar clic
@@ -276,13 +276,13 @@ para publicar el hilo de `reports/<id>/hilo.txt`. El sistema lo genera pero
 
 ### Venezuela — cierra la aserción (b) de G2
 
-El activo ya esta construido y publicado (`exposure-ven-20260824`). Lo que falta
+El activo ya está construido y publicado (`exposure-ven-20260824`). Lo que falta
 es el **reporte** de los dos mainshocks del 24-jun-2026, que además estrena el
 camino P2→P3 en CI: hasta ahora `impact.yml` nunca ha calculado nada, solo ha
 devuelto `omitir: ya procesado`.
 
 **Primero hay que reconstruir el activo**, porque el publicado se hizo con el
-rescate que invadia al vecino y con el reparto que no veia los multipoligonos:
+rescate que invadia al vecino y con el reparto que no veía los multipoligonos:
 
 ```powershell
 gh workflow run exposure_quarterly.yml -f iso3=VEN
@@ -309,7 +309,7 @@ Hay reporte de us6000t7zp pero no cifra congelada.
 Anota pop_mmi7p=... en POP_MMI7P_ESPERADO.
 ```
 
-**Sobre la tolerancia de población:** esta en 5 % contra la ONU (28.516.896 para
+**Sobre la tolerancia de población:** está en 5 % contra la ONU (28.516.896 para
 2025) y es una expectativa, no una verificación. GHS-POP deriva de la ronda
 censal de 2010 y no modela la emigración venezolana. Que el assert falle sería
 un hallazgo publicable, no un bug: significaria que la cadena poblacional no
@@ -354,6 +354,6 @@ es lo que uno hace con prisa y no debe automatizarse.
 ### T0.10 — la cifra exacta del DANE
 
 `COL.yaml` usa 53.000.000, que es el redondeo de la nota técnica. El valor
-exacto esta en el anexo en Excel de las proyecciones de población del DANE
+exacto está en el anexo en Excel de las proyecciones de población del DANE
 (Geoportal -> Proyecciones CNPV-2018). Sustituirlo hace que el assert compare
 contra un número y no contra un redondeo.

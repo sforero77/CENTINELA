@@ -17,7 +17,7 @@ sistema declara públicamente sobre ella.
 
 > **FDSN está prohibido en el camino crítico.** El propio USGS recomienda los
 > feeds GeoJSON para aplicaciones automatizadas y desaconseja el polling a
-> FDSN (D7). `USGS_FDSN_EVENT` existe en el código sólo para backtests.
+> FDSN (D7). `USGS_FDSN_EVENT` existe en el código solo para backtests.
 
 ### NASA FIRMS — los focos activos
 
@@ -41,7 +41,7 @@ peticiones por 10 minutos. Verificado el 26-ago-2026.
 |---|---|---|---|
 | **GHS-POP R2023A** ép. 2025 | `pop_total` | EC reuse + atribución | Derivado de GPWv4.11 + volumen construido GHSL. **Modelado, no censal** |
 | **WorldPop age-sex R2025A** | `pop_0_14`, `pop_15_64`, `pop_65p` | CC-BY 4.0 | Modelado. Los extremos son conteos; la banda central es el residuo y **absorbe la diferencia entre ambos modelos** |
-| **WorldPop constrained R2025** | `pop_alt_worldpop` | CC-BY 4.0 | Sólo alimenta la banda de discrepancia publicada, **nunca la cifra principal** |
+| **WorldPop constrained R2025** | `pop_alt_worldpop` | CC-BY 4.0 | Solo alimenta la banda de discrepancia publicada, **nunca la cifra principal** |
 
 La estructura etaria merece una nota. La especificación daba por inevitable el
 supuesto de "estructura etaria estable" —repartir `pop_total` con proporciones
@@ -52,7 +52,7 @@ R2025A, y el sistema lo usa.
 
 | Fuente | Qué aporta | Licencia | Limitación |
 |---|---|---|---|
-| **Overture `buildings`** | `bld_count`, `bld_area_m2` | ODbL 1.0 | Cobertura desigual, pero **no sólo OSM**: conflaciona OSM, Microsoft, Google Open Buildings y Esri |
+| **Overture `buildings`** | `bld_count`, `bld_area_m2` | ODbL 1.0 | Cobertura desigual, pero **no solo OSM**: conflaciona OSM, Microsoft, Google Open Buildings y Esri |
 | **GHS-BUILT-S R2023A** | `built_m2` | EC reuse | Superficie vista por satélite |
 | **Overture `transportation`** | `road_km_primary/secondary/other` | ODbL 1.0 | Idem OSM |
 | **HOTOSM vía HDX** | `health_count`, `edu_count` | ODbL 1.0 | Puntos, no capacidad instalada |

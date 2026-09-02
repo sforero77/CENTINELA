@@ -35,7 +35,7 @@ flowchart LR
 
 **La diferencia entre las dos columnas importa.** Lo de la izquierda se
 consulta cada vez y cambia; lo de la derecha se congela en un manifest con su
-hash sha256, y sólo cambia cuando alguien reconstruye el activo. Por eso un
+hash sha256, y solo cambia cuando alguien reconstruye el activo. Por eso un
 reporte es reproducible: dice exactamente qué vintage consumió.
 
 ## La unidad

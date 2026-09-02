@@ -84,7 +84,7 @@ flowchart LR
 ```
 
 Medido el 27-ago-2026 sobre los diecinueve activos: de 14.984 celdas con fuego,
-3.760 tenían población, y con el corte por potencia radiativa sólo **636**
+3.760 tenían población, y con el corte por potencia radiativa solo **636**
 sobrevivían. Los 3.124 restantes eran celdas con gente y fuego moderado,
 desplazadas por incendios enormes en Amazonia deshabitada.
 
@@ -106,7 +106,7 @@ hay nadie"* con *"no hay fuego"*.
 
 Por el mismo criterio, la confianza baja **se cuenta aparte en vez de
 descartarse** (`detecciones_baja`): publicar lo que se descarta es regla del
-proyecto desde que un M4,9 sentido en media Colombia sólo existía en un log de CI.
+proyecto desde que un M4,9 sentido en media Colombia solo existía en un log de CI.
 
 ## Lo que publica
 

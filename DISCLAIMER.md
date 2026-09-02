@@ -1,11 +1,11 @@
 # Advertencias · CENTINELA
 
 Este documento es parte del producto, no un anexo legal. Si algo de lo que
-sigue deja de ser cierto, el sistema esta mal.
+sigue deja de ser cierto, el sistema está mal.
 
 ## Qué informa CENTINELA
 
-**Exposición estimada.** Cuantas personas, edificaciones, escuelas, hospitales
+**Exposición estimada.** Cuántas personas, edificaciones, escuelas, hospitales
 y kilómetros de vía quedan **dentro** de cada franja de intensidad sísmica
 modelada por el ShakeMap de USGS. Es una estimación basada en datos abiertos de
 población y edificaciones, cruzada con un modelo de intensidad.
@@ -16,7 +16,7 @@ población y edificaciones, cruzada con un modelo de intensidad.
   notifica a la población ni recomienda evacuar.
 - ❌ **No estima víctimas.** Eso lo hace PAGER (USGS), y este sistema solo lo referencia.
 - ❌ **No dictamina daño.** Exposición no es daño. Una edificación dentro de
-  MMI≥7 esta *expuesta*; si se dañó o no, este sistema no lo sabe.
+  MMI≥7 está *expuesta*; si se dañó o no, este sistema no lo sabe.
 - ❌ **No dictamina habitabilidad.** La brigada de imagen produce
   *priorización* para inspección, jamás un veredicto estructural.
 - ❌ **No reemplaza** a los servicios geológicos nacionales (SGC, SSN, CSN,

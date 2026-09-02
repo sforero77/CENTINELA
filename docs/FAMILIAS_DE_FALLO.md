@@ -10,7 +10,7 @@ propias cifras, un dibujo que corría dos veces y una prueba que no vigilaba nad
 sirve para reconocer el siguiente antes de que muerda.
 
 El hilo común: **casi ninguno falla ruidosamente.** Producen resultados
-plausibles, corridas en verde y cifras creibles. Por eso hay que buscarlos.
+plausibles, corridas en verde y cifras creíbles. Por eso hay que buscarlos.
 
 ---
 
@@ -19,7 +19,7 @@ plausibles, corridas en verde y cifras creibles. Por eso hay que buscarlos.
 Una función existe, tiene pruebas verdes, y **nadie la llama** — o la llama pero
 su resultado no le llega a nadie.
 
-| Caso | Como se veia |
+| Caso | Cómo se veía |
 |---|---|
 | El latido de `/status` no se commiteaba | 20+ corridas verdes, `"latidos": []` |
 | Latencia calculada y no publicada | la página decía "sin datos" |
@@ -29,13 +29,13 @@ su resultado no le llega a nadie.
 | **El visor 17 h congelado** | los dos workflows en verde |
 | `focos_en` sin llamador | 27-ago, cazado por el guardia |
 
-**Por que pasa.** Las pruebas comprueban que la pieza *funciona*, no que este
+**Por qué pasa.** Las pruebas comprueban que la pieza *funciona*, no que este
 *enchufada*. El fallo vive en el hueco entre dos cosas que por separado están
 bien, y no hay hueco que se pueda probar por dentro.
 
 **Que lo detecta.** `test_funciones_conectadas.py` recorre el grafo de llamadas
 y exige que toda función pública tenga llamador en producción, o una
-justificación escrita. Ha cazado tres cambios mios esta semana.
+justificación escrita. Ha cazado tres cambios míos esta semana.
 
 ---
 
@@ -63,7 +63,7 @@ la línea entera (`republica()`).
 
 ## 3 · Un tercero cambia el dato y un país desaparece
 
-| Caso | Que cambio |
+| Caso | Qué cambio |
 |---|---|
 | ARG, COD-AB republicado | apareció coordenada Z; tipo WKB 3 → 1003 |
 | ARG, mismo fichero | Itati englobando a San Luis del Palmar al 100 % |
@@ -103,7 +103,7 @@ existe» de «no pude descargarla», que eran la misma excepción.
 «solo océano»; cualquier otra sube. `comprobar_origenes` pregunta por HEAD a
 cada host distinto del manifest antes de la primera descarga, y **cualquier
 código de estado cuenta como vivo** —404, 403, 405 incluidos—: la pregunta es si
-el servidor esta en pie, no si el recurso existe, y un chequeo que confundiera
+el servidor está en pie, no si el recurso existe, y un chequeo que confundiera
 las dos cosas sería un generador de falsos positivos desactivado en una semana.
 
 Y `centinela country` sale con **código 4** cuando el origen no estaba, para que
@@ -111,7 +111,7 @@ el workflow reintente solo eso: un activo que no pasa los asserts de calidad
 falla igual las tres veces, y repetirlo solo retrasaria el diagnóstico media
 hora.
 
-**Por que pasa.** Dependemos de HDX, USGS, JRC, ESA, Overture. Ninguno avisa. Y
+**Por qué pasa.** Dependemos de HDX, USGS, JRC, ESA, Overture. Ninguno avisa. Y
 lo más fino del caso argentino: el filtro `ST_GeometryType(...) = 'POLYGON'`
 **parecia cubrirlo y no podía**, porque devuelve `POLYGON` tanto para el tipo 3
 como para el 1003 — borra la dimensión al contestar.
@@ -121,7 +121,7 @@ como para el 1003 — borra la dimensión al contestar.
 detiene el build ahí —a los minutos, nombrando la fuente y el fichero— en vez de
 salir a las dos horas disfrazado de error de geometría.
 
-**Por que llevaba vacío desde el primer día, que no era disciplina.** El campo se
+**Por qué llevaba vacío desde el primer día, que no era disciplina.** El campo se
 llamaba `sha256` y era escalar, y **una fuente del manifest no es un fichero**:
 GHS-POP son nueve u once teselas, el desglose etario de WorldPop veinte rasters,
 un COD-AB el shapefile con su `.dbf` y su `.prj`, y Overture no baja ninguno. No
@@ -156,7 +156,7 @@ traía 12,8 GB sobre un runner de 16.
 | México | 0,86 G | 4,3 GB | si |
 | Brasil | 2,57 G | 12,8 GB | no |
 
-**Por que pasa.** Funciona en Colombia y en México, así que parece correcto.
+**Por qué pasa.** Funciona en Colombia y en México, así que parece correcto.
 Brasil es seis veces Colombia y solo entonces revienta. Y el mensaje con que
 GitHub mata un runner sin recursos no distingue disco de memoria, lo que costo
 dos diagnosticos equivocados.
@@ -191,7 +191,7 @@ propia prueba del caso bueno — no solo del malo.
 | `lulc_*` a cero en activos viejos | se lee como "no hay bosque" |
 | `manifest_id` sin subir | dos activos distintos, mismo identificador |
 
-**Por que pasa.** Cero es un número perfectamente creíble, y un identificador
+**Por qué pasa.** Cero es un número perfectamente creíble, y un identificador
 repetido no chirria.
 
 **La regla, y sostiene media arquitectura del proyecto:** *ausencia de medición
@@ -207,7 +207,7 @@ cero, que `event_latencies` exija que exista el reporte, y que
 Los hexágonos H3 r8 a **0,05 píxeles** en la vista continental. La rampa de
 fuego con seis colores y ninguna leyenda.
 
-**Por que pasa.** Las pruebas comprueban que la capa se *declara*, y estaba
+**Por qué pasa.** Las pruebas comprueban que la capa se *declara*, y estaba
 perfectamente declarada. La única forma de verlo es mirar.
 
 **La regla.** Una capa nueva se abre en un navegador antes de darla por hecha, y
@@ -263,7 +263,7 @@ ensena dos bloques más arriba**: Muisne tiene 2.283.454 personas en MMI≥7. Lo
 tres eventos más fuertes del catalogo eran los que llevaban la frase que niega
 sus propias cifras.
 
-**La regla.** Una condicion escrita como "el caso raro" (`banda !== 7`) agrupa
+**La regla.** Una condición escrita como "el caso raro" (`banda !== 7`) agrupa
 dos casos opuestos en cuanto aparece el tercero. Se enumeran, no se niegan.
 
 ---
@@ -272,13 +272,13 @@ dos casos opuestos en cuanto aparece el tercero. Se enumeran, no se niegan.
 
 `cuandoElEstiloEsteListo` esperaba a que MapLibre terminara y ademas armaba un
 `setTimeout` de cuatro segundos por si ese momento no llegaba nunca. El camino
-normal quitaba los escuchadores **y dejaba el temporizador en pie**, asi que
+normal quitaba los escuchadores **y dejaba el temporizador en pie**, así que
 todo dibujo diferido corria dos veces.
 
     fallo al dibujar sobre el mapa: Error: Source "celdas" already exists.
 
-No se veia al arrancar, porque ahi el estilo suele estar listo y se toma el
-atajo. Se veia con `?evento=` sobre estilo frio — el enlace profundo, que es
+No se veía al arrancar, porque ahi el estilo suele estar listo y se toma el
+atajo. Se veía con `?evento=` sobre estilo frio — el enlace profundo, que es
 como llega quien recibe un reporte compartido.
 
 **La regla.** Una red de seguridad tiene que apagarse cuando el camino bueno
@@ -290,15 +290,15 @@ funciona. Si no, no es una red: es una segunda ejecucion.
 
 El bloque «Ambiente» del panel de fuego se quedaba con su titulo y su parrafo
 cuando GFS no cubria el foco. Se arreglo, se escribio una prueba que recorria
-doce focos buscando el caso… y pasaba siempre. Medido despues: **los 3.337
+doce focos buscando el caso… y pasaba siempre. Medido después: **los 3.337
 puntos de la rejilla de viento cubren los 6.239 focos, ninguno a más de medio
 grado**. El caso no se da nunca.
 
-Una prueba asi da verde el dia que el arreglo se rompe, porque nunca lo ejecuto.
+Una prueba así da verde el día que el arreglo se rompe, porque nunca lo ejecutó.
 La prueba buena **provoca** el escenario: vacia la rejilla y comprueba que el
 bloque desaparece.
 
-De la misma familia, y encontrado a la vez: recortar el código por un numero
+De la misma familia, y encontrado a la vez: recortar el código por un número
 fijo de caracteres. Dos pruebas leian 900 caracteres desde el id de una capa; al
 crecer el bloque las aserciones quedaron fuera y siguieron en verde sobre código
 que ya no miraban.

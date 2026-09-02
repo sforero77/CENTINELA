@@ -6,7 +6,7 @@ del sistema y obliga a actualizar los golden tests.
 
 | # | Decisión | Elegido | Descartado, y por qué |
 |---|---|---|---|
-| **D1** | Unidad de análisis | H3 r8 para cómputo, r7/r6 agregados para el visor, más crosswalk a división político-administrativa | Sólo municipios (pierde el detalle intraurbano); grid propio (no interoperable) |
+| **D1** | Unidad de análisis | H3 r8 para cómputo, r7/r6 agregados para el visor, más crosswalk a división político-administrativa | Solo municipios (pierde el detalle intraurbano); grid propio (no interoperable) |
 | **D2** | Formato | GeoParquet particionado + PMTiles | PostGIS: exige un servidor vivo, o sea costo y mantenimiento |
 | **D3** | Cómputo | DuckDB con extensiones `spatial` y `h3`, dentro del runner | Spark/Sedona (sobredimensionado); Google Earth Engine (dependencia de cuenta y de sus términos) |
 | **D4** | Orquestación | GitHub Actions + `workflow_dispatch` + keepalive | Servidor propio. **La espec ya documentaba el camino al cron externo**, que es el que hoy da los 5 minutos |
@@ -68,37 +68,37 @@ licencia, no de calidad.
 
 ## Decisiones del visor, tomadas el 1-sep-2026
 
-Salieron de recorrer la pagina publicada como usuario final. Las tres se
+Salieron de recorrer la página publicada como usuario final. Las tres se
 tomaron con medida, no con gusto.
 
 ### Velar lo que no es America Latina, en vez de reencuadrar
 
-La caja de la region es alta —73° por 76°— y el panel del mapa es apaisado en
+La caja de la región es alta —73° por 76°— y el panel del mapa es apaisado en
 todo escritorio: `fitBounds` encaja por la altura y el ancho sobra. Medido en la
-pagina publicada: 191° de longitud visibles en 1540 px, con la region ocupando
+página publicada: 191° de longitud visibles en 1540 px, con la región ocupando
 el 38 % del ancho y Africa occidental **rotulada**.
 
 Llenar el ancho obliga a recortar latitud, y el primer recorte se lleva Ciudad
-de Mexico, Monterrey y Santiago. **Se ensena la region entera y se apaga lo
+de Mexico, Monterrey y Santiago. **Se ensena la región entera y se apaga lo
 demas.** Detalle en [`../visor/capas-y-modos.md`](../visor/capas-y-modos.md).
 
 ### El fuego se dibuja con simbolos proporcionales, no con calor ni con bins
 
 La vista continental era una mancha porque **la tinta no cabia**: 12.767
 simbolos ponian 1,23 veces el lienzo. Se probaron cuatro alternativas sobre la
-pagina real y se descarto el mapa de calor **por medida**: con
+página real y se descarto el mapa de calor **por medida**: con
 `heatmap-intensity` y `heatmap-radius` fijos, el mismo punto sale carmesi a zoom
 2, naranja a zoom 4 y del color del papel a zoom 6. `heatmap-density` cuenta
-vecinos por pixel de pantalla, no energia — no se puede rotular en MW.
+vecinos por pixel de pantalla, no energía — no se puede rotular en MW.
 
 El clustering agrupa por proximidad **en pantalla**, y a escala continental el
-radio se traga paises: los conteos acaban flotando sobre el Pacifico.
+radio se traga países: los conteos acaban flotando sobre el Pacifico.
 
 ### Tres mapas base, no cinco
 
 OpenFreeMap publica cinco estilos. `liberty` y `fiord` son de colores saturados
 y sobre ellos las rampas de intensidad y de fuego dejan de leerse. Ofrecer un
-mapa base que estropea el dato no es dar una opcion, es dar una trampa. Los tres
+mapa base que estropea el dato no es dar una opción, es dar una trampa. Los tres
 que quedan llevan escrito lo que cuestan.
 
 ---

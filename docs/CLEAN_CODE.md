@@ -37,18 +37,18 @@ recuerda.**
 
 ## Nombres
 
-| Regla | Que significa aquí |
+| Regla | Qué significa aquí |
 |---|---|
 | Nombres descriptivos y sin ambigüedad | El código, los comentarios y las docstrings están **en español**, como los reportes. Un mantenedor por país no debería tener que leer inglés para revisar la cifra de su municipio. |
 | Distinciones con sentido | Prohibido lo que pasó con `SQL_IMPACT_H3`: dos constantes con **el mismo nombre**, en dos módulos del mismo paquete, con cuerpos distintos y una de las dos muerta. |
 | Nombres buscables | Los identificadores de la espec —`RF-04`, `§6.4`, `T0.7`— se citan literalmente en el código. `grep RF-04` tiene que llevar al sitio. |
-| Constantes con nombre en vez de numeros magicos | `RESCUE_MAX_DEGREES`, `DEDUPE_METERS`, `MMI_MIN_POLYFILL`, `MAX_LATIDOS`. Cada una es una decisión con consecuencias medidas, no un número. |
+| Constantes con nombre en vez de números magicos | `RESCUE_MAX_DEGREES`, `DEDUPE_METERS`, `MMI_MIN_POLYFILL`, `MAX_LATIDOS`. Cada una es una decisión con consecuencias medidas, no un número. |
 
 ---
 
 ## Funciones
 
-| Regla | Que significa aquí |
+| Regla | Qué significa aquí |
 |---|---|
 | Pequenas, y una sola cosa | `write_report_bundle` tenía el render de mapas dentro. Se extrajo `render_maps`, y por eso `regenerar-mapas` puede reusar **exactamente** el camino de la publicación en vez de reimplementarlo. |
 | Sin efectos secundarios sorprendentes | `ensure_bundled_proj()` los tiene —toca el entorno— y por eso es explicita, se llama a mano, lleva escape (`CENTINELA_RESPETA_PROJ`) y devuelve lo que aparto. Un efecto secundario que se declara deja de ser una sorpresa. |
@@ -110,7 +110,7 @@ que ya no corría. Daba la misma sensación de seguridad.
 Cuando se conserva algo sin llamador, se **declara** en
 `SIN_LLAMADOR_JUSTIFICADO` con su motivo, y hay una prueba que exige que el
 motivo tenga sustancia y otra que borra la entrada en cuanto sobra. Lo que no
-vale como motivo: «esta probada», «la usaremos pronto», «es API pública». Las
+vale como motivo: «está probada», «la usaremos pronto», «es API pública». Las
 tres describen justo el código que hay que borrar o cablear.
 
 ---
@@ -162,7 +162,7 @@ sola, no esta pasando: esta heredando el efecto de otra.
 
 ## Diseño
 
-| Regla | Que significa aquí |
+| Regla | Qué significa aquí |
 |---|---|
 | Configuracion en los niveles altos | Los vintages, licencias y hashes viven en `data/manifests/*.yaml`, nunca en el código. Regla dura: **nunca `latest`**. |
 | Evitar la sobre-configurabilidad | La reconstrucción trimestral no lee una lista de países de ningún sitio: pregunta que Releases hay publicados. Una lista que mantener a mano es una lista que se desincroniza. |

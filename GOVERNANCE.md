@@ -12,7 +12,7 @@ funcionando el mes en que nadie lo mire.
 
 ## Roles
 
-| Rol | Que hace | Cuantos |
+| Rol | Qué hace | Cuántos |
 |---|---|---|
 | **Mantenedor del núcleo** | Revisa PR a `pipelines/`, `schemas/` y workflows. Custodia los golden tests | 2+ |
 | **Mantenedor por país** | Responsable de las capas nacionales, los topónimos oficiales y el manifest de su país | 1 por país |

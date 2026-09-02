@@ -140,7 +140,7 @@ Dos variantes, y ahora distintas de verdad:
 | `general` | 1100 × 900 | 110 | El panel y el markdown: compacta, para leerse dentro de otra cosa |
 | `prensa` | 1920 × 1080 | 140 | 16:9 y tipografía grande: una nota o una proyección |
 
-Antes sólo cambiaba el ancho máximo, y con `tight_layout` recortando al dato ni
+Antes solo cambiaba el ancho máximo, y con `tight_layout` recortando al dato ni
 eso se notaba: los dos PNG de cada evento salían prácticamente idénticos,
 ofrecidos como dos descargas distintas.
 

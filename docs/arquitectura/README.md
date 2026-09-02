@@ -47,7 +47,7 @@ historial es legible. Por eso el latido del vigía se frena a uno por hora: 288
 corridas al día no pueden ser 288 commits.
 
 **2. Idempotencia por versión.** Correr P1 dos veces sobre el mismo feed no
-crea trabajo duplicado. P2 sólo re-emite cuando aparece un ShakeMap v(n+1), y
+crea trabajo duplicado. P2 solo re-emite cuando aparece un ShakeMap v(n+1), y
 entonces publica un *changelog* de deltas contra la versión anterior.
 
 **3. El cero silencioso es un fallo.** Una capa que no se construye entraría
@@ -67,4 +67,4 @@ Todo el trabajo pesado —polyfill H3, muestreo de ráster, joins de millones de
 celdas— ocurre dentro de un runner gratuito, leyendo GeoParquet particionado
 directamente con DuckDB. No hay warehouse ni cluster porque no hace falta:
 la unidad de análisis es la celda y el particionado Hive (`iso3=/layer=`)
-permite leer sólo el país que importa.
+permite leer solo el país que importa.

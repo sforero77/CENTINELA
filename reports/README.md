@@ -2,7 +2,7 @@
 
 Salidas publicadas, un directorio por evento (`<usgs_id>/`):
 
-| Archivo | Que es |
+| Archivo | Qué es |
 |---|---|
 | `report.json` | Fuente de verdad. Esquema `centinela/report/1.0` |
 | `report.md` | Reporte legible, español neutro, < 500 KB con el PNG |

@@ -1,7 +1,7 @@
 # Registro de verificaciones
 
 Cierre de las tareas ⚠️ de §8 de la especificación. Cada entrada dice **como**
-se verifico, no solo el resultado: una verificación que no se puede repetir no
+se verificó, no solo el resultado: una verificación que no se puede repetir no
 sirve de nada dentro de seis meses.
 
 Rondas: **23 de agosto de 2026** (fuentes de §8) y **auditoría completa del registro**, misma fecha. Método: peticiones reales a las
@@ -79,7 +79,7 @@ que encontrar:
 **GHS-POP**: el mosaico global pesa **5,25 GB**. El JRC publica el mismo producto
 en **375 teselas**; Colombia necesita **nueve**, que suman **93 MB**. El esquema de
 teselado (origen en x=-18.041.000, y=9.000.000, teselas de 1.000 km) se derivo y
-se verifico contra la georreferenciacion real de una tesela descargada.
+se verificó contra la georreferenciacion real de una tesela descargada.
 
 **Overture**: el tema `buildings` son **512 ficheros, 277 GB y 2.529 millones de
 edificaciones**. Colombia toca **once**. El `collection.json` del catálogo STAC
@@ -99,7 +99,7 @@ fichero.
 Aplicar la lectura del estándar —saltarse la primera— desplaza todo un puesto y
 hace leer los ficheros equivocados. Y como los ficheros vecinos cubren zonas
 adyacentes, el resultado sería plausible: un conteo de edificaciones que parece
-razonable y esta mal. Se detecto al cruzar los bboxes del catálogo con la
+razonable y está mal. Se detectó al cruzar los bboxes del catálogo con la
 extensión real medida sobre los ficheros con DuckDB.
 
 `parse_collection()` falla explícitamente si el conteo deja de ser 1:1, porque
@@ -260,11 +260,11 @@ ONU como referencia en vez del INE.
 | Colombia, para comparar | -0,11 % |
 
 La primera corrida de `centinela country VEN` fallo con la tolerancia en 5 %, y
-**eso fue el assert funcionando**: detecto una divergencia real entre dos
+**eso fue el assert funcionando**: detectó una divergencia real entre dos
 modelos de población en un país sin censo desde 2011. Se subio a 8 % para poder
 construir el activo, no porque la divergencia deje de importar.
 
-**Por que divergen.** GHS-POP R2023A parte de la ronda censal de 2010 y
+**Por qué divergen.** GHS-POP R2023A parte de la ronda censal de 2010 y
 desagrega con volumen construido. Las casas de quien emigro siguen en pie y
 siguen pesando en el modelo. WPP si incorpora el saldo migratorio. Para un
 sistema de exposición la diferencia no es academica: sobrestimar la población de
@@ -342,7 +342,7 @@ llevo la población nacional de 52,6 a 167 millones— pero en pequeño, dentro 
 la cota, y por eso invisible durante meses.
 
 **La corrección:** rescatar una celda solo si su centro no cae dentro de otro
-país. Una celda cuyo centro esta en tierra brasilena es de Brasil, por cerca que
+país. Una celda cuyo centro está en tierra brasilena es de Brasil, por cerca que
 este de la línea. Se resuelve con los polígonos de país de `division_area` de
 Overture, los mismos ficheros que se leyeron para medir las cajas envolventes.
 
@@ -357,7 +357,7 @@ código que lo persigue.
 La causa: el filtro de poda de Overture comprueba que la **esquina inferior
 izquierda** del rasgo caiga dentro de la caja del país. Vale para un edificio o
 un tramo de vía, que son más pequenos que la caja. Deja de valer para un país:
-la esquina de Brasil esta en -73,99, muy al oeste de la caja paraguena, aunque
+la esquina de Brasil está en -73,99, muy al oeste de la caja paraguena, aunque
 Brasil ocupe media caja. Medido contra Overture 2026-08-19.0:
 
 | Poda | Países devueltos en la caja de Paraguay |
@@ -443,7 +443,7 @@ frontera ni el arreglo del multipoligono la tocan.
 perfectamente creíble para una zona de intensidad. Es el cero silencioso en su
 versión más peligrosa — no un cero, un número.
 
-### El reparto no veia las islas, y el rescate lo tapaba
+### El reparto no veía las islas, y el rescate lo tapaba
 
 `h3_polygon_wkt_to_cells` devuelve **cero** celdas ante un MULTIPOLYGON. No la
 primera parte: cero. Medido:
@@ -509,7 +509,7 @@ intentos: cuatro OutOfMemory, uno por duplicados al simplificar mal, y este.)
 El rescate solo mira celdas **con población** (`FROM pop_h3`). Una celda dentro
 de un municipio multipoligono con un colegio, una vía o unas edificaciones pero
 sin población censada no entraba por ninguno de los dos caminos: ni por el
-reparto —que no veia el multipoligono— ni por el rescate. Desaparecia del activo.
+reparto —que no veía el multipoligono— ni por el rescate. Desaparecia del activo.
 
 Medido en Uruguay, misma corrida antes y después del `ST_Dump`:
 
@@ -534,7 +534,7 @@ de Colombia: lo que se pierde no es donde vive la mayoría, es la periferia.
 
 Consecuencia: **la fracción rescatada de los diecinueve hay que remedirla**.
 Hasta ahora no media lo que se creia que medida, y la afirmación "Chile rescata
-el 31 % porque su rescate es mar" esta sin comprobar por el mismo motivo.
+el 31 % porque su rescate es mar" está sin comprobar por el mismo motivo.
 
 ### Chile: dos muertes por memoria, un solo error de diseño
 
@@ -644,7 +644,7 @@ de cada producto. Una dependencia menos en el procedimiento de congelado.
 
 ### 6. T0.1 resuelta: los tres eventos identificados
 
-| Evento | `usgs_id` | Cuando | Detalle |
+| Evento | `usgs_id` | Cuándo | Detalle |
 |---|---|---|---|
 | Chocó | `us6000tjl2` | 2026-08-10T12:34:28Z | M7.4, **110 km**, PAGER rojo, ShakeMap v7 |
 | Catia La Mar | `us6000t7zp` | 2026-06-24T22:05:04Z | M7.5, 10 km, ShakeMap v14 |
@@ -678,7 +678,7 @@ la URL se resuelve por la API de CKAN de HDX en cada build
 `cod-ab-col`, `cod-ab-mex`, `cod-ab-per`, `cod-ab-ecu`, `cod-ab-chl`,
 `cod-ab-ven` y `cod-ab-gtm` existen, todos **CC BY-IGO**, todos con shapefile o
 geodatabase. Para Colombia el COD es el propio MGN del DANE reempaquetado, así
-que no aporta geometría nueva; su valor esta en Fase 1, donde evita que cada
+que no aporta geometría nueva; su valor está en Fase 1, donde evita que cada
 mantenedor de país tenga que ingeniar el geoportal nacional de turno solo para
 obtener adm1/adm2.
 
@@ -800,7 +800,7 @@ antes de contar nada.
 ### T1.2 — OurAirports · **resuelta** (23-ago-2026)
 
 `https://davidmegginson.github.io/ourairports-data/airports.csv` responde
-HTTP 200 con 12,7 MB. El texto que faltaba citar esta en dos sitios, ambos
+HTTP 200 con 12,7 MB. El texto que faltaba citar está en dos sitios, ambos
 leidos directamente:
 
 - **Página de datos** (`https://ourairports.com/data/`): «All data is released
@@ -1004,7 +1004,7 @@ de ser correcto sin avisar.
 
 ### T2.4 — La rama de pesos, sin cambios
 
-Sigue en pie tal como esta escrito en `p4_brigada/protocol.py`: un modelo
+Sigue en pie tal como está escrito en `p4_brigada/protocol.py`: un modelo
 afinado desde xBD/xView2 hereda CC BY-NC-SA y va al cubo `nc/`. Lo que cambia
 tras T2.1 y T2.2 es que **la rama limpia ya tiene de que alimentarse**: EMS para
 etiquetas, Umbra y Capella para imagen, las dos CC BY. La rama limpia deja de
@@ -1014,7 +1014,7 @@ ser una aspiracion y pasa a ser una ruta con fuentes nombradas.
 
 ## Ronda 6 — el visor, recorrido como usuario final (31-ago / 1-sep-2026)
 
-Metodo: abrir la pagina publicada y usarla, con criterio de UX/UI y de
+Método: abrir la página publicada y usarla, con criterio de UX/UI y de
 cartografia digital, cruzando cada cifra contra `report.json`, `cobertura.json`,
 la API de USGS y el `report.md` que produce el propio pipeline. Las medidas de
 pantalla se tomaron con Playwright sobre el sitio armado igual que lo publica
@@ -1026,31 +1026,31 @@ de abajo se midio con Playwright.
 
 ### Cifras que decian lo que no era
 
-| Que | Como se comprobo | Resultado |
+| Qué | Cómo se comprobó | Resultado |
 |---|---|---|
 | «La sacudida no alcanzo MMI 7 sobre población» en Muisne | `report.json` del evento | **Falso**: `pop_mmi7p` = 2.283.454. La nota estaba escrita para el caso contrario y salia en los 3 eventos que llegan a MMI 8 |
 | «Municipios más expuestos» | `top_municipios` de los 21 reportes | Ordenaba por la banda cumbre: Quininde salia con **0** teniendo 164.691 en MMI≥7, y Portoviejo (333.075) no salia. Filas en cero en 12 de los 21 |
-| «Difiere del total nacional del mismo producto… remuestreo a hexagonos» | SQL de `p2_impact/pipeline.py` y `markdown.py` | Es el desacuerdo **GHS-POP vs WorldPop en el area afectada**. El `.md` lo decia bien y el visor al reves. Carupano publica 416,9 % |
-| «La malla de 5,2 km² con la que se calcula» | `H3_RES_COMPUTE` = 8, `H3_RES_VIEWER` = (7, 6) | El calculo va en r8 (0,74 km²); 5,2 km² es la resolucion de publicacion |
+| «Difiere del total nacional del mismo producto… remuestreo a hexagonos» | SQL de `p2_impact/pipeline.py` y `markdown.py` | Es el desacuerdo **GHS-POP vs WorldPop en el area afectada**. El `.md` lo decía bien y el visor al reves. Carupano publica 416,9 % |
+| «La malla de 5,2 km² con la que se calcula» | `H3_RES_COMPUTE` = 8, `H3_RES_VIEWER` = (7, 6) | El calculo va en r8 (0,74 km²); 5,2 km² es la resolución de publicación |
 | PAGER «naranja» del visor | API de USGS (`fdsnws/event/1/query`) | ✅ coincide. El `.md` lo publicaba sin traducir |
 | Suma de la malla vs totales del pipeline | 8.517 celdas de Muisne sumadas en el navegador | ✅ 4.311.562 contra `pop_mmi6p` = 4.311.549 |
 | Recorte de la malla al contorno MMI 6 | `querySourceFeatures` sobre `celdas` y `contornos` | ✅ Quito y Guayaquil quedan fuera, y **deben** quedar fuera |
 
 ### Medidas de pantalla
 
-| Que | Antes | Despues |
+| Qué | Antes | Después |
 |---|---|---|
-| Longitud visible al abrir (1540 px) | 191° para una region de 73° | 126° a 1440×900; la region ocupa del 41 % al 88 % segun el tamano |
+| Longitud visible al abrir (1540 px) | 191° para una región de 73° | 126° a 1440×900; la región ocupa del 41 % al 88 % segun el tamano |
 | Tinta de la capa de fuego a zoom 2 | 413.000 px² — **1,23× el lienzo** | 117.000 px² — 0,15× |
 | Tinta de las celdas ≤10 MW frente a las ≥400 MW | 10,9 : 1 | 2,0 : 1 |
 | Celdas que caen sobre un pixel ya ocupado (z2) | 69 %, y las 150 más energeticas **sin excepcion** | igual, pero ahora el fuego fuerte se dibuja encima |
 | Barra de escala vs leyenda en 390 px, con evento abierto | −22 px (solapando) | +1 px |
-| Rueda del raton sobre el mapa | zoom 2,05 → 1,65 **y** pagina 300 px, en un gesto | la rueda no toca el mapa |
+| Rueda del raton sobre el mapa | zoom 2,05 → 1,65 **y** página 300 px, en un gesto | la rueda no toca el mapa |
 
 ### El mapa de calor, descartado por medida
 
 Con `heatmap-intensity` y `heatmap-radius` **fijos**, se leyo el color del pixel
-del mismo punto geografico (un foco del Beni) a tres zooms:
+del mismo punto geográfico (un foco del Beni) a tres zooms:
 
 | zoom | color |
 |---|---|
@@ -1058,7 +1058,7 @@ del mismo punto geografico (un foco del Beni) a tres zooms:
 | 4 | `rgb(238, 113, 21)` — naranja |
 | 6 | `rgb(223, 220, 209)` — el color del papel: desaparece |
 
-`heatmap-density` mide vecinos por pixel de pantalla, no energia. Una rampa que
+`heatmap-density` mide vecinos por pixel de pantalla, no energía. Una rampa que
 cambia de significado con el zoom no se puede rotular en MW.
 
 ### Lo publicado estaba rancio
@@ -1071,9 +1071,9 @@ publicado y 8 en el `hilo.txt`, incluido «Exposición no es daño» como cierre
 hilo para redes.
 
 Se anadio `centinela regenerar-textos` y se re-emitieron los 21. Verificado
-contra la pagina publicada tras la fusion: 0 ficheros con formas sin tilde.
+contra la página publicada tras la fusion: 0 ficheros con formas sin tilde.
 
-### Un defecto que ya estaba en produccion
+### Un defecto que ya estaba en producción
 
 Comparando el visor publicado contra el arreglado, con `?evento=` y estilo frio:
 
@@ -1081,14 +1081,14 @@ Comparando el visor publicado contra el arreglado, con `?evento=` y estilo frio:
     [ahora] (sin errores)
 
 La red de seguridad de `cuandoElEstiloEsteListo` no se cancelaba cuando el
-camino normal funcionaba, asi que todo dibujo diferido corria dos veces. Ver la
+camino normal funcionaba, así que todo dibujo diferido corria dos veces. Ver la
 familia 10 de [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md).
 
 ---
 
 ## Sigue abierto
 
-| Tarea | Que falta |
+| Tarea | Qué falta |
 |---|---|
 | T0.2 (resto) | Congelar los **contenidos**: `cont_mmi.json` y rasters de Ground Failure, que necesita el polyfill H3. Lo congelado hoy es la estructura de productos y su historial de versiones |
 | T0.9 (nueva) | Nombre del archivo MGN a nivel municipal: el nacional pesa 3,39 GB |

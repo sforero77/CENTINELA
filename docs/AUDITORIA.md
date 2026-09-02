@@ -74,7 +74,7 @@ llamar a `centinela status`.
 `status.json` seguía diciendo `generado_utc: 2026-08-23T18:27`,
 `backtests_excluidos: 1`, y listaba un solo evento.
 
-**Por que importa.** «Latencia medida y publicada» es uno de los dos requisitos
+**Por qué importa.** «Latencia medida y publicada» es uno de los dos requisitos
 que quedan para cerrar Fase 0. No lo cerraba el primer sismo: lo bloqueaba este
 `git add`. El sistema iba a calcular la latencia correctamente y a no
 publicarla.
@@ -91,7 +91,7 @@ comentario de al lado todavía decía «Fase 0 construye un solo país. Cuando F
 1 traiga los siete, esto vuelve a ser una matriz» — pero Fase 1 ya había
 ocurrido: hay 18 activos publicados.
 
-**Por que urge.** Los 19 manifests fijan el mismo release de Overture,
+**Por qué urge.** Los 19 manifests fijan el mismo release de Overture,
 `2026-08-19.0`, y Overture conserva solo dos (~2 meses). La corrida del 1-oct
 refrescaba COL con el pin todavía vivo; poco después el pin muere y **ninguno de
 los otros 17 países se puede reconstruir** hasta que alguien suba los vintages.
@@ -119,7 +119,7 @@ backtest del Chocó no coincidian con `reports/us6000tjl2/report.json`:
 
 Más «52,9 millones de habitantes» contra `medido_ghs_pop: 52.620.466`. La cifra
 de vías estaba errada por un factor de seis, en la portada de un repositorio
-público cuyo argumento entero es que sus numeros son de fiar.
+público cuyo argumento entero es que sus números son de fiar.
 
 **Criterio de aceptación.** Las cifras del README salen del artefacto publicado,
 y una prueba falla si vuelven a divergir. Una tabla de cifras a mano se
@@ -129,7 +129,7 @@ desincroniza; una tabla con prueba, no.
 
 **Severidad:** media-alta · **Estado:** ✅ cerrada
 
-| Módulo | Cobertura previa | Que hace |
+| Módulo | Cobertura previa | Qué hace |
 |---|---|---|
 | `pipelines/cli.py` | **0 %** (172 sentencias) | El punto de entrada de todos los workflows |
 | `p0_exposure/raster_h3.py` | **0 %** | Agregación ráster→H3: de aquí sale **cada cifra de población** |
@@ -138,7 +138,7 @@ desincroniza; una tabla con prueba, no.
 Los dos últimos solo se importan, en import diferido, desde dentro de funciones
 de `build.py` y `run.py` — en tramos que la cobertura marcaba sin ejecutar.
 
-**Por que importa más que el número.** Es literalmente la clase de fallo que
+**Por qué importa más que el número.** Es literalmente la clase de fallo que
 este proyecto ya se cazó tres veces: `static_map.py` no tenía pruebas y publicó
 seis PNG vacios en tres reportes; `compute_preliminary` estaba escrita, probada
 y sin llamador; tres capas del activo se agregaban a tablas que nadie leia.
@@ -190,7 +190,7 @@ nunca en el limbo. Y una prueba impide que el limbo vuelva.
 
 - `docs/OPERACION.md` §6 listaba como abiertos «PMTiles del visor (hoy el mapa
   esta vacío)» y «RF-03… se calcula por radios pero no se emite». Ambos
-  cerrados. Su §4 decía «solo Colombia esta medida» — son 18.
+  cerrados. Su §4 decía «solo Colombia está medida» — son 18.
 - `PENDIENTES.md` §2.1 decía que faltaba correr el backtest de Venezuela (esta
   publicado) y que su tolerancia era 5 % (es 5,44, **estrechada** desde 8,0).
   §2.5 decía que los países nuevos llevan «un 5 % provisional».
@@ -331,7 +331,7 @@ mide 1.719 grados cuadrados porque llega a Rapa Nui**, y la de Argentina 671.
 Medido sobre el epicentro real del M6,7 de Coquimbo (2019), los candidatos salen
 `[ARG, CHL, BRA]`. El workflow habría bajado el activo argentino, el join no
 habría encontrado una sola celda y el evento se habría quedado sin reporte.
-Cada vez, para uno de los países más sismicos de la región.
+Cada vez, para uno de los países más sísmicos de la región.
 
 Lo más incomodo del hallazgo: **el diseño correcto estaba escrito desde el
 principio y en dos sitios**. Las docstrings de `countries_for_point` y de
@@ -428,7 +428,7 @@ resultó ser distinta en cada caso — y el tablero los mostraba igual, como un
 hueco.
 
 **Paraguay y Uruguay no han tenido un solo sismo M≥5,5 desde el año 2000.**
-Ninguno. Su activo esta construido, medido y esperando. Para un sistema cuyo
+Ninguno. Su activo está construido, medido y esperando. Para un sistema cuyo
 propósito es estar listo por adelantado, eso no es una carencia: es exactamente
 el estado que se persigue, y presentarlo como un vacío lo cuenta al revés.
 
@@ -495,7 +495,7 @@ público que este visor tiene hasta que ocurra el primer sismo en vivo.
 
 La causa: `cuandoElEstiloEsteListo` usaba `m.once("load", fn)`. Ese evento
 dispara **una sola vez**. Si ya disparo y `isStyleLoaded()` sigue devolviendo
-false —cosa que pasa mientras una fuente esta en vuelo— el callback queda
+false —cosa que pasa mientras una fuente está en vuelo— el callback queda
 registrado para algo que no volverá a ocurrir. Se cambia por `styledata` +
 `idle`, que entre los dos no dejan ventana.
 
@@ -532,7 +532,7 @@ Es la primera pregunta ante una celda sacudida, y la que separa «esta cerca» d
 «esta lejos y aun así le llegó». No estaba en ninguna parte del visor.
 
 Se calcula con **el mismo radio terrestre que usa el pipeline**
-(`pipelines/common/geo.py`). Dos numeros distintos para la misma distancia, uno
+(`pipelines/common/geo.py`). Dos números distintos para la misma distancia, uno
 en el mapa y otro en el reporte, es la clase de discrepancia que destruye la
 confianza en todo lo demás — y hay una prueba que compara las dos formulas.
 
@@ -614,7 +614,7 @@ confirma:
 
 La auditoría incorporo una revisión contra los principios de *Clean Code*
 (Robert C. Martin) y su lectura moderna en Python. Lo adoptado, con lo que
-significa **aquí**, esta en [`CLEAN_CODE.md`](CLEAN_CODE.md).
+significa **aquí**, está en [`CLEAN_CODE.md`](CLEAN_CODE.md).
 
 La regla que más trabajo dio no es de estilo: **«always find root cause»**.
 Cinco de los nueve hallazgos son la misma causa raíz —una función escrita y no

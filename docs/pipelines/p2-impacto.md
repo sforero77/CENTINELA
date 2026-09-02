@@ -65,7 +65,7 @@ conteo de población expuesta.
 El ráster de licuefacción **no es probabilidad**: el producto de USGS deriva
 por calibración una **cobertura areal** —la fracción de la celda que se espera
 cubierta por manifestaciones de licuefacción—, y el de deslizamiento sí es
-probabilidad. Llamarlas igual afirma de una lo que sólo vale para la otra, y el
+probabilidad. Llamarlas igual afirma de una lo que solo vale para la otra, y el
 `report.md` ya las distingue (`GF_UNIDAD`). El umbral 0,10 se aplica a las dos,
 pero significa cosas distintas en cada una.
 

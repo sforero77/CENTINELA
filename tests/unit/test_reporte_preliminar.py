@@ -108,3 +108,63 @@ def test_sin_radios_lo_dice_en_vez_de_callar(estado: EventState, sin_productos: 
     """Si no hay activo del pais, el hueco se declara; no se publica una tabla vacia."""
     md = render_markdown(build_preliminary_report(estado, sin_productos, {}, manifest_id="x"))
     assert "No se pudo calcular el corte por radios" in md
+
+
+# --- La guardia de pais del preliminar -------------------------------------
+#
+# El camino completo comprueba que el ShakeMap toque al menos una celda del
+# activo y, si no, lanza `ExposureCountryMismatchError` para que el orquestador
+# pruebe el siguiente pais. El preliminar no lo hacia: con el activo equivocado
+# devolvia {25: 0, 50: 0, 100: 0}, `run_impact` salia con exito e `impact.yml`
+# daba el evento por resuelto en el primer candidato. Un "0 personas a 100 km"
+# publicado en la primera hora de un sismo real es la cifra falsa y creible que
+# este sistema no se permite en ningun otro sitio.
+
+
+def _activo_de_una_celda(con: object, tmp_path: Path, lat: float, lon: float) -> str:
+    """Un parquet con una sola celda r8, en la coordenada que se le pida."""
+    destino = tmp_path / "exposure_h3.parquet"
+    con.execute(  # type: ignore[attr-defined]
+        "COPY (SELECT h3_latlng_to_cell(?, ?, 8)::UBIGINT AS h3_08, "
+        "'COL' AS iso3, '05' AS adm1_id, '05001' AS adm2_id, 5000.0 AS pop_total, "
+        "'col-v0.6' AS src_manifest) "
+        f"TO '{destino.as_posix()}' (FORMAT PARQUET)",
+        [lat, lon],
+    )
+    return destino.as_posix()
+
+
+@pytest.mark.geo
+def test_el_preliminar_cuenta_lo_que_tiene_cerca(estado: EventState, tmp_path: Path) -> None:
+    """Con el activo del pais correcto, la celda entra en los tres radios."""
+    from pipelines.p2_impact.exposure_join import connect
+    from pipelines.p2_impact.pipeline import compute_preliminary
+
+    con = connect()
+    ruta = _activo_de_una_celda(con, tmp_path, estado.lat, estado.lon)
+
+    por_radio = compute_preliminary(con, estado, exposure_glob=ruta)
+
+    assert por_radio == {25: 5000.0, 50: 5000.0, 100: 5000.0}
+
+
+@pytest.mark.geo
+def test_el_preliminar_no_publica_ceros_con_el_activo_de_otro_pais(
+    estado: EventState, tmp_path: Path
+) -> None:
+    """El caso de Coquimbo, que el propio codigo documenta.
+
+    La caja de Chile mide 1.719 grados cuadrados por Rapa Nui, asi que un sismo
+    chileno sale como argentino primero. Antes de la guardia, el preliminar se
+    calculaba contra el activo argentino y publicaba tres ceros; ahora levanta,
+    y el bucle de `impact.yml` prueba el siguiente candidato.
+    """
+    from pipelines.p2_impact.exposure_join import connect
+    from pipelines.p2_impact.pipeline import ExposureCountryMismatchError, compute_preliminary
+
+    con = connect()
+    # Una celda en Buenos Aires para un epicentro en el Choco: nada a 100 km.
+    ruta = _activo_de_una_celda(con, tmp_path, -34.60, -58.38)
+
+    with pytest.raises(ExposureCountryMismatchError, match="100 km del epicentro"):
+        compute_preliminary(con, estado, exposure_glob=ruta)

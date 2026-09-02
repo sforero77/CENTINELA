@@ -35,7 +35,7 @@ from typing import Any
 
 from ..common.formatting import format_count_prose, format_number_es, titulo_es
 from ..common.logging import get_logger
-from .model import Report
+from .model import Report, banda_del_ranking
 
 _log = get_logger(__name__)
 
@@ -166,7 +166,8 @@ def render_map(
     from matplotlib.patches import Patch
 
     spec = SPECS[variant]
-    puntos = [p for p in _puntos_municipales(municipios or []) if p[2] >= MMI_MIN_MAPPED]
+    banda = banda_del_ranking(report)
+    puntos = [p for p in _puntos_municipales(municipios or [], banda) if p[2] >= MMI_MIN_MAPPED]
     epicentro = _epicentro(report)
 
     # La figura se dimensiona a partir de la extension de los datos, no al
@@ -264,7 +265,8 @@ def render_map(
     fig.text(
         0.012,
         0.932 if prensa else 0.925,
-        f"Población en MMI≥7 por municipio · ShakeMap v{report.inputs.shakemap_version}"
+        f"Población en MMI≥{banda} por municipio · "
+        f"ShakeMap v{report.inputs.shakemap_version}"
         " · exposición estimada, no daño",
         fontsize=11 if prensa else 8,
         color="#55524e",
@@ -682,6 +684,7 @@ def _epicentro(report: Report) -> tuple[float, float] | None:
 
 def _puntos_municipales(
     filas: Sequence[Mapping[str, Any]],
+    banda: int,
 ) -> list[tuple[float, float, float, float, str]]:
     """``(lon, lat, mmi, pop, nombre)`` de cada municipio.
 
@@ -701,7 +704,12 @@ def _puntos_municipales(
                 coord[0],
                 coord[1],
                 float(fila.get("mmi_max") or 0),
-                float(fila.get("pop_mmi7p") or 0),
+                # LA MISMA BANDA QUE EL TITULO Y QUE LA TABLA DEL `report.md`.
+                # Estaba fija en `pop_mmi7p`: para los once eventos del catalogo
+                # que no llegan a MMI>=7 sobre poblacion, todos los circulos
+                # salian al minimo y la leyenda rotulaba "Personas expuestas: 0"
+                # mientras el `report.md` del mismo evento hablaba de MMI>=6.
+                float(fila.get(f"pop_mmi{banda}p") or 0),
                 str(fila.get("nombre") or ""),
             )
         )

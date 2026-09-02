@@ -76,7 +76,7 @@ combinación.
 
 Una capa que no se construye entra vacía al ensamblaje, el `LEFT JOIN` la
 vuelve ceros y el activo se escribiría sin que nada proteste: el assert de
-total nacional sólo mira población.
+total nacional solo mira población.
 
 > Es preferible no publicar activo que publicar uno que informa cero donde no
 > midió nada.

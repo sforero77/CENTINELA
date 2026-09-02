@@ -28,7 +28,7 @@ flowchart TB
   style visor fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
 ```
 
-Ejemplos de fallos que **sólo** el navegador encontró:
+Ejemplos de fallos que **solo** el navegador encontró:
 
 - Una tarjeta de capas que creció a 576 px y tapó las pestañas.
 - La barra de escala "2000 km" pisando el título de la leyenda en móvil.
@@ -91,7 +91,7 @@ sirve igual para diagnosticar desde la consola de quien reporte un fallo.
 | `totalesDelTablero()` / `sumaDelVisor()` | Dos implementaciones de la misma suma, para poder compararlas |
 | `abrirFoco(i)` / `olvidarElViento()` | Puertas para provocar estados que no se dan solos |
 
-Las dos últimas existen por una regla: **una prueba que sólo pasa porque el
+Las dos últimas existen por una regla: **una prueba que solo pasa porque el
 escenario no ocurre no vigila nada**. Los 3.337 puntos de la rejilla de viento
 cubren hoy los 6.239 focos, así que el caso «GFS no llegó» hay que provocarlo.
 
@@ -111,7 +111,7 @@ persona ve en dos segundos y que ninguna aserción sobre el DOM detecta.
 
 ## Reproducir carreras de red
 
-Un fallo que sólo aparece con red lenta no se reproduce en un servidor local,
+Un fallo que solo aparece con red lenta no se reproduce en un servidor local,
 que responde en microsegundos. Se retrasan **las teselas**, no el estilo:
 
 ```python

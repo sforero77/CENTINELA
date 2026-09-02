@@ -402,14 +402,30 @@ def _linea_ground_failure(report: Report, tipo: str, propia: float) -> str:
 #: No se contradicen. Para el Choco, las cifras de CENTINELA caen exactamente
 #: dentro del intervalo que las filas de PAGER acotan por arriba y por abajo:
 #: PAGER da 10.487.959 en su fila 6 (o sea ≥5,5) y 6.514.486 en la 7 (≥6,5), y
-#: CENTINELA da 6.960.086 en ≥6,0 y 2.415.793 en ≥7,0. Es el unico acuerdo
-#: aritmeticamente posible entre dos convenciones de banda distintas.
+#: CENTINELA da 6.960.086 en ≥6,0 y 2.415.793 en ≥7,0.
+#:
+#: ESO ES EL RESULTADO DE UN EVENTO, Y ESTA NOTA SALE EN TODOS. La version
+#: anterior afirmaba, sin condicion, que "cada cifra de aqui cae dentro del
+#: intervalo que las filas de PAGER acotan", en los veinte reportes con alerta
+#: PAGER. Es falso en al menos uno: `us2000ahv0` publica 0 en MMI>=7 y 760.856
+#: en MMI>=6, y los intervalos de PAGER para Mexico son 494.298-1.614.941 y
+#: 1.614.941-5.047.657. La causa no es el calculo: los dos no leyeron el mismo
+#: ShakeMap —CENTINELA consumio el Atlas v1, maximo 7,398, y PAGER corrio sobre
+#: `us` v11, maximo 8,57—, que es justo lo que la nota tiene que advertir en vez
+#: de tapar con una afirmacion que no puede comprobar al renderizar.
+#:
+#: La diferencia de convencion es un hecho y se queda. El acotamiento es una
+#: comprobacion por evento: se hace donde hay con que hacerla
+#: (`test_contraste_con_pager.py`, sobre el Choco) y se cita, no se promete.
 NOTA_BANDAS_PAGER = (
-    "Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado "
-    "—su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas "
-    "literales, donde MMI≥7 es MMI≥7. Comparadas de frente parecen "
-    "discrepar; puestas en el mismo eje, cada cifra de aquí cae dentro del "
-    "intervalo que las filas de PAGER acotan por arriba y por abajo."
+    "Las dos cifras **no se tabulan igual** y no se pueden leer una contra "
+    "otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae "
+    "entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. "
+    "Puede además que no hablen del mismo ShakeMap: este reporte declara en "
+    "«Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión "
+    "o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y "
+    "comprobado para el sismo de San José del Palmar, está en "
+    "`docs/PARA_INSTITUCIONES.md`."
 )
 
 
