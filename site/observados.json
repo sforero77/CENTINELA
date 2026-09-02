@@ -1,10 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-<<<<<<< HEAD
-  "generado_utc": "2026-09-02T20:00:24Z",
-=======
-  "generado_utc": "2026-09-02T20:01:00Z",
->>>>>>> 96ce2ba (P1: eventos detectados ["us7000tdms", "us7000tdmp"])
+  "generado_utc": "2026-09-02T20:19:26Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -72,7 +68,7 @@
       "lugar": "26 km al OSO de Tocopilla, Chile",
       "origen_utc": "2026-08-30T05:19:51Z",
       "razon": "M4.7 < umbral M5.5",
-      "iso3": ""
+      "iso3": "CHL"
     },
     {
       "usgs_id": "us7000tcvp",
@@ -83,7 +79,7 @@
       "lugar": "70 km al ENE de San Pedro de Atacama, Chile",
       "origen_utc": "2026-08-29T23:26:17Z",
       "razon": "M4.5 < umbral M5.5",
-      "iso3": ""
+      "iso3": "CHL"
     },
     {
       "usgs_id": "us7000tcth",
@@ -94,7 +90,7 @@
       "lugar": "24 km al OSO de Sipí, Colombia",
       "origen_utc": "2026-08-29T10:50:24Z",
       "razon": "M4.5 < umbral M5.5",
-      "iso3": ""
+      "iso3": "COL"
     },
     {
       "usgs_id": "us7000tcpf",
@@ -105,7 +101,7 @@
       "lugar": "38 km al NNE de Cuya, Chile",
       "origen_utc": "2026-08-28T20:44:36Z",
       "razon": "M4.5 < umbral M5.5",
-      "iso3": ""
+      "iso3": "CHL"
     }
   ]
 }

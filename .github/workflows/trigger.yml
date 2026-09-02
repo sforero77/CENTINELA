@@ -299,7 +299,35 @@ jobs:
               return 1
             fi
             echo "::notice::derivados en conflicto; se regeneran en vez de fusionarse"
-            uv run centinela status
+            # SE REGENERAN LOS DOS, NO UNO.
+            #
+            # `centinela status` rehace `site/status.json` y nada mas;
+            # `site/observados.json` lo rehace otro comando. Con el `git add`
+            # de abajo cubriendo los dos, el que no se regeneraba entraba al
+            # commit **con los marcadores de conflicto dentro**. Paso el
+            # 2-sep-2026 a las 20:01: los dos derivados quedaron corruptos en
+            # `main`, `/status` sirvio JSON invalido, y el vigia se cayo en las
+            # dos corridas siguientes.
+            #
+            # Y fallar aqui tiene que abortar. Esta funcion se llama desde un
+            # `elif`, que **desactiva `set -e`**: sin comprobar el codigo de
+            # salida, un regenerado que falla seguia hasta `git add` y
+            # `rebase --continue` igual.
+            uv run centinela status || return 1
+            uv run centinela observados || return 1
+
+            # LA RED DE SEGURIDAD, QUE ES LO QUE DE VERDAD FALTABA.
+            #
+            # Cualquiera que sea el motivo, un fichero con marcadores no se
+            # publica. Es preferible reintentar y dejar el vigia en rojo —que
+            # es visible— a servir un JSON que el visor no puede leer.
+            for derivado in $DERIVADOS; do
+              if grep -q '^<<<<<<< \|^>>>>>>> ' "$derivado"; then
+                echo "::error::$derivado conserva marcadores de conflicto; no se publica"
+                return 1
+              fi
+            done
+
             # shellcheck disable=SC2086
             git add $DERIVADOS
             GIT_EDITOR=true git rebase --continue
