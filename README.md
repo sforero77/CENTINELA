@@ -12,6 +12,25 @@ municipio y por celda H3, con datos descargables y en español.
 > geológicos ni a las unidades de gestión del riesgo. Ver
 > [`DISCLAIMER.md`](DISCLAIMER.md).
 
+**[Ver el visor](https://sforero77.github.io/CENTINELA/)** · [un reporte de
+ejemplo](https://sforero77.github.io/CENTINELA/reports/us6000tjl2/) ·
+[`DISCLAIMER.md`](DISCLAIMER.md)
+
+### Dos palabras que este documento usa todo el rato
+
+**MMI** es la escala **Mercalli Modificada**, de I a XII, y mide **la sacudida
+en un sitio**: lo que se sintió y lo que puede romperse allí. No es la magnitud.
+La magnitud —M7,4— es una sola cifra para el sismo entero, y la intensidad es un
+mapa: el mismo M7,4 deja MMI 8 en un valle y MMI 5 a cien kilómetros. Confundir
+las dos es el error de lectura más caro que este sistema puede provocar, porque
+lleva a repartir ayuda por la cifra equivocada. Aquí las bandas se escriben
+literales: **MMI≥7** significa intensidad 7 o más, no «alrededor de 7».
+
+Un **activo de exposición** es el otro término: una tabla ya construida, celda a
+celda, de cuánta gente e infraestructura hay en cada punto del país. Es lo que
+permite que un mapa de intensidad se convierta en cifras el mismo día en vez de
+en semanas, y construirlo es la mitad del trabajo de este proyecto.
+
 ## Por qué existe
 
 En el sismo de San José del Palmar (M7,4, 10 de agosto de 2026) el país supo
@@ -297,7 +316,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.373 pruebas** sin red, más **101 de navegador** que abren el visor en un
+**1.375 pruebas** sin red, más **101 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 
