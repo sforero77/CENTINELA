@@ -4,15 +4,15 @@
     "mag": 7.4,
     "lugar": "2 km al SE de San José del Palmar, Colombia",
     "iso3": "COL",
-    "lon": -76.2422,
-    "lat": 4.8436,
+    "lon": -76.2182,
+    "lat": 4.8836,
     "pop_mmi7p": 2424287.2030194234,
     "pop_mmi6p": 7194539.766747381,
     "utc": "2026-08-10T12:34:28Z",
     "shakemap_version": 8,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-09-01T21:53:34Z"
+    "generado_utc": "2026-09-02T02:45:38Z"
   },
   {
     "usgs_id": "us6000t7zp",

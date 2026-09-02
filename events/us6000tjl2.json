@@ -2,9 +2,9 @@
   "usgs_id": "us6000tjl2",
   "estado": "publicado",
   "mag": 7.4,
-  "lon": -76.2422,
-  "lat": 4.8436,
-  "depth_km": 110.285,
+  "lon": -76.2182,
+  "lat": 4.8836,
+  "depth_km": 108.174,
   "lugar": "2 km al SE de San José del Palmar, Colombia",
   "origen_utc": "2026-08-10T12:34:28Z",
   "versiones_procesadas": {
@@ -12,7 +12,7 @@
     "groundfailure": 8
   },
   "timestamps": {
-    "publicado": "2026-09-01T21:53:37Z",
+    "publicado": "2026-09-02T02:45:40Z",
     "usgs_origen": "2026-08-10T12:34:28Z"
   },
   "hashes": {},
@@ -20,6 +20,7 @@
   "backtest": true,
   "notas": [
     "Backtest: reconstruccion retrospectiva del 10-ago-2026, no una respuesta en vivo.",
+    "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",

@@ -1,6 +1,6 @@
 # Exposición sísmica — M7,4 · 2 km al SE de San José del Palmar, Colombia
 
-**Evento USGS:** `us6000tjl2` · **Origen:** 2026-08-10T12:34:28Z UTC · **Profundidad:** 110,3 km
+**Evento USGS:** `us6000tjl2` · **Origen:** 2026-08-10T12:34:28Z UTC · **Profundidad:** 108,2 km
 
 > **Reconstrucción retrospectiva.** Este reporte se calculó después del evento, no en respuesta a él, y no cuenta para las métricas de latencia del sistema.
 >
@@ -37,7 +37,7 @@ De la población en intensidad MMI≥7, alrededor de **290 mil** personas tienen
 | 5 | Dosquebradas | `66170` | 7,5 | 180 mil |
 | 6 | Cartago | `76147` | 7,5 | 130 mil |
 | 7 | Quibdó | `27001` | 7,0 | 110 mil |
-| 8 | Santa Rosa De Cabal | `66682` | 7,0 | 68 mil |
+| 8 | Santa Rosa de Cabal | `66682` | 7,0 | 68 mil |
 | 9 | La Tebaida | `63401` | 7,0 | 54 mil |
 | 10 | Zarzal | `76895` | 7,5 | 40 mil |
 | 11 | Alcalá | `76020` | 7,0 | 37 mil |
@@ -67,10 +67,9 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,3 %**.
 
 ## Cambios frente a la versión anterior
 
-- ShakeMap: v7 → v8
-- Ground Failure: v7 → v8
-- Población en MMI≥6: 7 millones → 7,2 millones
-- Edificaciones en MMI≥7: 440 mil → 450 mil
+- Profundidad: 110 → 108 km
+- Epicentro: reubicado 5 km
+- Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
 
@@ -82,7 +81,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,3 %**.
 - ShakeMap consumido: **v8**
 - Ground Failure consumido: **v8**
 - Manifiesto de exposición: `col-v0.6`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T21:53:34Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:45:38Z
 
 ## Advertencias
 

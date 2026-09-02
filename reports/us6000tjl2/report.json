@@ -3,12 +3,12 @@
   "event": {
     "usgs_id": "us6000tjl2",
     "mag": 7.4,
-    "depth_km": 110.285,
+    "depth_km": 108.174,
     "utc": "2026-08-10T12:34:28Z",
     "lugar": "2 km al SE de San José del Palmar, Colombia",
     "pager_alert": "red",
-    "lon": -76.2422,
-    "lat": 4.8436
+    "lon": -76.2182,
+    "lat": 4.8836
   },
   "inputs": {
     "shakemap_version": 8,
@@ -22,13 +22,13 @@
     "pop_mmi6p": 7194539.766747381,
     "pop_mmi7p": 2424287.2030194234,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 289947.45064393966,
+    "pop_65p_mmi7p": 289947.45064394,
     "bld_mmi7p": 448789.0,
     "built_m2_mmi7p": 70306557.0,
     "health_mmi7p": 516.0,
     "edu_mmi7p": 1003.0,
-    "road_km_mmi7p": 8791.335779124453,
-    "road_km_principal_mmi7p": 1015.2104602015536,
+    "road_km_mmi7p": 8791.33577912444,
+    "road_km_principal_mmi7p": 1015.2104602015522,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 1602162.1454312252
   },
@@ -84,7 +84,7 @@
     },
     {
       "adm2_id": "66682",
-      "nombre": "Santa Rosa De Cabal",
+      "nombre": "Santa Rosa de Cabal",
       "mmi_max": 7.0,
       "pop_mmi7p": 68465.74396868609,
       "pop_banda": 68465.74396868609
@@ -156,10 +156,9 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
-    "ShakeMap: v7 → v8",
-    "Ground Failure: v7 → v8",
-    "Población en MMI≥6: 7 millones → 7,2 millones",
-    "Edificaciones en MMI≥7: 440 mil → 450 mil"
+    "Profundidad: 110 → 108 km",
+    "Epicentro: reubicado 5 km",
+    "Ninguna cifra publicada cambia frente a la versión anterior."
   ],
   "disclaimers": [
     "Exposición estimada, no daño observado.",
@@ -167,6 +166,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-01T21:53:34Z",
+  "generado_utc": "2026-09-02T02:45:38Z",
   "pipeline_version": "0.1.0"
 }
