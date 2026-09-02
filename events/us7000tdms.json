@@ -8,18 +8,19 @@
   "lugar": "southern East Pacific Rise",
   "origen_utc": "2026-09-02T12:35:56Z",
   "versiones_procesadas": {
-    "shakemap": 1,
+    "shakemap": 2,
     "groundfailure": 0
   },
   "timestamps": {
     "detectado": "2026-09-02T13:00:25Z",
-    "publicado": "2026-09-02T14:11:03Z",
+    "publicado": "2026-09-02T14:40:57Z",
     "usgs_origen": "2026-09-02T12:35:56Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,
   "backtest": false,
   "notas": [
-    "ShakeMap v0 -> v1"
+    "ShakeMap v0 -> v1",
+    "ShakeMap v1 -> v2"
   ]
 }
