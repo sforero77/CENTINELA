@@ -16,7 +16,7 @@
 | Edificaciones en MMI≥7 | 0 |
 | Sedes de salud en MMI≥7 | 0 |
 | Sedes educativas en MMI≥7 | 0 |
-| Kilometros de via en MMI≥7 | 0 km |
+| Kilómetros de vía en MMI≥7 | 0 km |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
@@ -30,7 +30,7 @@ Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la 
 | 4 | Milagro | `EC0910` | 6,0 | 210 mil |
 | 5 | Naranjal | `EC0911` | 6,5 | 89 mil |
 | 6 | Pasaje | `EC0709` | 6,5 | 82 mil |
-| 7 | San Jacinto De Yaguachi | `EC0920` | 6,5 | 75 mil |
+| 7 | San Jacinto de Yaguachi | `EC0920` | 6,5 | 75 mil |
 | 8 | Samborondón | `EC0916` | 6,0 | 74 mil |
 | 9 | Santa Rosa | `EC0712` | 6,5 | 74 mil |
 | 10 | Huaquillas | `EC0707` | 6,5 | 60 mil |
@@ -69,7 +69,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,4 %**.
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v9**
 - Manifiesto de exposición: `ecu-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T22:12:00Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:47:25Z
 
 ## Advertencias
 

@@ -77,7 +77,7 @@
     },
     {
       "adm2_id": "EC0920",
-      "nombre": "San Jacinto De Yaguachi",
+      "nombre": "San Jacinto de Yaguachi",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 74539.90179289039
@@ -162,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-01T22:12:00Z",
+  "generado_utc": "2026-09-02T02:47:25Z",
   "pipeline_version": "0.1.0"
 }
