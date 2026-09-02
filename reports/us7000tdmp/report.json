@@ -11,7 +11,7 @@
     "lat": 14.3909
   },
   "inputs": {
-    "shakemap_version": 2,
+    "shakemap_version": 3,
     "groundfailure_version": 0,
     "exposure_manifest": "mex-v0.2"
   },
@@ -52,7 +52,7 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
-    "ShakeMap: v0 → v2",
+    "ShakeMap: v2 → v3",
     "Ninguna cifra publicada cambia frente a la versión anterior."
   ],
   "disclaimers": [
@@ -61,6 +61,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-02T13:57:34Z",
+  "generado_utc": "2026-09-02T14:36:05Z",
   "pipeline_version": "0.1.0"
 }

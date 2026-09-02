@@ -36,7 +36,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Cambios frente a la versión anterior
 
-- ShakeMap: v0 → v2
+- ShakeMap: v2 → v3
 - Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
@@ -46,10 +46,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v2**
+- ShakeMap consumido: **v3**
 - Ground Failure consumido: **v0**
 - Manifiesto de exposición: `mex-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-02T13:57:34Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T14:36:05Z
 
 ## Advertencias
 
