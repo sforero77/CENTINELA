@@ -2,6 +2,6 @@
 
 2/4 Ninguna persona del país queda dentro de MMI≥6. No es que falte el dato: la intensidad que el ShakeMap dibuja para este evento no alcanza esa banda sobre territorio habitado.
 
-3/4 Ningún municipio del país queda con población dentro de las bandas de intensidad de este evento. La sacudida fue mar adentro.
+3/4 Ningún municipio del país queda con población dentro de las bandas de intensidad de este evento: la sacudida quedó mar adentro o sobre zona despoblada.
 
 4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/reports/us7000tdmp/
