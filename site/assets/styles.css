@@ -211,6 +211,11 @@ a:hover { color: var(--verde-vivo); }
   background: var(--bosque);
   color: var(--crema) !important;
   font-size: 0.84rem;
+  /* Una pastilla es un boton, y un boton no se subraya. Vivia dentro de
+     `.barra nav`, que ya quitaba el subrayado; fuera de la barra salia
+     subrayada. La regla va donde vive el componente, no donde se le use. */
+  text-decoration: none;
+  display: inline-block;
 }
 
 .boton-pastilla:hover { background: var(--verde); }
