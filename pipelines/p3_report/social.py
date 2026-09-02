@@ -81,9 +81,19 @@ def render_thread(report: Report) -> list[str]:
     elif not report.preliminar:
         # Y cuando no hay ninguno se dice, en vez de nombrar a los tres primeros
         # de una lista de ceros — que es lo que hacia con los sismos mar adentro.
+        # «LA SACUDIDA FUE MAR ADENTRO» ERA FALSO EN UNO DE LOS CINCO.
+        #
+        # `usp000jd2q` tiene el epicentro a 5 km de Baní, **tierra adentro** en
+        # República Dominicana, y este hilo afirmaba que fue mar adentro. El
+        # `.md` ya decía la version correcta —«mar adentro **o sobre zona
+        # despoblada**»— y el hilo se quedo con la mitad falsa.
+        #
+        # Afirmar de menos cuesta una palabra; afirmar de mas cuesta la
+        # credibilidad de todo lo demas que el hilo dice.
         posts.append(
             "Ningún municipio del país queda con población dentro de las bandas de "
-            "intensidad de este evento. La sacudida fue mar adentro."
+            "intensidad de este evento: la sacudida quedó mar adentro o sobre zona "
+            "despoblada."
         )
 
     posts.append(

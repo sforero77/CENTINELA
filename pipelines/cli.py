@@ -18,13 +18,14 @@ from .common.http import HttpFetcher
 from .common.logging import get_logger
 from .common.manifest import Manifest, fijar_insumos_en_manifest, lint_manifest_file
 from .common.paths import BUILD_DIR, MANIFESTS_DIR
-from .common.state import EventState
+from .common.state import EventState, EventStatus
 from .common.status import write_status
 from .p0_exposure.build import MEDICION_FICHERO, build_country
 from .p1_trigger.observados import (
     DIAS_OBSERVADOS,
     fusionar,
     leer,
+    pais_del_toponimo,
     podar,
     write_observados,
 )
@@ -659,6 +660,58 @@ def _cmd_calibrar(args: argparse.Namespace) -> int:
     return 2 if bloqueadas else 0
 
 
+def _cmd_sin_pais(args: argparse.Namespace) -> int:
+    """Cierra un evento que no cae en ningun pais, dejandolo visible.
+
+    NI FALLO ETERNO NI DESAPARICION SILENCIOSA.
+
+    Un M5,5+ en mar abierto dentro de `LATAM_BBOX` no tiene activo contra el que
+    calcular: un reporte es imposible. Pero hasta hoy tampoco alcanzaba estado
+    terminal, asi que `repaso.yml` lo re-despachaba a diario durante noventa
+    dias, abriendo una incidencia cada vez.
+
+    Se cierra por los dos lados: el estado pasa a `DESCARTADO` —terminal, no se
+    re-despacha— **y el evento entra en `observados.json`**, la capa que el
+    visor ya pinta con los sismos vistos y no despachados. Ocurrio, se vio, y se
+    puede señalar en el mapa; lo unico que no hay es una cifra de exposicion, y
+    eso el propio fichero lo declara.
+    """
+    from .p1_trigger.observados import EventoObservado, fusionar, leer, podar, write_observados
+
+    events_dir = Path(args.events_dir) if args.events_dir else None
+    estado = EventState.load(args.usgs_id, events_dir)
+    if estado is None:
+        print(f"No existe event_state para {args.usgs_id}.", file=sys.stderr)
+        return 1
+
+    razon = args.razon or "epicentro fuera de la caja de todos los paises cubiertos"
+    if estado.estado is not EventStatus.DESCARTADO:
+        estado.transition(EventStatus.DESCARTADO, nota=razon).save(events_dir)
+
+    observado = EventoObservado(
+        usgs_id=estado.usgs_id,
+        mag=estado.mag,
+        lon=estado.lon,
+        lat=estado.lat,
+        depth_km=estado.depth_km,
+        lugar=estado.lugar,
+        origen_utc=estado.origen_utc,
+        razon=razon,
+        iso3="",
+    )
+    ruta = write_observados(podar(fusionar(leer(), [observado])))
+    print(json.dumps({"usgs_id": estado.usgs_id, "razon": razon, "observados": str(ruta)}))
+    return 0
+
+
+#: Codigo de salida de `paises-candidatos` cuando el epicentro no cae en ninguna
+#: caja de pais. **No es un fallo**: es mar abierto, y quien llama tiene que
+#: poder distinguirlo de un error de verdad para cerrarlo en vez de reintentarlo
+#: noventa dias. El 1 queda para los fallos y el 2 lo usa `main()` para
+#: `NotImplementedError`.
+SIN_PAIS_CANDIDATO = 4
+
+
 def _cmd_paises(args: argparse.Namespace) -> int:
     """Paises cuyo activo podria servir para un evento ya detectado.
 
@@ -672,9 +725,21 @@ def _cmd_paises(args: argparse.Namespace) -> int:
     """
     from .p0_exposure.download import countries_for_point
 
-    state = EventState.load(args.usgs_id, Path(args.events_dir) if args.events_dir else None)
+    # Un estado ilegible se trata como un estado ausente: este comando ya tiene
+    # camino para eso —`--detail-url`— y usarlo es mejor que morir, porque quien
+    # llama es `impact.yml` y necesita saber que activo bajar.
+    try:
+        state = EventState.load(args.usgs_id, Path(args.events_dir) if args.events_dir else None)
+    except (ValueError, KeyError, OSError) as error:
+        _log.warning(
+            "event_state ilegible; se resuelve el pais por el detail",
+            extra={"context": {"usgs_id": args.usgs_id, "error": str(error)}},
+        )
+        state = None
+    lugar = ""
     if state is not None:
         lon, lat = state.lon, state.lat
+        lugar = state.lugar
     elif args.detail_url:
         # Un historico no tiene estado hasta que P2 lo reconstruye, y en el
         # workflow esta pregunta va **antes** de P2: hay que saber que activo
@@ -682,6 +747,7 @@ def _cmd_paises(args: argparse.Namespace) -> int:
         # epicentro del detail sirve igual de bien que el estado.
         detalle = HttpFetcher(timeout_s=60.0).get_json(args.detail_url)
         lon, lat = (float(c) for c in detalle["geometry"]["coordinates"][:2])
+        lugar = str((detalle.get("properties") or {}).get("place") or "")
     else:
         print(
             f"No existe event_state para {args.usgs_id}. Si es un historico que P1 "
@@ -692,17 +758,43 @@ def _cmd_paises(args: argparse.Namespace) -> int:
 
     candidatos = countries_for_point(lon, lat)
     if not candidatos:
+        # MAR ABIERTO NO ES UN FALLO, Y TRATARLO COMO TAL SALIA CARO.
+        #
+        # `LATAM_BBOX` es un rectangulo que cubre miles de km2 de Pacifico y
+        # Atlantico. Un M5,5+ ahi pasa el filtro de P1 y llega aqui; con
+        # `return 1`, `impact.yml` moria bajo `set -e`, abria una incidencia que
+        # nadie cerraba, y el evento **nunca alcanzaba estado terminal** —el
+        # descarte vive dentro de `run_impact`, que no llegaba a correr—. Se
+        # quedaba `detectado` para siempre y `repaso.yml` lo re-despachaba a
+        # diario durante noventa dias.
+        #
+        # Con codigo propio, quien llama puede distinguirlo de un fallo de
+        # verdad y cerrarlo: ver `centinela sin-pais`.
         print(
             f"El epicentro de {args.usgs_id} ({lon}, {lat}) no cae en "
             f"ningun pais con caja declarada. Puede ser mar abierto o un pais que "
             f"el sistema todavia no cubre; anadelo a COUNTRY_BBOX.",
             file=sys.stderr,
         )
-        return 1
+        return SIN_PAIS_CANDIDATO
+
+    # EL ORDEN POR AREA DE CAJA NO SIRVE PARA ELEGIR UNO SOLO.
+    #
+    # `countries_for_point` ordena por area de caja envolvente, y este mismo
+    # fichero documenta por que eso falla: la de Chile mide 1.719 grados
+    # cuadrados por Rapa Nui, asi que un sismo en Coquimbo sale como argentino
+    # primero. Para **iterar** da igual —el join desempata—, pero `impact.yml`
+    # usa el primero cuando tiene que publicar sin poder iterar, y ahi elegir mal
+    # significa publicar un reporte de Chile contra el activo de Argentina.
+    #
+    # El toponimo de USGS si lo dice, y `pais_del_toponimo` ya lo lee. Cuando no
+    # lo sepa devuelve cadena vacia y manda el orden de siempre.
+    del_toponimo = pais_del_toponimo(lugar)
+    preferido = del_toponimo if del_toponimo in candidatos else candidatos[0]
 
     print(" ".join(candidatos))
     _emit_github_output("paises", " ".join(candidatos))
-    _emit_github_output("pais", candidatos[0])
+    _emit_github_output("pais", preferido)
     return 0
 
 
@@ -948,6 +1040,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_paises.add_argument("usgs_id")
     p_paises.add_argument("--events-dir", help="directorio de event_state")
     p_paises.set_defaults(func=_cmd_paises)
+
+    p_sin_pais = sub.add_parser(
+        "sin-pais",
+        help="cierra un evento en mar abierto: terminal y visible en observados",
+    )
+    p_sin_pais.add_argument("usgs_id")
+    p_sin_pais.add_argument("--razon", default="")
+    p_sin_pais.add_argument("--events-dir", default="")
+    p_sin_pais.set_defaults(func=_cmd_sin_pais)
 
     return parser
 

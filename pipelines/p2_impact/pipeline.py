@@ -474,7 +474,13 @@ def compute_impact(
 # --- Reporte preliminar sin ShakeMap (RF-03) -------------------------------
 
 
-def compute_preliminary(con: Any, state: EventState, *, exposure_glob: str) -> dict[int, float]:
+def compute_preliminary(
+    con: Any,
+    state: EventState,
+    *,
+    exposure_glob: str,
+    aunque_no_alcance: bool = False,
+) -> dict[int, float]:
     """Poblacion dentro de radios alrededor del epicentro.
 
     Cuando USGS aun no ha publicado ShakeMap, el corte por radios es lo unico
@@ -510,7 +516,18 @@ def compute_preliminary(con: Any, state: EventState, *, exposure_glob: str) -> d
     # nadie cerca, un preliminar no informa. Si se agotan los candidatos,
     # `impact.yml` abre error; para un evento oceanico eso es ruido, y la
     # decision de suavizarlo es de operacion, no de calculo.
-    if not any(por_radio.values()):
+    # LA VENTANA PRELIMINAR ES LA QUE MAS IMPORTA, Y AQUI SEGUIA ROTA.
+    #
+    # `--aunque-no-alcance` se puso el 2-sep para el camino completo y no llego
+    # hasta aqui. El resultado: un M5,5+ mar adentro **antes de que USGS
+    # publique el ShakeMap** —los primeros diez a treinta minutos— seguia
+    # fallando en rojo con el enrutado bien hecho, que es justo lo que se creia
+    # arreglado.
+    #
+    # El comentario de abajo ya decia que suavizarlo era "decision de operacion,
+    # no de calculo". Esta bandera **es** esa decision, tomada por quien agoto
+    # los candidatos, y por eso entra aqui y no como heuristica.
+    if not any(por_radio.values()) and not aunque_no_alcance:
         raise ExposureCountryMismatchError(
             f"Ninguna celda del activo ({exposure_glob}) queda a menos de "
             f"{max(PRELIMINARY_RADII_KM)} km del epicentro de {state.usgs_id}. "

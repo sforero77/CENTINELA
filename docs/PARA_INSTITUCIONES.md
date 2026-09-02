@@ -41,27 +41,28 @@ es la fuente de verdad del código DIVIPOLA.
 | | |
 |---|---|
 | Activos de exposición publicados | **19 de 19** |
-| Reportes emitidos de punta a punta | **21**, en 15 países |
-| De ellos, disparados en vivo | **1** — los otros 21 son reconstrucciones |
+| Reportes emitidos de punta a punta | **23**, en 15 países |
+| De ellos, disparados en vivo | **2** — los otros 21 son reconstrucciones |
 | Personas ya en la malla hexagonal | **649,8 millones** |
-| Latencia objetivo, sismo → reporte | p50 ≤ 60 min · primera medida: 89,1 min, con un fallo de por medio |
+| Latencia objetivo, sismo → reporte | p50 ≤ 60 min · lo medido, en `/status` |
 
-**El primero en vivo llegó el 2-sep-2026, y costó 89 minutos.** Un M5,6 a 71 km
+**El primero en vivo llegó el 2-sep-2026, y no salió como debía.** Un M5,6 a 71 km
 al OSO de Puerto Madero, México. El vigía lo detectó y despachó en minutos —esa
 mitad de la cadena funcionó a la primera— y P2 lo rechazó veinte veces seguidas:
 trataba «el ShakeMap no alcanza ninguna celda» como error incluso con el país
 bien enrutado, cuando lo que pasaba es que la sacudida se quedó mar adentro. El
-reporte salió cuando se arregló esa distinción.
+reporte salió cuando se arregló esa distinción. Horas después llegó el segundo,
+un M5,9 en la dorsal del Pacífico Oriental (`us7000tdms`).
 
-Así que `medido.p50_min` publica **89,1 min** y esa cifra hay que leerla por lo
-que es: no mide la cadena en régimen, mide lo que tardó en arreglarse un fallo
-que sólo podía aparecer con un sismo real. El siguiente evento en vivo dará la
-primera medida limpia, y hasta entonces conviene no citar los 89 minutos como
-latencia del sistema.
+**La latencia medida está en [`/status`](https://sforero77.github.io/CENTINELA/status.html),
+y aquí no se copia a mano.** Se mueve con cada evento —ya caducó dos veces en un
+día— y ahora mismo está **por encima del objetivo**, porque lo que cronometró no
+fue la cadena en régimen sino lo que tardó en arreglarse un fallo que sólo podía
+aparecer con un sismo real. La primera medida limpia la dará el siguiente evento.
 
 Los otros veintiún reportes siguen siendo reconstrucciones históricas: prueban
 que el cálculo funciona sobre eventos reales de USGS, no que la cadena en vivo
-esté ejercitada. Ahora está ejercitada una vez, y enseñó algo.
+esté ejercitada. Ahora está ejercitada dos veces, y enseñó algo.
 
 ## 4. Qué tan buena es la cifra de población
 

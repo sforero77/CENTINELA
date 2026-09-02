@@ -125,3 +125,57 @@ def test_el_cero_no_se_confunde_con_una_medicion(tmp_path: Path) -> None:
     totales = _correr(tmp_path, aunque_no_alcance=True)
 
     assert totales.discrepancia_pct is None
+
+
+# --- Y la ventana preliminar, que es la que más importa ----------------------
+
+
+def _preliminar(tmp_path: Path, *, aunque_no_alcance: bool) -> dict[int, float]:
+    """El corte por radios, con el epicentro lejísimos de la única celda."""
+    from pipelines.common.state import EventState, EventStatus
+    from pipelines.p2_impact.pipeline import compute_preliminary
+
+    estado = EventState(
+        usgs_id="us7000tdmp",
+        estado=EventStatus.DETECTADO,
+        mag=5.6,
+        lon=-140.0,
+        lat=-30.0,
+        depth_km=10.0,
+        lugar="en mitad del Pacífico",
+        origen_utc="2026-09-02T12:28:31Z",
+    )
+    # `connect()` y no `duckdb.connect()`: el corte por radios usa las funciones
+    # H3 de DuckDB, que vienen de la extension de la comunidad.
+    from pipelines.p2_impact.exposure_join import connect
+
+    return compute_preliminary(
+        connect(),
+        estado,
+        exposure_glob=_activo(tmp_path),
+        aunque_no_alcance=aunque_no_alcance,
+    )
+
+
+def test_el_preliminar_sin_el_permiso_sigue_elevando(tmp_path: Path) -> None:
+    """El caso del país equivocado no cambia: hay que probar el siguiente.
+
+    `tests/unit/test_reporte_preliminar.py` fija este mismo comportamiento y
+    debe seguir pasando sin tocarse.
+    """
+    with pytest.raises(ExposureCountryMismatchError):
+        _preliminar(tmp_path, aunque_no_alcance=False)
+
+
+def test_el_preliminar_con_el_permiso_publica_ceros(tmp_path: Path) -> None:
+    """LA VENTANA QUE MÁS IMPORTA SEGUÍA ROTA.
+
+    `--aunque-no-alcance` se puso el 2-sep para el camino completo y no llegaba
+    aquí. Un M5,5+ mar adentro **antes de que USGS publique el ShakeMap** —los
+    primeros diez a treinta minutos— seguía fallando en rojo con el enrutado
+    bien hecho, que es justo lo que se creía arreglado.
+    """
+    por_radio = _preliminar(tmp_path, aunque_no_alcance=True)
+
+    assert por_radio, "el preliminar tiene que devolver sus radios, aunque estén en cero"
+    assert not any(por_radio.values()), "nadie cerca del epicentro: los radios van en cero"

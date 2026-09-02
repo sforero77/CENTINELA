@@ -37,6 +37,10 @@ class TriggerResult:
     #: despachan, pero se publican: el vigia tiene que poder demostrar que
     #: estuvo mirando.
     observados: list[EventoObservado] = field(default_factory=list)
+    #: Eventos cuyo `event_state` no se pudo leer. Se cuentan **aparte** de los
+    #: relevantes: descartarlos en silencio haria que "cero eventos" no
+    #: distinguiera "ninguno interesante" de "no pude leer ninguno".
+    estados_ilegibles: list[str] = field(default_factory=list)
     latido_utc: str = field(default_factory=utcnow_iso)
 
     @property
@@ -98,6 +102,7 @@ def run_trigger(
             "context": {
                 "revisados": result.revisados,
                 "relevantes": result.relevantes,
+                "estados_ilegibles": len(result.estados_ilegibles),
                 "observados": len(result.observados),
                 "nuevos": result.nuevos,
                 "revisitados": result.revisitados,
@@ -129,8 +134,31 @@ def _classify(
     events_dir: Path | None,
     dry_run: bool,
 ) -> None:
-    """Decide si el evento es nuevo, revisita o terminal, y persiste el estado."""
-    existing = EventState.load(candidate.usgs_id, events_dir)
+    """Decide si el evento es nuevo, revisita o terminal, y persiste el estado.
+
+    UN `event_state` CORRUPTO CEGABA A P1 ENTERO, Y PARA SIEMPRE.
+
+    `EventState.load` se llamaba aqui sin proteccion. Un solo fichero ilegible
+    en `events/` propagaba hasta `cli.main` —que solo atrapa
+    `NotImplementedError`— y mataba la pasada entera; y la mataria igual en cada
+    corrida siguiente hasta que alguien lo tocara a mano. Con el cron a cinco
+    minutos, eso es la vigilancia caida indefinidamente.
+
+    Lo llamativo es que los consumidores secundarios si se protegian —
+    `repaso.py`, `rezago.py`, `status.py`— y el critico no. Aqui se aplica el
+    mismo patron, y ademas se **cuenta** el ilegible: si se descartara en
+    silencio, "cero eventos relevantes" seria indistinguible de "no pude leer
+    ninguno", que es la confusion que este proyecto persigue en todas partes.
+    """
+    try:
+        existing = EventState.load(candidate.usgs_id, events_dir)
+    except (ValueError, KeyError, OSError) as error:
+        result.estados_ilegibles.append(candidate.usgs_id)
+        _log.warning(
+            "event_state ilegible; el evento se salta y los demas siguen",
+            extra={"context": {"usgs_id": candidate.usgs_id, "error": str(error)}},
+        )
+        return
 
     if existing is None:
         state = EventState(
