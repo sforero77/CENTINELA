@@ -31,7 +31,7 @@ De la población en intensidad MMI≥7, alrededor de **15 mil** personas tienen 
 | 1 | Alto Amazonas | `PE1602` | 7,5 | 110 mil |
 | 2 | Ucayali | `PE1606` | 7,5 | 38 mil |
 | 3 | Requena | `PE1605` | 7,5 | 29 mil |
-| 4 | Datem Del Marañon | `PE1607` | 7,5 | 24 mil |
+| 4 | Datem del Marañon | `PE1607` | 7,5 | 24 mil |
 | 5 | Loreto | `PE1603` | 7,5 | 17 mil |
 | 6 | San Martin | `PE2209` | 7,5 | 15 mil |
 | 7 | Lamas | `PE2205` | 7,5 | 11 mil |
@@ -65,7 +65,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,0 %**.
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v8**
 - Manifiesto de exposición: `per-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T22:09:48Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:44:47Z
 
 ## Advertencias
 
