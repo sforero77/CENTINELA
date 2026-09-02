@@ -133,6 +133,39 @@ jobs:
             DESCARTADOS="$DESCARTADOS $ISO3"
           done
 
+          # AGOTAR LOS CANDIDATOS NO ES LO MISMO QUE FALLAR.
+          #
+          # Si todos se descartaron por **no alcanzar celdas** —y ninguno por
+          # faltar el activo— el enrutado acerto y lo que pasa es que la
+          # sacudida no llego a poblacion. Es el caso de un M5,6 a 71 km mar
+          # adentro, y hay que publicarlo: el ShakeMap se revisa, la version
+          # siguiente puede alcanzar tierra, y solo se seguira mirando si el
+          # evento esta en el catalogo. Descartarlo es dejar de mirar.
+          #
+          # Se reintenta con el primer candidato, el mejor por epicentro.
+          PRIMERO=$(echo $PAISES | awk '{print $1}')
+          if [ -z "$SIN_ACTIVO" ] && [ -n "$PRIMERO" ]; then
+            echo "::notice::Ningun activo alcanza celdas para $USGS_ID: la sacudida no llego a poblacion. Se publica con ceros usando $PRIMERO."
+            PREFIJO="exposure-$(echo "$PRIMERO" | tr '[:upper:]' '[:lower:]')-"
+            TAG=$(gh release list --limit 100 --json tagName \
+                   --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
+                         | sort_by(.tagName) | last | .tagName")
+            rm -rf data/build && mkdir -p data/build
+            gh release download "$TAG" --dir data/build --clobber
+            MANIFEST=$(ISO3="$PRIMERO" uv run python -c "
+          import os
+          from pipelines.common.manifest import Manifest
+          print(Manifest.load(os.environ['ISO3']).manifest_id)")
+            uv run centinela impact "$USGS_ID" $BACKTEST $REPROCESAR \
+              --detail-url "$DETAIL_URL" \
+              --exposure "data/build/exposure_h3.parquet" \
+              --manifest "$MANIFEST" \
+              --aunque-no-alcance
+            echo "tag=$TAG"      >> "$GITHUB_OUTPUT"
+            echo "iso3=$PRIMERO" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           echo "::error::Ningun activo sirvio para $USGS_ID. Candidatos: [$PAISES].\
           Descartados por no alcanzar celdas:[$DESCARTADOS]. Sin activo publicado:\
           [$SIN_ACTIVO]. Si falta un pais, construyelo con: \

@@ -213,6 +213,7 @@ def run_impact(
     workdir: Path | None = None,
     admin_lookup_parquet: str | None = None,
     backtest: bool = False,
+    aunque_no_alcance: bool = False,
     forzar: bool = False,
 ) -> Decision:
     """Procesa un evento de punta a punta: productos -> impacto -> reporte.
@@ -328,6 +329,7 @@ def run_impact(
         contornos=contornos,
         deslizamiento=deslizamiento,
         licuefaccion=licuefaccion,
+        aunque_no_alcance=aunque_no_alcance,
     )
     # §6.4 pide estos asserts "en P0 y P2". En P2 no corrian: vivian en una
     # funcion sin llamador, llamada desde otra funcion sin llamador cuya
