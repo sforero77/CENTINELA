@@ -237,7 +237,12 @@ def run_impact(
     Returns:
         La decision tomada, ya ejecutada.
     """
-    from .pipeline import build_report, compute_impact, download_products
+    from .pipeline import (
+        build_report,
+        compute_impact,
+        download_products,
+        manifiesto_del_activo,
+    )
 
     detail = fetcher.get_json(detail_url)
     state = EventState.load(usgs_id, events_dir)
@@ -337,8 +342,14 @@ def run_impact(
             extra={"context": {"usgs_id": usgs_id, "avisos": list(calidad.avisos)}},
         )
 
+    # EL MANIFIESTO LO DICE EL ACTIVO, NO QUIEN LLAMO AL CLI.
+    #
+    # `--manifest` viene de `data/manifests/` y el activo es un Release que
+    # puede ser mas viejo. Ver `manifiesto_del_activo`.
+    del_activo = manifiesto_del_activo(con, manifest_id)
+
     reporte = build_report(
-        con, state, products, totales, manifest_id=manifest_id, notas=calidad.avisos
+        con, state, products, totales, manifest_id=del_activo, notas=calidad.avisos
     )
 
     # RF-04: al re-emitir por un ShakeMap nuevo hay que decir **que cambio**.
@@ -428,13 +439,19 @@ def _publicar_preliminar(
     mientras no llega el ShakeMap, no es el reporte definitivo, y el reintento
     vuelve a pasar por aqui en quince minutos. Se registra y se sigue.
     """
-    from .pipeline import build_preliminary_report, compute_preliminary
+    from .pipeline import (
+        build_preliminary_report,
+        compute_preliminary,
+        manifiesto_del_activo,
+    )
 
     try:
         con = connect()
         _cargar_admin_lookup(con, exposure_glob, admin_lookup_parquet)
         por_radio = compute_preliminary(con, state, exposure_glob=exposure_glob)
-        reporte = build_preliminary_report(state, products, por_radio, manifest_id=manifest_id)
+        reporte = build_preliminary_report(
+            state, products, por_radio, manifest_id=manifiesto_del_activo(con, manifest_id)
+        )
         escritos = write_report_bundle(reporte, [], reports_root=reports_root)
     except Exception as exc:
         _log.warning(

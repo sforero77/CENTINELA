@@ -24,13 +24,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
+from .constants import SITIO_PUBLICADO
 from .logging import get_logger
 from .paths import SITE_DIR
 
 _log = get_logger(__name__)
 
 #: Donde vive la pagina publicada.
-SITIO_PUBLICADO: Final[str] = "https://sforero77.github.io/CENTINELA"
+
 
 #: Cuanto puede ir la pagina por detras del repositorio antes de que sea un
 #: fallo. El latido se commitea como mucho una vez por hora y el despliegue

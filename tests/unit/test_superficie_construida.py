@@ -111,7 +111,7 @@ def test_con_desglose_se_publican_dos_filas(reporte: Report) -> None:
     md = render_markdown(_con(reporte, road_km_mmi7p=1000.0, road_km_principal_mmi7p=300.0))
     assert "Vías primarias y secundarias en MMI≥7" in md
     assert "Vías locales en MMI≥7" in md
-    assert "Kilometros de via en MMI≥7" not in md
+    assert "Kilómetros de vía en MMI≥7" not in md
 
 
 def test_la_via_local_es_el_resto(reporte: Report) -> None:
@@ -122,7 +122,7 @@ def test_la_via_local_es_el_resto(reporte: Report) -> None:
 def test_un_activo_sin_desglose_publica_el_total(reporte: Report) -> None:
     """Compatibilidad: un reporte anterior no tiene la columna nueva."""
     md = render_markdown(_con(reporte, road_km_mmi7p=1000.0, road_km_principal_mmi7p=0.0))
-    assert "Kilometros de via en MMI≥7" in md
+    assert "Kilómetros de vía en MMI≥7" in md
     assert "Vías locales" not in md
 
 

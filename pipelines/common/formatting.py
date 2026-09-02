@@ -82,3 +82,36 @@ def format_delta_prose(before: float, after: float) -> str:
     '340 mil → 360 mil'
     """
     return f"{format_count_prose(before)} → {format_count_prose(after)}"
+
+
+#: Palabras que en un toponimo espanol van en minuscula salvo al principio.
+#: `str.title()` no lo sabe y publica "Santa Rosa De Cabal", "Villa De Leyva",
+#: "San Andres Y Providencia".
+_ATONAS: frozenset[str] = frozenset(
+    {"de", "del", "la", "las", "el", "los", "y", "e", "da", "do", "dos", "en"}
+)
+
+
+def titulo_es(nombre: str) -> str:
+    """Titula un toponimo respetando las particulas.
+
+    `str.title()` pone en mayuscula toda palabra, y los nombres municipales de
+    LATAM estan llenos de particulas: salia "Santa Rosa De Cabal". Tambien
+    rompe los apostrofos y los guiones, pero eso no aparece en el catalogo.
+
+    La primera palabra siempre va en mayuscula, aunque sea atona: "Las Vegas"
+    no es "las Vegas".
+    """
+    palabras = nombre.strip().split()
+    if not palabras:
+        return ""
+    salida = []
+    for i, palabra in enumerate(palabras):
+        # Las abreviaturas se quedan como estan: "BOGOTA, D.C." no es
+        # "Bogota, D.c.". Se reconocen por el punto interior.
+        if "." in palabra.rstrip("."):
+            salida.append(palabra.upper())
+            continue
+        baja = palabra.lower()
+        salida.append(baja if i and baja in _ATONAS else baja.capitalize())
+    return " ".join(salida)

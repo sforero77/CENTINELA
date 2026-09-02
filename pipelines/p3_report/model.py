@@ -166,7 +166,10 @@ class Incertidumbre:
     de exposicion se publican como notas, no se maquillan.
     """
 
-    pop_discrepancia_pct: float = 0.0
+    #: `None` cuando no se pudo medir. **No es cero.** Ver
+    #: `ImpactTotals.discrepancia_pct`: tres reportes publicaban "0,0 %", que se
+    #: lee como "los dos productos coinciden" y significaba lo contrario.
+    pop_discrepancia_pct: float | None = None
     notas: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
@@ -326,7 +329,7 @@ class Report:
             radios=tuple(PoblacionEnRadio(**r) for r in data.get("radios", [])),
             top_municipios=tuple(MunicipioTop(**m) for m in data.get("top_municipios", [])),
             incertidumbre=Incertidumbre(
-                pop_discrepancia_pct=data["incertidumbre"]["pop_discrepancia_pct"],
+                pop_discrepancia_pct=data["incertidumbre"].get("pop_discrepancia_pct"),
                 notas=tuple(data["incertidumbre"].get("notas", [])),
             ),
             ground_failure_usgs=GroundFailureUSGS(**data.get("ground_failure_usgs", {})),
@@ -338,3 +341,48 @@ class Report:
             generado_utc=str(data.get("generado_utc", "")),
             pipeline_version=str(data.get("pipeline_version", "")),
         )
+
+
+# --- El ranking municipal, en un solo sitio ---------------------------------
+
+
+def banda_del_ranking(report: Report) -> int:
+    """La banda MMI por la que se ordenan los municipios de este reporte.
+
+    MMI≥7 —donde estan todas las demas cifras— salvo que el evento no llegue
+    ahi sobre poblacion, y entonces MMI≥6.
+    """
+    return 6 if (report.totales.banda_titular or 6) == 6 else 7
+
+
+def municipios_del_ranking(report: Report) -> list[MunicipioTop]:
+    """Los municipios expuestos, ordenados, **sin ceros**.
+
+    VIVE AQUI PORQUE HAY DOS PLANTILLAS Y TENIAN DOS RANKINGS.
+
+    El `report.md` y el `hilo.txt` del mismo evento nombraban municipios
+    distintos: para Muisne, el reporte decia Portoviejo / Esmeraldas / Quinindé
+    y el hilo decia Pedernales / Jama / Muisne. El arreglo —ordenar por la banda
+    del reporte y descartar los ceros— aterrizo en `markdown.py` y no en
+    `social.py`, que seguia leyendo `top_municipios` crudo.
+
+    Dos plantillas que responden la misma pregunta no pueden calcularla cada
+    una: la respuesta es del reporte, no de como se dibuje.
+
+    Devuelve lista vacia cuando ningun municipio tiene poblacion expuesta, que
+    es un caso real —los sismos mar adentro— y no un error. Quien la use tiene
+    que decir por que no hay nadie, en vez de publicar una cabecera sin filas o
+    nombrar a los tres primeros de una lista de ceros.
+    """
+    banda = banda_del_ranking(report)
+
+    def cifra(m: MunicipioTop) -> float:
+        return m.pop_mmi7p if banda == 7 else (m.pop_banda or m.pop_mmi7p)
+
+    return sorted((m for m in report.top_municipios if cifra(m) > 0), key=cifra, reverse=True)
+
+
+def poblacion_del_ranking(report: Report, municipio: MunicipioTop) -> float:
+    """La cifra con la que ese municipio entra al ranking."""
+    banda = banda_del_ranking(report)
+    return municipio.pop_mmi7p if banda == 7 else (municipio.pop_banda or municipio.pop_mmi7p)

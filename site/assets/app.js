@@ -959,6 +959,21 @@ function pintarPanorama(eventos) {
   const paises = new Set(eventos.map((e) => e.iso3).filter(Boolean)).size;
   const enVivo = eventos.filter((e) => !e.backtest).length;
 
+  // EL LEMA Y EL PANEL DECIAN COSAS CONTRARIAS EN LA MISMA PANTALLA.
+  //
+  // `index.html` afirmaba «Cada uno se emitió solo, sin que nadie
+  // interviniera» —que se lee como «respondiendo a un sismo en vivo»— tres
+  // centimetros encima de este panel diciendo «Ninguno se emitió en vivo
+  // todavía». Las dos frases salian de ficheros distintos y nadie las
+  // comparaba. Ahora la escribe quien cuenta.
+  const lema = $("lema-reportes");
+  if (lema) {
+    lema.textContent =
+      enVivo === 0
+        ? "Ninguno se ha emitido en vivo todavía: son reconstrucciones retrospectivas."
+        : `${nf.format(enVivo)} de ${nf.format(eventos.length)} se emitieron en vivo, sin intervención manual.`;
+  }
+
   caja.innerHTML =
     `<div class="metricas">` +
     `<div class="metrica"><span class="cabeza">${iconoSvg("reportes")}` +
@@ -1889,6 +1904,18 @@ function pintarIncertidumbre(reporte) {
         `cifras de este reporte como un orden de magnitud.`
       );
     }
+  } else if (inc.pop_discrepancia_pct === null) {
+    // NULL NO ES CERO, Y CALLARSE TAMPOCO SIRVE.
+    //
+    // El pipeline publicaba 0,0 % cuando no habia con que comparar —ninguna
+    // celda del corte tiene poblacion de WorldPop— y eso se lee como "los dos
+    // productos coinciden perfectamente", que es lo contrario. Ahora publica
+    // null; esconder el bloque entero seria el mismo silencio con otra forma.
+    partes.push(
+      `El contraste entre GHS-POP y WorldPop <strong>no se pudo medir</strong> ` +
+      `para este evento: ninguna celda dentro de las bandas publicadas tiene ` +
+      `población de WorldPop con la que comparar.`
+    );
   }
   if (Array.isArray(inc.notas)) partes.push(...inc.notas.map(escapar));
   bloque.hidden = !partes.length;
