@@ -574,6 +574,43 @@ dijeran algo.
 
 ---
 
+### 2.1.terdecies Lo que el primer sismo en vivo dejó anotado
+
+**Abierto el 2-sep-2026**, con lo que la validación encontró y **no** entra en esta
+tanda. No son fallos que publiquen algo falso; son deuda con nombre.
+
+**El `adm2.csv` del Chocó va en mayúsculas y el resto del paquete no.** `PEREIRA` en el
+CSV, `Pereira` en el `report.json` y en el `.md` — el mismo municipio con dos grafías
+dentro del mismo paquete, y 23 nombres con `DE`/`DEL` a mitad. Es **el único de los 23**:
+`titulo_es` se aplicó al ranking y no al escritor del CSV, y el activo de Colombia
+guarda los nombres crudos. Los otros dieciocho países los traen ya capitalizados.
+
+**`us7000nr0v` publica «0,1 km²» donde su propia regla pide «0,15».** El `.md` promete
+dos cifras significativas dos líneas más abajo. Subestima un 33 % y es la única fila de
+toda la colección con una sola cifra.
+
+**`us7000tdms` se titula `"southern East Pacific Rise"`**, sin traducir, en un producto
+que se define por estar en español. `traducir_lugar` no cubre los topónimos oceánicos.
+
+**Dos manejadores de alarma pueden fallar ellos mismos.** `contract_drift.yml` y
+`simulacro.yml` usan `--label "contrato,automatico"` / `"operacion,automatico"` sin
+crear las etiquetas antes y sin el camino de respaldo sin etiquetas que sí tienen
+`frescura`, `impact` y `rezago`. Es literalmente el fallo que `impact.yml` documenta:
+el manejador de fallos falla y la incidencia no se abre, justo en la corrida que había
+que investigar.
+
+**`us1000gez7` publica una discrepancia GHS-POP/WorldPop del 416,9 %** sobre 3.416
+personas. El aviso de «desacuerdo enorme» que se añadió el 1-sep vive en el visor y no
+en el `.md`, así que el reporte descargable la saca sin una palabra.
+
+**Un tercer país sin activo bloquea un evento bien enrutado.** `impact.yml` sólo
+reintenta con ceros si `SIN_ACTIVO` está vacío. Candidatos `[ARG, CHL, BRA]`, sismo
+chileno mar adentro y BRA sin Release: no hay reintento, y la incidencia dice «si falta
+un país, constrúyelo», que no es el problema. **Medir primero** cuántos países siguen
+sin Release publicado.
+
+---
+
 ### 2.2 Coropletas r7/r6 del visor
 
 **Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salió primero de las
@@ -1042,18 +1079,22 @@ el estado real:
 | **F2** | Un GeoPackage publicado con métricas | ❌ falta T2.4 |
 | **F2** | Protocolo probado en simulacro | ⚠️ `simulacro.yml` corre; el protocolo de brigada no está escrito |
 
-**Los 21 reportes del catálogo son backtest, los 21.** `/status` los excluye a
-propósito del cálculo de latencia —`eventos_publicados: 0`,
-`backtests_excluidos: 21`, `p50_min: null`— y hace bien: un backtest se procesa
-sobre productos de USGS ya asentados, así que su latencia no dice nada sobre lo
-que tardaria un evento vivo. La cifra honesta es que **todavía no hay ninguna**.
+**Veintiuno de los veintitrés reportes son backtest.** `/status` los excluye a
+propósito del cálculo de latencia —`backtests_excluidos: 21`— y hace bien: un
+backtest se procesa sobre productos de USGS ya asentados, así que su latencia no
+dice nada sobre lo que tardaría un evento vivo.
+
+Los otros dos llegaron el **2-sep-2026** y son los que dan la cifra. Léase con la
+cautela que merece: cronometraron una cadena que fallaba, no la cadena en
+régimen. La primera medida limpia la dará el siguiente.
 
 **El proyecto esta desbalanceado, y conviene verlo claro.** El trabajo de datos
 de Fase 1 está hecho al 271 % —diecinueve países donde la puerta pedia siete— y
 las tres puertas que quedan abiertas no dependen de código:
 
-* Dos esperan a que ocurra un sismo M>=5,5 en LATAM. No se pueden forzar y no
-  tiene sentido intentarlo.
+* Dos esperaban a que ocurriera un sismo M>=5,5 en LATAM. **Ocurrió el
+  2-sep-2026**, dos veces, y las dos quedaron cerradas — enseñando de paso que
+  P2 rechazaba los eventos mar adentro.
 * Una espera a que haya otras personas. Es la única que se puede empujar hoy, y
   es la que lleva más tiempo sin moverse: `CONTRIBUTING.md` define el rol de
   mantenedor por país y no hay ninguno.

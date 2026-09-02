@@ -83,7 +83,23 @@ jobs:
           BACKTEST: ${{ inputs.backtest && '--backtest' || '' }}
           REPROCESAR: ${{ inputs.reprocesar && '--reprocesar' || '' }}
         run: |
+          # MAR ABIERTO NO ES UN FALLO. El codigo 4 dice "el epicentro no cae en
+          # ninguna caja de pais": no hay activo contra el que calcular y un
+          # reporte es imposible. Se cierra por los dos lados —estado terminal y
+          # entrada en la capa de observados, que el visor si pinta— en vez de
+          # reintentarlo a diario durante noventa dias.
+          set +e
           PAISES=$(uv run centinela paises-candidatos "$USGS_ID" --detail-url "$DETAIL_URL")
+          CODIGO=$?
+          set -e
+          if [ "$CODIGO" -eq 4 ]; then
+            echo "::notice::$USGS_ID cae fuera de todas las cajas de pais: mar abierto. Se cierra y queda visible en observados."
+            uv run centinela sin-pais "$USGS_ID" \
+              --razon "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos"
+            echo "sin_pais=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$CODIGO" -ne 0 ]; then exit "$CODIGO"; fi
           echo "candidatos por epicentro: $PAISES"
 
           SIN_ACTIVO=""
@@ -156,11 +172,24 @@ jobs:
           import os
           from pipelines.common.manifest import Manifest
           print(Manifest.load(os.environ['ISO3']).manifest_id)")
+            # SIN `set +e` UN 3 RESIDUAL TUMBA EL PASO.
+            #
+            # El bucle de arriba envuelve cada intento porque el 3 significa
+            # "prueba el siguiente pais". Este reintento no lo hacia, asi que
+            # cualquier camino que siguiera devolviendo 3 —el preliminar lo
+            # hacia hasta hoy— salia como fallo pese a ser el caso previsto.
+            set +e
             uv run centinela impact "$USGS_ID" $BACKTEST $REPROCESAR \
               --detail-url "$DETAIL_URL" \
               --exposure "data/build/exposure_h3.parquet" \
               --manifest "$MANIFEST" \
               --aunque-no-alcance
+            CODIGO=$?
+            set -e
+            if [ "$CODIGO" -ne 0 ]; then
+              echo "::error::El reintento con --aunque-no-alcance fallo (codigo $CODIGO)."
+              exit "$CODIGO"
+            fi
             echo "tag=$TAG"      >> "$GITHUB_OUTPUT"
             echo "iso3=$PRIMERO" >> "$GITHUB_OUTPUT"
             exit 0
@@ -227,6 +256,13 @@ jobs:
               return 1
             fi
             echo "::notice::derivados en conflicto; se regeneran en vez de fusionarse"
+            # EL FICHERO EN CONFLICTO NO ES JSON, Y `centinela status` LO LEE.
+            #
+            # Regenerar sobre un `status.json` con marcadores de conflicto hacia
+            # que `write_status` no pudiera parsearlo y repusiera el historial de
+            # latidos vacio. Se resuelve antes: con `--theirs` se pierde a lo sumo
+            # un latido en vez de todos, y `centinela status` regenera el resto.
+            git checkout --theirs site/status.json 2>/dev/null || true
             uv run centinela reindexar
             uv run centinela status
             # shellcheck disable=SC2086
@@ -281,6 +317,29 @@ jobs:
 
       # RNF-03: si el contrato USGS se rompe, el pipeline degrada y deja
       # rastro accionable. Nunca publica datos corruptos en silencio.
+
+      # LA OTRA MITAD: SABER DECIR "YA PASO".
+      #
+      # Sabia abrir incidencia y no cerrarla. Las veinte del 2-sep quedaron
+      # abiertas describiendo una condicion que ya no existia, y hubo que
+      # cerrarlas a mano. Una alarma que solo sabe encenderse deja de leerse, y
+      # entonces la siguiente que importe tampoco se ve. Es la mitad que
+      # `frescura.yml` y `rezago.yml` ya tenian.
+      - name: Cerrar la incidencia si el evento volvio a salir
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITULO="P2 fallo para $USGS_ID"
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          if [ -n "$ABIERTA" ]; then
+            gh issue close "$ABIERTA" --comment "P2 vuelve a salir bien para $USGS_ID. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "Cerrada la incidencia #$ABIERTA."
+          else
+            echo "Nada que cerrar: no habia incidencia abierta."
+          fi
+
       - name: Abrir issue ante fallo
         if: failure()
         env:

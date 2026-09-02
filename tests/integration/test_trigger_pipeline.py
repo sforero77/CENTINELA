@@ -132,3 +132,39 @@ def test_un_evento_registrado_no_crea_event_state(
     run_trigger(fetcher, events_dir=events_dir)
 
     assert not (events_dir / "us7000small.json").exists()
+
+
+def test_un_event_state_ilegible_no_ciega_la_pasada_entera(
+    fetcher: FixtureFetcher, events_dir: Path
+) -> None:
+    """UN SOLO FICHERO CORRUPTO MATABA A P1, Y LO MATARÍA EN CADA CORRIDA.
+
+    `EventState.load` se llamaba desde `_classify` sin protección. La excepción
+    subía hasta `cli.main`, que sólo atrapa `NotImplementedError`, así que la
+    pasada moría entera — y moriría igual cinco minutos después, y al siguiente,
+    hasta que alguien tocara el fichero a mano. Con el cron a cinco minutos eso
+    es la vigilancia caída indefinidamente.
+
+    Los tres consumidores secundarios —`repaso.py`, `rezago.py`, `status.py`— ya
+    se protegían. El crítico era el único que no.
+
+    El ilegible se cuenta aparte: descartarlo en silencio haría que «cero
+    eventos relevantes» no distinguiera «ninguno interesante» de «no pude leer
+    ninguno».
+    """
+    # El corrupto tiene que ser un evento que **esta en el feed**: `_classify`
+    # solo carga el estado de los que le llegan. Con un id inventado la prueba
+    # pasaria sin tocar una linea del camino nuevo.
+    (events_dir / "us7000sint.json").write_text("{ esto no es json", encoding="utf-8")
+
+    resultado = run_trigger(fetcher, events_dir=events_dir, dry_run=True)
+
+    assert resultado.estados_ilegibles == ["us7000sint"], (
+        "el ilegible tiene que contarse aparte, no descartarse en silencio"
+    )
+    assert "us7000sint" not in resultado.nuevos
+    assert "us7000sint" not in resultado.revisitados
+    # Y lo importante: los demas del mismo feed siguen procesandose.
+    assert resultado.nuevos or resultado.revisitados, (
+        "un solo estado corrupto no puede llevarse por delante a los demas"
+    )

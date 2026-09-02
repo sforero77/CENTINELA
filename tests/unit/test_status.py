@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from pipelines.common.state import EventState, EventStatus
 from pipelines.common.status import build_status, event_latencies, percentil, write_status
 
@@ -278,3 +280,66 @@ def test_lo_declarado_coincide_con_el_cron_del_workflow() -> None:
     c = cadencia_del_vigia(_latidos("2026-08-27T00:00:00Z", "2026-08-27T00:30:00Z"))
 
     assert f'cron: "*/{c["declarado_min"]} * * * *"' in workflow
+
+
+# --- El historial de latidos no puede vaciarse solo --------------------------
+
+
+def test_un_status_ilegible_no_repone_el_historial_vacio(tmp_path: Path) -> None:
+    """ESTE `except` BORRO EL LATIDO ENTERO DURANTE HORAS.
+
+    Decia `except (ValueError, OSError): previos = []`, que convierte «no pude
+    leer los latidos» en «no habia latidos». Paso de verdad el 2-sep-2026: dos
+    sismos en vivo a la vez, cada P2/P3 en su grupo de concurrencia, y el
+    manejador de rebase de `impact.yml` llamando a `centinela status` con el
+    fichero todavia lleno de marcadores de conflicto.
+
+    La pagina publico `latidos: []` y `cadencia: {}` mientras tres documentos
+    citaban cifras de esos campos, y `frescura` no lo vio porque comprueba
+    `generado_utc`, que si se actualizaba.
+    """
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "status.json").write_text(
+        '<<<<<<< HEAD\n{"latidos": [{"utc": "2026-09-02T12:00:00Z"}]}\n=======\n'
+        '{"latidos": [{"utc": "2026-09-02T12:05:00Z"}]}\n>>>>>>> otra\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="historial de latidos vacio"):
+        write_status(events_dir=tmp_path / "events", site_dir=site)
+
+
+def test_sin_fichero_previo_el_historial_arranca_vacio(tmp_path: Path) -> None:
+    """Que no exista es normal —la primera corrida— y no debe quejarse.
+
+    Es la mitad que distingue «no hay nada todavia» de «habia algo y no lo
+    puedo leer». Sin ella, el arreglo de arriba rompería un repositorio nuevo.
+    """
+    site = tmp_path / "site"
+    eventos = tmp_path / "events"
+    eventos.mkdir()
+
+    destino = write_status(events_dir=eventos, site_dir=site)
+
+    assert json.loads(destino.read_text(encoding="utf-8"))["latidos"] == []
+
+
+def test_el_historial_sobrevive_a_una_escritura_sin_latido(tmp_path: Path) -> None:
+    """`centinela status` regenera sin aportar latido, y no debe perder los que hay.
+
+    Es exactamente lo que hace el manejador de rebase, que fue donde se perdio.
+    """
+    site = tmp_path / "site"
+    site.mkdir()
+    eventos = tmp_path / "events"
+    eventos.mkdir()
+    (site / "status.json").write_text(
+        json.dumps({"latidos": [{"utc": "2026-09-02T12:00:00Z", "revisados": 17}]}),
+        encoding="utf-8",
+    )
+
+    destino = write_status(events_dir=eventos, site_dir=site)
+
+    latidos = json.loads(destino.read_text(encoding="utf-8"))["latidos"]
+    assert [x["utc"] for x in latidos] == ["2026-09-02T12:00:00Z"]

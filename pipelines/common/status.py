@@ -80,7 +80,14 @@ def event_latencies(
     for path in sorted(base.glob("*.json")):
         try:
             estado = EventState.from_dict(json.loads(path.read_text(encoding="utf-8")))
-        except (ValueError, KeyError):
+        except (ValueError, KeyError, OSError) as error:
+            # Se salta, pero no en silencio: si `events/` se corrompe hay que
+            # enterarse. Es el mismo patron de `repaso.py` y `rezago.py`; aqui
+            # era el unico de los tres sin log.
+            _log.warning(
+                "event_state ilegible al calcular latencias",
+                extra={"context": {"ruta": str(path), "error": str(error)}},
+            )
             continue
         if estado.estado is not EventStatus.PUBLICADO:
             continue
@@ -216,6 +223,44 @@ def build_status(
     }
 
 
+def _latidos_previos(destino: Path) -> list[dict[str, Any]]:
+    """El historial que ya hay, o vacio **solo si el fichero no existe**.
+
+    ESTE `except` BORRO EL LATIDO ENTERO DURANTE HORAS.
+
+    Decia `except (ValueError, OSError): previos = []`, y eso convierte «no
+    pude leer los latidos» en «no habia latidos». Se disparo de verdad el
+    2-sep-2026: dos sismos en vivo corriendo a la vez, cada P2/P3 en su propio
+    grupo de concurrencia, y el manejador de rebase de `impact.yml` llamando a
+    `centinela status` para regenerar los derivados **con el fichero todavia
+    lleno de marcadores de conflicto**. `json.loads` fallaba, el historial se
+    reponia vacio, y `cadencia_del_vigia` sobre una lista vacia dejaba tambien
+    `cadencia: {}`.
+
+    El resultado fue una pagina publicando `latidos: []` —el sintoma exacto del
+    hallazgo A1 de la auditoria, dado por cerrado— mientras tres documentos
+    citaban cifras de esos campos. Nadie lo vio porque `frescura` comprueba
+    `generado_utc`, que si se actualizaba.
+
+    Ahora se distinguen los dos casos. Que no exista es normal: la primera
+    corrida de un repositorio nuevo. Que exista y no se pueda leer **no** es
+    normal, y publicar un historial vacio encima seria destruir la unica prueba
+    de que el vigia esta vivo.
+    """
+    if not destino.exists():
+        return []
+    try:
+        crudo = json.loads(destino.read_text(encoding="utf-8"))
+    except (ValueError, OSError) as error:
+        raise ValueError(
+            f"{destino} existe y no se puede leer ({error}). No se reescribe: "
+            f"hacerlo publicaria un historial de latidos vacio y borraria la "
+            f"unica senal de que el vigia sigue vivo. Si viene de un rebase, "
+            f"resuelve el conflicto del fichero antes de regenerarlo."
+        ) from error
+    return list(crudo.get("latidos", []))
+
+
 def write_status(
     *,
     events_dir: Path | None = None,
@@ -225,12 +270,7 @@ def write_status(
 ) -> Path:
     """Escribe ``site/status.json``, conservando el historial de latidos."""
     destino = (site_dir or SITE_DIR) / STATUS_FILENAME
-    previos: list[dict[str, Any]] = []
-    if destino.exists():
-        try:
-            previos = list(json.loads(destino.read_text(encoding="utf-8")).get("latidos", []))
-        except (ValueError, OSError):
-            previos = []
+    previos: list[dict[str, Any]] = _latidos_previos(destino)
     if latido:
         previos.append(latido)
 

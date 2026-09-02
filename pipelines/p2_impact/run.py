@@ -246,7 +246,17 @@ def run_impact(
     )
 
     detail = fetcher.get_json(detail_url)
-    state = EventState.load(usgs_id, events_dir)
+    # Aqui NO se salta como en `_classify`: P2 procesa **este** evento y sin su
+    # estado no hay nada que hacer. Lo que cambia es que el fallo se nombre en
+    # vez de salir como un JSONDecodeError crudo desde media traza.
+    try:
+        state = EventState.load(usgs_id, events_dir)
+    except (ValueError, KeyError, OSError) as error:
+        raise ValueError(
+            f"El event_state de {usgs_id} existe y no se puede leer ({error}). "
+            f"P2 no puede continuar sin el; hay que repararlo o borrarlo para "
+            f"que P1 lo vuelva a crear."
+        ) from error
     if state is None:
         if not backtest:
             raise FileNotFoundError(
@@ -309,6 +319,7 @@ def run_impact(
             manifest_id=manifest_id,
             reports_root=reports_root,
             admin_lookup_parquet=admin_lookup_parquet,
+            aunque_no_alcance=aunque_no_alcance,
         )
         return decision
 
@@ -459,6 +470,7 @@ def _publicar_preliminar(
     manifest_id: str,
     reports_root: Path | None,
     admin_lookup_parquet: str | None,
+    aunque_no_alcance: bool = False,
 ) -> None:
     """Calcula el corte por radios y publica el reporte preliminar.
 
@@ -476,7 +488,9 @@ def _publicar_preliminar(
     try:
         con = connect()
         _cargar_admin_lookup(con, exposure_glob, admin_lookup_parquet)
-        por_radio = compute_preliminary(con, state, exposure_glob=exposure_glob)
+        por_radio = compute_preliminary(
+            con, state, exposure_glob=exposure_glob, aunque_no_alcance=aunque_no_alcance
+        )
         reporte = build_preliminary_report(
             state, products, por_radio, manifest_id=manifiesto_del_activo(con, manifest_id)
         )

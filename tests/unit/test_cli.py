@@ -59,6 +59,13 @@ def test_los_workflows_solo_llaman_a_subcomandos_que_existen() -> None:
             if not resto:
                 continue
             palabra = resto.split()[0] if resto.split() else ""
+            # Los comentarios citan los subcomandos entre acentos graves —«y
+            # `centinela status` regenera el resto»— y sin limpiarlos la guardia
+            # reclamaba un subcomando llamado "status`". Fallaba por como esta
+            # escrito el comentario, no por lo que hace el workflow, que es la
+            # peor clase de falso positivo: enseña a editar el comentario para
+            # callarla.
+            palabra = palabra.strip("`\"'.,;:)")
             if palabra and not palabra.startswith("-") and not palabra.startswith("$"):
                 invocados.add(palabra)
 

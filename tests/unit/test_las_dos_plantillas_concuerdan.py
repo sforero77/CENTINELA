@@ -100,3 +100,24 @@ def test_la_fecha_del_hilo_no_dice_utc_dos_veces(usgs_id: str) -> None:
     """`ev.utc` ya acaba en Z, que **es** la marca de UTC: salia «Z UTC»."""
     hilo = render_thread_text(_reporte(usgs_id))
     assert "Z UTC" not in hilo, f"{usgs_id}: la fecha dice UTC dos veces"
+
+
+@pytest.mark.parametrize("usgs_id", _eventos())
+def test_ningun_hilo_afirma_mar_adentro_de_un_epicentro_en_tierra(usgs_id: str) -> None:
+    """AFIRMAR DE MÁS CUESTA LA CREDIBILIDAD DE TODO LO DEMÁS.
+
+    El hilo de `usp000jd2q` decía «la sacudida fue mar adentro» de un sismo con
+    el epicentro a 5 km de Baní, tierra adentro en República Dominicana. El
+    `.md` del mismo evento ya decía la versión correcta —«mar adentro **o sobre
+    zona despoblada**»— y el hilo se había quedado con la mitad falsa.
+
+    No se comprueba dónde cae el epicentro —eso pediría una línea de costa que
+    este sistema no consume— sino que el hilo **no afirme categóricamente** algo
+    que no puede saber. La redacción con «o» es cierta en los cinco casos.
+    """
+    hilo = render_thread_text(_reporte(usgs_id))
+
+    assert "fue mar adentro" not in hilo, (
+        f"{usgs_id}: el hilo afirma que la sacudida fue mar adentro sin poder saberlo. "
+        "El epicentro puede estar en tierra sobre zona despoblada."
+    )

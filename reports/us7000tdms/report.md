@@ -26,18 +26,13 @@ USGS no ha publicado el producto *Ground Failure* para este evento. La sección 
 
 PAGER (USGS) estima para este evento una alerta **verde**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Comparadas de frente parecen discrepar; puestas en el mismo eje, cada cifra de aquí cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
 Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentro de las bandas publicadas tiene población de WorldPop con la que contrastar.
 
 - El epicentro está a 868 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
-
-## Cambios frente a la versión anterior
-
-- ShakeMap: v1 → v2
-- Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
 
@@ -49,7 +44,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 - ShakeMap consumido: **v2**
 - Ground Failure consumido: **v0**
 - Manifiesto de exposición: `chl-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-02T14:40:55Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T16:39:45Z
 
 ## Advertencias
 
