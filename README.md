@@ -164,18 +164,24 @@ con la fuente de cada columna, está en
 
 ### La validación externa
 
-El Microsoft AI for Good Lab publicó evaluación de daño por imagen satelital
-para dos de los sismos que CENTINELA reconstruyó, usando además **las mismas
-huellas de edificación de Overture**. De las celdas que Microsoft evaluó,
-**ninguna falta del activo**, en dos países y dos sismos distintos. La lista de
-celdas la puso otro, así que es la verificación de cobertura más exigente que se
-le ha hecho a este sistema.
+El Microsoft AI for Good Lab publicó en HDX evaluación de daño por imagen
+satelital para **los dos** sismos que este proyecto tiene congelados como
+golden: Cali, del sismo de San José del Palmar, y la costa de La Guaira, del de
+Catia La Mar. Las dos son CC BY, y la de Cali se publica además sobre **las
+mismas huellas de edificación de Overture** que usa el activo, lo que hace la
+comparación interpretable y no anecdótica. De las **402 celdas** que Microsoft
+evaluó, **ninguna falta del activo**, en dos países y dos sismos distintos. La
+lista de celdas la puso otro, así que es la verificación de cobertura más
+exigente que se le ha hecho a este sistema.
 
-Y la evaluación **no cubrió una sola ciudad**: corrió sobre Cali (imagen Airbus)
-y sobre Pereira (imagen Vantor), que es además el municipio más expuesto del
-evento según este mismo reporte. El gradiente entre las tres zonas evaluadas es
-la respuesta corta a por qué una cifra de exposición no se lee como una cifra de
-daño.
+Y ahí está la respuesta corta a por qué una cifra de exposición no se lee como
+una cifra de daño. Sobre las edificaciones que Microsoft evaluó, la tasa de daño
+detectado fue de **0,273 % en Cali** (266 de 97.351) y de **3,69 % en La Guaira**
+(965 de 26.143): **un factor de trece entre dos zonas que el activo cubre
+igual de bien**. La exposición dice cuántos estaban dentro; cuántos resultaron
+dañados es otra pregunta, y su respuesta cambia trece veces de un sitio a otro.
+El detalle de las dos, con sus efectos de borde, está en
+[`VERIFICACIONES.md`](VERIFICACIONES.md).
 
 ### El catálogo histórico regional
 
