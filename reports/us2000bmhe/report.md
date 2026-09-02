@@ -61,7 +61,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **1,8 %**.
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v2**
 - Manifiesto de exposición: `cri-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-01T22:08:36Z
+- Pipeline: `0.1.0` · Generado: 2026-09-02T02:43:02Z
 
 ## Advertencias
 
