@@ -43,12 +43,15 @@ población y edificaciones, cruzada con un modelo de intensidad.
 4. **ShakeMap versionado.** Las cifras cambian entre versiones del ShakeMap.
    Cada reporte declara que versión consumió, y se re-emite con changelog
    cuando aparece una nueva.
-5. **Latencia dependiente de terceros.** La detección la dispara un cron
-   externo cada cinco minutos; el cron de GitHub Actions —con demoras
-   documentadas de 5 a 30 minutos— queda como respaldo. La cadencia real
-   **medida** y la latencia de punta a punta se publican en `/status`, y
-   mientras no haya ocurrido un sismo en vivo esa segunda cifra aparece vacía:
-   no hay con qué medirla todavía.
+5. **Latencia dependiente de terceros, y hoy por encima del objetivo.** La
+   detección la dispara un cron externo cada cinco minutos; el cron de GitHub
+   Actions —con demoras documentadas de 5 a 30 minutos— queda como respaldo.
+   Sobre los dos primeros sismos en vivo, del 2-sep-2026, la latencia de punta
+   a punta medida es **p50 185,7 min**, tres veces el objetivo de 60. La
+   detección no es el cuello de botella —veintitantos minutos, la mayor parte
+   esperando a que USGS liste el evento—: lo que se lleva el resto es esperar
+   el ShakeMap, que publica USGS y no depende de este sistema. Las dos cifras,
+   con su fecha, están en `/status`.
 
 ## Cómo citar una cifra de este sistema
 
