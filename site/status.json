@@ -1,22 +1,29 @@
 {
-  "generado_utc": "2026-09-02T14:10:55Z",
+  "generado_utc": "2026-09-02T14:41:02Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
   },
   "medido": {
-    "eventos_publicados": 1,
+    "eventos_publicados": 2,
     "backtests_excluidos": 21,
-    "p50_min": 89.1,
-    "p95_min": 89.1,
-    "peor_min": 89.1
+    "p50_min": 126.3,
+    "p95_min": 127.5,
+    "peor_min": 127.6
   },
   "eventos": [
     {
+      "usgs_id": "us7000tdms",
+      "origen_utc": "2026-09-02T12:35:56Z",
+      "publicado_utc": "2026-09-02T14:40:57Z",
+      "minutos": 125.0,
+      "backtest": false
+    },
+    {
       "usgs_id": "us7000tdmp",
       "origen_utc": "2026-09-02T12:28:31Z",
-      "publicado_utc": "2026-09-02T13:57:37Z",
-      "minutos": 89.1,
+      "publicado_utc": "2026-09-02T14:36:06Z",
+      "minutos": 127.6,
       "backtest": false
     },
     {
@@ -167,171 +174,7 @@
       "backtest": true
     }
   ],
-  "cadencia": {
-    "declarado_min": 30,
-    "p50_min": 5.0,
-    "p90_min": 5.0,
-    "peor_min": 9.6,
-    "revisiones": 108,
-    "latidos": 26
-  },
-  "latidos": [
-    {
-      "utc": "2026-09-02T04:25:16Z",
-      "revisados": 17,
-      "relevantes": 0,
-      "revisiones": 14
-    },
-    {
-      "utc": "2026-09-02T05:25:22Z",
-      "revisados": 19,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-09-02T06:30:19Z",
-      "revisados": 18,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-09-02T07:30:27Z",
-      "revisados": 19,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-09-02T08:35:26Z",
-      "revisados": 19,
-      "relevantes": 0,
-      "revisiones": 14
-    },
-    {
-      "utc": "2026-09-02T09:40:19Z",
-      "revisados": 19,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-09-02T10:40:24Z",
-      "revisados": 18,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-09-02T12:45:23Z",
-      "revisados": 18,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-09-02T12:50:23Z",
-      "revisados": 20,
-      "relevantes": 1,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T12:54:11Z",
-      "revisados": 20,
-      "relevantes": 1,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T12:55:23Z",
-      "revisados": 20,
-      "relevantes": 1,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:00:24Z",
-      "revisados": 21,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:05:18Z",
-      "revisados": 21,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:10:21Z",
-      "revisados": 21,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:15:21Z",
-      "revisados": 21,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:20:22Z",
-      "revisados": 21,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:25:22Z",
-      "revisados": 20,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:30:21Z",
-      "revisados": 20,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:35:21Z",
-      "revisados": 20,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:40:22Z",
-      "revisados": 20,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:45:24Z",
-      "revisados": 20,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:50:24Z",
-      "revisados": 19,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T13:55:18Z",
-      "revisados": 19,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T14:00:26Z",
-      "revisados": 19,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T14:05:21Z",
-      "revisados": 19,
-      "relevantes": 2,
-      "revisiones": 1
-    },
-    {
-      "utc": "2026-09-02T14:10:22Z",
-      "revisados": 19,
-      "relevantes": 2,
-      "revisiones": 1
-    }
-  ],
+  "cadencia": {},
+  "latidos": [],
   "nota": "La latencia incluye la demora del cron de GitHub Actions, que el proyecto no controla y que su documentacion situa entre 5 y 30 minutos. El objetivo se define sobre lo controlable; esta cifra es el total real, sin descontar nada."
 }

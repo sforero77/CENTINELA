@@ -1,6 +1,6 @@
-# Exposición sísmica — M5,6 · 71 km al OSO de Puerto Madero, México
+# Exposición sísmica — M5,9 · southern East Pacific Rise
 
-**Evento USGS:** `us7000tdmp` · **Origen:** 2026-09-02T12:28:31Z UTC · **Profundidad:** 10,0 km
+**Evento USGS:** `us7000tdms` · **Origen:** 2026-09-02T12:35:56Z UTC · **Profundidad:** 10,0 km
 
 ## Exposición estimada
 
@@ -32,11 +32,11 @@ Las dos cifras **no se tabulan igual**: PAGER agrupa por MMI redondeado —su fi
 
 Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentro de las bandas publicadas tiene población de WorldPop con la que contrastar.
 
-- El epicentro está a 68 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
+- El epicentro está a 868 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
 
 ## Cambios frente a la versión anterior
 
-- ShakeMap: v2 → v3
+- ShakeMap: v1 → v2
 - Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
@@ -46,10 +46,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v3**
+- ShakeMap consumido: **v2**
 - Ground Failure consumido: **v0**
-- Manifiesto de exposición: `mex-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-02T14:36:05Z
+- Manifiesto de exposición: `chl-v0.2`
+- Pipeline: `0.1.0` · Generado: 2026-09-02T14:40:55Z
 
 ## Advertencias
 

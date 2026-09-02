@@ -1,19 +1,19 @@
 {
   "schema": "centinela/report/1.0",
   "event": {
-    "usgs_id": "us7000tdmp",
-    "mag": 5.6,
+    "usgs_id": "us7000tdms",
+    "mag": 5.9,
     "depth_km": 10.0,
-    "utc": "2026-09-02T12:28:31Z",
-    "lugar": "71 km al OSO de Puerto Madero, México",
+    "utc": "2026-09-02T12:35:56Z",
+    "lugar": "southern East Pacific Rise",
     "pager_alert": "green",
-    "lon": -92.9873,
-    "lat": 14.3909
+    "lon": -109.0259,
+    "lat": -34.9815
   },
   "inputs": {
-    "shakemap_version": 3,
+    "shakemap_version": 2,
     "groundfailure_version": 0,
-    "exposure_manifest": "mex-v0.2"
+    "exposure_manifest": "chl-v0.2"
   },
   "preliminar": false,
   "radios": [],
@@ -36,7 +36,7 @@
   "incertidumbre": {
     "pop_discrepancia_pct": null,
     "notas": [
-      "El epicentro está a 68 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
+      "El epicentro está a 868 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
     ]
   },
   "ground_failure_usgs": {
@@ -52,7 +52,7 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
-    "ShakeMap: v2 → v3",
+    "ShakeMap: v1 → v2",
     "Ninguna cifra publicada cambia frente a la versión anterior."
   ],
   "disclaimers": [
@@ -61,6 +61,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-02T14:36:05Z",
+  "generado_utc": "2026-09-02T14:40:55Z",
   "pipeline_version": "0.1.0"
 }

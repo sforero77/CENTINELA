@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-02T14:10:22Z",
+  "generado_utc": "2026-09-02T14:40:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
@@ -101,17 +101,6 @@
       "lugar": "38 km al NNE de Cuya, Chile",
       "origen_utc": "2026-08-28T20:44:36Z",
       "razon": "M4.5 < umbral M5.5",
-      "iso3": ""
-    },
-    {
-      "usgs_id": "us7000tcjv",
-      "mag": 4.6,
-      "lon": -68.5089,
-      "lat": -21.2109,
-      "depth_km": 131.4,
-      "lugar": "26 km al O de Ollagüe, Chile",
-      "origen_utc": "2026-08-28T14:11:54Z",
-      "razon": "M4.6 < umbral M5.5",
       "iso3": ""
     }
   ]
