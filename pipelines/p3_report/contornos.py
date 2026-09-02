@@ -47,9 +47,21 @@ def build_contours(
     """
     features: list[dict[str, Any]] = []
     for feature in payload.get("features", []):
+        propiedades = feature.get("properties") or {}
+        # `cont_mmi.json` trae, segun version, isolineas de MMI **y de PGA y
+        # PGV en el mismo fichero**. `shakemap.parse_contours` filtra por
+        # `type` y lee `value` o `paramvalue`; esto no hacia ni lo uno ni lo
+        # otro, asi que con un fichero que trajera PGA habria dibujado
+        # aceleraciones rotuladas como intensidad. Los veintiun contornos
+        # publicados estan limpios —esto no es un dano, es un riesgo— pero dos
+        # lectores del mismo fichero en el mismo sistema no pueden discrepar
+        # sobre que es una isolinea de MMI.
+        if str(propiedades.get("type", "mmi")).lower() != "mmi":
+            continue
+        crudo = propiedades.get(PROPIEDAD_VALOR, propiedades.get("paramvalue"))
         try:
-            valor = float(feature["properties"][PROPIEDAD_VALOR])
-        except (KeyError, TypeError, ValueError):
+            valor = float(crudo)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
             continue
         if valor < mmi_minimo:
             continue

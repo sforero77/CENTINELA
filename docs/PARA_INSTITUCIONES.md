@@ -266,3 +266,19 @@ Nada obligatorio. Lo que más valor añadiría, en orden:
 *Código, datos y el registro completo de verificaciones:*
 <https://github.com/sforero77/CENTINELA> · *Reportes:*
 <https://sforero77.github.io/CENTINELA/>
+
+---
+
+## La evidencia de que la pieza del medio falta
+
+No es un argumento del proyecto: es lo que hicieron **a mano** otros, sin ella.
+
+El sitrep de **OIM/DTM del 17 de agosto de 2026** fusionó manualmente los
+productos de daño de **Copernicus EMS** con las huellas de edificación de
+**Microsoft AI for Good** sobre la base de **Overture** — exactamente las tres
+piezas que este activo ya trae unidas, ensambladas de urgencia durante una
+emergencia y para un solo evento.
+
+Que un equipo con recursos tuviera que hacer ese join a mano, una semana después
+del sismo, dice mejor que cualquier justificación por qué el activo tiene que
+estar construido **antes**.

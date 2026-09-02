@@ -43,7 +43,8 @@ Contrato completo: [`schemas/parquet/tables.yaml`](../../schemas/parquet/tables.
 | `bld_area_m2` | DOUBLE | Overture buildings |
 | `built_m2` | DOUBLE | GHS-BUILT-S 2025 |
 
-> `built_m2` **contrasta** a `bld_count`: donde OSM no mapeó el barrio, el
+> `built_m2` **contrasta** a `bld_count`: donde ninguna de las fuentes de
+> Overture mapeó el barrio —conflaciona OSM, Microsoft, Google y Esri—, el
 > satélite sí lo ve. El reporte avisa cuando la razón entre ambas pasa de 1,5.
 
 ### Servicios y vías
@@ -135,3 +136,10 @@ Colombia, como referencia: Release `exposure-col-20260824`, manifest `col-v0.5`,
 **559.103 celdas**, 52.620.466 habitantes, 15,3 M edificaciones, 9.888 sedes de
 salud, 45.710 educativas, 307.314 km de vía, 1.122 municipios. Desvío contra el
 DANE: **−0,72 %**.
+
+Overture **conflaciona** OSM, Microsoft Building Footprints, Google Open
+Buildings y Esri: ya no es cierto que donde OSM no mapeó no haya edificios. Eso
+cambia el sentido del contraste `built_m2` / `bld_count`: la desproporción ya no
+señala «zona sin mapear en OSM» sino zonas donde ninguna de las cuatro fuentes
+tiene huellas, que son muchas menos y de otro tipo —rural disperso, informal
+reciente—.

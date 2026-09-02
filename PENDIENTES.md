@@ -490,6 +490,62 @@ lo que sí cierra el hueco es que esté escrito aquí, que es donde se mira.
 
 ---
 
+### 2.1.undecies Tres invariantes que se rompen sin que nada avise
+
+**Abierto el 1-sep-2026.** Los tres mueven cifras publicadas, así que **no se
+tocan sin medir el delta antes** — la misma disciplina que se aplicó a
+`grid.xml` en §2.1.sexies, y por la misma razón: cambiar un método y publicar el
+resultado a la vez impide saber cuál de las dos cosas movió la cifra.
+
+**El tope de 2.000 puntos por vía.** `MAX_POINTS_PER_LINE = 2000` en
+`vector_h3.py`. La prueba comprueba **la constante**, no el paso efectivo: una
+vía larga se remuestrea hasta caber en el tope, y el paso resultante puede
+superar el tamaño de una celda r8 —0,74 km², unos 900 m de lado— con lo que la
+línea salta celdas y sus kilómetros no se cuentan en ninguna. Nadie sabe en
+cuántas vías pasa.
+*Medir:* distribución del paso efectivo por país, y kilómetros perdidos.
+
+**`ORDER BY ST_Distance` en grados.** `crosswalk.py:557` ordena por distancia
+euclídea sobre coordenadas geográficas. Un grado de longitud mide 111 km en el
+ecuador y 71 km a 50° S, así que **la celda puede asignarse al municipio que no
+es el más cercano** en el rescate fronterizo. El propio fichero ya advierte que
+un grado no mide lo mismo (línea 468) y aun así ordena en grados.
+El rescate mueve el 6,15 % de las celdas en Colombia —medido, ronda 4— y
+explica el 93 % del exceso frente a la referencia oficial: no es marginal.
+*Medir:* cuántas asignaciones cambian con `ST_Distance_Sphere`, por país.
+
+**`GREATEST(..., 0)` en `pop_15_64`.** `build.py:107` recorta a cero un residuo
+que puede ser negativo. Recortar en silencio convierte una inconsistencia entre
+productos de población en un cero plausible — y el proyecto entero se define
+contra eso. Puede ser correcto; lo que no puede es no saberse.
+*Medir:* en cuántas celdas y por cuánta población se activa el recorte.
+
+Las tres mediciones son locales, contra los activos ya publicados, y no
+necesitan re-emitir nada.
+
+---
+
+### 2.1.duodecies Dos campos del estado que no dicen nada
+
+**Abierto el 1-sep-2026.** `EventStatus.DEGRADADO` está declarado y **ninguna
+transición lo asigna**; `EventState.hashes` se serializa y se lee, y nada lo
+escribe: los veintiún estados publicados lo tienen vacío.
+
+No son código muerto inocuo. Un estado que nadie asigna hace que «no hay eventos
+degradados» no signifique nada, y un diccionario de digests siempre vacío invita
+a leerlo como «no hubo cambios en los insumos» cuando dice «nadie miró». Es la
+familia de fallo que este proyecto nombra: la defensa escrita y el mecanismo sin
+conectar.
+
+**Lo que lo cierra:** o se conectan —`DEGRADADO` cuando P2 publica con columnas
+sustituidas o con avisos de calidad, `hashes` con los digests que
+`download_products` ya calcula— o se retiran. Retirarlos cambia la forma de un
+fichero versionado, así que no es gratis. Mientras tanto, quedan **declarados
+como vacíos en el propio código**, que es lo que impide leerlos como si
+dijeran algo.
+
+---
+
 ### 2.2 Coropletas r7/r6 del visor
 
 **Hecho el 24-ago-2026:** el mapa ya dibuja. El fondo salió primero de las

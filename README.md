@@ -26,6 +26,15 @@ ortofoto de 10 cm, FUNVISIS habilitó reporte ciudadano de daño, el hub LAC de
 HOT coordinó con OSM Colombia desde el primer día, y GEM SARA se construyó con
 más de cincuenta expertos de diecisiete instituciones de la región.
 
+Y GEM no se quedó en SARA: el **23 de junio de 2026** liberó su modelo global
+2026, con el primer análisis global de vías cruzadas con licuefacción. Conviene
+decirlo antes que nadie, porque es lo más parecido a este proyecto que existe.
+Lo que sigue faltando es el encaje: la versión abierta de GEM llega a **Adm1**,
+es **CC BY-NC-SA** —no reutilizable comercialmente ni por muchas agencias—, es
+**probabilística** —riesgo esperado, no un evento concreto— y no cuenta salud ni
+educación. CENTINELA publica **Adm2 por evento ocurrido**, bajo CC BY y ODbL, y
+con la vigencia del dato declarada en cada celda.
+
 **Lo que no hay es la pieza del medio**: un activo de exposición ya construido,
 por municipio y por celda, que convierta la intensidad en cuánta gente e
 infraestructura —el mismo día, con el dato descargable y en español—. Este

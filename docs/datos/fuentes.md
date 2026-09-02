@@ -52,7 +52,7 @@ R2025A, y el sistema lo usa.
 
 | Fuente | Qué aporta | Licencia | Limitación |
 |---|---|---|---|
-| **Overture `buildings`** | `bld_count`, `bld_area_m2` | ODbL 1.0 | Cobertura desigual: donde OSM no mapeó, no hay edificios |
+| **Overture `buildings`** | `bld_count`, `bld_area_m2` | ODbL 1.0 | Cobertura desigual, pero **no sólo OSM**: conflaciona OSM, Microsoft, Google Open Buildings y Esri |
 | **GHS-BUILT-S R2023A** | `built_m2` | EC reuse | Superficie vista por satélite |
 | **Overture `transportation`** | `road_km_primary/secondary/other` | ODbL 1.0 | Idem OSM |
 | **HOTOSM vía HDX** | `health_count`, `edu_count` | ODbL 1.0 | Puntos, no capacidad instalada |
