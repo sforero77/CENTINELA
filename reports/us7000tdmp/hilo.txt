@@ -1,5 +1,7 @@
-1/3 Sismo M5,6 · 71 km al OSO de Puerto Madero, México (2026-09-02 12:28 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+1/4 Sismo M5,6 · 71 km al OSO de Puerto Madero, México (2026-09-02 12:28 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
-2/3 Aun no hay ShakeMap publicado. Estas cifras son un corte preliminar por radios alrededor del epicentro y se actualizan solas cuando USGS publique el ShakeMap.
+2/4 Ninguna persona del país queda dentro de MMI≥6. No es que falte el dato: la intensidad que el ShakeMap dibuja para este evento no alcanza esa banda sobre territorio habitado.
 
-3/3 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/reports/us7000tdmp/
+3/4 Ningún municipio del país queda con población dentro de las bandas de intensidad de este evento. La sacudida fue mar adentro.
+
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/reports/us7000tdmp/
