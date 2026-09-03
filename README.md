@@ -344,7 +344,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.493 pruebas** sin red, más **101 de navegador** que abren el visor en un
+**1.500 pruebas** sin red, más **101 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 
@@ -395,7 +395,7 @@ diagramas de cada componente:
 | Carpeta | Qué explica |
 |---|---|
 | [`docs/arquitectura/`](docs/arquitectura/) | La vista de conjunto, el viaje del dato y el contrato de cada fichero |
-| [`docs/acciones/`](docs/acciones/) | Las doce GitHub Actions: quién dispara a quién y con qué reloj |
+| [`docs/acciones/`](docs/acciones/) | Las catorce GitHub Actions: quién dispara a quién y con qué reloj |
 | [`docs/pipelines/`](docs/pipelines/) | Los seis pipelines: qué extrae, qué calcula y qué escribe cada uno |
 | [`docs/datos/`](docs/datos/) | Fuentes, licencias, agregaciones y el esquema del activo |
 | [`docs/visor/`](docs/visor/) | Qué consume el visor, cómo pinta y cómo se valida |

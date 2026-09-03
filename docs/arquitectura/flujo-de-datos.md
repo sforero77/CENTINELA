@@ -8,7 +8,7 @@ ambos hasta el píxel.
 ```mermaid
 sequenceDiagram
   autonumber
-  participant CRON as Cron externo<br/>(previsto; hoy cron GH */30)
+  participant CRON as Cron externo<br/>(cada 5 min desde el 31-ago-2026)
   participant GH as GitHub Actions
   participant P1 as P1 trigger
   participant USGS as USGS

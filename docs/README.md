@@ -10,9 +10,9 @@ qué garantiza y cómo se rompe.
 | Carpeta | Qué explica |
 |---|---|
 | [`arquitectura/`](arquitectura/) | La vista de conjunto, el viaje del dato de punta a punta y el contrato de cada fichero |
-| [`acciones/`](acciones/) | Las doce GitHub Actions: quién dispara a quién, con qué reloj y por qué |
+| [`acciones/`](acciones/) | Las catorce GitHub Actions: quién dispara a quién, con qué reloj y por qué |
 | [`pipelines/`](pipelines/) | Los seis pipelines de Python: qué extrae, qué calcula y qué escribe cada uno |
-| [`datos/`](datos/) | Las fuentes, sus licencias, las agregaciones y el esquema del activo |
+| [`datos/`](datos/) | Las fuentes, sus licencias, las agregaciones y **en qué banda de intensidad se publica cada indicador** |
 | [`visor/`](visor/) | El visor estático: qué consume, cómo pinta y cómo se validan sus capas |
 
 ## Transversales
@@ -31,6 +31,14 @@ qué garantiza y cómo se rompe.
 Fuera de `docs/`: [`ESPECIFICACION.md`](../ESPECIFICACION.md) es la especificación
 técnica (v0.10) y manda sobre todo lo demás; [`PENDIENTES.md`](../PENDIENTES.md)
 es la deuda viva.
+
+## Las tres preguntas que se hacen más
+
+| Pregunta | Dónde se responde |
+|---|---|
+| **¿Cómo llega un sismo de USGS a la página?** | [`arquitectura/flujo-de-datos.md`](arquitectura/flujo-de-datos.md) sigue el camino entero, y [`acciones/cadena-de-evento.md`](acciones/cadena-de-evento.md) lo cuenta workflow a workflow |
+| **¿Qué dispara a qué, y con qué reloj?** | [`acciones/orquestacion.md`](acciones/orquestacion.md). La regla corta: el vigía es el reloj de todo lo demás |
+| **¿En qué banda de intensidad se publica cada cifra, y por qué?** | [`datos/agregaciones.md`](datos/agregaciones.md), sección *En qué banda se publica cada cosa*. Las fuentes de cada umbral están en `MMI_BANDS_INFRAESTRUCTURA` (`pipelines/common/constants.py`) |
 
 ## El sistema en un vistazo
 
