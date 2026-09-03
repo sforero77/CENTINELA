@@ -16,7 +16,20 @@
     "exposure_manifest": "chl-v0.2"
   },
   "preliminar": false,
-  "radios": [],
+  "radios": [
+    {
+      "radio_km": 25,
+      "pop": 0.0
+    },
+    {
+      "radio_km": 50,
+      "pop": 0.0
+    },
+    {
+      "radio_km": 100,
+      "pop": 0.0
+    }
+  ],
   "backtest": false,
   "totales": {
     "pop_mmi6p": 0.0,
@@ -58,6 +71,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-02T16:39:45Z",
+  "generado_utc": "2026-09-03T03:26:06Z",
   "pipeline_version": "0.1.0"
 }
