@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-03T11:45:23Z",
+  "generado_utc": "2026-09-03T11:50:27Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigia y no despachados: por debajo del umbral de reporte. No se midio su impacto — esto no es una estimacion de cero, es la ausencia de una medicion.",
   "eventos": [
+    {
+      "usgs_id": "us7000tdw2",
+      "mag": 4.8,
+      "lon": -94.6336,
+      "lat": 17.6542,
+      "depth_km": 159.0,
+      "lugar": "12 km al E de Venustiano Carranza (Peña Blanca), México",
+      "origen_utc": "2026-09-03T11:33:52Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "MEX"
+    },
     {
       "usgs_id": "us7000tduc",
       "mag": 5.1,
