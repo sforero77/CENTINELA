@@ -27,8 +27,8 @@
     "built_m2_mmi7p": 19491798.0,
     "health_mmi7p": 126.0,
     "edu_mmi7p": 540.0,
-    "road_km_mmi7p": 1571.99279216002,
-    "road_km_principal_mmi7p": 207.08703789871538,
+    "road_km_mmi7p": 1571.992792160019,
+    "road_km_principal_mmi7p": 207.08703789871544,
     "pop_ls_alta": 1199.2567775519565,
     "pop_lq_alta": 214.4236927209422
   },
@@ -78,6 +78,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-02T02:43:52Z",
+  "generado_utc": "2026-09-03T03:25:06Z",
   "pipeline_version": "0.1.0"
 }
