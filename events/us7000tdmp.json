@@ -14,7 +14,7 @@
   "timestamps": {
     "detectado": "2026-09-02T12:50:23Z",
     "preliminar": "2026-09-02T12:50:54Z",
-    "publicado": "2026-09-02T14:36:06Z",
+    "publicado": "2026-09-03T03:26:06Z",
     "usgs_origen": "2026-09-02T12:28:31Z"
   },
   "hashes": {},
@@ -23,6 +23,7 @@
   "notas": [
     "sin ShakeMap disponible aun",
     "reproceso forzado: el pipeline cambio, no los productos",
-    "ShakeMap v2 -> v3"
+    "ShakeMap v2 -> v3",
+    "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }
