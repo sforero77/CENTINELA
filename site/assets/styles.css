@@ -2245,3 +2245,33 @@ thead th {
     max-width: 9.5rem;
   }
 }
+
+/* --- Los sismos menores: la misma tarjeta, en voz baja -------------------- */
+/* Comparte `.lista-eventos` con los reportes a proposito: es la misma clase de
+   objeto. Lo que cambia es el peso, porque aqui no hay nada que medir. */
+.lista-eventos li.menor {
+  border-style: dashed;
+}
+
+.menor-lugar {
+  font-family: var(--tipo-titulo);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.015em;
+  color: var(--bosque);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menor-lugar:hover { color: var(--verde); }
+
+/* La casilla que en un reporte lleva la cifra. Aqui lleva su ausencia, y va
+   tenue para que no compita con las cifras de verdad de la lista de arriba. */
+.evento-cifra .sin-medicion {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--tenue-mas);
+}

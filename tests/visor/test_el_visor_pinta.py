@@ -1813,6 +1813,59 @@ def test_los_sismos_menores_obedecen_al_filtro_de_pais(pagina: Any) -> None:
     )
 
 
+def test_los_menores_tienen_lista_y_ninguna_cifra_de_impacto(pagina: Any) -> None:
+    """El interruptor decía «12 en 5 días» y el mapa los pintaba, y para saber
+    CUÁLES eran había que pinchar estrella por estrella o abrir el JSON crudo.
+
+    Un conteo no es un índice. Es el mismo hueco que ya se le arregló al fuego
+    con su lista de focos, y por la misma razón.
+
+    Lo segundo que exige esta prueba es lo que la hace valer: la casilla de la
+    derecha va **sin cifra**. En la lista de reportes ahí vive «610 mil personas
+    en MMI≥6»; un cero en el mismo sitio se leería como «no había nadie», cuando
+    lo que pasa es que nadie lo midió. La lista tiene que decir la ausencia, no
+    imprimir un número.
+    """
+    capa = _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#menores:not([hidden])", timeout=ESPERA_MS)
+
+    filas = pagina.locator("#lista-menores li")
+    assert filas.count() == capa["rasgos"] > 0, (
+        "la lista y el mapa salen del mismo fichero y no cuentan lo mismo: "
+        f"{filas.count()} filas contra {capa['rasgos']} estrellas"
+    )
+
+    assert filas.first.locator(".sin-medicion").count() == 1, (
+        "la fila no dice que no se midió el impacto"
+    )
+    texto = pagina.locator("#lista-menores").inner_text()
+    assert "personas" not in texto, (
+        "la lista de menores imprime una cifra de personas: "
+        "es medir lo que justamente no se midió"
+    )
+
+
+def test_pinchar_un_menor_lo_enciende_en_el_mapa(pagina: Any) -> None:
+    """La lista sin el mapa responde «cuáles», y deja «dónde» sin respuesta.
+
+    La capa nace apagada a propósito (una estrella se lee como alarma diga lo
+    que diga el pie), así que la fila tiene que encenderla ella: si no, pinchar
+    no hace nada visible y la lista parece rota.
+    """
+    _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#menores:not([hidden])", timeout=ESPERA_MS)
+
+    casilla = pagina.locator("#interruptor-observados input")
+    assert not casilla.is_checked(), "la capa debería nacer apagada"
+
+    pagina.locator("#lista-menores .menor-lugar").first.click()
+    pagina.wait_for_timeout(800)
+
+    assert casilla.is_checked(), (
+        "pinchar un sismo de la lista no encendió su capa en el mapa"
+    )
+
+
 def test_el_filtro_de_pais_del_fuego_llega_a_las_tres_capas(pagina: Any) -> None:
     """Lo mismo que se le exige a los sismos, y por el mismo motivo.
 
