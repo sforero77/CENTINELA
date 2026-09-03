@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-03T21:00:29Z",
+  "generado_utc": "2026-09-03T21:40:23Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -178,17 +178,11 @@
     "declarado_min": 30,
     "p50_min": 5.0,
     "p90_min": 5.1,
-    "peor_min": 9.9,
-    "revisiones": 655,
+    "peor_min": 10.0,
+    "revisiones": 658,
     "latidos": 201
   },
   "latidos": [
-    {
-      "utc": "2026-09-02T18:20:29Z",
-      "revisados": 19,
-      "relevantes": 2,
-      "revisiones": 1
-    },
     {
       "utc": "2026-09-02T18:25:18Z",
       "revisados": 19,
@@ -1382,6 +1376,12 @@
       "revisados": 23,
       "relevantes": 0,
       "revisiones": 73
+    },
+    {
+      "utc": "2026-09-03T21:40:23Z",
+      "revisados": 23,
+      "relevantes": 0,
+      "revisiones": 4
     }
   ],
   "nota": "La latencia incluye la demora del cron de GitHub Actions, que el proyecto no controla y que su documentacion situa entre 5 y 30 minutos. El objetivo se define sobre lo controlable; esta cifra es el total real, sin descontar nada."
