@@ -1492,7 +1492,6 @@ def test_ver_en_el_mapa_encuadra_los_sismos_vistos(pagina: Any) -> None:
     _esperar_capa(pagina, "observados")
     boton = pagina.locator('.metrica-viva[data-capa="observados"]')
     boton.wait_for(state="visible", timeout=ESPERA_MS)
-    antes = _escala(pagina)
 
     boton.click()
     pagina.wait_for_timeout(600)
@@ -1500,8 +1499,16 @@ def test_ver_en_el_mapa_encuadra_los_sismos_vistos(pagina: Any) -> None:
 
     casilla = pagina.locator("#interruptor-observados input")
     assert casilla.is_checked(), "la capa que el botón promete encender sigue apagada"
-    assert _escala(pagina) != antes, (
-        f"la cámara no se movió: sigue en {antes}. «Ver en el mapa» tiene que llevar al sitio"
+    # Se mira la ORDEN, no el píxel, que es para lo que existe `camara` y lo
+    # dice su propio comentario. La versión anterior comparaba la barra de
+    # escala antes y después, y eso no distingue "no se pidió mover" de "se
+    # pidió y el encuadre coincide con el de partida": los sismos vistos van de
+    # Chile a México, así que el rectángulo que los contiene ES casi el
+    # panorama, y la barra marcaba 1000 km en los dos lados. La prueba fallaba
+    # con el botón funcionando.
+    motivo = pagina.evaluate("() => window.CENTINELA.camara.motivo")
+    assert motivo == "observados", (
+        f"«Ver en el mapa» no le pidió a la cámara ir a los sismos vistos: última orden {motivo!r}"
     )
 
 
@@ -1840,8 +1847,7 @@ def test_los_menores_tienen_lista_y_ninguna_cifra_de_impacto(pagina: Any) -> Non
     )
     texto = pagina.locator("#lista-menores").inner_text()
     assert "personas" not in texto, (
-        "la lista de menores imprime una cifra de personas: "
-        "es medir lo que justamente no se midió"
+        "la lista de menores imprime una cifra de personas: es medir lo que justamente no se midió"
     )
 
 
@@ -1861,9 +1867,7 @@ def test_pinchar_un_menor_lo_enciende_en_el_mapa(pagina: Any) -> None:
     pagina.locator("#lista-menores .menor-lugar").first.click()
     pagina.wait_for_timeout(800)
 
-    assert casilla.is_checked(), (
-        "pinchar un sismo de la lista no encendió su capa en el mapa"
-    )
+    assert casilla.is_checked(), "pinchar un sismo de la lista no encendió su capa en el mapa"
 
 
 def test_el_filtro_de_pais_del_fuego_llega_a_las_tres_capas(pagina: Any) -> None:
