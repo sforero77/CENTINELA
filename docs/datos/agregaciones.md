@@ -33,7 +33,7 @@ flowchart TB
 Una carretera de 40 km cruza muchas celdas. Asignarla entera a la celda de su
 centroide daría 40 km en una celda y 0 en las vecinas.
 
-Lo que se hace —y este documento lo describía mal— es **densificar y repartir**:
+Lo que se hace (y este documento lo describía mal) es **densificar y repartir**:
 la longitud se mide entera con `ST_Length_Spheroid`, que es geodésica sobre el
 elipsoide (no hay ninguna reproyección equiárea en el repositorio, y una
 equiárea sería además la clase equivocada para medir longitud), la vía se parte
@@ -111,21 +111,21 @@ flowchart TB
 
 ### En qué banda se publica cada cosa, y por qué
 
-Población en **MMI ≥ 6, ≥ 7 y ≥ 8**. Equipamiento —edificaciones, superficie
-construida, salud, educación, vías— y desglose etario en **MMI ≥ 6 y ≥ 7**
+Población en **MMI ≥ 6, ≥ 7 y ≥ 8**. Equipamiento (edificaciones, superficie
+construida, salud, educación, vías) y desglose etario en **MMI ≥ 6 y ≥ 7**
 (`MMI_BANDS_INFRAESTRUCTURA`, `MMI_BANDS_AGE_BREAKDOWN`).
 
 Hasta el 3-sep-2026 el equipamiento se agregaba **solo** en MMI ≥ 7, y el
 desglose etario también, con esta justificación escrita: *"más abajo la
 incertidumbre del modelo etario sería mayor que la señal"*. **Esa razón no era
-una razón**: la incertidumbre etaria viene de mezclar GHS-POP con WorldPop —lo
-explica la sección de arriba— y es la misma en MMI 6 que en MMI 7. No es
+una razón**: la incertidumbre etaria viene de mezclar GHS-POP con WorldPop (lo
+explica la sección de arriba) y es la misma en MMI 6 que en MMI 7. No es
 función de la intensidad.
 
 El efecto medido: **trece de los veintitrés reportes no tienen población en
 MMI ≥ 7**, así que publicaban "0 edificaciones, 0 hospitales, 0 escuelas, 0 km
 de vía" con millones de personas dentro de MMI ≥ 6. `us7000jl3s`: 4,75 millones
-de personas —3,1 de ellas en Guayaquil— y ni un solo hospital que nombrar.
+de personas (3,1 de ellas en Guayaquil) y ni un solo hospital que nombrar.
 
 Ninguna fuente autorizada sitúa el inicio del daño en MMI VII, y las que hay
 convergen en VI: el USGS describe el grado VI como *"Damage slight"*; la tabla
@@ -144,12 +144,12 @@ igual que ya hacía el ranking municipal.
 ### Ground Failure
 
 Se muestrea el ráster por celda. Un valor ≥ **0,10** cuenta como "alto" para el
-conteo de población expuesta. `NaN` significa fuera de la huella del modelo — no
+conteo de población expuesta. `NaN` significa fuera de la huella del modelo, no
 cero, no "sin riesgo".
 
 El ráster de licuefacción **no es probabilidad**: el producto de USGS deriva
-por calibración una **cobertura areal** —la fracción de la celda que se espera
-cubierta por manifestaciones de licuefacción—, y el de deslizamiento sí es
+por calibración una **cobertura areal** (la fracción de la celda que se espera
+cubierta por manifestaciones de licuefacción), y el de deslizamiento sí es
 probabilidad. Llamarlas igual afirma de una lo que solo vale para la otra, y el
 `report.md` ya las distingue (`GF_UNIDAD`). El umbral 0,10 se aplica a las dos,
 pero significa cosas distintas en cada una.
@@ -169,11 +169,11 @@ fuera un censo.
 
 Correr el catálogo regional entero enseñó algo que ninguna prueba sintética
 habría encontrado: **trece de los veintitrés eventos no alcanzan MMI ≥ 7 sobre
-población** —eran ocho de diecinueve cuando se midió por primera vez, y la
-proporción se ha mantenido al crecer el catálogo—. De ellos, **cinco tampoco
+población** (eran ocho de diecinueve cuando se midió por primera vez, y la
+proporción se ha mantenido al crecer el catálogo). De ellos, **cinco tampoco
 alcanzan MMI ≥ 6**: para esos, la única cifra que dimensiona el evento es el
 corte por radios alrededor del epicentro. Son los profundos y los de mar adentro, que en esta región son la
-mitad. Tehuantepec 2017 —M8,2, 98 muertos— tiene su máximo sobre población
+mitad. Tehuantepec 2017 (M8,2, 98 muertos) tiene su máximo sobre población
 mexicana en **MMI 6,5**.
 
 Hasta que se corrieron, el producto daba por supuesto que MMI ≥ 7 era *la*

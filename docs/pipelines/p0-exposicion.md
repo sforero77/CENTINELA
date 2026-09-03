@@ -1,4 +1,4 @@
-# P0 — Activo de exposición
+# P0: Activo de exposición
 
 **Qué hace:** construye, para cada país, la malla H3 r8 con todo lo que hay
 expuesto. Es el denominador de todo el sistema.
@@ -72,7 +72,7 @@ Antes de descargar nada pesado, comprueba que la caja de trabajo cubre el país.
 Una caja mal puesta produciría un activo correcto y truncado, que es la peor
 combinación.
 
-### 2. `validate_layer_coverage` — el cero silencioso
+### 2. `validate_layer_coverage`: el cero silencioso
 
 Una capa que no se construye entra vacía al ensamblaje, el `LEFT JOIN` la
 vuelve ceros y el activo se escribiría sin que nada proteste: el assert de
@@ -108,7 +108,7 @@ deriva.
 | Población en la malla | **649.793.406** |
 | Peor desvío | +4,94 % |
 
-Se publica en `site/cobertura.json`, que sale de los manifests — así que la
+Se publica en `site/cobertura.json`, que sale de los manifests, así que la
 página **no puede prometer más países de los que se construyeron de verdad**.
 
 ## Por qué el activo no va en git

@@ -1,4 +1,4 @@
-# P2 — Impacto
+# P2: Impacto
 
 **Qué hace:** cruza la intensidad sísmica publicada por USGS con el activo de
 exposición del país, y produce el modelo del reporte.
@@ -37,7 +37,7 @@ flowchart TB
 ## De contornos a celdas
 
 ShakeMap publica `cont_mmi.json`: **isolíneas** de intensidad en pasos de 0,5,
-como `MultiLineString` — no polígonos, aunque este documento lo dijo así hasta
+como `MultiLineString`, no polígonos, aunque este documento lo dijo así hasta
 el 1-sep-2026. La diferencia no es cosmética: la isolínea de MMI 7,0 es la
 *frontera* de la región ≥7, así que antes de rellenar hay que cerrarla en
 anillos y resolver el anidamiento (una isla de MMI 8 dentro de la de 7 es un
@@ -63,8 +63,8 @@ Se muestrea el ráster por celda. Un valor ≥ **0,10** cuenta como "alto" para 
 conteo de población expuesta.
 
 El ráster de licuefacción **no es probabilidad**: el producto de USGS deriva
-por calibración una **cobertura areal** —la fracción de la celda que se espera
-cubierta por manifestaciones de licuefacción—, y el de deslizamiento sí es
+por calibración una **cobertura areal** (la fracción de la celda que se espera
+cubierta por manifestaciones de licuefacción), y el de deslizamiento sí es
 probabilidad. Llamarlas igual afirma de una lo que solo vale para la otra, y el
 `report.md` ya las distingue (`GF_UNIDAD`). El umbral 0,10 se aplica a las dos,
 pero significa cosas distintas en cada una.
@@ -95,7 +95,7 @@ El criterio de la distinción está escrito en el código:
 > terremoto por un municipio sin nombre es peor que decir que falta.
 
 `crosswalk_incompleto` no bloquea pero tampoco se calla: un municipio que llega
-al corte y no está en el lookup **desaparecería del reporte sin una palabra** —
+al corte y no está en el lookup **desaparecería del reporte sin una palabra**:
 y podría ser el más expuesto del evento. Los totales nacionales siguen siendo
 correctos porque salen de `impact_h3`; lo que falta es la fila.
 
@@ -103,7 +103,7 @@ correctos porque salen de `impact_h3`; lo que falta es la fila.
 
 Un activo publicado hace meses puede no tener las columnas que el código de hoy
 espera. Si P2 las exigiera, **el primer sismo después de actualizar el código y
-antes de republicar el activo se quedaría sin reporte** — y no hay peor momento
+antes de republicar el activo se quedaría sin reporte**, y no hay peor momento
 para eso.
 
 `register_exposure_view` sustituye las columnas ausentes por un valor neutro y
@@ -115,8 +115,8 @@ Release publicado era `col-v0.4`.
 ## El enrutado al país
 
 Un epicentro no trae su ISO3. `centinela paises-candidatos` lo resuelve y
-devuelve una lista ordenada —un sismo en el mar o cerca de una frontera puede
-tocar dos países—. Si el activo del primero no existe, se reintenta con el
+devuelve una lista ordenada (un sismo en el mar o cerca de una frontera puede
+tocar dos países). Si el activo del primero no existe, se reintenta con el
 siguiente. Si ninguno existe, se abre una incidencia en vez de publicar ceros.
 
 `ExposureCountryMismatchError` es la excepción que salta cuando el activo

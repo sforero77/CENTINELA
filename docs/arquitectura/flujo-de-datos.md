@@ -3,7 +3,7 @@
 Dos caminos distintos comparten el mismo denominador. Este documento sigue
 ambos hasta el píxel.
 
-## Camino A — un sismo, de la fuente al reporte
+## Camino A: un sismo, de la fuente al reporte
 
 ```mermaid
 sequenceDiagram
@@ -46,7 +46,7 @@ el respaldo: GitHub documenta demoras de 5 a 30 minutos en los crons
 programados, y si el runner despierta tarde el feed horario ya no alcanza.
 Los duplicados entre ambos se descartan por `usgs_id`.
 
-## Camino B — el fuego, cada seis horas
+## Camino B: el fuego, cada seis horas
 
 ```mermaid
 flowchart LR
@@ -69,7 +69,7 @@ cantidad de fuegos, que es el triple de los que hay.
 **El recorte a 4.000 celdas** no es por potencia: entran primero todas las que
 tienen gente debajo, ordenadas por población, y el resto se rellena por
 potencia radiativa. El visor lo dice con esas palabras porque durante un tiempo
-dijo otra cosa —"las 4.000 celdas de mayor energía"— y era falso.
+dijo otra cosa («las 4.000 celdas de mayor energía») y era falso.
 
 ## El denominador común
 
@@ -91,7 +91,7 @@ flowchart TB
 
 Este es el motivo de que el visor tenga un selector de amenaza y no dos mapas:
 cambia la amenaza, no el denominador. Cualquier amenaza futura que sepa
-resolverse a celda H3 —inundación, ceniza volcánica— entra por el mismo join.
+resolverse a celda H3 (inundación, ceniza volcánica) entra por el mismo join.
 
 ## Qué se dispara con qué reloj
 

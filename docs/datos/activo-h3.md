@@ -1,4 +1,4 @@
-# El activo — `exposure_h3`
+# El activo: `exposure_h3`
 
 Una fila por celda H3 r8. Es el denominador de todo el sistema: lo que P2 cruza
 con la intensidad sísmica y lo que P5 cruza con los focos de calor.
@@ -33,7 +33,7 @@ Contrato completo: [`schemas/parquet/tables.yaml`](../../schemas/parquet/tables.
 | `pop_0_14` | DOUBLE | WorldPop age-sex |
 | `pop_15_64` | DOUBLE | **residuo** de los otros dos |
 | `pop_65p` | DOUBLE | WorldPop age-sex |
-| `pop_alt_worldpop` | DOUBLE | WorldPop total — **solo alimenta la banda de discrepancia** |
+| `pop_alt_worldpop` | DOUBLE | WorldPop total, **solo alimenta la banda de discrepancia** |
 
 ### Construcción
 
@@ -44,7 +44,7 @@ Contrato completo: [`schemas/parquet/tables.yaml`](../../schemas/parquet/tables.
 | `built_m2` | DOUBLE | GHS-BUILT-S 2025 |
 
 > `built_m2` **contrasta** a `bld_count`: donde ninguna de las fuentes de
-> Overture mapeó el barrio —conflaciona OSM, Microsoft, Google y Esri—, el
+> Overture mapeó el barrio (conflaciona OSM, Microsoft, Google y Esri), el
 > satélite sí lo ve. El reporte avisa cuando la razón entre ambas pasa de 1,5.
 
 ### Servicios y vías
@@ -107,7 +107,7 @@ sismo en Colombia **no lee ni un byte** del activo de Chile.
 
 Un activo publicado hace meses puede no traer las columnas que el código de hoy
 espera. `register_exposure_view` sustituye las ausentes por un valor neutro y
-**devuelve la lista de sustituidas** — el reporte omite esa fila en vez de
+**devuelve la lista de sustituidas**: el reporte omite esa fila en vez de
 publicar un cero.
 
 ```mermaid
@@ -141,5 +141,5 @@ Overture **conflaciona** OSM, Microsoft Building Footprints, Google Open
 Buildings y Esri: ya no es cierto que donde OSM no mapeó no haya edificios. Eso
 cambia el sentido del contraste `built_m2` / `bld_count`: la desproporción ya no
 señala «zona sin mapear en OSM» sino zonas donde ninguna de las cuatro fuentes
-tiene huellas, que son muchas menos y de otro tipo —rural disperso, informal
-reciente—.
+tiene huellas, que son muchas menos y de otro tipo (rural disperso, informal
+reciente).

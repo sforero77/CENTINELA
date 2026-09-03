@@ -1,4 +1,4 @@
-# `pipelines/common/` — los módulos compartidos
+# `pipelines/common/`: los módulos compartidos
 
 Catorce módulos que usan todos los pipelines. Ninguno es utilitario genérico:
 cada uno existe por un fallo concreto o una regla del proyecto.
@@ -22,7 +22,7 @@ cada uno existe por un fallo concreto o una regla del proyecto.
 
 ## Los que llevan una historia
 
-### `frescura.py` — las diecisiete horas
+### `frescura.py`: las diecisiete horas
 
 ```mermaid
 flowchart LR
@@ -42,23 +42,23 @@ flowchart LR
 > preguntó.
 
 Vigila **una sola cosa**: que el repositorio avance y la página no. Si el vigía
-muriera, los dos se quedarían quietos a la vez y esto no diría nada — de eso se
+muriera, los dos se quedarían quietos a la vez y esto no diría nada: de eso se
 ocupa el latido externo. Mezclar las dos alarmas daría una incapaz de decir cuál
 de las dos cosas se rompió.
 
-### `toponimos.py` — el lugar, en español (RF-06)
+### `toponimos.py`: el lugar, en español (RF-06)
 
 USGS publica `"26 km WSW of Tocopilla, Chile"`. El reporte dice
 `"26 km al OSO de Tocopilla, Chile"`. Un reporte para gestión del riesgo en
 América Latina que dice "WSW" no está terminado.
 
-### `licensing.py` — los tres cubos
+### `licensing.py`: los tres cubos
 
 `bucket_for(licencia)` clasifica cada fuente en núcleo redistribuible, ODbL
 (share-alike) o no comercial. El lint falla en CI si una capa entra en el cubo
 equivocado. Ver [`../arquitectura/decisiones.md`](../arquitectura/decisiones.md).
 
-### `status.py` — la latencia que se publica, no la que se promete
+### `status.py`: la latencia que se publica, no la que se promete
 
 ```json
 "objetivo": {"p50_min": 60, "p95_min": 90},
@@ -83,14 +83,14 @@ Y `cadencia` publica la distancia entre lo declarado (30 min) y lo real
 (165,9 min de mediana, 765,9 en el peor caso) sin maquillarla. Es lo que
 justifica el cron externo.
 
-### `http.py` — un solo cliente
+### `http.py`: un solo cliente
 
 416 líneas para lo que parece resuelto. Existe porque todo acceso a red del
 sistema pasa por aquí: reintentos, `User-Agent` identificable, descarga
-atómica a disco, y —sobre todo— **una superficie única que los tests pueden
+atómica a disco, y, sobre todo, **una superficie única que los tests pueden
 sustituir por fixtures**. Ninguna prueba de la suite toca la red.
 
-### `state.py` — la base de datos
+### `state.py`: la base de datos
 
 ```mermaid
 stateDiagram-v2
@@ -106,5 +106,5 @@ stateDiagram-v2
 ```
 
 `descartado` es el único estado terminal. Un evento publicado se revisita
-indefinidamente por si USGS saca un ShakeMap nuevo — el de Venezuela llegó a
+indefinidamente por si USGS saca un ShakeMap nuevo: el de Venezuela llegó a
 v14.

@@ -1,9 +1,9 @@
-# La cadena de un evento — `impact.yml` y `site.yml`
+# La cadena de un evento: `impact.yml` y `site.yml`
 
 De un `usgs_id` a una página publicada. Es el camino crítico: lo que el
 objetivo de latencia (p50 60 min, p95 90 min) mide de punta a punta.
 
-## `impact.yml` — P2 + P3
+## `impact.yml`: P2 + P3
 
 ```mermaid
 flowchart TB
@@ -27,7 +27,7 @@ flowchart TB
 ### El enrutado al país
 
 Un sismo no trae su país en el feed. `centinela paises-candidatos` lo resuelve
-desde el detalle de USGS y devuelve una lista ordenada de ISO3 candidatos —
+desde el detalle de USGS y devuelve una lista ordenada de ISO3 candidatos,
 porque un epicentro en el mar, o a 20 km de una frontera, puede afectar a dos
 países. El workflow prueba en orden y **reintenta** con el siguiente si el
 activo del primero no existe.
@@ -55,13 +55,13 @@ anterior: cuánta población entró o salió de cada banda.
 
 ### El reporte preliminar
 
-Si el sismo pasó el filtro pero **ShakeMap todavía no existe** —lo normal en
-los primeros minutos—, P2 no espera de brazos cruzados. Emite un reporte
+Si el sismo pasó el filtro pero **ShakeMap todavía no existe** (lo normal en
+los primeros minutos), P2 no espera de brazos cruzados. Emite un reporte
 preliminar por radios fijos (25, 50 y 100 km) y reintenta cada 30 minutos
 durante un máximo de 6 horas. El estado del evento queda en `preliminar` y el
 reporte lo declara.
 
-## `site.yml` — la publicación
+## `site.yml`: la publicación
 
 ```mermaid
 flowchart LR
@@ -76,7 +76,7 @@ flowchart LR
 ### Por qué todos los workflows lo llaman a mano
 
 Un push hecho con `GITHUB_TOKEN` **no dispara otros workflows**. Es una
-protección de GitHub contra bucles infinitos, y es correcta — pero significa
+protección de GitHub contra bucles infinitos, y es correcta, pero significa
 que commitear `site/status.json` desde el vigía no republica la página.
 
 El 26-ago-2026 eso dejó el visor **diecisiete horas sirviendo datos viejos con

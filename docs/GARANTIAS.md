@@ -29,7 +29,7 @@ demuestra que sigue vivo.
 ### No se pierde un sismo
 
 El vigía lee `4.5_day`, una ventana de **24 horas**. Aunque el cron tarde once
-—el peor caso medido—, el evento sigue en el feed cuando llegue.
+(el peor caso medido), el evento sigue en el feed cuando llegue.
 
 Esa ventana garantiza que no se pierde un sismo, **no** que se sigan viendo sus
 revisiones: pasadas 24 h el evento se cae del feed. De eso se ocupa
@@ -49,7 +49,7 @@ healthcheck el 27-ago.
 Un push hecho con `GITHUB_TOKEN` no dispara otros workflows, así que cada
 workflow que commitea en `site/` o `reports/` lanza `site.yml` explícitamente.
 
-**Cómo se sabe:** se demostró solo el 27-ago a las 03:17 — el vigía commiteó su
+**Cómo se sabe:** se demostró solo el 27-ago a las 03:17: el vigía commiteó su
 latido y republicó el visor sin intervención. `test_el_visor_se_republica`
 exige ese paso a todo el que empuje, derivando las rutas del propio `site.yml`.
 
@@ -61,8 +61,8 @@ exige ese paso a todo el que empuje, derivando las rutas del propio `site.yml`.
 2. ¿Están los mismos reportes en el índice publicado?
 3. ¿Cuánto hace que cada fichero no se regenera?
 
-La tercera es la que faltaba: un fichero congelado **no desfasa** —repositorio y
-página igual de viejos— y pasaba las dos primeras sin protestar.
+La tercera es la que faltaba: un fichero congelado **no desfasa** (repositorio y
+página igual de viejos) y pasaba las dos primeras sin protestar.
 
 ### El camino de P2, de punta a punta
 
@@ -93,8 +93,8 @@ vigía detecte un sismo nuevo y despache P2 solo. Eso necesita un M≥5,5 real.
 `event_latencies` exige que exista `reports/<id>/report.json` antes de contar la
 latencia de un evento.
 
-**Por qué existe:** el 26-ago la página sirvió `us7000abcd` —inexistente en
-USGS— con una latencia de 20,0 minutos, contado como el único evento real
+**Por qué existe:** el 26-ago la página sirvió `us7000abcd` (inexistente en
+USGS) con una latencia de 20,0 minutos, contado como el único evento real
 publicado.
 
 ---
@@ -113,17 +113,24 @@ entero.** Medido el 27-ago: el repositorio recibe unos pocos turnos de cron **al
 día**, repartidos entre los cinco workflows programados. El vigía bajó de `*/10`
 a `*/30` para dejar de acaparar una cola que no podía ganar.
 
-La ruta que lo arregla —un cron externo que dispare `repository_dispatch`— está
+La ruta que lo arregla, un cron externo que dispare `repository_dispatch`, está
 hecha desde el 31-ago-2026 y despacha cada cinco minutos; el cron de GitHub
 quedó de respaldo. Los primeros latidos con el disparador nuevo dan **p50 5,0
 min · p90 5,0 · peor 5,0**, o sea la cadencia declarada, exactamente. Son pocos
-—la serie se reinició el 1-sep-2026 al re-emitir el catálogo entero— así que
+(la serie se reinició el 1-sep-2026 al re-emitir el catálogo entero), así que
 valen como orden de magnitud y no como percentil estable, y la cifra de arriba
 se conserva por lo que documenta: lo que daba la cola de GitHub sola.
 
 **La latencia de punta a punta ya está medida, y no se cumple.** Los dos
-primeros sismos en vivo, el 2-sep-2026, dan **p50 185,7 min · p95 238,0 · peor
-243,8** — tres veces el objetivo. `/status` lo publica.
+primeros sismos en vivo, el 2-sep-2026, dan **p50 92,1 min · p95 94,8 · peor
+95,1**: más del doble del objetivo. `/status` lo publica.
+
+*Esa cifra decía 185,7 hasta el 3-sep-2026, y era falsa por una razón que vale
+la pena conocer: `transition` reescribía el sello `publicado` en cada
+re-emisión, así que la latencia de un evento crecía sola cada vez que USGS
+publicaba un ShakeMap nuevo. Se medía «cuánto hace que lo relanzamos», no
+«cuánto tardó el sistema». Ahora se conserva el primer sello y la re-emisión se
+guarda aparte.*
 
 Dónde se va el tiempo, con los dos únicos casos que hay:
 
@@ -138,7 +145,7 @@ distinguir «no alcanza celdas» de «activo equivocado».
 
 Con dos eventos no hay percentil: son dos medidas, no una distribución. Pero ya
 son suficientes para decir que **el objetivo de 60 minutos no depende de esta
-infraestructura** — depende de cuándo publique USGS. Mientras no se decida
+infraestructura**: depende de cuándo publique USGS. Mientras no se decida
 medirlo contra el ShakeMap en vez de contra el origen, el objetivo se declara
 aquí como lo que es: no cumplido.
 
@@ -154,8 +161,8 @@ Esa es la razón de que el proyecto entero se apoye en no publicar lo que no mid
 
 **Los vigilantes dependen de la misma cola que vigilan.**
 
-`frescura.yml` pide un turno cada tres horas. El 27-ago corrió **dos veces** —a
-las 00:49 y a las 14:15—, así que su detección real fue de trece horas, no de
+`frescura.yml` pide un turno cada tres horas. El 27-ago corrió **dos veces** (a
+las 00:49 y a las 14:15), así que su detección real fue de trece horas, no de
 tres. `incendios.yml` pidió cuatro turnos y no corrió **ninguno**.
 
 El único vigilante independiente es el **monitor externo** (healthchecks.io), y
@@ -186,7 +193,7 @@ forma más sutil, la detección depende de la misma cola que se rompió.**
 
 1. ~~Ejercitar P2 de punta a punta.~~ **Hecho el 27-ago.** Queda el tramo que
    no se puede ensayar: que el vigía despache solo ante un sismo nuevo.
-2. **Sacar `frescura` de la cola de GitHub** — encadenarla al vigía, o al
+2. **Sacar `frescura` de la cola de GitHub**: encadenarla al vigía, o al
    monitor externo. Un vigilante que depende de lo que vigila no es un
    vigilante.
 3. **Decidir sobre la latencia:** arreglarla con reloj externo, o publicar el

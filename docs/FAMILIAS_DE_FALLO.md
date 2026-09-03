@@ -16,7 +16,7 @@ plausibles, corridas en verde y cifras creíbles. Por eso hay que buscarlos.
 
 ## 1 · Escrito no es conectado
 
-Una función existe, tiene pruebas verdes, y **nadie la llama** — o la llama pero
+Una función existe, tiene pruebas verdes, y **nadie la llama**, o la llama pero
 su resultado no le llega a nadie.
 
 | Caso | Cómo se veía |
@@ -73,23 +73,23 @@ la línea entera (`republica()`).
 
 **El caso peruano, del 27-ago-2026, es el más instructivo porque el tercero no
 cambio nada: se cayó.** `HttpFetcher.download_to` lanza el mismo `RuntimeError`
-genérico para cualquier causa —404, timeout, 500, conexión cortada— y
+genérico para cualquier causa (404, timeout, 500, conexión cortada) y
 `download_ghsl` lo captura para tratar un caso legítimo: las teselas que solo
 cubren océano no existen en el servidor, y ahí un 404 **es** la respuesta
 correcta. Con el JRC caído tres horas, las nueve teselas de Perú agotaron sus
 reintentos, se contaron una a una como «tesela ausente, probablemente solo
 océano», y el país se ensamblo con población 0 y superficie construida 0.
 
-Lo detuvo el assert de §6.4 —`Total nacional 0 se desvia -100.00%`— pero al
+Lo detuvo el assert de §6.4 (`Total nacional 0 se desvia -100.00%`) pero al
 final de la cadena, tres horas y 24 millones de edificaciones después. Desde el
 27-ago-2026 lo detiene antes `_verificar_insumos`: una fuente que **si** descarga
 y vuelve con cero ficheros levanta `InsumoAusenteError` al terminar esa descarga.
 Vacío no es lo mismo que remoto, y suponerlo era el agujero.
 
 **Cerrado del todo el 28-ago-2026, en tres piezas.** La caída *parcial* seguía
-abierta —si de nueve teselas responden cinco no hay cero que detectar, y el país
+abierta (si de nueve teselas responden cinco no hay cero que detectar, y el país
 sale con una fracción de su población: una cifra plausible, del orden correcto y
-equivocada—. Lo que faltaba era que el fetcher distinguiera «404, esta tesela no
+equivocada). Lo que faltaba era que el fetcher distinguiera «404, esta tesela no
 existe» de «no pude descargarla», que eran la misma excepción.
 
 | | Antes | Ahora |
@@ -102,7 +102,7 @@ existe» de «no pude descargarla», que eran la misma excepción.
 `RecursoAusenteError` es la única excepción que `download_ghsl` acepta como
 «solo océano»; cualquier otra sube. `comprobar_origenes` pregunta por HEAD a
 cada host distinto del manifest antes de la primera descarga, y **cualquier
-código de estado cuenta como vivo** —404, 403, 405 incluidos—: la pregunta es si
+código de estado cuenta como vivo** (404, 403, 405 incluidos): la pregunta es si
 el servidor está en pie, no si el recurso existe, y un chequeo que confundiera
 las dos cosas sería un generador de falsos positivos desactivado en una semana.
 
@@ -114,11 +114,11 @@ hora.
 **Por qué pasa.** Dependemos de HDX, USGS, JRC, ESA, Overture. Ninguno avisa. Y
 lo más fino del caso argentino: el filtro `ST_GeometryType(...) = 'POLYGON'`
 **parecia cubrirlo y no podía**, porque devuelve `POLYGON` tanto para el tipo 3
-como para el 1003 — borra la dimensión al contestar.
+como para el 1003: borra la dimensión al contestar.
 
 **La puerta, puesta el 27-ago-2026.** Cada fuente se compara contra su
 `insumos_sha256` en cuanto sus ficheros están en disco, y un insumo republicado
-detiene el build ahí —a los minutos, nombrando la fuente y el fichero— en vez de
+detiene el build ahí (a los minutos, nombrando la fuente y el fichero) en vez de
 salir a las dos horas disfrazado de error de geometría.
 
 **Por qué llevaba vacío desde el primer día, que no era disciplina.** El campo se
@@ -139,15 +139,15 @@ ya viaja en el Release al lado del parquet.
 **Lo que falta.** Los 194 digests siguen vacios: solo se pueden medir
 construyendo, y los diecinueve activos publicados se construyeron antes de que
 esto existiera. Se llenan país a país con `centinela fijar-insumos <ISO3>` sobre
-la medición de la proxima reconstrucción —la misma que ya alinea la versión del
-activo—, y hasta entonces el lint lo reporta como aviso y el build lo registra
+la medición de la proxima reconstrucción (la misma que ya alinea la versión del
+activo), y hasta entonces el lint lo reporta como aviso y el build lo registra
 sin detenerse.
 
 ---
 
 ## 4 · El recurso escala con el tamaño del país
 
-Brasil, tres diagnosticos: tiempo, disco, y por fin **memoria** — `src.read(1)`
+Brasil, tres diagnosticos: tiempo, disco, y por fin **memoria**: `src.read(1)`
 traía 12,8 GB sobre un runner de 16.
 
 | País | Píxeles | En RAM | ¿Cabe? |
@@ -178,7 +178,7 @@ que nada haya ido mal.
 "llegó incompleto" manda a investigar la red cuando el problema es el guardia.
 
 **La regla.** Un guardia que puede fallar sobre datos correctos necesita su
-propia prueba del caso bueno — no solo del malo.
+propia prueba del caso bueno, no solo del malo.
 
 ---
 
@@ -211,7 +211,7 @@ fuego con seis colores y ninguna leyenda.
 perfectamente declarada. La única forma de verlo es mirar.
 
 **La regla.** Una capa nueva se abre en un navegador antes de darla por hecha, y
-se comprueba en el zoom en el que la gente la va a mirar — no en el que la
+se comprueba en el zoom en el que la gente la va a mirar, no en el que la
 escribiste.
 
 ---
@@ -219,7 +219,7 @@ escribiste.
 ## 8 · La fuente entera se cayó y la corrida salió en verde
 
 P5 lee seis ficheros de FIRMS. Un fichero caído no puede tumbar los otros cinco
-—perder una región entera es peor que publicar con cinco sextos del dato— así
+(perder una región entera es peor que publicar con cinco sextos del dato) así
 que el fallo se anota en el log y se sigue. Correcto.
 
 El 30-ago-2026 fallaron **los seis**:
@@ -227,21 +227,21 @@ El 30-ago-2026 fallaron **los seis**:
     {"detecciones": 0, "utiles": 0, "ficheros_fallidos": [los seis]}
 
 Cero detecciones, cero celdas, y el workflow **verde**. La capa publicada se
-salvo porque el pipeline ya se niega a publicar ceros —la familia 6 hizo su
-trabajo— pero nadie se entero de que ese día no se miro. Si FIRMS se cayera una
+salvo porque el pipeline ya se niega a publicar ceros (la familia 6 hizo su
+trabajo) pero nadie se entero de que ese día no se miro. Si FIRMS se cayera una
 semana, el visor serviria fuego de hace siete días con el sello «revisado hace 5
 min» que este mismo repositorio añade para que eso no pase.
 
 **Y estaba en tres sitios.** La auditoría posterior lo encontró también en
-`frescura` —el vigilante que existe porque el visor estuvo diecisiete horas
-congelado en verde, apuntandose un verde cuando no podía leer la página— y en el
+`frescura` (el vigilante que existe porque el visor estuvo diecisiete horas
+congelado en verde, apuntandose un verde cuando no podía leer la página) y en el
 repaso de versiones, escrito ese mismo día para arreglar otro fallo de esta
 misma familia.
 
 **La regla.** Tolerar fallos parciales exige contar el denominador. Dos fallidos
 de seis es un roce; dos de dos es no haber mirado, y eso no es «sin cambios».
 Todo bucle que lee N fuentes y tolera que alguna falle necesita responder
-**¿fallaron todas?** — y si la respuesta es si, salir en rojo.
+**¿fallaron todas?**, y si la respuesta es si, salir en rojo.
 
 **El corolario, que es el que costo.** Los tres sitios tenían su fallo parcial
 bien pensado y documentado. La ceguera total no apareció en ninguna revisión
@@ -278,7 +278,7 @@ todo dibujo diferido corria dos veces.
     fallo al dibujar sobre el mapa: Error: Source "celdas" already exists.
 
 No se veía al arrancar, porque ahi el estilo suele estar listo y se toma el
-atajo. Se veía con `?evento=` sobre estilo frio — el enlace profundo, que es
+atajo. Se veía con `?evento=` sobre estilo frio: el enlace profundo, que es
 como llega quien recibe un reporte compartido.
 
 **La regla.** Una red de seguridad tiene que apagarse cuando el camino bueno
@@ -326,6 +326,6 @@ una de estas cosas:
 
 Y la regla que las cubre todas, que es del dueño del proyecto: **el sistema tiene
 que demostrar que funciona por si mismo, no porque alguien lo note y pregunte.**
-Ante cualquier arreglo, la pregunta es *¿que lo vigila cuando nadie mira?* — una
+Ante cualquier arreglo, la pregunta es *¿que lo vigila cuando nadie mira?*: una
 prueba que falle en CI, un workflow programado que abra issue, o un dato
 publicado que delate el problema. Un comentario no cuenta.

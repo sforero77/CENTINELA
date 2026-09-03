@@ -67,4 +67,4 @@ cero en todo el país.
 **La función sin llamador.** `tests/unit/test_funciones_conectadas.py` recorre
 el grafo de llamadas y falla si una función pública se queda sin quien la
 invoque. Ha cazado: el reporte preliminar, el epicentro del mapa estático, tres
-capas del activo y los asserts de §6.4 — todos probados, ninguno conectado.
+capas del activo y los asserts de §6.4: todos probados, ninguno conectado.

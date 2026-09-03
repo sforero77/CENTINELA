@@ -41,7 +41,7 @@ recuerda.**
 |---|---|
 | Nombres descriptivos y sin ambigüedad | El código, los comentarios y las docstrings están **en español**, como los reportes. Un mantenedor por país no debería tener que leer inglés para revisar la cifra de su municipio. |
 | Distinciones con sentido | Prohibido lo que pasó con `SQL_IMPACT_H3`: dos constantes con **el mismo nombre**, en dos módulos del mismo paquete, con cuerpos distintos y una de las dos muerta. |
-| Nombres buscables | Los identificadores de la espec —`RF-04`, `§6.4`, `T0.7`— se citan literalmente en el código. `grep RF-04` tiene que llevar al sitio. |
+| Nombres buscables | Los identificadores de la espec (`RF-04`, `§6.4`, `T0.7`) se citan literalmente en el código. `grep RF-04` tiene que llevar al sitio. |
 | Constantes con nombre en vez de números magicos | `RESCUE_MAX_DEGREES`, `DEDUPE_METERS`, `MMI_MIN_POLYFILL`, `MAX_LATIDOS`. Cada una es una decisión con consecuencias medidas, no un número. |
 
 ---
@@ -51,7 +51,7 @@ recuerda.**
 | Regla | Qué significa aquí |
 |---|---|
 | Pequenas, y una sola cosa | `write_report_bundle` tenía el render de mapas dentro. Se extrajo `render_maps`, y por eso `regenerar-mapas` puede reusar **exactamente** el camino de la publicación en vez de reimplementarlo. |
-| Sin efectos secundarios sorprendentes | `ensure_bundled_proj()` los tiene —toca el entorno— y por eso es explicita, se llama a mano, lleva escape (`CENTINELA_RESPETA_PROJ`) y devuelve lo que aparto. Un efecto secundario que se declara deja de ser una sorpresa. |
+| Sin efectos secundarios sorprendentes | `ensure_bundled_proj()` los tiene (toca el entorno) y por eso es explicita, se llama a mano, lleva escape (`CENTINELA_RESPETA_PROJ`) y devuelve lo que aparto. Un efecto secundario que se declara deja de ser una sorpresa. |
 | Sin argumentos bandera | `check_quality` no recibe un `bloqueante: bool`. La severidad vive con cada assert, en `QUALITY_ASSERTIONS`, donde se puede leer y discutir. |
 | Pocos argumentos | Los que crecen usan objetos: `JoinInputs`, `QualityReport`, `Calibracion`. |
 
@@ -127,12 +127,12 @@ Repetir una regla en dos sitios es como divergen. Casos de la auditoría:
   `exposure_join.QUALITY_FLAGS` (muerta) eran la misma regla escrita dos veces.
   Identicas ese día; solo podían divergir.
 - **El formato del CSV municipal.** `read_adm2_csv` vive al lado de
-  `write_adm2_csv` porque la peculiaridad del formato —que la **segunda** fila
-  no son datos sino etiquetas HXL— es conocimiento del formato.
+  `write_adm2_csv` porque la peculiaridad del formato (que la **segunda** fila
+  no son datos sino etiquetas HXL) es conocimiento del formato.
 
 El cuidado: **no todo lo que se parece es lo mismo.** Los asserts de calidad de
-P0 y de P2 se parecen y preguntan cosas distintas — el activo entero contra el
-corte de un evento— así que viven separados a propósito.
+P0 y de P2 se parecen y preguntan cosas distintas (el activo entero contra el
+corte de un evento) así que viven separados a propósito.
 
 ---
 
@@ -201,6 +201,6 @@ Los cuatro corren en CI y ninguno admite excepciones locales. `ruff` va
 configurado con `E, F, W, I, N, UP, B, A, C4, SIM, PTH, RUF` y solo ignora las
 tres reglas que se pelean con los acentos del español.
 
-Lo que ninguna herramienta puede comprobar —si un comentario justifica su
-decisión, si un nombre dice la verdad, si una función esta conectada— se revisa
+Lo que ninguna herramienta puede comprobar (si un comentario justifica su
+decisión, si un nombre dice la verdad, si una función esta conectada) se revisa
 a mano, salvo lo último, que ya tiene su prueba.

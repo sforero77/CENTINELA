@@ -223,7 +223,7 @@ def test_el_radio_sobrevive_al_shakemap_cuando_ninguna_banda_alcanza() -> None:
 
     # La banda vacia ya no dice "0": dice por que esta vacia. Ver
     # BANDA_NO_ALCANZADA en markdown.py.
-    assert "Población en MMI≥6 | — el evento no llegó a esta banda" in md
+    assert "Población en MMI≥6 | el evento no llegó a esta banda" in md
     assert "### Población por distancia al epicentro" in md
     assert "610 mil" in md
     # Y con la cautela que impide leer un radio como una banda.

@@ -13,8 +13,9 @@
   },
   "timestamps": {
     "detectado": "2026-09-02T13:00:25Z",
-    "publicado": "2026-09-03T03:26:08Z",
-    "usgs_origen": "2026-09-02T12:35:56Z"
+    "publicado": "2026-09-02T14:11:03Z",
+    "usgs_origen": "2026-09-02T12:35:56Z",
+    "publicado_ultimo": "2026-09-03T03:26:08Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,

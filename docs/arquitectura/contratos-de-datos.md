@@ -39,7 +39,7 @@ flowchart LR
 
 ## Los ficheros, uno por uno
 
-### `events/<usgs_id>.json` — la base de datos
+### `events/<usgs_id>.json`: la base de datos
 
 Escribe: **P1** (lo crea) y **P2** (avanza su estado).
 Lee: **P1** para el dedupe, **P2** para saber si hay trabajo real.
@@ -62,7 +62,7 @@ stateDiagram-v2
 
 Contrato formal: [`schemas/event-state.schema.json`](../../schemas/event-state.schema.json).
 
-### `reports/<usgs_id>/` — los artefactos de un evento
+### `reports/<usgs_id>/`: los artefactos de un evento
 
 | Fichero | Qué es | Quién lo consume |
 |---|---|---|
@@ -80,13 +80,13 @@ y sus claves raíz son: `schema`, `event`, `inputs`, `preliminar`, `radios`,
 `backtest`, `totales`, `top_municipios`, `incertidumbre`, `descargas`,
 `changelog`, `disclaimers`, `generado_utc`, `pipeline_version`.
 
-### `reports/index.json` — el catálogo
+### `reports/index.json`: el catálogo
 
 Una lista de 21 entradas, cada una con `usgs_id`, `mag`, `lugar`, `iso3`,
 `lon`, `lat`, `pop_mmi7p`, `pop_mmi6p`, `utc`, `shakemap_version`,
 `preliminar`, `backtest`, `generado_utc`. Es lo primero que descarga el visor.
 
-### `site/observados.json` — la prueba de que el vigía miró
+### `site/observados.json`: la prueba de que el vigía miró
 
 ```
 { schema, generado_utc, ventana_dias: 5, nota, eventos: [
@@ -96,9 +96,9 @@ Una lista de 21 entradas, cada una con `usgs_id`, `mag`, `lugar`, `iso3`,
 
 Sismos de LATAM **vistos y no despachados** por quedar bajo el umbral. No se
 despachan, pero se publican: el vigía tiene que poder demostrar que estuvo
-mirando. El campo `razon` dice por qué no pasó — `"M4.7 < umbral M5.5"`.
+mirando. El campo `razon` dice por qué no pasó: `"M4.7 < umbral M5.5"`.
 
-### `site/incendios.json` — los focos activos
+### `site/incendios.json`: los focos activos
 
 ```
 { schema, generado_utc, ventana_horas: 24, nota, suelo, totales, celdas: [...] }
@@ -113,7 +113,7 @@ es una afirmación sin respaldo.
 La `nota` no es decorativa: es la única línea que impide leer "detecciones"
 como "incendios" y "celda con fuego" como "hectáreas quemadas".
 
-### `site/cobertura.json` — qué países puede atender el sistema
+### `site/cobertura.json`: qué países puede atender el sistema
 
 ```
 { generado_utc, resumen: { paises_con_manifest, paises_construidos,
@@ -124,7 +124,7 @@ Sale de los manifests, así que **no puede prometer más países de los que se
 construyeron de verdad**. Cada país trae su `desvio_pct` contra la cifra
 oficial de referencia y la `tolerancia_pct` que se le exige.
 
-### `site/status.json` — la página de estado
+### `site/status.json`: la página de estado
 
 ```
 { generado_utc, objetivo, medido, eventos, cadencia, latidos, nota }

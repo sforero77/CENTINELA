@@ -29,7 +29,7 @@ Esto importa más que lo anterior, y está impreso en cada reporte:
 - **No es una alerta temprana.** Llega después del sismo, no antes.
 - **No estima víctimas.** Ni heridos, ni fallecidos, ni damnificados.
 - **No dictamina habitabilidad.** No dice si un edificio se puede ocupar.
-- **No mide daño.** Mide exposición, que es una pregunta distinta — ver §6.
+- **No mide daño.** Mide exposición, que es una pregunta distinta; ver §6.
 
 ## 3. Cobertura y estado
 
@@ -42,21 +42,21 @@ es la fuente de verdad del código DIVIPOLA.
 |---|---|
 | Activos de exposición publicados | **19 de 19** |
 | Reportes emitidos de punta a punta | **23**, en 15 países |
-| De ellos, disparados en vivo | **2** — los otros 21 son reconstrucciones |
+| De ellos, disparados en vivo | **2**; los otros 21 son reconstrucciones |
 | Personas ya en la malla hexagonal | **649,8 millones** |
 | Latencia objetivo, sismo → reporte | p50 ≤ 60 min · lo medido, en `/status` |
 
 **El primero en vivo llegó el 2-sep-2026, y no salió como debía.** Un M5,6 a 71 km
-al OSO de Puerto Madero, México. El vigía lo detectó y despachó en minutos —esa
-mitad de la cadena funcionó a la primera— y P2 lo rechazó veinte veces seguidas:
+al OSO de Puerto Madero, México. El vigía lo detectó y despachó en minutos (esa
+mitad de la cadena funcionó a la primera) y P2 lo rechazó veinte veces seguidas:
 trataba «el ShakeMap no alcanza ninguna celda» como error incluso con el país
 bien enrutado, cuando lo que pasaba es que la sacudida se quedó mar adentro. El
 reporte salió cuando se arregló esa distinción. Horas después llegó el segundo,
 un M5,9 en la dorsal del Pacífico Oriental (`us7000tdms`).
 
 **La latencia medida está en [`/status`](https://sforero77.github.io/CENTINELA/status.html),
-y aquí no se copia a mano.** Se mueve con cada evento —ya caducó dos veces en un
-día— y ahora mismo está **por encima del objetivo**, porque lo que cronometró no
+y aquí no se copia a mano.** Se mueve con cada evento (ya caducó dos veces en un
+día) y ahora mismo está **por encima del objetivo**, porque lo que cronometró no
 fue la cadena en régimen sino lo que tardó en arreglarse un fallo que sólo podía
 aparecer con un sismo real. La primera medida limpia la dará el siguiente evento.
 
@@ -69,7 +69,7 @@ esté ejercitada. Ahora está ejercitada dos veces, y enseñó algo.
 El total nacional del activo se compara contra una referencia oficial. Se usa la
 serie de World Population Prospects de Naciones Unidas por uniformidad regional;
 un instituto nacional con censo reciente es mejor referencia para su país, y el
-mantenedor de país puede sustituirla — Colombia ya usa las proyecciones del DANE.
+mantenedor de país puede sustituirla: Colombia ya usa las proyecciones del DANE.
 
 | País | Medido | Referencia | Desvío |
 |---|---:|---:|---:|
@@ -98,8 +98,8 @@ diecinueve manifests: si un `centinela calibrar` mueve una cifra, la tabla falla
 antes de quedarse rancia.*
 
 *Brasil entró en esta tabla el 28-ago-2026, cuando se cerró el fallo que lo
-declaraba con `poblacion_medida: 0` —219 millones de personas de menos en una
-cifra pública— con el activo en el Release desde el 26. Su casilla de reportes
+declaraba con `poblacion_medida: 0` (219 millones de personas de menos en una
+cifra pública) con el activo en el Release desde el 26. Su casilla de reportes
 sigue vacía por otra razón, explicada en el README: sus doce sismos M≥5,5 desde
 2000 están todos entre 534 y 645 km de profundidad.*
 
@@ -123,7 +123,7 @@ personas en su fila «7» y CENTINELA publica 2.424.287 en MMI≥7.** Un factor 
 No subcuenta. **Las dos no tabulan igual.** PAGER agrupa por MMI *redondeado*:
 su fila «7» es todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas
 *literales*: MMI≥7 es MMI≥7. Puestas en el mismo eje, cada cifra de CENTINELA
-cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo —
+cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo,
 que es la única comparación que las dos convenciones admiten:
 
 | Umbral literal | PAGER | CENTINELA |
@@ -138,14 +138,14 @@ que es la única comparación que las dos convenciones admiten:
 Léase por parejas: 7.194.540 (≥6,0) tiene que quedar **entre** 6.514.486 (≥6,5)
 y 10.487.959 (≥5,5), y queda. 2.424.287 (≥7,0) tiene que quedar entre 1.126.902
 (≥7,5) y 6.514.486 (≥6,5), y queda. Si alguna se saliera del intervalo, una de
-las dos estaría mal — y esa es exactamente la comprobación que corre en CI.
+las dos estaría mal, y esa es exactamente la comprobación que corre en CI.
 
 **Y conviene no vender esto como más de lo que es.** El intervalo de MMI≥7 va de
 1,1 a 6,5 millones: un factor de 5,8, dentro del cual cabría casi cualquier
 cifra. Que una cifra caiga dentro es una condición necesaria, no una validación.
 
-**En los dos casos CENTINELA queda en el cuarto inferior del intervalo** —al
-17 % y al 24 % contando desde abajo—, es decir sistemáticamente por debajo del
+**En los dos casos CENTINELA queda en el cuarto inferior del intervalo** (al
+17 % y al 24 % contando desde abajo), es decir sistemáticamente por debajo del
 punto medio y siempre en la misma dirección. Eso es lo que se puede afirmar sin
 elegir un método: cuánto por debajo depende de cómo se interpole entre las filas
 de PAGER, y la respuesta va del 11 % al 37 % según se haga lineal o logarítmica.
@@ -167,8 +167,8 @@ Es la confusión más costosa que puede provocar un reporte de este tipo, así q
 el proyecto no la explica: la contrasta contra fuentes independientes.
 
 El Microsoft AI for Good Lab publicó en HDX evaluaciones de daño por imagen
-satelital para dos de los sismos que CENTINELA reconstruyó —Cali, del sismo de
-San José del Palmar, y La Guaira, del de Catia La Mar— las dos **CC BY** y las
+satelital para dos de los sismos que CENTINELA reconstruyó (Cali, del sismo de
+San José del Palmar, y La Guaira, del de Catia La Mar), las dos **CC BY** y las
 dos sobre **las mismas huellas de edificación de Overture** que usa este
 proyecto. Eso hace la comparación interpretable y no anecdótica.
 
@@ -194,8 +194,8 @@ uv run centinela contraste <url-del-vector-de-dano> \
 ```
 
 **Esta sección no publica todavía la tabla de resultados.** La publicó hasta el
-1-sep-2026 —con cifras de edificaciones evaluadas, dañadas y celdas fuera del
-activo— y ninguna de ellas apuntaba a un fichero del repositorio: el comando
+1-sep-2026 (con cifras de edificaciones evaluadas, dañadas y celdas fuera del
+activo) y ninguna de ellas apuntaba a un fichero del repositorio: el comando
 imprimía su resultado y lo perdía. En un documento que abre diciendo que todo lo
 que afirma está medido y dice dónde está la medida, eso no se sostiene. El
 comando ya persiste su salida (`--salida`); la tabla vuelve cuando el
@@ -222,7 +222,7 @@ ShakeMap y Ground Failure del USGS (dominio público).
 
 El proyecto **no mezcla cubos de licencia**: ODbL, CC BY y CC BY-SA se mantienen
 separados y hay una comprobación automática que lo impide. Por eso, por ejemplo,
-la evaluación de escombros de UNEP/OCHA —excelente y CC BY-SA— se consume como
+la evaluación de escombros de UNEP/OCHA, excelente y CC BY-SA, se consume como
 referencia externa y no entra en el activo.
 
 ## 8. Reproducibilidad
@@ -234,8 +234,8 @@ credenciales:
 uv run centinela country COL
 ```
 
-Cada país tiene un **manifest** que fija la versión exacta de cada fuente —nunca
-«la última»— con su licencia y su fecha. Un reporte publicado dice contra qué
+Cada país tiene un **manifest** que fija la versión exacta de cada fuente (nunca
+«la última») con su licencia y su fecha. Un reporte publicado dice contra qué
 manifest se calculó.
 
 ## 9. Límites conocidos
@@ -246,9 +246,9 @@ Están publicados porque son parte de la cifra:
   edificaciones se queda corto. El reporte lo detecta comparando contra la
   superficie construida que ve el satélite y **lo dice en el propio reporte**
   cuando la diferencia pasa de 1,5 veces.
-- **La detección depende del cron de GitHub.** El vigía declara `*/30` —bajó
+- **La detección depende del cron de GitHub.** El vigía declara `*/30` (bajó
   de `*/10` el 27-ago-2026, cuando se midió que GitHub reparte turnos por
-  repositorio y no por workflow— y entrega mucho menos: sobre 23 latidos entre
+  repositorio y no por workflow) y entrega mucho menos: sobre 23 latidos entre
   el 25 y el 30 de agosto, **p50 157 min, p90 462 y peor caso 766 (12,8 h)**.
   Con un objetivo de 60 minutos extremo a extremo, **la detección sola se come
   el presupuesto entero**. La salida documentada es un disparador externo, ya
@@ -286,7 +286,7 @@ No es un argumento del proyecto: es lo que hicieron **a mano** otros, sin ella.
 
 El sitrep de **OIM/DTM del 17 de agosto de 2026** fusionó manualmente los
 productos de daño de **Copernicus EMS** con las huellas de edificación de
-**Microsoft AI for Good** sobre la base de **Overture** — exactamente las tres
+**Microsoft AI for Good** sobre la base de **Overture**: exactamente las tres
 piezas que este activo ya trae unidas, ensambladas de urgencia durante una
 emergencia y para un solo evento.
 

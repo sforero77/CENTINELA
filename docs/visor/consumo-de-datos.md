@@ -97,8 +97,8 @@ conversión de celda H3 a polígono con `h3-js` para dibujarla.
 
 Poco, y todo geométrico:
 
-- `h3.cellsToMultiPolygon` — disuelve las celdas del evento en un perímetro.
-- `h3.cellToBoundary` — convierte cada celda en su hexágono.
+- `h3.cellsToMultiPolygon`: disuelve las celdas del evento en un perímetro.
+- `h3.cellToBoundary`: convierte cada celda en su hexágono.
 - El área de cada banda, multiplicando celdas por `AREA_CELDA_KM2 = 5.2`.
 - Qué reportes caen dentro del encuadre actual, para la lista lateral.
 

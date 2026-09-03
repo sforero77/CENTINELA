@@ -40,7 +40,7 @@ documenta GitHub. Importa porque el objetivo es p50 ≤ 60 min desde el origen d
 sismo hasta el reporte publicado: **la detección sola puede comerse la mitad del
 presupuesto, y en el peor caso todo**.
 
-Subir la frecuencia del cron no arregla nada — la demora la pone la cola de
+Subir la frecuencia del cron no arregla nada: la demora la pone la cola de
 GitHub, no el intervalo. Las salidas reales son dos, y las dos son decisiones de
 quien opera, no del código:
 
@@ -54,8 +54,8 @@ se detecta tarde, pero no se pierde nada.
 
 **El release de Overture es el más urgente y el menos obvio.** Cuando la prueba
 nocturna abra el issue, hay que actualizar el `vintage` en los manifests de los
-países construidos. No corre prisa para *operar* —el activo publicado sigue
-sirviendo— pero si para *reconstruir*.
+países construidos. No corre prisa para *operar* (el activo publicado sigue
+sirviendo) pero si para *reconstruir*.
 
 ---
 
@@ -114,7 +114,7 @@ requerida suma cero en todo el país.
 **Dos fuentes de lo mismo cuentan doble.** HOTOSM y healthsites.io derivan las
 dos de OSM: el 96,6 % de los puntos de la segunda son la misma sede. La
 deduplicacion por proximidad (20 m) está en `aggregate_points_to_h3`, y el
-orden del manifest importa — la principal va primera.
+orden del manifest importa: la principal va primera.
 
 **Una caja envolvente corta pierde territorio en silencio.** Recorta teselas y
 ficheros, y el activo sale con una punta del país sin población. Cuadra todo.
@@ -136,20 +136,20 @@ y explicaba el 93 % de su desvío frente a la ONU.
 **La magnitud no es la señal.** Chile rescata el **31 %** de su población y su
 cifra es correcta, porque su rescate es mar: sin el perderia 6,1 millones de
 personas. Lo que distingue lo correcto de lo contaminado no es cuanto se rescata
-sino **sobre que esta la celda** — agua, o tierra de otro país. Corregido
+sino **sobre que esta la celda**: agua, o tierra de otro país. Corregido
 cargando los polígonos de los países limitrofes desde Overture y excluyendo las
 celdas que caen dentro de ellos.
 
 Si Overture no responde, el rescate degrada al comportamiento anterior en vez de
 tumbar el build: correcto para una isla, generoso para un país con frontera
-terrestre. El log lo dice — y **hay que mirarlo**, porque el primer intento de
+terrestre. El log lo dice, y **hay que mirarlo**, porque el primer intento de
 este arreglo cargo cero polígonos y siguio adelante sin quejarse. La línea
 `paises vecinos cargados` publica el embudo entero: candidatas, junto al país,
 descartadas por vecino. Cero vecinos es ahora un WARNING: en LATAM solo Cuba no
 toca a nadie por tierra, y hasta su caja alcanza a Haití.
 
 **Solo cuenta la tierra del vecino, no su mar.** Overture publica dos polígonos
-por país —`is_land` e `is_territorial`— y cargar los dos rompe el caso costero:
+por país (`is_land` e `is_territorial`) y cargar los dos rompe el caso costero:
 las aguas peruanas llegan hasta la frontera de Arica, así que una celda del
 Pacífico frente a Chile caería "dentro de Perú".
 
@@ -178,7 +178,7 @@ no sea cero, y la agregación de vías descarta longitudes infinitas o mayores d
 
 **Un sismo fuera del país del activo.** P1 vigila toda LATAM y el activo es por
 país. Si se calcula un sismo peruano contra celdas colombianas, el join no
-encuentra nada y todas las cifras salen en cero — publicadas, durante un
+encuentra nada y todas las cifras salen en cero: publicadas, durante un
 terremoto. El activo se elige ahora por el epicentro, y `compute_impact` falla
 si el join queda vacío. **Si ves un issue que dice "no hay activo de exposición
 publicado para X", eso es el sistema funcionando**: construye el país con
@@ -190,7 +190,7 @@ publicado para X", eso es el sistema funcionando**: construye el país con
 
 Ha hecho falta tres veces: al arreglar la simbología del mapa estático, al
 acentuar los textos y al corregir el corte de MMI de Ground Failure. Las tres
-veces la pregunta fue la misma —«el código está bien, ¿y lo publicado?»— y las
+veces la pregunta fue la misma («el código está bien, ¿y lo publicado?») y las
 tres veces la respuesta dependió de **qué artefacto** cambia.
 
 | Qué cambió | Con qué se rehace | Cuesta |
@@ -201,22 +201,22 @@ tres veces la respuesta dependió de **qué artefacto** cambia.
 
 Los dos primeros son derivados del `report.json`, que ya está en el repositorio.
 El tercero no: las cifras salen del join contra el activo de exposición del país,
-que **no vive en git** —unos 19 MB por país— y se publica como Release. Por eso
+que **no vive en git** (unos 19 MB por país) y se publica como Release. Por eso
 no hay un `regenerar-cifras`: rehacerlas es correr el pipeline, no re-renderizar.
 
 ### Cómo se re-emite
 
 `impact.yml` ya hace todo lo que hace falta: elige el país por el epicentro
 probando los candidatos contra el join, descarga el Release de su activo, corre
-P2/P3 y empuja con rebase —endurecido para empujes concurrentes desde el doble
-mainshock de Venezuela—.
+P2/P3 y empuja con rebase, endurecido para empujes concurrentes desde el doble
+mainshock de Venezuela.
 
 ```bash
 # Uno:
 gh workflow run impact.yml -f usgs_id=us6000tjl2 -f backtest=true -f reprocesar=true
 
-# El catálogo entero, uno por uno. `sleep` no por prudencia con el push —el
-# workflow ya rebasa— sino para no encolar veintiún runners a la vez.
+# El catálogo entero, uno por uno. `sleep` no por prudencia con el push (el
+# workflow ya rebasa) sino para no encolar veintiún runners a la vez.
 for ID in $(jq -r '.[].usgs_id' reports/index.json); do
   gh workflow run impact.yml -f usgs_id="$ID" -f backtest=true -f reprocesar=true
   sleep 20
@@ -238,7 +238,7 @@ uv run pytest tests/unit/test_el_csv_cuadra_con_el_reporte.py
 Esa prueba lleva la lista `PENDIENTES_DE_REEMITIR` con los eventos cuyo
 `adm2.csv` todavía arrastra el corte viejo. **Cada evento re-emitido hay que
 sacarlo de la lista**, y hay una segunda prueba que falla si alguno ya cuadra y
-sigue dentro — para que una excepción temporal no se vuelva permanente sin que
+sigue dentro, para que una excepción temporal no se vuelva permanente sin que
 nadie lo decida. Cuando la lista quede vacía, la guardia es total.
 
 ---
@@ -278,7 +278,7 @@ data/build/                  Efimero, NO va en git. Se pierde en cada clon.
 
 **El activo de exposición no está en el repositorio.** Vive en los Releases
 (`exposure-col-<fecha>`) porque pesa 17 MB por país y crecera. Esa copia, con su
-`sha256`, es la que sostiene la reproducibilidad — no la URL de origen, que
+`sha256`, es la que sostiene la reproducibilidad, no la URL de origen, que
 caduca.
 
 Comandos:
@@ -307,8 +307,8 @@ Los dos últimos no dependen de nadie: llegan con el primer M≥5.5 en la regió
 
 Lo demás abierto, sin bloquear: **T0.7** (benchmark de `exactextract`),
 **T0.10** (la cifra exacta del DANE en vez del redondeo), las **coropletas
-r7/r6 del visor** en PMTiles —el mapa base y la malla por celda ya dibujan; lo
-que falta son las teselas propias, que si necesitan `tippecanoe`— y el **activo
+r7/r6 del visor** en PMTiles (el mapa base y la malla por celda ya dibujan; lo
+que falta son las teselas propias, que si necesitan `tippecanoe`) y el **activo
 de Brasil**.
 
 **RF-03 y RF-04 están cerradas.** El reporte preliminar sin ShakeMap se emite

@@ -43,7 +43,7 @@ flowchart TB
     N2["CC-BY 4.0<br/><i>WorldPop · COD-AB</i>"]
     N3["EC reuse<br/><i>GHSL</i>"]
   end
-  subgraph odbl["Cubo ODbL — share-alike"]
+  subgraph odbl["Cubo ODbL · share-alike"]
     O1["Overture<br/>buildings · transportation"]
     O2["HOTOSM vía HDX<br/>salud · educación"]
   end
@@ -73,7 +73,7 @@ tomaron con medida, no con gusto.
 
 ### Velar lo que no es America Latina, en vez de reencuadrar
 
-La caja de la región es alta —73° por 76°— y el panel del mapa es apaisado en
+La caja de la región es alta (73° por 76°) y el panel del mapa es apaisado en
 todo escritorio: `fitBounds` encaja por la altura y el ancho sobra. Medido en la
 página publicada: 191° de longitud visibles en 1540 px, con la región ocupando
 el 38 % del ancho y Africa occidental **rotulada**.
@@ -89,7 +89,7 @@ simbolos ponian 1,23 veces el lienzo. Se probaron cuatro alternativas sobre la
 página real y se descarto el mapa de calor **por medida**: con
 `heatmap-intensity` y `heatmap-radius` fijos, el mismo punto sale carmesi a zoom
 2, naranja a zoom 4 y del color del papel a zoom 6. `heatmap-density` cuenta
-vecinos por pixel de pantalla, no energía — no se puede rotular en MW.
+vecinos por pixel de pantalla, no energía: no se puede rotular en MW.
 
 El clustering agrupa por proximidad **en pantalla**, y a escala continental el
 radio se traga países: los conteos acaban flotando sobre el Pacifico.
@@ -115,28 +115,28 @@ Estas no están cerradas y viven en [`PENDIENTES.md`](../../PENDIENTES.md):
 - **`cont_mmi.json` en vez de `grid.xml`: medido, y el argumento no se
   sostiene.** Era la crítica metodológica más seria que este sistema podía
   recibir, y la justificación era de rendimiento, no científica. El 1-sep-2026 se
-  midió sobre **cuatro eventos**, con el criterio fijado de antemano —3 %—:
+  midió sobre **cuatro eventos**, con el criterio fijado de antemano (3 %):
   cinco de las ocho medidas se salen, y los cuatro se salen en al menos un
   umbral. En MMI≥7: Chocó **+11,8 %**, Venezuela **+34,0 %** y **+31,1 %**,
-  Muisne +1,5 % —pero +11,0 % en MMI≥6—.
+  Muisne +1,5 % (pero +11,0 % en MMI≥6).
 
   El mecanismo importa más que la cifra: `cont_mmi.json` describe el borde de
   MMI 7 con **103 vértices y paso mediano de 4,2 km**, sobre una rejilla de
   **1 km**. Es un producto de dibujo consumido como producto de análisis. No se
-  pierde área —cero celdas sin contorno— pero el valor asignado difiere, y donde
+  pierde área (cero celdas sin contorno) pero el valor asignado difiere, y donde
   el borde cruza una ciudad densa decide si la ciudad cuenta: el 68 % del delta
   del Chocó es Manizales.
 
-  El signo es siempre el mismo —la rejilla da más, como predice el suelo de
-  banda— y en los cuatro eventos no se pierde área. Lo que no se predice es la
+  El signo es siempre el mismo (la rejilla da más, como predice el suelo de
+  banda) y en los cuatro eventos no se pierde área. Lo que no se predice es la
   **magnitud**: va del 1,5 % al 34 % y no sigue al grosor del contorno. Por eso
   no cabe publicar una corrección ni una banda de error; no hay factor estable
   que aplicar.
 
   Y el coste que se quiso evitar no existe: la medición completa tarda **6
-  segundos**. Cambiar el método queda anotado en `PENDIENTES.md` §2.1.nonies —no
+  segundos**. Cambiar el método queda anotado en `PENDIENTES.md` §2.1.nonies (no
   es un fallo que se arregle en caliente, porque mueve todas las cifras
-  publicadas—. Reproducible con `scripts/delta_contornos_vs_grid.py`.
+  publicadas). Reproducible con `scripts/delta_contornos_vs_grid.py`.
 - **El redondeo de prosa y el de tabla no coinciden.** RF-06 fija dos cifras
   significativas en prosa, así que el `.md` publica «110 mil» donde el visor
   publica «108.000». Las dos son ciertas y quien las compare sin saber la regla
