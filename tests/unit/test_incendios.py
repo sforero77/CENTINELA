@@ -298,8 +298,18 @@ def test_se_guarda_cuando_empezo_y_cuando_se_vio_por_ultima_vez(con: Any) -> Non
 
 
 def _celda(
-    h3: str, *, pop: float = 0.0, frp: float = 1.0, ultima: str = "2026-08-25T12:00:00Z"
+    h3: str,
+    *,
+    pop: float = 0.0,
+    frp: float = 1.0,
+    ultima: str = "2026-08-25T12:00:00Z",
+    lulc_px: int = 0,
 ) -> CeldaConFuego:
+    """Una celda de prueba. `lulc_px` es lo que la declara **medida**.
+
+    Cero significa "sin cobertura leida", que es el caso por defecto: la
+    mayoria de estas pruebas no habla de suelo.
+    """
     return CeldaConFuego(
         h3=h3,
         detecciones=1,
@@ -310,6 +320,7 @@ def _celda(
         primera_utc="2026-08-25T12:00:00Z",
         ultima_utc=ultima,
         pop=pop,
+        lulc_px=lulc_px,
     )
 
 
@@ -475,8 +486,8 @@ def test_el_reparto_del_suelo_pondera_por_energia() -> None:
 
     from pipelines.p5_incendios.incendios import build_incendios
 
-    debil = replace(_celda("88a", frp=1.0), cultivo_pct=100.0)
-    fuerte = replace(_celda("88b", frp=99.0), arbolado_pct=100.0)
+    debil = replace(_celda("88a", frp=1.0, lulc_px=120), cultivo_pct=100.0)
+    fuerte = replace(_celda("88b", frp=99.0, lulc_px=120), arbolado_pct=100.0)
 
     suelo = build_incendios([debil, fuerte])["suelo"]
 
@@ -505,7 +516,10 @@ def test_se_dice_cuantas_celdas_no_tienen_cobertura() -> None:
 
     from pipelines.p5_incendios.incendios import build_incendios
 
-    con = replace(_celda("88a", frp=5.0), arbolado_pct=80.0)
+    con = replace(_celda("88a", frp=5.0, lulc_px=120), arbolado_pct=80.0)
+    # Sin pixeles de WorldCover detras: sin medir. Antes esto se infería de que
+    # todas las clases dieran cero, y una celda 100 % matorral —medida— caía en
+    # el mismo saco.
     sin = _celda("88b", frp=5.0)
 
     suelo = build_incendios([con, sin])["suelo"]
@@ -758,3 +772,41 @@ def test_el_visor_no_usa_el_area_de_r7_para_el_fuego() -> None:
     assert "areaKm2: celdas.length * AREA_CELDA_FUEGO_KM2," in app, (
         "el area de un foco volvio a calcularse con la constante de r7"
     )
+
+
+def test_una_celda_de_matorral_esta_medida_aunque_las_otras_clases_den_cero() -> None:
+    """El caso que la heuristica anterior marcaba mal.
+
+    `celdas_medidas` se infería de "alguna clase publicada pasa de cero". Con
+    cuatro clases de las seis del activo, una celda 100 % matorral daba cero en
+    las cuatro y salía como **sin medir** — y el visor lo afirmaba en pantalla,
+    estando la cobertura perfectamente medida. Ahora la pregunta es cuánta
+    evidencia hay debajo: `lulc_px`.
+    """
+    from dataclasses import replace
+
+    from pipelines.p5_incendios.incendios import build_incendios
+
+    matorral = replace(_celda("88a", frp=10.0, lulc_px=140), arbustos_pct=100.0)
+
+    suelo = build_incendios([matorral])["suelo"]
+
+    assert suelo["celdas_medidas"] == 1
+    assert suelo["celdas_sin_medir"] == 0
+    assert suelo["arbustos"] == 100.0, "y la clase se nombra, que antes no existía"
+
+
+def test_el_suelo_construido_se_publica_porque_es_la_interfaz_urbano_forestal() -> None:
+    """La frase más accionable que este panel puede emitir, y no podía.
+
+    `construido` es WorldCover 50. En un sistema cuya razón de ser es la
+    exposición, "el fuego está sobre suelo construido" es el dato que decide
+    algo, y el cruce de P5 no traía la columna.
+    """
+    from dataclasses import replace
+
+    from pipelines.p5_incendios.incendios import build_incendios
+
+    urbano = replace(_celda("88a", frp=10.0, lulc_px=140), construido_pct=100.0)
+
+    assert build_incendios([urbano])["suelo"]["construido"] == 100.0

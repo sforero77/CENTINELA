@@ -30,9 +30,20 @@ _log = get_logger(__name__)
 
 _BASE: Final[str] = "https://firms.modaps.eosdis.nasa.gov/data/active_fire"
 
-#: Satelites VIIRS: (segmento de ruta, prefijo del fichero). Los tres llevan el
-#: mismo sensor a 375 m y se reparten las horas de paso, asi que usar los tres
-#: no es redundancia: es cobertura temporal.
+#: Satelites VIIRS: (segmento de ruta, prefijo del fichero).
+#:
+#: NO SE REPARTEN LAS HORAS DEL DIA, y este comentario decia que si. Los tres
+#: van en el mismo plano heliosincrono y cruzan el ecuador a la **misma hora
+#: solar** —13:30 ascendente, 01:30 descendente—, separados por cuartos de
+#: orbita: S-NPP y NOAA-21 unos 25 min, S-NPP y NOAA-20 unos 50. `docs/pipelines/
+#: p5-incendios.md` ya lo decia bien; alguien corrigio el doc y no volvio al
+#: codigo.
+#:
+#: Lo que aportan de verdad: se pasa de 2 miradas al dia a **6** (tres de dia,
+#: tres de noche), todas agrupadas en esas dos ventanas. Eso son mas
+#: oportunidades de atravesar nube y humo y de atrapar un fuego corto, no
+#: cobertura horaria: sigue habiendo un hueco ciego de unas 11 h en cada mitad
+#: del dia. Fuente: NOAA VLAB TOWR-S, VIIRS Imagery.
 SATELITES: Final[tuple[tuple[str, str], ...]] = (
     # NASA cesa Suomi-NPP el 1-nov-2026 a las 13:00 UTC. Cuando deje de
     # responder hay que quitarlo de aqui y corregir la documentacion de P5,

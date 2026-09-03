@@ -49,11 +49,23 @@ class CeldaConFuego:
     salud: int = 0
     edu: int = 0
     vias_km: float = 0.0
-    #: Cobertura del suelo, en porcentaje de la celda.
+    #: Cobertura del suelo, en porcentaje de la celda. **Las seis del activo.**
+    #:
+    #: Faltaban `arbustos` y `construido`, y no son clases menores aqui:
+    #: `arbustos` (WorldCover 20) es la cobertura dominante del Cerrado, el
+    #: Chaco, la Caatinga y el matorral chileno —de lo que mas arde en LATAM— y
+    #: `construido` (50) es la interfaz urbano-forestal, que en un sistema de
+    #: exposicion es probablemente la frase mas accionable que el panel puede
+    #: emitir. El visor ya tenia los iconos de las dos dibujados esperandolas.
     arbolado_pct: float = 0.0
+    arbustos_pct: float = 0.0
     pastizal_pct: float = 0.0
     cultivo_pct: float = 0.0
+    construido_pct: float = 0.0
     humedal_pct: float = 0.0
+    #: Cuantos pixeles de WorldCover respaldan esos porcentajes. Cero significa
+    #: **no medida**, que no es lo mismo que "cero en las clases que miro".
+    lulc_px: int = 0
 
 
 #: Agrupa las detecciones por celda. La confianza baja se cuenta aparte en vez
@@ -74,6 +86,22 @@ SELECT h3_latlng_to_cell(lat, lon, {resolucion})              AS h3_08,
        max(adquirido_utc)                                     AS ultima_utc
 FROM focos_arrow
 GROUP BY 1
+-- LA EXCEPCION A "SE PUBLICA LO QUE SE DESCARTA", Y ES DELIBERADA.
+--
+-- Una celda cuyas detecciones son **todas** de baja confianza no entra. No es
+-- un olvido: pintar un hexagono de fuego sobre territorio poblado apoyandose
+-- solo en detecciones dudosas es la version visual de la cifra alarmista, y
+-- pesa mas que el silencio. Lo fija `test_la_confianza_baja_se_cuenta_aparte_
+-- y_no_crea_celda`.
+--
+-- Lo que si se cuenta aparte es la baja de una celda que ya existe por otra
+-- deteccion, que es el caso frecuente.
+--
+-- EL COSTE, PARA QUE ESTE DICHO. NASA define `low` como reflejo solar **o**
+-- anomalia termica debil (<15 K), y una anomalia debil tambien es un fuego
+-- pequeno, frio o bajo dosel. Asi que esto pierde fuegos reales: los debiles y
+-- aislados. Y los pierde de dia, porque `low` casi no existe de noche —requiere
+-- sun glint—. Es un intercambio, no un filtro gratis.
 HAVING count(*) FILTER (WHERE confianza <> 'low') > 0
 """
 
@@ -95,9 +123,17 @@ SELECT f.*,
        + COALESCE(e.road_km_secondary, 0.0)
        + COALESCE(e.road_km_other, 0.0)     AS vias_km,
        COALESCE(e.lulc_arbolado_pct, 0.0)   AS arbolado_pct,
+       COALESCE(e.lulc_arbustos_pct, 0.0)   AS arbustos_pct,
        COALESCE(e.lulc_pastizal_pct, 0.0)   AS pastizal_pct,
        COALESCE(e.lulc_cultivo_pct, 0.0)    AS cultivo_pct,
-       COALESCE(e.lulc_humedal_pct, 0.0)    AS humedal_pct
+       COALESCE(e.lulc_construido_pct, 0.0) AS construido_pct,
+       COALESCE(e.lulc_humedal_pct, 0.0)    AS humedal_pct,
+       -- El conteo de evidencia. P0 lo publica diciendo que "una celda con
+       -- nueve pixeles y otra con ciento cuarenta no merecen la misma
+       -- confianza", y P5 no lo leia: inferia "medida / sin medir" de si alguna
+       -- clase daba mas de cero, lo que marcaba **sin medir** a una celda 100 %
+       -- matorral perfectamente medida.
+       COALESCE(e.lulc_px, 0)               AS lulc_px
 FROM focos_h3 f
 LEFT JOIN exposure e USING (h3_08)
 ORDER BY f.frp_suma DESC
@@ -148,7 +184,7 @@ def cruzar_con_exposicion(con: Any) -> list[CeldaConFuego]:
     except Exception:
         _log.warning("sin activo de exposicion registrado; se publica solo el fuego", extra={})
         filas = con.execute(
-            "SELECT *, '', 0.0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0 "
+            "SELECT *, '', 0.0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0 "
             "FROM focos_h3 ORDER BY frp_suma DESC"
         ).fetchall()
 
@@ -171,9 +207,12 @@ def cruzar_con_exposicion(con: Any) -> list[CeldaConFuego]:
             edu=int(f[12]),
             vias_km=round(float(f[13]), 1),
             arbolado_pct=float(f[14]),
-            pastizal_pct=float(f[15]),
-            cultivo_pct=float(f[16]),
-            humedal_pct=float(f[17]),
+            arbustos_pct=float(f[15]),
+            pastizal_pct=float(f[16]),
+            cultivo_pct=float(f[17]),
+            construido_pct=float(f[18]),
+            humedal_pct=float(f[19]),
+            lulc_px=int(f[20]),
         )
         for f in filas
     ]
