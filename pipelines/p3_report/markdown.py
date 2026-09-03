@@ -99,6 +99,21 @@ def render_markdown(report: Report) -> str:
             "significativas, que es la precisión que un modelo de exposición "
             "sostiene. Las exactas están en el CSV municipal y en `report.json`."
         )
+        # EL RADIO SOBREVIVE AL SHAKEMAP CUANDO NINGUNA BANDA ALCANZA POBLACION.
+        #
+        # Hasta el 3-sep-2026 no: el preliminar de `us7000tdmp` publico "610 mil
+        # personas a 100 km" a los 22 minutos del sismo, y el reporte completo la
+        # sustituyo dos horas despues por una tabla de ceros. El sistema calculo
+        # la respuesta buena y luego la borro. Para los eventos que no llegan a
+        # MMI≥6 —tres de los veintiun reconstruidos, y los dos primeros en vivo—
+        # el reporte final informaba **menos** que el preliminar.
+        if report.radios:
+            partes.append("### Población por distancia al epicentro")
+            partes.append(
+                "Ninguna banda de intensidad alcanza población, así que la única "
+                "cifra que dimensiona este evento es la distancia:"
+            )
+            partes.append(_tabla_radios(report))
 
     if tot.pop_65p_mmi7p and not report.preliminar:
         partes.append(
