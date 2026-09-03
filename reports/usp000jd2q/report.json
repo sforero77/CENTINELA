@@ -16,7 +16,20 @@
     "exposure_manifest": "dom-v0.2"
   },
   "preliminar": false,
-  "radios": [],
+  "radios": [
+    {
+      "radio_km": 25,
+      "pop": 417447.6695457217
+    },
+    {
+      "radio_km": 50,
+      "pop": 2988257.505123783
+    },
+    {
+      "radio_km": 100,
+      "pop": 6935082.224710891
+    }
+  ],
   "backtest": true,
   "totales": {
     "pop_mmi6p": 0.0,
@@ -64,6 +77,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-02T02:48:02Z",
+  "generado_utc": "2026-09-03T03:25:56Z",
   "pipeline_version": "0.1.0"
 }

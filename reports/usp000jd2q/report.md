@@ -10,17 +10,29 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 0 |
-| Población en MMI≥7 | 0 |
-| Población en MMI≥8 | 0 |
-| Edificaciones en MMI≥7 | 0 |
-| Sedes de salud en MMI≥7 | 0 |
-| Sedes educativas en MMI≥7 | 0 |
-| Kilómetros de vía en MMI≥7 | 0 km |
+| Población en MMI≥6 | — el evento no llegó a esta banda |
+| Población en MMI≥7 | — el evento no llegó a esta banda |
+| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Edificaciones en MMI≥6 | 0 |
+| Sedes de salud en MMI≥6 | 0 |
+| Sedes educativas en MMI≥6 | 0 |
+| Kilómetros de vía en MMI≥6 | 0 km |
 
 > **Todas las cifras en cero es un resultado, no un fallo.** El ShakeMap de este evento sí dibuja intensidad, pero no alcanza MMI≥6 sobre territorio habitado del país: la sacudida quedó mar adentro o sobre zona despoblada. El cálculo corrió entero.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
+
+### Población por distancia al epicentro
+
+Ninguna banda de intensidad alcanza población, así que la única cifra que dimensiona este evento es la distancia:
+
+| Radio desde el epicentro | Población |
+|---|---:|
+| 25 km | 420 mil |
+| 50 km | 3 millones |
+| 100 km | 6,9 millones |
+
+Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
 
 ## Municipios más expuestos, por población en MMI≥6
 
@@ -44,7 +56,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v0**
 - Manifiesto de exposición: `dom-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-02T02:48:02Z
+- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:56Z
 
 ## Advertencias
 
