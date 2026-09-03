@@ -1,8 +1,10 @@
 # GitHub Actions
 
-Trece workflows. Tres son el camino crítico de un sismo, seis son
+**Catorce workflows.** Tres son el camino crítico de un sismo, siete son
 mantenimiento periódico, dos son verificación de código y dos se disparan a
-mano.
+mano. Esa cuenta la vigila `tests/unit/test_acciones_documentadas.py`: se quedó
+vieja dos veces —decía trece arriba y doce en la tabla del mismo documento— y
+una cuenta a mano se desincroniza cada vez que entra un workflow.
 
 | Documento | Qué explica |
 |---|---|
@@ -11,7 +13,7 @@ mano.
 | [`cadena-de-evento.md`](cadena-de-evento.md) | `impact.yml` y `site.yml`: de un `usgs_id` a la página publicada |
 | [`mantenimiento.md`](mantenimiento.md) | Frescura, keepalive, simulacro, deriva de contrato y CI |
 
-## Las doce, de un vistazo
+## Las catorce, de un vistazo
 
 | Workflow | Disparo | Qué hace |
 |---|---|---|
@@ -69,7 +71,8 @@ vigía acelera al sistema entero.
 ## Por qué no se confía en el cron de GitHub
 
 GitHub concede los crons programados en función de la carga de la plataforma.
-Medido sobre 26 revisiones reales de este repositorio:
+Medido sobre 26 revisiones reales de este repositorio, **con el cron de GitHub
+como único disparador**:
 
 | | Declarado | Real |
 |---|---|---|
@@ -77,6 +80,15 @@ Medido sobre 26 revisiones reales de este repositorio:
 | p90 | — | 484,4 min |
 | Peor caso | — | **765,9 min** (12,8 h) |
 
-Esas cifras las publica el propio sistema en `site/status.json` → `cadencia`.
-El cron externo por `repository_dispatch` es la respuesta, y está documentado
-en [`el-vigia.md`](el-vigia.md).
+**Desde el 31-ago-2026 hay un cron externo** que dispara `repository_dispatch`
+cada cinco minutos, y el de GitHub quedó de respaldo. La cadencia medida con el
+disparador nuevo es de **p50 5,0 min**, o sea exactamente lo que declara. Las
+dos cifras salen del propio sistema, en `site/status.json` → `cadencia`; la de
+arriba se conserva porque documenta por qué existe el cron externo. El detalle
+está en [`el-vigia.md`](el-vigia.md).
+
+Lo que **no** arregla el cron externo es la latencia de punta a punta: medida
+sobre los dos primeros sismos en vivo da **p50 185,7 min**, tres veces el
+objetivo. La detección son ~22 minutos —la mayor parte esperando a que USGS
+liste el evento— y el resto es esperar el ShakeMap, que publica USGS. Ver
+[`../GARANTIAS.md`](../GARANTIAS.md).
