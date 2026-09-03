@@ -58,10 +58,10 @@ MAX_CELDAS: Final[int] = 60_000
 NOTA: Final[str] = (
     "Detecciones de satelite (VIIRS, 375 m) en las ultimas 24 horas, agregadas a "
     "celdas H3. Una deteccion no es un incendio: es un pixel donde el sensor vio "
-    "una anomalia termica —casi siempre fuego de vegetacion, a veces un volcan, "
-    "una antorcha de gas o un reflejo— y el mismo fuego produce varias. "
-    "NO se estima area quemada — el propio "
-    "FIRMS lo desaconseja, porque el muestreo espacial y temporal es irregular. "
+    "una anomalia termica, casi siempre fuego de vegetacion y a veces un volcan, "
+    "una antorcha de gas o un reflejo. Ademas, el mismo fuego produce varias. "
+    "NO se estima area quemada, porque el propio FIRMS lo desaconseja: el "
+    "muestreo espacial y temporal es irregular. "
     "La exposicion es la del activo de cada pais; una celda sin poblacion puede "
     "estar fuera de los paises cubiertos, no vacia."
 )

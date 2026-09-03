@@ -65,7 +65,7 @@ def render_markdown(report: Report) -> str:
 
     # `M7,8` y no `M7.8`: el visor y el hilo ya escriben la magnitud con coma,
     # y el mismo evento no puede salir de dos maneras segun donde se lea.
-    partes.append(f"# Exposición sísmica — M{format_number_es(ev.mag, 1)} · {ev.lugar}")
+    partes.append(f"# Exposición sísmica: M{format_number_es(ev.mag, 1)} · {ev.lugar}")
     partes.append(
         f"**Evento USGS:** `{ev.usgs_id}` · **Origen:** {ev.utc} UTC · "
         f"**Profundidad:** {format_number_es(ev.depth_km, 1)} km"
@@ -183,7 +183,7 @@ def _tabla_radios(report: Report) -> str:
 #: cero. Esa misma distincion faltaba un nivel mas arriba: en trece de los
 #: veintitres reportes, "Poblacion en MMI>=7 | 0" se lee como "no hay nadie"
 #: cuando lo cierto es "este sismo no llego a MMI 7 sobre poblacion".
-BANDA_NO_ALCANZADA = "— el evento no llegó a esta banda"
+BANDA_NO_ALCANZADA = "el evento no llegó a esta banda"
 
 
 def _celda_poblacion(valor: float) -> str:
@@ -470,8 +470,8 @@ def _linea_ground_failure(report: Report, tipo: str, propia: float) -> str:
 #: (`test_contraste_con_pager.py`, sobre el Choco) y se cita, no se promete.
 NOTA_BANDAS_PAGER = (
     "Las dos cifras **no se tabulan igual** y no se pueden leer una contra "
-    "otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae "
-    "entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. "
+    "otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae "
+    "entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. "
     "Puede además que no hablen del mismo ShakeMap: este reporte declara en "
     "«Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión "
     "o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y "

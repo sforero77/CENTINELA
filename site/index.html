@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CENTINELA — exposición sísmica en América Latina</title>
+  <title>CENTINELA: exposición sísmica en América Latina</title>
   <meta name="description" content="Reportes automáticos de exposición sísmica por celda H3 y por municipio para América Latina. Datos abiertos, sin backend. Un proyecto de GeoAI LATAM." />
   <meta name="color-scheme" content="light" />
 
@@ -18,10 +18,10 @@
 
   <!-- Un tablero de crisis viaja por WhatsApp y por X, y ahi salia como un
        enlace pelado: habia `og:title` y `og:description` y ni `og:image` ni
-       `og:url`. La imagen no hace falta inventarla — el sistema ya genera un
+       `og:url`. La imagen no hace falta inventarla: el sistema ya genera un
        `mapa_prensa.png` por evento; esta es la del ultimo publicado, que es la
        que corresponde a la portada. -->
-  <meta property="og:title" content="CENTINELA — exposición sísmica en América Latina" />
+  <meta property="og:title" content="CENTINELA: exposición sísmica en América Latina" />
   <meta property="og:description" content="Cuánta población e infraestructura quedó dentro de cada franja de intensidad, celda a celda. Datos abiertos, sin backend." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://sforero77.github.io/CENTINELA/" />
@@ -60,7 +60,7 @@
         </span>
       </a>
 
-      <h1 class="oculto-visual">CENTINELA — exposición sísmica en América Latina</h1>
+      <h1 class="oculto-visual">CENTINELA: exposición sísmica en América Latina</h1>
 
       <label class="selector" for="selector-evento">
         <span class="mono">Evento</span>
@@ -101,7 +101,7 @@
          pastillas son dos lineas de ruido que empujan el mapa fuera de la
          pantalla; un desplegable ocupa lo mismo con uno que con cincuenta, y en
          un telefono abre el selector nativo del sistema. Se visten como el
-         selector de evento de la cabecera —mismo chevron, misma pastilla— porque
+         selector de evento de la cabecera (mismo chevron, misma pastilla) porque
          hacen lo mismo: elegir que se mira. -->
     <div class="filtros" id="barra-filtros">
       <p class="filtros-titulo mono" id="filtros-titulo">Filtrar</p>
@@ -159,8 +159,8 @@
         </div>
 
         <!-- La amenaza es el primer control del mapa, no una casilla de esquina.
-             El activo es agnostico —las mismas celdas cuentan gente bajo MMI 7 y
-             bajo fuego— asi que el lente se elige aqui: una amenaza al mando y
+             El activo es agnostico: las mismas celdas cuentan gente bajo MMI 7 y
+             bajo fuego, asi que el lente se elige aqui: una amenaza al mando y
              la otra de contexto discreto. -->
         <div class="amenazas" id="amenazas" role="group" aria-label="Amenaza mostrada en el mapa">
           <button type="button" data-amenaza="sismos" aria-pressed="true">Sismos</button>
@@ -175,7 +175,7 @@
           <!-- Plegable: la nota explica por que hay huecos en la malla y por
                que las lineas del ShakeMap si llegan al mar. Es informacion que
                hay que tener disponible y que no hace falta tener delante todo
-               el rato — nueve lineas fijas se comen el mapa a zoom cercano. -->
+               el rato: nueve lineas fijas se comen el mapa a zoom cercano. -->
           <details class="leyenda-detalle">
             <summary>Cómo leer esta capa</summary>
             <p class="leyenda-nota" id="leyenda-nota"></p>
@@ -213,8 +213,8 @@
                    que se mide siete veces más fino. -->
               Elige un evento arriba, pulsa un epicentro en el mapa o abre uno de
               la lista. Cada evento se dibuja sobre una malla hexagonal de
-              5,2&nbsp;km²; el cálculo va una resolución más fina —celdas de
-              0,74&nbsp;km²— y se agrega para pintarlo.
+              5,2&nbsp;km²; el cálculo va una resolución más fina (celdas de
+              0,74&nbsp;km²) y se agrega para pintarlo.
             </p>
           </div>
 
@@ -292,7 +292,7 @@
           <!-- DE CUÁNDO SON LAS CIFRAS DE UNA RECONSTRUCCIÓN.
                Esto vivía sólo como `title` del distintivo «reconstrucción
                retrospectiva»: invisible sin ratón e inalcanzable en un móvil. Y
-               es el aviso interpretativo más importante del panel — el `.md` lo
+               es el aviso interpretativo más importante del panel, y el `.md` lo
                publica en prosa desde siempre y el visor no. Sin él, «cuánta
                gente vivía dentro» se lee como la población de 2016 cuando es la
                de hoy. -->
@@ -316,7 +316,7 @@
 
           <section class="bloque">
             <h3 class="eyebrow" id="titulo-metricas">Expuesto en MMI≥7</h3>
-            <p class="subtitulo-bloque" id="subtitulo-metricas">MMI 7 es la sacudida que asusta a todo el mundo y agrieta construcción corriente. Esto es lo que quedó dentro de esa franja — no lo que se dañó.</p>
+            <p class="subtitulo-bloque" id="subtitulo-metricas">MMI 7 es la sacudida que asusta a todo el mundo y agrieta construcción corriente. Esto es lo que quedó dentro de esa franja, no lo que se dañó.</p>
             <div class="metricas" id="detalle-metricas"></div>
           </section>
 
