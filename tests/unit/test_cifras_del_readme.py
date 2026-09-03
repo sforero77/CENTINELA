@@ -353,3 +353,47 @@ def test_la_portada_enlaza_el_visor_antes_de_la_mitad(readme: str) -> None:
     assert enlace < len(readme) // 3, (
         "el enlace al visor queda pasado el primer tercio del documento"
     )
+
+
+# --- La cuenta de eventos por banda, que ya se quedo vieja dos veces --------
+#
+# "Ocho de diecinueve" -> "once de veintiuno" -> "trece de veintitres". La cifra
+# se copiaba a mano en dos documentos y envejecia cada vez que entraba un
+# reporte, que es justo lo que este fichero existe para impedir.
+
+BANDAS_EN_PROSA = (
+    ("README.md", "trece de los veintitrés"),
+    ("docs/datos/agregaciones.md", "trece de los veintitrés"),
+)
+
+
+def _sin_banda(banda: str) -> int:
+    """Cuantos reportes publicados no tienen poblacion en esa banda."""
+    return sum(
+        1
+        for p in sorted((RAIZ / "reports").glob("*/report.json"))
+        if json.loads(p.read_text(encoding="utf-8"))["totales"][banda] == 0
+    )
+
+
+def test_la_cuenta_de_eventos_sin_mmi7_es_la_que_dicen_los_documentos() -> None:
+    """Trece de veintitrés, y que lo siga diciendo el disco y no la memoria."""
+    total = len(list((RAIZ / "reports").glob("*/report.json")))
+    sin7 = _sin_banda("pop_mmi7p")
+
+    assert (sin7, total) == (13, 23), (
+        f"la cuenta cambio: hoy son {sin7} de {total} sin población en MMI≥7. "
+        f"Actualiza README.md y docs/datos/agregaciones.md, y esta prueba."
+    )
+
+
+def test_la_cuenta_de_eventos_sin_mmi6_tambien() -> None:
+    """Los que ni siquiera llegan a 6: solo el corte por radios los dimensiona."""
+    assert _sin_banda("pop_mmi6p") == 5
+
+
+@pytest.mark.parametrize(("documento", "frase"), BANDAS_EN_PROSA)
+def test_los_documentos_dicen_esa_cuenta(documento: str, frase: str) -> None:
+    """La prosa y el disco, atados."""
+    texto = (RAIZ / documento).read_text(encoding="utf-8")
+    assert frase in texto, f"{documento} ya no dice «{frase}»"

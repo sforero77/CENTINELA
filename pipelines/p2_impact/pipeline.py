@@ -84,6 +84,17 @@ class ImpactTotals:
     pop_mmi7p: float = 0.0
     pop_mmi8p: float = 0.0
     pop_65p_mmi7p: float = 0.0
+    # LA BANDA 6, PARA TODO Y NO SOLO PARA POBLACION. Ver
+    # `MMI_BANDS_INFRAESTRUCTURA` en `common/constants.py`: trece de veintitres
+    # reportes no alcanzan MMI>=7, y publicaban cero equipamiento con millones
+    # de personas en MMI>=6.
+    pop_65p_mmi6p: float = 0.0
+    bld_mmi6p: float = 0.0
+    built_m2_mmi6p: float = 0.0
+    health_mmi6p: float = 0.0
+    edu_mmi6p: float = 0.0
+    road_km_mmi6p: float = 0.0
+    road_km_principal_mmi6p: float = 0.0
     bld_mmi7p: float = 0.0
     built_m2_mmi7p: float = 0.0
     health_mmi7p: float = 0.0
@@ -125,6 +136,13 @@ class ImpactTotals:
             pop_mmi7p=self.pop_mmi7p,
             pop_mmi8p=self.pop_mmi8p,
             pop_65p_mmi7p=self.pop_65p_mmi7p,
+            pop_65p_mmi6p=self.pop_65p_mmi6p,
+            bld_mmi6p=self.bld_mmi6p,
+            built_m2_mmi6p=self.built_m2_mmi6p,
+            health_mmi6p=self.health_mmi6p,
+            edu_mmi6p=self.edu_mmi6p,
+            road_km_mmi6p=self.road_km_mmi6p,
+            road_km_principal_mmi6p=self.road_km_principal_mmi6p,
             bld_mmi7p=self.bld_mmi7p,
             built_m2_mmi7p=self.built_m2_mmi7p,
             health_mmi7p=self.health_mmi7p,
@@ -326,6 +344,17 @@ SELECT
     SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END) AS pop_mmi7p,
     SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END) AS pop_mmi8p,
     SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END) AS pop_65p_mmi7p,
+    SUM(CASE WHEN mmi_max >= 6 THEN pop_65p ELSE 0 END) AS pop_65p_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN bld_count ELSE 0 END) AS bld_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN built_m2 ELSE 0 END) AS built_m2_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN health_count ELSE 0 END) AS health_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN edu_count ELSE 0 END) AS edu_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6
+             THEN road_km_primary + road_km_secondary + road_km_other
+             ELSE 0 END) AS road_km_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6
+             THEN road_km_primary + road_km_secondary
+             ELSE 0 END) AS road_km_principal_mmi6p,
     SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END) AS bld_mmi7p,
     SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END) AS built_m2_mmi7p,
     SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END) AS health_mmi7p,
@@ -352,6 +381,17 @@ SELECT
     SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END),
     SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6 THEN pop_65p ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6 THEN bld_count ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6 THEN built_m2 ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6 THEN health_count ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6 THEN edu_count ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6
+             THEN road_km_primary + road_km_secondary + road_km_other
+             ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6
+             THEN road_km_primary + road_km_secondary
+             ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END),
     SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END),
