@@ -19,10 +19,10 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 1115170.996424166,
-    "pop_mmi7p": 910714.4594508425,
+    "pop_mmi6p": 1115170.9964241658,
+    "pop_mmi7p": 910714.4594508426,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 81266.6050451849,
+    "pop_65p_mmi7p": 81266.6050451847,
     "bld_mmi7p": 331809.0,
     "built_m2_mmi7p": 46814341.0,
     "health_mmi7p": 152.0,
@@ -162,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-02T02:46:55Z",
+  "generado_utc": "2026-09-03T03:25:41Z",
   "pipeline_version": "0.1.0"
 }
