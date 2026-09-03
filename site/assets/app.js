@@ -2323,6 +2323,12 @@ function aplicarAmenaza() {
   const seccionFocos = $("focos");
   if (seccionEventos) seccionEventos.hidden = fuego;
   if (seccionFocos) seccionFocos.hidden = !fuego || !estado.focos.length;
+  // La de menores sigue a la de reportes: es del lado sismico, y solo existe
+  // si el vigia ya escribio algo.
+  const seccionMenores = $("menores");
+  if (seccionMenores) {
+    seccionMenores.hidden = fuego || !(estado.observadosDatos || []).length;
+  }
   if (fuego && estado.focos.length) {
     pintarControlesFocos();
     pintarListaFocos({ anunciando: false });
@@ -3995,10 +4001,107 @@ async function cargarObservados() {
 
   dibujarObservados(eventos);
   pintarInterruptorObservados(eventos, datos.ventana_dias);
+  pintarListaMenores(eventos, datos.ventana_dias);
   estado.vivo.observados = eventos.length;
   estado.vivo.ventanaSismos = datos.ventana_dias || 5;
   estado.vivo.sismosUtc = datos.generado_utc || null;
   pintarEnVivo();
+}
+
+// La lista de menores, hermana de la de reportes y de la de focos.
+//
+// El interruptor decia "12 en 5 dias" y el mapa los pintaba, pero para saber
+// cuales eran habia que pinchar estrella por estrella. Un conteo no es un
+// indice.
+//
+// Ordena por magnitud descendente y no por fecha, al reves que la de reportes:
+// aqui no hay ninguno que "haya pasado" mas que otro —todos son de la misma
+// ventana corta— y lo que se busca es cual estuvo mas cerca del umbral.
+function pintarListaMenores(eventos, ventanaDias) {
+  const seccion = $("menores");
+  const lista = $("lista-menores");
+  if (!seccion || !lista) return;
+
+  const lema = $("lema-menores");
+  if (lema) {
+    lema.textContent =
+      `Los ${eventos.length} de los últimos ${ventanaDias || 5} días que quedaron ` +
+      `por debajo del umbral de reporte. Se vieron; no se midió su impacto.`;
+  }
+
+  lista.replaceChildren(...eventos
+    .slice()
+    .sort((a, b) => Number(b.mag) - Number(a.mag))
+    .map(filaMenor));
+  seccion.hidden = estado.amenaza === "fuego";
+}
+
+function filaMenor(e) {
+  const li = document.createElement("li");
+  li.className = "menor";
+  li.dataset.usgsId = e.usgs_id;
+  if (e.iso3) li.dataset.iso3 = e.iso3;
+
+  const cabecera = document.createElement("div");
+  cabecera.className = "evento-cabecera";
+
+  const mag = document.createElement("span");
+  mag.className = "evento-mag";
+  mag.textContent = `M${String(e.mag).replace(".", ",")}`;
+
+  // Boton y no enlace: no hay reporte al que ir, la accion es sobre el mapa de
+  // esta misma pagina. Y boton y no `li` pinchable, para que llegue el teclado.
+  const boton = document.createElement("button");
+  boton.type = "button";
+  boton.className = "menor-lugar";
+  boton.textContent = e.lugar;
+  boton.addEventListener("click", () => verMenorEnElMapa(e));
+
+  cabecera.append(mag, boton);
+
+  const meta = document.createElement("p");
+  meta.className = "evento-meta";
+  meta.textContent = [
+    comoFecha(e.origen_utc, false),
+    Number.isFinite(Number(e.depth_km)) ? `${numero(Number(e.depth_km), 0)} km de profundidad` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  // Aqui no va una cifra, y no es un hueco: es la unica casilla honesta. La de
+  // reportes dice "610 mil personas en MMI>=6"; esta tiene que decir que nadie
+  // midio, porque un cero se leeria como "no habia nadie".
+  const sin = document.createElement("span");
+  sin.className = "evento-cifra";
+  sin.innerHTML =
+    `<span class="sin-medicion">Sin medición</span>` +
+    `<small>${escapar(e.razon || "bajo el umbral")}</small>`;
+
+  li.append(cabecera, meta, sin);
+  return li;
+}
+
+// Encender la capa y volar hasta el. Mismo gesto que "Ver en el mapa" del
+// panorama, pero a uno solo: la lista responde "cuales son" y el mapa
+// responde "donde".
+function verMenorEnElMapa(e) {
+  cambiarAmenaza("sismos");
+  const casilla = document.querySelector("#interruptor-observados input");
+  if (casilla && !casilla.checked) {
+    casilla.checked = true;
+    casilla.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  const lon = Number(e.lon);
+  const lat = Number(e.lat);
+  if (Number.isFinite(lon) && Number.isFinite(lat)) {
+    encuadrarPuntos([[lon, lat]], { maxZoom: 7 });
+    anotarCamara("menor");
+  }
+  anunciar(`M${String(e.mag).replace(".", ",")} en ${e.lugar}. No se midió su impacto.`);
+  $("mapa")?.scrollIntoView({
+    behavior: REDUCIR_MOVIMIENTO ? "auto" : "smooth",
+    block: "nearest",
+  });
 }
 
 function dibujarObservados(eventos) {

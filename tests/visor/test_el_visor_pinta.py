@@ -1492,7 +1492,6 @@ def test_ver_en_el_mapa_encuadra_los_sismos_vistos(pagina: Any) -> None:
     _esperar_capa(pagina, "observados")
     boton = pagina.locator('.metrica-viva[data-capa="observados"]')
     boton.wait_for(state="visible", timeout=ESPERA_MS)
-    antes = _escala(pagina)
 
     boton.click()
     pagina.wait_for_timeout(600)
@@ -1500,8 +1499,16 @@ def test_ver_en_el_mapa_encuadra_los_sismos_vistos(pagina: Any) -> None:
 
     casilla = pagina.locator("#interruptor-observados input")
     assert casilla.is_checked(), "la capa que el botón promete encender sigue apagada"
-    assert _escala(pagina) != antes, (
-        f"la cámara no se movió: sigue en {antes}. «Ver en el mapa» tiene que llevar al sitio"
+    # Se mira la ORDEN, no el píxel, que es para lo que existe `camara` y lo
+    # dice su propio comentario. La versión anterior comparaba la barra de
+    # escala antes y después, y eso no distingue "no se pidió mover" de "se
+    # pidió y el encuadre coincide con el de partida": los sismos vistos van de
+    # Chile a México, así que el rectángulo que los contiene ES casi el
+    # panorama, y la barra marcaba 1000 km en los dos lados. La prueba fallaba
+    # con el botón funcionando.
+    motivo = pagina.evaluate("() => window.CENTINELA.camara.motivo")
+    assert motivo == "observados", (
+        f"«Ver en el mapa» no le pidió a la cámara ir a los sismos vistos: última orden {motivo!r}"
     )
 
 
@@ -1811,6 +1818,56 @@ def test_los_sismos_menores_obedecen_al_filtro_de_pais(pagina: Any) -> None:
     assert "__ninguno__" not in con_filtro, (
         "la capa se apaga entera en vez de filtrarse: el país está en el dato"
     )
+
+
+def test_los_menores_tienen_lista_y_ninguna_cifra_de_impacto(pagina: Any) -> None:
+    """El interruptor decía «12 en 5 días» y el mapa los pintaba, y para saber
+    CUÁLES eran había que pinchar estrella por estrella o abrir el JSON crudo.
+
+    Un conteo no es un índice. Es el mismo hueco que ya se le arregló al fuego
+    con su lista de focos, y por la misma razón.
+
+    Lo segundo que exige esta prueba es lo que la hace valer: la casilla de la
+    derecha va **sin cifra**. En la lista de reportes ahí vive «610 mil personas
+    en MMI≥6»; un cero en el mismo sitio se leería como «no había nadie», cuando
+    lo que pasa es que nadie lo midió. La lista tiene que decir la ausencia, no
+    imprimir un número.
+    """
+    capa = _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#menores:not([hidden])", timeout=ESPERA_MS)
+
+    filas = pagina.locator("#lista-menores li")
+    assert filas.count() == capa["rasgos"] > 0, (
+        "la lista y el mapa salen del mismo fichero y no cuentan lo mismo: "
+        f"{filas.count()} filas contra {capa['rasgos']} estrellas"
+    )
+
+    assert filas.first.locator(".sin-medicion").count() == 1, (
+        "la fila no dice que no se midió el impacto"
+    )
+    texto = pagina.locator("#lista-menores").inner_text()
+    assert "personas" not in texto, (
+        "la lista de menores imprime una cifra de personas: es medir lo que justamente no se midió"
+    )
+
+
+def test_pinchar_un_menor_lo_enciende_en_el_mapa(pagina: Any) -> None:
+    """La lista sin el mapa responde «cuáles», y deja «dónde» sin respuesta.
+
+    La capa nace apagada a propósito (una estrella se lee como alarma diga lo
+    que diga el pie), así que la fila tiene que encenderla ella: si no, pinchar
+    no hace nada visible y la lista parece rota.
+    """
+    _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#menores:not([hidden])", timeout=ESPERA_MS)
+
+    casilla = pagina.locator("#interruptor-observados input")
+    assert not casilla.is_checked(), "la capa debería nacer apagada"
+
+    pagina.locator("#lista-menores .menor-lugar").first.click()
+    pagina.wait_for_timeout(800)
+
+    assert casilla.is_checked(), "pinchar un sismo de la lista no encendió su capa en el mapa"
 
 
 def test_el_filtro_de_pais_del_fuego_llega_a_las_tres_capas(pagina: Any) -> None:
