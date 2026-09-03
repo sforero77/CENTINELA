@@ -574,6 +574,43 @@ dijeran algo.
 
 ---
 
+### 2.1.quaterdecies La banda MMI≥5, evaluada y descartada a propósito
+
+**Decidido el 3-sep-2026. No es deuda: es una decisión tomada**, y se anota para que
+no se vuelva a discutir desde cero.
+
+Al fijar en qué banda se publica cada indicador (ver `MMI_BANDS_INFRAESTRUCTURA` en
+`pipelines/common/constants.py`) apareció una banda candidata más: **MMI≥5**, la de
+*«very light»* en la tabla de ShakeMap — donde la gente lo siente y no se cae nada.
+
+**Qué habría resuelto.** Los **cinco reportes que hoy salen enteros en cero** porque el
+sismo no alcanzó MMI≥6 sobre nadie (`us1000c2zy`, `usp000jd2q`, `us6000hf75`,
+`us7000tdms`, `us7000tdmp`). Para esos, «0 en todo» no es una respuesta: es un no-dato.
+Una banda ≥5 diría cuánta gente lo sintió, que es cierto y es lo único que dimensiona
+el evento. Desde #83 esos cinco sí publican el corte por radios, que cubre parte de ese
+hueco.
+
+**Qué cuesta, y es la razón de descartarlo.** `SQL_TOTALES` termina en
+`WHERE mmi_max >= 6`, y **la banda de discrepancia GHS-POP vs WorldPop se calcula sobre
+ese mismo conjunto filtrado**. Bajar el `WHERE` a 5 mete más celdas al denominador y
+**cambia una cifra publicada en los veintitrés reportes** sin que ninguna banda cambie
+de valor. Es el único cambio de esa tanda que rompe la serie histórica, y obligaría a
+re-emitir el catálogo entero con el delta publicado — la disciplina que
+`GROUND_FAILURE_HIGH_PROB` ya se impuso para su propio umbral.
+
+**La decisión: no se hace.** El beneficio no está medido, el costo sí, y dos de los
+cinco eventos están en mitad del Pacífico, donde una banda ≥5 tampoco tocaría a nadie.
+
+**Si alguna vez se retoma**, dos condiciones que ya están razonadas:
+
+* **Población sí, equipamiento no.** A daño potencial *«very light»* no hay hospital que
+  verificar; contarlos ahí sería alarmismo. Contar personas es defendible porque a
+  MMI 5 la gente lo siente.
+* **Medir antes de decidir.** Correr los cinco eventos mudos y ver cuánta población
+  recupera realmente la banda ≥5. Si son cientos de miles, la decisión se toma sola.
+
+---
+
 ### 2.1.terdecies Lo que el primer sismo en vivo dejó anotado
 
 **Abierto el 2-sep-2026**, con lo que la validación encontró y **no** entra en esta
