@@ -29,6 +29,7 @@ una heuristica.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -179,3 +180,76 @@ def test_el_preliminar_con_el_permiso_publica_ceros(tmp_path: Path) -> None:
 
     assert por_radio, "el preliminar tiene que devolver sus radios, aunque estén en cero"
     assert not any(por_radio.values()), "nadie cerca del epicentro: los radios van en cero"
+
+
+# --- Y el reporte completo no puede informar menos que el preliminar --------
+#
+# La otra mitad del mismo evento. `us7000tdmp` publico a los 22 minutos, sin
+# ShakeMap todavia, "610 mil personas dentro de 100 km": la unica cifra util
+# que ese sismo produjo. Dos horas despues llego el ShakeMap —que no pasa de
+# MMI 5,0— y el reporte completo la sustituyo por una tabla de ceros. El
+# sistema calculo la respuesta buena y luego la borro; las 610 mil solo
+# quedaron en el historial de git.
+#
+# El cero por banda es correcto y se queda: dice "nada que priorizar". Lo que
+# no puede es ser lo unico que se publica.
+
+
+def _reporte_sin_banda(radios: tuple[int, ...] = (25, 50, 100)) -> Any:
+    from pipelines.p3_report.model import Evento, Inputs, PoblacionEnRadio, Report, Totales
+
+    poblacion = {25: 0.0, 50: 0.0, 100: 610_000.0}
+    return Report(
+        event=Evento(
+            usgs_id="us7000tdmp",
+            mag=5.6,
+            depth_km=10.0,
+            utc="2026-09-02T12:28:31Z",
+            lugar="71 km al OSO de Puerto Madero, México",
+            lon=-93.0,
+            lat=14.5,
+        ),
+        inputs=Inputs(shakemap_version=3, groundfailure_version=0, exposure_manifest="mex-v0.2"),
+        totales=Totales(),
+        radios=tuple(PoblacionEnRadio(radio_km=km, pop=poblacion[km]) for km in radios),
+    )
+
+
+def test_el_radio_sobrevive_al_shakemap_cuando_ninguna_banda_alcanza() -> None:
+    """Las 610 mil se publican junto a los ceros, no en vez de ellos."""
+    from pipelines.p3_report.markdown import render_markdown
+
+    md = render_markdown(_reporte_sin_banda())
+
+    assert "Población en MMI≥6 | 0" in md, "el cero por banda sigue siendo correcto"
+    assert "### Población por distancia al epicentro" in md
+    assert "610 mil" in md
+    # Y con la cautela que impide leer un radio como una banda.
+    assert "no son bandas de intensidad" in md
+
+
+def test_el_radio_va_despues_de_la_tabla_por_intensidad() -> None:
+    """El orden importa: la banda es la respuesta, el radio la dimensiona.
+
+    Al reves, un lector con prisa se lleva "610 mil" como si fuera exposicion a
+    sacudida fuerte, que es justo la confusion que el sistema existe para no
+    provocar.
+    """
+    from pipelines.p3_report.markdown import render_markdown
+
+    md = render_markdown(_reporte_sin_banda())
+
+    assert md.index("## Exposición estimada") < md.index("### Población por distancia")
+
+
+def test_un_evento_con_banda_no_publica_radios() -> None:
+    """Con gente en MMI≥6, el radio sobra: hay algo mejor que la distancia."""
+    from pipelines.p3_report.markdown import render_markdown
+    from pipelines.p3_report.model import Totales
+
+    reporte = _reporte_sin_banda()
+    con_banda = replace(reporte, totales=Totales(pop_mmi6p=7_194_540.0), radios=())
+
+    md = render_markdown(con_banda)
+
+    assert "### Población por distancia al epicentro" not in md

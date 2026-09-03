@@ -474,6 +474,27 @@ def compute_impact(
 # --- Reporte preliminar sin ShakeMap (RF-03) -------------------------------
 
 
+def poblacion_por_radio(con: Any, state: EventState) -> dict[int, float]:
+    """Poblacion dentro de cada radio del epicentro. Sin juicio, solo distancia.
+
+    Asume la vista ``exposure`` ya registrada. Se saca aparte porque la usan los
+    dos caminos: el preliminar la publica **en lugar** de la tabla por
+    intensidad, y el reporte completo la publica **ademas** cuando ninguna banda
+    alcanzo poblacion. Ver `build_report`.
+    """
+    filas = con.execute(
+        "SELECT h3_cell_to_lat(h3_08), h3_cell_to_lng(h3_08), pop_total FROM exposure"
+    ).fetchall()
+
+    por_radio = dict.fromkeys(PRELIMINARY_RADII_KM, 0.0)
+    for lat, lon, pop in filas:
+        d = haversine_km(state.lon, state.lat, float(lon), float(lat))
+        for radio in PRELIMINARY_RADII_KM:
+            if d <= radio:
+                por_radio[radio] += float(pop or 0.0)
+    return por_radio
+
+
 def compute_preliminary(
     con: Any,
     state: EventState,
@@ -488,16 +509,7 @@ def compute_preliminary(
     reporte lo declara asi y se re-emite solo en cuanto aparezca el ShakeMap.
     """
     register_exposure_view(con, exposure_glob)
-    filas = con.execute(
-        "SELECT h3_cell_to_lat(h3_08), h3_cell_to_lng(h3_08), pop_total FROM exposure"
-    ).fetchall()
-
-    por_radio = dict.fromkeys(PRELIMINARY_RADII_KM, 0.0)
-    for lat, lon, pop in filas:
-        d = haversine_km(state.lon, state.lat, float(lon), float(lat))
-        for radio in PRELIMINARY_RADII_KM:
-            if d <= radio:
-                por_radio[radio] += float(pop or 0.0)
+    por_radio = poblacion_por_radio(con, state)
 
     # EL PRELIMINAR TAMBIEN PUEDE CAER SOBRE EL ACTIVO EQUIVOCADO, Y NO MIRABA.
     #
@@ -671,4 +683,28 @@ def build_report(
             notas=notas + nota_de_columnas_ausentes(totales.columnas_ausentes),
         ),
         descargas=Descargas(csv_adm2="adm2.csv", mapa_png="mapa_general.png"),
+        # CUANDO NINGUNA BANDA ALCANZA POBLACION, EL RADIO ES LO UNICO QUE INFORMA.
+        #
+        # `us7000tdmp`, el primer sismo en vivo: el preliminar publico "610 mil
+        # personas a 100 km" a los 22 minutos, y dos horas despues el reporte
+        # completo lo sustituyo por una tabla de ceros —el ShakeMap de USGS no
+        # pasa de MMI 5,0 en ese evento—. El sistema calculo la respuesta buena
+        # y luego la borro: las 610 mil solo sobrevivian en el historial de git.
+        #
+        # El cero por banda sigue siendo correcto y se queda: dice "nada que
+        # priorizar". Pero deja de ser lo unico que se publica. Tres de los
+        # veintiun reconstruidos y los dos en vivo caen en este caso.
+        radios=_radios_si_ninguna_banda_alcanza(con, state, banda),
+    )
+
+
+def _radios_si_ninguna_banda_alcanza(
+    con: Any, state: EventState, banda: int
+) -> tuple[PoblacionEnRadio, ...]:
+    """Los radios, solo cuando la tabla por intensidad va a salir en ceros."""
+    if banda:
+        return ()
+    return tuple(
+        PoblacionEnRadio(radio_km=km, pop=pop)
+        for km, pop in sorted(poblacion_por_radio(con, state).items())
     )
