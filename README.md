@@ -20,7 +20,7 @@ ejemplo](https://sforero77.github.io/CENTINELA/reports/us6000tjl2/) ·
 
 **MMI** es la escala **Mercalli Modificada**, de I a XII, y mide **la sacudida
 en un sitio**: lo que se sintió y lo que puede romperse allí. No es la magnitud.
-La magnitud —M7,4— es una sola cifra para el sismo entero, y la intensidad es un
+La magnitud (M7,4) es una sola cifra para el sismo entero, y la intensidad es un
 mapa: el mismo M7,4 deja MMI 8 en un valle y MMI 5 a cien kilómetros. Confundir
 las dos es el error de lectura más caro que este sistema puede provocar, porque
 lleva a repartir ayuda por la cifra equivocada. Aquí las bandas se escriben
@@ -49,14 +49,14 @@ Y GEM no se quedó en SARA: el **23 de junio de 2026** liberó su modelo global
 2026, con el primer análisis global de vías cruzadas con licuefacción. Conviene
 decirlo antes que nadie, porque es lo más parecido a este proyecto que existe.
 Lo que sigue faltando es el encaje: la versión abierta de GEM llega a **Adm1**,
-es **CC BY-NC-SA** —no reutilizable comercialmente ni por muchas agencias—, es
-**probabilística** —riesgo esperado, no un evento concreto— y no cuenta salud ni
+es **CC BY-NC-SA** (no reutilizable comercialmente ni por muchas agencias), es
+**probabilística** (riesgo esperado, no un evento concreto) y no cuenta salud ni
 educación. CENTINELA publica **Adm2 por evento ocurrido**, bajo CC BY y ODbL, y
 con la vigencia del dato declarada en cada celda.
 
 **Lo que no hay es la pieza del medio**: un activo de exposición ya construido,
 por municipio y por celda, que convierta la intensidad en cuánta gente e
-infraestructura —el mismo día, con el dato descargable y en español—. Este
+infraestructura, el mismo día, con el dato descargable y en español. Este
 proyecto es esa pieza.
 
 ### Qué añade sobre lo que ya existe
@@ -65,7 +65,7 @@ Tres cosas, y las tres se pueden citar de documentos del propio USGS:
 
 * **PAGER no publica el corte.** Estima población por banda de MMI
   *redondeada* y pérdidas, para el país entero: sin municipio, sin celda y sin
-  equipamiento. Su insumo de población —LandScan Global— es abierto desde 2022
+  equipamiento. Su insumo de población, LandScan Global, es abierto desde 2022
   (CC BY 4.0, ORNL), así que el argumento nunca fue la licencia del dato: es que
   la cadena de PAGER no la rehace nadie de fuera. El activo de CENTINELA se
   reconstruye entero desde fuentes abiertas, sin credenciales, con un comando, y
@@ -76,7 +76,7 @@ Tres cosas, y las tres se pueden citar de documentos del propio USGS:
 * **PAGER no considera deslizamiento ni licuefacción _en sus estimaciones de pérdida_.** Cita literal de
   onePAGER: *«PAGER does not consider secondary effects such as landslides,
   liquefaction, and tsunami in loss estimates at this time»*. CENTINELA sí
-  consume el producto Ground Failure — con las cautelas que cada reporte
+  consume el producto Ground Failure, con las cautelas que cada reporte
   imprime en su sección «Deslizamiento y licuefacción», que no son pocas.
 
 Y una honestidad que el proyecto se debe a sí mismo: **la malla H3 no es la
@@ -112,8 +112,8 @@ vez de esperar días.
 
 Las cifras salen de `reports/us6000tjl2/report.json`, y
 `tests/unit/test_cifras_del_readme.py` falla si esta tabla se separa de él.
-Cinco de estas filas estuvieron desactualizadas hasta el 25-ago-2026 —los km de
-vía, por un factor de seis— porque se copiaron a mano y el activo se reconstruyó
+Cinco de estas filas estuvieron desactualizadas hasta el 25-ago-2026 (los km de
+vía, por un factor de seis) porque se copiaron a mano y el activo se reconstruyó
 después. Una tabla de cifras escrita a mano se desincroniza; una tabla con
 prueba, no.
 
@@ -126,8 +126,8 @@ al dígito porque su trabajo es ser trazable; **en prosa, estas cifras son «7,2
 millones» y «2,4 millones»**, que es como las escribe el `report.md` generado.
 
 *Sobre la licuefacción.* 1,6 millones **no es la cifra de USGS y no se puede
-comparar con ella**. El modelo de Zhu (2017) entrega **cobertura areal** —la
-fracción del área de la celda que se espera cubierta—, no probabilidad; aquí se
+comparar con ella**. El modelo de Zhu (2017) entrega **cobertura areal** (la
+fracción del área de la celda que se espera cubierta), no probabilidad; aquí se
 cuenta la población entera de toda celda por encima de 0,10, y USGS pondera la
 población de cada celda por esa cobertura, con lo que publica **~460 mil** para
 el mismo evento y el mismo producto. Son dos preguntas distintas sobre el mismo
@@ -136,8 +136,8 @@ ráster. El reporte lo dice ahora en cada emisión.
 ### El contraste con PAGER, en las mismas bandas
 
 Es la objeción que el proyecto recibe primero, y conviene resolverla antes de
-que la haga nadie. PAGER tabula por **MMI redondeado** —su fila «7» es todo lo
-que cae entre 6,5 y 7,49— y CENTINELA usa **bandas literales**. Puestas en el
+que la haga nadie. PAGER tabula por **MMI redondeado** (su fila «7» es todo lo
+que cae entre 6,5 y 7,49) y CENTINELA usa **bandas literales**. Puestas en el
 mismo eje, cada cifra de CENTINELA cae dentro del intervalo que las filas de
 PAGER acotan por arriba y por abajo:
 
@@ -153,8 +153,8 @@ El acotamiento se cumple, y `tests/unit/test_contraste_con_pager.py` falla si
 deja de cumplirse. Pero **acotar no es coincidir**: el intervalo de MMI≥7 va de
 1,1 a 6,5 millones, un factor de 5,8, y casi cualquier cifra cabría dentro.
 
-**En los dos casos CENTINELA queda en el cuarto inferior del intervalo** —al
-17 % y al 24 % contando desde abajo—, es decir sistemáticamente por debajo del
+**En los dos casos CENTINELA queda en el cuarto inferior del intervalo** (al
+17 % y al 24 % contando desde abajo), es decir sistemáticamente por debajo del
 punto medio y siempre en la misma dirección. Eso es lo que se puede afirmar sin
 elegir un método: cuánto por debajo depende de cómo se interpole entre las filas
 de PAGER, y la respuesta va del 11 % al 37 % según se haga lineal o logarítmica.
@@ -197,16 +197,16 @@ que USGS publicó entonces, cada uno contra el activo de su país:
 | Peor desvío contra la cifra oficial de un país | **+4,94 %** (Venezuela, y está explicado) |
 
 **El primero en vivo llegó el 2-sep-2026, y no salió como debía.** Un M5,6 a 71 km
-al OSO de Puerto Madero, México. El vigía lo detectó y despachó en minutos —esa
-mitad de la cadena funcionó a la primera— y P2 lo rechazó veinte veces seguidas:
+al OSO de Puerto Madero, México. El vigía lo detectó y despachó en minutos (esa
+mitad de la cadena funcionó a la primera) y P2 lo rechazó veinte veces seguidas:
 trataba «el ShakeMap no alcanza ninguna celda» como error incluso con el país
 bien enrutado, cuando lo que pasaba es que la sacudida se quedó mar adentro. El
 reporte salió cuando se arregló esa distinción. Horas después llegó el segundo,
 un M5,9 en la dorsal del Pacífico Oriental (`us7000tdms`).
 
 **La latencia medida está en [`/status`](https://sforero77.github.io/CENTINELA/status.html),
-y aquí no se copia a mano.** Se mueve con cada evento —ya caducó dos veces en un
-día— y ahora mismo está **por encima del objetivo**, porque lo que cronometró no
+y aquí no se copia a mano.** Se mueve con cada evento (ya caducó dos veces en un
+día) y ahora mismo está **por encima del objetivo**, porque lo que cronometró no
 fue la cadena en régimen sino lo que tardó en arreglarse un fallo que sólo podía
 aparecer con un sismo real. La primera medida limpia la dará el siguiente evento.
 
@@ -217,7 +217,7 @@ esté ejercitada. Ahora está ejercitada dos veces, y enseñó algo.
 Lo que enseña ese catálogo importa más que su tamaño: **trece de los veintitrés
 eventos no alcanzan MMI≥7 sobre población**, y cinco de ellos tampoco MMI≥6. Son
 los profundos y los de mar adentro, que en esta región son la mitad.
-Tehuantepec 2017 —M8,2, 98 muertos— es uno de ellos: su máximo sobre población
+Tehuantepec 2017 (M8,2, 98 muertos) es uno de ellos: su máximo sobre población
 mexicana es MMI 6,5.
 
 Hasta que se corrieron, el producto entero daba por supuesto que MMI≥7 era *la*
@@ -238,7 +238,7 @@ contra USGS:
   estado que se persigue, no una carencia.
 * **Brasil** tiene doce sismos M≥5,5 desde 2000, **todos entre 534 y 645 km de
   profundidad** y todos en Acre. El ShakeMap de USGS no modela MMI≥5 en
-  superficie para ninguno —su máximo modelado es 3,0—, aunque el DYFI recoja
+  superficie para ninguno (su máximo modelado es 3,0), aunque el DYFI recoja
   reportes de personas de hasta CDI 5,6. Un sistema que calcula sobre `cont_mmi`
   no tiene ahí nada que calcular.
 * **Bolivia no es el caso de Brasil, y este README decía que sí.** Sus veintidós
@@ -247,7 +247,7 @@ contra USGS:
   modelada de **6,4** y `cont_mmi.json` publicado. Bolivia no está en silencio
   por profundidad: **tiene un reporte pendiente de construir**, y está en
   [`PENDIENTES.md`](PENDIENTES.md). El error venía de una búsqueda ordenada por
-  relevancia sobre una caja envolvente que se llena de sismos chilenos — el
+  relevancia sobre una caja envolvente que se llena de sismos chilenos, el
   mismo sesgo que la auditoría del 25-ago-2026 ya había documentado para
   Argentina y República Dominicana, y que en Bolivia no se notó.
 
@@ -283,7 +283,7 @@ aquí», sea cual sea la amenaza que llegue.
 ### Sobre la latencia, con los números medidos
 
 El cálculo de un evento es la parte corta. La larga es enterarse. Con el cron
-de GitHub Actions solo —declara diez minutos y entrega mucho menos—, medido
+de GitHub Actions solo (declara diez minutos y entrega mucho menos), medido
 entre el 25 y el 30 de agosto sobre 23 latidos, la detección daba **p50 157 min,
 p90 462 y peor caso 766 min (12,8 h)**: con un objetivo de 60 minutos extremo a
 extremo, **la detección sola se comía el presupuesto entero**. Por eso desde el
@@ -291,13 +291,13 @@ extremo, **la detección sola se comía el presupuesto entero**. Por eso desde e
 el cron de GitHub quedó de respaldo.
 
 Y el cambio es de otro orden: sobre los primeros latidos con el disparador
-externo, `/status` publica **p50 5,0 min, p90 5,0 y peor caso 5,0** — el cron
+externo, `/status` publica **p50 5,0 min, p90 5,0 y peor caso 5,0**: el cron
 externo entrega exactamente lo que declara. Son pocos latidos todavía, y la
 serie se reinició el 1-sep-2026 al re-emitir el catálogo entero, así que esa
 cifra vale como orden de magnitud y no como percentil estable.
 
 Este README sigue sin prometer «menos de una hora»: promete el contraste que sí
-controla —de días a segundos de cómputo— y publica en
+controla (de días a segundos de cómputo) y publica en
 [`/status`](https://sforero77.github.io/CENTINELA/status.json) la latencia real,
 incluida la que no le favorece: los dos primeros eventos en vivo salieron por
 encima del objetivo, y `/status` lo publica en vez de esconderlo.
@@ -319,8 +319,8 @@ arranque no funciona en tu máquina, eso es un bug.
 ```
 pipelines/       p0_exposure, p1_trigger, p2_impact, p3_report, p4_brigada, p5_incendios, common
 schemas/         JSON Schema del reporte, del estado y de los contratos USGS
-data/manifests/  vintages por país (fuente, url, licencia, hash, fecha) — los 19 de LATAM
-events/          event_state por evento — la base de datos del sistema, en git
+data/manifests/  vintages por país (fuente, url, licencia, hash, fecha) · los 19 de LATAM
+events/          event_state por evento · la base de datos del sistema, en git
 reports/         salidas publicadas (json + md + csv + png)
 site/            visor estático (MapLibre + PMTiles, cero llaves de API)
 tests/           unit/, integration/, golden/, fixtures/
@@ -348,7 +348,7 @@ garantizado.
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 1-sep-2026.
 
-Las etapas pendientes fallan de forma ruidosa y explícita — nunca devuelven un
+Las etapas pendientes fallan de forma ruidosa y explícita, y nunca devuelven un
 cero que acabaría publicado como cifra. `tests/unit/test_pendientes.py` es el
 inventario vivo de esa deuda, y hoy está vacío.
 
@@ -357,20 +357,20 @@ Y hay una segunda guardia, de otra clase.
 si una función pública se queda **sin llamador**. Existe porque el fallo que más
 veces ha cazado este proyecto no es un cálculo mal hecho sino una pieza correcta
 que nadie invoca: el reporte preliminar, el epicentro del mapa estático, tres
-capas del activo, los asserts de §6.4. Todas estaban probadas —por eso la
-cobertura las daba por verdes— y ninguna estaba conectada.
+capas del activo, los asserts de §6.4. Todas estaban probadas (por eso la
+cobertura las daba por verdes) y ninguna estaba conectada.
 
 El cero silencioso tiene además su propia guardia. Una capa que no se construye
 entra vacía al ensamblaje, el `LEFT JOIN` la vuelve ceros y el activo se
 escribiría sin que nada proteste: el assert de total nacional solo mira
 población. `validate_layer_coverage` detiene el build si **cualquier** capa
-requerida suma cero en todo el país — es preferible no publicar activo que
+requerida suma cero en todo el país: es preferible no publicar activo que
 publicar uno que informa cero donde no midió nada.
 
 Los golden tests corren contra **productos reales congelados** de los dos
 eventos que motivan el proyecto: San José del Palmar (`us6000tjl2`) y el doble
 mainshock de Venezuela (`us6000t7zp`, `us6000t7zc`). Ya cazaron dos bugs que
-ninguna prueba sintética habría encontrado — ver
+ninguna prueba sintética habría encontrado; ver
 [`tests/fixtures/golden/README.md`](tests/fixtures/golden/README.md).
 
 ### El activo del que salen las cifras
@@ -383,7 +383,7 @@ Su desvío contra la referencia del DANE es **−0,72 %**, y solo el 0,32 % de l
 población entra por celdas rescatadas.
 
 Y el dato que cambia la conversación: los municipios más expuestos no estaban en
-el Chocó sino en el Eje Cafetero y el Valle — Pereira, Buenaventura, Armenia,
+el Chocó sino en el Eje Cafetero y el Valle: Pereira, Buenaventura, Armenia,
 Tuluá, Dosquebradas. Por eso este README dejó de llamarlo «el terremoto del
 Chocó»: el nombre contradecía la tesis del propio reporte.
 
@@ -402,21 +402,21 @@ diagramas de cada componente:
 
 Y los transversales:
 
-- [`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md) — **el documento de presentación, con las cifras y su procedencia**
-- [`docs/OPERACION.md`](docs/OPERACION.md) — qué vigilar ahora que el sistema opera
-- [`PENDIENTES.md`](PENDIENTES.md) — qué falta, quién puede hacerlo y en qué orden
-- [`docs/GARANTIAS.md`](docs/GARANTIAS.md) — qué está probado y qué no
-- [`docs/AUDITORIA.md`](docs/AUDITORIA.md) — la auditoría del 25-ago-2026: qué se encontró y cómo se cerró
-- [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md) — las once formas en que este sistema falla
-- [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md) — las reglas de código del proyecto, con el caso real de cada una
-- [`ESPECIFICACION.md`](ESPECIFICACION.md) — especificación técnica v0.10
-- [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md) — cómo publicar el activo y por qué no va en git
-- [`VERIFICACIONES.md`](VERIFICACIONES.md) — cierre de las tareas ⚠️ de §8, con método y hallazgos
-- [`DISCLAIMER.md`](DISCLAIMER.md) — qué informa y qué no informa el sistema
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — cómo ayudar (incluye rol de mantenedor por país)
-- [`GOVERNANCE.md`](GOVERNANCE.md) — roles, decisiones, frontera comunidad ↔ empresa
-- [`ATTRIBUTION.md`](ATTRIBUTION.md) — créditos obligatorios de cada fuente
-- [`LICENSES/`](LICENSES/) — la regla de los tres cubos
+- [`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md): **el documento de presentación, con las cifras y su procedencia**
+- [`docs/OPERACION.md`](docs/OPERACION.md): qué vigilar ahora que el sistema opera
+- [`PENDIENTES.md`](PENDIENTES.md): qué falta, quién puede hacerlo y en qué orden
+- [`docs/GARANTIAS.md`](docs/GARANTIAS.md): qué está probado y qué no
+- [`docs/AUDITORIA.md`](docs/AUDITORIA.md): la auditoría del 25-ago-2026: qué se encontró y cómo se cerró
+- [`docs/FAMILIAS_DE_FALLO.md`](docs/FAMILIAS_DE_FALLO.md): las once formas en que este sistema falla
+- [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md): las reglas de código del proyecto, con el caso real de cada una
+- [`ESPECIFICACION.md`](ESPECIFICACION.md): especificación técnica v0.10
+- [`docs/PUBLICAR_ACTIVO.md`](docs/PUBLICAR_ACTIVO.md): cómo publicar el activo y por qué no va en git
+- [`VERIFICACIONES.md`](VERIFICACIONES.md): cierre de las tareas ⚠️ de §8, con método y hallazgos
+- [`DISCLAIMER.md`](DISCLAIMER.md): qué informa y qué no informa el sistema
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): cómo ayudar (incluye rol de mantenedor por país)
+- [`GOVERNANCE.md`](GOVERNANCE.md): roles, decisiones, frontera comunidad ↔ empresa
+- [`ATTRIBUTION.md`](ATTRIBUTION.md): créditos obligatorios de cada fuente
+- [`LICENSES/`](LICENSES/): la regla de los tres cubos
 
 ## Licencia
 

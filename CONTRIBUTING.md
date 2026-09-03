@@ -1,6 +1,6 @@
 # Cómo contribuir
 
-Gracias por venir. Capacidad regional hay —el README la enumera con nombres— y
+Gracias por venir. Capacidad regional hay (el README la enumera con nombres) y
 lo que faltó dos veces en dos meses fue **la pieza del medio**: un activo de
 exposición ya construido que convierta la intensidad en cuánta gente y qué
 infraestructura, por municipio, el mismo día. Eso es lo que este proyecto
@@ -52,7 +52,7 @@ del país:
 3. **Decidir si hay una referencia de población mejor que la ONU.** Todos los
    manifests nuevos usan World Population Prospects por uniformidad regional,
    pero un instituto nacional con censo reciente es mejor para su propio país
-   — Colombia usa el DANE. Cambiarla es tuya.
+   y Colombia ya usa el DANE. Esa decisión es tuya.
 4. **Sustituir fuentes nacionales donde mejoren a las regionales**, si existen
    con coordenadas y con licencia compatible. Ojo con las dos trampas ya
    documentadas: un registro sin coordenadas no se puede asignar a una celda, y
@@ -86,8 +86,8 @@ está en [`docs/CLEAN_CODE.md`](docs/CLEAN_CODE.md).
   repositorio producen **cifras plausibles**, así que un comentario justifica
   una decisión con la evidencia que la motivo, o sobra.
 - **Si escribes una función, conectala.** Es el fallo que este proyecto más
-  veces ha tenido que cazar —el reporte preliminar, el epicentro del mapa, tres
-  capas del activo, los asserts de §6.4— y todas las veces la función estaba
+  veces ha tenido que cazar (el reporte preliminar, el epicentro del mapa, tres
+  capas del activo, los asserts de §6.4) y todas las veces la función estaba
   probada. `tests/unit/test_funciones_conectadas.py` falla si una función
   pública se queda sin llamador.
 - **Código muerto se borra**, no se comenta ni se guarda por si acaso. Git se
