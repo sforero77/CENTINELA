@@ -88,7 +88,7 @@ arriba se conserva porque documenta por qué existe el cron externo. El detalle
 está en [`el-vigia.md`](el-vigia.md).
 
 Lo que **no** arregla el cron externo es la latencia de punta a punta: medida
-sobre los dos primeros sismos en vivo da **p50 185,7 min**, tres veces el
+sobre los dos primeros sismos en vivo da **p50 92,1 min**, más de dos veces el
 objetivo. La detección son ~22 minutos —la mayor parte esperando a que USGS
 liste el evento— y el resto es esperar el ShakeMap, que publica USGS. Ver
 [`../GARANTIAS.md`](../GARANTIAS.md).

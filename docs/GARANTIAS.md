@@ -122,8 +122,15 @@ valen como orden de magnitud y no como percentil estable, y la cifra de arriba
 se conserva por lo que documenta: lo que daba la cola de GitHub sola.
 
 **La latencia de punta a punta ya está medida, y no se cumple.** Los dos
-primeros sismos en vivo, el 2-sep-2026, dan **p50 185,7 min · p95 238,0 · peor
-243,8** — tres veces el objetivo. `/status` lo publica.
+primeros sismos en vivo, el 2-sep-2026, dan **p50 92,1 min · p95 94,8 · peor
+95,1** — más del doble del objetivo. `/status` lo publica.
+
+*Esa cifra decía 185,7 hasta el 3-sep-2026, y era falsa por una razón que vale
+la pena conocer: `transition` reescribía el sello `publicado` en cada
+re-emisión, así que la latencia de un evento crecía sola cada vez que USGS
+publicaba un ShakeMap nuevo. Se medía «cuánto hace que lo relanzamos», no
+«cuánto tardó el sistema». Ahora se conserva el primer sello y la re-emisión se
+guarda aparte.*
 
 Dónde se va el tiempo, con los dos únicos casos que hay:
 

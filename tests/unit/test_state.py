@@ -104,3 +104,35 @@ def test_un_backtest_se_marca_como_tal(events_dir: Path) -> None:
 
 def test_por_defecto_un_evento_no_es_backtest() -> None:
     assert _estado().backtest is False
+
+
+def test_el_primer_sello_de_un_estado_no_se_pisa() -> None:
+    """La latencia medía «cuánto hace que lo relanzamos», no cuánto tardó.
+
+    `transition` hacía `timestamps | {estado: ahora}`, así que cada re-emisión
+    —rutina cada vez que USGS publica un ShakeMap nuevo— reescribía `publicado`
+    y la latencia del evento crecía sola. Medido el 3-sep-2026: los dos sismos
+    en vivo daban p50 893,9 min cuando lo real es 92,1.
+
+    Lo mismo rompía la ventana de 6 h del preliminar, que cuenta desde
+    `detectado` o `preliminar` y se reiniciaba en cada reintento.
+    """
+    from pipelines.common.state import EventState, EventStatus
+
+    inicial = EventState(
+        usgs_id="us7000test",
+        estado=EventStatus.DETECTADO,
+        mag=6.0,
+        lon=-75.0,
+        lat=4.0,
+        depth_km=10.0,
+        lugar="X",
+        origen_utc="2026-09-02T12:00:00Z",
+    )
+    publicado = inicial.transition(EventStatus.PUBLICADO)
+    primero = publicado.timestamps["publicado"]
+
+    reemitido = publicado.transition(EventStatus.PUBLICADO)
+
+    assert reemitido.timestamps["publicado"] == primero, "la latencia se mide al primero"
+    assert "publicado_ultimo" in reemitido.timestamps, "y la re-emisión no se pierde"

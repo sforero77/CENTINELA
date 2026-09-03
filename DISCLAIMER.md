@@ -47,7 +47,7 @@ población y edificaciones, cruzada con un modelo de intensidad.
    detección la dispara un cron externo cada cinco minutos; el cron de GitHub
    Actions —con demoras documentadas de 5 a 30 minutos— queda como respaldo.
    Sobre los dos primeros sismos en vivo, del 2-sep-2026, la latencia de punta
-   a punta medida es **p50 185,7 min**, tres veces el objetivo de 60. La
+   a punta medida es **p50 92,1 min**, más del doble del objetivo de 60. La
    detección no es el cuello de botella —veintitantos minutos, la mayor parte
    esperando a que USGS liste el evento—: lo que se lleva el resto es esperar
    el ShakeMap, que publica USGS y no depende de este sistema. Las dos cifras,

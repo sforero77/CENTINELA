@@ -14,8 +14,9 @@
   "timestamps": {
     "detectado": "2026-09-02T12:50:23Z",
     "preliminar": "2026-09-02T12:50:54Z",
-    "publicado": "2026-09-03T03:26:06Z",
-    "usgs_origen": "2026-09-02T12:28:31Z"
+    "publicado": "2026-09-02T13:57:37Z",
+    "usgs_origen": "2026-09-02T12:28:31Z",
+    "publicado_ultimo": "2026-09-03T03:26:06Z"
   },
   "hashes": {},
   "intentos_preliminar": 1,

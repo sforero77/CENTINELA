@@ -131,7 +131,31 @@ class EventState:
         """
         if nuevo not in _ALLOWED_TRANSITIONS[self.estado]:
             raise InvalidTransitionError(f"{self.estado} -> {nuevo} no permitida ({self.usgs_id})")
-        stamps = dict(self.timestamps) | {nuevo.value: utcnow_iso()}
+        # EL PRIMER SELLO NO SE PISA, Y ESTO ERA UN CERO SILENCIOSO.
+        #
+        # Era `dict(self.timestamps) | {nuevo.value: utcnow_iso()}`: cada
+        # transicion **sobrescribia** el sello de ese estado. Los dos unicos
+        # consumidores quieren el primero, y los dos estaban mal:
+        #
+        # * `status.event_latencies` mide `origen -> publicado`. Cada
+        #   re-emision de RF-04 —rutina cada vez que USGS publica un ShakeMap
+        #   nuevo— reescribia `publicado` y la latencia del evento crecia sola.
+        #   Medido el 3-sep-2026: los dos sismos en vivo daban p50 893,9 min
+        #   cuando lo real es **92,1**. `/status` llevaba publicando una
+        #   latencia que no era la del sistema sino la de la ultima vez que
+        #   alguien lo relanzo.
+        # * `_ventana_agotada` cuenta 6 h desde `detectado` o `preliminar` para
+        #   rendirse. Al re-sellar `preliminar` en cada reintento, la ventana se
+        #   reiniciaba sola y nunca vencia por tiempo.
+        #
+        # Se conserva el primero y se guarda aparte el ultimo: la re-emision es
+        # informacion, solo que no es la que mide la latencia.
+        ahora = utcnow_iso()
+        stamps = dict(self.timestamps)
+        if nuevo.value in stamps:
+            stamps[f"{nuevo.value}_ultimo"] = ahora
+        else:
+            stamps[nuevo.value] = ahora
         notas = [*self.notas, nota] if nota else list(self.notas)
         return replace(self, estado=nuevo, timestamps=stamps, notas=notas)
 
