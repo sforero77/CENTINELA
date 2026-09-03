@@ -1,25 +1,25 @@
-usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
-#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
-us7000nr0v,9,CU0511,Pilón,-77.248697,19.937153,7.0,30171.60373160988,2960.987789724022,0.0,335.18432726078845,1561.0,143702.0,1,7,37.50642589618162,15.004597685668262,0.0,223.77799612656236,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
-us7000nr0v,9,CU1502,Guamá,-76.505855,19.996562,7.0,3781.542118728161,275.445321418345,0.0,30.411447945145483,314.0,4785.0,0,0,11.806712828554405,6.315663229866819,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0501,Bartolomé Masó,-76.941251,20.080708,7.0,49497.833175331354,54.75324557721615,0.0,13.219283986185474,138.0,751.0,0,0,6.486437271988143,6.298638184447384,0.0,2595.785349957645,discrepancia_poblacional
-us7000nr0v,9,CU0504,Campechuela,-77.241979,20.118427,6.5,3225.767728112638,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,158.58373018354177,discrepancia_poblacional
-us7000nr0v,9,CU0513,Yara,-76.95959,20.35517,6.0,49920.84772238135,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,33019.67756333947,discrepancia_poblacional
-us7000nr0v,9,CU0509,Media Luna,-77.396381,20.068663,6.5,33400.09518179856,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,536.7664102613926,discrepancia_poblacional
-us7000nr0v,9,CU1005,Las Tunas,-77.033902,20.935539,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0507,Jiguaní,-76.386115,20.422345,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
-us7000nr0v,9,CU1004,Jobabo,-77.247784,20.848218,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0502,Bayamo,-76.686136,20.425113,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0506,Guisa,-76.520869,20.178538,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us7000nr0v,9,CU1501,Contramaestre,-76.221122,20.324079,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0508,Manzanillo,-77.102726,20.247315,6.0,1313.2990748714656,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,309.40968411043286,discrepancia_poblacional
-us7000nr0v,9,CU1006,Majibacoa,-76.775379,20.844881,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0505,Cauto Cristo,-76.607485,20.618377,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0512,Río Cauto,-76.979934,20.601591,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
-us7000nr0v,9,CU0704,Cacocum,-76.455671,20.757609,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU1001,Amancio,-77.642546,20.797192,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU1002,Colombia,-77.45256,20.855745,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
-us7000nr0v,9,CU0503,Buey Arriba,-76.715128,20.127342,6.0,34.91010046005249,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0714,Urbano Noris,-76.213871,20.608387,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0510,Niquero,-77.570855,19.939119,6.0,1671.6204245388508,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us7000nr0v,9,CU0705,Calixto García,-76.569603,20.881369,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,pop_65p_mmi6p,bld_mmi6p,built_m2_mmi6p,health_mmi6p,edu_mmi6p,road_km_mmi6p,road_km_principal_mmi6p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
+#meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#population+age65+mmi6,#infra+buildings+mmi6,#infra+built+area+mmi6,#infra+health+mmi6,#infra+education+mmi6,#infra+roads+km+mmi6,#infra+roads+km+primary+mmi6,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
+us7000nr0v,9,CU0511,Pilón,-77.248697,19.937153,7.0,30171.60373160988,2960.987789724022,0.0,335.18432726078845,4281.371721960099,13369.0,1162701.0,8,20,320.43948472155233,41.87312473141949,1561.0,143702.0,1,7,37.50642589618162,15.004597685668262,0.0,223.77799612656236,"discrepancia_poblacional,construido_no_mapeado,discrepancia_poblacional"
+us7000nr0v,9,CU1502,Guamá,-76.505855,19.996562,7.0,3781.542118728161,275.445321418345,0.0,30.411447945145483,153.38680292027493,2061.0,65682.0,0,0,41.83491084476778,21.697036956970287,314.0,4785.0,0,0,11.806712828554405,6.315663229866819,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0501,Bartolomé Masó,-76.941251,20.080708,7.0,49497.833175331354,54.75324557721615,0.0,13.219283986185474,7721.924522899814,27276.0,697147.0,6,22,412.12241028071895,41.097891020966784,138.0,751.0,0,0,6.486437271988143,6.298638184447384,0.0,2595.785349957645,discrepancia_poblacional
+us7000nr0v,9,CU0512,Río Cauto,-76.979934,20.601591,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us7000nr0v,9,CU0704,Cacocum,-76.455671,20.757609,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU1001,Amancio,-77.642546,20.797192,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU1002,Colombia,-77.45256,20.855745,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us7000nr0v,9,CU0503,Buey Arriba,-76.715128,20.127342,6.0,34.91010046005249,0.0,0.0,0.0,21.164137014129665,152.0,833.0,0,0,2.6827959616821593,0.9842209281411161,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0714,Urbano Noris,-76.213871,20.608387,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0510,Niquero,-77.570855,19.939119,6.0,1671.6204245388508,0.0,0.0,0.0,813.010877230874,4373.0,66994.0,0,1,196.48334213808542,9.250810730733715,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0705,Calixto García,-76.569603,20.881369,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us7000nr0v,9,CU0504,Campechuela,-77.241979,20.118427,6.5,3225.767728112638,0.0,0.0,0.0,1868.7374597865128,9874.0,127887.0,1,2,249.96274360882964,14.155690393054233,0.0,0.0,0,0,0.0,0.0,0.0,158.58373018354177,discrepancia_poblacional
+us7000nr0v,9,CU0513,Yara,-76.95959,20.35517,6.0,49920.84772238135,0.0,0.0,0.0,6537.056597076236,16134.0,786973.0,5,28,309.49458713457693,26.77573458476438,0.0,0.0,0,0,0.0,0.0,0.0,33019.67756333947,discrepancia_poblacional
+us7000nr0v,9,CU0509,Media Luna,-77.396381,20.068663,6.5,33400.09518179856,0.0,0.0,0.0,5083.35974605067,16849.0,597368.0,5,24,320.8810852569057,35.26213509009577,0.0,0.0,0,0,0.0,0.0,0.0,536.7664102613926,discrepancia_poblacional
+us7000nr0v,9,CU1005,Las Tunas,-77.033902,20.935539,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0507,Jiguaní,-76.386115,20.422345,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us7000nr0v,9,CU1004,Jobabo,-77.247784,20.848218,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0502,Bayamo,-76.686136,20.425113,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0506,Guisa,-76.520869,20.178538,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us7000nr0v,9,CU1501,Contramaestre,-76.221122,20.324079,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0508,Manzanillo,-77.102726,20.247315,6.0,1313.2990748714656,0.0,0.0,0.0,1130.825699555251,5596.0,73601.0,3,2,200.40691058223598,16.744638796384336,0.0,0.0,0,0,0.0,0.0,0.0,309.40968411043286,discrepancia_poblacional
+us7000nr0v,9,CU1006,Majibacoa,-76.775379,20.844881,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us7000nr0v,9,CU0505,Cauto Cristo,-76.607485,20.618377,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
