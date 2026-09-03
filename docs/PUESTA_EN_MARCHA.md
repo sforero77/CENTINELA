@@ -8,7 +8,7 @@ operado nunca solo. Estos cinco pasos son los que lo encienden.
 
 ---
 
-## Paso 0 — Herramientas
+## Paso 0: Herramientas
 
 Hace falta `gh`, el CLI de GitHub. En Windows:
 
@@ -32,7 +32,7 @@ Si `uv` se queda colgado bajando Python, aislalo: `uv python install 3.12`.
 
 ---
 
-## Paso 1 — Fusionar el PR
+## Paso 1: Fusionar el PR
 
 `main` sigue en el commit inicial; todo el sistema vive en la rama.
 
@@ -49,7 +49,7 @@ Hasta que esto pase, el trigger no se dispara aunque el cron exista.
 
 ---
 
-## Paso 2 — Publicar el activo de exposición
+## Paso 2: Publicar el activo de exposición
 
 `impact.yml` **falla a propósito** si no encuentra un Release `exposure-col-*`.
 Es deliberado: operar sin activo produciría un reporte de ceros en vez de un
@@ -64,7 +64,7 @@ gh run watch
 
 Ese workflow construye el activo **y publica el Release** en un solo paso. Es la
 vía preferible por tres razones: corre en la red de GitHub (donde el paso lento
-—leer Overture en remoto— son minutos y no horas), no depende de tu conexión, y
+(leer Overture en remoto) son minutos y no horas), no depende de tu conexión, y
 de paso **prueba el workflow trimestral** antes de que tenga que correr solo.
 
 Requiere haber hecho el paso 1: los workflows solo corren desde la rama por
@@ -98,7 +98,7 @@ curl -s -o NUL -w "%{speed_download} B/s`n" --max-time 60 -r 0-10485760 `
 Por debajo de ~1 MB/s, usa la vía de CI.
 
 **Cuenta con ~1 GB de descarga, no con los "20 minutos" que decía la
-documentación vieja.** Medido sobre la corrida real de Colombia — 89 archivos,
+documentación vieja.** Medido sobre la corrida real de Colombia: 89 archivos,
 **1.053 MB**:
 
 | Fuente | Descarga | Nota |
@@ -145,10 +145,10 @@ construido -> ficheros de Overture seleccionados (**11**) -> activo ensamblado
 
 **Si falla**, el mensaje dice que hacer. Los dos casos previstos:
 
-- `El activo no pasa los asserts de calidad: La capa 'X' no aporto nada` — una
+- `El activo no pasa los asserts de calidad: La capa 'X' no aporto nada`: una
   capa se construyó vacía. **No publiques ese activo**: es exactamente el cero
   silencioso que el assert existe para atrapar.
-- `Ningun fichero de buildings del release ... toca la caja de COL` — el release
+- `Ningun fichero de buildings del release ... toca la caja de COL`: el release
   de Overture caduco. Overture solo conserva **dos** releases, así que cada
   ~2 meses hay que actualizar el `vintage` en `data/manifests/COL.yaml`. La
   prueba nocturna avisa de esto antes de que te pase aquí.
@@ -170,8 +170,8 @@ RNF-04 y hoy están vacios:
 centinela fijar-insumos COL
 ```
 
-Lee el bloque `insumos` de `medicion.json` —el que se publica en el Release al
-lado del parquet— y escribe cada `insumos_sha256` en su fuente del manifest, sin
+Lee el bloque `insumos` de `medicion.json` (el que se publica en el Release al
+lado del parquet) y escribe cada `insumos_sha256` en su fuente del manifest, sin
 tocar la prosa. A partir de ahí, un insumo republicado por un tercero detiene el
 build en la descarga en vez de fallar dos horas después. No se anota a mano: con
 194 fuentes en diecinueve países, copiar a mano no es tedioso, es que no ocurre.
@@ -185,7 +185,7 @@ a lanzar el comando continua donde iba.
 
 ---
 
-## Paso 3 — Habilitar GitHub Pages
+## Paso 3: Habilitar GitHub Pages
 
 `Settings -> Pages -> Build and deployment -> Source: GitHub Actions`.
 
@@ -204,7 +204,7 @@ Al terminar, `https://sforero77.github.io/CENTINELA/` muestra el visor y
 
 ---
 
-## Paso 4 — Monitor externo
+## Paso 4: Monitor externo
 
 Este paso parece burocrático y es el que más protege el proyecto.
 
@@ -229,7 +229,7 @@ a "up" en healthchecks.io.
 
 ---
 
-## Paso 5 — Probar el circuito completo
+## Paso 5: Probar el circuito completo
 
 Antes de que llegue un sismo de verdad.
 
@@ -249,7 +249,7 @@ reprocesar el backtest del Chocó, que ya tiene su `event_state`:
 gh workflow run impact.yml -f usgs_id=us6000tjl2
 ```
 
-Contestara `omitir: ya procesado en ShakeMap v7` — eso **es** el resultado
+Contestara `omitir: ya procesado en ShakeMap v7`: eso **es** el resultado
 correcto: es la idempotencia de RF-02 funcionando. Que responda eso prueba que
 el workflow encontró el Release, bajo el activo y llegó hasta la decisión.
 
@@ -274,7 +274,7 @@ para publicar el hilo de `reports/<id>/hilo.txt`. El sistema lo genera pero
 
 ## Tareas que no bloquean, cuando tengas tiempo
 
-### Venezuela — cierra la aserción (b) de G2
+### Venezuela: cierra la aserción (b) de G2
 
 El activo ya está construido y publicado (`exposure-ven-20260824`). Lo que falta
 es el **reporte** de los dos mainshocks del 24-jun-2026, que además estrena el
@@ -295,8 +295,8 @@ gh workflow run impact.yml -f usgs_id=us6000t7zp -f backtest=true
 gh workflow run impact.yml -f usgs_id=us6000t7zc -f backtest=true
 ```
 
-`-f backtest=true` reconstruye el `event_state` que P1 nunca creo —el feed que
-vigila es el de la última hora, no un sismo de hace dos meses— y lo marca como
+`-f backtest=true` reconstruye el `event_state` que P1 nunca creo (el feed que
+vigila es el de la última hora, no un sismo de hace dos meses) y lo marca como
 retrospectivo: su latencia de dos meses no entra en el p50/p95, y el reporte
 lleva el aviso de que la población es de la época pero las edificaciones y las
 vías son las de hoy.
@@ -315,8 +315,8 @@ censal de 2010 y no modela la emigración venezolana. Que el assert falle sería
 un hallazgo publicable, no un bug: significaria que la cadena poblacional no
 sirve igual en un país sin censo reciente, y el reporte tiene que decirlo.
 
-(La codificacion de los topónimos estaba anotada como rota —«Falc?n» por
-«Falcón»— y **no lo esta**. Verificado byte a byte sobre el parquet publicado:
+(La codificacion de los topónimos estaba anotada como rota («Falc?n» por
+«Falcón») y **no lo esta**. Verificado byte a byte sobre el parquet publicado:
 `46 61 6c 63 c3 b3 6e`, UTF-8 correcto. Eran los interrogantes de la consola de
 Windows.)
 
@@ -333,8 +333,8 @@ foreach ($iso in "ARG","BOL","BRA","CHL","COL","CRI","CUB","DOM","ECU","GTM",
 }
 ```
 
-Cuando terminen, la medición de cada uno viaja en su Release —`medicion.json`,
-un kilobyte— y de ahí sale la recalibracion:
+Cuando terminen, la medición de cada uno viaja en su Release (`medicion.json`,
+un kilobyte) y de ahí sale la recalibracion:
 
 ```powershell
 foreach ($iso in "arg","bol","bra","chl","col","cri","cub","dom","ecu","gtm",
@@ -351,7 +351,7 @@ automático; ensancharla no**: si el desvío medido se sale de la vigente, el
 comando lo dice y no toca nada, porque aflojar la alarma para que deje de sonar
 es lo que uno hace con prisa y no debe automatizarse.
 
-### T0.10 — la cifra exacta del DANE
+### T0.10: la cifra exacta del DANE
 
 `COL.yaml` usa 53.000.000, que es el redondeo de la nota técnica. El valor
 exacto está en el anexo en Excel de las proyecciones de población del DANE

@@ -14,7 +14,7 @@ mantenerlo sin presupuesto y para que cualquiera pueda reproducirlo.
 
 ```mermaid
 flowchart TB
-  subgraph almacen["Almacenamiento — todo es git o GitHub"]
+  subgraph almacen["Almacenamiento · todo es git o GitHub"]
     direction LR
     A1["<b>events/</b><br/>event_state por evento<br/><i>la base de datos</i>"]
     A2["<b>reports/</b><br/>artefactos publicados"]
@@ -22,12 +22,12 @@ flowchart TB
     A4["<b>Releases</b><br/>activo GeoParquet<br/><i>pesa, no va en git</i>"]
   end
 
-  subgraph computo["Cómputo — efímero, en el runner"]
+  subgraph computo["Cómputo · efímero, en el runner"]
     C1["DuckDB<br/><i>spatial + h3</i>"]
     C2["Pipelines Python 3.12"]
   end
 
-  subgraph entrega["Entrega — estática"]
+  subgraph entrega["Entrega · estática"]
     E1["GitHub Pages"]
     E2["Visor MapLibre"]
   end
@@ -63,8 +63,8 @@ nadie llamaba.
 
 ### Lo que hace un runner de GitHub Actions
 
-Todo el trabajo pesado —polyfill H3, muestreo de ráster, joins de millones de
-celdas— ocurre dentro de un runner gratuito, leyendo GeoParquet particionado
+Todo el trabajo pesado (polyfill H3, muestreo de ráster, joins de millones de
+celdas) ocurre dentro de un runner gratuito, leyendo GeoParquet particionado
 directamente con DuckDB. No hay warehouse ni cluster porque no hace falta:
 la unidad de análisis es la celda y el particionado Hive (`iso3=/layer=`)
 permite leer solo el país que importa.

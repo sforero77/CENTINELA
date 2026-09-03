@@ -48,20 +48,20 @@ resolución más arriba.
 
 Y «~0,74 km²» es una **media**, no una constante: H3 no es equiárea. Sobre
 LATAM, una celda r8 va de 0,48 a 0,89 km² según la latitud. Para sumar población
-da igual —se suma lo que hay en la celda, no su área— pero para cualquier cifra
+da igual (se suma lo que hay en la celda, no su área) pero para cualquier cifra
 por unidad de superficie no da igual, y `cell_area` existe para eso.
 
 > **Esas dos cifras se confundieron durante meses, y costó caro.** Este mismo
 > documento decía que una celda r8 medía 5,2 km², que es el área de r7. El visor
-> se lo creyó: la capa de incendios publica celdas r8 sin agregar —P5 no pasa por
-> el `cell_to_parent` que sí hace el lado sísmico— y multiplicaba por 5,2. **Cada
+> se lo creyó: la capa de incendios publica celdas r8 sin agregar (P5 no pasa por
+> el `cell_to_parent` que sí hace el lado sísmico) y multiplicaba por 5,2. **Cada
 > área de foco salía siete veces mayor de lo real**, y el rótulo prometía
 > hexágonos de 5,2 km² sobre hexágonos de 0,74. Encontrado el 31-ago-2026
 > revisando los textos del visor, no por una prueba.
 
 Por qué hexágonos y no una grilla: los hexágonos tienen todos los vecinos a la
 misma distancia, no tienen la distorsión de área de una grilla en latitud, y
-H3 es un estándar con implementaciones en todas partes — incluido el navegador,
+H3 es un estándar con implementaciones en todas partes, incluido el navegador,
 que es cómo el visor dibuja las celdas sin servidor.
 
 ## Lo que el sistema NO agrega

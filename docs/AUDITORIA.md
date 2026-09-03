@@ -44,8 +44,8 @@ al lado:
 > todo el sistema.»
 
 Pero `trigger.yml` condicionaba el commit a `hay_trabajo == 'true'`. En una
-corrida tranquila —el caso normal, y **exactamente el caso que el latido existe
-para vigilar**— el fichero se escribia en el runner y se tiraba.
+corrida tranquila (el caso normal, y **exactamente el caso que el latido existe
+para vigilar**) el fichero se escribia en el runner y se tiraba.
 
 **Evidencia.** `site/status.json` llevaba `"latidos": []` después de 20+
 corridas exitosas el mismo día. La página pública decía «Sin latidos
@@ -67,7 +67,7 @@ schedules contra la desactivacion a los 60 días.
 
 **Severidad:** alta · **Estado:** ✅ cerrada
 
-`impact.yml` hacia `git add events/ reports/` — sin `site/status.json` y sin
+`impact.yml` hacia `git add events/ reports/`, sin `site/status.json` y sin
 llamar a `centinela status`.
 
 **Evidencia.** Los tres reportes se publicaron el 25-ago a las 03:2x;
@@ -88,7 +88,7 @@ la misma corrida.
 
 `exposure_quarterly.yml` fijaba `ISO3: ${{ inputs.iso3 || 'COL' }}`. El
 comentario de al lado todavía decía «Fase 0 construye un solo país. Cuando Fase
-1 traiga los siete, esto vuelve a ser una matriz» — pero Fase 1 ya había
+1 traiga los siete, esto vuelve a ser una matriz», pero Fase 1 ya había
 ocurrido: hay 18 activos publicados.
 
 **Por qué urge.** Los 19 manifests fijan el mismo release de Overture,
@@ -104,7 +104,7 @@ un solo país sigue funcionando igual.
 
 **Severidad:** media-alta · **Estado:** ✅ cerrada
 
-Único documento sin tocar desde el 23-ago 22:50 — antes de reconstruir el activo
+Único documento sin tocar desde el 23-ago 22:50: antes de reconstruir el activo
 (col-v0.4 → col-v0.5) y de regenerar los reportes. Cinco de nueve filas del
 backtest del Chocó no coincidian con `reports/us6000tjl2/report.json`:
 
@@ -136,7 +136,7 @@ desincroniza; una tabla con prueba, no.
 | `p3_report/celdas.py` | **0 %** | Escribe `celdas.json`, el fichero que dibuja el visor |
 
 Los dos últimos solo se importan, en import diferido, desde dentro de funciones
-de `build.py` y `run.py` — en tramos que la cobertura marcaba sin ejecutar.
+de `build.py` y `run.py`, en tramos que la cobertura marcaba sin ejecutar.
 
 **Por qué importa más que el número.** Es literalmente la clase de fallo que
 este proyecto ya se cazó tres veces: `static_map.py` no tenía pruebas y publicó
@@ -152,8 +152,8 @@ real, no solo la función. Para `cli.py` eso significa despachar subcomandos.
 
 **Severidad:** media · **Estado:** ✅ cerrada
 
-`exposure_join.check_quality()` —`pop_negativa`, `pop_nula`,
-`crosswalk_incompleto`— no se llamaba en producción **ni en las pruebas**. Su
+`exposure_join.check_quality()` (`pop_negativa`, `pop_nula`,
+`crosswalk_incompleto`) no se llamaba en producción **ni en las pruebas**. Su
 llamador previsto, `run_join()`, cuya docstring afirmaba «corre los asserts de
 calidad de §6.4 sobre el resultado», estaba muerto también:
 `pipeline.compute_impact()` lo reemplazo y hace el register + SQL en línea, sin
@@ -167,14 +167,14 @@ que no tenerlo: ocupa el sitio de la vigilancia que no existe.
 
 **Severidad:** media · **Estado:** ✅ cerrada
 
-- **`hdx.resolve_resource`** — 40 líneas, **11 referencias en pruebas**, cero
+- **`hdx.resolve_resource`**: 40 líneas, **11 referencias en pruebas**, cero
   llamadores. La reemplazo `resolve_attempts`, que es la que usa `download.py`.
   Las pruebas probaban la muerta.
-- **`licensing.assert_publishable_in_report`** — la guarda que impide que una
+- **`licensing.assert_publishable_in_report`**: la guarda que impide que una
   fuente NC alimente el reporte automático. Probada, nunca invocada.
 - `products.fetch_products`, `paths.ensure_workspace`, `paths.report_dir`,
-  `crosswalk.validate_fractions`, `crosswalk.prorate` — sin llamador.
-- `exposure_join.QUALITY_FLAGS` — copia inerte de `build.SQL_FLAGS`, que es la
+  `crosswalk.validate_fractions`, `crosswalk.prorate`: sin llamador.
+- `exposure_join.QUALITY_FLAGS`: copia inerte de `build.SQL_FLAGS`, que es la
   viva. Identicas hoy; dos copias de la misma regla es una trampa de deriva.
 
 En un proyecto cuyo fallo recurrente es «una función escrita no es una función
@@ -190,7 +190,7 @@ nunca en el limbo. Y una prueba impide que el limbo vuelva.
 
 - `docs/OPERACION.md` §6 listaba como abiertos «PMTiles del visor (hoy el mapa
   esta vacío)» y «RF-03… se calcula por radios pero no se emite». Ambos
-  cerrados. Su §4 decía «solo Colombia está medida» — son 18.
+  cerrados. Su §4 decía «solo Colombia está medida»: son 18.
 - `PENDIENTES.md` §2.1 decía que faltaba correr el backtest de Venezuela (esta
   publicado) y que su tolerancia era 5 % (es 5,44, **estrechada** desde 8,0).
   §2.5 decía que los países nuevos llevan «un 5 % provisional».
@@ -214,7 +214,7 @@ mapas de un reporte publicado, o de todos, desde sus artefactos en disco.
 # Lo que apareció mientras se arreglaba
 
 Cinco hallazgos que no estaban en la auditoría inicial. Los cuatro primeros
-salieron de A5 y A7 — de escribir las pruebas que faltaban y de mirar el grafo
+salieron de A5 y A7: de escribir las pruebas que faltaban y de mirar el grafo
 de llamadas con cuidado. Eso es lo que se esperaba de ellos.
 
 ## A11 · Un PROJ del sistema dejaba inservible todo el pipeline geo
@@ -241,7 +241,7 @@ O4 dice que el sistema construye un país desde un clon limpio **sin
 dependencias del sistema**. Un PROJ del sistema es una dependencia del sistema,
 y encima una que nadie eligio.
 
-`ensure_bundled_proj()` la aparta antes de cada import de GDAL/PROJ — tiene que
+`ensure_bundled_proj()` la aparta antes de cada import de GDAL/PROJ, y tiene que
 ser antes, porque GDAL fija su ruta de búsqueda al inicializarse y después ya no
 la relee. Hay escape (`CENTINELA_RESPETA_PROJ=1`) para quien de verdad necesite
 rejillas geoidales nacionales.
@@ -256,8 +256,8 @@ existía, `markdown.py` renderizaba la sección, `format_delta_prose` daba
 exactamente ese formato. **Ninguna línea del pipeline lo llenaba**, así que la
 sección no apareció en un solo reporte publicado.
 
-Importa durante una emergencia: un ShakeMap se revisa muchas veces —el de
-Venezuela llegó a v14— y quien ya leyó la versión anterior necesita saber que
+Importa durante una emergencia: un ShakeMap se revisa muchas veces (el de
+Venezuela llegó a v14) y quien ya leyó la versión anterior necesita saber que
 cambio, no releerla entera.
 
 Se compara la cifra **ya redondeada**, no la exacta: si una revisión mueve la
@@ -275,7 +275,7 @@ por un reclamo». Ni ella ni `map_license` tenían un solo llamador.
 
 Es el peor sitio para ese hueco. La contaminación entre cubos es el riesgo que
 la espec clasifica de impacto alto (§7), el manifest fija la licencia una vez y
-a mano, y un publicador que la cambie —de CC BY a CC BY-NC— dejaria el activo
+a mano, y un publicador que la cambie (de CC BY a CC BY-NC) dejaria el activo
 con una fuente que el reporte no puede consumir, con todo pasando en verde.
 
 Ahora `download_hdx` la contrasta antes de bajar un byte, y **falla el build**:
@@ -304,7 +304,7 @@ sensación de seguridad y no cubre nada.
 Tras arreglar A11, las pruebas nuevas de `raster_h3` pasaban en la suite
 completa y fallaban sueltas: para cuando les llegaba el turno, otro módulo ya
 había llamado a `ensure_bundled_proj()`. Verde por orden de ejecución, que es
-peor que rojo — desaparece en cuanto alguien corre una prueba sola o pytest
+peor que rojo: desaparece en cuanto alguien corre una prueba sola o pytest
 reordena.
 
 La llamada vive ahora en `tests/conftest.py`, antes de que ningún módulo de
@@ -337,7 +337,7 @@ Lo más incomodo del hallazgo: **el diseño correcto estaba escrito desde el
 principio y en dos sitios**. Las docstrings de `countries_for_point` y de
 `paises-candidatos` dicen que el llamador «prueba en ese orden y el join contra
 las celdas H3 desempata de verdad». El workflow no lo hacia. Es el mismo patrón
-de A5 y A7 —lo escrito y lo conectado— pero en el peor sitio posible.
+de A5 y A7 (lo escrito y lo conectado) pero en el peor sitio posible.
 
 Cerrado con un código de salida propio (`3`, "este activo no es de este sismo")
 que el workflow distingue de un fallo real, y un bucle que prueba los candidatos
@@ -348,8 +348,8 @@ personas en MMI≥7.
 
 **Severidad:** alta · **Estado:** ✅ cerrada
 
-El producto entero —el titular del visor, el ranking municipal, la tabla del
-markdown, el círculo del epicentro, el hilo— daba por supuesto que MMI≥7 es *la*
+El producto entero (el titular del visor, el ranking municipal, la tabla del
+markdown, el círculo del epicentro, el hilo) daba por supuesto que MMI≥7 es *la*
 banda. Sobre los primeros dieciocho reportes del catálogo LATAM, **ocho no
 alcanzan MMI≥7 sobre población**. El 44 %.
 
@@ -357,8 +357,8 @@ No son casos raros: son los sismos profundos y los de mar adentro, que en esta
 región son la mitad del catálogo. Para ellos el sistema publicaba:
 
 * una cifra grande que decía **0 personas**,
-* una tabla de "municipios más expuestos" ordenada por una columna de ceros —o
-  sea, en orden alfabético—,
+* una tabla de "municipios más expuestos" ordenada por una columna de ceros (o
+  sea, en orden alfabético),
 * y quince ceros bajo un rótulo que prometía cifras.
 
 **Tehuantepec 2017 se publicaba así.** Un M8,2 con 98 muertos, cuyo máximo sobre
@@ -367,14 +367,14 @@ salía como "0 personas en MMI≥7" con una tabla alfabetica debajo. Un cero es
 cierto y se lee como que el sistema fallo, o como que el sismo no fue nada.
 
 Cerrado con `Totales.banda_titular`: la banda más alta que alcanzo población.
-Con ella se titula, se ordena y se rotula. Cuando el evento llega a MMI≥7 —el
-caso normal— no cambia absolutamente nada.
+Con ella se titula, se ordena y se rotula. Cuando el evento llega a MMI≥7 (el
+caso normal) no cambia absolutamente nada.
 
 ## A18 · El producto nombraba sus sismos en inglés
 
 **Severidad:** media-alta · **Estado:** ✅ cerrada
 
-USGS publica el lugar en inglés —`20 km W of Catia La Mar, Venezuela`— y esa
+USGS publica el lugar en inglés (`20 km W of Catia La Mar, Venezuela`) y esa
 cadena viajaba tal cual al título del reporte, al hilo para redes, al mapa
 estático y al visor. RF-06 pide "reporte en español neutro con topónimos
 oficiales del país": la segunda mitad se cumplia, la primera no.
@@ -383,7 +383,7 @@ Se notaba poco porque el único reporte publicado era el del Chocó, cuyo lugar
 venía de una fixture escrita a mano en español. En cuanto entraron diecisiete
 eventos reales, el tablero quedó en inglés.
 
-`traducir_lugar` traduce el andamiaje —`W of` → `al O de`, `Mexico` → `México`—
+`traducir_lugar` traduce el andamiaje (`W of` → `al O de`, `Mexico` → `México`)
 y **nunca el topónimo**: `Catia La Mar` es un nombre propio, y traducirlo
 produciría lugares que no existen en ningún mapa oficial. Ante una forma que no
 reconoce devuelve el original: un lugar en inglés se lee raro, uno mal traducido
@@ -397,7 +397,7 @@ La columna de codigos del reporte decía "DIVIPOLA", que es el código municipal
 **de Colombia**. En el reporte de Tehuantepec rotulaba `MX20043` como DIVIPOLA.
 
 Es la marca de agua de un sistema que se construyó con un país y se declaro
-regional. Ahora se rotula por lo que es —un código de municipio— y el país lo
+regional. Ahora se rotula por lo que es (un código de municipio) y el país lo
 pone el manifest.
 
 ## A20 · El visor no decía que el sistema es regional
@@ -407,11 +407,11 @@ pone el manifest.
 El tablero listaba eventos y nada más. Con tres reportes de dos países eso se
 lee como una demo, y lo que hay detrás no lo es: **dieciocho países con su
 activo construido, medido contra la cifra oficial de su instituto o de la ONU, y
-publicado — 430,9 millones de personas ya en la malla hexagonal, calculadas
+publicado: 430,9 millones de personas ya en la malla hexagonal, calculadas
 antes de que ocurra nada**.
 
-Ese hecho responde la pregunta que se hace quien llega —*¿esto sirve para mi
-país?*— y no aparecia en ninguna pantalla. La respuesta que daba el tablero,
+Ese hecho responde la pregunta que se hace quien llega (*¿esto sirve para mi
+país?*) y no aparecia en ninguna pantalla. La respuesta que daba el tablero,
 por omisión, era que no.
 
 `site/cobertura.json` sale de los manifests y no de un listado aparte, para que
@@ -424,7 +424,7 @@ verdad. Brasil aparece marcado como pendiente en vez de esconderse.
 **Severidad:** media · **Estado:** ✅ cerrada
 
 Al buscar históricos para los seis países que no tenían ninguno, la respuesta
-resultó ser distinta en cada caso — y el tablero los mostraba igual, como un
+resultó ser distinta en cada caso, y el tablero los mostraba igual, como un
 hueco.
 
 **Paraguay y Uruguay no han tenido un solo sismo M≥5,5 desde el año 2000.**
@@ -438,11 +438,11 @@ M≥5,5 desde 2000 están todos entre 534 y **645** km de profundidad, en Acre, 
 recontado el 1-sep-2026, el más profundo es `usp000fgsv` a 644,9 km. La
 conclusión no cambia: cuanto más profundo, menos superficie que medir.) Un sistema que calcula sobre
 `cont_mmi` no tiene nada que calcular ahí. Construir su activo sigue teniendo
-sentido —un sismo somero raro en la costa cambiaria eso en un día— pero
+sentido (un sismo somero raro en la costa cambiaria eso en un día) pero
 conviene decir por que su casilla de reportes esta vacía.
 
 **Argentina y Republica Dominicana si tenían eventos**, y no aparecían porque
-el primer lote se busco con umbral M6,3 —el sistema dispara a M5,5— y porque
+el primer lote se busco con umbral M6,3 (el sistema dispara a M5,5) y porque
 las cajas envolventes de Argentina y Bolivia se llenan de sismos chilenos, que
 tapaban a los suyos al ordenar por relevancia. Ya tienen reporte: Pocito 2021
 (M6,4, San Juan) y Baní 2012 (M5,5).
@@ -450,8 +450,8 @@ tapaban a los suyos al ordenar por relevancia. Ya tienen reporte: Pocito 2021
 **Bolivia resultó NO ser el caso de Brasil, y esta sección lo dijo al revés
 durante seis días.** Decía que sus veintidós sismos M≥5,5 desde 2000 estaban
 «entre 359 y 596 km». Recontado el 1-sep-2026 contra el catálogo de USGS, van
-**de 33 a 608 km**, y el más somero —`usp000ahzc`, M6,2 del 4-jul-2001, cerca de
-Colomi— tiene MMI modelada de 6,4 y publica `cont_mmi.json`.
+**de 33 a 608 km**, y el más somero (`usp000ahzc`, M6,2 del 4-jul-2001, cerca de
+Colomi) tiene MMI modelada de 6,4 y publica `cont_mmi.json`.
 
 **La causa es la que esta misma sección describe dos parrafos más abajo**, y por
 eso duele: la búsqueda se ordenó por relevancia sobre una caja envolvente que se
@@ -465,7 +465,7 @@ en `PENDIENTES.md` §2.1.bis, y `tests/integration/test_silencio_de_paises_live.
 vuelve a comprobarlo contra USGS en cada corrida nocturna.
 
 **Y el descarte por país se estreno en real.** De los tres eventos dominicanos
-probados, dos —ambos frente a Punta Cana, a 77 y 102 km mar adentro— salieron
+probados, dos (ambos frente a Punta Cana, a 77 y 102 km mar adentro) salieron
 con código 3: el activo dominicano no los alcanza. Con el comportamiento
 anterior habrían publicado un reporte de ceros.
 
@@ -490,12 +490,12 @@ consola**. El panel lateral cargaba entero, así que ni siquiera parecia roto:
 parecia un mapa que no tiene nada que enseñar.
 
 El mismo enlace con la caché caliente funciona. Es una carrera, y le toca justo
-a **quien abre por primera vez un enlace que alguien le compartió** — el único
+a **quien abre por primera vez un enlace que alguien le compartió**: el único
 público que este visor tiene hasta que ocurra el primer sismo en vivo.
 
 La causa: `cuandoElEstiloEsteListo` usaba `m.once("load", fn)`. Ese evento
 dispara **una sola vez**. Si ya disparo y `isStyleLoaded()` sigue devolviendo
-false —cosa que pasa mientras una fuente está en vuelo— el callback queda
+false (cosa que pasa mientras una fuente está en vuelo) el callback queda
 registrado para algo que no volverá a ocurrir. Se cambia por `styledata` +
 `idle`, que entre los dos no dejan ventana.
 
@@ -534,14 +534,14 @@ Es la primera pregunta ante una celda sacudida, y la que separa «esta cerca» d
 Se calcula con **el mismo radio terrestre que usa el pipeline**
 (`pipelines/common/geo.py`). Dos números distintos para la misma distancia, uno
 en el mapa y otro en el reporte, es la clase de discrepancia que destruye la
-confianza en todo lo demás — y hay una prueba que compara las dos formulas.
+confianza en todo lo demás, y hay una prueba que compara las dos formulas.
 
 ## A26 · La profundidad estaba enterrada, y es lo que explica el catálogo
 
 **Severidad:** media · **Estado:** ✅ cerrada
 
 Vivía en una línea de metadatos, entre la fecha y la versión del ShakeMap. A
-igual magnitud, la profundidad decide cuanto se siente en superficie — o sea que
+igual magnitud, la profundidad decide cuanto se siente en superficie: o sea que
 es **exactamente lo que explica los casos raros del catálogo**: Tehuantepec fue
 un M8,2 y su máximo sobre población mexicana es MMI 6,5; los veintidós sismos
 bolivianos van de 33 a 608 km, y el más somero si produce celdas: ver arriba y
@@ -561,8 +561,8 @@ afectación del terremoto». No estaba.
 
 La malla H3 llega **hasta donde hay algo expuesto** y se corta ahí, con huecos
 que son ausencia de población y no de sacudida. La nota de la leyenda lo
-admitia —«el hueco no es ausencia de sacudida, es ausencia de gente y de
-infraestructura»— y aun así era lo único que el visor dibujaba. Enseñaba **la
+admitia («el hueco no es ausencia de sacudida, es ausencia de gente y de
+infraestructura») y aun así era lo único que el visor dibujaba. Enseñaba **la
 forma de la población recortada por el sismo**, y quien preguntaba hasta donde
 llegó el terremoto no tenía donde mirarlo.
 
@@ -570,13 +570,13 @@ Medido sobre Baláo 2023: el área sentida (MMI 4) mide unos 410 km de lado y la
 que el sistema cuantifica (MMI≥6) unos 180. **Cuatro veces más ancha**, y toda
 esa diferencia quedaba fuera del tablero.
 
-Lo más incomodo: **el pipeline ya descargaba los contornos en cada evento** —son
-la entrada del polyfill que produce la malla— y los tiraba al terminar. El dato
+Lo más incomodo: **el pipeline ya descargaba los contornos en cada evento** (son
+la entrada del polyfill que produce la malla) y los tiraba al terminar. El dato
 estaba, pasaba por las manos del sistema y no llegaba a ninguna pantalla.
 
 Ahora `contornos.json` viaja con cada reporte (unos 20 kB) y el visor dibuja las
 isolíneas **debajo** de la malla: donde hay hexágonos manda el dato, y fuera de
-ellos la línea es lo único — que es justo donde hacia falta. La de MMI 6 va más
+ellos la línea es lo único: que es justo donde hacia falta. La de MMI 6 va más
 gruesa, porque es la frontera desde la que este sistema publica cifras. Por
 debajo de 6 van en gris: son niveles que se sienten y que el sistema **no
 cuantifica**, y pintarlos con la rampa de intensidad sugeriría que si.
@@ -586,7 +586,7 @@ epicentro. No el de MMI 4: en un M8 abarca medio continente y dejaria la malla
 del tamaño de un sello.
 
 Los 21 reportes ya publicados se rellenaron con `centinela contornos`, que los
-trae de USGS sin recomputar el impacto — un comando y no un script de usar y
+trae de USGS sin recomputar el impacto: un comando y no un script de usar y
 tirar, por lo mismo que existe `regenerar-mapas`.
 
 ## Lo que se revisó y estaba bien
@@ -617,7 +617,7 @@ La auditoría incorporo una revisión contra los principios de *Clean Code*
 significa **aquí**, está en [`CLEAN_CODE.md`](CLEAN_CODE.md).
 
 La regla que más trabajo dio no es de estilo: **«always find root cause»**.
-Cinco de los nueve hallazgos son la misma causa raíz —una función escrita y no
-conectada— apareciendo en cinco sitios distintos. Arreglarlos uno a uno sin
+Cinco de los nueve hallazgos son la misma causa raíz (una función escrita y no
+conectada) apareciendo en cinco sitios distintos. Arreglarlos uno a uno sin
 nombrar el patrón habría dejado el sexto para la proxima auditoría. Por eso A5
 y A7 cierran con **pruebas que vigilan el patrón**, no solo con los arreglos.

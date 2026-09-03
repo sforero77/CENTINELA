@@ -10,8 +10,8 @@ Un HTML, un CSS y un JS. **Cero backend, cero llaves de API** (D6).
 
 ## La regla que lo ordena todo
 
-> Todo lo que se ve sale de artefactos que **ya se publican para descargar** —
-> `report.json`, `adm2.csv`, `celdas.json`— así que lo que hay en pantalla no
+> Todo lo que se ve sale de artefactos que **ya se publican para descargar**:
+> `report.json`, `adm2.csv`, `celdas.json`, así que lo que hay en pantalla no
 > puede divergir de lo que se lleva quien los baja. El visor no tiene una
 > fuente propia, y esa es la idea.
 
@@ -49,13 +49,13 @@ flowchart TB
 
 | Qué | De dónde | Riesgo |
 |---|---|---|
-| MapLibre GL 4.7.1 | unpkg | **Sin `integrity`** — decisión abierta |
+| MapLibre GL 4.7.1 | unpkg | **Sin `integrity`**: decisión abierta |
 | h3-js 4.1.0 | unpkg | Idem |
 | DM Sans, Familjen Grotesk, JetBrains Mono | Google Fonts | Degradación tipográfica si cae |
 | Teselas base | OpenFreeMap | El mapa se queda sin fondo, los datos siguen |
 
-El mapa base se puede cambiar entre tres estilos de OpenFreeMap —claro, oscuro
-y con relieve— desde un widget del mapa. Los cinco que publica no se ofrecen
+El mapa base se puede cambiar entre tres estilos de OpenFreeMap (claro, oscuro
+y con relieve) desde un widget del mapa. Los cinco que publica no se ofrecen
 enteros: `liberty` y `fiord` son de colores saturados y sobre ellos las rampas
 de intensidad y de fuego dejan de leerse. Ver
 [`capas-y-modos.md`](capas-y-modos.md).
@@ -65,7 +65,7 @@ dependencia en tiempo de ejecución. Está en [`PENDIENTES.md`](../../PENDIENTES
 
 ## Las dos amenazas
 
-El visor tiene un **selector de amenaza** —Sismos / Fuego— y no dos mapas
+El visor tiene un **selector de amenaza** (Sismos / Fuego) y no dos mapas
 separados, porque el activo de exposición es agnóstico a la amenaza: las mismas
 celdas cuentan gente bajo MMI 7 y gente bajo fuego activo.
 
@@ -89,5 +89,5 @@ La regla de contexto es **asimétrica a propósito** y está explicada en
   reporte publicado.
 - El selector de amenaza es un `role="group"` con `aria-pressed`.
 - Cada cambio de modo se anuncia por región viva.
-- Ningún texto se pisa con otro en ningún tamaño — hay una prueba que lo
+- Ningún texto se pisa con otro en ningún tamaño: hay una prueba que lo
   comprueba midiendo cajas reales.

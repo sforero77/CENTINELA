@@ -12,12 +12,12 @@ Corren en CI (`visor.yml`) en cada push y PR.
 
 ```mermaid
 flowchart TB
-  subgraph unit["Pruebas unitarias — 1.065"]
+  subgraph unit["Pruebas unitarias · 1.065"]
     U1["¿el cálculo es correcto?"]
     U2["¿el JSON valida?"]
     U3["¿la función está conectada?"]
   end
-  subgraph visor["Pruebas de navegador — 101"]
+  subgraph visor["Pruebas de navegador · 101"]
     V1["¿las pestañas reciben el clic?"]
     V2["¿algún texto se pisa con otro?"]
     V3["¿la leyenda promete lo que dibuja?"]
@@ -67,7 +67,7 @@ Reglas que se derivan de eso:
 
 1. La verdad está en `window.CENTINELA`, no en el píxel.
 2. **Nunca** medir rendimiento ni estados `:focus` en una pestaña oculta.
-3. Para *ver* el mapa —juzgar cartografía, no comprobar estado— hay que renderizar
+3. Para *ver* el mapa (juzgar cartografía, no comprobar estado) hay que renderizar
    de verdad: un script de Playwright que copie `site/` y `reports/` a un temporal
    como hace el fixture `_sitio`, lo sirva y capture. Pelearse con una pestaña
    oculta no lleva a ninguna parte.
@@ -119,7 +119,7 @@ pg.route("**/tiles.openfreemap.org/**/*.pbf", _lento)  # 1,2 s
 ```
 
 Retrasar el estilo no sirve: en local `load` llega antes que `styledata` y la
-carrera no existe. Con las teselas lentas, sí — y así se reprodujo la
+carrera no existe. Con las teselas lentas, sí, y así se reprodujo la
 regresión del enlace profundo que reportaba "21 de 21 reportes en el encuadre".
 
 ## Un aviso para quien valide a mano

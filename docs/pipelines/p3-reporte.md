@@ -1,4 +1,4 @@
-# P3 — Reporte
+# P3: Reporte
 
 **Qué hace:** convierte el modelo `Report` en los ocho artefactos publicables.
 **Cadencia:** por evento, justo después de P2.
@@ -39,7 +39,7 @@ flowchart LR
 | `contornos.json` | El visor: las líneas de isointensidad |
 | `mapa_general.png` | Uso general |
 | `mapa_prensa.png` | Redes y prensa, con tipografía mayor |
-| `hilo.txt` | El hilo listo para publicar — **el único paso manual permitido en todo el sistema** |
+| `hilo.txt` | El hilo listo para publicar: **el único paso manual permitido en todo el sistema** |
 
 ## El modelo
 
@@ -115,7 +115,7 @@ lo que necesita quien va a recalcular.
 
 ## El changelog de deltas (RF-04)
 
-Un ShakeMap se revisa muchas veces —el de Venezuela llegó a **v15**—. Quien ya
+Un ShakeMap se revisa muchas veces (el de Venezuela llegó a **v15**). Quien ya
 leyó la versión anterior necesita saber qué cambió, no volver a leerlo entero
 durante una emergencia.
 
@@ -125,7 +125,7 @@ pop MMI≥7: 340k → 355k
 
 > Este módulo estaba escrito casi entero y **no lo llamaba nadie**.
 > `Report.changelog` existía, `markdown.py` lo renderizaba si venía con algo,
-> `format_delta_prose` daba exactamente ese formato — y ninguna línea del
+> `format_delta_prose` daba exactamente ese formato, y ninguna línea del
 > pipeline lo llenaba, así que la sección no apareció jamás en un reporte.
 > El mismo patrón que el reporte preliminar y que tres capas del activo:
 > piezas correctas, sin nadie que las una. Es el fallo que motivó
@@ -145,7 +145,7 @@ eso se notaba: los dos PNG de cada evento salían prácticamente idénticos,
 ofrecidos como dos descargas distintas.
 
 **Y no eran un mapa.** Eran una dispersión de matplotlib con los ejes en grados
-decimales —«−79.5», «0.5»—, sin costa, sin escala, sin norte y sin leyenda de
+decimales («−79.5», «0.5»), sin costa, sin escala, sin norte y sin leyenda de
 tamaño, cuando el tamaño del círculo *es* la variable principal. Hoy llevan:
 
 - **La forma del evento**, de `contornos.json`. ShakeMap publica sus contornos
@@ -175,8 +175,8 @@ activo de cada país.
 
 Existe por un descubrimiento incómodo. El generador llevaba las tildes puestas en
 el repositorio y **lo publicado no**: los veintiún paquetes se emitieron antes de
-esa corrección y nada volvía a tocarlos, así que el hilo para redes —el único
-artefacto que un humano publica a mano— abría con `Reporte automatico de
+esa corrección y nada volvía a tocarlos, así que el hilo para redes (el único
+artefacto que un humano publica a mano) abría con `Reporte automatico de
 EXPOSICION estimada` y cerraba con `Exposicion no es dano`.
 
 Un texto rancio no se distingue de uno recién generado mirándolo.

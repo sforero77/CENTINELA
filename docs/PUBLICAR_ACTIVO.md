@@ -1,8 +1,8 @@
 # Publicar el activo de exposición
 
 El activo construido no va en git: pesa unos 19 MB por país y crecera con cada
-país de Fase 1. Va como **Release de GitHub**, y esa copia —no la URL de la
-fuente original— es la que sostiene RNF-04.
+país de Fase 1. Va como **Release de GitHub**, y esa copia (no la URL de la
+fuente original) es la que sostiene RNF-04.
 
 Por qué importa: Overture conserva solo los **dos releases más recientes** en su
 bucket. Pasados unos dos meses la URL que declara el manifest deja de existir, y
@@ -10,7 +10,7 @@ sin una copia propia nadie puede rehacer el build de un reporte de hace seis
 meses. El Release con su `sha256` es lo que hace re-derivable un número
 publicado.
 
-## Colombia v0.4 — activo publicado
+## Colombia v0.4: activo publicado
 
 | | |
 |---|---|
@@ -26,7 +26,7 @@ publicado.
 | Municipios | 1.122 de 1.122 |
 | Manifest | `col-v0.4` |
 
-## Colombia v0.5 — medido en CI el 24-ago-2026
+## Colombia v0.5: medido en CI el 24-ago-2026
 
 | Indicador | v0.4 (a mano) | v0.5 (pipeline) |
 |---|---:|---:|
@@ -62,14 +62,14 @@ Las que se mueven, y por que:
   ninguno de los dos: son dos cosas distintas, y por eso el reporte ahora
   publica **vías primarias y secundarias** y **vías locales** por separado en
   vez de un solo número. Lo que si se corrigio es que las escaleras, senderos y
-  aceras ya no cuentan como vía — son el 4 % y decian que hay acceso rodado
+  aceras ya no cuentan como vía: son el 4 % y decian que hay acceso rodado
   donde no lo hay.
 
-## Colombia v0.5 — que cambia en el esquema
+## Colombia v0.5: que cambia en el esquema
 
 El manifest sube a `col-v0.5` porque **el esquema del activo gana una columna**,
 `built_m2`: superficie construida vista por satélite (GHS-BUILT-S). No sustituye
-al conteo de edificaciones, lo contrasta — y donde OpenStreetMap no mapeo el
+al conteo de edificaciones, lo contrasta, y donde OpenStreetMap no mapeo el
 barrio, es la única de las dos que ve algo. De ahí sale la bandera
 `construido_no_mapeado` y la advertencia del reporte cuando el conteo se queda
 corto.
@@ -91,7 +91,7 @@ el build y el `sha256` nuevo.
 
 ```bash
 gh release create exposure-col-20260823 exposure_h3.parquet admin_lookup.parquet \
-  --title "Activo de exposicion COL — 2026-08-23" \
+  --title "Activo de exposicion COL · 2026-08-23" \
   --notes-file data/manifests/COL.yaml
 ```
 

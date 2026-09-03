@@ -1,4 +1,4 @@
-# P4 — Brigada de imagen
+# P4: Brigada de imagen
 
 **Estado:** Fase 2. No implementado.
 **Qué hará:** daño por edificación con IA, cuando exista imagen abierta
@@ -36,5 +36,5 @@ exposición al daño real?**
 El [`DISCLAIMER.md`](../../DISCLAIMER.md) es explícito y P4 no lo cambia: el
 sistema no estima víctimas y no dictamina habitabilidad. Un modelo de daño por
 imagen diría "este techo está colapsado", no "aquí murió alguien" ni "esta casa
-es inhabitable" — esas dos siguen siendo competencia de quien tiene mandato
+es inhabitable": esas dos siguen siendo competencia de quien tiene mandato
 legal para decirlas.

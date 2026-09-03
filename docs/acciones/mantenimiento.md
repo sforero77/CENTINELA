@@ -3,7 +3,7 @@
 Cinco workflows que no producen reportes: existen para que el sistema no se
 rompa en silencio.
 
-## `frescura.yml` — ¿la página va al día?
+## `frescura.yml`: ¿la página va al día?
 
 Cada 3 horas (y cuando el vigía la despierta), compara el `generado_utc` de la
 página **publicada** contra el del repositorio.
@@ -25,12 +25,12 @@ flowchart TB
 
 **Qué vigila y qué no.** Detecta que el repositorio avanza y la página no. Si
 el vigía se muriera, los dos se quedarían quietos a la vez y esto no diría
-nada — de eso se ocupa el latido a healthchecks.io, que es un vigilante
+nada: de eso se ocupa el latido a healthchecks.io, que es un vigilante
 distinto para un fallo distinto. Mezclarlos daría una alarma incapaz de decir
 cuál de las dos cosas se rompió.
 
 **Y no poder mirar no es estar al día.** Un 404 en un fichero recién nacido es
-normal —el primer despliegue no ha corrido— y confundir «la red se cayó» con «la
+normal (el primer despliegue no ha corrido) y confundir «la red se cayó» con «la
 página está vieja» manda a investigar mal, así que un fallo suelto se anota y se
 sigue. Pero si no se pudo comparar **ninguno**, la comprobación no llegó a
 correr, y el comando sale con código 1. Estuvo saliendo en verde hasta el
@@ -40,7 +40,7 @@ congelado con todo en verde se apuntaba un verde estando ciego.
 La deduplicación de incidencias y el auto-cierre existen porque una alarma que
 abre una incidencia cada 3 horas deja de leerse a la semana.
 
-## `repaso.yml` — RF-04 más allá de las 24 h del feed
+## `repaso.yml`: RF-04 más allá de las 24 h del feed
 
 Diario (y cuando el vigía lo despierta). Pregunta por los eventos de los
 últimos **90 días** *por su identificador*, sin depender del feed, y despacha a
@@ -66,8 +66,8 @@ eventos publicados, la mediana hasta la última revisión son **63 días**, y el
 Venezuela llegó a **v15 dos meses después** del sismo. Ninguno terminó dentro de
 las 24 h del feed.
 
-**Por qué 90 días.** Cubre 17 de los 20 medidos. Los tres que se salen —185, 571
-y 2.024 días— no son revisiones del evento: son reprocesos del catálogo entero
+**Por qué 90 días.** Cubre 17 de los 20 medidos. Los tres que se salen (185, 571
+y 2.024 días) no son revisiones del evento: son reprocesos del catálogo entero
 que USGS hace cada varios años, y perseguirlos a diario sería gastar peticiones
 en algo que no va a pasar hoy.
 
@@ -78,27 +78,27 @@ en algo que no va a pasar hoy.
   cada vez que USGS retoca su Atlas convertiría el catálogo en ruido.
 
 **Y un fallo de red no es un «sin cambios»**, con la distinción que importa: si
-falla **alguno**, se avisa y la corrida sigue —los que sí se consultaron valen y
-sus despachos salen—; si fallan **todos**, sale con código 1 y la corrida se pone
+falla **alguno**, se avisa y la corrida sigue (los que sí se consultaron valen y
+sus despachos salen); si fallan **todos**, sale con código 1 y la corrida se pone
 roja, porque eso no es «sin cambios» sino no haber repasado.
 
 Y «no había nada que repasar» tampoco es «no se pudo repasar»: hoy los 25
 eventos son backtests y quedan fuera, así que cero revisados con cero fallidos
 sale en verde. Confundirlo pondría el workflow en rojo todos los días.
 
-## `keepalive.yml` — que GitHub no apague los crons
+## `keepalive.yml`: que GitHub no apague los crons
 
 Días 1 y 15, 07:00 UTC. GitHub **desactiva los workflows programados de repos
 sin actividad durante 60 días**. Este workflow existe solo para que ese
 contador no llegue nunca.
 
-## `simulacro.yml` — el ensayo mensual
+## `simulacro.yml`: el ensayo mensual
 
 Día 5, 09:00 UTC. Corre la cadena completa **en seco** (`--dry-run`): el vigía
 revisa el feed de verdad pero no escribe `event_state` ni publica nada. Prueba
 que las piezas siguen encajando sin esperar a que haya un sismo.
 
-## `contract_drift.yml` — ¿cambiaron las fuentes?
+## `contract_drift.yml`: ¿cambiaron las fuentes?
 
 Diario, 08:00 UTC. Las fuentes públicas cambian sus formatos sin avisar. Este
 workflow valida los contratos de USGS (feed y productos de detalle) contra
@@ -107,7 +107,7 @@ workflow valida los contratos de USGS (feed y productos de detalle) contra
 Es la diferencia entre enterarse el día que cambia y enterarse el día que hay
 un sismo.
 
-## `ci.yml` y `visor.yml` — las dos verificaciones
+## `ci.yml` y `visor.yml`: las dos verificaciones
 
 ```mermaid
 flowchart LR
@@ -121,7 +121,7 @@ flowchart LR
 ```
 
 `visor.yml` no es opcional ni decorativo: abre el visor en un Chromium de
-verdad y comprueba cosas que ninguna prueba unitaria ve — que las pestañas
+verdad y comprueba cosas que ninguna prueba unitaria ve: que las pestañas
 reciben el clic, que ningún texto se pisa con otro en los tres tamaños de
 pantalla, que la leyenda promete lo que el mapa dibuja.
 
@@ -129,7 +129,7 @@ Su instrumentación es `window.CENTINELA.pintado`, un registro público de qué
 capas se pintaron y con cuántos rasgos. Las pruebas leen de ahí, no de una
 captura de pantalla.
 
-## `exposure_quarterly.yml` — la reconstrucción del activo
+## `exposure_quarterly.yml`: la reconstrucción del activo
 
 Trimestral (1 de enero, abril, julio y octubre, 06:00 UTC), y a mano con
 `-f iso3=XXX` cuando falta un país. Reconstruye el activo de exposición desde

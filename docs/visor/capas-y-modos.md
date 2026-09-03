@@ -73,14 +73,14 @@ contexto; 4.000 son otro mapa.
 - El **interruptor de sismos menores** es del modo Sismos y se oculta en Fuego.
 - **«Ver en el mapa»** de la tarjeta viva cambia de modo, no marca casillas.
 - **`?amenaza=fuego`** viaja en la URL como `?evento=`, así que un modo es
-  compartible. También viajan `?pais=` y `?periodo=` —y sus gemelos de fuego
-  `?paisf=` y `?periodof=`—: eligen **qué** se mira, y una vista filtrada tiene
+  compartible. También viajan `?pais=` y `?periodo=` (y sus gemelos de fuego
+  `?paisf=` y `?periodof=`): eligen **qué** se mira, y una vista filtrada tiene
   que poderse mandar. `orden` y «solo lo que se ve en el mapa» **no** viajan a
   propósito: son preferencias de lectura, no contenido.
 
 ## El velo: por qué no se reencuadra
 
-La caja de América Latina es **alta** —73° de ancho por 76° de alto— y el panel
+La caja de América Latina es **alta** (73° de ancho por 76° de alto) y el panel
 del mapa es apaisado en todo escritorio. `fitBounds` encaja por la dimensión que
 primero se agota, que aquí es siempre la altura, y el ancho sobrante se reparte a
 los dos lados.
@@ -96,8 +96,8 @@ enseñar la región entera y llenar el ancho, **se enseña la región entera y s
 apaga lo demás**: un polígono del mundo con un agujero en la región, relleno con
 el tono del papel del estilo activo.
 
-Va **encima de todo el estilo base** —símbolos incluidos, que es de donde venían
-los rótulos— y **debajo de la primera capa de dato**, que es lo que comprueba
+Va **encima de todo el estilo base** (símbolos incluidos, que es de donde venían
+los rótulos) y **debajo de la primera capa de dato**, que es lo que comprueba
 `test_la_mascara_tapa_el_mapa_base_y_no_el_dato`.
 
 Medido después, en cinco tamaños: ninguno de los sitios con reporte queda fuera
@@ -113,7 +113,7 @@ o sea 1,23 veces el lienzo entero.
 Y sin `circle-sort-key` ganaba el que viniera después en el fichero. Medido a
 zoom 2: el 69 % de las celdas cae sobre un píxel ya ocupado, y **las 150 más
 energéticas comparten píxel con otra sin una sola excepción**. Encima, las 5.221
-celdas más débiles —≤10 MW, que juntas no llegan al 1 % de la energía— ponían
+celdas más débiles (≤10 MW, que juntas no llegan al 1 % de la energía) ponían
 **once veces más tinta** que las 150 más fuertes.
 
 | | tinta | vs. lienzo | radio | débiles : fuertes |
@@ -128,7 +128,7 @@ Tres propiedades, y cada una su razón:
    la energía, que es como se escala un símbolo proporcional. Una celda débil pasa
    a ser polvo: sigue estando y deja de competir.
 3. **Contorno solo desde zoom 7.** Con radio 2 px el contorno **es** el símbolo:
-   se come el relleno —que es lo que lleva el color— y los contornos solapados
+   se come el relleno (que es lo que lleva el color) y los contornos solapados
    tejen la malla oscura que se veía. De cerca sigue separando los que se tocan.
 
 `window.CENTINELA.tintaDelFuego(zoom)` mide esto evaluando **la expresión que la
@@ -158,7 +158,7 @@ propio, y la esquina de arriba a la derecha es la única libre.
 |---|---|---|
 | **Claro** *(defecto)* | `positron` | El único contra el que están medidos los contrastes de las dos rampas. Se retinta a la paleta de la identidad |
 | **Oscuro** | `dark` | Para pantallas a media luz; el fuego gana contraste |
-| **Con relieve** | `bright` | Más detalle de terreno, a costa de que el mapa compita con el dato — y la galería lo dice |
+| **Con relieve** | `bright` | Más detalle de terreno, a costa de que el mapa compita con el dato, y la galería lo dice |
 
 `liberty` y `fiord` quedan fuera: son de colores saturados y sobre ellos las dos
 rampas dejan de leerse. Ofrecer un mapa base que estropea el dato no es dar una
@@ -172,8 +172,8 @@ opción, es dar una trampa.
 > **e** `idle`.
 
 En pantalla estrecha desaparecen los botones de zoom: son los únicos tres
-controles con gesto equivalente —el propio aviso de gestos cooperativos dice
-«usa dos dedos»—. Hacía falta: con un evento abierto en 390 px la barra de escala
+controles con gesto equivalente (el propio aviso de gestos cooperativos dice
+«usa dos dedos»). Hacía falta: con un evento abierto en 390 px la barra de escala
 caía 67 px dentro de la leyenda, y ya se metía 22 px antes de añadir nada.
 
 ## La rueda no es del mapa
@@ -189,7 +189,7 @@ Positron rotula con `name`, que es el topónimo local: «Gulf of Mexico»,
 «Democratic Republic of the Congo», y Libia en árabe. `rotularEnEspanol`
 sustituye el `text-field` por
 `["coalesce", ["get","name:es"], ["get","name:latin"], ["get","name"]]` en las
-capas cuyo campo ya menciona `name` — los escudos de carretera rotulan con `ref`
+capas cuyo campo ya menciona `name`: los escudos de carretera rotulan con `ref`
 y cambiarlos los dejaría en blanco.
 
 ## La leyenda de fuego dice lo que el mapa dibuja
@@ -224,7 +224,7 @@ de una captura de pantalla, porque una pestaña que corre oculta congela
   profundo-enlazado. `if (estado.seleccionado) return;`.
 - **`aplicarAmenaza()` no lleva `isStyleLoaded()` de guardia**: durante la carga
   inicial es `false` mientras llegan teselas, y el enlace profundo a Fuego
-  pasaba justo entonces — los *paints* se saltaban y los epicentros quedaban a
+  pasaba justo entonces: los *paints* se saltaban y los epicentros quedaban a
   toda opacidad sobre el fuego.
 - **`[hidden]` pierde contra `display: flex` de clase.** Ha mordido tres veces
   en este repositorio. Cada elemento que se oculta por atributo necesita su

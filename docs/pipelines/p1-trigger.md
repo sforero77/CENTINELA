@@ -1,4 +1,4 @@
-# P1 — Trigger
+# P1: Trigger
 
 **Qué hace:** vigila el feed de USGS, decide qué merece un reporte, y deja
 constancia de todo lo que vio.
@@ -42,7 +42,7 @@ flowchart TB
 
 ## El filtro, en tres condiciones
 
-`pipelines/p1_trigger/filters.py` — todas explícitas y testeables sin red:
+`pipelines/p1_trigger/filters.py`: todas explícitas y testeables sin red:
 
 ```python
 if candidate.tipo != "earthquake":  # explosiones, hielo, ruido
@@ -65,7 +65,7 @@ del registro de riesgos (§7).
 | `4.5_hour` | El camino crítico. Ligero, se consulta primero |
 | `4.5_day` | El respaldo. Cubre la demora del cron |
 
-GitHub documenta demoras de 5 a 30 minutos en los crons programados —y este
+GitHub documenta demoras de 5 a 30 minutos en los crons programados (y este
 repositorio ha medido hasta **12,8 horas**. Si el runner despierta tarde, el
 feed horario ya no alcanza; el diario garantiza que no se pierda nada. Los
 duplicados se descartan por `usgs_id`.
@@ -87,7 +87,7 @@ estaba caído".
 ```
 
 Ventana móvil de 5 días. El visor los dibuja como estrellas huecas, con la
-etiqueta *"Sismo visto, sin reporte — por debajo de M5,5. Se vio y no se midió
+etiqueta *"Sismo visto, sin reporte: por debajo de M5,5. Se vio y no se midió
 su impacto"*.
 
 ## El límite del feed, y quién lo tapa

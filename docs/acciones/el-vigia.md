@@ -1,4 +1,4 @@
-# El vigía — `trigger.yml`
+# El vigía: `trigger.yml`
 
 El workflow más largo del repositorio (350 líneas) y el único que corre
 siempre. Hace cuatro cosas: revisa el feed, despierta a los demás, publica el
@@ -9,7 +9,7 @@ latido y avisa al monitor externo.
 ```mermaid
 flowchart TB
   START(["repository_dispatch<br/>o cron"]) --> GUARD{"github.repository<br/>== sforero77/CENTINELA?"}
-  GUARD -->|no| STOP(["fin — los forks<br/>no disparan reportes"])
+  GUARD -->|no| STOP(["fin · los forks<br/>no disparan reportes"])
   GUARD -->|sí| SETUP["checkout + uv<br/>instalar núcleo"]
   SETUP --> FEED["<b>Revisar el feed</b><br/>uv run centinela trigger"]
 
@@ -59,7 +59,7 @@ por hora. Basta uno cada hora para responder "el cron sigue vivo".
 gh workflow run "$workflow" || echo "::warning::no se pudo despachar $workflow"
 ```
 
-Su trabajo —revisar el feed y commitear— ya está hecho. Se avisa y se sigue.
+Su trabajo (revisar el feed y commitear) ya está hecho. Se avisa y se sigue.
 
 ## El cron externo
 
@@ -80,7 +80,7 @@ sequenceDiagram
 ### Cómo se aprovisiona
 
 1. **Token**: fine-grained PAT sobre `sforero77/CENTINELA` con el permiso
-   **Contents: Read and write** — el único que la API de dispatches exige
+   **Contents: Read and write**: el único que la API de dispatches exige
    (lo confirma la cabecera `x-accepted-github-permissions: contents=write`).
 2. **Servicio**: cron-job.org, Cloudflare Workers o equivalente, llamando cada
    5 minutos al endpoint de arriba.
@@ -105,7 +105,7 @@ sequenceDiagram
 `schedule: */30 * * * *` sigue declarado a propósito. Si el servicio externo
 cae, el vigía sigue corriendo mal pero corriendo, y eso es mejor que un único
 punto de fallo fuera del repositorio. Y si el externo se para del todo, el
-latido se detiene y **healthchecks.io avisa a los 30 minutos** — la misma
+latido se detiene y **healthchecks.io avisa a los 30 minutos**: la misma
 alarma que ya cubría la desactivación silenciosa del cron, sin nada nuevo.
 
 ## Qué produce cada corrida
@@ -115,9 +115,9 @@ alarma que ya cubría la desactivación silenciosa del cron, sin nada nuevo.
  "observados": 2, "nuevos": [], "revisitados": []}
 ```
 
-- **`revisados`** — candidatos leídos de los dos feeds, ya deduplicados.
-- **`relevantes`** — los que pasaron el filtro (tipo, magnitud, bbox).
-- **`observados`** — sismos de LATAM vistos y descartados por umbral. Se
+- **`revisados`**: candidatos leídos de los dos feeds, ya deduplicados.
+- **`relevantes`**: los que pasaron el filtro (tipo, magnitud, bbox).
+- **`observados`**: sismos de LATAM vistos y descartados por umbral. Se
   publican en `site/observados.json` con la razón: el vigía tiene que poder
   demostrar que estuvo mirando.
-- **`nuevos` / `revisitados`** — lo que se despacha a P2.
+- **`nuevos` / `revisitados`**: lo que se despacha a P2.

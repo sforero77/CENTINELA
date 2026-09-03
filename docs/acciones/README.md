@@ -3,7 +3,7 @@
 **Catorce workflows.** Tres son el camino crítico de un sismo, siete son
 mantenimiento periódico, dos son verificación de código y dos se disparan a
 mano. Esa cuenta la vigila `tests/unit/test_acciones_documentadas.py`: se quedó
-vieja dos veces —decía trece arriba y doce en la tabla del mismo documento— y
+vieja dos veces (decía trece arriba y doce en la tabla del mismo documento) y
 una cuenta a mano se desincroniza cada vez que entra un workflow.
 
 | Documento | Qué explica |
@@ -64,7 +64,7 @@ flowchart TB
 ```
 
 **El vigía es el reloj de todo lo demás.** Es un patrón deliberado: en vez de
-confiar en que GitHub honre siete crons distintos —no lo hace—, el vigía corre
+confiar en que GitHub honre siete crons distintos (no lo hace), el vigía corre
 seguido y despierta a los otros cuando les toca por edad. Así, acelerar el
 vigía acelera al sistema entero.
 
@@ -89,6 +89,6 @@ está en [`el-vigia.md`](el-vigia.md).
 
 Lo que **no** arregla el cron externo es la latencia de punta a punta: medida
 sobre los dos primeros sismos en vivo da **p50 92,1 min**, más de dos veces el
-objetivo. La detección son ~22 minutos —la mayor parte esperando a que USGS
-liste el evento— y el resto es esperar el ShakeMap, que publica USGS. Ver
+objetivo. La detección son ~22 minutos (la mayor parte esperando a que USGS
+liste el evento) y el resto es esperar el ShakeMap, que publica USGS. Ver
 [`../GARANTIAS.md`](../GARANTIAS.md).

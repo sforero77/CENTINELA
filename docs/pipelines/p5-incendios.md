@@ -1,4 +1,4 @@
-# P5 — Incendios
+# P5: Incendios
 
 **Qué hace:** cruza los focos de calor de las últimas 24 h con el mismo activo
 de exposición que usa P2.
@@ -38,7 +38,7 @@ Los tres satélites llevan el mismo sensor VIIRS a 375 m. **No se reparten las
 horas del día**: van en el mismo plano heliosíncrono, separados unos 50 minutos
 en órbita, así que sus pasadas caen casi a la misma hora solar. Lo que aportan
 los tres no es cobertura horaria sino más oportunidades de ver el mismo fuego
-—y de que una nube no lo tape en las tres—. Y significa que el mismo fuego
+(y de que una nube no lo tape en las tres). Y significa que el mismo fuego
 produce varias filas.
 
 Medido el 26-ago-2026, antes del pico de temporada:
@@ -54,7 +54,7 @@ Medido el 26-ago-2026, antes del pico de temporada:
 Y por eso el fichero publicado lleva una `nota` obligatoria:
 
 > Detecciones de satélite (VIIRS, 375 m) en las últimas 24 horas, agregadas a
-> celdas H3. Una detección no es un incendio. **NO se estima área quemada** —
+> celdas H3. Una detección no es un incendio. **NO se estima área quemada**:
 > el propio FIRMS lo desaconseja, porque el muestreo espacial y temporal es
 > irregular.
 
@@ -96,7 +96,7 @@ El relleno despoblado **también se ordena** (por FRP). Sin eso, el día que las
 celdas con gente no llenen el cupo, el resto entraría en el orden en que DuckDB
 las escupiera: arbitrario. Se encontró el 30-ago-2026 auditando el artefacto
 E2E, un día en que había 5.244 celdas pobladas para 4.000 puestos y **el fallo
-no se manifestaba** — que es exactamente cuando conviene arreglarlo.
+no se manifestaba**: que es exactamente cuando conviene arreglarlo.
 
 ## El `LEFT JOIN` es deliberado
 
@@ -116,8 +116,8 @@ Lo fija `test_la_confianza_baja_se_cuenta_aparte_y_no_crea_celda`.
 
 Y el coste de esa excepción, para que esté dicho: NASA define `low` como reflejo
 solar **o** anomalía térmica débil (&lt;15 K), y una anomalía débil también es un
-fuego pequeño, frío o bajo dosel. Así que esto pierde fuegos reales —los débiles
-y aislados— y los pierde de día, porque `low` casi no existe de noche: requiere
+fuego pequeño, frío o bajo dosel. Así que esto pierde fuegos reales (los débiles
+y aislados) y los pierde de día, porque `low` casi no existe de noche: requiere
 *sun glint*. Es un intercambio, no un filtro gratis.
 
 ## Lo que publica

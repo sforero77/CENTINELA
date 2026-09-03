@@ -5,7 +5,7 @@ sistema declara públicamente sobre ella.
 
 ## En tiempo real
 
-### USGS — el disparo y la intensidad
+### USGS: el disparo y la intensidad
 
 | | |
 |---|---|
@@ -19,7 +19,7 @@ sistema declara públicamente sobre ella.
 > feeds GeoJSON para aplicaciones automatizadas y desaconseja el polling a
 > FDSN (D7). `USGS_FDSN_EVENT` existe en el código solo para backtests.
 
-### NASA FIRMS — los focos activos
+### NASA FIRMS: los focos activos
 
 | | |
 |---|---|
@@ -44,8 +44,8 @@ peticiones por 10 minutos. Verificado el 26-ago-2026.
 | **WorldPop constrained R2025** | `pop_alt_worldpop` | CC-BY 4.0 | Solo alimenta la banda de discrepancia publicada, **nunca la cifra principal** |
 
 La estructura etaria merece una nota. La especificación daba por inevitable el
-supuesto de "estructura etaria estable" —repartir `pop_total` con proporciones
-de 2020—. **Ya no aplica**: WorldPop publica desglose age-sex para 2025 en
+supuesto de "estructura etaria estable" (repartir `pop_total` con proporciones
+de 2020). **Ya no aplica**: WorldPop publica desglose age-sex para 2025 en
 R2025A, y el sistema lo usa.
 
 ### Construcción e infraestructura
@@ -60,7 +60,7 @@ R2025A, y el sistema lo usa.
 
 **`built_m2` contrasta a `bld_count` a propósito**: donde OSM no mapeó el
 barrio, el satélite sí lo ve. El reporte avisa cuando la razón entre las dos
-pasa de 1,5 — o sea, cuando hay mucha superficie construida y pocos edificios
+pasa de 1,5: o sea, cuando hay mucha superficie construida y pocos edificios
 mapeados, que es la firma de un vacío cartográfico.
 
 Descartadas y por qué: **REPS** (sin geometría utilizable, T0.5);
