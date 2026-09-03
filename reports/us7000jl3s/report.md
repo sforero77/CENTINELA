@@ -11,14 +11,18 @@
 | Indicador | Estimado |
 |---|---:|
 | Población en MMI≥6 | 4,8 millones |
-| Población en MMI≥7 | 0 |
-| Población en MMI≥8 | 0 |
-| Edificaciones en MMI≥7 | 0 |
-| Sedes de salud en MMI≥7 | 0 |
-| Sedes educativas en MMI≥7 | 0 |
-| Kilómetros de vía en MMI≥7 | 0 km |
+| Población en MMI≥7 | — el evento no llegó a esta banda |
+| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Edificaciones en MMI≥6 | 1,1 millones |
+| Sedes de salud en MMI≥6 | 1.698 |
+| Sedes educativas en MMI≥6 | 1.570 |
+| Vías primarias y secundarias en MMI≥6 | 1.500 km |
+| Vías locales en MMI≥6 | 15 mil km |
+| Superficie construida en MMI≥6 | 177,5 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
+
+De la población en intensidad MMI≥6, alrededor de **360 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥6
 
@@ -69,7 +73,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,4 %**.
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v9**
 - Manifiesto de exposición: `ecu-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-02T02:47:25Z
+- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:51Z
 
 ## Advertencias
 
