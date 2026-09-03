@@ -19,7 +19,7 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 760856.2383539013,
+    "pop_mmi6p": 760856.238353901,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
@@ -30,7 +30,7 @@
     "road_km_mmi7p": 0.0,
     "road_km_principal_mmi7p": 0.0,
     "pop_ls_alta": 2061.6080413851887,
-    "pop_lq_alta": 360767.2864430278
+    "pop_lq_alta": 360767.28644302784
   },
   "top_municipios": [
     {
@@ -162,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-02T02:42:49Z",
+  "generado_utc": "2026-09-03T03:24:54Z",
   "pipeline_version": "0.1.0"
 }
