@@ -108,9 +108,38 @@ flowchart TB
 ```
 
 **Las bandas son acumulativas**: "personas en MMI ≥ 7" incluye a las de MMI 8.
-El desglose por edad se publica **solo para MMI ≥ 7**
-(`MMI_BAND_AGE_BREAKDOWN = 7`): más abajo la incertidumbre del modelo etario
-sería mayor que la señal.
+
+### En qué banda se publica cada cosa, y por qué
+
+Población en **MMI ≥ 6, ≥ 7 y ≥ 8**. Equipamiento —edificaciones, superficie
+construida, salud, educación, vías— y desglose etario en **MMI ≥ 6 y ≥ 7**
+(`MMI_BANDS_INFRAESTRUCTURA`, `MMI_BANDS_AGE_BREAKDOWN`).
+
+Hasta el 3-sep-2026 el equipamiento se agregaba **solo** en MMI ≥ 7, y el
+desglose etario también, con esta justificación escrita: *"más abajo la
+incertidumbre del modelo etario sería mayor que la señal"*. **Esa razón no era
+una razón**: la incertidumbre etaria viene de mezclar GHS-POP con WorldPop —lo
+explica la sección de arriba— y es la misma en MMI 6 que en MMI 7. No es
+función de la intensidad.
+
+El efecto medido: **trece de los veintitrés reportes no tienen población en
+MMI ≥ 7**, así que publicaban "0 edificaciones, 0 hospitales, 0 escuelas, 0 km
+de vía" con millones de personas dentro de MMI ≥ 6. `us7000jl3s`: 4,75 millones
+de personas —3,1 de ellas en Guayaquil— y ni un solo hospital que nombrar.
+
+Ninguna fuente autorizada sitúa el inicio del daño en MMI VII, y las que hay
+convergen en VI: el USGS describe el grado VI como *"Damage slight"*; la tabla
+de ShakeMap deja de decir *"None"* en MMI 5; la EMS-98 pone daño de grado 1 en
+muchas construcciones de clase A ya en intensidad VI; GDACS deja de dar alerta
+verde en MMI VI; y la OPS, para los sismos de Venezuela de 2026, reportó *"91
+emergency hospitals located in areas affected by Intensity VI or above,
+including 20 hospitals exposed to Intensity VII or higher"*. Las citas
+completas están en `MMI_BANDS_INFRAESTRUCTURA` (`pipelines/common/constants.py`).
+
+**Se añadió, no se movió.** Las columnas `*_mmi7p` conservan su significado
+exacto y ninguna cifra publicada cambió de valor; las `*_mmi6p` son nuevas.
+Lo que sí cambió es qué banda enseña el `report.md`: la que el evento alcanzó,
+igual que ya hacía el ranking municipal.
 
 ### Ground Failure
 
@@ -136,12 +165,14 @@ Es el reconocimiento explícito de que la cifra tiene un intervalo, en un
 producto cuyo riesgo principal es que alguien lea un número redondo como si
 fuera un censo.
 
-## Once de veintiún eventos no llegan a MMI ≥ 7
+## Trece de veintitrés eventos no llegan a MMI ≥ 7
 
 Correr el catálogo regional entero enseñó algo que ninguna prueba sintética
-habría encontrado: **once de los veintiún eventos no alcanzan MMI ≥ 7 sobre
+habría encontrado: **trece de los veintitrés eventos no alcanzan MMI ≥ 7 sobre
 población** —eran ocho de diecinueve cuando se midió por primera vez, y la
-proporción se ha mantenido al crecer el catálogo—. Son los profundos y los de mar adentro, que en esta región son la
+proporción se ha mantenido al crecer el catálogo—. De ellos, **cinco tampoco
+alcanzan MMI ≥ 6**: para esos, la única cifra que dimensiona el evento es el
+corte por radios alrededor del epicentro. Son los profundos y los de mar adentro, que en esta región son la
 mitad. Tehuantepec 2017 —M8,2, 98 muertos— tiene su máximo sobre población
 mexicana en **MMI 6,5**.
 

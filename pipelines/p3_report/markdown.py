@@ -115,10 +115,12 @@ def render_markdown(report: Report) -> str:
             )
             partes.append(_tabla_radios(report))
 
-    if tot.pop_65p_mmi7p and not report.preliminar:
+    banda_edad = banda_del_ranking(report)
+    p65 = tot.pop_65p_mmi6p if banda_edad == 6 else tot.pop_65p_mmi7p
+    if p65 and not report.preliminar:
         partes.append(
-            f"De la población en intensidad MMI≥7, alrededor de "
-            f"**{format_count_prose(tot.pop_65p_mmi7p)}** personas tienen 65 años o más."
+            f"De la población en intensidad MMI≥{banda_edad}, alrededor de "
+            f"**{format_count_prose(p65)}** personas tienen 65 años o más."
         )
 
     if report.top_municipios:
@@ -174,34 +176,68 @@ def _tabla_radios(report: Report) -> str:
     )
 
 
+#: Lo que va en una celda cuyo evento no llego a esa banda. **No es cero.**
+#:
+#: El propio codigo ya distingue "no medido" de "medido y da cero" para las
+#: columnas ausentes de un activo viejo, y omite la fila en vez de publicar un
+#: cero. Esa misma distincion faltaba un nivel mas arriba: en trece de los
+#: veintitres reportes, "Poblacion en MMI>=7 | 0" se lee como "no hay nadie"
+#: cuando lo cierto es "este sismo no llego a MMI 7 sobre poblacion".
+BANDA_NO_ALCANZADA = "— el evento no llegó a esta banda"
+
+
+def _celda_poblacion(valor: float) -> str:
+    """La cifra, o por que no hay cifra."""
+    return format_count_prose(valor) if valor > 0 else BANDA_NO_ALCANZADA
+
+
 def _tabla_totales(report: Report) -> str:
     tot = report.totales
+    # EL EQUIPAMIENTO SE PUBLICA EN LA BANDA QUE EL EVENTO ALCANZO.
+    #
+    # Estaba clavado en MMI>=7 y trece de veintitres reportes no llegan ahi:
+    # publicaban "0 hospitales, 0 escuelas, 0 km de via" con millones de
+    # personas dentro de MMI>=6. `us7000jl3s` es el caso: 4,75 millones, 3,1 de
+    # ellos en Guayaquil, y ni un solo hospital que nombrar.
+    #
+    # La escalera completa —ambas bandas— sigue en `report.json` y en el CSV
+    # municipal para quien integre. Aqui se publica la que responde la pregunta.
+    # Ver `MMI_BANDS_INFRAESTRUCTURA` en `common/constants.py` para las fuentes.
+    banda = banda_del_ranking(report)
+    seis = banda == 6
+    bld = tot.bld_mmi6p if seis else tot.bld_mmi7p
+    salud = tot.health_mmi6p if seis else tot.health_mmi7p
+    edu = tot.edu_mmi6p if seis else tot.edu_mmi7p
+    via_total = tot.road_km_mmi6p if seis else tot.road_km_mmi7p
+    via_principal = tot.road_km_principal_mmi6p if seis else tot.road_km_principal_mmi7p
+    superficie = tot.built_m2_mmi6p if seis else tot.built_m2_mmi7p
+
     filas = [
-        ("Población en MMI≥6", format_count_prose(tot.pop_mmi6p)),
-        ("Población en MMI≥7", format_count_prose(tot.pop_mmi7p)),
-        ("Población en MMI≥8", format_count_prose(tot.pop_mmi8p)),
-        ("Edificaciones en MMI≥7", format_count_prose(tot.bld_mmi7p)),
-        ("Sedes de salud en MMI≥7", format_number_es(tot.health_mmi7p)),
-        ("Sedes educativas en MMI≥7", format_number_es(tot.edu_mmi7p)),
+        ("Población en MMI≥6", _celda_poblacion(tot.pop_mmi6p)),
+        ("Población en MMI≥7", _celda_poblacion(tot.pop_mmi7p)),
+        ("Población en MMI≥8", _celda_poblacion(tot.pop_mmi8p)),
+        (f"Edificaciones en MMI≥{banda}", format_count_prose(bld)),
+        (f"Sedes de salud en MMI≥{banda}", format_number_es(salud)),
+        (f"Sedes educativas en MMI≥{banda}", format_number_es(edu)),
     ]
     # Se publican por separado a proposito: no es lo mismo que quede cortada
     # una troncal que una calle de barrio, y la red principal es ademas la
     # cifra comparable con las estadisticas viales oficiales. Un solo numero
     # que las sume esconde las dos cosas.
-    if tot.road_km_principal_mmi7p > 0:
-        local = max(tot.road_km_mmi7p - tot.road_km_principal_mmi7p, 0.0)
+    if via_principal > 0:
+        local = max(via_total - via_principal, 0.0)
         filas.append(
             (
-                "Vías primarias y secundarias en MMI≥7",
-                format_count_prose(tot.road_km_principal_mmi7p) + " km",
+                f"Vías primarias y secundarias en MMI≥{banda}",
+                format_count_prose(via_principal) + " km",
             )
         )
-        filas.append(("Vías locales en MMI≥7", format_count_prose(local) + " km"))
+        filas.append((f"Vías locales en MMI≥{banda}", format_count_prose(local) + " km"))
     else:
-        filas.append(("Kilómetros de vía en MMI≥7", format_count_prose(tot.road_km_mmi7p) + " km"))
-    if tot.built_m2_mmi7p > 0:
-        km2 = tot.built_m2_mmi7p / 1_000_000.0
-        filas.append(("Superficie construida en MMI≥7", f"{format_number_es(km2, 1)} km²"))
+        filas.append((f"Kilómetros de vía en MMI≥{banda}", format_count_prose(via_total) + " km"))
+    if superficie > 0:
+        km2 = superficie / 1_000_000.0
+        filas.append((f"Superficie construida en MMI≥{banda}", f"{format_number_es(km2, 1)} km²"))
     lineas = ["| Indicador | Estimado |", "|---|---:|"]
     lineas += [f"| {nombre} | {valor} |" for nombre, valor in filas]
     return "\n".join(lineas) + _nota_del_muro_de_ceros(report) + _nota_superficie(report)

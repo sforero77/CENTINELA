@@ -73,6 +73,20 @@ class Totales:
     pop_mmi7p: float = 0.0
     pop_mmi8p: float = 0.0
     pop_65p_mmi7p: float = 0.0
+    #: LA BANDA 6, PARA TODO. Hasta el 3-sep-2026 el equipamiento solo se
+    #: agregaba en MMI>=7, y trece de veintitres reportes no llegan ahi: salian
+    #: "0 hospitales, 0 escuelas" con millones de personas dentro de MMI>=6.
+    #: La razon de publicar desde 6 esta citada en `MMI_BANDS_INFRAESTRUCTURA`
+    #: (`common/constants.py`); la corta: el USGS pone "Damage slight" en el
+    #: grado VI, GDACS deja de dar verde en VI, y la OPS reporta hospitales
+    #: desde VI. Las columnas `*_mmi7p` no cambian de significado.
+    pop_65p_mmi6p: float = 0.0
+    bld_mmi6p: float = 0.0
+    built_m2_mmi6p: float = 0.0
+    health_mmi6p: float = 0.0
+    edu_mmi6p: float = 0.0
+    road_km_mmi6p: float = 0.0
+    road_km_principal_mmi6p: float = 0.0
     bld_mmi7p: float = 0.0
     #: Superficie construida detectada por satelite. Contrasta a bld_mmi7p:
     #: donde OSM no mapeo el barrio, esta cifra si lo ve.

@@ -49,9 +49,64 @@ CRS_PUBLICATION: Final[str] = "EPSG:4326"
 
 # --- Bandas de intensidad publicadas (RF-05) ------------------------------
 
-#: Bandas MMI reportadas como totales. El desglose etario solo se publica
-#: para MMI>=7.
+#: Bandas MMI reportadas como totales.
 MMI_BANDS: Final[tuple[int, ...]] = (6, 7, 8)
+
+#: Bandas en las que se publica **equipamiento e infraestructura**, no solo
+#: poblacion: edificaciones, superficie construida, salud, educacion y vias.
+#:
+#: POR QUE 6 Y NO SOLO 7. Hasta el 3-sep-2026 todo lo que no fuera poblacion se
+#: agregaba unicamente en MMI>=7, sin justificacion citada. El efecto medido:
+#: **trece de veintitres reportes no tienen poblacion en MMI>=7**, asi que
+#: publicaban "0 edificaciones, 0 hospitales, 0 escuelas, 0 km de via" con
+#: millones de personas dentro de MMI>=6. El peor caso, `us7000jl3s`: 4,75
+#: millones de personas —3,1 de ellas en Guayaquil— y ni un solo hospital que
+#: nombrar.
+#:
+#: No se encontro **ninguna** fuente autorizada que situe el inicio del dano en
+#: MMI VII. Lo que hay dice lo contrario, y converge en VI:
+#:
+#: * **USGS, Mercalli abreviada**, grado VI: *"Damage slight"*. El grado VII ya
+#:   describe *"considerable damage in poorly built structures"*.
+#: * **ShakeMap**, tabla de intensidad instrumental: el dano potencial deja de
+#:   ser *"None"* en **MMI 5** (*"Very light"*), y en MMI 6 es *"Light"*.
+#: * **EMS-98** (Grunthal): para la clase de vulnerabilidad A —mamposteria de
+#:   piedra, adobe— el dano de grado 1 aparece en muchas construcciones ya en
+#:   **intensidad VI**. El umbral se corre tres grados segun el tipo
+#:   constructivo, cosa que un corte fijo no puede representar.
+#: * **GDACS** (Comision Europea): la compuerta de alerta esta en **MMI VI**;
+#:   por debajo la alerta es verde.
+#: * **OPS/OMS**, sismos de Venezuela 2026: reporta *"91 emergency hospitals
+#:   located in areas affected by Intensity VI or above, including 20 hospitals
+#:   exposed to Intensity VII or higher"*. Es el precedente operativo exacto
+#:   —equipamiento de salud, en MMI>=VI, con el >=VII anidado— y es de LATAM.
+#:
+#: Y un argumento que va al reves de lo que parece: los hospitales tienen norma
+#: sismorresistente mas exigente (NSR-10 los pone en Grupo IV, "indispensables"),
+#: pero la OPS mide que *"nonstructural elements contribute more to vulnerability
+#: than structural factors"*. Que el hospital no se caiga a MMI 6,5 no significa
+#: que siga atendiendo — y significa que **se convierte en el destino de los
+#: heridos de la zona**. Es mas razon para inventariarlo en MMI>=6, no menos.
+#:
+#: SE ANADE, NO SE MUEVE. Las columnas `*_mmi7p` conservan su significado exacto
+#: para no romper la serie ni a quien integre el `report.json`. Las `*_mmi6p`
+#: son nuevas y no cambian una sola cifra ya publicada.
+MMI_BANDS_INFRAESTRUCTURA: Final[tuple[int, ...]] = (6, 7)
+
+#: Bandas del desglose etario.
+#:
+#: Estuvo en MMI>=7 y solo ahi, y `docs/datos/agregaciones.md` lo justificaba
+#: diciendo que "mas abajo la incertidumbre del modelo etario seria mayor que la
+#: senal". **Esa razon no es una razon**: la incertidumbre etaria viene de mezclar
+#: GHS-POP con WorldPop —el mismo documento lo explica dos secciones antes— y es
+#: la misma en MMI 6 que en MMI 7. No es funcion de la intensidad.
+#:
+#: El efecto: en los trece eventos sin MMI>=7, la cifra de mayores era cero por
+#: construccion, justo donde una poblacion mayor expuesta es lo mas accionable.
+MMI_BANDS_AGE_BREAKDOWN: Final[tuple[int, ...]] = (6, 7)
+
+#: Se conserva por compatibilidad: es la banda cuyo campo `pop_65p_mmi7p` viaja
+#: en los veintitres `report.json` ya publicados.
 MMI_BAND_AGE_BREAKDOWN: Final[int] = 7
 
 #: Umbral a partir del cual una celda entra en el conteo de poblacion expuesta

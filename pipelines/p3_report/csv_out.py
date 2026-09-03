@@ -29,6 +29,16 @@ HXL_HEADERS: dict[str, str] = {
     "pop_mmi7p": "#population+mmi7",
     "pop_mmi8p": "#population+mmi8",
     "pop_65p_mmi7p": "#population+age65+mmi7",
+    # La banda 6 del equipamiento. Trece de veintitres eventos no llegan a
+    # MMI>=7, y para ellos estas son las unicas columnas con dato. Ver
+    # `MMI_BANDS_INFRAESTRUCTURA` en `common/constants.py`.
+    "pop_65p_mmi6p": "#population+age65+mmi6",
+    "bld_mmi6p": "#infra+buildings+mmi6",
+    "built_m2_mmi6p": "#infra+built+area+mmi6",
+    "health_mmi6p": "#infra+health+mmi6",
+    "edu_mmi6p": "#infra+education+mmi6",
+    "road_km_mmi6p": "#infra+roads+km+mmi6",
+    "road_km_principal_mmi6p": "#infra+roads+km+primary+mmi6",
     "bld_mmi7p": "#infra+buildings+mmi7",
     "built_m2_mmi7p": "#infra+built+area+mmi7",
     "health_mmi7p": "#infra+health+mmi7",
