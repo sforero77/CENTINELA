@@ -12,7 +12,7 @@
 |---|---:|
 | Población en MMI≥6 | 28 mil |
 | Población en MMI≥7 | 7.400 |
-| Población en MMI≥8 | 0 |
+| Población en MMI≥8 | — el evento no llegó a esta banda |
 | Edificaciones en MMI≥7 | 4.400 |
 | Sedes de salud en MMI≥7 | 4 |
 | Sedes educativas en MMI≥7 | 8 |
@@ -61,7 +61,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **1,8 %**.
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v2**
 - Manifiesto de exposición: `cri-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-02T02:43:02Z
+- Pipeline: `0.1.0` · Generado: 2026-09-03T03:24:42Z
 
 ## Advertencias
 
