@@ -4295,7 +4295,7 @@ async function cargarIncendios() {
 //: sus cifras y nada mas, asi que "¿que superficie cubre este incendio?" —la
 //: primera pregunta de cualquiera que mire un mapa de fuego— no tenia respuesta
 //: en ninguna parte del producto. Y la tarjeta de arriba solo daba el total de
-//: toda America Latina, que es el otro extremo: o todo, o un hexagono de 5 km².
+//: toda America Latina, que es el otro extremo: o todo, o un hexagono de 0,74 km².
 //:
 //: Un foco es una componente conexa sobre la malla H3: dos celdas del mismo
 //: foco si comparten lado. Es la definicion que usa cualquier producto de
@@ -4369,16 +4369,18 @@ function areaDeFoco(km2) {
 function resumirFoco(id, celdas) {
   const suma = (campo) => celdas.reduce((t, c) => t + (Number(c[campo]) || 0), 0);
 
-  // Solo las celdas que tienen cobertura del suelo entran en el reparto: las
-  // demas no son "cero por ciento arbolado", son "sin medir". El panel dice
-  // cuantas fueron.
-  const conSuelo = celdas.filter((c) =>
-    ["arbolado_pct", "pastizal_pct", "cultivo_pct", "humedal_pct"].some((k) => Number(c[k]) > 0)
-  );
+  // MEDIDA ES `lulc_px > 0`, NO "ALGUNA CLASE PASA DE CERO".
+  //
+  // La heuristica anterior miraba cuatro clases de las seis que mide el activo,
+  // asi que una celda 100 % matorral o 100 % construida daba cero en las cuatro
+  // y se declaraba "sin cobertura del suelo conocida" **en pantalla**, estando
+  // medida. En LATAM eso no es raro: el Cerrado, el Chaco, la Caatinga y el
+  // matorral chileno son clase 20, y arden.
+  const conSuelo = celdas.filter((c) => Number(c.lulc_px) > 0);
   const energiaMedida = conSuelo.reduce((t, c) => t + (Number(c.frp_suma) || 0), 0);
   const suelo = {};
   if (energiaMedida > 0) {
-    for (const clase of ["arbolado", "pastizal", "cultivo", "humedal"]) {
+    for (const clase of ["arbolado", "arbustos", "pastizal", "cultivo", "construido", "humedal"]) {
       const pct =
         conSuelo.reduce(
           (t, c) => t + ((Number(c[`${clase}_pct`]) || 0) / 100) * (Number(c.frp_suma) || 0),
@@ -5481,7 +5483,7 @@ function encuadrarPuntos(coords, { maxZoom = 6 } = {}) {
 // diferencia entre un contador y algo con lo que se decide.
 //
 // El dato llega como reticula y no dentro de cada celda, y eso es a proposito:
-// GFS va a 0,25 grados —unos 27 km— y una celda H3 son 5 km2, asi que decenas
+// GFS va a 0,25 grados —unos 27 km— y una celda H3 r8 son 0,74 km2, asi que cientos
 // comparten el mismo punto. Verlo como puntos separados es ver la resolucion
 // que de verdad hay.
 
@@ -5528,6 +5530,14 @@ function vientoDelFoco(foco) {
   return mejor && cerca <= 0.5 ** 2 ? mejor : null;
 }
 
+//: El ciclo de GFS del que sale la flecha. `cuadroDeViento` no tiene la rejilla
+//: en el scope y la necesita para fechar el dato.
+function cicloDeGfs() {
+  const rejilla = estado.fuegoDatos && estado.fuegoDatos.viento;
+  return (rejilla && rejilla.ciclo) || "";
+}
+
+
 function cuadroDeViento(p) {
   if (!p) return "";
 
@@ -5551,8 +5561,18 @@ function cuadroDeViento(p) {
     //
     // Ahora van en el orden en que importan: primero que es de la zona y de un
     // modelo, despues el detalle tecnico.
+    // DE CUANDO ES ESTE VIENTO.
+    //
+    // `ciclo` viaja en `incendios.json` desde que existe el bloque y no se
+    // pintaba en ninguna parte. Con ciclos de GFS cada 6 h y unas 3,5 h de
+    // latencia, la flecha en pantalla puede tener entre 3 y 10 horas — y la
+    // direccion del viento cambia en escalas de una hora. Era el unico dato que
+    // decia si "hacia donde empuja el viento" significa algo.
     `<span class="apunte">Viento de la zona según modelo, no medido en el incendio` +
-    ` · malla de 27&nbsp;km</span></div>` +
+    ` · malla de 27&nbsp;km` +
+    (cicloDeGfs() ? ` · ciclo GFS ${escapar(cicloDeGfs())}` : "") +
+    ` · no incluye la topografía ni la circulación del propio incendio` +
+    `</span></div>` +
     (p.hr_pct >= 0
       ? `<div class="metrica"><span class="cabeza">${iconoSvg("humedad")}` +
         `<span class="valor">${numero(Math.round(p.hr_pct))}</span></span>` +
@@ -5810,8 +5830,8 @@ function totalesDeFuego(celdas) {
 
   // Solo las celdas con cobertura conocida entran en el reparto del suelo: las
   // demás no son «cero por ciento arbolado», son «sin medir».
-  const clases = ["arbolado", "pastizal", "cultivo", "humedal"];
-  const conSuelo = celdas.filter((c) => clases.some((k) => Number(c[`${k}_pct`]) > 0));
+  const clases = ["arbolado", "arbustos", "pastizal", "cultivo", "construido", "humedal"];
+  const conSuelo = celdas.filter((c) => Number(c.lulc_px) > 0);
   const energia = conSuelo.reduce((t, c) => t + (Number(c.frp_suma) || 0), 0);
   const suelo = {};
   if (energia > 0) {
@@ -5926,18 +5946,25 @@ function pintarEnVivo() {
   const suelo = v.suelo || {};
   const clases = [
     ["arbolado", suelo.arbolado],
+    ["arbustos", suelo.arbustos],
     ["pastizal", suelo.pastizal],
     ["cultivo", suelo.cultivo],
+    ["construido", suelo.construido],
     ["humedal", suelo.humedal],
   ];
   // LAS BARRAS TIENEN QUE SUMAR CIEN, O DECIR QUE NO SUMAN.
   //
   // Se enseñaban tres —arbolado 50 %, pastizal 24 %, cultivo 8 %— y se leian
-  // como un reparto completo del fuego. Suman 82: el resto es matorral, suelo
-  // desnudo, urbano y las clases que el activo no nombra, mas el humedal cuando
-  // no llega al 1 % y se descarta. Un reparto al que le falta una quinta parte
+  // como un reparto completo del fuego. Un reparto al que le falta una parte
   // sin decirlo hace pensar que la mitad de America Latina arde en bosque
   // cuando la cifra honesta es "la mitad de la energia MEDIDA".
+  //
+  // Desde el 3-sep-2026 se nombran las SEIS clases del activo: faltaban
+  // `arbustos` y `construido`, que P5 no cruzaba, y eran el 13,5 % de la
+  // energia. No son clases menores aqui —el matorral es la cobertura del
+  // Cerrado, el Chaco y la Caatinga, y `construido` es la interfaz
+  // urbano-forestal—. "Otros" queda para suelo desnudo, nieve, agua y lo que
+  // caiga bajo el 1 %.
   const nombradas = clases.reduce((t, [, pct]) => t + (Number(pct) || 0), 0);
   const resto = Math.max(0, 100 - nombradas);
   const reparto = [...clases, ["otros", resto]].filter(([, pct]) => Number(pct) >= 1);

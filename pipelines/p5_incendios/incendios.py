@@ -57,8 +57,10 @@ MAX_CELDAS: Final[int] = 60_000
 
 NOTA: Final[str] = (
     "Detecciones de satelite (VIIRS, 375 m) en las ultimas 24 horas, agregadas a "
-    "celdas H3. Una deteccion no es un incendio: tres satelites sobre el mismo "
-    "fuego producen tres detecciones. NO se estima area quemada — el propio "
+    "celdas H3. Una deteccion no es un incendio: es un pixel donde el sensor vio "
+    "una anomalia termica —casi siempre fuego de vegetacion, a veces un volcan, "
+    "una antorcha de gas o un reflejo— y el mismo fuego produce varias. "
+    "NO se estima area quemada — el propio "
     "FIRMS lo desaconseja, porque el muestreo espacial y temporal es irregular. "
     "La exposicion es la del activo de cada pais; una celda sin poblacion puede "
     "estar fuera de los paises cubiertos, no vacia."
@@ -67,12 +69,12 @@ NOTA: Final[str] = (
 #: Lo que el viento NO dice, escrito donde viaja el dato.
 #:
 #: Misma funcion que `NOTA` para las detecciones: la unica linea que impide
-#: leer un punto de reticula de 27 km como el viento de una celda de 5 km2, y
+#: leer un punto de reticula de 27 km como el viento de una celda de 0,74 km2, y
 #: la direccion como hacia donde va en vez de desde donde sopla.
 NOTA_VIENTO: Final[str] = (
     "Viento a 10 m y humedad a 2 m del modelo NOAA GFS, en una reticula de 0,25 "
-    "grados (unos 27 km). NO es una medicion en la celda: una celda H3 son 5 km2 "
-    "y decenas comparten el mismo punto. La direccion es DESDE donde sopla, "
+    "grados (unos 27 km). NO es una medicion en la celda: una celda H3 r8 son "
+    "0,74 km2 y cientos comparten el mismo punto. La direccion es DESDE donde sopla, "
     "convencion meteorologica: 90 grados es viento del este, que empuja el fuego "
     "hacia el oeste."
 )
@@ -90,8 +92,10 @@ NOTA_VIENTO: Final[str] = (
 #: primario, y contar celdas las igualaria.
 SUELOS: Final[tuple[tuple[str, str], ...]] = (
     ("arbolado_pct", "arbolado"),
+    ("arbustos_pct", "arbustos"),
     ("pastizal_pct", "pastizal"),
     ("cultivo_pct", "cultivo"),
+    ("construido_pct", "construido"),
     ("humedal_pct", "humedal"),
 )
 
@@ -104,7 +108,7 @@ def _rejilla_de_viento(
     ES LA DECISION DE DISENO DE ESTE BLOQUE Y TIENE MOTIVO. Lo comodo seria
     meter velocidad, direccion y humedad dentro de cada celda, junto a la
     poblacion y el arbolado. Se descarto porque **seria una precision falsa**:
-    GFS va a 0,25 grados —unos 27 km— y una celda H3 r8 son 5 km2. Escribir el
+    GFS va a 0,25 grados —unos 27 km— y una celda H3 r8 son 0,74 km2. Escribir el
     valor dentro de cada celda las haria parecer medidas independientes cuando
     son el mismo numero repetido.
 
@@ -169,7 +173,17 @@ def _reparto_del_suelo(celdas: list[CeldaConFuego]) -> dict[str, Any]:
     donde lo correcto es "no se midio". Es la misma regla que sostiene el resto
     del sistema.
     """
-    con_suelo = [c for c in celdas if any(getattr(c, campo) > 0 for campo, _ in SUELOS)]
+    # MEDIDA ES `lulc_px > 0`, NO "ALGUNA CLASE DA MAS DE CERO".
+    #
+    # La heuristica anterior preguntaba si alguna de las clases publicadas
+    # pasaba de cero. Con cuatro clases de seis, una celda 100 % matorral o
+    # 100 % construida daba cero en las cuatro y se marcaba **sin medir**,
+    # estando perfectamente medida — y el visor lo afirmaba en pantalla. Con las
+    # seis clases eso ya casi no pasa, pero la pregunta correcta no es cuanto
+    # suman las clases: es cuanta evidencia hay debajo. P0 publica `lulc_px`
+    # justo para esto, diciendo que "una celda con nueve pixeles y otra con
+    # ciento cuarenta no merecen la misma confianza".
+    con_suelo = [c for c in celdas if c.lulc_px > 0]
     if not con_suelo:
         return {}
 

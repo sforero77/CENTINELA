@@ -27,7 +27,7 @@ decodifica con `struct` y aritmetica entera, que es lo que hace este modulo.
 Meter `eccodes` en los runners por tres numeros habria sido el mayor salto de
 dependencias del proyecto.
 
-## La reticula es de 27 km y una celda H3 r8 son 5
+## La reticula es de 27 km y una celda H3 r8 son 0,74
 
 GFS va a 0,25 grados. **El viento que se publica para una celda es el del punto
 de reticula mas cercano, no el de la celda**, y por eso viaja rotulado como

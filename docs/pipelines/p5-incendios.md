@@ -108,6 +108,18 @@ Por el mismo criterio, la confianza baja **se cuenta aparte en vez de
 descartarse** (`detecciones_baja`): publicar lo que se descarta es regla del
 proyecto desde que un M4,9 sentido en media Colombia solo existía en un log de CI.
 
+**Con una excepción, y conviene decirla porque la regla suena absoluta.** Una
+celda cuyas detecciones son **todas** de baja confianza no se publica: pintar un
+hexágono de fuego sobre territorio poblado apoyándose solo en detecciones
+dudosas es la versión visual de la cifra alarmista, y pesa más que el silencio.
+Lo fija `test_la_confianza_baja_se_cuenta_aparte_y_no_crea_celda`.
+
+Y el coste de esa excepción, para que esté dicho: NASA define `low` como reflejo
+solar **o** anomalía térmica débil (&lt;15 K), y una anomalía débil también es un
+fuego pequeño, frío o bajo dosel. Así que esto pierde fuegos reales —los débiles
+y aislados— y los pierde de día, porque `low` casi no existe de noche: requiere
+*sun glint*. Es un intercambio, no un filtro gratis.
+
 ## Lo que publica
 
 ```json
@@ -132,5 +144,5 @@ sería exactamente el cero silencioso, en versión porcentaje.
 La cobertura del suelo (`lulc_*` del activo, de ESA WorldCover) es lo que
 convierte "hay fuego" en información: un foco sobre pastizal en agosto es
 rutina agrícola; el mismo foco sobre arbolado es otra cosa. El reparto se
-calcula **sobre la energía medida, no sobre el número de focos**, y el visor lo
+calcula **sobre la potencia radiativa medida, no sobre el número de focos**, y el visor lo
 dice con esas palabras.
