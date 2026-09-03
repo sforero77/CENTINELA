@@ -249,7 +249,7 @@ def _cmd_lint_manifests(args: argparse.Namespace) -> int:
 
 def _cmd_status(args: argparse.Namespace) -> int:
     """Recalcula la pagina de estado a partir de los event_state en disco."""
-    path = write_status()
+    path = write_status(recuperar=args.recuperar)
     print(path)
     return 0
 
@@ -914,6 +914,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_lint.set_defaults(func=_cmd_lint_manifests)
 
     p_status = sub.add_parser("status", help="recalcula site/status.json")
+    p_status.add_argument(
+        "--recuperar",
+        action="store_true",
+        help=(
+            "sale del bloqueo cuando site/status.json quedo ilegible: lo aparta, "
+            "arranca historial nuevo y declara la perdida en el JSON"
+        ),
+    )
     p_status.set_defaults(func=_cmd_status)
 
     p_cobertura = sub.add_parser(
