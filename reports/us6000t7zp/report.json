@@ -19,7 +19,7 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 9183151.96281509,
+    "pop_mmi6p": 9183151.962815108,
     "pop_mmi7p": 2276853.9713528785,
     "pop_mmi8p": 736970.7352275667,
     "pop_65p_mmi7p": 226865.5566116786,
@@ -27,8 +27,8 @@
     "built_m2_mmi7p": 74831146.0,
     "health_mmi7p": 578.0,
     "edu_mmi7p": 810.0,
-    "road_km_mmi7p": 5265.768779357764,
-    "road_km_principal_mmi7p": 974.9592220731543,
+    "road_km_mmi7p": 5265.768779357779,
+    "road_km_principal_mmi7p": 974.9592220731528,
     "pop_ls_alta": 28985.956875724718,
     "pop_lq_alta": 561150.0343206676
   },
@@ -155,16 +155,13 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [
-    "Epicentro: reubicado 1 km",
-    "Ninguna cifra publicada cambia frente a la versión anterior."
-  ],
+  "changelog": [],
   "disclaimers": [
     "Exposición estimada, no daño observado.",
     "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-02T02:45:21Z",
+  "generado_utc": "2026-09-03T03:25:38Z",
   "pipeline_version": "0.1.0"
 }

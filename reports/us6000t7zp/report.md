@@ -63,11 +63,6 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
 
-## Cambios frente a la versión anterior
-
-- Epicentro: reubicado 1 km
-- Ninguna cifra publicada cambia frente a la versión anterior.
-
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -78,7 +73,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
 - ShakeMap consumido: **v15**
 - Ground Failure consumido: **v12**
 - Manifiesto de exposición: `ven-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-02T02:45:21Z
+- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:38Z
 
 ## Advertencias
 
