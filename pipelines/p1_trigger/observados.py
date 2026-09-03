@@ -196,9 +196,9 @@ def write_observados(
         "generado_utc": utcnow_iso(),
         "ventana_dias": DIAS_OBSERVADOS,
         "nota": (
-            "Sismos vistos por el vigia y no despachados: por debajo del umbral "
-            "de reporte. No se midio su impacto — esto no es una estimacion de "
-            "cero, es la ausencia de una medicion."
+            "Sismos vistos por el vigía y no despachados: por debajo del umbral "
+            "de reporte. No se midió su impacto: esto no es una estimación de "
+            "cero, es la ausencia de una medición."
         ),
         "eventos": [asdict(e) for e in vigentes],
     }

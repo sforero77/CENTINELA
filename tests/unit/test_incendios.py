@@ -407,7 +407,7 @@ def test_la_nota_dice_que_no_es_area_quemada() -> None:
     """
     nota = build_incendios([])["nota"]
 
-    assert "NO se estima area quemada" in nota
+    assert "NO se estima área quemada" in nota
     assert "no es un incendio" in nota
 
 
@@ -417,7 +417,7 @@ def test_la_nota_avisa_de_que_cero_poblacion_puede_ser_falta_de_activo() -> None
     Una corrida regional siempre tendra celdas de paises sin activo cargado.
     Publicarlas como cero medido seria el falso negativo de siempre.
     """
-    assert "no vacia" in build_incendios([])["nota"]
+    assert "no vacía" in build_incendios([])["nota"]
 
 
 def test_el_fichero_trae_generado_utc_para_frescura(tmp_path: Path) -> None:
