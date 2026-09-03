@@ -37,12 +37,12 @@
     "lon": -76.2182,
     "lat": 4.8836,
     "pop_mmi7p": 2424287.2030194234,
-    "pop_mmi6p": 7194539.766747381,
+    "pop_mmi6p": 7194539.76674738,
     "utc": "2026-08-10T12:34:28Z",
     "shakemap_version": 8,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-09-02T02:45:38Z"
+    "generado_utc": "2026-09-03T03:25:30Z"
   },
   {
     "usgs_id": "us6000t7zp",

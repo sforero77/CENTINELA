@@ -12,7 +12,7 @@
 |---|---:|
 | Población en MMI≥6 | 7,2 millones |
 | Población en MMI≥7 | 2,4 millones |
-| Población en MMI≥8 | 0 |
+| Población en MMI≥8 | — el evento no llegó a esta banda |
 | Edificaciones en MMI≥7 | 450 mil |
 | Sedes de salud en MMI≥7 | 516 |
 | Sedes educativas en MMI≥7 | 1.003 |
@@ -65,12 +65,6 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,3 %**.
 
-## Cambios frente a la versión anterior
-
-- Profundidad: 110 → 108 km
-- Epicentro: reubicado 5 km
-- Ninguna cifra publicada cambia frente a la versión anterior.
-
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -81,7 +75,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,3 %**.
 - ShakeMap consumido: **v8**
 - Ground Failure consumido: **v8**
 - Manifiesto de exposición: `col-v0.6`
-- Pipeline: `0.1.0` · Generado: 2026-09-02T02:45:38Z
+- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:30Z
 
 ## Advertencias
 
