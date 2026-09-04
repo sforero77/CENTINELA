@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-04T20:05:25Z",
+  "generado_utc": "2026-09-04T20:18:37Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
@@ -17,161 +17,207 @@
       "origen_utc": "2026-09-02T12:35:56Z",
       "publicado_utc": "2026-09-02T14:11:03Z",
       "minutos": 95.1,
-      "backtest": false
+      "backtest": false,
+      "shakemap": 3,
+      "actualizado_utc": "2026-09-04T09:54:39Z"
     },
     {
       "usgs_id": "us7000tdmp",
       "origen_utc": "2026-09-02T12:28:31Z",
       "publicado_utc": "2026-09-02T13:57:37Z",
       "minutos": 89.1,
-      "backtest": false
+      "backtest": false,
+      "shakemap": 4,
+      "actualizado_utc": "2026-09-04T09:54:36Z"
     },
     {
       "usgs_id": "us6000tjl2",
       "origen_utc": "2026-08-10T12:34:28Z",
       "publicado_utc": "2026-09-03T03:25:32Z",
       "minutos": 34011.1,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 8,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us6000t7zp",
       "origen_utc": "2026-06-24T22:05:04Z",
       "publicado_utc": "2026-09-03T03:25:40Z",
       "minutos": 101120.6,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 15,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us6000t7zc",
       "origen_utc": "2026-06-24T22:04:31Z",
       "publicado_utc": "2026-09-03T03:25:20Z",
       "minutos": 101120.8,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 9,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us7000nr0v",
       "origen_utc": "2024-11-10T16:49:50Z",
       "publicado_utc": "2026-09-03T03:25:54Z",
       "minutos": 952476.1,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 9,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us7000jl3s",
       "origen_utc": "2023-03-18T17:12:52Z",
       "publicado_utc": "2026-09-03T03:25:53Z",
       "minutos": 1820773.0,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 7,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us6000hf75",
       "origen_utc": "2022-04-21T07:42:46Z",
       "publicado_utc": "2026-09-03T03:25:11Z",
       "minutos": 2297982.4,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 6,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us7000f93v",
       "origen_utc": "2021-09-08T01:47:47Z",
       "publicado_utc": "2026-09-03T03:25:45Z",
       "minutos": 2622338.0,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 7,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us7000d18q",
       "origen_utc": "2021-01-19T02:46:22Z",
       "publicado_utc": "2026-09-03T03:25:40Z",
       "minutos": 2956359.3,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 8,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us7000455l",
       "origen_utc": "2019-06-26T05:23:51Z",
       "publicado_utc": "2026-09-03T03:25:33Z",
       "minutos": 3781321.7,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us70003t2n",
       "origen_utc": "2019-05-30T09:03:32Z",
       "publicado_utc": "2026-09-03T03:25:33Z",
       "minutos": 3819982.0,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us60003sc0",
       "origen_utc": "2019-05-26T07:41:15Z",
       "publicado_utc": "2026-09-03T03:25:46Z",
       "minutos": 3825824.5,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us2000j6hy",
       "origen_utc": "2019-01-20T01:32:52Z",
       "publicado_utc": "2026-09-03T03:25:08Z",
       "minutos": 4007632.3,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us1000gez7",
       "origen_utc": "2018-08-21T21:31:47Z",
       "publicado_utc": "2026-09-03T03:24:34Z",
       "minutos": 4225312.8,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us2000cjfy",
       "origen_utc": "2018-01-14T09:18:45Z",
       "publicado_utc": "2026-09-03T03:24:58Z",
       "minutos": 4541406.2,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us1000c2zy",
       "origen_utc": "2018-01-10T02:51:33Z",
       "publicado_utc": "2026-09-03T03:24:18Z",
       "minutos": 4547552.8,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us2000bmhe",
       "origen_utc": "2017-11-13T02:28:23Z",
       "publicado_utc": "2026-09-03T03:24:44Z",
       "minutos": 4631096.3,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us2000ahv0",
       "origen_utc": "2017-09-08T04:49:19Z",
       "publicado_utc": "2026-09-03T03:25:01Z",
       "minutos": 4725995.7,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us20009mbt",
       "origen_utc": "2017-06-14T07:29:04Z",
       "publicado_utc": "2026-09-03T03:24:40Z",
       "minutos": 4849675.6,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us10007mn3",
       "origen_utc": "2016-12-25T14:22:27Z",
       "publicado_utc": "2026-09-03T03:24:12Z",
       "minutos": 5095501.8,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "us20005j32",
       "origen_utc": "2016-04-16T23:58:36Z",
       "publicado_utc": "2026-09-03T03:24:51Z",
       "minutos": 5459246.2,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     },
     {
       "usgs_id": "usp000jd2q",
       "origen_utc": "2012-01-05T09:35:32Z",
       "publicado_utc": "2026-09-03T03:25:58Z",
       "minutos": 7710830.4,
-      "backtest": true
+      "backtest": true,
+      "shakemap": 1,
+      "actualizado_utc": ""
     }
   ],
   "cadencia": {
@@ -179,8 +225,8 @@
     "p50_min": 5.0,
     "p90_min": 5.1,
     "peor_min": 18.3,
-    "revisiones": 972,
-    "latidos": 201
+    "revisiones": 971,
+    "latidos": 200
   },
   "latidos": [
     {

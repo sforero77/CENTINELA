@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from pipelines.common.state import EventState, EventStatus
+from pipelines.common.state import EventState, EventStatus, ProcessedVersions
 from pipelines.common.status import build_status, event_latencies, percentil, write_status
 
 
@@ -408,3 +408,115 @@ def test_un_fichero_sano_no_declara_perdida_ni_aparta_nada(tmp_path: Path) -> No
     assert len(datos["latidos"]) == 1
     assert "historial_reiniciado" not in datos
     assert not [f for f in tmp_path.iterdir() if "ilegible" in f.name]
+
+
+# --- El trabajo que la latencia no mide -------------------------------------
+#
+# La latencia mide la PRIMERA publicacion y nada mas. RF-04 obliga a re-emitir
+# cuando USGS revisa el ShakeMap, y eso pasa de verdad: el de Puerto Madero
+# llego a v4 en dos dias y el de Venezuela a v14. El panel enseñaba "89,1 min"
+# de hace tres dias como si el reporte no se hubiera vuelto a tocar desde
+# entonces, y no habia forma de saber desde la pagina que se habia reprocesado.
+
+
+def _publicado_y_revisado(usgs_id: str) -> EventState:
+    return EventState(
+        usgs_id=usgs_id,
+        estado=EventStatus.PUBLICADO,
+        mag=5.6,
+        lon=-92.9,
+        lat=14.4,
+        depth_km=10.0,
+        lugar="x",
+        origen_utc="2026-09-02T12:00:00Z",
+        timestamps={
+            "publicado": "2026-09-02T13:00:00Z",
+            "publicado_ultimo": "2026-09-04T09:54:36Z",
+        },
+        versiones_procesadas=ProcessedVersions(shakemap=4),
+    )
+
+
+def test_la_latencia_lleva_la_version_consumida(tmp_path: Path) -> None:
+    """Sin ella, el panel no dice sobre que producto se calculo lo que enseña."""
+    eventos = tmp_path / "events"
+    eventos.mkdir()
+    estado = _publicado_y_revisado("us7000tdmp")
+    (eventos / "us7000tdmp.json").write_text(json.dumps(estado.to_dict()), encoding="utf-8")
+    reportes = _con_reporte(tmp_path, "us7000tdmp")
+
+    [latencia] = event_latencies(eventos, reports_root=reportes)
+
+    assert latencia.shakemap == 4
+
+
+def test_la_latencia_distingue_la_primera_publicacion_de_la_ultima(tmp_path: Path) -> None:
+    """Son dos fechas y significan cosas distintas.
+
+    `publicado_utc` es cuando el sistema respondio al sismo —lo que mide el
+    SLO— y `actualizado_utc` cuando volvio a hacerlo porque el producto cambio.
+    Colapsarlas dejaria el p50 mintiendo o el reproceso invisible; hasta ahora
+    pasaba lo segundo.
+    """
+    eventos = tmp_path / "events"
+    eventos.mkdir()
+    estado = _publicado_y_revisado("us7000tdmp")
+    (eventos / "us7000tdmp.json").write_text(json.dumps(estado.to_dict()), encoding="utf-8")
+    reportes = _con_reporte(tmp_path, "us7000tdmp")
+
+    [latencia] = event_latencies(eventos, reports_root=reportes)
+
+    assert latencia.publicado_utc == "2026-09-02T13:00:00Z"
+    assert latencia.actualizado_utc == "2026-09-04T09:54:36Z"
+    # Y la latencia sigue midiendo la primera, no la ultima: 60 min, no dos dias.
+    assert latencia.minutos == 60.0
+
+
+def test_un_reporte_que_solo_se_publico_una_vez_no_inventa_un_reproceso(tmp_path: Path) -> None:
+    """Vacio, no la fecha de publicacion repetida.
+
+    Es el caso normal —no todos los ShakeMap se revisan— y repetir la fecha
+    haria parecer que cada reporte se reproceso el dia que salio.
+    """
+    eventos = tmp_path / "events"
+    eventos.mkdir()
+    estado = _publicado("us1000c2zy", "2026-09-02T12:00:00Z", "2026-09-02T13:00:00Z")
+    (eventos / "us1000c2zy.json").write_text(json.dumps(estado.to_dict()), encoding="utf-8")
+    reportes = _con_reporte(tmp_path, "us1000c2zy")
+
+    [latencia] = event_latencies(eventos, reports_root=reportes)
+
+    assert latencia.actualizado_utc == ""
+    assert latencia.shakemap == 0
+
+
+def test_las_dos_columnas_viajan_hasta_status_json(tmp_path: Path) -> None:
+    """El calculo puede estar bien y no llegar al fichero que la pagina lee.
+
+    Es el hueco de siempre en este repositorio, y aqui son literalmente dos
+    claves de un diccionario que se escribe a mano.
+    """
+    eventos = tmp_path / "events"
+    eventos.mkdir()
+    estado = _publicado_y_revisado("us7000tdmp")
+    (eventos / "us7000tdmp.json").write_text(json.dumps(estado.to_dict()), encoding="utf-8")
+    reportes = _con_reporte(tmp_path, "us7000tdmp")
+
+    datos = build_status(events_dir=eventos, reports_root=reportes)
+
+    [evento] = datos["eventos"]
+    assert evento["shakemap"] == 4
+    assert evento["actualizado_utc"] == "2026-09-04T09:54:36Z"
+
+
+def test_el_panel_de_estado_pinta_las_dos_columnas() -> None:
+    """Publicarlas en el JSON y no dibujarlas es no publicarlas."""
+    raiz = Path(__file__).parent.parent.parent
+    js = (raiz / "site" / "assets" / "status.js").read_text(encoding="utf-8")
+    html = (raiz / "site" / "status.html").read_text(encoding="utf-8")
+
+    assert "e.shakemap" in js, "status.js no pinta la version consumida"
+    assert "e.actualizado_utc" in js, "status.js no pinta la fecha de reproceso"
+    assert "ShakeMap</th>" in html and "Reprocesado (UTC)</th>" in html, (
+        "la tabla de eventos no tiene cabecera para las dos columnas nuevas"
+    )

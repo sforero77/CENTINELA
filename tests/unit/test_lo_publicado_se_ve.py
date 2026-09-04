@@ -419,3 +419,87 @@ def test_las_dos_reglas_de_color_de_isolinea_leen_la_misma_tabla() -> None:
         assert not re.search(r"#[0-9a-fA-F]{6}", cuerpo), (
             f"{nombre} lleva un color escrito a mano: tiene que salir de CAPAS.mmi"
         )
+
+
+# --- Lo que cambio al reprocesar --------------------------------------------
+#
+# El mismo hueco que las isolineas, en otro dato. `changelog.py` calcula los
+# deltas entre dos versiones del reporte —RF-04 los exige— y su cabecera dice
+# para quien: "un ShakeMap se revisa muchas veces y quien ya leyo la version
+# anterior necesita saber que cambio, no volver a leerlo entero durante una
+# emergencia". Van en `report.json`, `markdown.py` les da su seccion, y el
+# visor —que es donde se lee esto en una emergencia— pintaba `shakemap_version`
+# a secas. Un numero que cambia sin decir que cambio no se distingue de uno que
+# siempre fue ese.
+
+
+def _reportes_con_changelog() -> list[str]:
+    """Los publicados que ya traen deltas. Sale del catalogo, como el resto."""
+    con = []
+    for usgs_id in _eventos_publicados():
+        datos = json.loads((REPORTS / usgs_id / "report.json").read_text(encoding="utf-8"))
+        if datos.get("changelog"):
+            con.append(usgs_id)
+    return con
+
+
+def test_hay_reportes_con_changelog_en_el_catalogo() -> None:
+    """Sin ellos, el guardia de navegador pasaria en vacio.
+
+    Aparecen solos: basta que USGS revise un ShakeMap y que P1 lo vea. Si algun
+    dia no hay ninguno sera porque el catalogo es nuevo, no porque el reproceso
+    dejara de pasar.
+    """
+    assert _reportes_con_changelog(), (
+        "ningun reporte publicado trae changelog: nada esta comprobando que el visor lo pinte"
+    )
+
+
+def test_el_visor_pinta_el_changelog_del_reporte() -> None:
+    """Estaba calculado, servido y descargable, y nadie lo llamaba.
+
+    Es literalmente la misma forma que el `return` que se llevaba las
+    isolineas: la pieza correcta, sin conexion.
+    """
+    assert "pintarCambios(" in _sin_comentarios(APP), (
+        "app.js no pinta el changelog en ninguna parte: el reporte publica "
+        "'que cambio' y el visor solo ensena el numero de version"
+    )
+
+    ini = APP.index("function pintarCambios")
+    cuerpo = _sin_comentarios(APP[ini : APP.index("\n}", ini)])
+    assert "reporte.changelog" in cuerpo, "pintarCambios no lee el changelog del reporte"
+    assert "escapar(" in cuerpo, (
+        "el changelog se inyecta como HTML sin escapar: viene de un fichero "
+        "generado, pero es texto que acaba en innerHTML"
+    )
+
+
+def test_el_bloque_de_cambios_nace_oculto() -> None:
+    """La primera emision de un reporte no tiene version anterior.
+
+    Un bloque vacio que dice "sin cambios" en veintiuno de veintitres reportes
+    ensena a no leer el bloque.
+    """
+    html = (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
+
+    assert 'id="bloque-cambios" hidden' in html, (
+        "el bloque de cambios no arranca oculto: aparecera vacio en todo "
+        "reporte que solo se haya publicado una vez"
+    )
+
+
+def test_el_bloque_de_cambios_se_puede_ocultar_de_verdad() -> None:
+    """`[hidden]` es `display:none` con especificidad de elemento, y `.bloque`
+    puede pisarlo — la trampa que ya costo dieciocho tarjetas visibles con el
+    filtro puesto."""
+    css = (RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8")
+    reglas = re.findall(r"\.bloque\s*\{[^}]*\}", css)
+    con_display = [r for r in reglas if "display" in r]
+
+    if not con_display:
+        return
+    assert "[hidden]" in css and ".bloque[hidden]" in css, (
+        f".bloque fija display ({con_display[0][:60]}...) y nada devuelve el "
+        "efecto a [hidden]: el bloque de cambios se vera aunque este oculto"
+    )

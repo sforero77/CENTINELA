@@ -298,6 +298,22 @@
                de hoy. -->
           <p class="apostilla" id="detalle-epoca" hidden></p>
 
+          <!-- QUÉ CAMBIÓ DESDE LA VERSIÓN ANTERIOR.
+               RF-04 pide re-emitir con changelog de deltas cuando aparece un
+               ShakeMap nuevo, y `changelog.py` lo calcula desde hace tiempo: va
+               en `report.json` y el `.md` le da su sección. El visor —que es
+               donde alguien mira esto durante una emergencia— sólo pintaba el
+               número de versión suelto. Un «ShakeMap v4» que ayer decía v3 no
+               se distingue de uno que siempre fue v4.
+               Va arriba, junto a la época y antes de las cifras, porque es
+               justamente para quien ya leyó la versión anterior y no quiere
+               releer el reporte entero. -->
+          <section class="bloque" id="bloque-cambios" hidden>
+            <h3 class="eyebrow">Cambios frente a la versión anterior</h3>
+            <p class="subtitulo-bloque">Un ShakeMap se revisa muchas veces —el de Venezuela llegó a v14—. Esto es lo que se movió al reprocesar.</p>
+            <ul class="cambios" id="detalle-cambios"></ul>
+          </section>
+
           <!-- Cuanto territorio, antes de cuanta gente. El visor contaba
                personas, edificaciones y vias y no decia nunca sobre que
                superficie: "2,4 M en MMI≥7" no distingue una ciudad sacudida de

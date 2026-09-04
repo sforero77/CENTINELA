@@ -78,8 +78,15 @@
     <h2>Eventos publicados</h2>
     <p class="cargando" id="estado-eventos">Cargando…</p>
     <div class="tabla-scroll"><table id="tabla-eventos" hidden>
+      <!-- LAS DOS ÚLTIMAS COLUMNAS SON EL TRABAJO QUE NO SE VEÍA.
+           La latencia mide la primera publicación y nada más. RF-04 obliga a
+           re-emitir cuando USGS revisa el ShakeMap, y eso pasa de verdad: el de
+           Puerto Madero llegó a v4 en dos días, el de Venezuela a v14. Esta
+           tabla enseñaba «89,1 min» de hace tres días como si el reporte no se
+           hubiera vuelto a tocar desde entonces. -->
       <thead><tr><th>Evento</th><th>Origen (UTC)</th><th>Publicado (UTC)</th>
-        <th class="num">Latencia</th></tr></thead>
+        <th class="num">Latencia</th><th class="num">ShakeMap</th>
+        <th class="num">Reprocesado (UTC)</th></tr></thead>
       <tbody></tbody>
     </table></div>
     <p class="nota" id="nota-eventos" hidden></p>

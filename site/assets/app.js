@@ -1265,6 +1265,7 @@ function pintarLateral(reporte, municipios, celdas) {
   ].join(" · ");
 
   pintarDistintivos(reporte);
+  pintarCambios(reporte);
   pintarArea(reporte, celdas);
   pintarFranjas(reporte);
   pintarMetricas(reporte);
@@ -1914,6 +1915,32 @@ function pintarContraste(usgsId, totales) {
     `${numero(c.evaluadas)} por imagen satelital y detectó daño en ` +
     `<strong>${numero(c.danadas)} (${pct} %)</strong>. Son dos preguntas distintas: ` +
     `exposición es quién quedó dentro de la franja; daño es a quién le pasó algo.`;
+}
+
+//: Lo que cambio al reprocesar, que el reporte publica y el visor no pintaba.
+//:
+//: `changelog.py` existe desde hace tiempo con este argumento en su cabecera:
+//: "un ShakeMap se revisa muchas veces —el de Venezuela llego a v14— y quien ya
+//: leyo la version anterior necesita saber **que cambio**, no volver a leerlo
+//: entero durante una emergencia". Lo calcula, lo mete en `report.json`,
+//: `markdown.py` le da su seccion — y el visor, que es donde se lee esto en una
+//: emergencia, solo pintaba `shakemap_version` a secas.
+//:
+//: Un numero que cambia sin decir que cambio no se distingue de uno que siempre
+//: fue ese. Es el mismo hueco que dejaba las isolineas sin dibujar: el dato
+//: calculado, servido y descargable, y nadie llamandolo.
+//:
+//: Se oculta cuando no hay nada: la primera emision de un reporte no tiene
+//: version anterior con la que compararse, y un bloque vacio que dice "sin
+//: cambios" ensena a no leer el bloque.
+function pintarCambios(reporte) {
+  const lineas = (reporte.changelog || []).filter((l) => String(l).trim());
+  const bloque = $("bloque-cambios");
+  if (!bloque) return;
+  bloque.hidden = !lineas.length;
+  if (!lineas.length) return;
+
+  $("detalle-cambios").innerHTML = lineas.map((l) => `<li>${escapar(l)}</li>`).join("");
 }
 
 function pintarIncertidumbre(reporte) {

@@ -182,3 +182,98 @@ def test_la_vista_previa_apunta_al_ultimo_evento() -> None:
     assert 'property="og:image" content="https://' in html, (
         "el HTML se quedo sin og:image de respaldo"
     )
+
+
+# --- La otra mitad del mismo hueco -------------------------------------------
+#
+# El push del bot no dispara `site.yml`, y por eso existe todo lo de arriba.
+# Tampoco dispara `ci.yml`, y eso no se habia mirado: la suite no corre nunca
+# sobre lo que el bot publica. Medido el 4-sep-2026 sobre `gh run list`: el bot
+# commiteo a las 09:54 y no hubo una sola corrida de CI; las diez ultimas son
+# todas de un PR humano.
+#
+# Importa porque parte de la suite vigila **artefactos publicados**, no codigo:
+# `test_lo_publicado_se_ve.py` mide los PNG de `reports/` pixel a pixel, y
+# `test_ningun_evento_se_queda_sin_reporte.py` mira el hueco entre lo detectado
+# y lo publicado. Los dos son guardias sobre lo que este camino escribe.
+
+#: El comando que dispara la suite sobre lo recien publicado.
+COMPROBAR = "gh workflow run ci.yml"
+
+#: Lo que ningun otro guardia mira: los reportes. Es el artefacto que la suite
+#: mide por su contenido y no por el codigo que lo produjo.
+RUTA_DE_LOS_REPORTES = "reports/"
+
+
+def comprueba(ruta: Path) -> bool:
+    """Como `republica`, con el mismo cuidado de no confundir prosa con codigo."""
+    return any(
+        linea.strip() in {COMPROBAR, f"run: {COMPROBAR}"} for linea in _texto(ruta).splitlines()
+    )
+
+
+def test_solo_un_workflow_escribe_reportes() -> None:
+    """Si aparece un segundo, la regla de abajo tiene que alcanzarle.
+
+    La prueba siguiente esta escrita contra `impact.yml` a proposito —no es
+    parametrica sobre todos— porque la regla NO puede ser "todo el que commitea
+    dispara CI": `trigger.yml` late cada cinco minutos y eso serian casi
+    trescientas corridas al dia. El corte esta en quien escribe `reports/`, y
+    hoy es uno solo. Esto avisa el dia que deje de serlo.
+    """
+    escriben = sorted(
+        p.name
+        for p in WORKFLOWS.glob("*.yml")
+        if "git add" in _texto(p) and RUTA_DE_LOS_REPORTES in _texto(p).split("git add", 1)[1][:80]
+    )
+
+    assert escriben == ["impact.yml"], (
+        f"estos workflows commitean reports/: {escriben}. La regla de "
+        "`test_quien_publica_un_reporte_dispara_la_suite` solo cubre impact.yml; "
+        "amplíala o el nuevo publicara sin que la suite lo mire."
+    )
+
+
+def test_quien_publica_un_reporte_dispara_la_suite() -> None:
+    """Publicar sin que nada lo compruebe es publicar a ciegas.
+
+    Va **despues** del push y no antes: publicar es el camino critico de un
+    sismo real y no puede depender de una suite. La regla de P3 es que un fallo
+    de derivado no tumba el reporte, que ya esta en disco. Esto no bloquea,
+    delata.
+    """
+    impacto = WORKFLOWS / "impact.yml"
+
+    assert comprueba(impacto), (
+        "impact.yml commitea reports/ y empuja con GITHUB_TOKEN, que **no** "
+        "dispara ci.yml. La suite no correra sobre el reporte publicado, y "
+        "parte de ella —los PNG, el hueco entre detectado y publicado— solo "
+        "sabe mirar lo publicado. Anade `gh workflow run ci.yml` tras el push."
+    )
+
+
+def test_la_suite_se_deja_disparar() -> None:
+    """`gh workflow run ci.yml` sobre un workflow sin `workflow_dispatch` falla.
+
+    Y falla en el paso de despues de publicar, con el reporte ya en su sitio:
+    rojo donde el trabajo salio bien.
+    """
+    import yaml as _yaml
+
+    ci = _yaml.safe_load(_texto(WORKFLOWS / "ci.yml"))
+    # `on` en YAML 1.1 se interpreta como el booleano True.
+    disparadores = ci.get("on", ci.get(True, {}))
+
+    assert "workflow_dispatch" in disparadores, (
+        "ci.yml perdio `workflow_dispatch` e impact.yml no puede dispararlo"
+    )
+
+
+def test_no_se_comprueba_si_no_hubo_push() -> None:
+    """Una corrida de CI por un despacho que no publico nada no mira nada nuevo."""
+    texto = _texto(WORKFLOWS / "impact.yml")
+    bloque = texto[texto.index("Comprobar lo que se acaba de publicar") :]
+
+    assert "steps.publicar.outputs.publicado == 'true'" in bloque[:400], (
+        "el disparo de ci.yml no esta condicionado a haber publicado"
+    )
