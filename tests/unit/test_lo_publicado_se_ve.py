@@ -113,8 +113,7 @@ def test_hay_eventos_sin_malla_en_el_catalogo() -> None:
     adentro, que en esta region es la mitad.
     """
     assert _eventos_sin_malla(), (
-        "ningun reporte publicado se quedo sin malla: estas pruebas no estan "
-        "comprobando nada"
+        "ningun reporte publicado se quedo sin malla: estas pruebas no estan comprobando nada"
     )
 
 
@@ -315,9 +314,7 @@ def test_la_leyenda_del_png_rotula_lo_que_el_mapa_pinta(usgs_id: str) -> None:
     bandas, hay_bajas = _bandas_dibujadas(contornos, [])
 
     esperadas = sorted({banda_de_mmi(v) for v in niveles if v >= MMI_MIN_MAPPED})
-    assert bandas == esperadas, (
-        f"{usgs_id} pinta {esperadas} y la leyenda rotula {bandas}"
-    )
+    assert bandas == esperadas, f"{usgs_id} pinta {esperadas} y la leyenda rotula {bandas}"
     assert hay_bajas == any(v < MMI_MIN_MAPPED for v in niveles), (
         f"{usgs_id}: la entrada de la isolinea gris no sigue a lo que se dibuja"
     )
@@ -341,9 +338,7 @@ def _sin_comentarios(js: str) -> str:
     comentario que nombran `dibujarContornos` para contar que **no** se
     llamaba: sin esto, borrar la llamada seguiria dando verde.
     """
-    return "\n".join(
-        linea for linea in js.splitlines() if not linea.lstrip().startswith("//")
-    )
+    return "\n".join(linea for linea in js.splitlines() if not linea.lstrip().startswith("//"))
 
 
 def _rama_sin_malla() -> str:
@@ -376,9 +371,7 @@ def test_el_visor_nombra_las_isolineas_que_deja_solas() -> None:
     """
     rama = _rama_sin_malla()
 
-    assert "pintarLeyendaDeContornos(" in rama, (
-        "se dibujan las isolineas y no se rotulan"
-    )
+    assert "pintarLeyendaDeContornos(" in rama, "se dibujan las isolineas y no se rotulan"
     assert '$("leyenda").hidden = true' not in rama, (
         "la rama sin malla sigue ocultando la leyenda a ciegas: quien decide es "
         "pintarLeyendaDeContornos, que sabe si hay algo que rotular"

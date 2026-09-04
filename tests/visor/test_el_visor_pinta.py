@@ -235,8 +235,7 @@ def test_un_evento_sin_malla_ensena_igual_su_sacudida(pagina: Any, usgs_id: str)
     contornos = _esperar_capa(pagina, "contornos", desde=marca)
 
     assert celdas["rasgos"] == 0, (
-        f"{usgs_id} no tiene celdas en su celdas.json y el visor dibujo "
-        f"{celdas['rasgos']}"
+        f"{usgs_id} no tiene celdas en su celdas.json y el visor dibujo {celdas['rasgos']}"
     )
     assert contornos["rasgos"] > 0, (
         f"{usgs_id} publica isolineas y el visor no dibujo ninguna: sin malla y "
@@ -276,8 +275,7 @@ def test_las_isolineas_solas_van_con_su_leyenda(pagina: Any, usgs_id: str) -> No
     rotulados = {float(t.strip().replace(",", ".")) for t in escala if t.strip()}
 
     assert rotulados == publicados, (
-        f"{usgs_id} publica isolineas {sorted(publicados)} y la leyenda rotula "
-        f"{sorted(rotulados)}"
+        f"{usgs_id} publica isolineas {sorted(publicados)} y la leyenda rotula {sorted(rotulados)}"
     )
 
 

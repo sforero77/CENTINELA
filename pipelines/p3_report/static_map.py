@@ -448,9 +448,7 @@ def _lazos(geometria: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
     else:
         return []
 
-    return [
-        [(float(x), float(y)) for x, y, *_ in lazo] for lazo in crudos if len(lazo) >= 2
-    ]
+    return [[(float(x), float(y)) for x, y, *_ in lazo] for lazo in crudos if len(lazo) >= 2]
 
 
 def _anillos(geometria: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
@@ -470,9 +468,7 @@ def _anillos(geometria: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
     atravesando el mapa en linea recta, que es peor que no dibujarlo. Ese lazo
     no se pierde — `_dibujar_contornos` lo sigue trazando como linea.
     """
-    return [
-        lazo for lazo in _lazos(geometria) if len(lazo) >= 4 and lazo[0] == lazo[-1]
-    ]
+    return [lazo for lazo in _lazos(geometria) if len(lazo) >= 4 and lazo[0] == lazo[-1]]
 
 
 def _dibujar_contornos(ax: Any, contornos: Mapping[str, Any] | None) -> None:
