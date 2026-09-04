@@ -8,15 +8,15 @@
   "lugar": "71 km al OSO de Puerto Madero, México",
   "origen_utc": "2026-09-02T12:28:31Z",
   "versiones_procesadas": {
-    "shakemap": 3,
+    "shakemap": 4,
     "groundfailure": 0
   },
   "timestamps": {
     "detectado": "2026-09-02T12:50:23Z",
     "preliminar": "2026-09-02T12:50:54Z",
     "publicado": "2026-09-02T13:57:37Z",
-    "usgs_origen": "2026-09-02T12:28:31Z",
-    "publicado_ultimo": "2026-09-03T03:26:06Z"
+    "publicado_ultimo": "2026-09-04T09:54:36Z",
+    "usgs_origen": "2026-09-02T12:28:31Z"
   },
   "hashes": {},
   "intentos_preliminar": 1,
@@ -25,6 +25,7 @@
     "sin ShakeMap disponible aun",
     "reproceso forzado: el pipeline cambio, no los productos",
     "ShakeMap v2 -> v3",
-    "reproceso forzado: el pipeline cambio, no los productos"
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "ShakeMap v3 -> v4"
   ]
 }
