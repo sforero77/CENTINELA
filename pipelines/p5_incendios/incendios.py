@@ -56,14 +56,14 @@ INCENDIOS_SCHEMA_ID: Final[str] = "centinela/incendios/1.0"
 MAX_CELDAS: Final[int] = 60_000
 
 NOTA: Final[str] = (
-    "Detecciones de satelite (VIIRS, 375 m) en las ultimas 24 horas, agregadas a "
-    "celdas H3. Una deteccion no es un incendio: es un pixel donde el sensor vio "
-    "una anomalia termica, casi siempre fuego de vegetacion y a veces un volcan, "
-    "una antorcha de gas o un reflejo. Ademas, el mismo fuego produce varias. "
-    "NO se estima area quemada, porque el propio FIRMS lo desaconseja: el "
+    "Detecciones de satélite (VIIRS, 375 m) en las últimas 24 horas, agregadas a "
+    "celdas H3. Una detección no es un incendio: es un píxel donde el sensor vio "
+    "una anomalía térmica, casi siempre fuego de vegetación y a veces un volcán, "
+    "una antorcha de gas o un reflejo. Además, el mismo fuego produce varias. "
+    "NO se estima área quemada, porque el propio FIRMS lo desaconseja: el "
     "muestreo espacial y temporal es irregular. "
-    "La exposicion es la del activo de cada pais; una celda sin poblacion puede "
-    "estar fuera de los paises cubiertos, no vacia."
+    "La exposición es la del activo de cada país; una celda sin población puede "
+    "estar fuera de los países cubiertos, no vacía."
 )
 
 #: Lo que el viento NO dice, escrito donde viaja el dato.
@@ -72,10 +72,10 @@ NOTA: Final[str] = (
 #: leer un punto de reticula de 27 km como el viento de una celda de 0,74 km2, y
 #: la direccion como hacia donde va en vez de desde donde sopla.
 NOTA_VIENTO: Final[str] = (
-    "Viento a 10 m y humedad a 2 m del modelo NOAA GFS, en una reticula de 0,25 "
-    "grados (unos 27 km). NO es una medicion en la celda: una celda H3 r8 son "
-    "0,74 km2 y cientos comparten el mismo punto. La direccion es DESDE donde sopla, "
-    "convencion meteorologica: 90 grados es viento del este, que empuja el fuego "
+    "Viento a 10 m y humedad a 2 m del modelo NOAA GFS, en una retícula de 0,25 "
+    "grados (unos 27 km). NO es una medición en la celda: una celda H3 r8 son "
+    "0,74 km2 y cientos comparten el mismo punto. La dirección es DESDE donde sopla, "
+    "convención meteorológica: 90 grados es viento del este, que empuja el fuego "
     "hacia el oeste."
 )
 

@@ -216,7 +216,7 @@ def build_status(
         "latidos": previos_y_nuevo[-MAX_LATIDOS:],
         "nota": (
             "La latencia incluye la demora del cron de GitHub Actions, que el "
-            "proyecto no controla y que su documentacion situa entre 5 y 30 "
+            "proyecto no controla y que su documentación sitúa entre 5 y 30 "
             "minutos. El objetivo se define sobre lo controlable; esta cifra es "
             "el total real, sin descontar nada."
         ),

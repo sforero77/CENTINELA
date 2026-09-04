@@ -89,7 +89,7 @@ def test_el_archivo_dice_en_texto_que_no_es_una_medicion(tmp_path: Path) -> None
     write_observados([_evento()], site_dir=tmp_path)
     datos = json.loads((tmp_path / "observados.json").read_text(encoding="utf-8"))
 
-    assert "no es una estimacion de cero" in datos["nota"]
+    assert "no es una estimación de cero" in datos["nota"]
 
 
 # --- La ventana caduca ------------------------------------------------------

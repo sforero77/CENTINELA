@@ -1668,9 +1668,9 @@ function pintarMetricas(reporte) {
   if (subtitulo) {
     subtitulo.textContent = soloSeis
       ? "MMI 6 se siente en todas partes y mueve objetos; el daño estructural " +
-        "empieza más arriba. Esto es lo que quedó dentro de esa franja — no lo que se dañó."
+        "empieza más arriba. Esto es lo que quedó dentro de esa franja, no lo que se dañó."
       : "MMI 7 es la sacudida que asusta a todo el mundo y agrieta construcción " +
-        "corriente. Esto es lo que quedó dentro de esa franja — no lo que se dañó.";
+        "corriente. Esto es lo que quedó dentro de esa franja, no lo que se dañó.";
   }
 
   const km2 = Number.isFinite(t.built_m2_mmi7p) ? t.built_m2_mmi7p / 1e6 : null;
