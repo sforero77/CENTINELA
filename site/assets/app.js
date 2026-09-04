@@ -1617,18 +1617,48 @@ function tarjetaIndicador({ clave, valor, texto, etiqueta, apunte, ancha }) {
   );
 }
 
+// Los radios son la respuesta cuando no hay banda que responder. Y llevan su
+// propio aviso: no son intensidad, y confundirlos es peor que no darlos. Un
+// sismo superficial y uno profundo de la misma magnitud tienen el mismo
+// círculo y no se parecen en nada.
+function pintarRadios(reporte, { final }) {
+  $("titulo-metricas").textContent = "Expuesto por radio";
+  const subtitulo = $("subtitulo-metricas");
+  if (subtitulo) {
+    subtitulo.textContent = final
+      ? "Ninguna banda de intensidad alcanza población, así que la única cifra " +
+        "que dimensiona este evento es la distancia. Los radios no son bandas de " +
+        "intensidad: sirven para dimensionar, no para priorizar."
+      : "Todavía no hay mapa de intensidad. Estas son las personas que viven " +
+        "dentro de cada radio del epicentro, no dentro de una franja de sacudida.";
+  }
+  $("detalle-metricas").innerHTML = (reporte.radios || [])
+    .map((r) =>
+      tarjetaIndicador({ clave: "personas", valor: r.pop, etiqueta: `a ${r.radio_km} km` })
+    )
+    .join("");
+}
+
 function pintarMetricas(reporte) {
   const t = reporte.totales;
 
-  // Un preliminar publica radios en lugar de bandas de intensidad. Enseñar
-  // "MMI≥7: 0" sería una cifra falsa y creíble.
-  if (reporte.preliminar) {
-    $("titulo-metricas").textContent = "Expuesto por radio";
-    $("detalle-metricas").innerHTML = (reporte.radios || [])
-      .map((r) =>
-        tarjetaIndicador({ clave: "personas", valor: r.pop, etiqueta: `a ${r.radio_km} km` })
-      )
-      .join("");
+  // RADIOS Y NO BANDAS CUANDO LA SACUDIDA NO ALCANZA POBLACION.
+  //
+  // Enseñar "MMI≥7: 0" es una cifra falsa y creíble. Eso ya estaba escrito
+  // aquí, y solo cubría la mitad de los casos: el preliminar.
+  //
+  // El otro es el reporte **final** de un evento que no llega a MMI≥6 sobre
+  // población. Ahí `bandaDeTotales` devuelve 0, el panel caía a las bandas y
+  // pintaba una pared de ceros —personas, mayores, salud, educación,
+  // edificaciones, vías— escondiendo el único número que no lo era, que
+  // viajaba en el mismo JSON. Son cinco reportes publicados, y en tres hay
+  // cifra de verdad: Baní enseñaba cero con **6.935.082 personas a 100 km**.
+  //
+  // `markdown.py` ya tenía este arreglo, con su comentario puesto: "el reporte
+  // final informaba MENOS que el preliminar". El visor nunca lo recibió.
+  const bandaConPoblacion = bandaDeTotales(t);
+  if (reporte.preliminar || !bandaConPoblacion) {
+    pintarRadios(reporte, { final: !reporte.preliminar });
     return;
   }
 
@@ -1636,7 +1666,7 @@ function pintarMetricas(reporte) {
   // MMI≥7, así que el título nombra esa banda. Lo que sí cambia es la cifra de
   // personas: es la única que existe para las dos bandas, y con un evento que
   // no llega a 7 poner un 0 ahí es la frase que este tablero evita.
-  const banda = bandaDeTotales(t);
+  const banda = bandaConPoblacion;
   // UNA NOTA ESCRITA PARA UN CASO SE ESTABA IMPRIMIENDO EN EL CONTRARIO.
   //
   // `bandaDeTotales` devuelve 8 en cuanto hay alguien en MMI≥8 y 6 cuando la
@@ -1750,6 +1780,26 @@ function pintarTerreno(reporte) {
   const tiene = Number.isFinite(t.pop_lq_alta) || Number.isFinite(t.pop_ls_alta);
   bloque.hidden = !tiene || reporte.preliminar;
   if (bloque.hidden) return;
+
+  // USGS NO SIEMPRE PUBLICA GROUND FAILURE, Y UN 0 AHI NO ES UNA MEDICION.
+  //
+  // `pop_lq_alta` y `pop_ls_alta` salen a 0.0 cuando el producto no existe, y
+  // 0.0 es finito, así que el bloque se pintaba igual: "Licuefacción alta 0,
+  // Deslizamiento alto 0". Eso se lee como "se miró y no hay nadie sobre suelo
+  // licuable", cuando lo que pasa es que no hubo con qué mirar. Son siete
+  // reportes finales publicados.
+  //
+  // `markdown.py` ya lo distinguía con `groundfailure_version == 0`. Aquí se
+  // dice en vez de omitirlo: quien busca el dato merece enterarse de que no
+  // existe, no que la sección desaparezca sin explicación.
+  if ((reporte.inputs || {}).groundfailure_version === 0) {
+    $("detalle-terreno").innerHTML =
+      `<li style="background:none;padding:0.3rem 0 0"><span class="leyenda-nota">` +
+      `USGS no ha publicado el producto <em>Ground Failure</em> para este evento, ` +
+      `así que aquí no hay nada que contar. No es un cero: es una medición que no ` +
+      `existe. El reporte se re-emite solo si aparece.</span></li>`;
+    return;
+  }
 
   const filas = [
     { etiqueta: "Licuefacción alta", valor: t.pop_lq_alta, icono: "licuefaccion" },

@@ -1820,6 +1820,56 @@ def test_los_sismos_menores_obedecen_al_filtro_de_pais(pagina: Any) -> None:
     )
 
 
+def test_un_evento_sin_banda_ensena_radios_y_no_una_pared_de_ceros(pagina: Any) -> None:
+    """Puerto Madero (M5,6 a 71 km mar adentro) salia con todo en cero.
+
+    Personas, mayores, sedes de salud, educativas, edificaciones, vias: cero.
+    Y en el mismo `report.json` viajaban 614.310 personas a 100 km, que el
+    panel no enseñaba. En Bani eran **6.935.082**.
+
+    El panel ya tenia escrito el principio que incumplia, tres lineas encima de
+    la condicion mala: «Enseñar "MMI>=7: 0" seria una cifra falsa y creible».
+    Lo cumplia solo para el preliminar. `markdown.py` ya lo tenia arreglado
+    para los dos casos.
+    """
+    pagina.select_option("select", "us7000tdmp")
+    pagina.wait_for_timeout(1500)
+
+    titulo = pagina.locator("#titulo-metricas").inner_text()
+    assert "radio" in titulo.lower(), (
+        f"un evento sin banda deberia titular por radios y dice {titulo!r}"
+    )
+
+    detalle = pagina.locator("#detalle-metricas").inner_text()
+    assert "614" in detalle.replace(".", "").replace(",", "") or "614" in detalle, (
+        f"no aparece la poblacion dentro de los 100 km: {detalle!r}"
+    )
+    assert "sedes de salud" not in detalle, (
+        "sigue pintando las cifras de MMI>=7, que aqui son ceros inventados"
+    )
+
+    subtitulo = pagina.locator("#subtitulo-metricas").inner_text()
+    assert "no son bandas de intensidad" in subtitulo, (
+        "los radios se dan sin avisar de que no son intensidad: "
+        "un sismo hondo y uno superficial tienen el mismo circulo"
+    )
+
+
+def test_sin_ground_failure_el_terreno_lo_dice_en_vez_de_poner_cero(pagina: Any) -> None:
+    """`pop_lq_alta` sale 0.0 cuando USGS no publico el producto, y 0.0 es
+    finito, asi que el bloque pintaba "Licuefaccion alta 0".
+
+    Se lee como "se miro y no hay nadie sobre suelo licuable". Lo que pasa es
+    que no hubo con que mirar. Son siete reportes finales publicados.
+    """
+    pagina.select_option("select", "us7000tdmp")
+    pagina.wait_for_timeout(1500)
+
+    terreno = pagina.locator("#detalle-terreno").inner_text()
+    assert "no ha publicado" in terreno, f"el bloque no dice que falta el producto: {terreno!r}"
+    assert "Licuefacción alta" not in terreno, "sigue enseñando la fila con un cero que nadie midio"
+
+
 def test_los_menores_tienen_lista_y_ninguna_cifra_de_impacto(pagina: Any) -> None:
     """El interruptor decía «12 en 5 días» y el mapa los pintaba, y para saber
     CUÁLES eran había que pinchar estrella por estrella o abrir el JSON crudo.
