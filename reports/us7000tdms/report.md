@@ -1,4 +1,4 @@
-# Exposición sísmica — M5,9 · southern East Pacific Rise
+# Exposición sísmica: M5,9 · southern East Pacific Rise
 
 **Evento USGS:** `us7000tdms` · **Origen:** 2026-09-02T12:35:56Z UTC · **Profundidad:** 10,0 km
 
@@ -6,9 +6,9 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | — el evento no llegó a esta banda |
-| Población en MMI≥7 | — el evento no llegó a esta banda |
-| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Población en MMI≥6 | el evento no llegó a esta banda |
+| Población en MMI≥7 | el evento no llegó a esta banda |
+| Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥6 | 0 |
 | Sedes de salud en MMI≥6 | 0 |
 | Sedes educativas en MMI≥6 | 0 |
@@ -38,13 +38,18 @@ USGS no ha publicado el producto *Ground Failure* para este evento. La sección 
 
 PAGER (USGS) estima para este evento una alerta **verde**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
 Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentro de las bandas publicadas tiene población de WorldPop con la que contrastar.
 
 - El epicentro está a 868 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
+
+## Cambios frente a la versión anterior
+
+- ShakeMap: v2 → v3
+- Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
 
@@ -53,10 +58,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v2**
+- ShakeMap consumido: **v3**
 - Ground Failure consumido: **v0**
 - Manifiesto de exposición: `chl-v0.2`
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:26:06Z
+- Pipeline: `0.1.0` · Generado: 2026-09-04T09:54:36Z
 
 ## Advertencias
 
