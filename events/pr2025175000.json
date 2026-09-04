@@ -1,6 +1,6 @@
 {
   "usgs_id": "pr2025175000",
-  "estado": "detectado",
+  "estado": "publicado",
   "mag": 5.7,
   "lon": -68.1103,
   "lat": 19.2245,
@@ -8,17 +8,19 @@
   "lugar": "77 km al NNE de Punta Cana, República Dominicana",
   "origen_utc": "2025-06-24T02:45:43Z",
   "versiones_procesadas": {
-    "shakemap": 0,
+    "shakemap": 8,
     "groundfailure": 0
   },
   "timestamps": {
     "detectado": "2026-08-25T19:05:54Z",
+    "publicado": "2026-09-04T20:30:15Z",
     "usgs_origen": "2025-06-24T02:45:43Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,
   "backtest": true,
   "notas": [
-    "Backtest: reconstruccion retrospectiva de 2025-06-24, no una respuesta en vivo."
+    "Backtest: reconstruccion retrospectiva de 2025-06-24, no una respuesta en vivo.",
+    "ShakeMap v0 -> v8"
   ]
 }

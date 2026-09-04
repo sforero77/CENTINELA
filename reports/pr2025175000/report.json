@@ -1,0 +1,76 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "pr2025175000",
+    "mag": 5.7,
+    "depth_km": 68.0,
+    "utc": "2025-06-24T02:45:43Z",
+    "lugar": "77 km al NNE de Punta Cana, República Dominicana",
+    "pager_alert": "green",
+    "lon": -68.1103,
+    "lat": 19.2245
+  },
+  "inputs": {
+    "shakemap_version": 8,
+    "groundfailure_version": 0,
+    "exposure_manifest": "dom-v0.2"
+  },
+  "preliminar": false,
+  "radios": [
+    {
+      "radio_km": 25,
+      "pop": 0.0
+    },
+    {
+      "radio_km": 50,
+      "pop": 0.0
+    },
+    {
+      "radio_km": 100,
+      "pop": 287475.114130768
+    }
+  ],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 0.0,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [],
+  "incertidumbre": {
+    "pop_discrepancia_pct": null,
+    "notas": [
+      "El epicentro está a 66 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
+    ]
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "",
+    "ls_pop_usgs": "",
+    "lq_alerta_usgs": "",
+    "lq_pop_usgs": ""
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-04T20:30:13Z",
+  "pipeline_version": "0.1.0"
+}
