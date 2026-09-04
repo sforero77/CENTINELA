@@ -75,6 +75,21 @@
     "generado_utc": "2026-09-03T03:25:17Z"
   },
   {
+    "usgs_id": "pr2025056002",
+    "mag": 5.85,
+    "lugar": "102 km al NNE de Punta Cana, República Dominicana",
+    "iso3": "DOM",
+    "lon": -68.0846,
+    "lat": 19.4565,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2025-02-25T05:48:55Z",
+    "shakemap_version": 11,
+    "preliminar": false,
+    "backtest": true,
+    "generado_utc": "2026-09-04T20:30:10Z"
+  },
+  {
     "usgs_id": "us7000nr0v",
     "mag": 6.8,
     "lugar": "42 km al SSO de Bartolomé Masó, Cuba",

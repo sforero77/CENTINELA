@@ -1,12 +1,12 @@
 {
-  "generado_utc": "2026-09-04T20:18:37Z",
+  "generado_utc": "2026-09-04T20:30:12Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
   },
   "medido": {
     "eventos_publicados": 2,
-    "backtests_excluidos": 21,
+    "backtests_excluidos": 22,
     "p50_min": 92.1,
     "p95_min": 94.8,
     "peor_min": 95.1
@@ -55,6 +55,15 @@
       "minutos": 101120.8,
       "backtest": true,
       "shakemap": 9,
+      "actualizado_utc": ""
+    },
+    {
+      "usgs_id": "pr2025056002",
+      "origen_utc": "2025-02-25T05:48:55Z",
+      "publicado_utc": "2026-09-04T20:30:12Z",
+      "minutos": 801521.3,
+      "backtest": true,
+      "shakemap": 11,
       "actualizado_utc": ""
     },
     {
