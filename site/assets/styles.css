@@ -547,6 +547,17 @@ a:hover { color: var(--verde-vivo); }
   border: 1px solid rgba(28, 51, 40, 0.6);
 }
 
+/* LA MUESTRA DE UNA ISOLINEA ES UNA LINEA.
+ *
+ * Cuando el evento no tiene malla, lo unico que hay en el mapa son los
+ * contornos del ShakeMap. Explicarlos con la casilla rellena de la coropleta
+ * prometeria un area medida —"esto es lo que hay dentro"— que es justo lo que
+ * en esos eventos no existe: no hay celdas, no hay nadie contado dentro.
+ *
+ * Conserva el borde de `.muestra`, que no es decoracion: es lo que delimita el
+ * gris #9a8f7d de los niveles bajos contra el fondo claro de la caja. */
+.leyenda-escala .muestra-linea { height: 0.28rem; border-radius: 1px; }
+
 .leyenda-valor { font-family: var(--tipo-mono); font-size: 0.72rem; }
 .leyenda-nota { margin: 0; color: var(--tenue-mas); font-size: 0.72rem; line-height: 1.45; }
 
