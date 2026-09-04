@@ -3148,3 +3148,67 @@ def test_la_barra_de_escala_no_cae_dentro_de_la_leyenda(navegador: Any, servidor
     ctx.close()
     assert holgura is not None, "no se encontraron la escala o la leyenda"
     assert holgura >= 0, f"la barra de escala cae {abs(holgura)} px dentro de la leyenda"
+
+
+def _eventos_con_changelog() -> list[str]:
+    """Los publicados que ya traen deltas de un reproceso.
+
+    Del catalogo, no de una lista: aparecen solos en cuanto USGS revisa un
+    ShakeMap y P1 lo ve. Hoy son dos —Puerto Madero v3->v4 y East Pacific
+    v2->v3— y manana pueden ser otros.
+    """
+    con = []
+    for reporte in sorted((RAIZ / "reports").glob("*/report.json")):
+        if json.loads(reporte.read_text(encoding="utf-8")).get("changelog"):
+            con.append(reporte.parent.name)
+    return con
+
+
+@pytest.mark.parametrize("usgs_id", _eventos_con_changelog())
+def test_el_panel_dice_que_cambio_al_reprocesar(pagina: Any, usgs_id: str) -> None:
+    """El visor pintaba `ShakeMap v4` y nada mas.
+
+    `changelog.py` calcula los deltas para esto exactamente —"quien ya leyo la
+    version anterior necesita saber que cambio, no volver a leerlo entero
+    durante una emergencia"— y el visor, que es donde se lee en una emergencia,
+    no los enseñaba. Un numero que cambia sin decir que cambio no se distingue
+    de uno que siempre fue ese.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", usgs_id)
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    bloque = pagina.locator("#bloque-cambios")
+    assert bloque.is_visible(), f"{usgs_id} publica changelog y el panel no lo enseña"
+
+    publicadas = json.loads(
+        (RAIZ / "reports" / usgs_id / "report.json").read_text(encoding="utf-8")
+    )["changelog"]
+    pintadas = pagina.locator("#detalle-cambios li").all_inner_texts()
+
+    assert [t.strip() for t in pintadas] == [str(p).strip() for p in publicadas], (
+        f"{usgs_id} publica {publicadas} y el panel pinta {pintadas}"
+    )
+
+
+def test_un_reporte_sin_reproceso_no_enseña_el_bloque(pagina: Any) -> None:
+    """La primera emision no tiene con que compararse.
+
+    Un bloque que dice "sin cambios" en veintiuno de veintitres reportes enseña
+    a no leer el bloque — y `[hidden]` sobre un `.bloque` con `display` puesto
+    es la trampa que ya costo dieciocho tarjetas visibles con el filtro puesto.
+    """
+    sin_cambios = [
+        p.parent.name
+        for p in sorted((RAIZ / "reports").glob("*/report.json"))
+        if not json.loads(p.read_text(encoding="utf-8")).get("changelog")
+    ]
+    assert sin_cambios, "todos los reportes traen changelog: no hay caso que comprobar"
+
+    marca = _ahora(pagina)
+    pagina.select_option("select", sin_cambios[0])
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    assert not pagina.locator("#bloque-cambios").is_visible(), (
+        f"{sin_cambios[0]} no tiene changelog y el bloque se ve igual"
+    )

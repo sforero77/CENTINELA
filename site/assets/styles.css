@@ -740,6 +740,25 @@ a:hover { color: var(--verde-vivo); }
 .terreno .cifra { font-family: var(--tipo-titulo); font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 .terreno .cero { color: var(--tenue-mas); }
 
+/* LOS DELTAS DEL REPROCESO.
+ *
+ * Filete a la izquierda y no fondo lleno: es un aviso de lectura —"esto se
+ * movio desde la version que leiste"—, no una cifra mas del reporte. Compite
+ * con el bloque de franjas que va justo debajo y tiene que perder esa pelea.
+ *
+ * Las lineas vienen de `format_delta_prose` y traen flechas: "340k → 355k".
+ * Cifras tabulares para que los dos lados de la flecha se lean alineados. */
+.cambios { list-style: none; margin: 0; padding: 0; }
+
+.cambios li {
+  padding: 0.4rem 0 0.4rem 0.7rem;
+  margin-bottom: 0.25rem;
+  border-left: 2px solid var(--bosque);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Barras en CSS puro: una libreria de graficos para ocho barras horizontales
    es una dependencia que mantener y una peticion mas en una pagina que promete
    abrir con mala conexion. */

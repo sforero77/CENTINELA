@@ -44,6 +44,18 @@ class EventLatency:
     minutos: float
     #: Reconstruccion retrospectiva: se lista, pero no cuenta para el p50/p95.
     backtest: bool = False
+    #: Version de ShakeMap que el reporte consumio, y cuando se re-emitio.
+    #:
+    #: LA LATENCIA MEDIA LA PRIMERA PUBLICACION Y NADA MAS. RF-04 obliga a
+    #: re-emitir cuando USGS revisa el producto, y eso pasa de verdad: el
+    #: ShakeMap de Puerto Madero llego a v4 en dos dias y el de Venezuela a v14.
+    #: Ese trabajo no aparecia en ninguna parte del panel de estado, que
+    #: enseñaba "89,1 min" de hace tres dias como si el reporte no se hubiera
+    #: vuelto a tocar.
+    shakemap: int = 0
+    #: Vacio en un reporte que solo se publico una vez. No es lo mismo que
+    #: `publicado_utc`: ese es la primera vez, este la ultima.
+    actualizado_utc: str = ""
 
 
 def _parse(ts: str) -> datetime | None:
@@ -108,6 +120,8 @@ def event_latencies(
                 publicado_utc=publicado,
                 minutos=round((fin - inicio).total_seconds() / 60.0, 1),
                 backtest=estado.backtest,
+                shakemap=estado.versiones_procesadas.shakemap,
+                actualizado_utc=estado.timestamps.get("publicado_ultimo", ""),
             )
         )
     return sorted(latencias, key=lambda e: e.origen_utc, reverse=True)
@@ -209,6 +223,8 @@ def build_status(
                 "publicado_utc": e.publicado_utc,
                 "minutos": e.minutos,
                 "backtest": e.backtest,
+                "shakemap": e.shakemap,
+                "actualizado_utc": e.actualizado_utc,
             }
             for e in latencias[:50]
         ],

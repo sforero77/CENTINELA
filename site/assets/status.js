@@ -131,7 +131,12 @@ function pintarEventos(datos) {
       `${e.backtest ? ' <span class="mono">retrospectivo</span>' : ""}</td>` +
       `<td class="num">${comoFecha(e.origen_utc)}</td>` +
       `<td class="num">${comoFecha(e.publicado_utc)}</td>` +
-      `<td class="num">${comoDuracion(e.minutos)}</td>`;
+      `<td class="num">${comoDuracion(e.minutos)}</td>` +
+      // `v0` es un preliminar sin ShakeMap, no una version cero.
+      `<td class="num">${e.shakemap ? "v" + e.shakemap : "—"}</td>` +
+      // Vacío cuando el reporte se publicó una sola vez, que es el caso normal
+      // y no una carencia: no todos los ShakeMap se revisan.
+      `<td class="num">${e.actualizado_utc ? comoFecha(e.actualizado_utc) : "—"}</td>`;
     cuerpo.appendChild(fila);
   }
   estado.hidden = true;
