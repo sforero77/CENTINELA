@@ -22,6 +22,7 @@ malla dibujada de una malla vacia, que es el cero silencioso de siempre.
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import threading
@@ -190,6 +191,92 @@ def test_seleccionar_un_evento_dibuja_su_malla(pagina: Any) -> None:
 
     assert celdas["rasgos"] > 0, "se selecciono un evento y la malla salio vacia"
     assert contornos["rasgos"] > 0, "el area de afectacion no se dibujo"
+
+
+def _eventos_sin_malla() -> list[str]:
+    """Los publicados cuya sacudida no dejo ni una celda debajo.
+
+    Sale del catalogo en cada corrida y no de una lista escrita: los cinco de
+    hoy fueron uno solo hace una semana, y el sexto tiene que entrar aqui sin
+    que nadie se acuerde de anadirlo.
+    """
+    sin = []
+    for celdas in sorted((RAIZ / "reports").glob("*/celdas.json")):
+        if json.loads(celdas.read_text(encoding="utf-8")).get("celdas"):
+            continue
+        contornos = celdas.parent / "contornos.json"
+        if not contornos.is_file():
+            continue
+        if json.loads(contornos.read_text(encoding="utf-8")).get("features"):
+            sin.append(celdas.parent.name)
+    return sin
+
+
+@pytest.mark.parametrize("usgs_id", _eventos_sin_malla())
+def test_un_evento_sin_malla_ensena_igual_su_sacudida(pagina: Any, usgs_id: str) -> None:
+    """El mapa en blanco, esta vez del lado del catalogo que no tiene celdas.
+
+    Cinco de los veintitres reportes publicados no tienen ni un hexagono: su
+    sacudida no alcanzo MMI 6 sobre poblacion. La rama que los atendia volvia
+    antes de dibujar los contornos, asi que el evento traia su `contornos.json`
+    calculado y servido y el mapa no pintaba una sola linea. Quedaba una
+    estrella sobre nada, igual que un reporte que no se proceso.
+
+    El peor era `us1000c2zy`: un M7,5 con isolineas hasta MMI 8 sobre el Caribe.
+
+    Se cuentan rasgos y ademas se pregunta al estilo. El registro dice lo que el
+    visor **quiso** pintar; que la capa este de verdad en el mapa solo lo puede
+    decir MapLibre, y ya hubo tres pruebas que pasaron con capas prestadas.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", usgs_id)
+
+    celdas = _esperar_capa(pagina, "celdas", desde=marca)
+    contornos = _esperar_capa(pagina, "contornos", desde=marca)
+
+    assert celdas["rasgos"] == 0, (
+        f"{usgs_id} no tiene celdas en su celdas.json y el visor dibujo {celdas['rasgos']}"
+    )
+    assert contornos["rasgos"] > 0, (
+        f"{usgs_id} publica isolineas y el visor no dibujo ninguna: sin malla y "
+        f"sin contorno, su mapa no dice donde estuvo la sacudida"
+    )
+    assert "contornos" in pagina.evaluate("window.CENTINELA.capasDelMapa()"), (
+        "el registro anota los contornos y el estilo no los tiene"
+    )
+
+
+@pytest.mark.parametrize("usgs_id", _eventos_sin_malla())
+def test_las_isolineas_solas_van_con_su_leyenda(pagina: Any, usgs_id: str) -> None:
+    """Una linea palida sobre el mar, sin nada que la nombre, no es informacion.
+
+    La caja de la leyenda describe la malla —sus cortes, sus huecos— asi que en
+    esta rama se ocultaba. Con los contornos dibujados eso deja en pantalla el
+    unico rasgo del mapa sin escala y sin explicacion.
+
+    Se comprueba que rotula **los niveles que este ShakeMap trae**, no la rampa
+    entera: en un evento que topa en MMI 5, seis casillas hasta 8,5 pondrian en
+    la caja intensidades que no estan en el mapa.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", usgs_id)
+    _esperar_capa(pagina, "contornos", desde=marca)
+
+    leyenda = pagina.locator("#leyenda")
+    assert leyenda.is_visible(), f"{usgs_id} dibuja isolineas y no las rotula"
+
+    publicados = {
+        float(r["properties"]["mmi"])
+        for r in json.loads(
+            (RAIZ / "reports" / usgs_id / "contornos.json").read_text(encoding="utf-8")
+        )["features"]
+    }
+    escala = pagina.locator("#leyenda-escala li").all_inner_texts()
+    rotulados = {float(t.strip().replace(",", ".")) for t in escala if t.strip()}
+
+    assert rotulados == publicados, (
+        f"{usgs_id} publica isolineas {sorted(publicados)} y la leyenda rotula {sorted(rotulados)}"
+    )
 
 
 def test_la_leyenda_y_la_malla_hablan_del_mismo_dato(pagina: Any) -> None:

@@ -2638,6 +2638,73 @@ function dibujarContornos(m, datos, antes) {
   }, antes);
 }
 
+//: El color de una isolinea suelta, con la misma regla que `colorDeContorno`.
+//:
+//: Aquella devuelve una expresion de MapLibre y esta un color, y las dos tienen
+//: que decir lo mismo: la leyenda que explica una linea gris no puede estar
+//: junto a una linea naranja. Por eso ninguna de las dos lleva su propia tabla
+//: —leen `CAPAS.mmi`— y `test_visor_gis.py` las compara paso a paso.
+function colorDeIsolinea(valor) {
+  let color = COLOR_CONTORNO_BAJO;
+  CAPAS.mmi.cortes.forEach((corte, i) => {
+    if (valor >= corte) color = CAPAS.mmi.colores[i];
+  });
+  return color;
+}
+
+//: La leyenda cuando las isolineas son lo unico que hay en el mapa.
+//:
+//: `pintarLeyenda` describe la malla: sus cortes son los de la capa activa y su
+//: nota habla de hexagonos y de por que tienen huecos. Con la malla vacia esa
+//: caja se ocultaba, y las lineas se quedaban sin nadie que las nombrara:
+//: palidas, sobre el mar, sin escala. Un mapa con una sola cosa dibujada y
+//: ninguna forma de leerla no es mucho mejor que el mapa en blanco que habia.
+//:
+//: Lista **los niveles que este ShakeMap trae**, no la rampa entera. En un
+//: evento que topa en MMI 5, seis casillas hasta 8,5 pondrian en la caja
+//: intensidades que no estan en el mapa — el mismo criterio que `clasesVisibles`
+//: aplica a la malla.
+function pintarLeyendaDeContornos(contornos) {
+  const niveles = [
+    ...new Set(
+      ((contornos && contornos.features) || []).map((f) =>
+        Number(f.properties && f.properties.mmi)
+      )
+    ),
+  ]
+    .filter((v) => Number.isFinite(v))
+    .sort((a, b) => b - a);
+
+  if (!niveles.length) {
+    $("leyenda").hidden = true;
+    return;
+  }
+
+  $("leyenda").hidden = false;
+  $("leyenda-titulo").textContent = "Intensidad (isolíneas)";
+  // Dos notas porque son dos situaciones distintas, y confundirlas seria
+  // contestar mal la pregunta que trae al lector a este mapa.
+  $("leyenda-nota").textContent = niveles.some((v) => v >= 6)
+    ? "Los contornos del ShakeMap, sin malla debajo. La sacudida sí alcanzó " +
+      "MMI≥6, pero no sobre población del país: no hay nadie dentro que contar, " +
+      "y por eso las tablas van en cero. En gris, los niveles por debajo de 6, " +
+      "que se sienten y que este sistema no cuantifica."
+    : "Los contornos del ShakeMap. Este evento no alcanza MMI 6 en ningún punto, " +
+      "que es el umbral desde el que este sistema publica cifras: por eso las " +
+      "tablas van en cero. En gris, los niveles que se sienten y que no se " +
+      "cuantifican.";
+  // `muestra-linea` y no el bloque de la coropleta: en el mapa esto es una
+  // linea, y una casilla rellena prometeria un area medida que no hay.
+  $("leyenda-escala").innerHTML = niveles
+    .map(
+      (valor) =>
+        `<li><span class="muestra muestra-linea" ` +
+        `style="background:${colorDeIsolinea(valor)}"></span>` +
+        `<span class="leyenda-valor">${numero(valor, 1)}</span></li>`
+    )
+    .join("");
+}
+
 // El area que el sistema **cuantifica**: la isolinea de MMI 6. Es la que acota
 // el encuadre, no la de MMI 4 —que en un M8 abarca medio continente y dejaria
 // la malla del tamano de un sello— ni la malla sola, que se corta donde se
@@ -2655,6 +2722,55 @@ function extremosDeContorno(datos, minimo) {
     }
   }
   return { lons, lats };
+}
+
+//: El encuadre cuando no hay malla que encuadrar.
+//:
+//: La rama con malla enmarca los hexagonos, el epicentro y la isolinea de MMI 6.
+//: Sin hexagonos quedan los otros dos, y el orden importa: **manda el area que
+//: el sistema cuantifica** cuando existe —`us1000c2zy` la tiene entera sobre el
+//: mar— y solo si el evento no llega a MMI 6 en ningun punto se cae a todo lo
+//: que el ShakeMap dibujo, que ahi es lo unico que hay que ensenar.
+//:
+//: El respaldo NO se aplica en la rama con malla, a proposito: una celda existe
+//: porque su MMI es >= 6, asi que ahi la isolinea de 6 esta garantizada y caer a
+//: la de MMI 4 —que en un M8 abarca medio continente— solo podria pasar si algo
+//: mas se rompio antes. Que el encuadre no lo tape.
+//:
+//: Antes se volaba a un `zoom: 7,5` fijo sobre el epicentro. Un numero puesto a
+//: ojo que no habia mirado el evento: en Puerto Madero deja fuera media
+//: isolinea y en Barra Patuca encuadra una franja de mar dentro de una mancha
+//: de 400 km.
+function encuadrarSinMalla(m, reporte, contornos) {
+  const lons = [];
+  const lats = [];
+  for (const minimo of [6, -Infinity]) {
+    const borde = extremosDeContorno(contornos, minimo);
+    if (borde.lons.length) {
+      lons.push(...borde.lons);
+      lats.push(...borde.lats);
+      break;
+    }
+  }
+
+  const lon = Number(reporte.event.lon);
+  const lat = Number(reporte.event.lat);
+  if (Number.isFinite(lon) && Number.isFinite(lat) && (lon || lat)) {
+    lons.push(lon);
+    lats.push(lat);
+    estado.epicentro = [lon, lat];
+  } else {
+    estado.epicentro = null;
+  }
+
+  // Ni contorno ni epicentro: no hay nada que enmarcar y mover la camara a un
+  // sitio inventado seria peor que dejarla donde esta.
+  if (!lons.length) return;
+
+  m.fitBounds(
+    [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
+    { padding: 48, maxZoom: 10, duration: VUELO }
+  );
 }
 
 //: El perimetro de lo que se cuenta.
@@ -2774,16 +2890,35 @@ function dibujarCeldas(m, datos, reporte, contornos) {
 
   const geo = datos && celdasAGeoJson(datos);
   if (!geo || !geo.features.length) {
-    // Sin malla el tablero sigue sirviendo: las cifras y las barras salen del
-    // reporte. Se vuela al epicentro y no se finge una capa que no hay.
+    // SIN MALLA NO ES SIN MAPA.
+    //
+    // Cinco de los veintitres reportes publicados no tienen una sola celda:
+    // su sacudida no alcanzo MMI 6 sobre poblacion del pais. Eso es **el
+    // resultado** —lo argumenta `p2_impact/pipeline.py` con este mismo M5,6 de
+    // Puerto Madero como ejemplo—, no un fallo, y por eso se publican.
+    //
+    // Pero aqui se salia por este `return` antes de llegar a
+    // `dibujarContornos`, veinte lineas mas abajo. El evento traia su
+    // `contornos.json` calculado, servido y descargable, y el mapa lo tiraba a
+    // la basura junto con la malla que efectivamente no existe. Quedaba una
+    // estrella sobre un mapa vacio: indistinguible de un reporte que no se
+    // proceso. La unica pregunta que estos eventos tienen que contestar
+    // —**donde estuvo la sacudida y por que no toco a nadie**— era justo la que
+    // no se podia mirar.
+    //
+    // Y el peor caso no era el M5,6. `us1000c2zy` es un M7,5 con isolineas
+    // hasta MMI 8 dibujadas sobre el Caribe, y no se pintaba ni una.
+    //
+    // La capa ya estaba pensada para esto: "van debajo de la malla; donde hay
+    // hexagonos manda el dato, fuera de ellos la linea es lo unico, y es justo
+    // donde hace falta". Faltaba llamarla.
     $("capas").hidden = true;
-    $("leyenda").hidden = true;
     verHaloProporcional(true);
     // Cero es una respuesta, y hay que poder distinguirla de "todavia no".
     anotarPintado("celdas", 0);
-    if (Number.isFinite(reporte.event.lon) && reporte.event.lon !== 0) {
-      m.easeTo({ center: [reporte.event.lon, reporte.event.lat], zoom: 7.5, duration: VUELO });
-    }
+    dibujarContornos(m, contornos, primeraEtiqueta(m));
+    pintarLeyendaDeContornos(contornos);
+    encuadrarSinMalla(m, reporte, contornos);
     return;
   }
 

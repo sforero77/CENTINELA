@@ -111,8 +111,23 @@ MMI_COLORS: dict[float, str] = {
     8.5: "#7f0000",
 }
 
-#: Por debajo de esto no se dibuja nada en el mapa.
+#: Por debajo de esto no se **rellena** ninguna banda.
 MMI_MIN_MAPPED = 6.0
+
+#: El gris de las isolineas por debajo de MMI 6. Es el mismo
+#: `COLOR_CONTORNO_BAJO` del visor, y por el mismo motivo: son niveles que se
+#: sienten y que este sistema **no cuantifica**, asi que no llevan color de la
+#: rampa — pintarlos con ella sugeriria que si.
+#:
+#: Se dibujan como LINEA y no como area rellena. Eso resuelve la objecion que
+#: los dejaba fuera del mapa —un relleno de la rampa baja da 1,2:1 contra el
+#: fondo, invisible— sin el efecto que tenia excluirlos: el PNG de un evento que
+#: no alcanza MMI 6 en ningun punto salia **en blanco**, con la estrella del
+#: epicentro flotando sobre nada. Cinco de los veintitres reportes publicados
+#: son de esos, y su mapa era indistinguible del de un reporte que no se
+#: proceso. Una linea gris no promete area medida; una hoja en blanco tampoco
+#: dice que la sacudida existio.
+COLOR_CONTORNO_BAJO = "#9a8f7d"
 
 #: Separacion minima entre etiquetas, en grados, para no apilarlas.
 LABEL_MIN_SEPARATION = 0.25
@@ -173,7 +188,7 @@ def render_map(
     # La figura se dimensiona a partir de la extension de los datos, no al
     # reves. Fijar 16:9 y luego imponer proporcion geografica deja el mapa
     # flotando entre dos franjas vacias que no dicen nada.
-    limites = _limites(puntos, epicentro)
+    limites = _limites(puntos, epicentro, contornos)
     fig, ax = plt.subplots(figsize=_figsize(limites, spec), dpi=spec.dpi)
 
     # LA FORMA DEL EVENTO, DEBAJO DE TODO.
@@ -216,6 +231,7 @@ def render_map(
                 xytext=(7, 5),
                 textcoords="offset points",
                 zorder=4,
+                path_effects=_halo(),
             )
 
     if epicentro is not None:
@@ -238,6 +254,7 @@ def render_map(
             xytext=(9, -13),
             textcoords="offset points",
             zorder=5,
+            path_effects=_halo(),
         )
 
     _encuadrar(ax, limites)
@@ -300,15 +317,24 @@ def render_map(
     )
     _barra_de_escala(ax, limites, fuente=escala_fuente)
 
-    # Las bandas presentes, no una lista fija. La version anterior rotulaba
-    # siempre MMI 6 / 6,5 / 7 / 7,5: en el evento de Catia La Mar, que llega a
-    # 8,5, la leyenda se quedaba corta por dos clases, y en cualquier evento que
-    # no pase de 7 sobraban dos muestras de color que no estaban en el mapa.
-    bandas = sorted({banda_de_mmi(p[2]) for p in puntos})
+    bandas, hay_bajas = _bandas_dibujadas(contornos, puntos)
     leyenda: list[Any] = [
         Patch(facecolor=MMI_COLORS[v], edgecolor="white", alpha=0.55, label=f"MMI {v:g}")
         for v in bandas
     ]
+    if hay_bajas:
+        # La linea gris tambien se rotula. Es lo unico que hay en el mapa de un
+        # evento que no alcanza MMI 6, y sin entrada en la caja seria un trazo
+        # sin nombre — que es como se lee un mapa que no se entiende.
+        leyenda.append(
+            Line2D(
+                [],
+                [],
+                color=COLOR_CONTORNO_BAJO,
+                linewidth=1.6,
+                label="MMI < 6 · no se cuantifica",
+            )
+        )
     if epicentro is not None:
         leyenda.append(
             Line2D(
@@ -382,14 +408,56 @@ def render_map(
     return path
 
 
-def _anillos(geometria: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
-    """Los anillos cerrados de una geometria de contorno, para poder rellenarla.
+def _halo() -> list[Any]:
+    """Funda blanca para el texto que cae sobre las bandas de color.
 
-    ShakeMap publica sus contornos como **lineas**, no como areas: cada banda es
-    un `MultiLineString` de lazos alrededor del epicentro. El visor las dibuja
-    tal cual, encima de la malla de hexagonos, y ahi tiene sentido. El PNG no
-    tiene malla debajo: si dibujara solo lineas seguiria sin haber una forma que
-    el ojo reconozca, que es justo lo que le faltaba.
+    El rotulo "epicentro" iba en gris #55524e y la estrella cae, por definicion,
+    en la banda mas intensa: sobre el rojo #b30000 de MMI 8 daba 1,1:1 y no se
+    leia. En Barra Patuca la palabra estaba ahi, encima de la mancha, y no
+    habia forma de verla.
+
+    La misma solucion que ya llevan el marcador municipal —anillo blanco— y el
+    perimetro del visor: un borde que despega el simbolo de lo que hay debajo
+    sin cambiarle el color, que es lo que ata este PNG a la leyenda.
+    """
+    from matplotlib import patheffects
+
+    return [patheffects.withStroke(linewidth=2.2, foreground="white")]
+
+
+def _lazos(geometria: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
+    """Los trazos de una geometria de contorno, esten cerrados o no.
+
+    ShakeMap publica sus contornos como **lineas**: cada banda es un
+    `MultiLineString` de lazos alrededor del epicentro. Esto los devuelve tal
+    cual, que es lo que hace falta para dibujarlos como lo que son —y para medir
+    hasta donde llegan, que no depende de que el lazo cierre.
+    """
+    tipo = geometria.get("type")
+    coords = geometria.get("coordinates") or []
+    if tipo == "Polygon":
+        # Solo el exterior: un agujero de un contorno es una isla de intensidad
+        # menor, y la banda de encima ya vuelve a pintar por su cuenta.
+        crudos = [anillo[0] for anillo in [coords] if anillo]
+    elif tipo == "MultiPolygon":
+        crudos = [poligono[0] for poligono in coords if poligono]
+    elif tipo == "LineString":
+        crudos = [coords]
+    elif tipo == "MultiLineString":
+        crudos = list(coords)
+    else:
+        return []
+
+    return [[(float(x), float(y)) for x, y, *_ in lazo] for lazo in crudos if len(lazo) >= 2]
+
+
+def _anillos(geometria: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
+    """Los lazos **cerrados**, que son los unicos que se pueden rellenar.
+
+    El visor dibuja los contornos tal cual, encima de la malla de hexagonos, y
+    ahi tiene sentido. Las bandas de MMI>=6 del PNG van rellenas porque no hay
+    malla debajo: con solo lineas seguiria sin haber una forma que el ojo
+    reconozca, que es justo lo que a este mapa le faltaba.
 
     Rellenarlas es correcto porque los lazos vienen cerrados —comprobado sobre
     los contornos publicados: los nueve, y todos sus lazos secundarios— y porque
@@ -397,32 +465,10 @@ def _anillos(geometria: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
     exactamente la estructura sin recortar geometria.
 
     Un lazo **abierto** se descarta: cerrarlo a la fuerza inventaria area
-    atravesando el mapa en linea recta, que es peor que no dibujarlo.
+    atravesando el mapa en linea recta, que es peor que no dibujarlo. Ese lazo
+    no se pierde — `_dibujar_contornos` lo sigue trazando como linea.
     """
-    tipo = geometria.get("type")
-    coords = geometria.get("coordinates") or []
-    if tipo == "Polygon":
-        # Solo el exterior: un agujero de un contorno es una isla de intensidad
-        # menor, y la banda de encima ya vuelve a pintar por su cuenta.
-        lazos = [anillo[0] for anillo in [coords] if anillo]
-    elif tipo == "MultiPolygon":
-        lazos = [poligono[0] for poligono in coords if poligono]
-    elif tipo == "LineString":
-        lazos = [coords]
-    elif tipo == "MultiLineString":
-        lazos = list(coords)
-    else:
-        return []
-
-    anillos: list[list[tuple[float, float]]] = []
-    for lazo in lazos:
-        if len(lazo) < 4:
-            continue
-        puntos = [(float(x), float(y)) for x, y, *_ in lazo]
-        if puntos[0] != puntos[-1]:
-            continue
-        anillos.append(puntos)
-    return anillos
+    return [lazo for lazo in _lazos(geometria) if len(lazo) >= 4 and lazo[0] == lazo[-1]]
 
 
 def _dibujar_contornos(ax: Any, contornos: Mapping[str, Any] | None) -> None:
@@ -461,6 +507,36 @@ def _dibujar_contornos(ax: Any, contornos: Mapping[str, Any] | None) -> None:
                     alpha=0.55,
                     zorder=1,
                 )
+            )
+
+    # LO QUE NINGUN RELLENO CUBRE, COMO LINEA.
+    #
+    # Son dos casos y los dos acababan en hoja en blanco:
+    #
+    # * Los niveles por debajo de MMI 6, que no se rellenan nunca. En un evento
+    #   que topa en MMI 5 —el M5,6 de Puerto Madero, el M5,5 de Bani— son el
+    #   mapa entero, y su PNG salia con la estrella del epicentro sobre nada.
+    # * Un lazo de MMI>=6 abierto, que `_anillos` descarta con razon —cerrarlo
+    #   inventaria area atravesando el mapa— y que aun asi dice por donde paso
+    #   la sacudida.
+    #
+    # Se trazan de menor a mayor como los rellenos, y saltando el lazo que ya
+    # quedo pintado: repasar el borde de una banda rellena con su propio color
+    # taparia el filete blanco que la separa de la siguiente.
+    for mmi, geometria in sorted(((m, g) for m, g in rasgos if g), key=lambda par: par[0]):
+        relleno = mmi >= MMI_MIN_MAPPED
+        color = color_for_mmi(mmi) if relleno else COLOR_CONTORNO_BAJO
+        for lazo in _lazos(geometria):
+            if relleno and len(lazo) >= 4 and lazo[0] == lazo[-1]:
+                continue
+            ax.plot(
+                [p[0] for p in lazo],
+                [p[1] for p in lazo],
+                color=color,
+                linewidth=0.8,
+                alpha=0.9,
+                zorder=1,
+                solid_capstyle="round",
             )
 
 
@@ -586,13 +662,94 @@ def _leyenda_de_tamano(
     ]
 
 
+def _bandas_dibujadas(
+    contornos: Mapping[str, Any] | None,
+    puntos: list[tuple[float, float, float, float, str]],
+) -> tuple[list[float], bool]:
+    """Lo que la leyenda tiene que rotular: ``(bandas rellenas, hay isolinea baja)``.
+
+    Las bandas presentes, no una lista fija. La version anterior rotulaba
+    siempre MMI 6 / 6,5 / 7 / 7,5: en el evento de Catia La Mar, que llega a
+    8,5, la leyenda se quedaba corta por dos clases, y en cualquier evento que
+    no pase de 7 sobraban dos muestras de color que no estaban en el mapa.
+
+    Pero salian de los **municipios**, y los municipios no son lo que se dibuja.
+    Donde no hay ni uno —los eventos cuya sacudida no alcanza poblacion— la caja
+    no rotulaba nada sobre un mapa lleno de color: `us1000c2zy` pinta MMI 6, 7 y
+    8 sobre el Caribe y su leyenda decia solo "epicentro". Ahora salen del
+    contorno, que es lo que `_dibujar_contornos` acaba de pintar, y los
+    municipios quedan de respaldo para los reportes anteriores a que ese fichero
+    existiera.
+    """
+    valores = [
+        float(r.get("properties", {}).get("mmi", 0))
+        for r in ((contornos or {}).get("features") or [])
+        if r.get("geometry")
+    ]
+    if not valores:
+        valores = [p[2] for p in puntos]
+    bandas = sorted({banda_de_mmi(v) for v in valores if v >= MMI_MIN_MAPPED})
+    return bandas, any(v < MMI_MIN_MAPPED for v in valores)
+
+
+def _extremos_de_contorno(
+    contornos: Mapping[str, Any] | None,
+) -> tuple[list[float], list[float]]:
+    """Las coordenadas de la isolinea que tiene que caber en el encuadre.
+
+    La de MMI 6 —el area que el sistema cuantifica— cuando existe. Si el evento
+    no llega a esa banda en ningun punto, todas: ahi el contorno es lo unico que
+    hay que ensenar y dejarlo fuera vacia el mapa.
+
+    NO se usan todas siempre. La isolinea de MMI 4 de un M8 abarca medio
+    continente y dejaria la mancha del evento del tamano de un sello. Es la
+    misma regla, y por las mismas dos razones, que `encuadrarSinMalla` en el
+    visor: el mismo sismo no puede enmarcarse distinto segun se mire el PNG o
+    la pagina.
+    """
+    if not contornos:
+        return [], []
+
+    rasgos = [
+        (float(r.get("properties", {}).get("mmi", 0)), r.get("geometry") or {})
+        for r in contornos.get("features", [])
+    ]
+    for minimo in (MMI_MIN_MAPPED, float("-inf")):
+        lons: list[float] = []
+        lats: list[float] = []
+        for mmi, geometria in rasgos:
+            if mmi < minimo or not geometria:
+                continue
+            for lazo in _lazos(geometria):
+                lons.extend(p[0] for p in lazo)
+                lats.extend(p[1] for p in lazo)
+        if lons:
+            return lons, lats
+    return [], []
+
+
 def _limites(
     puntos: list[tuple[float, float, float, float, str]],
     epicentro: tuple[float, float] | None,
+    contornos: Mapping[str, Any] | None = None,
 ) -> tuple[float, float, float, float]:
-    """``(lon_min, lat_min, lon_max, lat_max)`` con margen."""
-    lons = [p[0] for p in puntos] + ([epicentro[0]] if epicentro else [])
-    lats = [p[1] for p in puntos] + ([epicentro[1]] if epicentro else [])
+    """``(lon_min, lat_min, lon_max, lat_max)`` con margen.
+
+    EL CONTORNO ENTRA EN EL ENCUADRE, y no entraba.
+
+    Se enmarcaba sobre los municipios y el epicentro. Sin municipios —los cinco
+    eventos cuya sacudida no alcanza poblacion— quedaba **un solo punto**, y el
+    margen minimo de 0,2 grados montaba una caja de 44 km alrededor del
+    epicentro. En `us1000c2zy`, un M7,5 mar adentro, esa caja cae entera dentro
+    de la banda de MMI 8: el PNG salia como un muro rojo de borde a borde, con
+    una barra de escala de 20 km y ninguna forma reconocible.
+
+    Con el contorno dentro, el encuadre lo fija lo que el ShakeMap dibujo, que
+    es lo que este mapa viene a ensenar.
+    """
+    borde_lons, borde_lats = _extremos_de_contorno(contornos)
+    lons = [p[0] for p in puntos] + ([epicentro[0]] if epicentro else []) + borde_lons
+    lats = [p[1] for p in puntos] + ([epicentro[1]] if epicentro else []) + borde_lats
     if not lons:
         return (-80.0, -5.0, -66.0, 13.0)
     margen_lon = max((max(lons) - min(lons)) * 0.08, 0.2)
