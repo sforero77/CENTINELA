@@ -516,6 +516,75 @@ la forma de las respuestas, no si una fuente se retira en una fecha anunciada.
 Un cron que compruebe la fecha sería más ruido que utilidad para un aviso único;
 lo que sí cierra el hueco es que esté escrito aquí, que es donde se mira.
 
+**El relevo, verificado el 3-sep-2026.** No hay nada que integrar: NOAA dice
+expresamente que la migración es a **NOAA-20 y NOAA-21**, que llevan el mismo
+VIIRS a 375 m y que P5 ya lee. El 1-nov no se añade una fuente, se borra una.
+Lo que se pierde no es capacidad ni resolución: es un tercio de la cadencia de
+revisita, de seis miradas al día a cuatro, con el hueco ciego de unas 11 h por
+mitad del día algo más ancho.
+
+Esa cadencia no se recupera en órbita polar hasta **JPSS-4** (NOAA-22 en órbita),
+con fecha de lanzamiento en 2027; JPSS-3 va para 2032. Contexto que conviene
+tener aunque no nos toque: NASA termina Terra MODIS en enero de 2027 y Aqua
+MODIS hacia septiembre de 2027, así que el mundo entero se comprime sobre VIIRS.
+
+**Una opción distinta, si alguna vez la cadencia importa más que el detalle:**
+FIRMS ya sirve detecciones geoestacionarias de **ABI (GOES-16 y GOES-18)**, a
+2 km y con 20 a 30 minutos de latencia, cubriendo las Américas. No es un
+sustituto y **no es un enchufe directo**: un píxel de 2 km es más grande que una
+celda H3 r8 (0,737 km² de media), así que asignarlo a una celda inventaría una
+precisión que no existe, el mismo error que ya se evita publicando el viento de
+GFS como retícula de 27 km y no por celda. Tendría que ser su propia capa, en r6
+o similar, rotulada como detección temprana de baja resolución. Es decisión de
+producto, no de configuración. El *Ultra Real-Time* de 60 s no sirve aquí: solo
+cubre Estados Unidos y Canadá.
+
+Fuentes: [cese de S-NPP, NOAA NESDIS](https://www.nesdis.noaa.gov/news/cessation-of-suomi-national-polar-orbiting-partnership-s-npp-data-users-onafter-november-01-2026),
+[aviso de NASA Earthdata](https://www.earthdata.nasa.gov/data/alerts-outages/suomi-npp-data-product-delivery-cease-november-1-2026),
+[JPSS, NOAA NESDIS](https://www.nesdis.noaa.gov/our-satellites/currently-flying/joint-polar-satellite-system),
+[qué sirve FIRMS Global](https://forum.earthdata.nasa.gov/viewtopic.php?p=17938).
+
+**Y el riesgo que deja si se pasa la fecha:** dos de seis peticiones fallando
+para siempre sin que `ciego` salte. Está en `2.1.quindecies`.
+
+---
+
+### 2.1.quindecies Una corrida parcial de FIRMS se publica como si fuera entera
+
+**Abierto el 3-sep-2026.** P5 hace seis peticiones a FIRMS, tres satélites por
+dos regiones. Si una falla, las otras cinco siguen, que es lo correcto y está
+razonado en `fetch_focos`: perder una región entera es peor que publicar con
+cinco sextos del dato.
+
+Lo que falta es la otra mitad de esa frase. `fallidos` y `pedidos` **solo van al
+log**. No llegan a `incendios.json`, así que el visor pinta igual una corrida de
+seis de seis que una de cinco de seis, y quien la mira no tiene forma de saber
+cuál está viendo. Y `ciego` no cubre el hueco: exige que fallen **todas**.
+
+Es la misma familia que el recorte mudo del tope, y aquel ya lleva su aviso
+puesto: un `[:max_celdas]` sin ruido «convertiría "esto es todo lo que arde" en
+una mentira». Aquí ni siquiera hay ruido en el dato, solo en el log.
+
+**Por qué importa hoy, sin esperar a ninguna fecha:** los cortes de FIRMS son
+rutina. El 2-sep fallaron 5 de 12 corridas por caídas del proveedor, y el
+sistema se negó a publicar, que es lo que debía hacer. El caso peligroso no es
+ese: es el intermedio, el que sí publica.
+
+**Por qué importa el 1-nov-2026 a las 13:00 UTC:** ese día NASA apaga
+Suomi-NPP (ver `2.1.decies`). Si no se saca de `SATELITES` a tiempo, 2 de las 6
+peticiones pasan a fallar **para siempre**. `ciego` no salta, porque 2 no son 6,
+y la capa de fuego se seguirá viendo completa, indefinidamente, construida sobre
+cuatro sextos del dato. La fecha no crea este pendiente: lo vuelve permanente.
+
+**Lo que hay que hacer:** llevar `fallidos` y `pedidos` al JSON publicado, y que
+el visor lo diga cuando no coincidan. No hace falta alarma ni bloqueo: basta con
+que la merma sea visible donde se lee la cifra, igual que la latencia que no
+favorece se publica en `/status`.
+
+**Lo que lo vigila mientras tanto:** nada. La decisión del 3-sep fue anotarlo
+aquí y no arreglarlo en caliente, para no meter un cambio de contrato del JSON
+en la misma tanda que tres arreglos del visor.
+
 ---
 
 ### 2.1.undecies Tres invariantes que se rompen sin que nada avise
