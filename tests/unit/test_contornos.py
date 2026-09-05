@@ -161,3 +161,81 @@ def test_el_visor_lo_dibuja_debajo_de_la_malla() -> None:
 
     assert "dibujarContornos(m, contornos, antes)" in app
     assert "extremosDeContorno" in app, "el encuadre no considera el area afectada"
+
+
+# --- Cuando el sismo entero cae por debajo del suelo ------------------------
+#
+# Publicar desde MMI 4 quita ruido en un sismo que llega a 7. En uno cuyo
+# **maximo** es MMI 3 el mismo corte deja el fichero sin una sola linea, y
+# entonces el visor no dibuja nada y el PNG sale en blanco — el fallo que se
+# arreglo dos capas mas arriba, reaparecido en la capa que produce el dato.
+#
+# Visto el 4-sep-2026 publicando `us1000jg5z`, M6,3 a 559 km bajo Tarata:
+# `contornos.json` con cero rasgos y un mapa con 45 pixeles de color.
+
+
+def _payload(*niveles: float) -> dict[str, Any]:
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {"type": "mmi", "value": n},
+                "geometry": {"type": "LineString", "coordinates": [[-66.0, -17.0], [-65.0, -17.0]]},
+            }
+            for n in niveles
+        ],
+    }
+
+
+def test_un_sismo_que_no_llega_al_suelo_publica_su_isolinea_mas_alta() -> None:
+    """Cero rasgos es un fichero que no dice nada de un sismo que si paso."""
+    datos = build_contours(_payload(2.0, 2.5, 3.0))
+
+    assert [f["properties"]["mmi"] for f in datos["features"]] == [3.0]
+
+
+def test_el_respaldo_publica_solo_la_mas_alta_y_no_todas() -> None:
+    """El suelo venia a quitar ruido y no puede devolverlo entero.
+
+    Con el maximo en 3,0, publicar tambien 2,0 y 2,5 seria justo lo que
+    `MMI_MINIMO_CONTORNO` existe para evitar.
+    """
+    datos = build_contours(_payload(2.0, 2.5, 3.0))
+
+    assert len(datos["features"]) == 1
+
+
+def test_el_fichero_declara_el_corte_que_de_verdad_se_aplico() -> None:
+    """`mmi_minimo` es lo que el visor y el PNG leen para explicarse.
+
+    Dejarlo en 4,0 cuando lo publicado es una isolinea de 3,0 obligaria a
+    deducir el corte de los propios datos, que es como se derivan dos lectores
+    del mismo fichero.
+    """
+    assert build_contours(_payload(2.0, 3.0))["mmi_minimo"] == 3.0
+    # Y con bandas por encima del suelo, el suelo manda y no se mueve.
+    assert build_contours(_payload(3.0, 4.0, 5.0))["mmi_minimo"] == MMI_MINIMO_CONTORNO
+
+
+def test_el_respaldo_no_inventa_nada_sin_isolineas() -> None:
+    """Sin un solo contorno valido no hay maximo del que tirar."""
+    datos = build_contours({"type": "FeatureCollection", "features": []})
+
+    assert datos["features"] == []
+    assert datos["mmi_minimo"] == MMI_MINIMO_CONTORNO
+
+
+def test_todo_reporte_publicado_tiene_alguna_isolinea() -> None:
+    """El guardia sobre el catalogo, que es donde el fallo se vio.
+
+    Un `contornos.json` con cero rasgos es un fichero servido que no dice nada:
+    el visor no pinta y el mapa sale en blanco. Recorre `reports/` para que el
+    evento de mañana entre solo.
+    """
+    vacios = []
+    for ruta in sorted((Path(__file__).parent.parent.parent / "reports").glob("*/contornos.json")):
+        if not json.loads(ruta.read_text(encoding="utf-8"))["features"]:
+            vacios.append(ruta.parent.name)
+
+    assert not vacios, f"estos publican un area de afectacion vacia: {vacios}"

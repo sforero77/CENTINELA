@@ -214,8 +214,9 @@ Los otros veintiún reportes siguen siendo reconstrucciones históricas: prueban
 que el cálculo funciona sobre eventos reales de USGS, no que la cadena en vivo
 esté ejercitada. Ahora está ejercitada dos veces, y enseñó algo.
 
-Lo que enseña ese catálogo importa más que su tamaño: **trece de los veintitrés
-eventos no alcanzan MMI≥7 sobre población**, y cinco de ellos tampoco MMI≥6. Son
+Lo que enseña ese catálogo importa más que su tamaño:
+**diecisiete de los veintisiete eventos no alcanzan MMI≥7 sobre población**, y
+nueve de ellos tampoco MMI≥6. Son
 los profundos y los de mar adentro, que en esta región son la mitad.
 Tehuantepec 2017 (M8,2, 98 muertos) es uno de ellos: su máximo sobre población
 mexicana es MMI 6,5.
@@ -344,7 +345,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.595 pruebas** sin red, más **118 de navegador** que abren el visor en un
+**1.652 pruebas** sin red, más **126 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 4-sep-2026.
 

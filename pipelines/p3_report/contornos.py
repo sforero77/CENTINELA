@@ -45,7 +45,7 @@ def build_contours(
     Se ordena descendente para que las lineas de intensidad alta queden encima
     al dibujarse: son las que importan y las que menos espacio ocupan.
     """
-    features: list[dict[str, Any]] = []
+    candidatas: list[tuple[float, dict[str, Any]]] = []
     for feature in payload.get("features", []):
         propiedades = feature.get("properties") or {}
         # `cont_mmi.json` trae, segun version, isolineas de MMI **y de PGA y
@@ -63,18 +63,42 @@ def build_contours(
             valor = float(crudo)  # type: ignore[arg-type]
         except (TypeError, ValueError):
             continue
-        if valor < mmi_minimo:
-            continue
-        features.append(
-            {
-                "type": "Feature",
-                "geometry": feature["geometry"],
-                "properties": {"mmi": valor},
-            }
+        candidatas.append(
+            (
+                valor,
+                {
+                    "type": "Feature",
+                    "geometry": feature["geometry"],
+                    "properties": {"mmi": valor},
+                },
+            )
         )
 
+    # EL SUELO EXISTE PARA QUITAR RUIDO, NO PARA BORRAR EL EVENTO.
+    #
+    # Publicar desde MMI 4 es correcto en un sismo que llega a 7: las isolineas
+    # de 2 y 3 multiplican el peso del fichero con lineas que nadie usa. Pero en
+    # un sismo cuyo **maximo** es MMI 3 el mismo corte deja el fichero sin una
+    # sola linea, y entonces el visor no dibuja nada y el PNG sale en blanco:
+    # exactamente el fallo que este proyecto acaba de arreglar dos capas mas
+    # arriba, reaparecido en la capa que produce el dato.
+    #
+    # Visto el 4-sep-2026 al publicar `us1000jg5z` —Tarata, Bolivia, M6,3 a 559
+    # km de profundidad—, cuyo ShakeMap solo dibuja la isolinea de MMI 3,0. Su
+    # `contornos.json` salio con cero rasgos y su mapa con 45 pixeles de color.
+    #
+    # Cuando no sobrevive ninguna se publica **la mas alta que hay**, y solo
+    # esa: es la que dice hasta donde llego el sismo sin devolver el ruido que
+    # el suelo venia a quitar. El `mmi_minimo` del fichero declara el corte que
+    # de verdad se aplico, para que no haya que deducirlo de los datos.
+    aplicado = mmi_minimo
+    features = [f for valor, f in candidatas if valor >= mmi_minimo]
+    if not features and candidatas:
+        aplicado = max(valor for valor, _ in candidatas)
+        features = [f for valor, f in candidatas if valor == aplicado]
+
     features.sort(key=lambda f: float(f["properties"]["mmi"]), reverse=True)
-    return {"type": "FeatureCollection", "mmi_minimo": mmi_minimo, "features": features}
+    return {"type": "FeatureCollection", "mmi_minimo": aplicado, "features": features}
 
 
 def write_contours_json(

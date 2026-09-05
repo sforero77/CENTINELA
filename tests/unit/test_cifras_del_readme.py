@@ -362,8 +362,8 @@ def test_la_portada_enlaza_el_visor_antes_de_la_mitad(readme: str) -> None:
 # reporte, que es justo lo que este fichero existe para impedir.
 
 BANDAS_EN_PROSA = (
-    ("README.md", "trece de los veintitrés"),
-    ("docs/datos/agregaciones.md", "trece de los veintitrés"),
+    ("README.md", "diecisiete de los veintisiete"),
+    ("docs/datos/agregaciones.md", "diecisiete de los veintisiete"),
 )
 
 
@@ -377,11 +377,11 @@ def _sin_banda(banda: str) -> int:
 
 
 def test_la_cuenta_de_eventos_sin_mmi7_es_la_que_dicen_los_documentos() -> None:
-    """Trece de veintitrés, y que lo siga diciendo el disco y no la memoria."""
+    """Diecisiete de veintisiete, y que lo siga diciendo el disco y no la memoria."""
     total = len(list((RAIZ / "reports").glob("*/report.json")))
     sin7 = _sin_banda("pop_mmi7p")
 
-    assert (sin7, total) == (13, 23), (
+    assert (sin7, total) == (17, 27), (
         f"la cuenta cambio: hoy son {sin7} de {total} sin población en MMI≥7. "
         f"Actualiza README.md y docs/datos/agregaciones.md, y esta prueba."
     )
@@ -389,7 +389,7 @@ def test_la_cuenta_de_eventos_sin_mmi7_es_la_que_dicen_los_documentos() -> None:
 
 def test_la_cuenta_de_eventos_sin_mmi6_tambien() -> None:
     """Los que ni siquiera llegan a 6: solo el corte por radios los dimensiona."""
-    assert _sin_banda("pop_mmi6p") == 5
+    assert _sin_banda("pop_mmi6p") == 9
 
 
 @pytest.mark.parametrize(("documento", "frase"), BANDAS_EN_PROSA)

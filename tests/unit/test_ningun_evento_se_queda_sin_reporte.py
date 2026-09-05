@@ -42,14 +42,13 @@ MAX_HORAS_SIN_REPORTE = 6.0
 #: auditoria ya documenta: la busqueda se hizo sobre cajas envolventes que se
 #: llenan de sismos chilenos y la lista se leyo truncada. Ver PENDIENTES
 #: 2.1.bis. **Solo puede encoger.**
-HUECOS_HISTORICOS: frozenset[str] = frozenset(
-    {
-        "pr2025056002",
-        "pr2025175000",
-        "us1000jg5z",
-        "us7000kg9g",
-    }
-)
+#: **Vacia desde el 4-sep-2026**, y se queda escrita porque la prueba que la
+#: vigila tiene que seguir corriendo. Los cuatro se despacharon ese dia y los
+#: cuatro publicaron en cero: su ShakeMap existe y su intensidad maxima esta
+#: entre 3,0 y 5,0, por debajo de lo que este sistema cuantifica. Dos murieron
+#: en el primer intento por un `ValueError` que llamaba "roto" a un ShakeMap
+#: sano — ver `test_sacudida_sin_llegar_a_tierra.py`.
+HUECOS_HISTORICOS: frozenset[str] = frozenset()
 
 
 def _estados() -> list[tuple[str, dict[str, Any]]]:

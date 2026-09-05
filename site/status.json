@@ -1,12 +1,12 @@
 {
-  "generado_utc": "2026-09-05T01:10:21Z",
+  "generado_utc": "2026-09-05T01:43:28Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90
   },
   "medido": {
     "eventos_publicados": 2,
-    "backtests_excluidos": 23,
+    "backtests_excluidos": 25,
     "p50_min": 92.1,
     "p95_min": 94.8,
     "peor_min": 95.1
@@ -85,6 +85,15 @@
       "actualizado_utc": ""
     },
     {
+      "usgs_id": "us7000kg9g",
+      "origen_utc": "2023-07-17T03:05:11Z",
+      "publicado_utc": "2026-09-05T01:25:42Z",
+      "minutos": 1650140.5,
+      "backtest": true,
+      "shakemap": 11,
+      "actualizado_utc": ""
+    },
+    {
       "usgs_id": "us7000jl3s",
       "origen_utc": "2023-03-18T17:12:52Z",
       "publicado_utc": "2026-09-03T03:25:53Z",
@@ -146,6 +155,15 @@
       "backtest": true,
       "shakemap": 1,
       "actualizado_utc": ""
+    },
+    {
+      "usgs_id": "us1000jg5z",
+      "origen_utc": "2019-03-15T05:03:50Z",
+      "publicado_utc": "2026-09-05T01:25:36Z",
+      "minutos": 3932421.8,
+      "backtest": true,
+      "shakemap": 5,
+      "actualizado_utc": "2026-09-05T01:26:42Z"
     },
     {
       "usgs_id": "us2000j6hy",
@@ -243,8 +261,8 @@
     "p50_min": 5.0,
     "p90_min": 5.1,
     "peor_min": 18.3,
-    "revisiones": 957,
-    "latidos": 201
+    "revisiones": 956,
+    "latidos": 200
   },
   "latidos": [
     {

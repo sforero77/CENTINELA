@@ -12,6 +12,7 @@ end-to-end sin intervencion*.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
@@ -411,6 +412,22 @@ WHERE mmi_max >= 6
 """
 
 
+def _toda_por_debajo_del_relleno(contornos: Sequence[Any]) -> bool:
+    """El ShakeMap dibuja intensidad, pero toda por debajo de lo que se rellena.
+
+    Distingue el ShakeMap **roto** del ShakeMap **debil**, que hasta hoy
+    compartian excepcion y mensaje. Con contornos validos cuya isolinea mas alta
+    no llega a `MMI_MIN_POLYFILL` no hay nada que rellenar y tampoco hay nada
+    que reparar: es el resultado.
+
+    Un fichero sin un solo contorno **no** entra aqui. Eso si es entrada rota
+    —o un producto que llego a medias— y tiene que seguir elevando: publicar
+    ceros ahi seria afirmar que no hubo sacudida cuando lo que no hubo es dato.
+    """
+    valores = [float(c.value) for c in contornos]
+    return bool(valores) and max(valores) < MMI_MIN_POLYFILL
+
+
 def compute_impact(
     con: Any,
     products: ProductSet,
@@ -424,11 +441,34 @@ def compute_impact(
     """Corre el computo completo y deja ``impact_h3`` e ``impact_adm2``."""
     import json
 
-    celdas_mmi = contours_to_h3(
-        parse_contours(json.loads(contornos.read_text(encoding="utf-8"))),
-        min_value=MMI_MIN_POLYFILL,
-    )
-    if not celdas_mmi:
+    leidos = parse_contours(json.loads(contornos.read_text(encoding="utf-8")))
+    celdas_mmi = contours_to_h3(leidos, min_value=MMI_MIN_POLYFILL)
+
+    # CERO CELDAS AQUI TAMBIEN SIGNIFICA DOS COSAS, Y ESTE MENSAJE DECIA LA QUE
+    # NO ERA.
+    #
+    # "Contornos vacios o degenerados" es un fallo de entrada, y con el se
+    # aborta el evento entero: el workflow solo reintenta con el siguiente pais
+    # ante el codigo 3, y esto sale con 1.
+    #
+    # Pero un ShakeMap cuya isolinea mas alta esta **por debajo** de
+    # `MMI_MIN_POLYFILL` no tiene nada de degenerado: sus contornos son
+    # perfectamente validos y describen una sacudida real, mas debil que la
+    # banda mas baja que este sistema rellena. Es el mismo resultado legitimo
+    # que `aunque_no_alcance` ya sabe publicar, una puerta antes.
+    #
+    # Se descubrio el 4-sep-2026 despachando los cuatro backtests encolados
+    # desde el 25-ago. Dos publicaron —sus contornos llegan a MMI 5— y dos
+    # murieron aqui: `us1000jg5z` (Tarata, Bolivia) solo dibuja MMI 3,0 y
+    # `us7000kg9g` (Loncopue, Argentina) llega a 4,0. Llevaban diez dias sin
+    # reporte y el unico rastro era un traceback que culpaba al ShakeMap de
+    # estar roto.
+    #
+    # Dejandolo pasar, la malla queda vacia, `impact_h3` tambien, y el evento
+    # cae en la rama de "no alcanza poblacion" de mas abajo — que eleva el error
+    # que el workflow SI sabe leer. La decision de publicar en ceros sigue
+    # siendo del llamador, como debe.
+    if not celdas_mmi and not _toda_por_debajo_del_relleno(leidos):
         raise ValueError(
             f"El ShakeMap de {products.usgs_id} no produjo ninguna celda: "
             f"contornos vacios o degenerados."

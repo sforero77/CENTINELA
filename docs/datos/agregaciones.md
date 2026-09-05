@@ -122,7 +122,7 @@ una razón**: la incertidumbre etaria viene de mezclar GHS-POP con WorldPop (lo
 explica la sección de arriba) y es la misma en MMI 6 que en MMI 7. No es
 función de la intensidad.
 
-El efecto medido: **trece de los veintitrés reportes no tienen población en
+El efecto medido: **diecisiete de los veintisiete reportes no tienen población en
 MMI ≥ 7**, así que publicaban "0 edificaciones, 0 hospitales, 0 escuelas, 0 km
 de vía" con millones de personas dentro de MMI ≥ 6. `us7000jl3s`: 4,75 millones
 de personas (3,1 de ellas en Guayaquil) y ni un solo hospital que nombrar.
@@ -168,9 +168,9 @@ fuera un censo.
 ## Trece de veintitrés eventos no llegan a MMI ≥ 7
 
 Correr el catálogo regional entero enseñó algo que ninguna prueba sintética
-habría encontrado: **trece de los veintitrés eventos no alcanzan MMI ≥ 7 sobre
-población** (eran ocho de diecinueve cuando se midió por primera vez, y la
-proporción se ha mantenido al crecer el catálogo). De ellos, **cinco tampoco
+habría encontrado: **diecisiete de los veintisiete eventos no alcanzan MMI ≥ 7
+sobre población** (eran ocho de diecinueve cuando se midió por primera vez, y la
+proporción se ha mantenido al crecer el catálogo). De ellos, **nueve tampoco
 alcanzan MMI ≥ 6**: para esos, la única cifra que dimensiona el evento es el
 corte por radios alrededor del epicentro. Son los profundos y los de mar adentro, que en esta región son la
 mitad. Tehuantepec 2017 (M8,2, 98 muertos) tiene su máximo sobre población

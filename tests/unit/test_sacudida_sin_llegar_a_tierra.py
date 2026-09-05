@@ -29,6 +29,7 @@ una heuristica.
 
 from __future__ import annotations
 
+import json
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -255,3 +256,155 @@ def test_un_evento_con_banda_no_publica_radios() -> None:
     md = render_markdown(con_banda)
 
     assert "### Población por distancia al epicentro" not in md
+
+
+# --- Y una puerta antes: el ShakeMap que ni siquiera llega a MMI 5 -----------
+#
+# EL 4-SEP-2026, DESPACHANDO LOS CUATRO BACKTESTS ENCOLADOS DESDE EL 25-AGO.
+#
+# Dos publicaron y dos murieron con este traceback:
+#
+#     ValueError: El ShakeMap de us1000jg5z no produjo ninguna celda:
+#                 contornos vacios o degenerados.
+#
+# Y era mentira. Sus contornos estan perfectamente formados; lo que pasa es que
+# `us1000jg5z` (Tarata, Bolivia, M6,3 a 559 km) solo dibuja la isolinea de MMI
+# 3,0 y `us7000kg9g` (Loncopue, Argentina) llega a 4,0 — los dos por debajo de
+# `MMI_MIN_POLYFILL`, que es 5,0. Los que publicaron, los dos de Punta Cana,
+# llegan justo a 5,0.
+#
+# El precio de confundirlos no es el mensaje: es que el workflow **solo
+# reintenta con el siguiente pais ante el codigo 3**, y un `ValueError` sale
+# con 1. Dos eventos llevaban diez dias sin reporte y el unico rastro era un
+# traceback que culpaba al producto de estar roto.
+#
+# Es la misma distincion que el resto de este fichero, una puerta mas arriba:
+# **producto roto** frente a **sacudida mas debil de lo que se cuantifica**.
+
+
+def _contornos_con(tmp_path: Path, *niveles: float, nombre: str = "bajos.json") -> Path:
+    """Un fichero de contornos bien formado en los niveles que se pidan."""
+    ruta = tmp_path / nombre
+    rasgos = [
+        json.dumps(
+            {
+                "type": "Feature",
+                "properties": {"type": "mmi", "value": nivel},
+                # Un lazo cerrado: `_anillos` descarta los abiertos, y aqui lo
+                # que se prueba es el umbral, no la geometria.
+                "geometry": {
+                    "type": "MultiLineString",
+                    "coordinates": [
+                        [
+                            [-140.0, -30.0],
+                            [-139.0, -30.0],
+                            [-139.0, -29.0],
+                            [-140.0, -29.0],
+                            [-140.0, -30.0],
+                        ]
+                    ],
+                },
+            }
+        )
+        for nivel in niveles
+    ]
+    ruta.write_text(
+        '{"type":"FeatureCollection","features":[' + ",".join(rasgos) + "]}",
+        encoding="utf-8",
+    )
+    return ruta
+
+
+def _correr_con(tmp_path: Path, contornos: Path, *, aunque_no_alcance: bool) -> Any:
+    con = duckdb.connect()
+    return compute_impact(
+        con,
+        _ProductosFalsos(),  # type: ignore[arg-type]
+        exposure_glob=_activo(tmp_path),
+        contornos=contornos,
+        deslizamiento=None,
+        licuefaccion=None,
+        aunque_no_alcance=aunque_no_alcance,
+    )
+
+
+def test_un_shakemap_debil_no_se_denuncia_como_roto(tmp_path: Path) -> None:
+    """Sale por la puerta que el workflow sabe leer, no por la que aborta.
+
+    `ExposureCountryMismatchError` es el codigo 3: "prueba el siguiente pais".
+    Agotados los candidatos, el workflow reintenta con `--aunque-no-alcance` y
+    publica. Un `ValueError` a secas mata el evento.
+    """
+    contornos = _contornos_con(tmp_path, 3.0, 3.5, 4.0)
+
+    with pytest.raises(ExposureCountryMismatchError):
+        _correr_con(tmp_path, contornos, aunque_no_alcance=False)
+
+
+def test_un_shakemap_debil_publica_ceros_con_el_permiso(tmp_path: Path) -> None:
+    """El resultado de Tarata y de Loncopue: intensidad real, ninguna cuantificable."""
+    totales = _correr_con(tmp_path, _contornos_con(tmp_path, 3.0), aunque_no_alcance=True)
+
+    assert totales.pop_mmi6p == 0.0
+    assert totales.discrepancia_pct is None
+
+
+def test_un_contorno_vacio_de_verdad_sigue_elevando(tmp_path: Path) -> None:
+    """Sin una sola isolinea no hay resultado: hay producto a medias.
+
+    Publicar ceros aqui afirmaria que no hubo sacudida cuando lo que no hay es
+    dato, que es exactamente la clase de cero silencioso que este repositorio
+    persigue. Tiene que seguir abortando el evento.
+    """
+    vacio = tmp_path / "vacio.json"
+    vacio.write_text('{"type":"FeatureCollection","features":[]}', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="vacios o degenerados"):
+        _correr_con(tmp_path, vacio, aunque_no_alcance=True)
+
+
+def test_un_contorno_alto_pero_degenerado_sigue_elevando(tmp_path: Path) -> None:
+    """La excepcion original conserva su caso: isolinea de MMI 6 que no cierra.
+
+    Ahi si hay banda cuantificable y aun asi no sale ni una celda, que es un
+    producto que no se puede usar. La relajacion de arriba **solo** alcanza a
+    los ShakeMap cuyo maximo esta por debajo del relleno.
+    """
+    abierto = tmp_path / "abierto.json"
+    abierto.write_text(
+        '{"type":"FeatureCollection","features":[{"type":"Feature",'
+        '"properties":{"type":"mmi","value":6.0},'
+        '"geometry":{"type":"MultiLineString","coordinates":[['
+        "[-140.0,-30.0],[-139.0,-30.0],[-139.0,-29.0]]]}}]}",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="vacios o degenerados"):
+        _correr_con(tmp_path, abierto, aunque_no_alcance=True)
+
+
+@pytest.mark.parametrize(
+    ("niveles", "esperado"),
+    [
+        ((3.0,), True),
+        ((3.5, 4.0), True),
+        ((4.5,), True),
+        # El limite exacto: 5,0 es la banda mas baja que se rellena, y los dos
+        # backtests de Punta Cana llegan justo ahi. No son el caso debil.
+        ((2.0, 5.0), False),
+        ((6.0,), False),
+        # Sin contornos no se decide nada: eso es entrada rota.
+        ((), False),
+    ],
+)
+def test_el_corte_esta_en_la_banda_que_se_rellena(
+    niveles: tuple[float, ...], esperado: bool
+) -> None:
+    """Un solo umbral, y es `MMI_MIN_POLYFILL`. Sin numeros sueltos."""
+    from types import SimpleNamespace
+
+    from pipelines.p2_impact.pipeline import _toda_por_debajo_del_relleno
+
+    contornos = [SimpleNamespace(value=n) for n in niveles]
+
+    assert _toda_por_debajo_del_relleno(contornos) is esperado

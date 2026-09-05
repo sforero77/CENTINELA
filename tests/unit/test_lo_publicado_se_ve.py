@@ -503,3 +503,59 @@ def test_el_bloque_de_cambios_se_puede_ocultar_de_verdad() -> None:
         f".bloque fija display ({con_display[0][:60]}...) y nada devuelve el "
         "efecto a [hidden]: el bloque de cambios se vera aunque este oculto"
     )
+
+
+# --- El PNG de la PRIMERA emision de cada evento ----------------------------
+#
+# `render_maps` lee `contornos.json` **del directorio del reporte**, y P2 lo
+# escribia despues de llamar a `write_report_bundle`. O sea: el mapa de la
+# primera publicacion de todo evento salia sin la forma del sismo, y solo se
+# arreglaba si el evento se reprocesaba mas tarde.
+#
+# No se habia visto porque los veintitres del catalogo ya se habian reprocesado
+# alguna vez. El fallo vivia solo en la primera vez de cada evento — que es
+# justo la que importa: el reporte que sale durante el sismo.
+#
+# Lo cazo `test_ningun_mapa_publicado_sale_en_blanco` en la primera publicacion
+# nueva desde que ese guardia existe: los dos backtests de Punta Cana, con 48
+# pixeles de color sobre un umbral de 1.500.
+
+
+def _fuente_de_p2() -> str:
+    ruta = RAIZ / "pipelines" / "p2_impact" / "run.py"
+    return ruta.read_text(encoding="utf-8")
+
+
+def test_las_capas_del_visor_se_escriben_antes_del_paquete() -> None:
+    """Orden, no presencia: las dos llamadas estaban y en el sitio equivocado.
+
+    Un guardia que solo comprobara "se escribe contornos.json" habria pasado
+    verde sobre el fallo entero.
+    """
+    fuente = _sin_comentarios(_fuente_de_p2())
+
+    contornos = fuente.index('directorio / "contornos.json"')
+    celdas = fuente.index('directorio / "celdas.json"')
+    paquete = fuente.index("write_report_bundle(reporte, filas")
+
+    assert contornos < paquete, (
+        "contornos.json se escribe despues de write_report_bundle: el PNG de la "
+        "primera emision saldra sin la forma del sismo"
+    )
+    assert celdas < paquete, "celdas.json se escribe despues del paquete"
+
+
+def test_el_paquete_dibuja_leyendo_el_directorio() -> None:
+    """La razon por la que el orden importa, fijada donde se puede leer.
+
+    Si algun dia `render_maps` recibiera los contornos por parametro, el orden
+    dejaria de ser critico — y esta prueba tendria que revisarse en vez de
+    seguir vigilando algo que ya no protege nada.
+    """
+    p3 = (RAIZ / "pipelines" / "p3_report" / "run.py").read_text(encoding="utf-8")
+    fuente = _sin_comentarios(p3)
+
+    assert 'directory / "contornos.json"' in fuente, (
+        "render_maps ya no lee los contornos del directorio: revisa si el orden "
+        "de escritura en p2_impact/run.py sigue siendo critico"
+    )
