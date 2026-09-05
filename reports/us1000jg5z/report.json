@@ -1,0 +1,76 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us1000jg5z",
+    "mag": 6.3,
+    "depth_km": 359.0,
+    "utc": "2019-03-15T05:03:50Z",
+    "lugar": "31 km al SSE de Tarata, Bolivia",
+    "pager_alert": "green",
+    "lon": -65.9072,
+    "lat": -17.8744
+  },
+  "inputs": {
+    "shakemap_version": 5,
+    "groundfailure_version": 3,
+    "exposure_manifest": "bol-v0.2"
+  },
+  "preliminar": false,
+  "radios": [
+    {
+      "radio_km": 25,
+      "pop": 22973.023899161723
+    },
+    {
+      "radio_km": 50,
+      "pop": 268371.03444361547
+    },
+    {
+      "radio_km": 100,
+      "pop": 2122256.434456625
+    }
+  ],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 0.0,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [],
+  "incertidumbre": {
+    "pop_discrepancia_pct": null,
+    "notas": [
+      "El epicentro está a 1 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
+    ]
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "green",
+    "ls_pop_usgs": "0",
+    "lq_alerta_usgs": "green",
+    "lq_pop_usgs": "0"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-05T01:26:41Z",
+  "pipeline_version": "0.1.0"
+}

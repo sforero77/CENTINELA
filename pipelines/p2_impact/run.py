@@ -408,17 +408,39 @@ def run_impact(
         for fila in con.execute("SELECT * FROM impact_adm2 ORDER BY pop_mmi7p DESC").fetchall()
     ]
     filas = _enriquecer_con_admin(con, filas)
-    escritos = write_report_bundle(reporte, filas, reports_root=reports_root)
+
+    # LAS DOS CAPAS DEL VISOR VAN ANTES DEL PAQUETE, Y ANTES NO LO IBAN.
+    #
+    # `write_report_bundle` renderiza los PNG, y `render_maps` lee
+    # `contornos.json` **del directorio del reporte**. Escribirlo despues
+    # significaba que el mapa de la **primera emision de cada evento** salia sin
+    # la forma del sismo: sin bandas, sin isolineas, la estrella sobre nada.
+    #
+    # No se habia visto porque los veintitres reportes del catalogo se habian
+    # reprocesado alguna vez —un ShakeMap nuevo, un reproceso forzado— y en la
+    # segunda pasada el fichero ya estaba ahi. El fallo solo existia en la
+    # primera vez de cada evento, que es justo la que importa: el reporte que
+    # sale durante el sismo.
+    #
+    # Lo caza `test_ningun_mapa_publicado_sale_en_blanco` en la primera
+    # publicacion nueva desde que ese guardia existe —los dos backtests de Punta
+    # Cana, con 48 pixeles de color sobre un umbral de 1.500—, que es
+    # exactamente para lo que se escribio.
+    #
+    # El directorio se crea aqui en vez de dejarselo al paquete: es el mismo que
+    # calcula `write_report_bundle`, y tiene que existir antes de escribir nada
+    # dentro.
+    directorio = (reports_root or REPORTS_DIR) / validate_usgs_id(usgs_id)
+    directorio.mkdir(parents=True, exist_ok=True)
+    escritos: dict[str, Path] = {}
 
     # La malla del evento, para que el visor dibuje el dato donde esta y no un
-    # circulo en el centroide del municipio. Se escribe junto al resto del
-    # paquete; si falla, el reporte ya esta publicado y eso es lo que importa.
+    # circulo en el centroide del municipio. Si falla, el reporte se publica
+    # igual: es un derivado, y eso es lo que importa.
     try:
         from ..p3_report.celdas import write_cells_json
 
-        escritos["celdas_json"] = write_cells_json(
-            con, escritos["report_json"].parent / "celdas.json"
-        )
+        escritos["celdas_json"] = write_cells_json(con, directorio / "celdas.json")
     except Exception as exc:
         _log.warning(
             "no se pudo escribir la malla del evento",
@@ -432,14 +454,14 @@ def run_impact(
     try:
         from ..p3_report.contornos import write_contours_json
 
-        escritos["contornos_json"] = write_contours_json(
-            contornos, escritos["report_json"].parent / "contornos.json"
-        )
+        escritos["contornos_json"] = write_contours_json(contornos, directorio / "contornos.json")
     except Exception as exc:
         _log.warning(
             "no se pudieron escribir los contornos del evento",
             extra={"context": {"usgs_id": usgs_id, "error": str(exc)}},
         )
+
+    escritos.update(write_report_bundle(reporte, filas, reports_root=reports_root))
 
     versiones = ProcessedVersions(
         shakemap=products.shakemap_version, groundfailure=products.groundfailure_version
@@ -611,6 +633,20 @@ def _cargar_admin_lookup(con: Any, exposure_glob: str, ruta: str | None) -> None
         return
     # Sin diccionario el reporte sigue saliendo, con el codigo del municipio como
     # nombre. Es peor de leer, pero mejor que no publicar.
+    #
+    # Y NO SALIA. Esta rama leia `FROM exposure`, que es una vista que registra
+    # `compute_impact` —mas tarde, en la llamada siguiente—, asi que el respaldo
+    # moria con `Catalog Error: Table with name exposure does not exist`. El
+    # unico camino degradado que este modulo declara soportar no habia
+    # funcionado nunca: no se ejercita porque el activo publicado como Release
+    # trae siempre `admin_lookup.parquet` al lado.
+    #
+    # Se vio el 4-sep-2026 corriendo P2 contra un activo local sin ese fichero.
+    # El aviso decia "el reporte usara el codigo del municipio como nombre" y lo
+    # siguiente era un traceback.
+    #
+    # Lee el parquet directamente, que es de donde sale la vista y no depende de
+    # que nadie la haya registrado antes.
     _log.warning(
         "sin admin_lookup: el reporte usara el codigo del municipio como nombre",
         extra={"context": {"buscado": candidata}},
@@ -618,26 +654,52 @@ def _cargar_admin_lookup(con: Any, exposure_glob: str, ruta: str | None) -> None
     con.execute(
         "CREATE OR REPLACE TABLE admin_lookup AS "
         "SELECT DISTINCT adm2_id, adm2_id AS nombre, adm1_id, "
-        "'' AS departamento, iso3, '' AS centroide FROM exposure"
+        f"'' AS departamento, iso3, '' AS centroide FROM read_parquet('{exposure_glob}')"
     )
 
 
 def _enriquecer_con_admin(con: Any, filas: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Anade nombre y centroide a las filas municipales, para CSV y mapa."""
+    """Anade nombre y centroide a las filas municipales, para CSV y mapa.
+
+    UN MUNICIPIO SIN CENTROIDE NO PUEDE TUMBAR EL REPORTE. `ST_GeomFromText('')`
+    eleva `Invalid Input Error: Expected geometry type`, y una sola fila asi
+    mataba el evento entero: la del respaldo sin `admin_lookup`, que pone el
+    centroide vacio a proposito porque no lo tiene. La segunda rotura del mismo
+    camino degradado, encontrada al arreglar la primera.
+
+    Se filtran antes de parsear, y quien no tenga centroide se queda sin `lon` y
+    `lat` —como ya pasaba con quien no aparece en el diccionario—, que es lo que
+    el resto del codigo ya sabe manejar: `static_map._coordenada` descarta el
+    municipio sin coordenadas en vez de dibujarlo en (0, 0).
+    """
+    # El centroide se parsea en una subconsulta y no en la proyeccion: quien no
+    # lo tiene queda con geometria nula y **conserva su nombre**, que es la
+    # mitad util del respaldo. Descartar la fila entera arreglaria el error y
+    # dejaria el CSV con la columna `nombre` vacia, que es peor de leer que el
+    # codigo del municipio — justo lo que el respaldo viene a evitar.
     extra = {
-        str(r[0]): (str(r[1]), float(r[2]), float(r[3]))
+        str(r[0]): (
+            str(r[1]),
+            None if r[2] is None else float(r[2]),
+            None if r[3] is None else float(r[3]),
+        )
         for r in con.execute(
             """
-            SELECT adm2_id, nombre,
-                   ST_X(ST_GeomFromText(centroide)) AS lon,
-                   ST_Y(ST_GeomFromText(centroide)) AS lat
-            FROM admin_lookup
+            SELECT adm2_id, nombre, ST_X(geom) AS lon, ST_Y(geom) AS lat
+            FROM (
+                SELECT adm2_id, nombre,
+                       CASE WHEN centroide IS NOT NULL AND trim(centroide) <> ''
+                            THEN ST_GeomFromText(centroide) END AS geom
+                FROM admin_lookup
+            )
             """
         ).fetchall()
     }
     for fila in filas:
-        nombre, lon, lat = extra.get(str(fila.get("adm2_id")), ("", 0.0, 0.0))
+        nombre, lon, lat = extra.get(str(fila.get("adm2_id")), ("", None, None))
         fila.setdefault("nombre", nombre)
+        lon = 0.0 if lon is None else lon
+        lat = 0.0 if lat is None else lat
         # El centroide se descompone en dos columnas numericas y no viaja como
         # WKT: asi el CSV se puede pintar en un mapa sin parsear geometria, que
         # es la diferencia entre una tabla que alguien usa y una que alguien

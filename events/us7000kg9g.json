@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000kg9g",
-  "estado": "detectado",
+  "estado": "publicado",
   "mag": 6.6,
   "lon": -70.4427,
   "lat": -38.1862,
@@ -8,17 +8,19 @@
   "lugar": "19 km al SE de Loncopué, Argentina",
   "origen_utc": "2023-07-17T03:05:11Z",
   "versiones_procesadas": {
-    "shakemap": 0,
-    "groundfailure": 0
+    "shakemap": 11,
+    "groundfailure": 11
   },
   "timestamps": {
     "detectado": "2026-08-25T19:03:55Z",
+    "publicado": "2026-09-05T01:25:42Z",
     "usgs_origen": "2023-07-17T03:05:11Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,
   "backtest": true,
   "notas": [
-    "Backtest: reconstruccion retrospectiva de 2023-07-17, no una respuesta en vivo."
+    "Backtest: reconstruccion retrospectiva de 2023-07-17, no una respuesta en vivo.",
+    "ShakeMap v0 -> v11"
   ]
 }

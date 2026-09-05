@@ -1,6 +1,6 @@
 {
   "usgs_id": "us1000jg5z",
-  "estado": "detectado",
+  "estado": "publicado",
   "mag": 6.3,
   "lon": -65.9072,
   "lat": -17.8744,
@@ -8,17 +8,21 @@
   "lugar": "31 km al SSE de Tarata, Bolivia",
   "origen_utc": "2019-03-15T05:03:50Z",
   "versiones_procesadas": {
-    "shakemap": 0,
-    "groundfailure": 0
+    "shakemap": 5,
+    "groundfailure": 3
   },
   "timestamps": {
     "detectado": "2026-08-25T19:05:25Z",
+    "publicado": "2026-09-05T01:25:36Z",
+    "publicado_ultimo": "2026-09-05T01:26:42Z",
     "usgs_origen": "2019-03-15T05:03:50Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,
   "backtest": true,
   "notas": [
-    "Backtest: reconstruccion retrospectiva de 2019-03-15, no una respuesta en vivo."
+    "Backtest: reconstruccion retrospectiva de 2019-03-15, no una respuesta en vivo.",
+    "ShakeMap v0 -> v5",
+    "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }

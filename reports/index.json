@@ -120,6 +120,21 @@
     "generado_utc": "2026-09-03T03:25:51Z"
   },
   {
+    "usgs_id": "us7000kg9g",
+    "mag": 6.6,
+    "lugar": "19 km al SE de Loncopué, Argentina",
+    "iso3": "ARG",
+    "lon": -70.4427,
+    "lat": -38.1862,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2023-07-17T03:05:11Z",
+    "shakemap_version": 11,
+    "preliminar": false,
+    "backtest": true,
+    "generado_utc": "2026-09-05T01:25:41Z"
+  },
+  {
     "usgs_id": "us7000jl3s",
     "mag": 6.8,
     "lugar": "14 km al NNO de Baláo, Ecuador",
@@ -223,6 +238,21 @@
     "preliminar": false,
     "backtest": true,
     "generado_utc": "2026-09-03T03:25:44Z"
+  },
+  {
+    "usgs_id": "us1000jg5z",
+    "mag": 6.3,
+    "lugar": "31 km al SSE de Tarata, Bolivia",
+    "iso3": "BOL",
+    "lon": -65.9072,
+    "lat": -17.8744,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2019-03-15T05:03:50Z",
+    "shakemap_version": 5,
+    "preliminar": false,
+    "backtest": true,
+    "generado_utc": "2026-09-05T01:26:41Z"
   },
   {
     "usgs_id": "us2000j6hy",
