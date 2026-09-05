@@ -737,6 +737,28 @@ a:hover { color: var(--verde-vivo); }
   font-size: 0.82rem;
 }
 
+/* LA ALERTA DE USGS VA PEGADA A LA CIFRA QUE MATIZA, NO SUELTA.
+ *
+ * Es una nota sobre la fila de encima —"nuestro cero y su naranja hablan del
+ * mismo evento"—, asi que se cuelga de ella: sin fondo propio, con sangria y un
+ * filete del color de la alerta. Una fila mas del mismo aspecto se leeria como
+ * una tercera medicion, que es justo lo que no es.
+ *
+ * El color va como refuerzo del texto, nunca solo: la palabra "naranja" o
+ * "roja" esta escrita en la nota. WCAG 1.4.1 — la informacion no puede
+ * depender del color. */
+.terreno .contraste-terreno {
+  display: block;
+  background: none;
+  padding: 0.35rem 0 0.55rem 0.7rem;
+  margin: -0.2rem 0 0.45rem 0.75rem;
+  border-left: 2px solid var(--borde-fuerte);
+}
+
+.terreno .contraste-terreno[data-alerta="yellow"] { border-left-color: #d9a406; }
+.terreno .contraste-terreno[data-alerta="orange"] { border-left-color: #e07a3f; }
+.terreno .contraste-terreno[data-alerta="red"] { border-left-color: #c0392b; }
+
 .terreno .cifra { font-family: var(--tipo-titulo); font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 .terreno .cero { color: var(--tenue-mas); }
 
@@ -2071,8 +2093,14 @@ thead th {
    panorama iban sin ninguno: una lista de palabras donde el resto del panel
    lleva silueta. Estos tres contextos son texto en línea, no cabeceras de
    cifra, así que el icono se alinea con la letra y no con el número. */
+/* El `:not(.contraste-terreno)` no es cosmética: la nota de la alerta de USGS
+   es una frase con un `<strong>` dentro, y como primer hijo del `li` caía en
+   esta regla. `inline-flex` convertía cada trozo del texto en un ítem, así que
+   "USGS declara alerta / roja / , con 460.000 expuestas" salía repartido en
+   tres columnas verticalmente centradas — legible en el DOM y roto en pantalla.
+   Esa fila no lleva icono y no quiere alineación de icono. */
 .suelo-nombre,
-.terreno li > span:first-child {
+.terreno li:not(.contraste-terreno) > span:first-child {
   display: inline-flex;
   align-items: center;
   gap: 6px;
