@@ -7,6 +7,7 @@ particionado, y todo el linaje queda registrado en el manifest.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -103,12 +104,30 @@ SELECT
     a.adm1_id,
     c.adm2_id,
     COALESCE(p.pop_total, 0.0)                        AS pop_total,
-    COALESCE(j.pop_0_14, 0.0)                         AS pop_0_14,
+    -- WorldPop pone la FORMA del reparto etario, GHS-POP la MAGNITUD.
+    --
+    -- Las tres bandas venian como conteos absolutos de WorldPop age-sex
+    -- metidos en una fila cuyo total es de GHS-POP. Son dos modelos de
+    -- poblacion distintos: a escala nacional coinciden (Colombia, 53,0 M
+    -- frente a 52,6 M) pero reparten la gente en celdas distintas, y por celda
+    -- la diferencia es enorme. Medido sobre el activo publicado, el 31 % de las
+    -- celdas de Colombia tenia **mas mayores de 65 anios que habitantes**, y el
+    -- 40 % sumaba las bandas por encima del total. Salio al CSV publicado: EL
+    -- CARMEN DE ATRATO con 69,2 habitantes y 128,2 mayores de 65 en MMI>=6.
+    --
+    -- Se publica la CUOTA de WorldPop aplicada al total de GHS-POP. Las tres
+    -- bandas suman `pop_total` por construccion, porque las de WorldPop nunca
+    -- superan su propio total (cuota maxima medida: 0,53). `pop_alt_worldpop`
+    -- ya estaba en el activo, asi que no hace falta descargar nada nuevo.
+    COALESCE(p.pop_total * j.pop_0_14 / NULLIF(w.pop_alt_worldpop, 0), 0.0)
+                                                      AS pop_0_14,
     GREATEST(
         COALESCE(p.pop_total, 0.0)
-        - COALESCE(j.pop_0_14, 0.0) - COALESCE(v.pop_65p, 0.0), 0.0
+        - COALESCE(p.pop_total * j.pop_0_14 / NULLIF(w.pop_alt_worldpop, 0), 0.0)
+        - COALESCE(p.pop_total * v.pop_65p  / NULLIF(w.pop_alt_worldpop, 0), 0.0), 0.0
     )                                                 AS pop_15_64,
-    COALESCE(v.pop_65p, 0.0)                          AS pop_65p,
+    COALESCE(p.pop_total * v.pop_65p / NULLIF(w.pop_alt_worldpop, 0), 0.0)
+                                                      AS pop_65p,
     COALESCE(w.pop_alt_worldpop, 0.0)                 AS pop_alt_worldpop,
     COALESCE(b.bld_count, 0)                          AS bld_count,
     COALESCE(b.bld_area_m2, 0.0)                      AS bld_area_m2,
@@ -336,6 +355,67 @@ def validate_layer_coverage(con: Any) -> list[str]:
             extra={"context": {"capas": len(REQUIRED_COVERAGE)}},
         )
     return problemas
+
+
+def validate_age_bands(con: Any) -> list[str]:
+    """Las tres bandas etarias tienen que sumar la poblacion de su celda.
+
+    No lo comprobaba nadie, y no se cumplia: las bandas llegaban como conteos
+    absolutos de WorldPop dentro de una fila cuyo total es de GHS-POP. El 31 %
+    de las celdas de Colombia publicaba mas mayores de 65 anios que habitantes,
+    y el `GREATEST(..., 0.0)` de `pop_15_64` escondia el desajuste poniendo la
+    banda central en cero en vez de fallar.
+
+    Se comprueba lo que un lector da por hecho al ver las tres columnas juntas:
+    que ninguna banda supera al total y que las tres lo reconstruyen. La
+    tolerancia es de coma flotante, no de modelo — con el reescalado la
+    identidad es exacta salvo redondeo.
+    """
+    fila = con.execute(
+        """
+        SELECT
+            count(*) FILTER (WHERE pop_0_14 > pop_total * 1.000001),
+            count(*) FILTER (WHERE pop_65p  > pop_total * 1.000001),
+            count(*) FILTER (
+                WHERE abs(pop_0_14 + pop_15_64 + pop_65p - pop_total)
+                      > GREATEST(pop_total * 1e-6, 1e-6)
+            ),
+            count(*)
+        FROM exposure_h3
+        """
+    ).fetchone()
+    exceso_0_14, exceso_65p, no_suman, celdas = (int(v or 0) for v in fila)
+
+    problemas: list[str] = []
+    if exceso_0_14 or exceso_65p:
+        problemas.append(
+            f"Bandas etarias por encima del total de su celda: {exceso_0_14} celdas con "
+            f"pop_0_14 > pop_total y {exceso_65p} con pop_65p > pop_total, de {celdas}. "
+            f"Suele significar que las bandas llegan como conteo absoluto de otro "
+            f"modelo de poblacion en vez de como cuota del total publicado."
+        )
+    if no_suman:
+        problemas.append(
+            f"Las tres bandas etarias no reconstruyen pop_total en {no_suman} celdas "
+            f"de {celdas}. El reporte publica las cuatro cifras juntas y quien las lea "
+            f"va a restarlas."
+        )
+    if not problemas:
+        _log.info("bandas etarias coherentes", extra={"context": {"celdas": celdas}})
+    return problemas
+
+
+#: Asserts de calidad que solo necesitan el activo ya ensamblado. Es una lista
+#: de datos y no una secuencia de llamadas escritas a mano porque asi se puede
+#: comprobar que un assert nuevo esta conectado sin leer el codigo fuente de
+#: `build_country` con `inspect.getsource` — que es un guardia que pasa aunque
+#: la funcion no se ejecute nunca.
+#:
+#: `validate_national_total` se queda fuera: necesita el manifest.
+ASSERTS_DEL_ACTIVO: tuple[Callable[[Any], list[str]], ...] = (
+    validate_layer_coverage,
+    validate_age_bands,
+)
 
 
 def write_asset(con: Any, plan: BuildPlan) -> Path:
@@ -840,7 +920,7 @@ def build_country(
         p
         for p in (
             *validate_national_total(conexion, plan.manifest, referencia=referencia),
-            *validate_layer_coverage(conexion),
+            *(m for assert_ in ASSERTS_DEL_ACTIVO for m in assert_(conexion)),
         )
         if "(aviso)" not in p
     ]
