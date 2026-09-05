@@ -23,7 +23,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..common.constants import H3_RES_COMPUTE
-from ..common.geo import BBox
+from ..common.geo import BBox, area_spheroid_m2
 from ..common.logging import get_logger
 from .sources.overture import bbox_predicate
 from .vector_h3 import (
@@ -104,7 +104,7 @@ def aggregate_buildings_to_h3(
                    sum(area)  AS bld_area_m2
             FROM (
                 SELECT ST_Centroid(geometry) AS c,
-                       ST_Area_Spheroid(geometry) AS area
+                       {area_spheroid_m2()} AS area
                 FROM read_parquet('{url}')
                 WHERE {bbox_predicate(bbox)}
             ) t

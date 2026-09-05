@@ -103,6 +103,40 @@ class BBox:
 LATAM_BBOX: Final[BBox] = BBox(lon_min=-119.0, lat_min=-57.5, lon_max=-32.0, lat_max=33.0)
 
 
+#: Las funciones geodesicas de DuckDB-spatial leen sus vertices en orden
+#: **(latitud, longitud)**, al reves que todo lo demas del sistema.
+#:
+#: Overture, GeoJSON, `ST_X`/`ST_Y` y el propio `h3_latlng_to_cell(ST_Y, ST_X)`
+#: que hay dos lineas mas abajo en el mismo SELECT trabajan en (lon, lat).
+#: `ST_Area_Spheroid` y `ST_Length_Spheroid`, no: interpretan la primera
+#: ordenada como latitud. Pasarles la geometria tal cual tiene dos efectos, y
+#: el segundo es el peligroso:
+#:
+#: * Donde |longitud| > 90 el valor sale **NaN**, porque no existe esa latitud.
+#: * Donde |longitud| <= 90 sale un numero **plausible y equivocado**, escalado
+#:   por cos(longitud) en vez de por cos(latitud).
+#:
+#: Medido el 5-sep-2026 sobre los activos publicados: Mexico tenia el 96,1 % de
+#: sus celdas con edificacion con `bld_area_m2` NaN, Guatemala el 68,0 %, y las
+#: islas de Ecuador, El Salvador y Chile su parte; y el guardia `isfinite` de
+#: las vias, puesto en su dia para que un NaN no envenenara la suma del pais,
+#: estaba **descartando en silencio toda via al oeste del meridiano -90**:
+#: Mexico publicaba 3,4 km de via en las 842.796 celdas donde viven 126,3
+#: millones de personas, y 39.140 km en las 45.533 celdas al este.
+#:
+#: `ST_FlipCoordinates` es la traduccion, y estas dos funciones son el unico
+#: sitio donde se escribe. Llamar a las de DuckDB directamente es el fallo;
+#: `test_convencion_del_esferoide` lo fija contra la libreria real.
+def area_spheroid_m2(geometria: str = "geometry") -> str:
+    """Area geodesica en m2 de una geometria en orden (lon, lat)."""
+    return f"ST_Area_Spheroid(ST_FlipCoordinates({geometria}))"
+
+
+def length_spheroid_m(geometria: str = "geometry") -> str:
+    """Longitud geodesica en m de una geometria en orden (lon, lat)."""
+    return f"ST_Length_Spheroid(ST_FlipCoordinates({geometria}))"
+
+
 def haversine_km(lon_a: float, lat_a: float, lon_b: float, lat_b: float) -> float:
     """Distancia de circulo maximo en km.
 
