@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-05T11:55:16Z",
+  "generado_utc": "2026-09-05T12:00:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tej2",
+      "mag": 5.1,
+      "lon": -66.7176,
+      "lat": -26.1078,
+      "depth_km": 10.0,
+      "lugar": "69 km al E de Antofagasta de la Sierra, Argentina",
+      "origen_utc": "2026-09-05T11:37:12Z",
+      "razon": "M5.1 < umbral M5.5",
+      "iso3": "ARG"
+    },
     {
       "usgs_id": "us7000tehe",
       "mag": 5.0,
