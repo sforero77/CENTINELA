@@ -13,7 +13,7 @@ end-to-end sin intervencion*.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -117,8 +117,7 @@ class ImpactTotals:
     #: reportes publicados lo decian: us1000c2zy, us6000hf75 y usp000jd2q.
     discrepancia_pct: float | None = None
     #: Columnas que el activo no traia y `register_exposure_view` sustituyo por
-    #: cero. Va **al final** y con valor por defecto a proposito: las de arriba
-    #: se rellenan por posicion desde la fila de `SQL_TOTALES`, y esta no.
+    #: cero. No sale del SQL: la pone el llamador.
     #:
     #: Existe porque el aviso se perdia. `register_exposure_view` devolvia la
     #: lista y los tres llamadores de produccion descartaban el retorno; solo
@@ -127,8 +126,8 @@ class ImpactTotals:
     #: markdown escondia la fila, que tapa el problema para quien lee y lo deja
     #: intacto para quien integra — que es el consumidor al que mas dano hace.
     #:
-    #: `kw_only` para que `*fila` no pueda desbordar hasta aqui: las de arriba se
-    #: rellenan por posicion desde el SQL, y esta no sale del SQL.
+    #: `kw_only` porque no es una cifra del evento sino un aviso sobre como se
+    #: midio, y no debe poder colarse en una construccion posicional.
     columnas_ausentes: tuple[str, ...] = field(default=(), kw_only=True)
 
     def to_totales(self) -> Totales:
@@ -376,40 +375,74 @@ GROUP BY ALL
 ORDER BY pop_mmi7p DESC
 """
 
+#: Cifras nacionales del evento. **Cada expresion lleva el nombre del campo de
+#: :class:`ImpactTotals` al que va**, y el dataclass se construye por ese nombre.
+#:
+#: Se rellenaba por posicion, con veinte sumas sin alias volcadas en orden sobre
+#: el constructor. Comprobado: intercambiar las dos lineas de salud y educacion
+#: dejaba la suite entera en verde y publicaba "1.003 sedes de salud" donde hay
+#: 516. Es un fallo que no se puede ver leyendo ninguno de los dos ficheros por
+#: separado, porque los dos son correctos; lo que estaba mal era la costura.
 SQL_TOTALES = """
 SELECT
-    SUM(CASE WHEN mmi_max >= 6 THEN pop_total ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 6 THEN pop_65p ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 6 THEN bld_count ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 6 THEN built_m2 ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 6 THEN health_count ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 6 THEN edu_count ELSE 0 END),
+    SUM(CASE WHEN mmi_max >= 6 THEN pop_total ELSE 0 END)      AS pop_mmi6p,
+    SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END)      AS pop_mmi7p,
+    SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END)      AS pop_mmi8p,
+    SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END)   AS pop_65p_mmi7p,
+    SUM(CASE WHEN mmi_max >= 6 THEN pop_65p ELSE 0 END)        AS pop_65p_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN bld_count ELSE 0 END)      AS bld_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN built_m2 ELSE 0 END)       AS built_m2_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN health_count ELSE 0 END)   AS health_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN edu_count ELSE 0 END)      AS edu_mmi6p,
     SUM(CASE WHEN mmi_max >= 6
              THEN road_km_primary + road_km_secondary + road_km_other
-             ELSE 0 END),
+             ELSE 0 END)                                       AS road_km_mmi6p,
     SUM(CASE WHEN mmi_max >= 6
              THEN road_km_primary + road_km_secondary
-             ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END),
+             ELSE 0 END)                                       AS road_km_principal_mmi6p,
+    SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END)      AS bld_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END)       AS built_m2_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END)   AS health_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END)      AS edu_mmi7p,
     SUM(CASE WHEN mmi_max >= 7
              THEN road_km_primary + road_km_secondary + road_km_other
-             ELSE 0 END),
+             ELSE 0 END)                                       AS road_km_mmi7p,
     SUM(CASE WHEN mmi_max >= 7
              THEN road_km_primary + road_km_secondary
-             ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 6 AND ls_prob >= {gf} THEN pop_total ELSE 0 END),
-    SUM(CASE WHEN mmi_max >= 6 AND lq_prob >= {gf} THEN pop_total ELSE 0 END),
+             ELSE 0 END)                                       AS road_km_principal_mmi7p,
+    SUM(CASE WHEN mmi_max >= 6 AND ls_prob >= {gf} THEN pop_total ELSE 0 END)
+                                                               AS pop_ls_alta,
+    SUM(CASE WHEN mmi_max >= 6 AND lq_prob >= {gf} THEN pop_total ELSE 0 END)
+                                                               AS pop_lq_alta,
     100 * abs(SUM(pop_total) - SUM(pop_alt_worldpop))
-        / NULLIF(SUM(pop_alt_worldpop), 0)
+        / NULLIF(SUM(pop_alt_worldpop), 0)                     AS discrepancia_pct
 FROM impact_h3
 WHERE mmi_max >= 6
 """
+
+
+def leer_totales(con: Any, *, columnas_ausentes: tuple[str, ...] = ()) -> ImpactTotals:
+    """Ejecuta :data:`SQL_TOTALES` y arma :class:`ImpactTotals` **por nombre**.
+
+    Los nombres salen del cursor, no de una lista paralela: si el SQL renombra o
+    pierde una columna, esto revienta con un `TypeError` que la nombra, en vez
+    de correr los valores una posicion y publicar las sedes de salud como
+    educativas.
+    """
+    cursor = con.execute(
+        SQL_TOTALES.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB)
+    )
+    nombres = [descripcion[0] for descripcion in cursor.description]
+    crudos = dict(zip(nombres, cursor.fetchone(), strict=True))
+
+    # La discrepancia sale aparte: es la unica columna donde NULL significa "no
+    # se pudo medir" y no "cero". Ver `ImpactTotals.discrepancia_pct`.
+    discrepancia = crudos.pop("discrepancia_pct")
+    return ImpactTotals(
+        **{nombre: float(valor or 0.0) for nombre, valor in crudos.items()},
+        discrepancia_pct=None if discrepancia is None else float(discrepancia),
+        columnas_ausentes=columnas_ausentes,
+    )
 
 
 def _toda_por_debajo_del_relleno(contornos: Sequence[Any]) -> bool:
@@ -523,21 +556,7 @@ def compute_impact(
 
     con.execute(SQL_IMPACT_ADM2.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB))
 
-    fila = con.execute(
-        SQL_TOTALES.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB)
-    ).fetchone()
-    # `replace` y no un positional mas: las cifras se rellenan por posicion desde
-    # la fila del SQL, y mezclar las dos formas en la misma llamada deja a mypy
-    # sin poder contar los argumentos.
-    # La discrepancia se saca aparte: es la unica columna donde NULL significa
-    # "no se pudo medir" y no "cero". Ver `ImpactTotals.discrepancia_pct`.
-    crudos = list(fila)
-    discrepancia = crudos[-1]
-    totales = replace(
-        ImpactTotals(*(float(v or 0.0) for v in crudos)),
-        columnas_ausentes=tuple(ausentes),
-        discrepancia_pct=None if discrepancia is None else float(discrepancia),
-    )
+    totales = leer_totales(con, columnas_ausentes=tuple(ausentes))
     _log.info(
         "impacto calculado",
         extra={
