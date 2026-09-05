@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-05T04:10:17Z",
+  "generado_utc": "2026-09-05T05:20:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tehe",
+      "mag": 5.0,
+      "lon": -83.1397,
+      "lat": 3.5518,
+      "depth_km": 10.0,
+      "lugar": "Cerca de la costa de Central America",
+      "origen_utc": "2026-09-05T05:00:07Z",
+      "razon": "M5.0 < umbral M5.5",
+      "iso3": ""
+    },
     {
       "usgs_id": "us7000tefw",
       "mag": 5.1,
