@@ -37,14 +37,19 @@ H3_RES_VIEWER: Final[tuple[int, ...]] = (7, 6)
 #:
 #: Este comentario decia "el computo de areas usa proyeccion equiarea local", y
 #: eran dos cosas mal a la vez. Una: no existe tal reproyeccion; longitudes y
-#: areas se calculan con `ST_Length_Spheroid` y `ST_Area_Spheroid`, que es
-#: **geodesico sobre el elipsoide**, no proyectado. Dos: una equiarea conserva
+#: areas se calculan con las funciones de esferoide de DuckDB, que son
+#: **geodesicas sobre el elipsoide**, no proyectadas. Dos: una equiarea conserva
 #: superficie a costa de la distancia, asi que seria la clase equivocada para
 #: medir longitud — y `road_km` es una cifra titular.
 #:
-#: Los numeros estan bien: nadie calcula en grados, y las columnas estan bien
-#: nombradas. Lo que estaba mal era lo que el codigo decia de si mismo, que en
-#: `layers.py` ademas no era un comentario sino metadato publicado.
+#: Nadie calcula en grados y las columnas estan bien nombradas, pero **los
+#: numeros no estaban bien**, y esta nota decia que si. Las dos funciones
+#: geodesicas de DuckDB leen sus vertices en orden (latitud, longitud) y se las
+#: llamaba con la geometria en (longitud, latitud): areas y longitudes salian
+#: escaladas por cos(longitud), y NaN donde |longitud| > 90. La traduccion vive
+#: ahora en :func:`pipelines.common.geo.area_spheroid_m2` y
+#: :func:`~pipelines.common.geo.length_spheroid_m`, que son el unico sitio del
+#: repositorio donde se nombra a `ST_*_Spheroid`.
 CRS_PUBLICATION: Final[str] = "EPSG:4326"
 
 # --- Bandas de intensidad publicadas (RF-05) ------------------------------
