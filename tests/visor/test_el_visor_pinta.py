@@ -3212,3 +3212,82 @@ def test_un_reporte_sin_reproceso_no_enseña_el_bloque(pagina: Any) -> None:
     assert not pagina.locator("#bloque-cambios").is_visible(), (
         f"{sin_cambios[0]} no tiene changelog y el bloque se ve igual"
     )
+
+
+def _con_alerta_de_terreno() -> list[str]:
+    """Publicados donde USGS declara alerta de terreno distinta de verde.
+
+    Del catalogo: basta que USGS publique Ground Failure de un evento nuevo
+    para que entre aqui sin tocar esta lista.
+    """
+    con = []
+    for reporte in sorted((RAIZ / "reports").glob("*/report.json")):
+        gf = json.loads(reporte.read_text(encoding="utf-8")).get("ground_failure_usgs") or {}
+        vivas = [
+            str(gf.get(f"{t}_alerta_usgs") or "").lower() not in ("", "green") for t in ("ls", "lq")
+        ]
+        if any(vivas):
+            con.append(reporte.parent.name)
+    return con
+
+
+@pytest.mark.parametrize("usgs_id", _con_alerta_de_terreno())
+def test_el_panel_cruza_el_terreno_con_la_alerta_de_usgs(pagina: Any, usgs_id: str) -> None:
+    """El visor enseñaba la cifra propia y callaba la ajena.
+
+    En el Choco pintaba "Licuefaccion alta 460.000" sin decir que USGS declara
+    alerta **roja** para el mismo evento. Y en cinco pares del catalogo nuestro
+    conteo da cero con la alerta de USGS viva, que es un cero correcto que se
+    lee justo al reves.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", usgs_id)
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    bloque = pagina.locator("#bloque-terreno")
+    assert bloque.is_visible(), f"{usgs_id} tiene Ground Failure y el bloque no se ve"
+
+    notas = pagina.locator("#detalle-terreno .contraste-terreno").all_inner_texts()
+    assert notas, f"{usgs_id} trae alerta de terreno de USGS y el panel no la nombra"
+
+    gf = json.loads((RAIZ / "reports" / usgs_id / "report.json").read_text(encoding="utf-8"))[
+        "ground_failure_usgs"
+    ]
+    colores = {"yellow": "amarilla", "orange": "naranja", "red": "roja"}
+    vivas = [
+        colores[str(gf[f"{t}_alerta_usgs"]).lower()]
+        for t in ("ls", "lq")
+        if str(gf.get(f"{t}_alerta_usgs") or "").lower() in colores
+    ]
+    texto = " ".join(notas)
+    for color in vivas:
+        assert color in texto, (
+            f"{usgs_id} declara alerta {color} y el panel no la escribe: {texto[:120]!r}"
+        )
+
+
+def test_un_cero_contra_una_alerta_viva_se_explica(pagina: Any) -> None:
+    """El peor caso: cifra correcta que se lee al reves.
+
+    Un `0` junto a una alerta naranja de USGS con 1.700 personas dice "aqui no
+    hay este peligro" y lo que dice de verdad es "ninguna celda llega al
+    umbral". La frase la escribio `markdown.py`; aqui se exige en pantalla.
+    """
+    candidatos = []
+    for usgs_id in _con_alerta_de_terreno():
+        datos = json.loads((RAIZ / "reports" / usgs_id / "report.json").read_text(encoding="utf-8"))
+        gf, t = datos["ground_failure_usgs"], datos["totales"]
+        for tipo, propia in (("ls", "pop_ls_alta"), ("lq", "pop_lq_alta")):
+            viva = str(gf.get(f"{tipo}_alerta_usgs") or "").lower() in ("yellow", "orange", "red")
+            if viva and t[propia] == 0:
+                candidatos.append(usgs_id)
+    assert candidatos, "ningun reporte tiene el cero propio contra una alerta viva"
+
+    marca = _ahora(pagina)
+    pagina.select_option("select", candidatos[0])
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    texto = " ".join(pagina.locator("#detalle-terreno .contraste-terreno").all_inner_texts())
+    assert "umbral" in texto, (
+        f"{candidatos[0]} publica 0 con alerta viva y el panel no explica el cero: {texto[:150]!r}"
+    )

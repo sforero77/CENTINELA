@@ -1803,8 +1803,8 @@ function pintarTerreno(reporte) {
   }
 
   const filas = [
-    { etiqueta: "Licuefacción alta", valor: t.pop_lq_alta, icono: "licuefaccion" },
-    { etiqueta: "Deslizamiento alto", valor: t.pop_ls_alta, icono: "deslizamiento" },
+    { etiqueta: "Licuefacción alta", valor: t.pop_lq_alta, icono: "licuefaccion", tipo: "lq" },
+    { etiqueta: "Deslizamiento alto", valor: t.pop_ls_alta, icono: "deslizamiento", tipo: "ls" },
   ];
   // La cuota se mide sobre los expuestos a MMI≥7, que es la banda con la que se
   // rotula el resto del panel: asi "1,6 M" y "66 %" hablan del mismo conjunto.
@@ -1816,13 +1816,65 @@ function pintarTerreno(reporte) {
           `<li><span>${iconoSvg(f.icono)}${f.etiqueta}` +
           (cuota ? ` <span class="cuota-apunte">· <strong>${cuota}</strong> de los expuestos</span>` : "") +
           `</span><span class="cifra${(f.valor || 0) > 0 ? "" : " cero"}">` +
-          `${comoConteo(f.valor)}</span></li>`
+          `${comoConteo(f.valor)}</span></li>` +
+          contrasteDeTerreno(reporte, f.tipo, f.valor)
         );
       })
       .join("") +
     `<li style="background:none;padding:0.3rem 0 0"><span class="leyenda-nota">` +
     `Personas sobre terreno con probabilidad alta según el modelo de fallo del ` +
     `suelo del USGS. Es susceptibilidad, no ocurrencia.</span></li>`;
+}
+
+//: Alertas de USGS, en el idioma del reporte. Es la misma tabla que
+//: `GF_ALERTA_ES` en `markdown.py`, y sale por el mismo sitio que la de PAGER.
+const ALERTA_GF_ES = { green: "verde", yellow: "amarilla", orange: "naranja", red: "roja" };
+
+//: La alerta propia de USGS al lado de nuestra cifra, cuando la declara.
+//:
+//: `report.json` la publica desde siempre —dieciocho de los veintisiete
+//: reportes la traen— y `markdown.py` le da su parrafo. El visor pintaba solo
+//: la cifra propia, asi que en el Choco enseñaba "Licuefaccion alta 460.000" y
+//: no decia que USGS declara **alerta roja** para el mismo evento.
+//:
+//: Y EL CASO QUE DE VERDAD OBLIGA A ESTO: nuestro conteo da cero y USGS no dice
+//: verde. Pasa en cinco pares del catalogo —Catia La Mar y el Choco con
+//: deslizamiento naranja y 1.700 expuestas, San Juan con las dos amarillas,
+//: Bartolome Maso con 33—, y el cero pelado se lee como "aqui no hay este
+//: peligro". Es cierto y es lo contrario de lo que dice: nuestro corte cuenta
+//: celdas por encima de un umbral de probabilidad, y ninguna lo alcanza.
+//:
+//: `markdown.py` ya escribia la frase que lo desarma. El visor la repetia por
+//: ninguna parte, que es el mismo hueco que dejaba las isolineas sin dibujar.
+function contrasteDeTerreno(reporte, tipo, propia) {
+  const gf = reporte.ground_failure_usgs || {};
+  const alerta = String(gf[`${tipo}_alerta_usgs`] || "").toLowerCase();
+  // Verde tambien se calla: sumar "USGS dice verde" a un cero no aporta nada y
+  // duplica la fila. La regla es la de `GroundFailureUSGS.alerta_viva`.
+  if (!alerta || alerta === "green") return "";
+
+  const color = ALERTA_GF_ES[alerta] || alerta;
+  // `numero` y NO `comoConteo`: esta cifra no es nuestra.
+  //
+  // `comoConteo` redondea al millar porque un modelo de exposicion no sostiene
+  // mas precision, y eso vale para lo que este sistema estima. La poblacion de
+  // Ground Failure la publica USGS, y redondearla la falsea: los 1.700 del
+  // Choco salian como "2000" en la pagina mientras el `report.md` del mismo
+  // evento decia "1.700". Dos artefactos del mismo sistema citando la misma
+  // fuente con dos numeros distintos.
+  const pop = Number(gf[`${tipo}_pop_usgs`]);
+  let texto = `USGS declara para este evento alerta <strong>${color}</strong>`;
+  if (Number.isFinite(pop) && pop > 0) texto += `, con ${numero(pop)} expuestas`;
+  if (!(propia > 0)) {
+    texto +=
+      ". El cero de arriba no dice que no haya exposición: dice que ninguna " +
+      "celda llega al umbral";
+  }
+
+  return (
+    `<li class="contraste-terreno" data-alerta="${escapar(alerta)}">` +
+    `<span class="leyenda-nota">${texto}.</span></li>`
+  );
 }
 
 function pintarMunicipios(reporte, municipios) {

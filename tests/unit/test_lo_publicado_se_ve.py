@@ -559,3 +559,168 @@ def test_el_paquete_dibuja_leyendo_el_directorio() -> None:
         "render_maps ya no lee los contornos del directorio: revisa si el orden "
         "de escritura en p2_impact/run.py sigue siendo critico"
     )
+
+
+# --- La alerta de terreno de USGS -------------------------------------------
+#
+# `report.json` publica la alerta propia de USGS para deslizamiento y
+# licuefaccion, con su color y su poblacion. Dieciocho de los veintisiete
+# reportes la traen y `markdown.py` le da su parrafo. El visor no la nombraba en
+# una sola linea: en el Choco enseñaba "Licuefaccion alta 460.000" sin decir que
+# USGS declara alerta ROJA para el mismo evento.
+#
+# Y el caso que obliga a esto: nuestro conteo da cero y USGS no dice verde. El
+# cero es cierto —ninguna celda alcanza el umbral de probabilidad— y pelado se
+# lee como "aqui no hay este peligro", que es lo contrario. `markdown.py` ya
+# tenia la frase que lo desarma; el visor no la repetia por ninguna parte.
+
+
+def _terreno_usgs(usgs_id: str) -> dict[str, str]:
+    datos = json.loads((REPORTS / usgs_id / "report.json").read_text(encoding="utf-8"))
+    return dict(datos.get("ground_failure_usgs") or {})
+
+
+def _con_alerta_viva() -> list[tuple[str, str]]:
+    """``(usgs_id, tipo)`` donde USGS declara algo distinto de verde.
+
+    Del catalogo en cada corrida: basta que USGS publique Ground Failure de un
+    evento nuevo para que entre aqui sin que nadie toque la lista.
+    """
+    vivas = []
+    for usgs_id in _eventos_publicados():
+        gf = _terreno_usgs(usgs_id)
+        for tipo in ("ls", "lq"):
+            alerta = str(gf.get(f"{tipo}_alerta_usgs") or "").lower()
+            if alerta and alerta != "green":
+                vivas.append((usgs_id, tipo))
+    return vivas
+
+
+def test_hay_alertas_de_terreno_con_las_que_comprobar() -> None:
+    """Sin ellas, los guardias de abajo pasarian en vacio."""
+    assert _con_alerta_viva(), (
+        "ningun reporte publicado trae alerta de terreno de USGS distinta de "
+        "verde: nada esta comprobando que el visor la enseñe"
+    )
+
+
+def test_el_visor_lee_la_alerta_de_terreno_de_usgs() -> None:
+    """Las cuatro claves estaban en `report.json` y en ninguna linea de app.js."""
+    fuente = _sin_comentarios(APP)
+
+    assert "contrasteDeTerreno(" in fuente, (
+        "el bloque de terreno no cruza con la alerta de USGS: el visor enseña "
+        "la cifra propia y calla la ajena"
+    )
+    ini = APP.index("function contrasteDeTerreno")
+    cuerpo = _sin_comentarios(APP[ini : APP.index("\n}", ini)])
+    assert "ground_failure_usgs" in cuerpo, "no lee el bloque que publica el reporte"
+    for clave in ("_alerta_usgs", "_pop_usgs"):
+        assert clave in cuerpo, f"no lee {clave}"
+
+
+def test_el_visor_calla_cuando_usgs_dice_verde() -> None:
+    """La misma regla que `GroundFailureUSGS.alerta_viva`.
+
+    Sumar "USGS dice verde" a un cero no aporta y duplica la fila. Que las dos
+    implementaciones no puedan separarse es el punto.
+    """
+    ini = APP.index("function contrasteDeTerreno")
+    cuerpo = _sin_comentarios(APP[ini : APP.index("\n}", ini)])
+
+    assert '=== "green"' in cuerpo or '== "green"' in cuerpo, (
+        "el contraste no descarta la alerta verde"
+    )
+
+
+def test_el_cero_que_contradice_a_usgs_lleva_su_explicacion() -> None:
+    """Cinco pares del catalogo, y es el peor de los casos posibles.
+
+    Un cero pelado junto a una alerta naranja de USGS con 1.700 personas es una
+    cifra correcta que se lee al reves. La frase sale de `markdown.py`, que la
+    escribio primero; aqui se exige que el visor diga lo mismo.
+    """
+    contradicen = [
+        (usgs_id, tipo)
+        for usgs_id, tipo in _con_alerta_viva()
+        if json.loads((REPORTS / usgs_id / "report.json").read_text(encoding="utf-8"))["totales"][
+            "pop_ls_alta" if tipo == "ls" else "pop_lq_alta"
+        ]
+        == 0
+    ]
+    assert contradicen, (
+        "ningun reporte tiene el cero propio contra una alerta viva de USGS: "
+        "revisa si este guardia sigue haciendo falta"
+    )
+
+    ini = APP.index("function contrasteDeTerreno")
+    cuerpo = APP[ini : APP.index("\n}", ini)]
+    assert "ninguna" in cuerpo and "umbral" in cuerpo, (
+        f"{len(contradicen)} pares publican 0 con alerta viva de USGS "
+        f"({contradicen[:3]}…) y el visor no explica el cero"
+    )
+
+
+def test_las_dos_traducciones_de_la_alerta_dicen_lo_mismo() -> None:
+    """El visor y el markdown traducen los mismos cuatro colores.
+
+    Dos tablas que se separan dejarian el mismo evento con la alerta en
+    naranja en el `.md` y en `orange` en la pagina.
+    """
+    ini = APP.index("const ALERTA_GF_ES")
+    en_visor = set(re.findall(r"(\w+): \"", APP[ini : APP.index("}", ini)]))
+
+    py = (RAIZ / "pipelines" / "p3_report" / "markdown.py").read_text(encoding="utf-8")
+    ini_py = py.index("GF_ALERTA_ES")
+    en_pipeline = set(re.findall(r'"(\w+)":', py[ini_py : py.index("}", ini_py)]))
+
+    assert en_visor == en_pipeline, (
+        f"el visor traduce {sorted(en_visor)} y el pipeline {sorted(en_pipeline)}"
+    )
+
+
+def test_la_cifra_de_usgs_no_se_redondea_como_la_nuestra() -> None:
+    """`comoConteo` redondea al millar; esa cifra no es de este sistema.
+
+    El redondeo vale para lo que CENTINELA estima —un modelo de exposicion no
+    sostiene mas precision— y falsea lo que solo cita: los 1.700 del Choco
+    salian como "2000" en la pagina mientras el `report.md` del mismo evento
+    decia "1.700". Dos artefactos citando la misma fuente con dos numeros.
+    """
+    ini = APP.index("function contrasteDeTerreno")
+    cuerpo = _sin_comentarios(APP[ini : APP.index("\n}", ini)])
+
+    assert "comoConteo(" not in cuerpo, (
+        "el contraste redondea la poblacion de USGS con el formateador de las "
+        "cifras propias: la estaria citando mal"
+    )
+    assert "numero(pop)" in cuerpo, "la cifra de USGS no se imprime exacta"
+
+
+def test_ninguna_cifra_citada_de_usgs_se_deforma() -> None:
+    """Sobre el catalogo: el redondeo al millar movia cifras de verdad.
+
+    No es teorico. Con los valores publicados hoy, `comoConteo` cambiaria cinco
+    de las que USGS declara — y la mas visible en un 18 %.
+    """
+    deformadas = []
+    for usgs_id in _eventos_publicados():
+        gf = _terreno_usgs(usgs_id)
+        for tipo in ("ls", "lq"):
+            crudo = gf.get(f"{tipo}_pop_usgs") or ""
+            if not crudo:
+                continue
+            valor = float(crudo)
+            if valor >= 1000 and round(valor / 1000) * 1000 != valor:
+                deformadas.append((usgs_id, tipo, valor, round(valor / 1000) * 1000))
+
+    assert deformadas, (
+        "ninguna cifra de USGS se deformaria al redondear: revisa si este "
+        "guardia sigue haciendo falta"
+    )
+    # Y el visor no puede estar usando ese redondeo. Lo garantiza la prueba de
+    # arriba; esta documenta cuanto costaba.
+    peor = max(deformadas, key=lambda d: abs(d[3] - d[2]) / d[2])
+    assert abs(peor[3] - peor[2]) / peor[2] > 0.1, (
+        f"la peor deformacion era del {abs(peor[3] - peor[2]) / peor[2]:.0%}: {peor}"
+    )
