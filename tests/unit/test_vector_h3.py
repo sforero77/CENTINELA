@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import math
+
 import pytest
 
+from pipelines.common.geo import length_spheroid_m
 from pipelines.p0_exposure.vector_h3 import (
     LINE_STEP_KM,
     MAX_POINTS_PER_LINE,
@@ -114,12 +117,20 @@ def test_el_reparto_conserva_la_longitud_total() -> None:
         "ST_GeomFromText('LINESTRING(-75.00 4.00, -74.90 4.00)') AS geometry, "
         "'primary' AS clase"
     )
-    esperado: float = con.execute(
-        "SELECT ST_Length_Spheroid(geometry) / 1000.0 FROM vias"
-    ).fetchone()[0]
+    # El esperado no se le pide a la misma expresion que produce el resultado:
+    # cuando esto decia `ST_Length_Spheroid(geometry)` a secas, la prueba fijaba
+    # el orden de coordenadas equivocado y pasaba con el fallo dentro. Aqui se
+    # calcula a mano — 0,1° de longitud sobre el paralelo 4 — y ademas se
+    # comprueba que la cifra es la del paralelo bueno y no la del meridiano -75.
+    esperado_km = 0.10 * 111.320 * math.cos(math.radians(4.0))
 
     resumen = aggregate_lines_to_h3(
         con, "SELECT geometry, clase FROM vias", tabla="roads_h3", paso_km=0.2
     )
 
-    assert resumen.total == pytest.approx(esperado, rel=1e-9)
+    assert resumen.total == pytest.approx(esperado_km, rel=2e-3)
+
+    # Y la conservacion en si: el reparto entre celdas suma la longitud entera.
+    geom = length_spheroid_m("geometry")
+    entera: float = con.execute(f"SELECT {geom} / 1000.0 FROM vias").fetchone()[0]
+    assert resumen.total == pytest.approx(entera, rel=1e-9)

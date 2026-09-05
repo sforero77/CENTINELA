@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..common.constants import H3_RES_COMPUTE
+from ..common.geo import length_spheroid_m
 from ..common.logging import get_logger
 
 _log = get_logger(__name__)
@@ -237,16 +238,16 @@ def aggregate_lines_to_h3(
         CREATE TABLE {tabla} AS
         WITH vias AS (
             SELECT geometry, clase,
-                   ST_Length_Spheroid(geometry) / 1000.0 AS km
+                   {length_spheroid_m()} / 1000.0 AS km
             FROM ({consulta_fuente})
             -- `> 0` descarta el cero y el NaN, pero **no el infinito**, y una
             -- sola geometria degenerada envenena el total: inf o NaN se
             -- propagan por la suma y el pais entero acaba con `road_km: NaN`.
             -- Le paso a Ecuador. `isfinite` es la comprobacion que hacia falta;
             -- el tope de longitud descarta lo que no puede ser una via real.
-            WHERE ST_Length_Spheroid(geometry) > 0
-              AND isfinite(ST_Length_Spheroid(geometry))
-              AND ST_Length_Spheroid(geometry) < {MAX_LINE_LENGTH_M}
+            WHERE {length_spheroid_m()} > 0
+              AND isfinite({length_spheroid_m()})
+              AND {length_spheroid_m()} < {MAX_LINE_LENGTH_M}
         ),
         con_paso AS (
             SELECT geometry, clase, km,
