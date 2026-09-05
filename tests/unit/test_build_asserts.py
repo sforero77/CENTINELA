@@ -19,9 +19,11 @@ from pipelines.p0_exposure.build import REQUIRED_COVERAGE, validate_layer_covera
 CELDA_COMPLETA = {
     "pop_total": 1200.0,
     "pop_0_14": 300.0,
+    "pop_15_64": 750.0,
     "pop_65p": 150.0,
     "pop_alt_worldpop": 1180.0,
     "bld_count": 320,
+    "bld_area_m2": 41000.0,
     "built_m2": 45000.0,
     "road_km_primary": 1.2,
     "road_km_secondary": 0.8,
@@ -69,6 +71,9 @@ def test_un_activo_completo_pasa(con: Any) -> None:
     ("anulados", "capa"),
     [
         ({"bld_count": 0}, "buildings"),
+        # El area de las edificaciones no estaba vigilada, y Mexico publico el
+        # 96,1 % de sus celdas con edificacion en NaN sin que nada protestara.
+        ({"bld_area_m2": 0.0}, "buildings"),
         ({"built_m2": 0.0}, "built_ghsl"),
         ({"road_km_primary": 0.0, "road_km_secondary": 0.0, "road_km_other": 0.0}, "roads"),
         ({"pop_65p": 0.0}, "pop_worldpop_agesex"),

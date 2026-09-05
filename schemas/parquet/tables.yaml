@@ -1,8 +1,11 @@
 # Esquemas de las tablas GeoParquet publicadas (§3.2, §3.3).
 #
 # Particionado Hive: iso3=COL/layer=exposure/...
-# CRS de publicacion: EPSG:4326. Areas y longitudes se calculan en proyeccion
-# equiarea local por pais y se publican ya reducidas a metros/kilometros.
+# CRS de publicacion: EPSG:4326. No hay ninguna reproyeccion: areas y longitudes
+# se calculan geodesicamente sobre el elipsoide y se publican ya reducidas a
+# metros/kilometros. Esta cabecera decia "proyeccion equiarea local por pais" y
+# era falso; ver `pipelines/common/geo.py`, que es donde vive la unica
+# traduccion del orden de coordenadas que esas funciones necesitan.
 
 exposure_h3:
   descripcion: Activo de exposicion, una fila por celda H3 r8. Rebuild trimestral.
