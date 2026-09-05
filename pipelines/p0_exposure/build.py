@@ -302,6 +302,11 @@ REQUIRED_COVERAGE: tuple[tuple[str, str, str], ...] = (
     ("sum(pop_65p)", "poblacion de 65 o mas", "pop_worldpop_agesex"),
     ("sum(pop_alt_worldpop)", "poblacion de contraste", "pop_worldpop_total"),
     ("sum(bld_count)", "edificaciones", "buildings"),
+    # `bld_area_m2` no estaba, y esa ausencia costo cinco activos: el area salia
+    # NaN en el 96,1 % de las celdas con edificacion de Mexico y el build
+    # terminaba en verde, porque el unico centinela de la capa era el conteo.
+    # Una columna publicada sin vigilancia es una columna que puede mentir.
+    ("sum(bld_area_m2)", "superficie de las edificaciones", "buildings"),
     ("sum(built_m2)", "superficie construida", "built_ghsl"),
     (
         "sum(road_km_primary + road_km_secondary + road_km_other)",
@@ -355,6 +360,47 @@ def validate_layer_coverage(con: Any) -> list[str]:
             extra={"context": {"capas": len(REQUIRED_COVERAGE)}},
         )
     return problemas
+
+
+#: Tipos de DuckDB que pueden llevar un valor no finito. Los enteros no.
+TIPOS_CON_NAN: frozenset[str] = frozenset({"DOUBLE", "FLOAT", "REAL"})
+
+
+def columnas_no_finitas(con: Any, tabla: str = "exposure_h3") -> list[str]:
+    """Columnas de coma flotante de ``tabla`` con algun NaN o infinito."""
+    tipos = con.execute(f"DESCRIBE {tabla}").fetchall()
+    flotantes = [nombre for nombre, tipo, *_ in tipos if str(tipo).upper() in TIPOS_CON_NAN]
+    if not flotantes:
+        return []
+    conteos = ", ".join(f"count(*) FILTER (WHERE NOT isfinite({c}))" for c in flotantes)
+    fila = con.execute(f"SELECT {conteos} FROM {tabla}").fetchone()
+    return [c for c, n in zip(flotantes, fila, strict=True) if int(n or 0) > 0]
+
+
+def validate_finite_values(con: Any) -> list[str]:
+    """Ninguna columna de coma flotante del activo puede llevar NaN ni infinito.
+
+    `validate_layer_coverage` ya comprueba finitud, pero solo de las diez
+    expresiones que alguien se acordo de anadir a `REQUIRED_COVERAGE`, y sobre
+    la **suma**. Esto barre la tabla entera preguntandole a la propia tabla que
+    columnas tiene, asi que una columna nueva queda vigilada el dia que se
+    anade y no el dia que alguien se acuerda.
+
+    Es la puerta que faltaba. `bld_area_m2` no estaba en `REQUIRED_COVERAGE` y
+    Mexico publico un activo con el 96,1 % de sus celdas con edificacion en
+    NaN, Guatemala el 68,0 %, y las partes insulares de Ecuador, El Salvador y
+    Chile la suya. Los cinco builds terminaron en verde.
+    """
+    rotas = columnas_no_finitas(con)
+    if not rotas:
+        _log.info("todas las columnas del activo son finitas")
+        return []
+    return [
+        f"Columnas del activo con valores no finitos: {', '.join(rotas)}. "
+        f"Un NaN se propaga por toda suma que lo toque y acabaria impreso en el "
+        f"reporte; casi siempre viene de una geometria degenerada o de una "
+        f"funcion geodesica llamada con las coordenadas al reves."
+    ]
 
 
 def validate_age_bands(con: Any) -> list[str]:
@@ -414,6 +460,7 @@ def validate_age_bands(con: Any) -> list[str]:
 #: `validate_national_total` se queda fuera: necesita el manifest.
 ASSERTS_DEL_ACTIVO: tuple[Callable[[Any], list[str]], ...] = (
     validate_layer_coverage,
+    validate_finite_values,
     validate_age_bands,
 )
 
