@@ -73,7 +73,18 @@ def test_el_json_cumple_su_propio_schema(reporte: Report, validator: Draft202012
 
 
 def test_roundtrip_del_modelo(reporte: Report) -> None:
-    assert Report.from_dict(reporte.to_dict()).to_dict() == reporte.to_dict()
+    """A NIVEL DE OBJETO, no de diccionario.
+
+    Esto comparaba `to_dict()` contra `to_dict()`, que es ciego a lo unico que
+    `to_dict` puede hacer mal: no emitir un campo. Las siete columnas de la
+    banda MMI>=6 llevaban ahi desde el 3-sep sin llegar nunca al `report.json`,
+    y esta prueba pasaba en verde porque las dos mitades de la igualdad las
+    omitian igual.
+
+    Comparando los objetos, un campo que no se serializa vuelve con su valor por
+    defecto y la igualdad falla.
+    """
+    assert Report.from_dict(reporte.to_dict()) == reporte
 
 
 def test_guardar_escribe_json_valido(reporte: Report, tmp_path: Path) -> None:

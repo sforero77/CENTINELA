@@ -103,6 +103,27 @@
     "totales": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "pop_mmi6p",
+        "pop_mmi7p",
+        "pop_mmi8p",
+        "pop_65p_mmi7p",
+        "pop_65p_mmi6p",
+        "bld_mmi6p",
+        "built_m2_mmi6p",
+        "health_mmi6p",
+        "edu_mmi6p",
+        "road_km_mmi6p",
+        "road_km_principal_mmi6p",
+        "bld_mmi7p",
+        "built_m2_mmi7p",
+        "health_mmi7p",
+        "edu_mmi7p",
+        "road_km_mmi7p",
+        "road_km_principal_mmi7p",
+        "pop_ls_alta",
+        "pop_lq_alta"
+      ],
       "properties": {
         "pop_mmi6p": {
           "type": "number",
@@ -223,7 +244,10 @@
       "additionalProperties": false,
       "properties": {
         "pop_discrepancia_pct": {
-          "type": ["number", "null"],
+          "type": [
+            "number",
+            "null"
+          ],
           "description": "Desacuerdo entre GHS-POP y WorldPop dentro de las bandas publicadas. null = no se pudo medir; no es cero."
         },
         "notas": {

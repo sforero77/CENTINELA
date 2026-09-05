@@ -8,7 +8,7 @@ version del schema (``centinela/report/2.0``), no editar en sitio.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Any, Self
 
@@ -130,20 +130,32 @@ class Totales:
         return {6: self.pop_mmi6p, 7: self.pop_mmi7p, 8: self.pop_mmi8p}.get(banda, 0.0)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "pop_mmi6p": self.pop_mmi6p,
-            "pop_mmi7p": self.pop_mmi7p,
-            "pop_mmi8p": self.pop_mmi8p,
-            "pop_65p_mmi7p": self.pop_65p_mmi7p,
-            "bld_mmi7p": self.bld_mmi7p,
-            "built_m2_mmi7p": self.built_m2_mmi7p,
-            "health_mmi7p": self.health_mmi7p,
-            "edu_mmi7p": self.edu_mmi7p,
-            "road_km_mmi7p": self.road_km_mmi7p,
-            "road_km_principal_mmi7p": self.road_km_principal_mmi7p,
-            "pop_ls_alta": self.pop_ls_alta,
-            "pop_lq_alta": self.pop_lq_alta,
-        }
+        """Las cifras, **derivadas de los campos** y no enumeradas a mano.
+
+        Esto era una lista escrita a mano de doce claves sobre un dataclass de
+        diecinueve campos. Las siete que faltaban eran las de la banda MMI>=6
+        —`pop_65p_mmi6p`, `bld_mmi6p`, `built_m2_mmi6p`, `health_mmi6p`,
+        `edu_mmi6p`, `road_km_mmi6p`, `road_km_principal_mmi6p`—, que se
+        calculan en el SQL, viajan en `ImpactTotals`, se publican en el
+        `adm2.csv` con su etiqueta HXL y las pinta el `report.md`, pero nunca
+        llegaban al `report.json`.
+
+        Ocho de los reportes publicados tienen su banda titular en MMI>=6, asi
+        que el visor —que solo puede leer el JSON— pintaba "0 sedes de salud, 0
+        sedes educativas, 0 edificaciones" al lado de hasta 4,75 millones de
+        personas dentro de la banda, mientras el `report.md` del mismo
+        directorio decia 1.698 y 1.570.
+
+        Y era peor que un cero: `centinela regenerar-textos`, el comando que
+        `docs/OPERACION.md` prescribe como reparacion de rutina, relee el
+        `report.json` y reescribe el `report.md`. Ejecutarlo habria convertido
+        esas cifras en ceros tambien en el markdown.
+
+        Derivarlo de `fields()` cierra la clase entera de fallo: una cifra que
+        se anade al dataclass se publica, sin depender de que alguien se acuerde
+        de una segunda lista.
+        """
+        return {campo.name: getattr(self, campo.name) for campo in fields(self)}
 
 
 @dataclass(frozen=True, slots=True)
