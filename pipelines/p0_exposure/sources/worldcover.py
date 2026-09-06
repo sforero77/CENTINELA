@@ -81,15 +81,43 @@ CLASES: Final[tuple[Clase, ...]] = (
     Clase(90, "humedal", "Humedal herbaceo y manglar"),
 )
 
-#: Codigos que se suman a cada columna publicada.
+#: Nombre del cubo de suelo que NO tiene columna propia. No esta en `CLASES`,
+#: asi que no genera `lulc_*_pct`: solo entra en el denominador.
+OTRO_SUELO: Final[str] = "otro_suelo"
+
+#: Codigos que entran en el reparto. Los que llevan nombre de `CLASES` se
+#: publican como columna; `OTRO_SUELO` solo cuenta.
+#:
+#: EL DENOMINADOR EXCLUIA SUELO, NO SOLO AGUA.
+#:
+#: El reparto se calcula sobre los pixeles **clasificados**, y "clasificados"
+#: eran unicamente estas seis clases. Quedaban fuera el suelo desnudo (60), la
+#: nieve y el hielo (70) y el musgo y liquen (100) — que son **suelo**— junto
+#: con el agua (80), que si esta excluida a proposito y documentada ("en la
+#: costa media celda es mar y el mar no cuenta").
+#:
+#: Efecto: una celda del Altiplano con 130 de sus 140 pixeles de roca y 10 de
+#: pastizal publicaba **«100 % pastizal»**, con `lulc_px = 10`. Ese diez se lee
+#: como "poca evidencia, celda de borde", no como "el 93 % de esto es roca
+#: desnuda". Son dos afirmaciones distintas y solo una es cierta.
+#:
+#: Ahora las tres clases de suelo entran en el denominador sin columna propia.
+#: Los seis porcentajes suman **menos de 100** cuando hay roca, nieve o musgo,
+#: y la diferencia es exactamente eso — que es lo que `schemas/parquet/tables.yaml`
+#: ya declaraba ("los porcentajes suman <= 100 salvo redondeo") y no se cumplia
+#: por otra razon. El agua sigue fuera: una celda medio marina no es media celda
+#: sin clasificar.
 AGRUPACION: Final[dict[int, str]] = {
     10: "arbolado",
     20: "arbustos",
     30: "pastizal",
     40: "cultivo",
     50: "construido",
+    60: OTRO_SUELO,  # suelo desnudo o vegetacion dispersa
+    70: OTRO_SUELO,  # nieve y hielo
     90: "humedal",
     95: "humedal",  # manglar
+    100: OTRO_SUELO,  # musgo y liquen
 }
 
 #: Valor de fuera de dato. El producto usa 0 y no declara nodata en el GeoTIFF.

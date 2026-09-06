@@ -105,19 +105,55 @@ def test_humedal_y_manglar_van_a_la_misma_columna() -> None:
 
 
 def test_lo_que_no_arde_no_ocupa_una_columna() -> None:
-    """Agua, nieve, suelo desnudo y musgo se quedan fuera a proposito.
+    """Agua, nieve, suelo desnudo y musgo se quedan fuera del CONTRATO.
 
     Nombrarlas en el contrato publicado para que sean siempre cero es ensanchar
     el parquet sin anadir informacion — y `exposure_h3` se hereda entero en
     `impact_h3`, asi que cada columna se paga dos veces.
     """
+    publicadas = {c.nombre for c in wc.CLASES}
     for codigo in (60, 70, 80, 100):
-        assert codigo not in wc.AGRUPACION
+        assert wc.AGRUPACION.get(codigo) not in publicadas
+
+
+def test_el_suelo_excluido_cuenta_igual_en_el_denominador() -> None:
+    """NO TENER COLUMNA NO ES NO CONTAR, Y SE CONFUNDIAN.
+
+    El reparto se calcula sobre los pixeles clasificados, y "clasificados" eran
+    solo las seis clases publicadas: quedaban fuera del **denominador** el suelo
+    desnudo (60), la nieve (70) y el musgo (100), que son suelo.
+
+    Una celda del Altiplano con 130 de sus 140 pixeles de roca y 10 de pastizal
+    publicaba «100 % pastizal» con `lulc_px = 10`. Ese diez se lee como "poca
+    evidencia, celda de borde", no como "el 93 % de esto es roca".
+    """
+    for codigo in (60, 70, 100):
+        assert wc.AGRUPACION.get(codigo) == wc.OTRO_SUELO, (
+            f"el codigo {codigo} es suelo y tiene que entrar en el denominador"
+        )
+
+
+def test_el_agua_si_se_queda_fuera_del_denominador() -> None:
+    """Y esa exclusion si esta declarada: "el mar no cuenta".
+
+    Una celda medio marina no es media celda sin clasificar: es una celda de
+    costa perfectamente medida sobre la mitad que es tierra.
+    """
+    assert 80 not in wc.AGRUPACION
 
 
 def test_cada_clase_publicada_tiene_su_grupo() -> None:
-    """Que las dos estructuras no se separen: `CLASES` rotula, `AGRUPACION` suma."""
-    assert {c.nombre for c in wc.CLASES} == set(wc.AGRUPACION.values())
+    """Que las dos estructuras no se separen: `CLASES` rotula, `AGRUPACION` suma.
+
+    Lo unico que `AGRUPACION` puede tener de mas es el cubo sin columna.
+    """
+    publicadas = {c.nombre for c in wc.CLASES}
+    agrupadas = set(wc.AGRUPACION.values())
+    assert publicadas <= agrupadas, f"clases sin grupo: {sorted(publicadas - agrupadas)}"
+    assert agrupadas - publicadas == {wc.OTRO_SUELO}, (
+        f"hay grupos sin columna que no son el cubo declarado: "
+        f"{sorted(agrupadas - publicadas - {wc.OTRO_SUELO})}"
+    )
 
 
 # --- La agregacion ----------------------------------------------------------
@@ -310,3 +346,43 @@ def test_una_sola_tesela_ausente_de_varias_sigue_sin_tumbar_nada(monkeypatch: An
     )
 
     assert resumen.celdas == 1
+
+
+@pytest.mark.geo
+def test_una_celda_de_roca_no_publica_cien_por_cien_de_pastizal() -> None:
+    """EL CASO DEL ALTIPLANO, sobre el SQL que produce los porcentajes.
+
+    130 pixeles de roca y 10 de pastizal en la misma celda. Con la roca fuera
+    del denominador salia «100 % pastizal»; con ella dentro sale el 7,1 % que
+    es, y los seis porcentajes suman menos de 100 — la diferencia es la roca.
+    """
+    from pipelines.p0_exposure.raster_categorico_h3 import fracciones_por_celda
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE OR REPLACE TABLE clases_h3 AS SELECT * FROM (VALUES "
+        f"(1::UBIGINT, 'pastizal', 10), (1::UBIGINT, '{wc.OTRO_SUELO}', 130)"
+        ") AS t(h3_08, clase, pixeles)"
+    )
+    fracciones_por_celda(
+        con,
+        origen="clases_h3",
+        destino="lulc_pct_h3",
+        clases=tuple(c.nombre for c in wc.CLASES),
+    )
+    fila = con.execute(
+        "SELECT lulc_pastizal_pct, lulc_px FROM lulc_pct_h3 WHERE h3_08 = 1"
+    ).fetchone()
+
+    assert float(fila[0]) == pytest.approx(7.1, abs=0.05), (
+        "la roca vuelve a estar fuera del denominador"
+    )
+    assert int(fila[1]) == 140, "`lulc_px` cuenta ahora todo el suelo de la celda"
+
+    suma = con.execute(
+        "SELECT "
+        + " + ".join(f"lulc_{c.nombre}_pct" for c in wc.CLASES)
+        + " FROM lulc_pct_h3 WHERE h3_08 = 1"
+    ).fetchone()[0]
+    assert float(suma) < 100.0, "los seis porcentajes tienen que dejar sitio a la roca"
