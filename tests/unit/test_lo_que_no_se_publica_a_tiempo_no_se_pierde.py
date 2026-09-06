@@ -283,3 +283,82 @@ def test_un_reporte_que_no_existe_no_deja_el_lote_a_medias(tmp_path: Path) -> No
     _publicar(tmp_path, "us7000aaa4")
     with pytest.raises((FileNotFoundError, ValueError)):
         regenerate_texts("us7000nada", reports_root=tmp_path)
+
+
+# --------------------------------------------------------------------------
+# Qué modelo de terreno produjo cada cifra.
+# --------------------------------------------------------------------------
+
+
+def _gf(*claves: str) -> ProductSet:
+    return ProductSet(
+        usgs_id="us6000tjl2",
+        shakemap=None,
+        ground_failure=ProductRef(
+            tipo="ground-failure",
+            version=8,
+            actualizado_ms=0,
+            contents={k: f"https://example.org/{k}" for k in claves},
+        ),
+        losspager=None,
+    )
+
+
+def test_se_registra_el_modelo_vigente() -> None:
+    from pipelines.p2_impact.pipeline import modelos_de_terreno
+
+    modelos = modelos_de_terreno(_gf("jessee_2018_model.tif", "zhu_2017_general_model.tif"))
+    assert modelos["modelo_deslizamiento"] == "jessee_2018_model.tif"
+    assert modelos["modelo_licuefaccion"] == "zhu_2017_general_model.tif"
+
+
+def test_se_registra_la_alternativa_historica_y_no_el_preferido() -> None:
+    """Este es el caso: el fichero se guardaba con el nombre del preferido.
+
+    Un `jessee_2018_model.tif` en el directorio de trabajo podía ser en realidad
+    un `nowicki_2014` o un `godt_2008`, y a partir de ahí nada los distinguía —
+    el mismo umbral, la misma etiqueta de unidad y solo el número de versión en
+    `report.json`. La docstring de `GROUND_FAILURE_HIGH_PROB` argumenta justo lo
+    contrario de que eso sea inocuo.
+    """
+    from pipelines.p2_impact.pipeline import modelos_de_terreno
+
+    modelos = modelos_de_terreno(_gf("nowicki_2014_global_model.tif", "zhu_2015_model.tif"))
+    assert modelos["modelo_deslizamiento"] == "nowicki_2014_global_model.tif"
+    assert modelos["modelo_licuefaccion"] == "zhu_2015_model.tif"
+
+
+def test_sin_ground_failure_no_se_inventa_un_modelo() -> None:
+    from pipelines.p2_impact.pipeline import modelos_de_terreno
+
+    assert modelos_de_terreno(_reporte_sin_gf()) == {}
+
+
+def _reporte_sin_gf() -> ProductSet:
+    return ProductSet(usgs_id="us1", shakemap=None, ground_failure=None, losspager=None)
+
+
+def test_el_reporte_nombra_el_modelo_que_produjo_la_cifra() -> None:
+    """«El modelo» sin nombre no dice de qué distribución sale el 0,10."""
+    from pipelines.p3_report.markdown import render_markdown
+    from pipelines.p3_report.model import GroundFailureUSGS, Inputs
+
+    reporte = _reporte()
+    object.__setattr__(
+        reporte,
+        "inputs",
+        Inputs(
+            shakemap_version=8,
+            groundfailure_version=8,
+            exposure_manifest="col-v0.6",
+            modelo_deslizamiento="nowicki_2014_global_model.tif",
+            modelo_licuefaccion="zhu_2015_model.tif",
+        ),
+    )
+    object.__setattr__(reporte, "totales", Totales(pop_mmi6p=6_960_086, pop_ls_alta=88_000))
+    object.__setattr__(reporte, "ground_failure_usgs", GroundFailureUSGS())
+
+    md = render_markdown(reporte)
+    assert "nowicki_2014_global_model.tif" in md, (
+        "el reporte sigue diciendo «el modelo» sin decir cuál"
+    )

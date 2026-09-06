@@ -52,9 +52,28 @@ class ProductRef:
         USGS ha movido nombres de contenido entre versiones de ShakeMap; pedir
         varias alternativas evita que un renombre tumbe el pipeline.
         """
+        clave = self.content_key(*candidates)
+        return self.contents[clave] if clave else None
+
+    def content_key(self, *candidates: str) -> str | None:
+        """**Cual** de las candidatas resolvio, no solo su url.
+
+        Hacia falta y no existia. Para Ground Failure, `download_products`
+        guardaba el fichero con el nombre del modelo **preferido** aunque la url
+        viniera de las alternativas historicas, y a partir de ahi nada
+        distinguia un modelo de otro: el mismo umbral, la misma etiqueta de
+        unidad, y `report.json` con solo el numero de version.
+
+        La docstring de `GROUND_FAILURE_HIGH_PROB` argumenta justo lo contrario
+        de que eso sea inocuo — «Zhu (2017), licuefaccion, entrega cobertura
+        areal, que no es una probabilidad y no se lee como tal. Las dos
+        distribuciones son distintas, asi que el mismo 0,10 no marca lo mismo en
+        cada una». Si el modelo cambia y la etiqueta no, la cifra publicada
+        cambia de significado en silencio.
+        """
         for key in candidates:
             if key in self.contents:
-                return self.contents[key]
+                return key
         return None
 
     @classmethod
