@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-06T18:54:50Z",
+  "generado_utc": "2026-09-06T19:40:25Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000terb",
+      "mag": 4.8,
+      "lon": -99.242,
+      "lat": 16.3632,
+      "depth_km": 10.0,
+      "lugar": "39 km al SO de Copala, México",
+      "origen_utc": "2026-09-06T18:46:18Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "MEX"
+    },
     {
       "usgs_id": "us7000tepx",
       "mag": 5.2,
