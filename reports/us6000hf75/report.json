@@ -54,20 +54,6 @@
   },
   "top_municipios": [
     {
-      "adm2_id": "NI5535",
-      "nombre": "San Rafael del Sur",
-      "mmi_max": 5.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "NI7520",
-      "nombre": "Diriamba",
-      "mmi_max": 5.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "NI5520",
       "nombre": "Villa el Carmen",
       "mmi_max": 5.0,
@@ -77,6 +63,20 @@
     {
       "adm2_id": "NI3550",
       "nombre": "Nagarote",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "NI5535",
+      "nombre": "San Rafael del Sur",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "NI7520",
+      "nombre": "Diriamba",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0

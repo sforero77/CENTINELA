@@ -54,8 +54,8 @@
   },
   "top_municipios": [
     {
-      "adm2_id": "HN0903",
-      "nombre": "Ahuas",
+      "adm2_id": "HN0902",
+      "nombre": "Brus Laguna",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -68,8 +68,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "HN0902",
-      "nombre": "Brus Laguna",
+      "adm2_id": "HN0903",
+      "nombre": "Ahuas",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0

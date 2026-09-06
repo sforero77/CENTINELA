@@ -1,4 +1,4 @@
-# Exposición sísmica — M6,7 · 10 km al SSO de Coquimbo, Chile
+# Exposición sísmica: M6,7 · 10 km al SSO de Coquimbo, Chile
 
 **Evento USGS:** `us2000j6hy` · **Origen:** 2019-01-20T01:32:52Z UTC · **Profundidad:** 63,0 km
 
@@ -12,7 +12,7 @@
 |---|---:|
 | Población en MMI≥6 | 700 mil |
 | Población en MMI≥7 | 470 mil |
-| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥7 | 180 mil |
 | Sedes de salud en MMI≥7 | 126 |
 | Sedes educativas en MMI≥7 | 540 |
@@ -43,7 +43,7 @@ Fuente: producto *Ground Failure* de USGS (v2), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **naranja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 

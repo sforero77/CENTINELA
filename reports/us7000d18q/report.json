@@ -125,22 +125,22 @@
       "pop_banda": 4.8950633481144905
     },
     {
-      "adm2_id": "AR070091",
-      "nombre": "San Martín",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "AR070014",
-      "nombre": "Angaco",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "AR050049",
       "nombre": "Las Heras",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "AR050056",
+      "nombre": "Lavalle",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "AR070091",
+      "nombre": "San Martín",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0

@@ -129,6 +129,33 @@ class Totales:
         """Poblacion de la banda pedida. Cero para una banda no publicada."""
         return {6: self.pop_mmi6p, 7: self.pop_mmi7p, 8: self.pop_mmi8p}.get(banda, 0.0)
 
+    @property
+    def banda_publicada(self) -> int:
+        """La banda por la que este reporte ordena y titula sus municipios.
+
+        **UNA SOLA REGLA, Y ESTE ES EL SITIO.** Habia dos: `build_report`
+        seleccionaba los quince primeros en SQL por `banda_titular` —que llega
+        a 8— y el markdown, el hilo, el mapa y el visor los reordenaban por
+        esta, que nunca pasa de 7. En los tres reportes que alcanzan MMI>=8 el
+        SQL recortaba a quince por una columna y la tabla se publicaba ordenada
+        por otra, asi que un municipio con mucha gente en MMI>=7 y nadie en
+        MMI>=8 no llegaba a entrar.
+
+        Paso de verdad. En `reports/us20005j32` (Muisne) falta **Manta, con
+        265.263 personas en MMI>=7** —seria el tercero— y en su lugar se publica
+        Eloy Alfaro con 6.605; faltan tambien El Carmen (131.651), El Empalme
+        (87.249) y Montecristi (77.993). En `reports/us6000t7zp` faltan Sucre
+        (352.686) y Plaza (172.919). Quien reparte ayuda leyendo esa tabla
+        despacha al municipio equivocado.
+
+        Se ordena por MMI>=7 —donde estan todas las demas cifras del reporte y
+        lo que hace comparables dos eventos— salvo que el evento no alcance esa
+        banda sobre poblacion, y entonces por MMI>=6. Nunca por MMI>=8: es una
+        banda demasiado estrecha para ordenar, y ordenar por ella esconde a los
+        municipios grandes del anillo de al lado.
+        """
+        return 7 if self.pop_mmi7p > 0 else 6
+
     def to_dict(self) -> dict[str, Any]:
         """Las cifras, **derivadas de los campos** y no enumeradas a mano.
 
@@ -375,10 +402,11 @@ class Report:
 def banda_del_ranking(report: Report) -> int:
     """La banda MMI por la que se ordenan los municipios de este reporte.
 
-    MMI≥7 —donde estan todas las demas cifras— salvo que el evento no llegue
-    ahi sobre poblacion, y entonces MMI≥6.
+    Delega en :attr:`Totales.banda_publicada`, que es donde vive la regla. Se
+    conserva la funcion porque la llaman cuatro modulos con un `Report` en la
+    mano; lo que no puede haber es una segunda regla.
     """
-    return 6 if (report.totales.banda_titular or 6) == 6 else 7
+    return report.totales.banda_publicada
 
 
 def municipios_del_ranking(report: Report) -> list[MunicipioTop]:

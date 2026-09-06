@@ -83,8 +83,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "MX12044",
-      "nombre": "Mochitlán",
+      "adm2_id": "MX12014",
+      "nombre": "Benito Juárez",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -97,15 +97,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "MX12014",
-      "nombre": "Benito Juárez",
+      "adm2_id": "MX12044",
+      "nombre": "Mochitlán",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "MX12040",
-      "nombre": "Leonardo Bravo",
+      "adm2_id": "MX12051",
+      "nombre": "Quechultenango",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -118,22 +118,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "MX12051",
-      "nombre": "Quechultenango",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "MX12011",
-      "nombre": "Atoyac de Álvarez",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "MX12030",
-      "nombre": "Florencio Villarreal",
+      "adm2_id": "MX12076",
+      "nombre": "Acatepec",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -141,6 +127,20 @@
     {
       "adm2_id": "MX12032",
       "nombre": "General Heliodoro Castillo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12040",
+      "nombre": "Leonardo Bravo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12011",
+      "nombre": "Atoyac de Álvarez",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
