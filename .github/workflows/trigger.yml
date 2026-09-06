@@ -236,6 +236,22 @@ jobs:
           # revision de ShakeMap que llega el dia 40 no es mas urgente por
           # mirarla cada hora, y la mediana de la ultima revision son 63 dias.
           despachar_si_toca repaso.yml 24
+          # EL TRIMESTRAL NO PUEDE DEPENDER DE UN CRON TRIMESTRAL.
+          #
+          # Su cadencia declarada es mas larga que la vida de su insumo:
+          # Overture publica release mensual y conserva **dos** (~2 meses), asi
+          # que un pais que no se reconstruya en ese plazo ya no se puede
+          # reconstruir — la url del release fijado deja de existir. El propio
+          # encabezado de `exposure_quarterly.yml` lo documenta.
+          #
+          # Y encima competia por la misma cola de cron que este vigia gano: con
+          # cinco workflows programados y unos pocos turnos al dia por
+          # repositorio, un cron que pide cuatro turnos al ano puede
+          # perfectamente no conseguir ninguno.
+          #
+          # 720 h son 30 dias: dentro de la ventana de retencion de Overture,
+          # con un mes de margen para que alguien vea la alarma si falla.
+          despachar_si_toca exposure_quarterly.yml 720
 
       # ESTE PASO NO LLEVA CONDICION DE `hay_trabajo`, Y ES DELIBERADO.
       #

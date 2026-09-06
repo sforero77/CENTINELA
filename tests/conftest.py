@@ -8,6 +8,7 @@ excluido de CI de PR.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -108,3 +109,22 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         for item in items:
             if extra in item.keywords:
                 item.add_marker(marca)
+
+
+# --- Estado global entre pruebas -------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _cache_de_hdx_limpio() -> Iterator[None]:
+    """El cache de `package_show` no puede filtrarse de una prueba a la otra.
+
+    Vive lo que vive el proceso —un build es una corrida y un dataset no cambia
+    de licencia a mitad— pero en la suite el proceso son dos mil pruebas. Sin
+    esto, la primera que resuelve `cod-ab-col` decide lo que ven las demas, y un
+    doble de fetcher devolveria la respuesta del doble anterior.
+    """
+    from pipelines.common.hdx import limpiar_cache_hdx
+
+    limpiar_cache_hdx()
+    yield
+    limpiar_cache_hdx()

@@ -176,6 +176,14 @@ EXIT_ACTIVO_DE_OTRO_PAIS = 3
 #: leer cuatro horas de log para saber cual de los dos era.
 EXIT_ORIGEN_CAIDO = 4
 
+#: Codigo de salida de "el release de Overture que fija el manifest ya no existe".
+#:
+#: Distinto del origen caido **porque no se reintenta**: Overture conserva dos
+#: releases y el fijado caduca solo. Volver a pedir una url que ya no existe
+#: gasta media hora en repetir el mismo 404; lo que hace falta es actualizar el
+#: release en el manifest, y eso lo decide una persona.
+EXIT_RELEASE_CADUCADO = 5
+
 
 def _cmd_impact(args: argparse.Namespace) -> int:
     """P2/P3: procesa un evento ya detectado y publica su reporte."""
@@ -215,7 +223,7 @@ def _cmd_impact(args: argparse.Namespace) -> int:
 
 def _cmd_country(args: argparse.Namespace) -> int:
     """P0: reconstruye el activo de exposicion de un pais."""
-    from .p0_exposure.download import OrigenCaidoError
+    from .p0_exposure.download import OrigenCaidoError, ReleaseCaducadoError
 
     try:
         out = build_country(
@@ -223,6 +231,16 @@ def _cmd_country(args: argparse.Namespace) -> int:
             out_dir=Path(args.out or BUILD_DIR),
             liberar_rasters=args.liberar_rasters,
         )
+    except ReleaseCaducadoError as exc:
+        # Antes de `OrigenCaidoError` en el orden del `except`: no hereda de el,
+        # pero dejarlo debajo invitaria a que alguien lo hiciera heredar y se
+        # tragara el codigo propio sin que nada fallara.
+        _log.error(
+            "release de Overture caducado, no se construyo nada",
+            extra={"context": {"iso3": args.iso3.upper(), "detalle": str(exc)}},
+        )
+        print(str(exc), file=sys.stderr)
+        return EXIT_RELEASE_CADUCADO
     except OrigenCaidoError as exc:
         # Sale con su propio codigo para que el workflow pueda reintentar solo
         # esto. Un activo que no pasa los asserts no se arregla reintentando.

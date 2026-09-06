@@ -20,6 +20,8 @@ resuelta se registra en el log del build para que quede en la trazabilidad.
 
 from __future__ import annotations
 
+from typing import Any
+
 from .http import Fetcher
 
 HDX_PACKAGE_SHOW = "https://data.humdata.org/api/3/action/package_show?id={dataset}"
@@ -36,6 +38,61 @@ PARTIAL_MARKERS: tuple[str, ...] = ("_points_", "_polygons_", "_lines_")
 
 class HdxResolutionError(Exception):
     """No se pudo resolver el recurso pedido en HDX."""
+
+
+#: Respuestas de `package_show` ya pedidas en esta corrida, por dataset.
+#:
+#: UN DATASET SE PREGUNTA UNA VEZ, NO TRES.
+#:
+#: `resolve_attempts` y `dataset_license` piden exactamente el mismo documento,
+#: y desde que la verificacion de licencia corre tambien en el camino con cache
+#: —antes se saltaba, que era el fallo— un pais con tres fuentes HDX hacia hasta
+#: seis peticiones identicas por build. HDX es un servicio publico y gratuito.
+#:
+#: El cache vive lo que vive el proceso: un build es una corrida y un dataset no
+#: cambia de licencia a mitad. `limpiar_cache_hdx()` lo vacia para las pruebas.
+_PAQUETES: dict[str, dict[str, Any]] = {}
+
+
+def limpiar_cache_hdx() -> None:
+    """Olvida las respuestas de `package_show` de esta corrida."""
+    _PAQUETES.clear()
+
+
+def package_show(fetcher: Fetcher, dataset: str) -> dict[str, Any]:
+    """Documento del dataset en HDX, pedido una sola vez por corrida."""
+    if dataset not in _PAQUETES:
+        payload = fetcher.get_json(HDX_PACKAGE_SHOW.format(dataset=dataset))
+        if not payload.get("success"):
+            raise HdxResolutionError(f"HDX no reconoce el dataset {dataset!r}")
+        resultado = payload["result"]
+        _PAQUETES[dataset] = dict(resultado) if isinstance(resultado, dict) else {}
+    return _PAQUETES[dataset]
+
+
+def primera_url(fetcher: Fetcher, dataset: str, *, resource: str = "") -> str:
+    """La url del primer intento: **el host que sirve los bytes**.
+
+    `comprobar_origenes` agrupaba por el `netloc` de `source.url`, y para las
+    fuentes de HDX esa url es —por contrato explicito del manifest— la pagina
+    estable del catalogo, `https://data.humdata.org/dataset/...`. Los bytes
+    salen de otra parte: `production-raw-data-api.s3.amazonaws.com`,
+    `s3.dualstack.us-east-1.amazonaws.com` o `export.hotosm.org`. Ninguno de
+    esos se comprobaba jamas, asi que el chequeo previo daba el visto bueno con
+    el origen real caido — que es exactamente la forma de fallar que existe para
+    evitar.
+
+    Devuelve cadena vacia si no se puede resolver: quien llama decide, y un
+    chequeo previo no es sitio para detener un build.
+    """
+    try:
+        intentos = resolve_attempts(fetcher, dataset, resource=resource)
+    except (HdxResolutionError, RuntimeError, OSError, ValueError):
+        return ""
+    for _formato, urls in intentos:
+        if urls:
+            return urls[0]
+    return ""
 
 
 def _es_parcial(nombre: str) -> bool:
@@ -69,10 +126,8 @@ def resolve_attempts(
     El combinado va primero y los parciales despues, nunca juntos: si los tres
     estuvieran vivos, bajarlos todos contaria cada sede dos veces.
     """
-    payload = fetcher.get_json(HDX_PACKAGE_SHOW.format(dataset=dataset))
-    if not payload.get("success"):
-        raise HdxResolutionError(f"HDX no reconoce el dataset {dataset!r}")
-    recursos = [r for r in (payload["result"].get("resources") or []) if r.get("url")]
+    resultado = package_show(fetcher, dataset)
+    recursos = [r for r in (resultado.get("resources") or []) if r.get("url")]
 
     if resource:
         aguja = resource.lower()
@@ -112,10 +167,7 @@ def dataset_license(fetcher: Fetcher, dataset: str) -> str:
     publicador cambia la licencia, queremos enterarnos por un fallo del lint y
     no por un reclamo.
     """
-    payload = fetcher.get_json(HDX_PACKAGE_SHOW.format(dataset=dataset))
-    if not payload.get("success"):
-        raise HdxResolutionError(f"HDX no reconoce el dataset {dataset!r}")
-    return str(payload["result"].get("license_id") or "")
+    return str(package_show(fetcher, dataset).get("license_id") or "")
 
 
 #: Traduccion de los identificadores de licencia de HDX a los del registro
