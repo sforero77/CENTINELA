@@ -87,13 +87,30 @@ class Rezago:
         )
 
     @property
+    def desaparecido(self) -> bool:
+        """El producto con el que se calculo el reporte YA NO ESTA en el detail.
+
+        `vigente = 0` frente a `publicado = 11` no es "todo al dia": es que el
+        producto que sostiene once versiones de reporte no aparece en la
+        respuesta de USGS. La comparacion era `vigente > publicado`, que con un
+        cero no dispara nada y ademas cuenta el evento como revisado.
+
+        Puede ser un retiro de USGS o una respuesta a medias, y las dos merecen
+        que alguien mire: el reporte publicado cita una version que su fuente ya
+        no reconoce.
+        """
+        return (self.shakemap_publicado > 0 and self.shakemap_vigente == 0) or (
+            self.groundfailure_publicado > 0 and self.groundfailure_vigente == 0
+        )
+
+    @property
     def exposicion(self) -> bool:
         """El activo del pais se reconstruyo despues de calcularse el reporte."""
         return self.manifiesto_publicado != self.manifiesto_vigente
 
     @property
     def hay(self) -> bool:
-        return self.productos or self.exposicion
+        return self.productos or self.exposicion or self.desaparecido
 
     def describir(self) -> str:
         """Una linea legible. Es lo que acaba en el cuerpo del issue."""
@@ -106,6 +123,11 @@ class Rezago:
             )
         if self.exposicion:
             partes.append(f"exposicion {self.manifiesto_publicado} -> {self.manifiesto_vigente}")
+        if self.desaparecido:
+            cual = "ShakeMap" if self.shakemap_vigente == 0 else "Ground Failure"
+            partes.append(
+                f"{cual} DESAPARECIO del detail: el reporte cita una version que USGS ya no sirve"
+            )
         return f"{self.usgs_id}: " + " · ".join(partes)
 
 
@@ -155,12 +177,19 @@ class ResultadoRezago:
         return [r for r in self.rezagados if r.exposicion and not r.productos]
 
 
-def _manifiesto_vigente(iso3: str, manifests_dir: Path | None) -> str:
+def _manifiesto_vigente(iso3: str, manifests_dir: Path | None) -> str | None:
     """El `manifest_id` que hoy tiene el pais en el repositorio.
 
-    Si el manifiesto no existe se devuelve cadena vacia en vez de propagar el
-    error: un pais sin manifiesto es un problema real, pero no uno que deba
-    impedir comprobar los otros veinte reportes.
+    `None` cuando no se pudo leer, y no cadena vacia. La diferencia importa: el
+    llamador hacia `manifiesto_vigente or manifiesto_publicado`, asi que un
+    manifiesto ilegible se convertia en «el mismo que se publico» y el reporte
+    salia **al dia**. Es la misma confusion que el propio modulo evita tres
+    lineas mas abajo para los productos —«UN FALLO NO ES UN "AL DIA"»— y que
+    aqui se colaba por un `or`.
+
+    Un pais sin manifiesto es un problema real y no debe impedir comprobar los
+    otros veinte reportes: por eso no propaga. Pero ese reporte no se cuenta
+    como revisado, porque de el no se sabe nada.
     """
     try:
         return Manifest.load(iso3, manifests_dir or MANIFESTS_DIR).manifest_id
@@ -169,7 +198,7 @@ def _manifiesto_vigente(iso3: str, manifests_dir: Path | None) -> str:
             "no se pudo leer el manifiesto vigente",
             extra={"context": {"iso3": iso3, "error": str(error)}},
         )
-        return ""
+        return None
 
 
 def _entero(valor: object) -> int:
@@ -228,6 +257,12 @@ def comprobar(
             if manifiesto_publicado
             else ""
         )
+        if manifiesto_vigente is None:
+            # No se pudo leer el manifiesto del pais: de este reporte no sabemos
+            # si su activo se reconstruyo. Antes se sustituia por el publicado y
+            # salia «al dia».
+            resultado.fallidos.append(usgs_id)
+            continue
 
         try:
             productos = parse_products(fetcher.get_json(detail_url(usgs_id)))
@@ -249,7 +284,7 @@ def comprobar(
             groundfailure_publicado=_entero(entradas.get("groundfailure_version")),
             groundfailure_vigente=productos.groundfailure_version,
             manifiesto_publicado=manifiesto_publicado,
-            manifiesto_vigente=manifiesto_vigente or manifiesto_publicado,
+            manifiesto_vigente=manifiesto_vigente,
         )
         if rezago.hay:
             resultado.rezagados.append(rezago)

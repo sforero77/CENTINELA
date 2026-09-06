@@ -45,11 +45,47 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
         "a_despachar": result.a_despachar,
         "revisados": result.revisados,
         "observados": len(result.observados),
+        # UN ESTADO ILEGIBLE SACA AL SISMO DEL DESPACHO PARA SIEMPRE.
+        #
+        # `run_trigger` ya lo contaba y lo dejaba en un log: no llegaba ni al
+        # stdout, ni al output del workflow, ni al latido, ni a /status. Y no es
+        # un tropiezo de una corrida: el fichero sigue ilegible en la siguiente,
+        # asi que ese evento no se despacha nunca mas y el latido publica
+        # «revisados: 18, relevantes: 0», identico a una noche tranquila.
+        "estados_ilegibles": result.estados_ilegibles,
+        "feeds_fallidos": result.feeds_fallidos,
         "latido_utc": result.latido_utc,
     }
     print(json.dumps(payload, ensure_ascii=False))
     _emit_github_output("eventos", json.dumps(result.a_despachar))
     _emit_github_output("hay_trabajo", "true" if result.a_despachar else "false")
+    _emit_github_output("estados_ilegibles", str(len(result.estados_ilegibles)))
+    _emit_github_output("feeds_fallidos", str(len(result.feeds_fallidos)))
+    # LOS DOS FEEDS CAIDOS ES NO HABER MIRADO.
+    #
+    # Con uno caido la corrida sigue valiendo —para eso hay dos— pero con los
+    # dos, "cero eventos" significa "no mire", no "no habia". El latido se
+    # escribe igual, porque su ausencia es la senal de que el cron murio; lo que
+    # cambia es que la corrida no sale en verde.
+    if result.ciego:
+        print(
+            f"No se pudo leer ninguno de los {len(result.feeds_fallidos)} feeds de USGS: "
+            f"esta pasada no vio el feed, no es que no hubiera sismos.",
+            file=sys.stderr,
+        )
+    elif result.feeds_fallidos:
+        print(
+            f"Feed(s) no disponibles: {', '.join(result.feeds_fallidos)}. "
+            f"La pasada sigue valiendo con el resto.",
+            file=sys.stderr,
+        )
+    if result.estados_ilegibles:
+        print(
+            f"No se pudo leer el estado de {len(result.estados_ilegibles)} evento(s) "
+            f"({', '.join(result.estados_ilegibles)}): quedan fuera del despacho hasta "
+            f"que su fichero se repare, y esta corrida no los va a reintentar.",
+            file=sys.stderr,
+        )
 
     # El latido alimenta /status. Se escribe siempre, tambien cuando no hay
     # eventos: la ausencia de latidos es la senal de que el cron se desactivo,
@@ -65,6 +101,15 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
             # y con el disparo externo a cinco minutos eso sobreestima el
             # intervalo real por un factor de doce.
             "revisiones": max(1, args.revisiones),
+            # Va al latido para que /status lo ensene: es la unica superficie
+            # publica donde "cero relevantes" se puede distinguir de "no pude
+            # leer". Solo cuando los hay, para no ensuciar los latidos sanos.
+            **(
+                {"estados_ilegibles": len(result.estados_ilegibles)}
+                if result.estados_ilegibles
+                else {}
+            ),
+            **({"feeds_fallidos": result.feeds_fallidos} if result.feeds_fallidos else {}),
         }
     )
 
@@ -84,7 +129,7 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
         # minutos para aparecer en el mapa — y quien acaba de sentirlo lo esta
         # buscando ahora.
         _emit_github_output("observados_cambio", "true" if cambio else "false")
-    return 0
+    return 1 if result.ciego else 0
 
 
 #: Codigo de salida de "el activo no es de este pais; prueba el siguiente".
@@ -318,7 +363,21 @@ def _cmd_reindexar(args: argparse.Namespace) -> int:
     """
     from .p3_report.run import rebuild_index
 
-    print(rebuild_index(Path(args.reports) if args.reports else None))
+    indice = rebuild_index(Path(args.reports) if args.reports else None)
+    print(indice.ruta)
+    # UN REPORTE QUE SE CAE DEL INDICE DEJA DE EXISTIR PARA EL VISOR.
+    #
+    # Se excluia con un `_log.warning` y esto salia 0: el reporte desaparecia de
+    # la pagina sin una sola alarma. El indice se reconstruye igual —los otros
+    # veintiseis tienen que seguir listados— pero la corrida se pone en rojo.
+    if indice.excluidos:
+        print(
+            f"{len(indice.excluidos)} reporte(s) publicados no se pudieron leer y "
+            f"NO aparecen en el indice ({', '.join(indice.excluidos)}): el visor "
+            f"dejara de listarlos.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

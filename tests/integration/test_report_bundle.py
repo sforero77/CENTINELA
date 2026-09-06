@@ -74,7 +74,7 @@ def test_un_reporte_corrupto_no_tumba_el_indice(tmp_path: Path) -> None:
     roto.mkdir()
     (roto / "report.json").write_text("{ esto no es json", encoding="utf-8")
 
-    indice = json.loads(rebuild_index(tmp_path).read_text(encoding="utf-8"))
+    indice = json.loads(rebuild_index(tmp_path).ruta.read_text(encoding="utf-8"))
     assert [e["usgs_id"] for e in indice] == ["us7000sint"]
 
 
