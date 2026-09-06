@@ -166,7 +166,7 @@ sola, no esta pasando: esta heredando el efecto de otra.
 |---|---|
 | Configuracion en los niveles altos | Los vintages, licencias y hashes viven en `data/manifests/*.yaml`, nunca en el código. Regla dura: **nunca `latest`**. |
 | Evitar la sobre-configurabilidad | La reconstrucción trimestral no lee una lista de países de ningún sitio: pregunta que Releases hay publicados. Una lista que mantener a mano es una lista que se desincroniza. |
-| Inyección de dependencias | Todo lo que toca la red recibe un `Fetcher`; `FixtureFetcher` es lo que hace que 2.259 pruebas corran sin red. Las raices de `events/` y `reports/` se inyectan para que las pruebas no escriban en el repositorio. |
+| Inyección de dependencias | Todo lo que toca la red recibe un `Fetcher`; `FixtureFetcher` es lo que hace que 2.260 pruebas corran sin red. Las raices de `events/` y `reports/` se inyectan para que las pruebas no escriban en el repositorio. |
 | Simple mejor que ingenioso | El manejador de conflictos de `impact.yml` se escribió con una función y un `grep -qvE` legible en vez de una línea con `comm` y sustitución de procesos. Un `run:` que nadie puede leer a las 3 de la mañana durante un terremoto no es código limpio, por corto que sea. |
 
 ---
