@@ -40,9 +40,16 @@ ShakeMap son 63 días, y el de Venezuela llegó a v15 dos meses después.
 Solo se perdería con una parada de más de un día, y de eso avisa el monitor
 externo en treinta minutos.
 
-**Cómo se sabe:** el feed de respaldo está en `constants.py` desde el diseño, y
-`test_enrutado_latam` cubre el caso. La parada larga la detectó de verdad el
-healthcheck el 27-ago.
+**Cómo se sabe:** `tests/unit/test_feed_de_respaldo.py` ejecuta `run_trigger`
+con el feed de una hora **vacío** y el sismo solo en el de 24 h, y comprueba que
+se despacha. La parada larga la detectó de verdad el healthcheck el 27-ago.
+
+> Esta línea citaba `test_enrutado_latam`, que no toca el feed. Y la fixture
+> compartida servía el feed de respaldo vacío, así que en toda la suite no había
+> una sola prueba donde `4.5_day` aportara un evento que `4.5_hour` no tuviera
+> — que es el único caso para el que existe. Una garantía que cita la prueba
+> equivocada manda a quien la audite a leer un fichero que no dice nada del
+> asunto.
 
 ### Lo que está en el repositorio llega a la página
 

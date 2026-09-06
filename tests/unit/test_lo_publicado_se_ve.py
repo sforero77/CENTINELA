@@ -724,3 +724,85 @@ def test_ninguna_cifra_citada_de_usgs_se_deforma() -> None:
     assert abs(peor[3] - peor[2]) / peor[2] > 0.1, (
         f"la peor deformacion era del {abs(peor[3] - peor[2]) / peor[2]:.0%}: {peor}"
     )
+
+
+# --- La leyenda tiene que rotular el COLOR, no solo la banda ----------------
+
+
+@pytest.mark.render
+def test_la_muestra_de_la_leyenda_es_el_color_que_se_ve_en_el_mapa() -> None:
+    """LA PRUEBA DE ARRIBA COMPARA VALORES DE BANDA Y NUNCA UN COLOR.
+
+    Los contornos de ShakeMap son anidados y se pintan de menor a mayor sin
+    recortar geometria, cada uno a alpha 0,55: donde manda MMI 7 se ve el color
+    de 7 **sobre el de 6** sobre el papel. La muestra de la leyenda era una sola
+    capa a 0,55, asi que salia mas clara que su area.
+
+    Medido: con las bandas 6, 6,5, 7 y 7,5 dibujadas, el area de MMI 7 es
+    `#f58764` y la muestra que la rotulaba era `#f6aa9a` — mas clara que la
+    muestra de MMI 7,5 (`#e98d84`). La leyenda se podia leer al reves.
+    """
+    from pipelines.p3_report.static_map import ALPHA_BANDA, MMI_COLORS, color_apilado
+
+    bandas = [6.0, 6.5, 7.0, 7.5]
+
+    def apilar_a_mano(hasta: float) -> tuple[float, float, float]:
+        from matplotlib.colors import to_rgb
+
+        r, g, b = to_rgb("#ffffff")
+        for banda in [x for x in bandas if x <= hasta]:
+            cr, cg, cb = to_rgb(MMI_COLORS[banda])
+            r = ALPHA_BANDA * cr + (1 - ALPHA_BANDA) * r
+            g = ALPHA_BANDA * cg + (1 - ALPHA_BANDA) * g
+            b = ALPHA_BANDA * cb + (1 - ALPHA_BANDA) * b
+        return r, g, b
+
+    from matplotlib.colors import to_rgb
+
+    for banda in bandas:
+        assert to_rgb(color_apilado(bandas, banda)) == pytest.approx(
+            apilar_a_mano(banda), abs=0.004
+        )
+
+
+@pytest.mark.render
+def test_la_muestra_de_cada_banda_es_mas_oscura_que_la_anterior() -> None:
+    """La monotonia que la rampa promete tiene que sobrevivir al apilado.
+
+    Es lo que hace legible el mapa en blanco y negro, que es como acaba en
+    muchas salas de crisis.
+    """
+    from matplotlib.colors import to_rgb
+
+    from pipelines.p3_report.static_map import MMI_COLORS, color_apilado
+
+    bandas = sorted(MMI_COLORS)
+
+    def luminancia(hexa: str) -> float:
+        r, g, b = to_rgb(hexa)
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+    lums = [luminancia(color_apilado(bandas, b)) for b in bandas]
+    assert lums == sorted(lums, reverse=True), (
+        f"el apilado rompe la monotonia de la rampa: {list(zip(bandas, lums, strict=True))}"
+    )
+
+
+@pytest.mark.render
+def test_ninguna_muestra_se_confunde_con_la_de_otra_banda() -> None:
+    """El fallo concreto: la muestra de 7 se parecia mas al area de 7,5."""
+    from matplotlib.colors import to_rgb
+
+    from pipelines.p3_report.static_map import MMI_COLORS, color_apilado
+
+    bandas = sorted(MMI_COLORS)
+    muestras = {b: to_rgb(color_apilado(bandas, b)) for b in bandas}
+
+    for banda, propia in muestras.items():
+        distancia_propia = 0.0
+        for otra, color in muestras.items():
+            if otra == banda:
+                continue
+            d = sum((a - b) ** 2 for a, b in zip(propia, color, strict=True)) ** 0.5
+            assert d > 0.05, f"las muestras de MMI {banda:g} y MMI {otra:g} son casi el mismo color"
+        assert distancia_propia == 0.0

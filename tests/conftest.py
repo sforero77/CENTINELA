@@ -56,7 +56,17 @@ def detail_sin_shakemap() -> dict[str, Any]:
 
 @pytest.fixture
 def fetcher(feed_payload: dict[str, Any]) -> FixtureFetcher:
-    """Fetcher que sirve el mismo feed en ambas URLs consultadas por P1."""
+    """Fetcher con el feed de una hora lleno y el de 24 h **vacio**.
+
+    Es deliberado: las pruebas que usan esta fixture miran otra cosa y un
+    segundo feed con contenido les duplicaria los eventos.
+
+    Pero durante meses fue la unica forma en que la suite veia el feed de
+    respaldo, asi que **el rescate de 24 h no se ejercitaba en ninguna parte** —
+    y `docs/GARANTIAS.md` lo declaraba garantizado citando una prueba que no
+    toca el feed. El caso vive ahora en `tests/unit/test_feed_de_respaldo.py`,
+    que lo invierte: primario vacio y el sismo solo en el respaldo.
+    """
     vacio = {"type": "FeatureCollection", "features": []}
     return FixtureFetcher(
         {

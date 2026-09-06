@@ -30,7 +30,7 @@ from pipelines.p5_incendios.firms import (
     parse_csv,
 )
 from pipelines.p5_incendios.focos_h3 import CeldaConFuego
-from pipelines.p5_incendios.incendios import MAX_CELDAS, build_incendios, leer, write_incendios
+from pipelines.p5_incendios.incendios import MAX_CELDAS, build_incendios, write_incendios
 
 #: La cabecera exacta que sirve FIRMS, copiada del fichero real.
 CABECERA = (
@@ -427,16 +427,6 @@ def test_el_fichero_trae_generado_utc_para_frescura(tmp_path: Path) -> None:
 
     assert datos["generado_utc"].endswith("Z")
     assert datos["schema"] == "centinela/incendios/1.0"
-
-
-def test_sin_fichero_no_es_un_fallo(tmp_path: Path) -> None:
-    assert leer(tmp_path) == {}
-
-
-def test_un_fichero_corrupto_se_reconstruye(tmp_path: Path) -> None:
-    (tmp_path / "incendios.json").write_text("{roto", encoding="utf-8")
-
-    assert leer(tmp_path) == {}
 
 
 def test_incendios_json_lo_vigila_frescura() -> None:

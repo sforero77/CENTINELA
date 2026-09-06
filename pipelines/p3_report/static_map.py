@@ -139,6 +139,46 @@ def banda_de_mmi(valor: float) -> float:
     return aplicables[-1] if aplicables else MMI_MIN_MAPPED
 
 
+#: Opacidad de cada banda sobre la anterior. Translucida a proposito: los
+#: circulos de municipio van encima y tienen que leerse sobre el rojo de MMI 8.
+ALPHA_BANDA = 0.55
+
+#: Fondo sobre el que se compone la pila. Es el `facecolor` con el que se
+#: guarda la figura.
+FONDO_DEL_MAPA = "#ffffff"
+
+
+def color_apilado(bandas: Sequence[float], hasta: float, fondo: str = FONDO_DEL_MAPA) -> str:
+    """El color que de verdad se ve donde manda la banda ``hasta``.
+
+    LA LEYENDA PINTABA UNA CAPA Y EL MAPA APILA ANILLOS.
+
+    Los contornos de ShakeMap son **anidados** —el de MMI 8 esta dentro del de
+    7, que esta dentro del de 6— y `_dibujar_contornos` los pinta de menor a
+    mayor sin recortar geometria, cada uno a alpha 0,55. Asi que donde manda
+    MMI 7 lo que se ve es el color de 7 sobre el de 6 sobre el papel, no el
+    color de 7 sobre el papel.
+
+    La muestra de la leyenda era una sola capa a 0,55, asi que salia mas clara
+    que su area: en los 32 PNG de los 16 eventos con dos o mas bandas, el area
+    de MMI 7 se parecia mas a la muestra rotulada «MMI 7,5» que a la suya. Una
+    leyenda que se puede leer al reves es peor que no tenerla.
+
+    Se compone la misma pila, y la muestra sale opaca porque ya lleva el fondo
+    dentro.
+    """
+    from matplotlib.colors import to_hex, to_rgb
+
+    rojo, verde, azul = to_rgb(fondo)
+    for banda in sorted(b for b in bandas if b <= hasta):
+        capa = to_rgb(MMI_COLORS[banda_de_mmi(banda)])
+        rojo, verde, azul = (
+            ALPHA_BANDA * c + (1 - ALPHA_BANDA) * previo
+            for c, previo in zip(capa, (rojo, verde, azul), strict=True)
+        )
+    return str(to_hex((rojo, verde, azul)))
+
+
 def color_for_mmi(valor: float) -> str:
     """Color de la banda a la que pertenece un MMI."""
     return MMI_COLORS[banda_de_mmi(valor)]
@@ -319,7 +359,7 @@ def render_map(
 
     bandas, hay_bajas = _bandas_dibujadas(contornos, puntos)
     leyenda: list[Any] = [
-        Patch(facecolor=MMI_COLORS[v], edgecolor="white", alpha=0.55, label=f"MMI {v:g}")
+        Patch(facecolor=color_apilado(bandas, v), edgecolor="white", label=f"MMI {v:g}")
         for v in bandas
     ]
     if hay_bajas:
@@ -504,7 +544,7 @@ def _dibujar_contornos(ax: Any, contornos: Mapping[str, Any] | None) -> None:
                     linewidth=0.4,
                     # Translucido: los circulos de municipio van encima y tienen
                     # que seguir leyendose sobre el rojo oscuro de MMI 8.
-                    alpha=0.55,
+                    alpha=ALPHA_BANDA,
                     zorder=1,
                 )
             )
