@@ -42,31 +42,37 @@ def huella(fuentes: list[dict[str, object]]) -> str:
     return hashlib.sha256("\n".join(partes).encode("utf-8")).hexdigest()[:16]
 
 
-#: `iso3 -> (manifest_id, huella de sus fuentes)`, al 27-ago-2026.
+#: `iso3 -> (manifest_id, huella de sus fuentes)`, al 6-sep-2026.
+#:
+#: La subida a `v0.3` de los dieciocho paises es la declaracion de
+#: `overture_divisions`: el build ya bajaba ese tema en todos ellos —de ahi
+#: salen los poligonos de los vecinos que acotan el reparto— y ninguno lo
+#: decia. Colombia se queda en `col-v0.6` porque era el unico que ya lo
+#: declaraba, asi que su conjunto de fuentes no ha cambiado.
 #:
 #: Para actualizarlo: sube el `manifest_id` del pais que cambio y pega aqui la
 #: huella nueva que la prueba te imprime. Los dos pasos son el punto — si
 #: bastara con uno, el cerrojo no cerraria nada.
 ESPERADO: dict[str, tuple[str, str]] = {
-    "ARG": ("arg-v0.2", "a043b452f81a054f"),
-    "BOL": ("bol-v0.2", "e2da138cc7609a4b"),
-    "BRA": ("bra-v0.2", "02eb073b9b4ef779"),
-    "CHL": ("chl-v0.2", "a216e3205f769214"),
+    "ARG": ("arg-v0.3", "70d3c95cfa496b03"),
+    "BOL": ("bol-v0.3", "c3a86f50fa8c5541"),
+    "BRA": ("bra-v0.3", "3168d7324958f004"),
+    "CHL": ("chl-v0.3", "b1bd667980fa40c8"),
     "COL": ("col-v0.6", "e5985587c95049c9"),
-    "CRI": ("cri-v0.2", "69746622b91d5a69"),
-    "CUB": ("cub-v0.2", "4936b676690cd28c"),
-    "DOM": ("dom-v0.2", "270a133236c7a961"),
-    "ECU": ("ecu-v0.2", "bcc77c931d02bf52"),
-    "GTM": ("gtm-v0.2", "b914b1df4681dfb6"),
-    "HND": ("hnd-v0.2", "c56ff4198fac4e2a"),
-    "MEX": ("mex-v0.2", "7631386829fc553e"),
-    "NIC": ("nic-v0.2", "736f25e58ebddf04"),
-    "PAN": ("pan-v0.2", "b4fbfe5a4d04f10a"),
-    "PER": ("per-v0.2", "cd4004c973217402"),
-    "PRY": ("pry-v0.2", "2ad5a8f1764f3cea"),
-    "SLV": ("slv-v0.2", "8cb2482a0c0f8cfb"),
-    "URY": ("ury-v0.2", "524127ccf993c526"),
-    "VEN": ("ven-v0.2", "f4ae67113d00707b"),
+    "CRI": ("cri-v0.3", "6965170670117816"),
+    "CUB": ("cub-v0.3", "f62d7b7626cfa180"),
+    "DOM": ("dom-v0.3", "5ffca9e588d6f446"),
+    "ECU": ("ecu-v0.3", "38b7eeb8921d2e88"),
+    "GTM": ("gtm-v0.3", "1880d72b5163f4f8"),
+    "HND": ("hnd-v0.3", "dec27c59c77a2fca"),
+    "MEX": ("mex-v0.3", "6d8f39e811591002"),
+    "NIC": ("nic-v0.3", "dd9484042979329e"),
+    "PAN": ("pan-v0.3", "a28d6765b9b0a859"),
+    "PER": ("per-v0.3", "2994b46bc6915b70"),
+    "PRY": ("pry-v0.3", "1de4f1ed9b66417a"),
+    "SLV": ("slv-v0.3", "e000802279905565"),
+    "URY": ("ury-v0.3", "ee01282f94534849"),
+    "VEN": ("ven-v0.3", "69ea7f8df4e40b02"),
 }
 
 

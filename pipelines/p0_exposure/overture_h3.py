@@ -254,12 +254,21 @@ def load_neighbours(
     celda r8.
     """
     ensure_httpfs(con)
-    con.execute(f"DROP TABLE IF EXISTS {tabla}")
-    con.execute(f"CREATE TABLE {tabla} (iso2 VARCHAR, geom GEOMETRY)")
+    # SE MONTA APARTE Y SE CAMBIA AL FINAL.
+    #
+    # Antes esto hacia `DROP` + `CREATE` sobre la tabla buena y luego iba
+    # insertando URL por URL. Si fallaba la tercera de cinco, `vecinos` quedaba
+    # con dos paises, el rescate la usaba **tal cual** —descartando celdas de dos
+    # vecinos y reclamando las de los otros tres— y el log afirmaba «no se
+    # pudieron cargar los paises vecinos»: describia un estado que no era el que
+    # se habia usado. Ahora un fallo a medias no deja nada a medias.
+    en_curso = f"{tabla}_en_curso"
+    con.execute(f"DROP TABLE IF EXISTS {en_curso}")
+    con.execute(f"CREATE TABLE {en_curso} (iso2 VARCHAR, geom GEOMETRY)")
     for url in urls:
         con.execute(
             f"""
-            INSERT INTO {tabla}
+            INSERT INTO {en_curso}
             SELECT country,
                    ST_SimplifyPreserveTopology(
                        ST_Intersection(
@@ -277,16 +286,20 @@ def load_neighbours(
               AND {bbox_predicate(bbox, intersecta=True)}
             """
         )
-    n: int = con.execute(f"SELECT count(*) FROM {tabla}").fetchone()[0]
+    n: int = con.execute(f"SELECT count(*) FROM {en_curso}").fetchone()[0]
+    con.execute(f"DROP TABLE IF EXISTS {tabla}")
+    con.execute(f"ALTER TABLE {en_curso} RENAME TO {tabla}")
     # Cero vecinos casi nunca es la verdad. En LATAM solo Cuba no toca a nadie
     # por tierra, y hasta su caja alcanza a Haiti y Jamaica. Si sale cero, lo
     # normal es que el filtro este mal, no que el pais este aislado — asi se
-    # descubrio que la poda por contencion descartaba a Brasil entero.
+    # descubrio que la poda por contencion descartaba a Brasil entero. Quien
+    # llama desde el build lo trata como error; aqui se deja el aviso porque
+    # esta funcion tambien se usa suelta.
     registrar = _log.info if n else _log.warning
     registrar(
         "paises vecinos cargados para acotar el rescate"
         if n
-        else "ningun pais vecino en la caja: el rescate sera tan generoso como antes",
+        else "ningun pais vecino en la caja: el rescate seria tan generoso como antes",
         extra={"context": {"tabla": tabla, "poligonos": n, "excluido": iso2_propio}},
     )
     return n

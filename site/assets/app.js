@@ -4073,7 +4073,14 @@ function pintarResumenCobertura(datos, eventos) {
   $("cobertura-resumen").innerHTML =
     `<div class="metrica"><span class="cabeza">${iconoSvg("paises")}` +
     `<span class="valor">${resumen.paises_construidos}</span></span>` +
-    `<span class="etiqueta">países con activo publicado</span>` +
+    // «publicado» NO, Y LA PALABRA IMPORTABA.
+    //
+    // Esta cifra cuenta los manifests con `medido_ghs_pop` anotado, o sea los
+    // paises cuyo activo **se construyo y se midio**. No mira el Release, que
+    // es lo que P2 necesita para calcular un reporte: un Release retirado a
+    // mano dejaria este numero intacto. Decir "publicado" prometia una
+    // disponibilidad operativa que este dato no puede respaldar.
+    `<span class="etiqueta">países con activo construido</span>` +
     `<span class="apunte">de ${resumen.paises_con_manifest} con fuentes fijadas</span></div>` +
     `<div class="metrica"><span class="cabeza">${iconoSvg("malla")}` +
     `<span class="valor">${comoConteo(resumen.poblacion_en_la_malla)}</span></span>` +

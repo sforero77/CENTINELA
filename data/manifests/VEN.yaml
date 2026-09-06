@@ -10,7 +10,7 @@
 # build y los publica en `medicion.json`; volcarlos aqui es un paso explicito,
 # `centinela fijar-insumos VEN`.
 
-manifest_id: ven-v0.2
+manifest_id: ven-v0.3
 iso3: VEN
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -146,6 +146,25 @@ sources:
     notes: >-
       `type=segment` es la geometria lineal; `type=connector` son nodos. Se
       filtra `subtype = 'road'`: el tema tambien publica ferrocarril y agua.
+
+  - id: overture_divisions
+    layer: divisions
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=divisions/type=division_area
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    insumos_sha256: ""
+    notes: >-
+      SE CONSUMIA SIN DECLARARSE. `load_country_neighbours` baja este tema en
+      **todos** los builds —no solo en el de Colombia— para acotar de donde
+      puede rescatar celdas el reparto: sin los poligonos del vecino, "fuera del
+      pais y cerca" incluye el otro lado de la frontera, y medido eso le daba a
+      Paraguay 459.518 personas de Brasil, Argentina y Bolivia.
+      O sea que una fuente ODbL entraba al activo de dieciocho paises sin
+      aparecer en su manifest, y `resolve_bucket` evaluaba la regla de los tres
+      cubos sobre un conjunto de licencias que no era el que se consumio. El
+      cubo salia igual de rebote —buildings y roads ya son ODbL—, pero la
+      relacion causal, que es lo que este fichero promete, estaba rota.
+      `type=division_area` trae los poligonos; `division` son puntos.
 
   - id: cod_ab_ven
     layer: divisions
