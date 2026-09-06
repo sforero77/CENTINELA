@@ -296,10 +296,20 @@ def _prioridad(celdas: list[CeldaConFuego], max_celdas: int) -> list[CeldaConFue
     return ordenadas[:max_celdas]
 
 
+#: Ventana que el fichero declara cubrir, en horas.
+#:
+#: Estaba escrita como `24` en tres sitios —los dos `ventana_horas: int = 24` de
+#: este modulo y el recorte— y tiene que coincidir ademas con el fichero que se
+#: pide a FIRMS (`firms.VENTANA`, "24h"). Dos definiciones del mismo umbral
+#: divergen en cuanto nadie las compara; `test_la_ventana_es_la_misma_en_los_dos
+#: _sitios` las compara.
+VENTANA_HORAS: Final[int] = 24
+
+
 def build_incendios(
     celdas: list[CeldaConFuego],
     *,
-    ventana_horas: int = 24,
+    ventana_horas: int = VENTANA_HORAS,
     max_celdas: int = MAX_CELDAS,
     viento: LecturaViento | None = None,
 ) -> dict[str, Any]:
@@ -348,7 +358,7 @@ def write_incendios(
     celdas: list[CeldaConFuego],
     *,
     site_dir: Path | None = None,
-    ventana_horas: int = 24,
+    ventana_horas: int = VENTANA_HORAS,
     viento: LecturaViento | None = None,
     avisos: tuple[str, ...] = (),
     lectura: dict[str, Any] | None = None,
