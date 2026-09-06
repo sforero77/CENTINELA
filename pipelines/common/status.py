@@ -56,6 +56,21 @@ class EventLatency:
     #: Vacio en un reporte que solo se publico una vez. No es lo mismo que
     #: `publicado_utc`: ese es la primera vez, este la ultima.
     actualizado_utc: str = ""
+    #: Minutos desde que **el vigia vio el evento** hasta publicar. `None` si el
+    #: estado no lleva sello de deteccion.
+    #:
+    #: ES LA SERIE QUE EL OBJETIVO DEFINE, Y SE COMPARABA CONTRA LA OTRA. O1 dice
+    #: "<= 60 min p50 tras **la disponibilidad del primer ShakeMap**", y `minutos`
+    #: mide desde el **origen del sismo**: incluye lo que USGS tarda en localizar
+    #: el evento y en publicar su primer ShakeMap, que es justo lo que el
+    #: objetivo excluye —su parentesis lo dice: "el SLO se define sobre lo
+    #: controlable"—. La pagina pintaba «incumple» comparando los dos relojes.
+    #:
+    #: El sello de disponibilidad del ShakeMap no se guarda en ninguna parte, asi
+    #: que la ancla medible mas cercana es `detectado`: el instante en que el
+    #: vigia vio el evento en el feed. Desde ahi hasta publicar es lo que este
+    #: sistema controla de verdad.
+    minutos_desde_deteccion: float | None = None
 
 
 def _parse(ts: str) -> datetime | None:
@@ -107,6 +122,10 @@ def event_latencies(
         inicio, fin = _parse(estado.origen_utc), _parse(publicado)
         if inicio is None or fin is None:
             continue
+        detectado = _parse(estado.timestamps.get("detectado", ""))
+        desde_deteccion = (
+            round((fin - detectado).total_seconds() / 60.0, 1) if detectado is not None else None
+        )
         if not (reportes / estado.usgs_id / "report.json").is_file():
             _log.warning(
                 "event_state dice PUBLICADO pero no hay reporte; no se publica su latencia",
@@ -122,6 +141,7 @@ def event_latencies(
                 backtest=estado.backtest,
                 shakemap=estado.versiones_procesadas.shakemap,
                 actualizado_utc=estado.timestamps.get("publicado_ultimo", ""),
+                minutos_desde_deteccion=desde_deteccion,
             )
         )
     return sorted(latencias, key=lambda e: e.origen_utc, reverse=True)
@@ -206,15 +226,36 @@ def build_status(
     # dias despues del sismo y su "latencia" no mide nada del sistema.
     en_vivo = [e for e in latencias if not e.backtest]
     minutos = [e.minutos for e in en_vivo]
+    # LAS DOS SERIES, Y EL OBJETIVO CONTRA LA QUE DEFINE.
+    #
+    # `minutos` va desde el ORIGEN DEL SISMO e incluye lo que USGS tarda en
+    # localizarlo y en publicar su primer ShakeMap. O1 se define "tras la
+    # disponibilidad del primer ShakeMap" y su parentesis lo dice sin rodeos:
+    # "el SLO se define sobre lo controlable". La pagina pintaba «incumple»
+    # comparando una serie contra el objetivo de la otra.
+    controlables = [e.minutos_desde_deteccion for e in en_vivo if e.minutos_desde_deteccion]
     return {
         "generado_utc": utcnow_iso(),
-        "objetivo": {"p50_min": 60, "p95_min": 90},
+        "objetivo": {
+            "p50_min": 60,
+            "p95_min": 90,
+            # Contra que serie se juzga. Sin esto la pagina tiene que elegir, y
+            # elegia la equivocada.
+            "medido_contra": "desde_deteccion",
+        },
         "medido": {
             "eventos_publicados": len(en_vivo),
             "backtests_excluidos": len(latencias) - len(en_vivo),
             "p50_min": percentil(minutos, 0.50),
             "p95_min": percentil(minutos, 0.95),
             "peor_min": max(minutos) if minutos else None,
+            # Desde que el vigia vio el evento: lo que el sistema controla.
+            "desde_deteccion": {
+                "eventos": len(controlables),
+                "p50_min": percentil(controlables, 0.50),
+                "p95_min": percentil(controlables, 0.95),
+                "peor_min": max(controlables) if controlables else None,
+            },
         },
         "eventos": [
             {
@@ -231,10 +272,16 @@ def build_status(
         "cadencia": cadencia_del_vigia(previos_y_nuevo := (latidos or [])),
         "latidos": previos_y_nuevo[-MAX_LATIDOS:],
         "nota": (
-            "La latencia incluye la demora del cron de GitHub Actions, que el "
-            "proyecto no controla y que su documentación sitúa entre 5 y 30 "
-            "minutos. El objetivo se define sobre lo controlable; esta cifra es "
-            "el total real, sin descontar nada."
+            "Se publican dos relojes. **Total** va desde el origen del sismo e "
+            "incluye lo que USGS tarda en localizarlo y en publicar su primer "
+            "ShakeMap, más la demora del cron de GitHub Actions —entre 5 y 30 "
+            "minutos según su propia documentación—: es el tiempo real que pasa, "
+            "sin descontar nada. **Desde detección** empieza cuando el vigía ve "
+            "el evento en el feed, que es lo que este sistema controla, y es la "
+            "serie contra la que se juzga el objetivo. El objetivo O1 se define "
+            "desde la disponibilidad del primer ShakeMap; ese instante no queda "
+            "registrado en ninguna parte, así que la detección es el ancla "
+            "medible más cercana."
         ),
     }
 

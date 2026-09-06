@@ -102,12 +102,27 @@ function pintarResumen(datos) {
   }
 
   const clase = (v, meta) => (v === null ? "" : v <= meta ? "cumple" : "incumple");
+
+  // EL OBJETIVO SE JUZGA CONTRA LA SERIE QUE LO DEFINE.
+  //
+  // Aqui se comparaba `medido.p50_min` —desde el ORIGEN DEL SISMO, que incluye
+  // lo que USGS tarda en localizarlo y en publicar su primer ShakeMap— contra un
+  // objetivo definido "tras la disponibilidad del primer ShakeMap". Dos relojes
+  // distintos, y la pagina pintaba «incumple» con esa resta.
+  //
+  // `objetivo.medido_contra` dice cual es la buena; sin el, esta pagina tenia
+  // que elegir, y elegia la equivocada. El total se sigue publicando al lado,
+  // porque es el tiempo que de verdad pasa.
+  const juzgada =
+    (objetivo.medido_contra && medido[objetivo.medido_contra]) || medido;
+  const hayJuzgada = Number.isFinite(juzgada.p50_min);
+
   nodo.innerHTML = `<div class="metricas">
-    ${metrica(comoDuracion(medido.p50_min), `p50 · objetivo ${objetivo.p50_min} min`,
-              clase(medido.p50_min, objetivo.p50_min))}
-    ${metrica(comoDuracion(medido.p95_min), `p95 · objetivo ${objetivo.p95_min} min`,
-              clase(medido.p95_min, objetivo.p95_min))}
-    ${metrica(comoDuracion(medido.peor_min), "peor caso")}
+    ${metrica(comoDuracion(juzgada.p50_min), `p50 desde detección · objetivo ${objetivo.p50_min} min`,
+              hayJuzgada ? clase(juzgada.p50_min, objetivo.p50_min) : "")}
+    ${metrica(comoDuracion(juzgada.p95_min), `p95 desde detección · objetivo ${objetivo.p95_min} min`,
+              hayJuzgada ? clase(juzgada.p95_min, objetivo.p95_min) : "")}
+    ${metrica(comoDuracion(medido.p50_min), "p50 total, desde el sismo")}
     ${metrica(nf.format(medido.eventos_publicados), "reportes en vivo")}
   </div>
   <p class="nota">${escapar(datos.nota)}</p>`;
