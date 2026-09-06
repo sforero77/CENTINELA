@@ -1,4 +1,4 @@
-# Exposición sísmica — M6,5 · 18 km al O de Parrita, Costa Rica
+# Exposición sísmica: M6,5 · 18 km al O de Parrita, Costa Rica
 
 **Evento USGS:** `us2000bmhe` · **Origen:** 2017-11-13T02:28:23Z UTC · **Profundidad:** 19,4 km
 
@@ -12,7 +12,7 @@
 |---|---:|
 | Población en MMI≥6 | 28 mil |
 | Población en MMI≥7 | 7.400 |
-| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥7 | 4.400 |
 | Sedes de salud en MMI≥7 | 4 |
 | Sedes educativas en MMI≥7 | 8 |
@@ -45,7 +45,7 @@ Fuente: producto *Ground Failure* de USGS (v2), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **verde**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 

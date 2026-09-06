@@ -2,6 +2,6 @@
 
 2/4 Personas dentro de intensidad MMI≥6: 4,3 millones. Dentro de MMI≥7: 2,3 millones. Edificaciones en MMI≥7: 1 millón.
 
-3/4 Municipios más expuestos (MMI≥7): Portoviejo, Esmeraldas, Quinindé.
+3/4 Municipios más expuestos (MMI≥7): Portoviejo, Esmeraldas, Manta.
 
 4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/reports/us20005j32/

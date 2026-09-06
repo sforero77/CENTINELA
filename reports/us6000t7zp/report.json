@@ -41,109 +41,109 @@
   },
   "top_municipios": [
     {
+      "adm2_id": "VE0101",
+      "nombre": "Libertador",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 647680.2640636018,
+      "pop_banda": 647680.2640636018
+    },
+    {
       "adm2_id": "VE2401",
       "nombre": "Vargas",
       "mmi_max": 8.0,
       "pop_mmi7p": 381695.780111006,
-      "pop_banda": 364616.89626370976
+      "pop_banda": 381695.780111006
+    },
+    {
+      "adm2_id": "VE1519",
+      "nombre": "Sucre",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 352685.5942679441,
+      "pop_banda": 352685.5942679441
     },
     {
       "adm2_id": "VE0811",
       "nombre": "Puerto Cabello",
       "mmi_max": 8.0,
       "pop_mmi7p": 206611.70656254236,
-      "pop_banda": 159536.81103630597
+      "pop_banda": 206611.70656254236
     },
     {
-      "adm2_id": "VE2214",
-      "nombre": "Veroes",
-      "mmi_max": 8.5,
-      "pop_mmi7p": 101400.31401313655,
-      "pop_banda": 99819.60736168735
-    },
-    {
-      "adm2_id": "VE0805",
-      "nombre": "Juan José Mora",
-      "mmi_max": 8.5,
-      "pop_mmi7p": 58001.31473601004,
-      "pop_banda": 57984.010930377524
+      "adm2_id": "VE1517",
+      "nombre": "Plaza",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 172919.1036837548,
+      "pop_banda": 172919.1036837548
     },
     {
       "adm2_id": "VE2211",
       "nombre": "San Felipe",
       "mmi_max": 8.0,
       "pop_mmi7p": 135247.57142168516,
-      "pop_banda": 54298.01945427805
+      "pop_banda": 135247.57142168516
     },
     {
-      "adm2_id": "VE1120",
-      "nombre": "Silva",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 10051.20091214357,
-      "pop_banda": 657.2616954818368
-    },
-    {
-      "adm2_id": "VE0518",
-      "nombre": "Ocumare de la Costa de Oro",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 11392.981012304313,
-      "pop_banda": 58.128485726192594
-    },
-    {
-      "adm2_id": "VE0514",
-      "nombre": "Tovar",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 689.5997774749994,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE0503",
-      "nombre": "Girardot",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 1633.6225647013634,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE2208",
-      "nombre": "Manuel Monge",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 12997.207302381285,
-      "pop_banda": 0.0
+      "adm2_id": "VE2214",
+      "nombre": "Veroes",
+      "mmi_max": 8.5,
+      "pop_mmi7p": 101400.31401313655,
+      "pop_banda": 101400.31401313655
     },
     {
       "adm2_id": "VE1507",
       "nombre": "Chacao",
       "mmi_max": 7.5,
       "pop_mmi7p": 83019.88845830341,
-      "pop_banda": 0.0
+      "pop_banda": 83019.88845830341
     },
     {
-      "adm2_id": "VE2202",
-      "nombre": "Bolívar",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 2592.7061946894974,
-      "pop_banda": 0.0
+      "adm2_id": "VE0805",
+      "nombre": "Juan José Mora",
+      "mmi_max": 8.5,
+      "pop_mmi7p": 58001.31473601004,
+      "pop_banda": 58001.31473601004
     },
     {
       "adm2_id": "VE1116",
       "nombre": "Palmasola",
       "mmi_max": 7.5,
       "pop_mmi7p": 30577.811606292613,
-      "pop_banda": 0.0
+      "pop_banda": 30577.811606292613
     },
     {
-      "adm2_id": "VE0801",
-      "nombre": "Bejuma",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 923.0880045853555,
-      "pop_banda": 0.0
+      "adm2_id": "VE2205",
+      "nombre": "Independencia",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 30384.867612460046,
+      "pop_banda": 30384.867612460046
     },
     {
-      "adm2_id": "VE0101",
-      "nombre": "Libertador",
+      "adm2_id": "VE2204",
+      "nombre": "Cocorote",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 24813.68682641664,
+      "pop_banda": 24813.68682641664
+    },
+    {
+      "adm2_id": "VE2208",
+      "nombre": "Manuel Monge",
       "mmi_max": 7.5,
-      "pop_mmi7p": 647680.2640636018,
-      "pop_banda": 0.0
+      "pop_mmi7p": 12997.207302381285,
+      "pop_banda": 12997.207302381285
+    },
+    {
+      "adm2_id": "VE0518",
+      "nombre": "Ocumare de la Costa de Oro",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 11392.981012304313,
+      "pop_banda": 11392.981012304313
+    },
+    {
+      "adm2_id": "VE1120",
+      "nombre": "Silva",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 10051.20091214357,
+      "pop_banda": 10051.20091214357
     }
   ],
   "incertidumbre": {

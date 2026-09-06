@@ -69,57 +69,8 @@
       "pop_banda": 3488.636115895584
     },
     {
-      "adm2_id": "SV04001",
-      "nombre": "Cuscatlán Norte",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV10002",
-      "nombre": "San Salvador Este",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV02002",
-      "nombre": "Cabañas Oeste",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV05006",
-      "nombre": "La Libertad Sur",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV06002",
-      "nombre": "La Paz Este",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV04002",
-      "nombre": "Cuscatlán Sur",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV05003",
-      "nombre": "La Libertad Este",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV10001",
-      "nombre": "San Salvador Centro",
+      "adm2_id": "SV11001",
+      "nombre": "San Vicente Norte",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -132,8 +83,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "SV11001",
-      "nombre": "San Vicente Norte",
+      "adm2_id": "SV02002",
+      "nombre": "Cabañas Oeste",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV04001",
+      "nombre": "Cuscatlán Norte",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -141,6 +99,48 @@
     {
       "adm2_id": "SV11002",
       "nombre": "San Vicente Sur",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV04002",
+      "nombre": "Cuscatlán Sur",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV10002",
+      "nombre": "San Salvador Este",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV10001",
+      "nombre": "San Salvador Centro",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV14003",
+      "nombre": "Usulután Oeste",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV05006",
+      "nombre": "La Libertad Sur",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV05003",
+      "nombre": "La Libertad Este",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0

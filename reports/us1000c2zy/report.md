@@ -1,4 +1,4 @@
-# Exposición sísmica — M7,5 · 203 km al NNE de Barra Patuca, Honduras
+# Exposición sísmica: M7,5 · 203 km al NNE de Barra Patuca, Honduras
 
 **Evento USGS:** `us1000c2zy` · **Origen:** 2018-01-10T02:51:33Z UTC · **Profundidad:** 19,0 km
 
@@ -10,9 +10,9 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | — el evento no llegó a esta banda |
-| Población en MMI≥7 | — el evento no llegó a esta banda |
-| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Población en MMI≥6 | el evento no llegó a esta banda |
+| Población en MMI≥7 | el evento no llegó a esta banda |
+| Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥6 | 0 |
 | Sedes de salud en MMI≥6 | 0 |
 | Sedes educativas en MMI≥6 | 0 |
@@ -46,7 +46,7 @@ USGS no ha publicado el producto *Ground Failure* para este evento. La sección 
 
 PAGER (USGS) estima para este evento una alerta **verde**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 

@@ -1,4 +1,4 @@
-# Exposición sísmica — M5,5 · 5 km al NNO de Baní, República Dominicana
+# Exposición sísmica: M5,5 · 5 km al NNO de Baní, República Dominicana
 
 **Evento USGS:** `usp000jd2q` · **Origen:** 2012-01-05T09:35:32Z UTC · **Profundidad:** 39,8 km
 
@@ -10,9 +10,9 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | — el evento no llegó a esta banda |
-| Población en MMI≥7 | — el evento no llegó a esta banda |
-| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Población en MMI≥6 | el evento no llegó a esta banda |
+| Población en MMI≥7 | el evento no llegó a esta banda |
+| Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥6 | 0 |
 | Sedes de salud en MMI≥6 | 0 |
 | Sedes educativas en MMI≥6 | 0 |

@@ -118,17 +118,43 @@ def test_un_reporte_antiguo_sin_pop_banda_se_sigue_renderizando() -> None:
 def test_el_ranking_se_ordena_por_la_banda_del_evento() -> None:
     """Es el arreglo: con `pop_mmi7p` todo a cero, el orden era el alfabetico.
 
-    Se comprueba sobre el SQL porque es donde vive el `ORDER BY`, y porque el
-    fallo era justo que el `ORDER BY` miraba una columna constante.
+    Esto comprobaba `"banda_titular" in inspect.getsource(build_report)`, que
+    es un guardia que pasa aunque la funcion no se ejecute nunca —y
+    `build_report` tenia cero llamadas en toda la suite—. Ademas fijaba el
+    nombre equivocado: `banda_titular` era justo la regla que sobraba.
+
+    Ahora se comprueba la propiedad, no el texto: los dos productores tienen que
+    decidir la misma banda para los mismos totales.
     """
-    import inspect
+    from pipelines.p2_impact.pipeline import ImpactTotals
 
-    from pipelines.p2_impact import pipeline
+    casos = [
+        # (mmi6, mmi7, mmi8) -> banda esperada
+        ((900.0, 500.0, 100.0), 7),  # alcanza 8: se ordena por 7 igualmente
+        ((900.0, 500.0, 0.0), 7),
+        ((760_856.0, 0.0, 0.0), 6),
+        ((0.0, 0.0, 0.0), 6),
+    ]
+    for (mmi6, mmi7, mmi8), esperada in casos:
+        totales = Totales(pop_mmi6p=mmi6, pop_mmi7p=mmi7, pop_mmi8p=mmi8)
+        # La que usa P2 para seleccionar los quince en SQL...
+        desde_p2 = ImpactTotals(pop_mmi6p=mmi6, pop_mmi7p=mmi7, pop_mmi8p=mmi8)
+        assert desde_p2.to_totales().banda_publicada == esperada
+        # ...y la que usan el markdown, el hilo y el mapa para reordenarlos.
+        assert totales.banda_publicada == esperada
 
-    fuente = inspect.getsource(pipeline.build_report)
 
-    assert "banda_titular" in fuente, "el ranking no consulta la banda del evento"
-    assert "ORDER BY i.{columna}" in fuente, "el ORDER BY sigue fijado a una columna"
+def test_la_banda_del_ranking_nunca_es_ocho() -> None:
+    """MMI>=8 es demasiado estrecha para ordenar municipios.
+
+    Ordenando por ella, Manta —265.263 personas en MMI>=7 y ninguna en MMI>=8—
+    no entraba en la tabla de `reports/us20005j32`, y si entraba Eloy Alfaro con
+    6.605. El SQL recortaba a quince por MMI>=8 y la publicacion reordenaba por
+    MMI>=7, asi que quien no pasaba el primer corte ya no existia.
+    """
+    con_ocho = Totales(pop_mmi6p=4_311_549.0, pop_mmi7p=2_283_454.0, pop_mmi8p=107_904.0)
+    assert con_ocho.banda_titular == 8, "el titular si distingue la banda 8"
+    assert con_ocho.banda_publicada == 7, "el ranking no puede ordenar por MMI>=8"
 
 
 @pytest.mark.parametrize("banda", [6, 7, 8])

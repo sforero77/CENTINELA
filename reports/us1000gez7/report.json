@@ -69,13 +69,6 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE1610",
-      "nombre": "Punceres",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "VE1901",
       "nombre": "Andrés Eloy Blanco",
       "mmi_max": 5.5,
@@ -90,15 +83,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE1915",
-      "nombre": "Valdez",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1902",
-      "nombre": "Andrés Mata",
+      "adm2_id": "VE2501",
+      "nombre": "Dependencias Federales",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -106,6 +92,13 @@
     {
       "adm2_id": "VE1608",
       "nombre": "Maturín",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1902",
+      "nombre": "Andrés Mata",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -125,8 +118,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE2501",
-      "nombre": "Dependencias Federales",
+      "adm2_id": "VE1915",
+      "nombre": "Valdez",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -139,8 +132,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE1906",
-      "nombre": "Bolívar",
+      "adm2_id": "VE1610",
+      "nombre": "Punceres",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE0317",
+      "nombre": "Santa Ana",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0

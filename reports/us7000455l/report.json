@@ -83,15 +83,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA0204",
-      "nombre": "Boquete",
+      "adm2_id": "PA0207",
+      "nombre": "Dolega",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA0207",
-      "nombre": "Dolega",
+      "adm2_id": "PA0204",
+      "nombre": "Boquete",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
