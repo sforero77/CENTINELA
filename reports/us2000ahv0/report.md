@@ -19,6 +19,8 @@
 | Kilómetros de vía en MMI≥6 | 0 km |
 | Superficie construida en MMI≥6 | 71,9 km² |
 
+El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 440 mil edificaciones registradas en MMI≥6. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
 De la población en intensidad MMI≥6, alrededor de **63 mil** personas tienen 65 años o más.

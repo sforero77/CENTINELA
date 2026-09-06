@@ -86,3 +86,30 @@ def test_la_tabla_trae_los_quince_primeros_si_los_hay(reporte: Path) -> None:
         f"hay {len(con_poblacion)} municipios con poblacion en MMI>={banda} y la tabla "
         f"publica {publicadas}"
     )
+
+
+@pytest.mark.parametrize("reporte", REPORTES, ids=_ids)
+def test_el_csv_empieza_por_el_municipio_mas_expuesto(reporte: Path) -> None:
+    """El CSV es "la tabla que consume el mundo" y se abre por arriba.
+
+    Se volcaba con `ORDER BY pop_mmi7p DESC` fijo, que en los reportes que no
+    alcanzan esa banda es una columna de ceros: en dieciseis de los veintisiete
+    la primera fila no era el municipio mas expuesto. En `us2000ahv0`, Juchitan
+    —109.670 personas en MMI>=6— salia en la fila 43 de 92, y la primera fila
+    era un municipio con 9.617.
+    """
+    report = Report.from_dict(json.loads(reporte.read_text(encoding="utf-8")))
+    banda = report.totales.banda_publicada
+    filas = _filas(reporte)
+    if not filas or _cifra(filas[0], banda) <= 0:
+        return  # ningun municipio con poblacion en la banda: el orden da igual
+
+    mayor = max(_cifra(f, banda) for f in filas)
+    assert _cifra(filas[0], banda) == pytest.approx(mayor), (
+        f"la primera fila del adm2.csv tiene {_cifra(filas[0], banda):,.0f} personas en "
+        f"MMI>={banda} y el maximo del fichero es {mayor:,.0f}"
+    )
+    if report.top_municipios:
+        assert filas[0]["adm2_id"] == report.top_municipios[0].adm2_id, (
+            "el CSV y la tabla del reporte no empiezan por el mismo municipio"
+        )

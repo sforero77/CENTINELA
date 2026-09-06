@@ -62,10 +62,23 @@ def render_thread(report: Report) -> list[str]:
             "banda sobre territorio habitado."
         )
     else:
+        # LAS CIFRAS DE LA BANDA QUE ESTE EVENTO ALCANZO, NO SIEMPRE LAS DE 7.
+        #
+        # Estaba clavado en `pop_mmi7p` y `bld_mmi7p`, asi que siete hilos
+        # publicados decian «Dentro de MMI≥7: 0. Edificaciones en MMI≥7: 0.»
+        # mientras el `report.md` del mismo directorio decia «el evento no llego
+        # a esta banda» y «1,1 millones de edificaciones». Dos ceros seguidos en
+        # un hilo se leen como que el sistema no calculo nada.
+        banda = tot.banda_publicada
+        edificaciones = tot.bld_mmi7p if banda == 7 else tot.bld_mmi6p
+        # Cuando la banda publicada ES la 6 no se repite la misma cifra dos
+        # veces: "MMI≥6: 3.400. Dentro de MMI≥6: 3.400." no informa de nada.
+        dentro = f"Dentro de MMI≥7: {format_count_prose(tot.pop_mmi7p)}. " if banda == 7 else ""
         posts.append(
             f"Personas dentro de intensidad MMI≥6: {format_count_prose(tot.pop_mmi6p)}. "
-            f"Dentro de MMI≥7: {format_count_prose(tot.pop_mmi7p)}. "
-            f"Edificaciones en MMI≥7: {format_count_prose(tot.bld_mmi7p)}."
+            f"{dentro}"
+            f"Edificaciones en MMI≥{banda}: "
+            f"{format_count_prose(edificaciones)}."
         )
 
     # EL MISMO RANKING QUE EL REPORTE, NO OTRO.

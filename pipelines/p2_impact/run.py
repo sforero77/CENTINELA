@@ -402,10 +402,24 @@ def run_impact(
         changelog=build_changelog(_reporte_publicado(usgs_id, reports_root), reporte),
     )
 
+    # EL CSV SE ORDENA POR LA BANDA QUE ESTE REPORTE PUBLICA, IGUAL QUE LA TABLA.
+    #
+    # Estaba clavado en `pop_mmi7p`, y en los reportes que no alcanzan esa banda
+    # eso es una columna de ceros: el fichero salia ordenado por el desempate de
+    # `mmi_max` o por nada. En dieciseis de los veintisiete publicados la primera
+    # fila no era el municipio mas expuesto. En us2000ahv0, Juchitan —109.670
+    # personas en MMI>=6— salia en la fila 43 de 92, y la primera era un
+    # municipio con 9.617.
+    #
+    # El CSV es "la tabla que consume el mundo" (schemas/parquet/tables.yaml) y
+    # quien lo abre en una hoja de calculo lee las primeras filas.
+    banda = reporte.totales.banda_publicada
     columnas = [c[0] for c in con.execute("SELECT * FROM impact_adm2 LIMIT 0").description]
     filas = [
         dict(zip(columnas, fila, strict=True))
-        for fila in con.execute("SELECT * FROM impact_adm2 ORDER BY pop_mmi7p DESC").fetchall()
+        for fila in con.execute(
+            f"SELECT * FROM impact_adm2 ORDER BY pop_mmi{banda}p DESC, mmi_max DESC"
+        ).fetchall()
     ]
     filas = _enriquecer_con_admin(con, filas)
 
