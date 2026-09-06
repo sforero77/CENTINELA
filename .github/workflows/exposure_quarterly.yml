@@ -81,6 +81,12 @@ jobs:
   construir:
     needs: elegir
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # Para republicar el visor con `gh workflow run site.yml`: un push hecho
+      # con GITHUB_TOKEN no dispara `site.yml`, asi que la cobertura recalculada
+      # se quedaria commiteada y sin llegar a la pagina.
+      actions: write
     # Un build de un pais mediano ronda los 45 min y con dos horas sobraba.
     # **Brasil no cabe en dos horas.** Medido el 25-ago-2026: 36 teselas de
     # GHS-POP y otras 29 de superficie construida son 419 MB, y su serie age-sex
@@ -210,3 +216,101 @@ jobs:
               --title "Activo de exposicion $ISO3 — $TAG" \
               --notes-file "data/manifests/$ISO3.yaml"
           fi
+
+      # LA CIFRA QUE EL VISOR PUBLICA TENIA QUE VOLVER AL REPOSITORIO.
+      #
+      # `site/cobertura.json` cuenta «paises con activo construido» mirando
+      # `medido_ghs_pop` en cada manifest, y ese campo solo lo escribia
+      # `centinela calibrar --escribir`: un comando manual que ningun workflow
+      # invocaba. Este job construia, publicaba el Release y **no commiteaba el
+      # manifest**, asi que la afirmacion publica sobre disponibilidad se
+      # apoyaba en un YAML que alguien edito a mano alguna vez.
+      #
+      # `calibrar` es seguro en automatico por diseno: **estrecha la tolerancia
+      # y nunca la ensancha**. Si el desvio medido se sale de la tolerancia
+      # vigente, no toca nada y lo dice — esa decision sigue siendo de una
+      # persona.
+      #
+      # Va despues del Release a proposito: si la publicacion falla, el manifest
+      # no debe quedar diciendo que hay un activo publicado que no existe.
+      - name: Anotar la medicion en el manifest y commitearla
+        id: anotar
+        run: |
+          MEDICION=$(find data/build -name 'medicion.json' -type f | head -1)
+          if [ -z "$MEDICION" ]; then
+            echo "::error::el build no dejo medicion.json; no hay nada que anotar"
+            exit 1
+          fi
+          uv run centinela calibrar --escribir "$MEDICION"
+
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+          git add "data/manifests/$ISO3.yaml"
+          if git diff --staged --quiet; then
+            echo "el manifest de $ISO3 ya estaba al dia"
+            exit 0
+          fi
+          git commit -m "P0: medicion de $ISO3 anotada en su manifest"
+
+          # La matriz corre hasta cuatro paises a la vez sobre la misma rama.
+          # Cada uno toca **su** fichero, asi que el rebase no puede conflictar
+          # por contenido; lo que si pasa es que el push del segundo llegue con
+          # la rama ya movida.
+          for intento in 1 2 3 4; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then
+              echo "publicado=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            git rebase --abort || true
+            sleep $((2 ** intento))
+          done
+          echo "::error::no se pudo commitear el manifest de $ISO3"
+          exit 1
+
+      # La cobertura que sirve el visor sale de los manifests, asi que se
+      # regenera aqui o se queda contando lo de antes. Un solo job la reescribe
+      # —el ultimo que termine—, y por eso se recalcula en vez de editarse.
+      - name: Recalcular y commitear la cobertura
+        id: publicar
+        run: |
+          uv run centinela cobertura
+          git add site/cobertura.json
+          git diff --staged --quiet && exit 0
+          git commit -m "P0: cobertura regional recalculada"
+          for intento in 1 2 3 4; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}"; then
+              if git push; then
+                echo "publicado=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+            # `cobertura.json` es un derivado entero: no se fusiona, se rehace.
+            # Mismo manejador que el vigia: el fichero en conflicto no es JSON,
+            # asi que primero se toma la version de la rama y luego se recalcula.
+            git checkout --theirs site/cobertura.json 2>/dev/null || true
+            uv run centinela cobertura || true
+            git add site/cobertura.json
+            GIT_EDITOR=true git rebase --continue || git rebase --abort || true
+            sleep $((2 ** intento))
+          done
+          echo "::error::no se pudo publicar site/cobertura.json"
+          exit 1
+
+      # UN PUSH HECHO CON `GITHUB_TOKEN` NO DISPARA OTROS WORKFLOWS.
+      #
+      # Es la regla de GitHub contra los bucles infinitos, y es la que dejo el
+      # visor diecisiete horas sirviendo una pagina vieja. `site.yml` escucha
+      # `push` sobre `site/**`, y los dos pasos de arriba commitean ahi.
+      #
+      # Va en su propio paso y con el comando solo en la linea: el guardia de
+      # `test_el_visor_se_republica.py` pide exactamente esa forma para no
+      # confundir el comando con una frase que lo menciona.
+      - name: Republicar el visor
+        if: >-
+          ${{ !cancelled()
+          && (steps.publicar.outputs.publicado == 'true'
+              || steps.anotar.outputs.publicado == 'true') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run site.yml

@@ -238,9 +238,9 @@ def test_la_medicion_publica_los_insumos(tmp_path: Path) -> None:
     """
     salida = tmp_path / "iso3=ARG" / "layer=exposure"
     salida.mkdir(parents=True)
-    plan = SimpleNamespace(
-        iso3="ARG", salida=salida, manifest=SimpleNamespace(manifest_id="arg-v0.6")
-    )
+    # El manifest de verdad: `write_measurement` publica ademas el cubo y las
+    # licencias del activo, y un doble a mano no los tiene.
+    plan = SimpleNamespace(iso3="ARG", salida=salida, manifest=_manifest_min())
     insumos = resumen_de_insumos(_manifest_min(), [_bajado("arg_adm2.shp", "a" * 64)])
 
     ruta = write_measurement(plan, {"pop_total": 1.0}, rescate={}, insumos=insumos)

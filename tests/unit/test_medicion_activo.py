@@ -13,6 +13,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+from pipelines.common.manifest import Manifest, Source
 from pipelines.p0_exposure.build import MEDICION_FICHERO, write_measurement
 
 RESUMEN: dict[str, Any] = {
@@ -28,15 +29,41 @@ RESUMEN: dict[str, Any] = {
 }
 RESCATE = {"pop_rescatada": 112, "pop_total": 7_015_517, "pop_rescatada_pct": 0.002}
 
+#: EL TIPO DE VERDAD, NO UN NAMESPACE CON LOS CAMPOS DE HOY.
+#
+# `manifest` era un `SimpleNamespace(manifest_id=...)`, asi que el dia que
+# `write_measurement` empezo a publicar el cubo y las licencias del activo
+# —procedencia que hasta entonces moria en dos logs— estas pruebas fallaron con
+# un `AttributeError` en vez de ejercitarlo. Es la segunda vez en esta auditoria
+# que un doble escrito a mano se separa del original en cuanto el original crece;
+# la primera fue `TriggerResult` en test_cli.py.
+MANIFEST = Manifest(
+    manifest_id="pry-v0.1",
+    iso3="PRY",
+    generated_utc="2026-08-23T00:00:00Z",
+    sources=(
+        Source(
+            id="overture_buildings",
+            layer="buildings",
+            url="s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building",
+            license="ODbL-1.0",
+            vintage="2026-08-19.0",
+        ),
+        Source(
+            id="ghs_pop_2025",
+            layer="pop_ghs",
+            url="https://jeodpp.jrc.ec.europa.eu/ftp/GHS_POP.zip",
+            license="EC-reuse-attribution",
+            vintage="R2023A-E2025-54009-100m",
+        ),
+    ),
+)
+
 
 def _plan(tmp_path: Path) -> Any:
     salida = tmp_path / "iso3=PRY" / "layer=exposure"
     salida.mkdir(parents=True)
-    return SimpleNamespace(
-        iso3="PRY",
-        salida=salida,
-        manifest=SimpleNamespace(manifest_id="pry-v0.1"),
-    )
+    return SimpleNamespace(iso3="PRY", salida=salida, manifest=MANIFEST)
 
 
 def _referencia() -> dict[str, Any]:
