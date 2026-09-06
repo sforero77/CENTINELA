@@ -16,12 +16,12 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
 from pipelines import cli
+from pipelines.p1_trigger.run import TriggerResult
 
 # --- El contrato del parser -------------------------------------------------
 
@@ -158,15 +158,13 @@ def test_trigger_publica_el_latido_aunque_no_haya_eventos(
     que el latido vigila era justo el que no se publicaba.
     """
     escrito: dict[str, Any] = {}
-    resultado = SimpleNamespace(
-        nuevos=[],
-        revisitados=[],
-        a_despachar=[],
-        revisados=18,
-        relevantes=0,
-        observados=[],
-        latido_utc="2026-08-25T15:00:00Z",
-    )
+    # EL TIPO DE VERDAD, NO UN NAMESPACE A MANO.
+    #
+    # Era un `SimpleNamespace` con los campos que hacian falta ese dia, asi que
+    # cada campo nuevo de `TriggerResult` —`estados_ilegibles`, `feeds_fallidos`—
+    # rompia estas pruebas con un `AttributeError` en vez de ejercitarlo. Un
+    # doble escrito a mano se separa del original en cuanto el original crece.
+    resultado = TriggerResult(revisados=18, relevantes=0, latido_utc="2026-08-25T15:00:00Z")
 
     monkeypatch.setattr(cli, "run_trigger", lambda *_a, **_k: resultado)
     monkeypatch.setattr(cli, "HttpFetcher", lambda *_a, **_k: object())
@@ -187,14 +185,8 @@ def test_el_json_del_trigger_sale_limpio_por_stdout(
     Por eso el log va a stderr.
     """
 
-    resultado = SimpleNamespace(
-        nuevos=["us1"],
-        revisitados=[],
-        a_despachar=["us1"],
-        revisados=3,
-        relevantes=1,
-        observados=[],
-        latido_utc="2026-08-25T15:00:00Z",
+    resultado = TriggerResult(
+        nuevos=["us1"], revisados=3, relevantes=1, latido_utc="2026-08-25T15:00:00Z"
     )
 
     monkeypatch.setattr(cli, "run_trigger", lambda *_a, **_k: resultado)
@@ -212,6 +204,11 @@ def test_el_json_del_trigger_sale_limpio_por_stdout(
         "a_despachar": ["us1"],
         "revisados": 3,
         "observados": 0,
+        # La merma viaja por stdout, no solo al log: un estado ilegible saca al
+        # sismo del despacho para siempre y un feed caido puede dejar la pasada
+        # ciega. Las dos salian solo en un `_log.warning`.
+        "estados_ilegibles": [],
+        "feeds_fallidos": [],
         "latido_utc": "2026-08-25T15:00:00Z",
     }
 

@@ -106,7 +106,16 @@ class _FetcherFalso:
 
         return {
             "id": uid,
-            "properties": {"products": {"shakemap": producto(sm), "groundfailure": producto(gf)}},
+            # `ground-failure` CON GUION, que es como lo publica USGS y como lo
+            # lee `products.GROUND_FAILURE`. Escrito junto, este fake no servia
+            # el producto en absoluto: **todas** las pruebas de rezago corrian
+            # con `groundfailure_vigente = 0`, asi que la mitad de Ground
+            # Failure de la comparacion no se ejercitaba, y los casos que dicen
+            # "al dia" lo decian con el producto ausente.
+            #
+            # Lo destapo el guardia de producto desaparecido: `publicado=8` y
+            # `vigente=0` dejo de ser silencio.
+            "properties": {"products": {"shakemap": producto(sm), "ground-failure": producto(gf)}},
         }
 
 

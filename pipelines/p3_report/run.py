@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -70,7 +71,7 @@ def write_report_bundle(
     hilo_path.write_text(render_thread_text(report), encoding="utf-8")
     escritos["hilo_txt"] = hilo_path
 
-    escritos["index_json"] = rebuild_index(root)
+    escritos["index_json"] = rebuild_index(root).ruta
 
     _log.info(
         "paquete de reporte escrito",
@@ -248,7 +249,30 @@ def _iso3_del_manifest(manifest_id: str) -> str:
     return iso3 if len(iso3) == 3 and iso3.isalpha() else ""
 
 
-def rebuild_index(reports_root: Path | None = None) -> Path:
+@dataclass(frozen=True, slots=True)
+class Indice:
+    """El indice reconstruido, y lo que se quedo fuera.
+
+    Devolvia solo la ruta, asi que un `report.json` ilegible se excluia con un
+    `_log.warning` y `centinela reindexar` salia 0: **un reporte publicado
+    desaparecia del visor sin una sola alarma**. El indice es lo que el visor
+    lee para saber que existe; caerse de el es dejar de existir.
+    """
+
+    ruta: Path
+    entradas: int
+    #: Identificadores cuyo `report.json` no se pudo leer.
+    excluidos: list[str] = field(default_factory=list)
+
+    def __fspath__(self) -> str:
+        """Para que siga sirviendo donde antes se usaba la ruta a secas."""
+        return str(self.ruta)
+
+    def __str__(self) -> str:
+        return str(self.ruta)
+
+
+def rebuild_index(reports_root: Path | None = None) -> Indice:
     """Reconstruye ``reports/index.json`` a partir de los reportes en disco.
 
     Se reconstruye entero en vez de anexar: el indice es un derivado, y un
@@ -257,6 +281,7 @@ def rebuild_index(reports_root: Path | None = None) -> Path:
     """
     root = reports_root or REPORTS_DIR
     entradas: list[dict[str, Any]] = []
+    excluidos: list[str] = []
 
     for path in sorted(root.glob("*/report.json")):
         try:
@@ -295,7 +320,10 @@ def rebuild_index(reports_root: Path | None = None) -> Path:
                 }
             )
         except (OSError, ValueError, KeyError) as exc:
-            # Un reporte corrupto no puede tumbar el indice de todos los demas.
+            # Un reporte corrupto no puede tumbar el indice de todos los demas —
+            # pero **desaparece del visor**, y eso no puede pasar en silencio.
+            # Se anota en `excluidos`, que viaja con el resultado.
+            excluidos.append(path.parent.name)
             _log.warning(
                 "reporte ilegible, excluido del indice",
                 extra={"context": {"path": str(path), "error": str(exc)}},
@@ -305,4 +333,9 @@ def rebuild_index(reports_root: Path | None = None) -> Path:
     destino = root / INDEX_FILENAME
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(json.dumps(entradas, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return destino
+    if excluidos:
+        _log.error(
+            "hay reportes publicados que no aparecen en el indice",
+            extra={"context": {"excluidos": excluidos}},
+        )
+    return Indice(ruta=destino, entradas=len(entradas), excluidos=excluidos)
