@@ -47,7 +47,7 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**2.278 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
+**2.282 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
 vivas y 144 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
 arranque verificado desde clon vacío. Eran 431 antes de la auditoría, 523 al
 empezarla, 686 el 26-ago y 948 el 28-ago.

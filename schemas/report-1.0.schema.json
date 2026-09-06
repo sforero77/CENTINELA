@@ -92,6 +92,14 @@
         },
         "exposure_manifest": {
           "type": "string"
+        },
+        "modelo_deslizamiento": {
+          "type": "string",
+          "description": "Fichero del modelo de deslizamiento que se consumio. Vacio en los reportes emitidos antes de que se registrara: el fichero se guardaba con el nombre del modelo preferido aunque viniera de una alternativa historica, asi que para esos no se puede saber cual fue."
+        },
+        "modelo_licuefaccion": {
+          "type": "string",
+          "description": "Fichero del modelo de licuefaccion que se consumio."
         }
       }
     },

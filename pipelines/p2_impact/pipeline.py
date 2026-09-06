@@ -191,11 +191,19 @@ def download_products(
     def bajar(nombre: str, alternativas: tuple[str, ...]) -> Path | None:
         if products.ground_failure is None:
             return None
-        url = products.ground_failure.content_url(nombre, *alternativas)
-        if not url:
+        # EL FICHERO SE GUARDA CON EL NOMBRE QUE SE RESOLVIO.
+        #
+        # Se guardaba con el del modelo **preferido** aunque la url viniera de
+        # las alternativas historicas —`nowicki_2014`, `godt_2008`,
+        # `zhu_2015`—, asi que un `jessee_2018_model.tif` en `workdir` podia ser
+        # cualquiera de los tres. A partir de ahi nada los distinguia: el mismo
+        # `GROUND_FAILURE_HIGH_PROB`, la misma etiqueta de unidad y un
+        # `report.json` que solo guarda el numero de version.
+        clave = products.ground_failure.content_key(nombre, *alternativas)
+        if not clave:
             return None
-        destino = workdir / nombre
-        destino.write_bytes(fetcher.get_bytes(url))
+        destino = workdir / clave
+        destino.write_bytes(fetcher.get_bytes(products.ground_failure.contents[clave]))
         return destino
 
     deslizamiento = bajar(LANDSLIDE_MODEL, LANDSLIDE_FALLBACKS)
@@ -765,6 +773,21 @@ def licencia_del_reporte(manifest_id: str) -> Licencia:
     )
 
 
+def modelos_de_terreno(products: ProductSet) -> dict[str, str]:
+    """Que fichero de modelo resolvio cada capa de Ground Failure.
+
+    Se calcula del mismo `ProductSet` que decide la descarga, asi que no puede
+    desviarse de lo que se bajo: es la misma llamada a `content_key`.
+    """
+    gf = products.ground_failure
+    if gf is None:
+        return {}
+    return {
+        "modelo_deslizamiento": gf.content_key(LANDSLIDE_MODEL, *LANDSLIDE_FALLBACKS) or "",
+        "modelo_licuefaccion": gf.content_key(LIQUEFACTION_MODEL, *LIQUEFACTION_FALLBACKS) or "",
+    }
+
+
 def build_report(
     con: Any,
     state: EventState,
@@ -823,6 +846,7 @@ def build_report(
             shakemap_version=products.shakemap_version,
             groundfailure_version=products.groundfailure_version,
             exposure_manifest=manifest_id,
+            **modelos_de_terreno(products),
         ),
         totales=totales.to_totales(),
         ground_failure_usgs=GroundFailureUSGS(**products.ground_failure_alerts()),
