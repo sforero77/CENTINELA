@@ -114,6 +114,14 @@ MMI_BANDS_AGE_BREAKDOWN: Final[tuple[int, ...]] = (6, 7)
 #: en los veintitres `report.json` ya publicados.
 MMI_BAND_AGE_BREAKDOWN: Final[int] = 7
 
+#: Profundidad desde la que un sismo deja de ser superficial (km).
+#:
+#: La clasificacion estandar —superficial < 70, intermedio 70-300, profundo
+#: > 300— que el visor ya explicaba en prosa y no existia como constante. Se
+#: usa para explicar por que un sismo grande puede no alcanzar ninguna banda
+#: sobre poblacion: a 359 km la energia llega repartida a la superficie.
+PROFUNDIDAD_INTERMEDIA_KM: Final[float] = 70.0
+
 #: Umbral a partir del cual una celda entra en el conteo de poblacion expuesta
 #: a falla de terreno.
 #:

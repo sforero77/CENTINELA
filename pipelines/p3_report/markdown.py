@@ -8,7 +8,12 @@ from __future__ import annotations
 
 from typing import Final
 
-from ..common.constants import DISCLAIMERS, GROUND_FAILURE_HIGH_PROB, TOP_ADM2_COUNT
+from ..common.constants import (
+    DISCLAIMERS,
+    GROUND_FAILURE_HIGH_PROB,
+    PROFUNDIDAD_INTERMEDIA_KM,
+    TOP_ADM2_COUNT,
+)
 from ..common.formatting import cifra_con_sustantivo, format_count_prose, format_number_es
 from .model import (
     MunicipioTop,
@@ -310,11 +315,42 @@ def _nota_del_muro_de_ceros(report: Report) -> str:
     """
     if report.preliminar or report.totales.banda_titular:
         return ""
+
+    # LA CAUSA SE MIRA, NO SE SUPONE.
+    #
+    # Esta nota afirmaba siempre «la sacudida quedó mar adentro o sobre zona
+    # despoblada», que es una de las tres causas posibles y no siempre la
+    # cierta. `reports/us1000jg5z` la publica para un sismo **bajo Bolivia**,
+    # país sin mar, a 359 km de profundidad; y `usp000jd2q` la publicaba con el
+    # epicentro a 5 km de Baní, tierra adentro.
+    #
+    # Afirmar de menos cuesta una frase; afirmar de más cuesta la credibilidad
+    # de todo lo demás que el reporte dice.
+    cabecera = "\n\n> **Todas las cifras en cero es un resultado, no un fallo.** "
+
+    alcanzada = max((m.mmi_max for m in report.top_municipios), default=0.0)
+    if alcanzada > 0:
+        # Llegó a territorio habitado, por debajo de la banda que se publica.
+        return (
+            f"{cabecera}El ShakeMap sí alcanza territorio habitado del país, con "
+            f"intensidad máxima **MMI {format_number_es(alcanzada, 1)}** sobre "
+            f"municipio. Este sistema publica cifras desde MMI≥6, así que por debajo "
+            f"de ese umbral las tablas van en cero. El cálculo corrió entero."
+        )
+
+    if report.event.depth_km >= PROFUNDIDAD_INTERMEDIA_KM:
+        return (
+            f"{cabecera}El sismo ocurrió a "
+            f"**{format_number_es(report.event.depth_km, 0)} km de profundidad**: la "
+            f"energía llega repartida a la superficie y la intensidad no alcanza "
+            f"MMI≥6 sobre territorio habitado, que es el umbral desde el que este "
+            f"sistema publica cifras. El cálculo corrió entero."
+        )
+
     return (
-        "\n\n> **Todas las cifras en cero es un resultado, no un fallo.** El "
-        "ShakeMap de este evento sí dibuja intensidad, pero no alcanza MMI≥6 "
-        "sobre territorio habitado del país: la sacudida quedó mar adentro o "
-        "sobre zona despoblada. El cálculo corrió entero."
+        f"{cabecera}El ShakeMap de este evento sí dibuja intensidad, pero no alcanza "
+        f"MMI≥6 sobre territorio habitado del país: la sacudida quedó mar adentro o "
+        f"sobre zona despoblada. El cálculo corrió entero."
     )
 
 
@@ -507,6 +543,38 @@ def _seccion_ground_failure(report: Report) -> str:
     )
 
 
+def _linea_discrepancia(report: Report) -> str:
+    """La banda de discrepancia, o **por que** no la hay.
+
+    Habia dos frases y hacen falta tres. Un preliminar no corta por intensidad
+    —publica radios— asi que no calcula ni una celda, y aun asi salia con
+    «Ninguna celda dentro de las bandas publicadas tiene poblacion de WorldPop
+    con la que contrastar»: una frase que describe un contraste intentado y
+    vacio, cuando lo que pasa es que no se intento.
+
+    Es el mismo error de siempre en su forma mas barata: afirmar de mas sobre
+    algo que no se midio.
+    """
+    inc = report.incertidumbre
+    if inc.pop_discrepancia_pct is not None:
+        return (
+            "Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: "
+            f"**{format_number_es(inc.pop_discrepancia_pct, 1)} %**."
+        )
+    if report.preliminar:
+        return (
+            "Discrepancia entre GHS-POP y WorldPop: **no se calcula en un reporte "
+            "preliminar**. El contraste se hace celda a celda dentro de las bandas de "
+            "intensidad, y sin ShakeMap todavía no hay bandas que cortar. Aparecerá "
+            "en cuanto el reporte se re-emita con el ShakeMap."
+        )
+    return (
+        "Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. "
+        "Ninguna celda dentro de las bandas publicadas tiene población de "
+        "WorldPop con la que contrastar."
+    )
+
+
 def _seccion_incertidumbre(report: Report) -> str:
     inc = report.incertidumbre
     lineas = [
@@ -519,14 +587,7 @@ def _seccion_incertidumbre(report: Report) -> str:
         # "0,0 %" se lee como "los dos productos coinciden perfectamente", y
         # cuando el valor es nulo significa lo contrario: no habia con que
         # comparar. Tres reportes publicaban ese cero.
-        (
-            "Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: "
-            f"**{format_number_es(inc.pop_discrepancia_pct, 1)} %**."
-            if inc.pop_discrepancia_pct is not None
-            else "Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. "
-            "Ninguna celda dentro de las bandas publicadas tiene población de "
-            "WorldPop con la que contrastar."
-        ),
+        _linea_discrepancia(report),
     ]
     if inc.notas:
         lineas += ["", *[f"- {nota}" for nota in inc.notas]]
@@ -547,11 +608,24 @@ def _seccion_descargas(report: Report) -> str:
     return "## Descargas\n\n" + "\n".join(disponibles)
 
 
+def _version_consumida(version: int) -> str:
+    """`v0` no es una version: es "no se consumio ninguna".
+
+    Se imprimia como `**v0**` al lado de `**v11**`, con el mismo formato y el
+    mismo verbo. Quien lee "Ground Failure consumido: v0" entiende que se
+    consumio algo, y de ahi a leer los ceros de deslizamiento como una medida
+    hay un paso. Es la misma distincion que el resto del reporte ya hace en
+    prosa y que la seccion de procedencia no hacia.
+    """
+    return f"**v{version}**" if version > 0 else "**ninguno** (no publicado aún)"
+
+
 def _seccion_procedencia(report: Report) -> str:
     return (
         "## Procedencia\n\n"
-        f"- ShakeMap consumido: **v{report.inputs.shakemap_version}**\n"
-        f"- Ground Failure consumido: **v{report.inputs.groundfailure_version}**\n"
+        f"- ShakeMap consumido: {_version_consumida(report.inputs.shakemap_version)}\n"
+        f"- Ground Failure consumido: "
+        f"{_version_consumida(report.inputs.groundfailure_version)}\n"
         f"- Manifiesto de exposición: `{report.inputs.exposure_manifest}`\n"
         f"- Pipeline: `{report.pipeline_version}` · Generado: {report.generado_utc}"
     )

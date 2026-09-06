@@ -18,7 +18,7 @@
 | Sedes educativas en MMI≥6 | 0 |
 | Kilómetros de vía en MMI≥6 | 0 km |
 
-> **Todas las cifras en cero es un resultado, no un fallo.** El ShakeMap de este evento sí dibuja intensidad, pero no alcanza MMI≥6 sobre territorio habitado del país: la sacudida quedó mar adentro o sobre zona despoblada. El cálculo corrió entero.
+> **Todas las cifras en cero es un resultado, no un fallo.** El ShakeMap sí alcanza territorio habitado del país, con intensidad máxima **MMI 5,0** sobre municipio. Este sistema publica cifras desde MMI≥6, así que por debajo de ese umbral las tablas van en cero. El cálculo corrió entero.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
@@ -60,7 +60,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 ## Procedencia
 
 - ShakeMap consumido: **v1**
-- Ground Failure consumido: **v0**
+- Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: `hnd-v0.2`
 - Pipeline: `0.1.0` · Generado: 2026-09-03T03:24:16Z
 

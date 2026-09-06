@@ -46,8 +46,12 @@ country:  ## P0: reconstruye el activo de un pais — make country ISO=COL
 	@test -n "$(ISO)" || (echo "Uso: make country ISO=COL" && exit 1)
 	$(UV) --extra geo centinela country $(ISO)
 
-site:  ## Sirve el visor estatico en localhost:8080
-	python3 -m http.server 8080 --directory site
+site:  ## Sirve el visor estatico en localhost:8080, con los reportes
+	@# `http.server --directory site` no reproducia la pagina publicada: el
+	@# visor pide `reports/...` como ruta relativa y ahi no existe, asi que el
+	@# unico comando documentado para verlo en local mostraba «Todavia no hay
+	@# reportes publicados» con veintisiete publicados.
+	python3 scripts/servir_visor.py
 
 clean:  ## Borra artefactos efimeros (nunca toca events/ ni reports/)
 	rm -rf work data/cache data/build .pytest_cache .ruff_cache .mypy_cache
