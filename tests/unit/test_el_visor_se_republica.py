@@ -212,6 +212,73 @@ def comprueba(ruta: Path) -> bool:
     )
 
 
+def _commitea_reportes(ruta: Path) -> bool:
+    """¿Este workflow hace `git add` de algo bajo `reports/`?
+
+    ESTO PASABA POR DIECISEIS CARACTERES DE HOLGURA.
+
+    La version anterior partia el fichero por la **primera** aparicion de
+    `git add` y miraba los 80 caracteres siguientes. En `impact.yml` la primera
+    aparicion esta dentro de un comentario —«lo bloqueaba este `git add`»— tres
+    lineas antes del comando de verdad, y la ventana llegaba justo. Un
+    comentario una linea mas largo, o un `git add` nuevo antes, y el guardia
+    habria dicho que **ningun** workflow escribe reportes: silencio, no rojo.
+
+    Ahora se recorren las lineas de comando, saltando comentarios, y se
+    resuelven las variables que el propio fichero asigna —`impact.yml` hace
+    `git add $DERIVADOS` con `DERIVADOS='reports/index.json ...'`—.
+    """
+    lineas = [
+        linea.strip() for linea in _texto(ruta).splitlines() if not linea.strip().startswith("#")
+    ]
+    asignadas = {
+        nombre: valor
+        for nombre, _, valor in (linea.partition("=") for linea in lineas)
+        if nombre.isidentifier() and valor
+    }
+
+    for linea in lineas:
+        comando = linea.removeprefix("run: ").strip()
+        if not comando.startswith("git add "):
+            continue
+        argumentos = comando.removeprefix("git add ")
+        for nombre, valor in asignadas.items():
+            argumentos = argumentos.replace(f"${nombre}", valor)
+        if RUTA_DE_LOS_REPORTES in argumentos:
+            return True
+    return False
+
+
+def test_el_guardia_no_confunde_un_comentario_con_un_comando(tmp_path: Path) -> None:
+    """El fallo exacto: la primera aparicion de `git add` esta comentada."""
+    solo_comentario = tmp_path / "falso.yml"
+    solo_comentario.write_text(
+        "steps:\n  - run: |\n      # antes esto hacia git add reports/ y se quito\n"
+        "      git add site/status.json\n",
+        encoding="utf-8",
+    )
+    assert not _commitea_reportes(solo_comentario)
+
+    de_verdad = tmp_path / "cierto.yml"
+    de_verdad.write_text(
+        "steps:\n  - run: |\n      # el git add de abajo publica\n"
+        "      git add events/ reports/ site/status.json\n",
+        encoding="utf-8",
+    )
+    assert _commitea_reportes(de_verdad)
+
+
+def test_el_guardia_resuelve_la_variable_del_git_add(tmp_path: Path) -> None:
+    """`impact.yml` hace `git add $DERIVADOS`, y ahi tambien hay reports/."""
+    ruta = tmp_path / "var.yml"
+    ruta.write_text(
+        "steps:\n  - run: |\n      DERIVADOS='reports/index.json site/status.json'\n"
+        "      git add $DERIVADOS\n",
+        encoding="utf-8",
+    )
+    assert _commitea_reportes(ruta)
+
+
 def test_solo_un_workflow_escribe_reportes() -> None:
     """Si aparece un segundo, la regla de abajo tiene que alcanzarle.
 
@@ -221,11 +288,7 @@ def test_solo_un_workflow_escribe_reportes() -> None:
     trescientas corridas al dia. El corte esta en quien escribe `reports/`, y
     hoy es uno solo. Esto avisa el dia que deje de serlo.
     """
-    escriben = sorted(
-        p.name
-        for p in WORKFLOWS.glob("*.yml")
-        if "git add" in _texto(p) and RUTA_DE_LOS_REPORTES in _texto(p).split("git add", 1)[1][:80]
-    )
+    escriben = sorted(p.name for p in WORKFLOWS.glob("*.yml") if _commitea_reportes(p))
 
     assert escriben == ["impact.yml"], (
         f"estos workflows commitean reports/: {escriben}. La regla de "

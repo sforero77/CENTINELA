@@ -21,6 +21,7 @@ como "no hay exposicion a deslizamiento". Con la alerta de USGS al lado, no.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -32,9 +33,40 @@ _log = get_logger(__name__)
 DETALLE_USGS = "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid={evento}&format=geojson"
 
 
+@dataclass(frozen=True, slots=True)
+class Relleno:
+    """Lo que hizo el relleno, con sus tres desenlaces separados.
+
+    Devolvia solo `escritos`, y con eso el llamador no podia distinguir tres
+    cosas muy distintas: que no hubiera nada que hacer —todos los reportes ya
+    tienen su alerta, que es el caso normal de una segunda corrida—, que los
+    eventos no tengan producto Ground Failure, o que USGS no contestara. El CLI
+    salia 1 en las tres, asi que una corrida idempotente sana se publicaba como
+    fallo.
+    """
+
+    #: `usgs_id -> ruta` de los reportes que cambiaron.
+    escritos: dict[str, Path] = field(default_factory=dict)
+    #: Ya tenian la alerta correcta. No es un fallo: es el caso normal.
+    ya_al_dia: list[str] = field(default_factory=list)
+    #: USGS no publica Ground Failure para ese evento. Tampoco es un fallo.
+    sin_alertas: list[str] = field(default_factory=list)
+    #: No se pudo leer el detalle o escribir el reporte. Esto si lo es.
+    fallidos: dict[str, str] = field(default_factory=dict)
+
+    @property
+    def revisados(self) -> int:
+        return len(self.escritos) + len(self.ya_al_dia) + len(self.sin_alertas) + len(self.fallidos)
+
+    @property
+    def ciego(self) -> bool:
+        """No se pudo leer NI UNO. Misma regla que el resto del sistema."""
+        return self.revisados > 0 and len(self.fallidos) == self.revisados
+
+
 def backfill_ground_failure_alerts(
     usgs_id: str = "", *, fetcher: Any = None, reports_root: Path | None = None
-) -> dict[str, Path]:
+) -> Relleno:
     """Escribe `ground_failure_usgs` en un `report.json` publicado, o en todos.
 
     Solo toca ese bloque: ninguna cifra propia del reporte se recalcula aqui, y
@@ -42,7 +74,7 @@ def backfill_ground_failure_alerts(
     markdown se rehace despues con `centinela regenerar-textos`.
 
     Returns:
-        ``usgs_id -> ruta`` de lo escrito.
+        Un :class:`Relleno` con los cuatro desenlaces separados.
     """
     from ..common.http import HttpFetcher
     from ..common.paths import REPORTS_DIR, validate_usgs_id
@@ -56,7 +88,8 @@ def backfill_ground_failure_alerts(
         else sorted(p.parent for p in raiz.glob("*/report.json"))
     )
 
-    escritos: dict[str, Path] = {}
+    resultado = Relleno()
+    escritos = resultado.escritos
     for directorio in directorios:
         evento = directorio.name
         destino = directorio / "report.json"
@@ -68,9 +101,11 @@ def backfill_ground_failure_alerts(
                     "este evento no trae alertas de falla de terreno",
                     extra={"context": {"usgs_id": evento}},
                 )
+                resultado.sin_alertas.append(evento)
                 continue
             datos = json.loads(destino.read_text(encoding="utf-8"))
             if datos.get("ground_failure_usgs") == alertas:
+                resultado.ya_al_dia.append(evento)
                 continue
             # El bloque va donde lo pone el modelo, para que un `git diff` del
             # reporte no dependa del orden de escritura de este relleno.
@@ -85,12 +120,24 @@ def backfill_ground_failure_alerts(
                 "no se pudieron traer las alertas de falla de terreno",
                 extra={"context": {"usgs_id": evento, "error": str(exc)}},
             )
+            # Y el fallo viaja con el resultado, no solo al log: quien invoca
+            # esto no puede distinguir "no habia nada que hacer" de "no se pudo
+            # mirar" si lo unico que recibe es una lista vacia.
+            resultado.fallidos[evento] = str(exc)
 
     _log.info(
         "alertas de falla de terreno actualizadas",
-        extra={"context": {"eventos": len(escritos), "de": len(directorios)}},
+        extra={
+            "context": {
+                "escritos": len(escritos),
+                "ya_al_dia": len(resultado.ya_al_dia),
+                "sin_alertas": len(resultado.sin_alertas),
+                "fallidos": len(resultado.fallidos),
+                "de": len(directorios),
+            }
+        },
     )
-    return escritos
+    return resultado
 
 
 def _orden(datos: dict[str, Any]) -> list[str]:
