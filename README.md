@@ -187,12 +187,12 @@ El detalle de las dos, con sus efectos de borde, está en
 ### El catálogo histórico regional
 
 San José del Palmar no es una demostración aislada. El sistema reconstruyó
-**21 sismos de 15 países** del catálogo real de USGS, cada uno con los productos
+**25 sismos de 16 países** del catálogo real de USGS, cada uno con los productos
 que USGS publicó entonces, cada uno contra el activo de su país:
 
 | | |
 |---|---|
-| Reportes publicados | **23**, en **15 países** |
+| Reportes publicados | **27**, en **16 países** |
 | Países con activo construido y medido | **19 de 19** |
 | Personas ya en la malla hexagonal | **649,8 millones** |
 | Peor desvío contra la cifra oficial de un país | **+4,94 %** (Venezuela, y está explicado) |
@@ -228,12 +228,12 @@ municipios ordenada alfabéticamente. Ahora se titula con la banda que el evento
 alcanzó de verdad. Ninguna cantidad de pruebas sintéticas habría encontrado eso:
 hizo falta correr la región entera.
 
-### Los cuatro países sin reporte
+### Los tres países sin reporte
 
-Bolivia, Brasil, Paraguay y Uruguay **tienen su activo construido**. No son
-huecos del sistema, y no lo son por el mismo motivo. Se buscó para los cuatro,
-y `tests/integration/test_silencio_de_paises_live.py` vuelve a comprobarlo
-contra USGS:
+Brasil, Paraguay y Uruguay **tienen su activo construido**. No son huecos del
+sistema, y no lo son por el mismo motivo. Se buscó para los tres, y
+`tests/integration/test_silencio_de_paises_live.py` vuelve a comprobarlo contra
+USGS:
 
 * **Paraguay y Uruguay** no registran un solo sismo M≥5,5 desde el año 2000. Su
   activo está construido y esperando, que para un sistema de preparación es el
@@ -243,15 +243,17 @@ contra USGS:
   superficie para ninguno (su máximo modelado es 3,0), aunque el DYFI recoja
   reportes de personas de hasta CDI 5,6. Un sistema que calcula sobre `cont_mmi`
   no tiene ahí nada que calcular.
-* **Bolivia no es el caso de Brasil, y este README decía que sí.** Sus veintidós
-  sismos M≥5,5 desde 2000 no están «todos entre 359 y 596 km»: van **de 33 a
-  608 km**. El más somero es un M6,2 del 4-jul-2001 cerca de Colomi, con MMI
-  modelada de **6,4** y `cont_mmi.json` publicado. Bolivia no está en silencio
-  por profundidad: **tiene un reporte pendiente de construir**, y está en
-  [`PENDIENTES.md`](PENDIENTES.md). El error venía de una búsqueda ordenada por
-  relevancia sobre una caja envolvente que se llena de sismos chilenos, el
-  mismo sesgo que la auditoría del 25-ago-2026 ya había documentado para
-  Argentina y República Dominicana, y que en Bolivia no se notó.
+**Bolivia ya no está en esta lista, y el título decía que sí.** Tiene reporte
+publicado desde el 5-sep-2026 (`us1000jg5z`, M6,3 a 359 km), y el mismo commit
+que lo publicó tocó este README dos secciones más arriba sin tocar esta. Lo que
+sigue pendiente de Bolivia es otra cosa, y está en
+[`PENDIENTES.md`](PENDIENTES.md): sus veintidós sismos M≥5,5 desde 2000 no están
+«todos entre 359 y 596 km» como este README llegó a decir —van **de 33 a
+608 km**— y el más somero, un M6,2 del 4-jul-2001 cerca de Colomi con MMI
+modelada de **6,4**, sigue sin correrse. El error venía de una búsqueda ordenada
+por relevancia sobre una caja envolvente que se llena de sismos chilenos, el
+mismo sesgo que la auditoría del 25-ago-2026 ya había documentado para Argentina
+y República Dominicana.
 
 ## Cómo funciona
 
@@ -346,7 +348,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**2.204 pruebas** sin red, más **142 de navegador** que abren el visor en un
+**2.259 pruebas** sin red, más **142 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 5-sep-2026.
 

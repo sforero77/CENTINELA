@@ -48,7 +48,22 @@ jobs:
     if: github.repository == 'sforero77/CENTINELA'
     timeout-minutes: 15
     steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Es la mitigacion barata del hueco que si queda abierto: **ninguna accion
+      # de este repositorio esta fijada por SHA**, todas van por etiqueta movil,
+      # y una etiqueta de git se puede reapuntar a cualquier commit.
+      # `astral-sh/setup-uv@v5` ademas no es de GitHub. El precedente concreto es
+      # tj-actions/changed-files (CVE-2025-30066, marzo de 2025). Fijar por SHA
+      # exige resolver catorce digests contra la red y queda en PENDIENTES.md.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v5
         with:

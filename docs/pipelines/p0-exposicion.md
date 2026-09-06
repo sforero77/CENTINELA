@@ -3,7 +3,7 @@
 **Qué hace:** construye, para cada país, la malla H3 r8 con todo lo que hay
 expuesto. Es el denominador de todo el sistema.
 **Cadencia:** trimestral (1 de enero, abril, julio, octubre) y a mano por país.
-**Comando:** `uv run centinela country --iso3 COL` · `make country ISO=COL`
+**Comando:** `uv run centinela country COL` · `make country ISO=COL`
 **Código:** `pipelines/p0_exposure/` (download, crosswalk, layers, build,
 raster_h3, vector_h3, overture_h3, raster_categorico_h3, calibrar, sources/)
 

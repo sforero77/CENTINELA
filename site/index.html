@@ -2,6 +2,38 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
+  <!--
+    SIN CABECERAS, LA ETIQUETA ES LA UNICA DEFENSA QUE HAY.
+
+    GitHub Pages no deja fijar cabeceras HTTP, asi que esta pagina no tenia
+    ninguna politica de contenido: `grep -n "Content-Security" site/*.html` no
+    devolvia nada. Y por aqui entran dos librerias de terceros sin verificar —
+    h3-js es lo que convierte los indices H3 en la geometria de cada hexagono y
+    maplibre decide donde cae cada poligono en la pantalla: quien controle esos
+    dos ficheros controla los numeros que ve quien mira.
+
+    Lo que esta politica **si** acota: un script inyectado en el HTML no corre,
+    un origen que no sea unpkg no puede servir codigo, la pagina no puede
+    exfiltrar a ningun host fuera de la lista, y no se puede embeber en un
+    iframe ajeno.
+
+    Lo que **no** acota, y hay que decirlo: un compromiso del propio unpkg. Para
+    eso hace falta `integrity=` con el sha384 de cada fichero —o servirlos desde
+    `assets/`, que es lo coherente con D6 y son unos 250 KB—, y las dos cosas
+    exigen tener los ficheros delante para hashearlos. Queda anotado en
+    PENDIENTES.md como lo que es: un hueco conocido, no un olvido.
+
+    `worker-src blob:` y `img-src blob:` no son laxitud: maplibre arranca sus
+    workers y compone sus texturas desde blobs, y sin ellos el mapa no dibuja.
+
+    Y no lleva `frame-ancestors`: el navegador la **ignora** cuando llega en un
+    `<meta>` y lo dice por consola. Ponerla seria dejar escrita una proteccion
+    que no protege, que es la forma de fallo que esta auditoria persigue.
+    Comprobado en Chromium contra las dos paginas: con esta politica no queda
+    ni una violacion.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org; base-uri 'none'; form-action 'none'; object-src 'none'" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CENTINELA: exposición sísmica en América Latina</title>
   <meta name="description" content="Reportes automáticos de exposición sísmica por celda H3 y por municipio para América Latina. Datos abiertos, sin backend. Un proyecto de GeoAI LATAM." />

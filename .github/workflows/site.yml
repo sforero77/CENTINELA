@@ -27,7 +27,22 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Es la mitigacion barata del hueco que si queda abierto: **ninguna accion
+      # de este repositorio esta fijada por SHA**, todas van por etiqueta movil,
+      # y una etiqueta de git se puede reapuntar a cualquier commit.
+      # `astral-sh/setup-uv@v5` ademas no es de GitHub. El precedente concreto es
+      # tj-actions/changed-files (CVE-2025-30066, marzo de 2025). Fijar por SHA
+      # exige resolver catorce digests contra la red y queda en PENDIENTES.md.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v5
         with:
@@ -82,14 +97,42 @@ jobs:
           p = "_site/index.html"
           s = io.open(p, encoding="utf-8").read()
           import re
-          s = re.sub(
+
+          # ESTE BLOQUE TENIA EL MISMO FALLO QUE VINO A ARREGLAR.
+          #
+          # Existe —lo dice su comentario— porque `og:image` estaba clavada a un
+          # evento y "se rompia en silencio el dia que ese reporte se retirara".
+          # Pero `re.sub` devuelve la cadena **sin cambios** cuando el patron no
+          # casa, y nadie miraba el resultado: el `print` de abajo se ejecutaba
+          # igual, asi que el log afirmaba haber actualizado la vista previa sin
+          # haber tocado un byte. El patron depende del orden literal de los
+          # atributos en `site/index.html`, que nadie protege.
+          #
+          # `subn` cuenta, y cero sustituciones es un error.
+          def reemplazar(patron, valor, texto):
+              # LA LAMBDA, Y NO UNA PLANTILLA.
+              #
+              # El segundo argumento de `re.sub` se **interpreta**. Y aqui el
+              # texto viene de USGS —`lugar` es el `place` del feed traducido—,
+              # asi que un toponimo con una barra invertida seguida de N daba
+              # `re.error: bad escape` y uno con una referencia a grupo daba
+              # `re.error: missing <`. `html.escape` no escapa la barra
+              # invertida. Con `repl` como funcion no hay plantilla que
+              # interpretar: el texto entra tal cual.
+              return re.subn(patron, lambda m: m.group(1) + valor + m.group(2),
+                             texto, count=1)
+
+          s, n1 = reemplazar(
               r'(property="og:image" content=")[^"]*(")',
-              rf"\g<1>{base}/reports/{usgs}/mapa_prensa.png\g<2>", s, count=1)
-          s = re.sub(
+              f"{base}/reports/{usgs}/mapa_prensa.png", s)
+          s, n2 = reemplazar(
               r'(property="og:image:alt" content=")[^"]*(")',
-              r"\g<1>" + html.escape(
-                  f"Mapa de exposición del M{mag} — {lugar}.", quote=True
-              ) + r"\g<2>", s, count=1)
+              html.escape(f"Mapa de exposición del M{mag} — {lugar}.", quote=True), s)
+          if n1 != 1 or n2 != 1:
+              raise SystemExit(
+                  f"og:image no se pudo reescribir (image={n1}, alt={n2}): "
+                  f"cambio el orden de los atributos en site/index.html")
+
           io.open(p, "w", encoding="utf-8").write(s)
           print(f"og:image -> {usgs} (M{mag}, {lugar})")
           PY
