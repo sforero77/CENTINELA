@@ -12,6 +12,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Self
 
+from ..common.logging import get_logger
+
+_log = get_logger(__name__)
+
+#: Niveles de alerta que PAGER publica y que el esquema del reporte admite.
+#:
+#: `pending` NO esta: es lo que USGS emite mientras el modelo corre, y no es un
+#: nivel sino la ausencia de uno.
+NIVELES_PAGER: frozenset[str] = frozenset({"green", "yellow", "orange", "red"})
+
 #: Nombres de producto que consume el sistema.
 SHAKEMAP = "shakemap"
 GROUND_FAILURE = "ground-failure"
@@ -137,10 +147,33 @@ class ProductSet:
         Se publica **solo como referencia cruzada** ("PAGER estima: alerta X").
         Nunca como cifra propia: la estimacion de victimas es un no-objetivo
         explicito del sistema (§1.2).
+
+        SE FILTRA CONTRA EL ENUM, Y ANTES SALIA CRUDO.
+
+        USGS emite ``alertlevel: "pending"`` mientras el modelo PAGER corre —
+        esta en la fixture golden del Chocó— y eso puede durar media hora, que
+        es justo la ventana en la que un reporte completo ya se publica: a
+        +27,5 min ya habia ShakeMap v2. El valor viajaba tal cual a
+        `Evento.pager_alert`, y `schemas/report-1.0.schema.json` cierra ese
+        campo a `["", "green", "yellow", "orange", "red"]`. O sea que el unico
+        artefacto publico con esquema cerrado se publicaba fuera de su esquema,
+        salia en ingles en el `.md` y desaparecia del visor sin decir nada.
+
+        Un valor desconocido se trata como ausencia —que es lo que es: PAGER no
+        ha dicho nada todavia— y se registra, porque el hecho de que este
+        corriendo es informacion.
         """
         if self.losspager is None:
             return ""
-        return self.losspager.props.get("alertlevel", "")
+        crudo = str(self.losspager.props.get("alertlevel", ""))
+        if crudo in NIVELES_PAGER:
+            return crudo
+        if crudo:
+            _log.info(
+                "PAGER todavia no publica un nivel de alerta",
+                extra={"context": {"usgs_id": self.usgs_id, "alertlevel": crudo}},
+            )
+        return ""
 
 
 def _preferred(entries: list[dict[str, Any]], tipo: str) -> ProductRef | None:

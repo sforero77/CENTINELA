@@ -30,6 +30,33 @@ _log = get_logger(__name__)
 INDEX_FILENAME = "index.json"
 
 
+class ReporteFueraDeContratoError(ValueError):
+    """El `report.json` calculado no cumple `schemas/report-1.0.schema.json`."""
+
+
+def validar_contra_esquema(report: Report) -> None:
+    """Comprueba el reporte contra su esquema publicado.
+
+    Raises:
+        ReporteFueraDeContratoError: con todos los errores, no solo el primero:
+            quien lo lea tiene que poder arreglarlos de una pasada.
+    """
+    from jsonschema import Draft202012Validator
+
+    from ..common.paths import SCHEMAS_DIR
+
+    esquema = json.loads((SCHEMAS_DIR / "report-1.0.schema.json").read_text(encoding="utf-8"))
+    errores = sorted(Draft202012Validator(esquema).iter_errors(report.to_dict()), key=str)
+    if errores:
+        detalle = "\n  - ".join(
+            f"{'.'.join(str(x) for x in e.path) or '(raiz)'}: {e.message}" for e in errores
+        )
+        raise ReporteFueraDeContratoError(
+            f"El reporte de {report.event.usgs_id} no cumple su esquema y no se "
+            f"publica:\n  - {detalle}"
+        )
+
+
 #: Nombre del aviso de licencia que viaja con cada reporte.
 LICENCIA_FICHERO = "LICENSE.txt"
 
@@ -79,6 +106,19 @@ def write_report_bundle(
     root = reports_root or REPORTS_DIR
     directory = root / validate_usgs_id(report.event.usgs_id)
     directory.mkdir(parents=True, exist_ok=True)
+
+    # SE VALIDA CONTRA SU PROPIO ESQUEMA ANTES DE ESCRIBIRLO.
+    #
+    # `report.json` es el unico artefacto publico con esquema cerrado y no tenia
+    # guardia en produccion: las dos pruebas que lo validan construyen el objeto
+    # a mano, o sea que comparan la cadena escrita contra la constante con la
+    # que se escribio. El campo `pager_alert` esta acotado a un enum y USGS
+    # emite `pending` durante la primera media hora — un valor que el esquema
+    # prohibe y que se publicaba igual.
+    #
+    # Falla antes de escribir: un JSON fuera de contrato en `reports/` lo
+    # consumen el visor, el indice y los tres comandos de regeneracion.
+    validar_contra_esquema(report)
 
     escritos: dict[str, Path] = {}
     escritos["report_json"] = report.save(directory / "report.json")
