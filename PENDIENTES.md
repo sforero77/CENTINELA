@@ -47,7 +47,7 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**2.260 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
+**2.278 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
 vivas y 144 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
 arranque verificado desde clon vacío. Eran 431 antes de la auditoría, 523 al
 empezarla, 686 el 26-ago y 948 el 28-ago.
@@ -169,6 +169,35 @@ repetirlo, sigue en
 
 Ordenado por lo que más desbloquea. Lo ya cerrado está en §3, en una línea cada
 cosa, porque este documento es la lista de trabajo y no el registro de lo hecho.
+
+### 2.0 Los tres huecos que la auditoría de septiembre dejó abiertos a propósito
+
+No están abiertos por olvido: cada uno necesita algo que no se puede decidir ni
+resolver desde dentro del repositorio, y dejarlos escritos aquí es preferible a
+cerrarlos mal.
+
+**Ninguna acción de Actions está fijada por SHA.** Catorce workflows usan
+`actions/checkout@v4`, `astral-sh/setup-uv@v5` y cinco más por etiqueta móvil, y
+una etiqueta de git se puede reapuntar a cualquier commit; `astral-sh/*` además
+no es de GitHub. El precedente es tj-actions/changed-files (CVE-2025-30066).
+Fijarlas exige resolver catorce digests contra la red. Mitigado mientras tanto:
+`persist-credentials: false` en los nueve workflows que no empujan nada, y
+`dependabot.yml` para que los bumps lleguen como PR revisable.
+
+**El visor carga maplibre y h3-js de unpkg sin `integrity`.** Ya lleva CSP —lo
+único que GitHub Pages permite— y eso acota todo menos un compromiso del propio
+unpkg. Para cerrarlo hacen falta los ficheros delante: o se calcula su `sha384`
+y se pone en la etiqueta, o se copian a `site/assets/` (~250 KB), que es lo
+coherente con D6 y elimina al tercero del camino crítico.
+
+**El arranque descarga y procesa el fichero de fuego entero y luego lo esconde**
+—4,4 MB de JSON, 10.963 hexágonos construidos con `h3.cellToBoundary`, un
+union-find sobre todos ellos— porque el modo por defecto es sismos. Diferirlo a
+`cambiarAmenaza("fuego")` es un cambio de una línea, pero **quita la mitad de
+fuego de la tarjeta «Ahora mismo» en el modo por defecto**: `pintarEnVivo` no
+distingue de modo, y hoy esa tarjeta enseña las detecciones al abrir la página.
+O sea que no es una optimización, es una decisión de producto sobre qué se ve
+sin pedirlo. Queda para quien la tome.
 
 ### 2.1 ✅ Brasil, el país 19 · cerrado el 28-ago-2026
 
