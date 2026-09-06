@@ -137,7 +137,13 @@ def test_se_leen_los_tres_satelites() -> None:
 
 
 class _FirmsFalso:
-    """Sirve lo que se le diga; revienta para las URL que se le marquen."""
+    """Sirve lo que se le diga; revienta para las URL que se le marquen.
+
+    Cada fichero sale con una deteccion propia —desplazada en longitud— porque
+    FIRMS publica detecciones distintas en cada uno y porque desde que las dos
+    regiones se deduplican, servir la misma fila seis veces devuelve una sola.
+    Servir seis identicas era ademas lo que impedia ver el solape.
+    """
 
     def __init__(self, texto: str, revienta: str = "") -> None:
         self.texto = texto
@@ -148,7 +154,9 @@ class _FirmsFalso:
         self.pedidas.append(url)
         if self.revienta and self.revienta in url:
             raise TimeoutError("la red")
-        return self.texto.encode("utf-8")
+        # Un grado de longitud por fichero: detecciones distintas, no copias.
+        desplazada = self.texto.replace("-70.0", f"-{70 + len(self.pedidas)}.0")
+        return desplazada.encode("utf-8")
 
     def get_json(self, url: str) -> Any:  # pragma: no cover - no se usa
         raise NotImplementedError

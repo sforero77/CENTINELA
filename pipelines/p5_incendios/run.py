@@ -8,7 +8,8 @@ from typing import Any
 
 from ..common.geo import LATAM_BBOX, BBox
 from ..common.logging import get_logger
-from .firms import Foco, fetch_focos
+from .firms import Foco, en_la_ventana, fetch_focos
+from .incendios import VENTANA_HORAS
 
 _log = get_logger(__name__)
 
@@ -100,6 +101,13 @@ def run_incendios(
             extra={"context": {"pedidos": lectura.pedidos, "fallidos": lectura.fallidos}},
         )
 
+    # LA VENTANA SE APLICA A LA DETECCION, ANTES DE AGREGAR.
+    #
+    # El recorte vivia sobre las celdas ya agregadas y conservaba la celda
+    # entera si su deteccion mas reciente entraba: las viejas de esa celda
+    # seguian sumando a su conteo y a su potencia radiativa. Ver
+    # `firms.en_la_ventana`.
+    focos = en_la_ventana(focos, VENTANA_HORAS)
     en_latam = focos_en(bbox, focos)
     result.en_latam = len(en_latam)
     if not en_latam:

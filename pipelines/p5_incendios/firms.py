@@ -240,11 +240,32 @@ def fetch_focos(
                 vacios.append(nombre)
             todos.extend(leidas)
 
+    # LAS DOS REGIONES DE FIRMS SE SOLAPAN Y SE CONCATENABAN SIN MAS.
+    #
+    # "South_America" y "Central_America" son la particion del proveedor, no la
+    # geografica, y su caja comun cubre el norte de Colombia y Venezuela,
+    # Panama, Costa Rica y Trinidad. Cada deteccion de esa franja llega **dos
+    # veces**, una por cada fichero regional, del mismo satelite y con los
+    # mismos valores.
+    #
+    # No se cae nada y no hay nada que revise: el conteo de detecciones sube, el
+    # FRP se suma dos veces, y las celdas de esa franja publican el doble de
+    # fuego. Medido el dia de la auditoria: 1.885 claves con exactamente dos
+    # copias, 889 celdas con el conteo duplicado y 11.930 MW inventados.
+    #
+    # La clave es lo que identifica una deteccion: **donde, cuando y que
+    # sensor**. Dos satelites que ven el mismo fuego a la misma hora son dos
+    # detecciones de verdad y tienen que seguir contando dos veces.
+    antes = len(todos)
+    todos = _sin_duplicados(todos)
+    duplicadas = antes - len(todos)
+
     _log.info(
         "focos leidos de FIRMS",
         extra={
             "context": {
                 "detecciones": len(todos),
+                "duplicadas_entre_regiones": duplicadas,
                 "utiles": sum(1 for f in todos if f.util),
                 "ficheros_fallidos": fallidos,
                 "ficheros_vacios": vacios,
@@ -259,6 +280,84 @@ def fetch_focos(
         pedidos=len(satelites) * len(regiones),
         leidos=leidos,
     )
+
+
+def clave_de_deteccion(foco: Foco) -> tuple[str, str, str, str]:
+    """Lo que identifica una deteccion: donde, cuando y que sensor.
+
+    Las coordenadas se comparan como texto con la precision que publica FIRMS
+    —cinco decimales, unos 30 cm— y no como flotantes: el mismo pixel llega en
+    los dos ficheros regionales con la misma cadena, y compararlo como numero
+    metera al redondeo en una decision que no lo necesita.
+    """
+    return (f"{foco.lon:.5f}", f"{foco.lat:.5f}", foco.adquirido_utc, foco.satelite)
+
+
+def _sin_duplicados(focos: list[Foco]) -> list[Foco]:
+    """Conserva la primera aparicion de cada deteccion, en orden de lectura."""
+    vistas: set[tuple[str, str, str, str]] = set()
+    unicos: list[Foco] = []
+    for foco in focos:
+        clave = clave_de_deteccion(foco)
+        if clave in vistas:
+            continue
+        vistas.add(clave)
+        unicos.append(foco)
+    return unicos
+
+
+def en_la_ventana(focos: list[Foco], horas: int) -> list[Foco]:
+    """Descarta las detecciones anteriores a la ventana declarada.
+
+    SE RECORTABA POR CELDA Y NO POR DETECCION.
+
+    El recorte vivia en `incendios._en_la_ventana`, sobre las celdas ya
+    agregadas, y conservaba la celda entera si su deteccion **mas reciente**
+    entraba en la ventana. Una celda cuya ultima deteccion es de hace dos horas
+    y la primera de hace treinta y nueve se publicaba con las dos dentro: su
+    conteo, su potencia radiativa acumulada y su reparto por satelite incluian
+    detecciones que el fichero declara no cubrir.
+
+    Medido el dia de la auditoria: **5.158 detecciones fuera de la ventana de
+    24 h, con 66.794 MW**. El fichero decia `ventana_horas: 24` y traia
+    detecciones de hasta 39 h.
+
+    Los seis ficheros regionales de FIRMS no cortan a la misma hora, asi que al
+    unirlos el span real supera siempre las 24 h declaradas. La referencia es
+    **la deteccion mas reciente del propio dato** y no el reloj: es la misma
+    regla que aplica el visor, y con el reloj un fichero de FIRMS de hace cuatro
+    horas dejaria la ventana vacia.
+    """
+    sellos = [f.adquirido_utc for f in focos if f.adquirido_utc]
+    if not sellos:
+        return focos
+    from datetime import datetime, timedelta
+
+    try:
+        corte = (
+            datetime.fromisoformat(max(sellos).replace("Z", "+00:00")) - timedelta(hours=horas)
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        # Un sello ilegible no puede tirar la corrida: se publica sin recortar,
+        # que es lo que se hacia antes de que este recorte existiera.
+        _log.warning("sello de tiempo ilegible; no se recorta la ventana", extra={"context": {}})
+        return focos
+
+    dentro = [f for f in focos if not f.adquirido_utc or f.adquirido_utc >= corte]
+    if len(dentro) < len(focos):
+        fuera = [f for f in focos if f.adquirido_utc and f.adquirido_utc < corte]
+        _log.info(
+            "detecciones fuera de la ventana declarada",
+            extra={
+                "context": {
+                    "horas": horas,
+                    "descartadas": len(fuera),
+                    "frp_descartado_mw": round(sum(f.frp for f in fuera), 1),
+                    "mas_antigua": min((f.adquirido_utc for f in fuera), default=""),
+                }
+            },
+        )
+    return dentro
 
 
 def _fetcher_por_defecto() -> Fetcher:
