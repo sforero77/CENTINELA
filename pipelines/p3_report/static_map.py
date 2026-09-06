@@ -33,6 +33,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+from ..common.atribucion import (
+    MAPA,
+    atribuciones_de,
+    linea_de_credito,
+    para_superficie,
+)
 from ..common.formatting import format_count_prose, format_number_es, titulo_es
 from ..common.logging import get_logger
 from .model import Report, banda_del_ranking
@@ -70,12 +76,33 @@ SPECS: dict[MapVariant, MapSpec] = {
     MapVariant.PRENSA: MapSpec(MapVariant.PRENSA, 1920, 1080, 140),
 }
 
+#: Fuentes cuyo dato llega a un PNG del reporte, y que por tanto tienen que
+#: aparecer en su pie (§2.4 regla 2).
+#:
+#: Son las que declara **todo** manifest, para que la linea sea la misma en los
+#: diecinueve paises. El MGN del DANE solo lo declara Colombia, asi que citarlo
+#: aqui seria falso en los otros dieciocho: su credito viaja en el bloque
+#: `licencia` del reporte y en su `LICENSE.txt`, que si son por pais.
+FUENTES_DEL_MAPA: tuple[str, ...] = (
+    "ghs_pop",
+    "worldpop",
+    "overture_buildings",
+    "cod_ab",
+)
+
 #: Atribucion obligatoria al pie de todo mapa (§2.4 regla 2).
-ATTRIBUTION_LINE = (
-    "Intensidad: USGS ShakeMap (dominio público) · "
-    "Población: GHS-POP, JRC/Comisión Europea · "
-    "Edificaciones y vías: Overture Maps, © OpenStreetMap contributors (ODbL) · "
-    "CENTINELA — exposición estimada, no daño"
+#:
+#: SE CALCULA, Y ANTES ERA UNA CADENA A MANO A LA QUE LE FALTABA WORLDPOP.
+#:
+#: De WorldPop sale `pop_65p`, que el reporte publica en portada como «De ellas,
+#: 65 años o más», y §2.4 regla 2 declara la atribucion obligatoria en cada
+#: artefacto. Una lista escrita a mano se queda vieja en cuanto entra una fuente
+#: —asi entro ESA WorldCover sin aparecer en ningun credito—; calcularla desde
+#: el catalogo hace que anadir una fuente sin credito sea un error y no un
+#: olvido.
+ATTRIBUTION_LINE = linea_de_credito(
+    para_superficie(atribuciones_de(FUENTES_DEL_MAPA), MAPA),
+    cola="CENTINELA — exposición estimada, no daño",
 )
 
 

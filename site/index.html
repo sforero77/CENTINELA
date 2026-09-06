@@ -461,13 +461,43 @@
 
   <footer>
     <div class="contenedor">
+      <!--
+        CITABA CUATRO FUENTES DE LAS DIEZ QUE ENTRAN AL ACTIVO.
+
+        Faltaban WorldPop —de donde sale «65 años o más»—, ESA WorldCover —que
+        el panel de fuego pinta como porcentajes de suelo—, OCHA COD-AB —los
+        límites municipales de dieciocho países—, HOT —salud y educación— y
+        NASA FIRMS, la fuente de los focos de calor, que además no aparecía en
+        ningún manifiesto: `resolve_bucket` no la había visto jamás.
+
+        La lista la fija `pipelines/common/atribucion.py` (superficie `visor`) y
+        `test_la_atribucion_viaja_con_el_dato.py` comprueba que este pie no se
+        quede atrás cuando entre una fuente nueva.
+      -->
       <p>
         Intensidad: USGS ShakeMap (dominio público) &middot;
         Población: GHS-POP y GHS-BUILT-S, JRC/Comisión Europea &middot;
+        Estructura por edad: WorldPop (CC BY 4.0) &middot;
         Edificaciones y vías: Overture Maps, &copy; OpenStreetMap contributors (ODbL) &middot;
+        Límites municipales: OCHA COD-AB (CC BY-IGO) &middot;
+        Salud y educación: HOT / OpenStreetMap (ODbL) &middot;
+        Cobertura del suelo: ESA WorldCover (CC BY 4.0) &middot;
+        Focos de calor: NASA FIRMS (VIIRS) &middot;
         Mapa base: <a href="https://openfreemap.org">OpenFreeMap</a>
       </p>
-      <p>Código bajo Apache-2.0 &middot; Datos del núcleo bajo CC BY 4.0</p>
+      <!--
+        Y DECÍA CC BY 4.0 SOBRE DATOS ODbL.
+
+        Medido con `resolve_bucket` sobre los diecinueve manifiestos: los
+        diecinueve dan `odbl`. La ODbL §4.4 exige que el derivado se publique
+        bajo ODbL, así que la línea anterior no era una imprecisión, era la
+        licencia equivocada.
+      -->
+      <p>
+        Código bajo Apache-2.0 &middot;
+        Datos derivados bajo
+        <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL 1.0</a>
+      </p>
       <p>
         <a class="pie-marca" href="https://geoai-latam.inspow.tech/" rel="noopener">
           <img class="globo" src="assets/geoai-latam.png" alt="" width="18" height="18" decoding="async" />

@@ -1,0 +1,28 @@
+CENTINELA — exposicion sismica abierta
+
+Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).
+
+Licencia del derivado: ODbL-1.0 (cubo `odbl`)
+
+Fuentes que hay que citar:
+
+  - USGS Earthquake Hazards Program — public-domain-usgov
+    https://earthquake.usgs.gov/
+  - JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A) — EC-reuse-attribution
+    https://ghsl.jrc.ec.europa.eu/
+  - WorldPop, University of Southampton — CC-BY-4.0
+    https://www.worldpop.org/
+  - Overture Maps Foundation — ODbL-1.0
+    https://overturemaps.org/
+  - © OpenStreetMap contributors — ODbL-1.0
+    https://www.openstreetmap.org/copyright
+  - OCHA — Common Operational Datasets (COD-AB), vía HDX — CC-BY-IGO
+    https://data.humdata.org/
+  - Humanitarian OpenStreetMap Team (HOT), vía HDX — ODbL-1.0
+    https://www.hotosm.org/
+  - ESA WorldCover 2021 v200 (Zanaga et al.) — CC-BY-4.0
+    https://esa-worldcover.org/
+
+Manifiesto de exposicion: https://github.com/sforero77/CENTINELA/blob/main/data/manifests/HND.yaml
+
+El codigo de CENTINELA es software libre bajo Apache-2.0.

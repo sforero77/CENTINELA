@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from pipelines.p2_impact.pipeline import licencia_del_reporte
 from pipelines.p3_report.model import (
     Descargas,
     Evento,
@@ -35,6 +36,7 @@ def reporte() -> Report:
         top_municipios=(MunicipioTop("66001", "Pereira", 7.5, 500_000),),
         incertidumbre=Incertidumbre(pop_discrepancia_pct=3.2),
         descargas=Descargas(csv_adm2="adm2.csv"),
+        licencia=licencia_del_reporte("col-v0.5"),
     )
 
 
@@ -78,4 +80,10 @@ def reporte_completo() -> Report:
         top_municipios=(MunicipioTop("EC1317", "Pedernales", 8.0, 65_950),),
         incertidumbre=Incertidumbre(pop_discrepancia_pct=3.2),
         descargas=Descargas(csv_adm2="adm2.csv"),
+        # LA LICENCIA, CALCULADA CON LA MISMA FABRICA QUE EN PRODUCCION.
+        #
+        # Escribirla a mano aqui seria repetir el error que estas fixtures
+        # acaban de arreglar dos veces: un doble se separa del original en
+        # cuanto el original crece.
+        licencia=licencia_del_reporte("ecu-v0.1"),
     )

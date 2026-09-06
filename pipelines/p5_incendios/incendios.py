@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Final
 
+from ..common.atribucion import INCENDIOS, bloque_de_licencia
 from ..common.logging import get_logger
 from ..common.paths import SITE_DIR
 from ..common.state import utcnow_iso
@@ -163,6 +164,19 @@ def _rejilla_de_viento(
         "nota": NOTA_VIENTO,
         "puntos": puntos,
     }
+
+
+#: Fuentes cuyo dato acaba dentro de `site/incendios.json`.
+#:
+#: `firms` no sale de ningun manifest —P5 no construye activo— y las otras tres
+#: llegan por el JOIN contra `exposure_h3`: edificaciones y vias de Overture,
+#: salud y educacion de HOT, y los porcentajes de suelo de ESA WorldCover.
+FUENTES_DE_INCENDIOS: tuple[str, ...] = (
+    "firms",
+    "overture_buildings",
+    "hotosm_health",
+    "worldcover-esa-2021",
+)
 
 
 def _reparto_del_suelo(celdas: list[CeldaConFuego]) -> dict[str, Any]:
@@ -327,6 +341,19 @@ def build_incendios(
         "generado_utc": utcnow_iso(),
         "ventana_horas": ventana_horas,
         "nota": NOTA,
+        # LA LICENCIA VIAJA CON EL JSON, Y NO VIAJABA.
+        #
+        # Este fichero cruza las detecciones de FIRMS contra `exposure_h3` y
+        # arrastra `bld`, `salud`, `edu` y `vias_km` a cada celda publicada: es
+        # un derivado ODbL mas, servido como JSON abierto en la raiz del sitio.
+        # Sus claves raiz eran [schema, generado_utc, ventana_horas, nota,
+        # suelo, totales, celdas, viento]: ninguna licencia, ninguna atribucion.
+        #
+        # Y la fuente primaria —NASA FIRMS— no aparecia en ningun manifest, asi
+        # que la regla de los tres cubos no la habia evaluado nunca. Ahora la
+        # declara `common/atribucion.py`, que es donde vive el credito de lo que
+        # no construye activo.
+        "licencia": bloque_de_licencia(FUENTES_DE_INCENDIOS, superficie=INCENDIOS, evento=False),
         "suelo": _reparto_del_suelo(celdas),
         "totales": {
             "celdas": len(celdas),

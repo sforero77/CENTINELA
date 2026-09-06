@@ -163,6 +163,69 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/COL.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Departamento Administrativo Nacional de Estadística - DANE: www.dane.gov.co",
+        "licencia": "CC-BY-4.0",
+        "url": "https://geoportal.dane.gov.co/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "healthsites.io, vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://healthsites.io/"
+      },
+      {
+        "titulo": "OurAirports",
+        "licencia": "public-domain",
+        "url": "https://ourairports.com/data/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
   "disclaimers": [
     "Exposición estimada, no daño observado.",
     "Este sistema no es una alerta temprana ni una recomendación de evacuación.",

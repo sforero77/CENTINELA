@@ -10,6 +10,7 @@ from jsonschema import Draft202012Validator
 
 from pipelines.common.constants import DISCLAIMERS
 from pipelines.common.paths import SCHEMAS_DIR
+from pipelines.p2_impact.pipeline import licencia_del_reporte
 from pipelines.p3_report.markdown import render_markdown
 from pipelines.p3_report.model import (
     Descargas,
@@ -58,6 +59,10 @@ def reporte() -> Report:
             notas=("Cobertura de edificaciones incompleta en zona rural dispersa.",),
         ),
         descargas=Descargas(geoparquet="https://example.org/e.parquet", csv_adm2="adm2.csv"),
+        # El bloque de licencia es obligatorio en el esquema desde que la ODbL
+        # dejo de vivir solo en una pagina del repositorio. Se calcula con la
+        # fabrica de produccion: un doble a mano se separa del original.
+        licencia=licencia_del_reporte("col-v0.6"),
     )
 
 

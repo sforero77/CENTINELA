@@ -74,7 +74,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,4 %**.
 
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v9**
-- Manifiesto de exposición: `ecu-v0.2`
+- Manifiesto de exposición: [`ecu-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ECU.yaml)
 - Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:51Z
 
 ## Advertencias
