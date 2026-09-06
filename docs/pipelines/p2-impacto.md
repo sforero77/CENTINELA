@@ -3,7 +3,7 @@
 **Qué hace:** cruza la intensidad sísmica publicada por USGS con el activo de
 exposición del país, y produce el modelo del reporte.
 **Cadencia:** por evento.
-**Comando:** `uv run centinela impact <usgs_id>`
+**Comando:** `uv run centinela impact <usgs_id> --detail-url <url> --exposure <parquet>`
 **Código:** `pipelines/p2_impact/` (products, shakemap, exposure_join,
 ground_failure, pipeline, run)
 

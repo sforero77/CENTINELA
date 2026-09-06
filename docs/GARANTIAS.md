@@ -92,8 +92,19 @@ Tres cosas que ese ensayo dejó demostradas de paso:
   parquet, esa declaración sale del activo consumido y no de un argumento del
   CLI, así que ya no puede desviarse por copia.
 
-Lo que sigue sin ejercitarse es la **cadena completa desde el feed**: que el
-vigía detecte un sismo nuevo y despache P2 solo. Eso necesita un M≥5,5 real.
+La **cadena completa desde el feed** se ejercitó el 2-sep-2026, dos veces:
+`us7000tdmp` y `us7000tdms` son las dos únicas entradas de `reports/index.json`
+sin `backtest`. El vigía los detectó y despachó P2 solo, con 21,9 y 24,5 minutos
+de detección — las cifras están cincuenta líneas más abajo, en esta misma página.
+
+> Aquí decía que esa cadena «sigue sin ejercitarse», y en el medio publicaba los
+> tiempos de los dos sismos que la ejercitaron. La sección de latencia se
+> actualizó con datos del 2 y el 3-sep y esta frase se quedó. Una latencia de
+> detección medida desde el feed **es** la cadena desde el feed ejercitada.
+
+Lo que sigue sin ejercitarse es un evento en vivo que **alcance población**: los
+dos que hubo se quedaron mar adentro y sus tablas por intensidad salieron en
+ceros. Eso necesita un M≥5,5 sobre tierra habitada, y no se puede ensayar.
 
 ### Una cifra publicada tiene un reporte detrás
 
@@ -198,8 +209,11 @@ forma más sutil, la detección depende de la misma cola que se rompió.**
 
 ## Antes de llamarlo producción
 
-1. ~~Ejercitar P2 de punta a punta.~~ **Hecho el 27-ago.** Queda el tramo que
-   no se puede ensayar: que el vigía despache solo ante un sismo nuevo.
+1. ~~Ejercitar P2 de punta a punta.~~ **Hecho el 27-ago.**
+   ~~Queda el tramo que no se puede ensayar: que el vigía despache solo ante un
+   sismo nuevo.~~ **Hecho el 2-sep**, dos veces: `us7000tdmp` y `us7000tdms`.
+   Queda el caso que sigue sin poder ensayarse: un evento en vivo que alcance
+   población.
 2. **Sacar `frescura` de la cola de GitHub**: encadenarla al vigía, o al
    monitor externo. Un vigilante que depende de lo que vigila no es un
    vigilante.

@@ -17,6 +17,7 @@ Asi que la tabla deja de sostenerse en disciplina. Estas pruebas leen el
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -423,3 +424,108 @@ def test_los_documentos_dicen_esa_cuenta(documento: str, frase: str) -> None:
     """La prosa y el disco, atados."""
     texto = (RAIZ / documento).read_text(encoding="utf-8")
     assert frase in texto, f"{documento} ya no dice «{frase}»"
+
+
+# --- La misma familia, en los otros documentos que copian cifras ------------
+
+
+#: Documentos que publican el recuento de reportes, y como lo escriben.
+#:
+#: `PENDIENTES.md` llevaba cinco cifras de estado desfasadas a la vez y no habia
+#: cambiado ninguna en seis ediciones posteriores; su encabezado decia «Estado al
+#: 28 de agosto» sobre un fichero que se seguia editando. `docs/CLEAN_CODE.md`
+#: citaba 601 pruebas. El README decia 23 reportes en 15 paises treinta lineas
+#: por encima de donde ya decia «veintisiete».
+#:
+#: Es exactamente lo que este fichero existe para vigilar, aplicado a los tres
+#: documentos que se habian quedado fuera.
+DOCUMENTOS_CON_RECUENTO: tuple[str, ...] = (
+    "README.md",
+    "docs/PARA_INSTITUCIONES.md",
+    "PENDIENTES.md",
+)
+
+
+def _indice_publicado() -> list[dict[str, object]]:
+    import json
+
+    entradas: list[dict[str, object]] = json.loads(
+        (RAIZ / "reports" / "index.json").read_text(encoding="utf-8")
+    )
+    return entradas
+
+
+@pytest.mark.parametrize("nombre", DOCUMENTOS_CON_RECUENTO)
+def test_ningun_documento_publica_un_recuento_de_reportes_desfasado(nombre: str) -> None:
+    """El numero sale de `reports/index.json`, que es lo que el visor lee.
+
+    No se exige una frase concreta —cada documento la escribe a su manera— sino
+    que **ninguna** cifra de reportes que aparezca sea una de las viejas. Pedir
+    la cadena exacta convertiria esto en un cerrojo tipografico; pedir que no
+    mienta es lo que hace falta.
+    """
+    entradas = _indice_publicado()
+    total = len(entradas)
+    paises = len({e.get("iso3") for e in entradas if e.get("iso3")})
+    backtests = sum(1 for e in entradas if e.get("backtest"))
+
+    texto = (RAIZ / nombre).read_text(encoding="utf-8")
+
+    # Las formas en que estos documentos escriben el recuento, con el numero
+    # dentro. Si el documento las usa, el numero tiene que ser el de hoy.
+    for patron, esperado, que in (
+        (r"Reportes (?:publicados|emitidos de punta a punta) \| \*\*(\d+)\*\*", total, "reportes"),
+        (r"\*\*(\d+) sismos de \d+ países\*\*", backtests, "backtests"),
+        (r"\*\*\d+ reportes en (\d+) países\*\*", paises, "países"),
+    ):
+        for hallado in re.finditer(patron, texto):
+            assert int(hallado.group(1)) == esperado, (
+                f"{nombre} dice {hallado.group(1)} {que} y en reports/index.json hay "
+                f"{esperado}. La cifra se copia a mano y se desfasa sola; es la "
+                f"tercera vez que pasa en este repositorio."
+            )
+
+    # Y los paises: se cuentan igual que en la tabla, con el numero al lado.
+    for hallado in re.finditer(r"en (?:\*\*)?(\d+)(?:\*\*)? países", texto):
+        assert int(hallado.group(1)) == paises, (
+            f"{nombre} dice {hallado.group(1)} países con reporte y hay {paises}"
+        )
+
+
+def test_el_readme_nombra_exactamente_los_paises_sin_reporte() -> None:
+    """Titulaba «Los cuatro países sin reporte» con Bolivia ya publicada.
+
+    El commit que publico el reporte de Bolivia toco este README dos secciones
+    mas arriba y dejo esta intacta. La lista se copia a mano en la portada, que
+    es la definicion de lo que este fichero vigila.
+    """
+    con_reporte = {e.get("iso3") for e in _indice_publicado() if e.get("iso3")}
+    todos = {p.stem for p in (RAIZ / "data" / "manifests").glob("*.yaml")}
+    sin_reporte = sorted(todos - con_reporte)
+
+    nombres = {
+        "BRA": "Brasil",
+        "PRY": "Paraguay",
+        "URY": "Uruguay",
+        "BOL": "Bolivia",
+        "CUB": "Cuba",
+        "ARG": "Argentina",
+    }
+    cardinales = {1: "El país", 2: "Los dos países", 3: "Los tres países", 4: "Los cuatro países"}
+
+    readme = (RAIZ / "README.md").read_text(encoding="utf-8")
+    titulo = f"### {cardinales[len(sin_reporte)]} sin reporte"
+    assert titulo in readme, (
+        f"hay {len(sin_reporte)} países sin reporte ({sin_reporte}) y el README no "
+        f"titula «{titulo}»"
+    )
+
+    # Y que la enumeración no nombre a ninguno que sí tiene reporte.
+    seccion = readme.split(titulo, 1)[1].split("\n## ", 1)[0]
+    primer_parrafo = seccion.strip().split("\n\n", 1)[0]
+    for iso3 in sorted(con_reporte):
+        nombre = nombres.get(iso3)
+        if nombre:
+            assert nombre not in primer_parrafo, (
+                f"{nombre} tiene reporte publicado y el README lo enumera entre los que no"
+            )

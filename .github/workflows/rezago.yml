@@ -56,7 +56,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'sforero77/CENTINELA'
     steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Es la mitigacion barata del hueco que si queda abierto: **ninguna accion
+      # de este repositorio esta fijada por SHA**, todas van por etiqueta movil,
+      # y una etiqueta de git se puede reapuntar a cualquier commit.
+      # `astral-sh/setup-uv@v5` ademas no es de GitHub. El precedente concreto es
+      # tj-actions/changed-files (CVE-2025-30066, marzo de 2025). Fijar por SHA
+      # exige resolver catorce digests contra la red y queda en PENDIENTES.md.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v5
         with:
@@ -99,8 +114,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACTIVO: ${{ steps.comprobar.outputs.ids_exposicion }}
           PRODUCTOS: ${{ steps.comprobar.outputs.ids_productos }}
+          # POR ENV, COMO LOS OTROS TRES DE ESTE MISMO PASO.
+          #
+          # Hoy `reemitir` es un `choice` de tres opciones y GitHub las valida,
+          # asi que el riesgo real es bajo. Pero `${{ inputs.x }}` dentro de un
+          # `run:` se sustituye antes de que bash vea el script —el valor deja de
+          # ser argumento y pasa a ser codigo— y el dia que alguien cambie el
+          # tipo a `string` para admitir una lista de ids, ese cambio no tendria
+          # por que acordarse de esta linea. La condicion `if:` de arriba si
+          # puede interpolarlo: ahi no hay shell.
+          REEMITIR: ${{ inputs.reemitir }}
         run: |
-          if [ "${{ inputs.reemitir }}" = "todos" ]; then
+          if [ "$REEMITIR" = "todos" ]; then
             OBJETIVO="$ACTIVO $PRODUCTOS"
           else
             OBJETIVO="$ACTIVO"

@@ -4800,6 +4800,30 @@ async function cargarIncendios() {
     }
     return;
   }
+  // SIN h3 NO SON CERO FOCOS: SON FOCOS QUE NO SE PUDIERON AGRUPAR.
+  //
+  // `agruparFocos` devuelve `[]` cuando la libreria no cargo —usa `gridDisk`
+  // para unir celdas vecinas— y unas lineas mas abajo eso se anotaba como
+  // `anotarPintado("focos", 0)`, que en el registro publico de este visor
+  // significa "se miro y no habia nada". El fichero habia llegado con sus
+  // celdas dentro.
+  //
+  // Es exactamente el mismo fallo que la malla de celdas ya tiene arreglado
+  // treinta lineas mas arriba: una averia pintada con el texto del cero
+  // legitimo. Y aqui afirma algo sobre el mundo —"ningun foco activo"— que es
+  // lo unico que este sistema no puede permitirse decir sin haberlo mirado.
+  if (typeof h3 === "undefined") {
+    anotarFallo("focos", "h3-js no cargo: los focos no se pudieron agrupar");
+    if (avisoFocos) {
+      avisoFocos.hidden = false;
+      avisoFocos.textContent =
+        "No se pudo dibujar el fuego activo: la librería que convierte los " +
+        "índices H3 en hexágonos no cargó. Hay detecciones en la ventana " +
+        "publicada; lo que falta es el dibujo, no el dato.";
+    }
+    return;
+  }
+
   if (avisoFocos) avisoFocos.hidden = true;
 
   dibujarIncendios(datos);
