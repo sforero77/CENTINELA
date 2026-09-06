@@ -87,6 +87,9 @@ jobs:
       # con GITHUB_TOKEN no dispara `site.yml`, asi que la cobertura recalculada
       # se quedaria commiteada y sin llegar a la pagina.
       actions: write
+      # Para la alarma por pais: una matriz de dieciocho en rojo no avisa a
+      # nadie por si sola.
+      issues: write
     # Un build de un pais mediano ronda los 45 min y con dos horas sobraba.
     # **Brasil no cabe en dos horas.** Medido el 25-ago-2026: 36 teselas de
     # GHS-POP y otras 29 de superficie construida son 419 MB, y su serie age-sex
@@ -168,6 +171,10 @@ jobs:
             set -e
             if [ "$CODIGO" -eq 0 ]; then
               exit 0
+            fi
+            if [ "$CODIGO" -eq 5 ]; then
+              echo "::error::$ISO3: el release de Overture que fija su manifest ya no existe. Actualizalo en data/manifests/$ISO3.yaml y relanza este workflow."
+              exit 5
             fi
             if [ "$CODIGO" -ne 4 ]; then
               echo "::error::$ISO3 fallo con codigo $CODIGO. No es un origen caido: no se reintenta."
@@ -314,3 +321,71 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: gh workflow run site.yml
+
+      # UNA MATRIZ DE DIECIOCHO PAISES EN ROJO NO AVISABA A NADIE.
+      #
+      # Con `fail-fast: false` —que es lo correcto: un pais roto no puede
+      # impedir que se reconstruyan los demas— el resultado es una lista de
+      # corridas en rojo que nadie mira, mientras `docs/OPERACION.md` le promete
+      # al operador que «exposure_quarterly.yml lo reconstruye solo».
+      #
+      # Un pais que lleva tres meses sin reconstruirse es un pais que ya no se
+      # puede reconstruir: su release de Overture caduco.
+      - name: Abrir incidencia si este pais no se pudo reconstruir
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: "No se pudo reconstruir el activo de ${{ matrix.iso3 }}"
+        run: |
+          gh label create activo --color 1D76DB --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # Una por pais, y se comenta en vez de duplicar: el trimestral vuelve
+          # a fallar en el siguiente turno si nadie lo arreglo.
+          ABIERTA=$(gh issue list --state open --limit 200 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            gh issue comment "$ABIERTA" --body "Sigue sin reconstruirse.
+
+          Corrida: $CORRIDA"
+            exit 0
+          fi
+
+          CUERPO=$(cat <<'TXT'
+          El activo de exposicion de este pais no se pudo reconstruir.
+
+          **Lo primero que hay que mirar es el release de Overture.** Es el unico
+          insumo con caducidad: Overture publica release mensual y conserva dos,
+          asi que el que fija el manifest deja de existir en unos dos meses. El
+          chequeo previo lo detecta en segundos y sale con codigo 5.
+
+          Reparacion: actualizar el release en `data/manifests/<ISO3>.yaml` —las
+          tres fuentes `s3://` van al mismo— y relanzar este workflow con el ISO3
+          del pais.
+
+          Mientras tanto **el activo publicado sigue sirviendo**: los reportes se
+          calculan contra el Release, no contra las fuentes. Lo que se pierde es
+          la capacidad de reconstruirlo.
+          TXT
+          )
+          CUERPO="$CUERPO
+
+          Corrida: $CORRIDA"
+
+          gh issue create --title "$TITULO" --label "activo,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"
+
+      # Y la otra mitad de la alarma: decir que ya paso.
+      - name: Cerrar la incidencia si el pais volvio
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: "No se pudo reconstruir el activo de ${{ matrix.iso3 }}"
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 200 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          [ -n "$ABIERTA" ] || exit 0
+          gh issue close "$ABIERTA" --comment "Reconstruido. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

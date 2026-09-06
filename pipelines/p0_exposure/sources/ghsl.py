@@ -28,6 +28,7 @@ servidor antes de descargar.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Final
 
@@ -37,7 +38,59 @@ from ...common.geo import BBox, ensure_bundled_proj
 #: globo — el R2025A que aparece en el FTP del JRC es solo del Artico.
 RELEASE: Final[str] = "R2023A"
 #: Epoca usada por el sistema. El producto publica 1975-2030 cada 5 anos.
+#:
+#: LAS DOS CONSTANTES SON EL RESPALDO, NO LA FUENTE. Quien construye un pais
+#: saca release y epoca del `vintage` de su manifest con `desde_vintage`; estas
+#: quedan para las llamadas sueltas y para documentar cual es el par vigente.
 EPOCH: Final[int] = 2025
+
+
+#: Forma del `vintage` con que los manifests fijan GHSL: ``R2023A-E2025-54009-100m``.
+_VINTAGE = re.compile(r"^(?P<release>R\d{4}[A-Z])-E(?P<epoch>\d{4})-(?P<crs>\d+)-(?P<res>\d+)m$")
+
+#: CRS y resolucion que asume la retícula de este modulo. `GRID_X0`, `GRID_Y0` y
+#: `TILE_SIZE_M` estan calculados para Mollweide a 100 m; otro par daria teselas
+#: que no existen, y el 404 se leeria como "solo oceano".
+CRS_ESPERADO: Final[str] = "54009"
+RESOLUCION_ESPERADA_M: Final[str] = "100"
+
+
+def desde_vintage(vintage: str) -> tuple[str, int]:
+    """Release y epoca que fija el manifest, no las constantes de este modulo.
+
+    EL MANIFEST NO MANDABA, Y DECIA QUE SI.
+
+    `download_ghsl` llamaba a `tiles_for_bbox(bbox, slug=slug)` con los valores
+    por defecto, o sea `RELEASE` y `EPOCH` de aqui. Del manifest solo se usaba
+    la url, y solo para adivinar de que producto se trataba. Sin embargo los
+    diecinueve manifests declaran `url` y `vintage` para estas capas, el lint
+    prohibe vintages flotantes **como si fijaran algo**, y `resumen_de_insumos`
+    copia ese vintage a `medicion.json`, que se publica en el Release como la
+    procedencia del activo.
+
+    O sea que la procedencia publicada no tenia ninguna relacion causal con los
+    bytes descargados: cambiar `vintage: R2023A-E2025-...` por `R2025A-E2030-...`
+    en los diecinueve manifests habria bajado exactamente lo mismo y publicado
+    otra cosa.
+
+    Raises:
+        ValueError: si el vintage no tiene la forma esperada, o si declara un
+            CRS o una resolucion que la retícula de este modulo no sabe teselar.
+    """
+    m = _VINTAGE.match(vintage.strip())
+    if not m:
+        raise ValueError(
+            f"vintage de GHSL irreconocible: {vintage!r}. Se espera la forma "
+            f"`R2023A-E2025-54009-100m` (release, epoca, CRS y resolucion)."
+        )
+    if m["crs"] != CRS_ESPERADO or m["res"] != RESOLUCION_ESPERADA_M:
+        raise ValueError(
+            f"el vintage {vintage!r} declara CRS {m['crs']} a {m['res']} m, y la "
+            f"retícula de este modulo esta calculada para {CRS_ESPERADO} a "
+            f"{RESOLUCION_ESPERADA_M} m. Las teselas que se pedirian no existen, "
+            f"y un 404 aqui se lee como «solo oceano»: el pais saldria vacio."
+        )
+    return m["release"], int(m["epoch"])
 
 
 @dataclass(frozen=True, slots=True)

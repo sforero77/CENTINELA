@@ -33,7 +33,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from ..common.geo import BBox
-from ..common.hdx import dataset_license, map_license, resolve_attempts
+from ..common.hdx import dataset_license, map_license, primera_url, resolve_attempts
 from ..common.http import PARTIAL_SUFFIX, Fetcher, HttpFetcher, RecursoAusenteError
 from ..common.licensing import LicenseViolationError
 from ..common.logging import get_logger
@@ -179,13 +179,24 @@ def write_atomic(path: Path, contenido: bytes) -> Path:
 
 
 def download_ghsl(
-    destino: Path, bbox: BBox, *, fetcher: HttpFetcher, slug: str = ghsl.POP.slug
+    destino: Path,
+    bbox: BBox,
+    *,
+    fetcher: HttpFetcher,
+    slug: str = ghsl.POP.slug,
+    vintage: str = "",
 ) -> list[Path]:
     """Descarga y descomprime las teselas de un producto GHSL sobre la caja.
 
     ``slug`` elige el producto: ``POP`` (poblacion) o ``BUILT_S`` (superficie
     construida). Comparten retícula, asi que el mismo calculo de teselas sirve
     para los dos.
+
+    ``vintage`` es el del manifest, y **de ahi salen el release y la epoca**.
+    Antes no se pasaba: se usaban las constantes de `ghsl`, y el vintage
+    declarado viajaba a `medicion.json` como procedencia del activo sin haber
+    tenido nada que ver con los bytes. Vacio conserva las constantes, para la
+    llamada suelta.
 
     Las teselas que solo cubren oceano no existen en el servidor: un 404 aqui
     no es un fallo, es la respuesta correcta.
@@ -197,8 +208,9 @@ def download_ghsl(
     `RecursoAusenteError` significa "no esta"; lo demas sube.
     """
     destino.mkdir(parents=True, exist_ok=True)
+    release, epoch = ghsl.desde_vintage(vintage) if vintage else (ghsl.RELEASE, ghsl.EPOCH)
     rutas: list[Path] = []
-    for tesela in ghsl.tiles_for_bbox(bbox, slug=slug):
+    for tesela in ghsl.tiles_for_bbox(bbox, release=release, epoch=epoch, slug=slug):
         tif = destino / f"{tesela.name}.tif"
         if tif.exists():
             rutas.append(tif)
@@ -396,6 +408,26 @@ def download_hdx(source: Source, destino: Path, *, fetcher: HttpFetcher) -> list
         un ZIP, como el COD-AB de Venezuela, que trae los cuatro niveles
         administrativos mas lineas y puntos en un solo descargable.
     """
+    # LA LICENCIA SE COMPRUEBA ANTES DEL ATAJO POR CACHE, Y ANTES NO.
+    #
+    # El retorno anticipado estaba **encima** de esta llamada, asi que la unica
+    # verificacion de licencia viva del sistema solo corria la primera vez que
+    # el fichero no estaba en disco. En la ruta con cache el archivo entraba al
+    # activo sin consultar nada — justo lo que la docstring de
+    # `verificar_licencia_declarada` dice que no se puede hacer: «se consulta en
+    # cada build y se contrasta con lo que dice el manifest».
+    #
+    # Y la ruta con cache es la normal, no la rara: cada reintento de un build
+    # pasa por ella. Cubre las dos o tres fuentes HDX de cada pais, incluida la
+    # geometria Adm2 del COD-AB.
+    #
+    # Cuesta un `package_show`, que la ruta sin cache pedia igual unas lineas mas
+    # abajo, y sin red el build no puede seguir de todas formas: Overture y
+    # WorldCover se leen en remoto. Falla, no avisa — es lo que dice su propia
+    # docstring y es lo correcto: entrar al activo sabiendo que no se comprobo
+    # la licencia es exactamente lo que no se puede hacer.
+    verificar_licencia_declarada(source, fetcher=fetcher)
+
     if ya_estan := _hdx_en_disco(source, destino):
         _log.info(
             "recurso de HDX ya en disco, no se vuelve a pedir",
@@ -404,7 +436,6 @@ def download_hdx(source: Source, destino: Path, *, fetcher: HttpFetcher) -> list
         return ya_estan
 
     destino.mkdir(parents=True, exist_ok=True)
-    verificar_licencia_declarada(source, fetcher=fetcher)
     intentos = resolve_attempts(fetcher, source.hdx_dataset, resource=source.hdx_resource)
 
     fallos: list[str] = []
@@ -663,7 +694,9 @@ def _descargar_fuente(
     if (slug := _producto_ghsl(source.url)) is not None:
         return [
             _registrar(source, tif)
-            for tif in download_ghsl(carpeta, bbox, fetcher=fetcher, slug=slug)
+            for tif in download_ghsl(
+                carpeta, bbox, fetcher=fetcher, slug=slug, vintage=source.vintage
+            )
         ]
 
     if source.url.endswith(".zip"):
@@ -698,6 +731,75 @@ class OrigenCaidoError(RuntimeError):
     """Un servidor de origen no contesta, y el build no ha empezado."""
 
 
+class ReleaseCaducadoError(RuntimeError):
+    """El release de Overture que fija el manifest ya no esta publicado."""
+
+
+#: Temas de Overture que el build consume, con su subtipo.
+TEMAS_DE_OVERTURE: tuple[tuple[str, str, str], ...] = (
+    ("buildings", "buildings", "building"),
+    ("roads", "transportation", "segment"),
+    ("divisions", "divisions", "division_area"),
+)
+
+
+def comprobar_release_de_overture(manifest: Manifest, *, fetcher: Fetcher) -> None:
+    """El release fijado tiene que seguir publicado, y se pregunta antes de bajar.
+
+    LA CADENCIA DEL TRIMESTRAL ES MAS LARGA QUE LA VIDA DEL INSUMO.
+
+    Overture publica release mensual y **conserva dos** (~2 meses); el cron de
+    `exposure_quarterly.yml` corre cada tres. El propio encabezado del workflow
+    lo dice: «pasado ese plazo, un pais que no se haya reconstruido no se puede
+    reconstruir — la url del release fijado deja de existir».
+
+    Y ninguna de las dos guardias previas podia verlo. `lint-manifests` es
+    totalmente offline: comprueba ids duplicados, cubos de licencia, vintages
+    flotantes y forma de la url, y nunca pregunta si la url existe.
+    `comprobar_origenes` **salta a proposito** las fuentes que se leen en
+    remoto, que es exactamente como estan declaradas las tres de Overture.
+
+    Asi que el fallo llegaba despues de descargar los rasters —hasta 9,1 GB en
+    el caso de Brasil— y de agregarlos: horas de runner para morir en la unica
+    capa que no se podia obtener.
+
+    Cuesta un `collection.json` por tema, unos 155 KB, y falla en segundos.
+
+    Raises:
+        ReleaseCaducadoError: si el catalogo no responde por alguno de los
+            releases fijados. **No es un origen caido y no se reintenta**:
+            reintentar una url que ya no existe solo retrasa el diagnostico.
+    """
+    from .sources.overture import collection_url
+
+    caducados: list[str] = []
+    for capa, tema, subtipo in TEMAS_DE_OVERTURE:
+        fuentes = [f for f in manifest.by_layer(capa) if f.url.startswith("s3://")]
+        if not fuentes:
+            continue
+        release = fuentes[0].vintage
+        try:
+            fetcher.get_json(collection_url(release, tema, subtipo))
+        except Exception as exc:  # cualquier fallo aqui significa lo mismo
+            caducados.append(f"{tema}@{release} ({str(exc).split(' tras ')[0]})")
+
+    if caducados:
+        raise ReleaseCaducadoError(
+            f"El catalogo de Overture no sirve los releases que fija "
+            f"{manifest.iso3}: {'; '.join(caducados)}.\n"
+            f"  No se ha descargado nada todavia.\n"
+            f"  Overture conserva SOLO los dos releases mas recientes, asi que la\n"
+            f"  causa mas probable es que el fijado haya caducado. Reintentar no\n"
+            f"  sirve: hay que actualizar el release en data/manifests/"
+            f"{manifest.iso3}.yaml\n"
+            f"  (las tres fuentes `s3://` van al mismo) y volver a construir."
+        )
+    _log.info(
+        "release de Overture vigente",
+        extra={"context": {"iso3": manifest.iso3, "temas": len(TEMAS_DE_OVERTURE)}},
+    )
+
+
 def comprobar_origenes(manifest: Manifest, *, fetcher: HttpFetcher) -> None:
     """Pregunta a cada origen distinto si esta en pie, antes de bajar nada.
 
@@ -710,14 +812,34 @@ def comprobar_origenes(manifest: Manifest, *, fetcher: HttpFetcher) -> None:
     dos fuentes de GHSL viven en el mismo, y preguntar dos veces solo alarga el
     chequeo. Se saltan las que se leen en remoto: su disponibilidad la comprueba
     DuckDB cuando toca, y un HEAD contra un prefijo ``s3://`` no significa nada.
+
+    **EL HOST QUE SE PREGUNTA ES EL QUE SIRVE LOS BYTES.**
+
+    Y antes no lo era. Para las fuentes de HDX, `source.url` es —por contrato
+    explicito del manifest— la pagina estable del catalogo,
+    ``https://data.humdata.org/dataset/...``, y los bytes salen de otro sitio:
+    ``production-raw-data-api.s3.amazonaws.com``,
+    ``s3.dualstack.us-east-1.amazonaws.com`` o ``export.hotosm.org``. Ninguno de
+    los tres se comprobaba nunca, asi que el chequeo daba el visto bueno con el
+    origen real caido — justo la forma de fallar que este chequeo existe para
+    evitar. Ahora se resuelve la url real (un `package_show` que la descarga
+    pedira igual, y que queda cacheado para la corrida) y se pregunta por ella.
+
+    Si la resolucion falla se cae a la pagina del catalogo: un chequeo previo no
+    es sitio para detener un build, y el error de verdad saldra al descargar.
     """
     representante: dict[str, str] = {}
     for source in manifest.sources:
         if source.se_lee_en_remoto:
             continue
-        host = urlparse(source.url).netloc
+        url = source.url
+        if source.hdx_dataset:
+            url = (
+                primera_url(fetcher, source.hdx_dataset, resource=source.hdx_resource) or source.url
+            )
+        host = urlparse(url).netloc
         if host:
-            representante.setdefault(host, source.url)
+            representante.setdefault(host, url)
 
     caidos = sorted(host for host, url in representante.items() if not fetcher.responde(url))
     if caidos:
@@ -758,6 +880,7 @@ def download_manifest(
         )
 
     comprobar_origenes(manifest, fetcher=cliente)
+    comprobar_release_de_overture(manifest, fetcher=cliente)
 
     inventario: list[Descargado] = []
     for source in manifest.sources:

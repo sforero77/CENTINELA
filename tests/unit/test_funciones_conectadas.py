@@ -66,6 +66,13 @@ SIN_LLAMADOR_JUSTIFICADO: dict[str, str] = {
         "Contrato de la brigada de imagen (P4), que es Fase 2. El modulo entero "
         "es contrato todavia sin pipeline detras."
     ),
+    "common.hdx.limpiar_cache_hdx": (
+        "Vacia el cache de `package_show` de la corrida. En produccion no hace "
+        "falta —un build es un proceso y un dataset no cambia de licencia a "
+        "mitad—, pero la suite son dos mil pruebas en el mismo proceso y sin "
+        "esto la primera que resuelve un dataset decide lo que ven las demas. "
+        "Lo llama la fixture autouse `_cache_de_hdx_limpio` de tests/conftest.py."
+    ),
     "p0_exposure.sources.ghsl.global_url": (
         "Mosaico global de GHSL, 5,25 GB. Su propia docstring dice que hay que "
         "preferir `tiles_for_bbox`, que baja 93 MB para Colombia. Se conserva "

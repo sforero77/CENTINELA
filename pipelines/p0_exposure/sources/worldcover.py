@@ -26,6 +26,7 @@ longitud multiplos de tres. Verificado contra el bucket: ``N03W075`` responde
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Final
 
@@ -34,7 +35,41 @@ from ...common.geo import BBox
 #: Version del producto. ``v200`` es la epoca 2021; ``v100`` fue la de 2020.
 VERSION: Final[str] = "v200"
 #: Ano del mapa. El producto no se actualiza desde 2021.
+#:
+#: RESPALDO, NO FUENTE: el par que se usa al construir un pais sale de la url
+#: que declara su manifest, con `desde_url`.
 EPOCH: Final[int] = 2021
+
+
+#: Version y epoca dentro de la url que declara el manifest:
+#: ``https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/``.
+_DE_LA_URL = re.compile(r"/(?P<version>v\d{3})/(?P<epoch>\d{4})/")
+
+
+def desde_url(url: str) -> tuple[str, int]:
+    """Version y epoca que fija el manifest, no las constantes de este modulo.
+
+    Mismo hueco que en GHSL: `build_landcover_layer` llamaba a `tiles_for_bbox`
+    con los valores por defecto y el manifest declaraba `url` y `vintage` sin
+    que ninguno gobernara los bytes. El propio `layers.py` lo admitia — «las URL
+    son constantes fijas» — mientras `medicion.json` publicaba el vintage como
+    procedencia.
+
+    La version sale de la url y no del `vintage` porque el vintage de esta capa
+    es solo el ano (``"2021"``): la url es el unico sitio del manifest donde
+    ``v200`` esta escrito.
+
+    Raises:
+        ValueError: si la url no lleva el par version/epoca.
+    """
+    m = _DE_LA_URL.search(url)
+    if not m:
+        raise ValueError(
+            f"la url de WorldCover no declara version y epoca: {url!r}. Se espera "
+            f"un tramo `/v200/2021/`, que es de donde salen las teselas."
+        )
+    return m["version"], int(m["epoch"])
+
 
 #: Lado de la tesela en grados.
 TILE_DEG: Final[int] = 3

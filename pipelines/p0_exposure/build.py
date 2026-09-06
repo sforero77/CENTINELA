@@ -37,6 +37,9 @@ _log = get_logger(__name__)
 #: construiria robandole poblacion al vecino sin que nada lo dijera.
 CAPA_DEL_RELEASE_DE_VECINOS = "divisions"
 
+#: Capa del manifest de la que sale la url de ESA WorldCover.
+CAPA_DE_COBERTURA_DEL_SUELO = "landcover"
+
 
 @dataclass(frozen=True, slots=True)
 class BuildPlan:
@@ -902,8 +905,14 @@ def write_measurement(
     return destino
 
 
-def build_landcover_layer(con: Any, *, bbox: BBox) -> int:
+def build_landcover_layer(con: Any, *, bbox: BBox, url: str = "") -> int:
     """Cobertura del suelo de un pais, leida en remoto y agregada a H3.
+
+    ``url`` es la que declara el manifest, y de ella salen la version y la epoca
+    del producto. Antes se usaban las constantes de `worldcover` y el manifest
+    no gobernaba nada: `layers.py` lo admitia —«las URL son constantes fijas»—
+    mientras `medicion.json` publicaba el vintage como procedencia del activo.
+    Vacia conserva las constantes, para la llamada suelta.
 
     No se registra en `RASTER_LAYERS` porque no es una suma: aquello materializa
     una columna DOUBLE con `sum(valor)`, y sumar codigos de clase da un numero
@@ -917,7 +926,8 @@ def build_landcover_layer(con: Any, *, bbox: BBox) -> int:
     from .raster_categorico_h3 import aggregate_categorical_to_h3, fracciones_por_celda
     from .sources import worldcover
 
-    teselas = worldcover.tiles_for_bbox(bbox)
+    version, epoch = worldcover.desde_url(url) if url else (worldcover.VERSION, worldcover.EPOCH)
+    teselas = worldcover.tiles_for_bbox(bbox, version=version, epoch=epoch)
     if not teselas:
         _log.warning("el pais cae fuera de la cobertura de WorldCover", extra={"context": {}})
         return 0
@@ -1030,7 +1040,10 @@ def build_country(
     # runner de CI tiene ~14 GB libres. Se leen las overviews del COG por rangos
     # HTTP, asi que el pico de memoria es el mismo para Colombia que para
     # Brasil — que es la leccion que costo tres intentos de build.
-    celdas_lulc = build_landcover_layer(conexion, bbox=caja)
+    fuentes_lulc = plan.manifest.by_layer(CAPA_DE_COBERTURA_DEL_SUELO)
+    celdas_lulc = build_landcover_layer(
+        conexion, bbox=caja, url=fuentes_lulc[0].url if fuentes_lulc else ""
+    )
     _log.info(
         "cobertura del suelo agregada",
         extra={"context": {"iso3": plan.iso3, "celdas": celdas_lulc}},
