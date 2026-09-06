@@ -173,6 +173,25 @@ WHERE COALESCE(p.pop_total, 0) > 0
    OR COALESCE(h.health_count, 0) > 0
    OR COALESCE(e.edu_count, 0) > 0
    OR COALESCE(s.built_m2, 0) > 0
+   -- LA CELDA DONDE SOLO WORLDPOP VE GENTE TAMBIEN CUENTA.
+   --
+   -- El filtro miraba seis capas y esta no. Una celda con poblacion de
+   -- WorldPop y nada mas se descartaba entera, y eso sesga justo la cifra que
+   -- existe para medir el desacuerdo entre los dos modelos: la banda de
+   -- discrepancia divide por `sum(pop_alt_worldpop)`, y ese denominador salia
+   -- corto porque le faltaban precisamente las celdas donde WorldPop ve gente
+   -- y GHS-POP no. El resultado es una discrepancia mas pequenia de la real,
+   -- publicada como incertidumbre del reporte.
+   --
+   -- No es lo mismo que la cobertura del suelo, que si se queda fuera a
+   -- proposito: aquella cubre toda la tierra y convertiria el activo en
+   -- "todas las celdas terrestres". WorldPop es un raster de **poblacion**:
+   -- las celdas que aporta son las que tienen gente segun el otro modelo, que
+   -- es exactamente lo que un activo de exposicion no puede tirar.
+   --
+   -- Las bandas etarias no hacen falta en este WHERE: desde que se publican
+   -- como cuota de `pop_total`, valen cero donde el total vale cero.
+   OR COALESCE(w.pop_alt_worldpop, 0) > 0
 """
 
 #: Banderas de calidad de §6.4. Se **publican**, no se ocultan: una celda con
