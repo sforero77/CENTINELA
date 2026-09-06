@@ -182,3 +182,56 @@ def test_el_recorte_corre_antes_de_agregar() -> None:
 def test_la_ventana_nunca_devuelve_mas_de_lo_que_recibe(horas: int) -> None:
     focos = [_foco(1.0, -70.0, f"2026-09-0{d}T00:00:00Z") for d in (1, 2, 3, 4, 5)]
     assert len(en_la_ventana(focos, horas)) <= len(focos)
+
+
+# --- Y en el visor: la lista y el mapa cuentan lo mismo ---------------------
+
+
+def _app() -> str:
+    from pathlib import Path
+
+    raiz = Path(__file__).parent.parent.parent
+    texto = (raiz / "site" / "assets" / "app.js").read_text(encoding="utf-8")
+    return chr(10).join(
+        linea for linea in texto.splitlines() if not linea.lstrip().startswith("//")
+    )
+
+
+def test_el_foco_se_recorta_a_la_ventana_como_el_mapa() -> None:
+    """LA LISTA FILTRABA EL FOCO ENTERO Y EL MAPA CELDA A CELDA.
+
+    `agruparFocos` corre sobre todas las celdas —y esta bien, un incendio es una
+    componente conexa y esa topologia no depende de la ventana— pero el resumen
+    sumaba tambien todas. Con la ventana en 6 h, un foco cuya celda mas reciente
+    es de hace dos horas entraba con su area entera, incluidas las de hace
+    veinte; el mapa dibujaba solo las recientes.
+
+    Medido: la lista anunciaba 1.783 km² ardiendo y el mapa 1.361.
+    """
+    codigo = _app()
+    assert "function focoEnLaVentana(" in codigo
+    assert "function enLaVentanaFuego(" not in codigo, (
+        "vuelve a existir un filtro de foco entero al lado del de celda"
+    )
+    # Y lo usan los tres sitios que contaban focos.
+    assert codigo.count("focoEnLaVentana") >= 4, (
+        "algun consumidor de la lista de focos se quedo con el filtro viejo"
+    )
+
+
+def test_el_recorte_reusa_el_resumen_y_no_reagrupa() -> None:
+    """El union-find sobre catorce mil celdas es lo caro; el resumen no.
+
+    Reagrupar en cada cambio de ventana costaria ~77.000 consultas de vecindad
+    por interaccion, que es justo lo que la auditoria marca como peso del
+    arranque. Se vuelve a resumir, que es una suma.
+    """
+    codigo = _app()
+    inicio = codigo.index("function focoEnLaVentana(")
+    cuerpo = codigo[inicio : codigo.index("\nfunction ", inicio + 1)]
+
+    assert "resumirFoco(" in cuerpo
+    assert "agruparFocos(" not in cuerpo, "no se puede reagrupar en cada filtro"
+    assert "if (dentro.length === foco.celdas.length) return foco;" in cuerpo, (
+        "sin el atajo, el caso normal —todas las celdas dentro— paga el resumen"
+    )
