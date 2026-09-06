@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-06T11:25:17Z",
+  "generado_utc": "2026-09-06T11:30:18Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tep0",
+      "mag": 4.8,
+      "lon": -68.7038,
+      "lat": -22.2344,
+      "depth_km": 115.5,
+      "lugar": "33 km al NE de Calama, Chile",
+      "origen_utc": "2026-09-06T10:39:32Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "CHL"
+    },
     {
       "usgs_id": "us7000tepa",
       "mag": 5.1,
