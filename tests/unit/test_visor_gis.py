@@ -363,10 +363,46 @@ def test_la_capa_se_carga_de_verdad() -> None:
 
 
 def test_el_interruptor_solo_aparece_si_hay_algo() -> None:
-    """Un control siempre vacio ensena a ignorar los controles."""
-    js = APP
+    """Un control siempre vacio ensena a ignorar los controles.
 
-    assert "if (!eventos.length) return;" in js
+    LA PRUEBA FIJABA LA LINEA, NO LA REGLA.
+
+    Decia `assert "if (!eventos.length) return;" in js`, o sea que emparejaba
+    una linea literal. Cuando esa rama tuvo que crecer —para publicar el cero
+    **medido** con su sello, que no es lo mismo que un fichero que no llego—
+    esta prueba se puso roja sin que nada se hubiera roto. Ahora se comprueba
+    que el camino de la lista vacia siga saliendo antes de dibujar.
+    """
+    js = APP
+    cuerpo = js[js.index("async function cargarObservados()") :][:2500]
+
+    assert "if (!eventos.length) {" in cuerpo
+    vacio = cuerpo[cuerpo.index("if (!eventos.length) {") :]
+    corte = vacio[: vacio.index("dibujarObservados(")]
+    assert "return;" in corte, "la lista vacia ya no sale antes de dibujar"
+
+
+def test_no_llego_el_fichero_no_es_cero_sismos_vistos() -> None:
+    """Los dos casos se veian igual: nada en pantalla.
+
+    Y esta capa existe justamente para hacer esa distincion — su propio
+    comentario dice que «desde el visor, "lo vi y es inofensivo" y "estoy roto"
+    se veian exactamente igual». Su cargador la perdia: un fallo de red caia a
+    `console.info` y volvia sin dejar rastro.
+    """
+    js = APP
+    cuerpo = js[js.index("async function cargarObservados()") :][:2500]
+
+    assert 'anotarFallo("observados"' in cuerpo, (
+        "un fallo al leer observados.json sigue sin dejar rastro en el registro"
+    )
+    assert "Array.isArray(datos.eventos)" in cuerpo, (
+        "un fichero sin la lista de eventos se sigue leyendo como una ventana vacia"
+    )
+    assert 'anotarPintado("observados", 0)' in cuerpo, (
+        "el cero medido no se publica, asi que la tarjeta desaparece en vez de "
+        "decir «0 vistos, revisado hace X»"
+    )
 
 
 # --- La capa de focos activos -----------------------------------------------

@@ -3291,3 +3291,73 @@ def test_un_cero_contra_una_alerta_viva_se_explica(pagina: Any) -> None:
     assert "umbral" in texto, (
         f"{candidatos[0]} publica 0 con alerta viva y el panel no explica el cero: {texto[:150]!r}"
     )
+
+
+def test_el_rotulo_de_la_tarjeta_de_fuego_sigue_a_la_ventana_elegida(pagina: Any) -> None:
+    """El numerador obedecía al control de 24/12/6 h y el rótulo no.
+
+    `estado.vivo.ventanaFuego` se fija una sola vez al cargar `incendios.json` y
+    no se vuelve a tocar; `v.incendios.detecciones`, en cambio, lo recalcula
+    `refrescarTablero` desde `celdasDeFuegoFiltradas()`. Así que elegir «6 h»
+    recortaba la cifra y la seguía publicando como «en 24 h»: 8.143 detecciones
+    de seis horas rotuladas como un día entero.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _esperar_capa(pagina, "focos")
+    pagina.wait_for_selector("#en-vivo .metrica", timeout=ESPERA_MS)
+
+    def apunte() -> str:
+        texto: str = pagina.locator("#en-vivo").inner_text()
+        return texto
+
+    assert "detecciones en 24" in apunte().replace("\u00a0", " ")
+
+    pagina.select_option("#ventana-focos", "h6")
+    pagina.wait_for_timeout(900)
+
+    ahora = apunte().replace("\u00a0", " ")
+    assert "detecciones en 6 h" in ahora, (
+        f"la tarjeta recorta por 6 h y sigue rotulando otra ventana: {ahora!r}"
+    )
+    assert "detecciones en 24 h" not in ahora
+
+
+def test_cerrar_el_detalle_borra_de_verdad_las_tres_capas(pagina: Any) -> None:
+    """`quitarCapa` se guardaba con `isStyleLoaded()`, que es falso con teselas cargando.
+
+    En ese instante la guarda cortaba, `cerrarDetalle` seguía, y las tres capas
+    del evento se quedaban dibujadas sobre el panorama mientras la línea
+    siguiente anotaba `pintado = 0` para las tres. El registro público del visor
+    —el que existe justamente para poder comprobar esto desde fuera— afirmaba
+    que no había nada dibujado con la malla, los contornos y el perímetro a la
+    vista.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    _esperar_capa(pagina, "perimetro", desde=marca)
+
+    pagina.locator("#volver").click()
+    pagina.wait_for_function(
+        """() => {
+             const p = window.CENTINELA.pintado;
+             return ['celdas', 'contornos', 'perimetro'].every((c) => p[c] && p[c].rasgos === 0);
+           }""",
+        timeout=ESPERA_MS,
+    )
+
+    # `capasDelMapa()` son los ids del estilo en orden de dibujo: es la
+    # superficie que este visor ya expone para comprobar lo que hay puesto, y no
+    # depende de contar pixeles en una captura.
+    en_el_mapa = set(pagina.evaluate("() => window.CENTINELA.capasDelMapa()"))
+    registro = pagina.evaluate("() => window.CENTINELA.pintado") or {}
+
+    for capa in ("celdas", "contornos", "perimetro"):
+        anotado = registro.get(capa)
+        cero = anotado == 0 or (isinstance(anotado, dict) and anotado.get("rasgos") == 0)
+        if not cero:
+            continue
+        assert capa not in en_el_mapa, (
+            f"el registro dice que {capa} está en cero y la capa sigue dibujada; "
+            f"capas del estilo: {sorted(en_el_mapa)}"
+        )
