@@ -1,6 +1,6 @@
 1/4 Sismo M6,9 · 2 km al SSO de San Pablo, Guatemala (2017-06-14 07:29 UTC, 93 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
-2/4 Personas dentro de intensidad MMI≥6: 1,8 millones. Dentro de MMI≥7: 0. Edificaciones en MMI≥7: 0.
+2/4 Personas dentro de intensidad MMI≥6: 1,8 millones. Edificaciones en MMI≥6: 890 mil.
 
 3/4 Municipios más expuestos (MMI≥6): Quetzaltenango, Coatepeque, Malacatán.
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Final
 
 from ..common.constants import DISCLAIMERS, GROUND_FAILURE_HIGH_PROB, TOP_ADM2_COUNT
-from ..common.formatting import format_count_prose, format_number_es
+from ..common.formatting import cifra_con_sustantivo, format_count_prose, format_number_es
 from .model import (
     MunicipioTop,
     Report,
@@ -268,19 +268,30 @@ def _nota_superficie(report: Report) -> str:
     por bueno seria publicar una cobertura que no existe (§6.4).
 
     """
+    # SE MIDE SOBRE LA BANDA QUE EL REPORTE PUBLICA, NO SIEMPRE SOBRE MMI≥7.
+    #
+    # Estaba clavado en `*_mmi7p`, asi que en los reportes que no alcanzan esa
+    # banda las dos cifras son cero y el aviso salia siempre vacio — justo en
+    # los reportes cuya tabla si tiene edificaciones que contar. Se callaba en
+    # us7000jl3s (razon 1,60), us2000ahv0 (1,62) y us7000455l (1,60), los tres
+    # por encima del umbral de 1,5 en la banda que su reporte publica.
     tot = report.totales
-    if tot.built_m2_mmi7p <= 0 or tot.bld_mmi7p <= 0:
+    banda = banda_del_ranking(report)
+    construido = tot.built_m2_mmi7p if banda == 7 else tot.built_m2_mmi6p
+    edificaciones = tot.bld_mmi7p if banda == 7 else tot.bld_mmi6p
+    if construido <= 0 or edificaciones <= 0:
         return ""
-    esperado = tot.bld_mmi7p * M2_POR_EDIFICACION
-    if tot.built_m2_mmi7p < esperado * UMBRAL_HUECO_MAPEO:
+    esperado = edificaciones * M2_POR_EDIFICACION
+    if construido < esperado * UMBRAL_HUECO_MAPEO:
         return ""
-    veces = tot.built_m2_mmi7p / esperado
+    veces = construido / esperado
     return (
         f"\n\nEl satélite detecta **{format_number_es(veces, 1)} veces** más superficie "
-        f"construida de la que explicarían las {format_count_prose(tot.bld_mmi7p)} "
-        f"edificaciones registradas. La diferencia suele ser asentamiento informal o "
-        f"zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto "
-        f"ahí, y la superficie construida no**."
+        f"construida de la que explicarían las "
+        f"{cifra_con_sustantivo(edificaciones, 'edificaciones')} registradas en "
+        f"MMI≥{banda}. La diferencia suele ser asentamiento informal o zona rural "
+        f"dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la "
+        f"superficie construida no**."
     )
 
 
