@@ -68,7 +68,24 @@ Contrato formal: [`schemas/event-state.schema.json`](../../schemas/event-state.s
 |---|---|---|
 | `report.json` | El reporte completo, validado contra esquema | visor, terceros |
 | `report.md` | El mismo reporte en prosa española | humanos |
-| `adm2.csv` | Una fila por municipio alcanzado | visor (tabla), analistas |
+| `adm2.csv` | Una fila por municipio que el ShakeMap toca desde MMI 5,0 | visor (tabla), analistas |
+
+> **Contar filas del `adm2.csv` no da «municipios expuestos».** `SQL_IMPACT_ADM2`
+> agrega desde MMI 5,0 —el suelo del relleno de contornos— y las cifras se
+> cuentan desde MMI≥6, así que un municipio alcanzado solo por debajo de esa
+> banda aparece con su `mmi_max` y el resto de columnas en cero. De las 299
+> filas de `us6000tjl2`, **188 están enteras en cero**: 109 municipios tienen
+> población en MMI≥6 y 44 en MMI≥7. El README publicaba «Municipios alcanzados:
+> 299» en una tabla cuyas demás filas dicen «en MMI≥7».
+>
+> Las filas se conservan porque su `mmi_max` es la única forma de saber a qué
+> municipios llegó la sacudida sin alcanzar la banda —y de ahí sale la nota que
+> el reporte publica cuando todas las cifras valen cero—. **Para contar
+> municipios expuestos, filtrar por `pop_mmi6p > 0`.**
+>
+> No se añade una línea de comentario al fichero: iría antes de la cabecera de
+> columnas y cualquier lector CSV corriente la tomaría por la cabecera. Es «la
+> tabla que consume el mundo» y no se rompe un parser para añadir una nota.
 | `celdas.json` | La malla H3 del evento con sus columnas | visor (coropletas) |
 | `contornos.json` | Los contornos MMI de ShakeMap | visor (líneas) |
 | `mapa_general.png` | Mapa de intensidad | prensa |
