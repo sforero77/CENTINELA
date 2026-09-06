@@ -60,7 +60,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,8 %**.
 
 - ShakeMap consumido: **v9**
 - Ground Failure consumido: **v9**
-- Manifiesto de exposición: `cub-v0.2`
+- Manifiesto de exposición: [`cub-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CUB.yaml)
 - Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:51Z
 
 ## Advertencias

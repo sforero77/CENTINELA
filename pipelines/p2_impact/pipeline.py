@@ -17,6 +17,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ..common.atribucion import (
+    REPORTE,
+    TEXTO_DEL_DERIVADO,
+    URL_DEL_MANIFIESTO,
+    atribuciones_de,
+    cubo_de,
+    fuentes_del_pais,
+    iso3_de_manifest_id,
+    para_superficie,
+    spdx_del_derivado,
+)
 from ..common.constants import (
     GROUND_FAILURE_HIGH_PROB,
     MMI_BAND_AGE_BREAKDOWN,
@@ -29,11 +40,13 @@ from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.state import EventState
 from ..p3_report.model import (
+    Atribuido,
     Descargas,
     Evento,
     GroundFailureUSGS,
     Incertidumbre,
     Inputs,
+    Licencia,
     MunicipioTop,
     PoblacionEnRadio,
     Report,
@@ -694,6 +707,9 @@ def build_preliminary_report(
         ),
         preliminar=True,
         backtest=state.backtest,
+        # Tambien en el preliminar: es un artefacto publicado como cualquier
+        # otro, y durante las dos horas que puede vivir solo es el unico que hay.
+        licencia=licencia_del_reporte(manifest_id),
     )
 
 
@@ -714,6 +730,38 @@ def nota_de_columnas_ausentes(columnas: tuple[str, ...]) -> tuple[str, ...]:
         f"El activo consumido no trae {len(columnas)} columna(s) que este reporte sabe "
         f"publicar ({', '.join(columnas)}); salen como cero y **no estan medidas**. "
         "Se corrige reconstruyendo y republicando el activo del pais.",
+    )
+
+
+def licencia_del_reporte(manifest_id: str) -> Licencia:
+    """El bloque `licencia` de un reporte, calculado sobre su propio manifest.
+
+    Se calcula y no se escribe a mano porque la regla ya existe —`resolve_bucket`
+    y el catalogo de creditos— y una segunda copia en prosa es como el pie del
+    visor acabo diciendo «Datos del núcleo bajo CC BY 4.0» sobre datos que los
+    diecinueve manifests resuelven a ODbL.
+
+    Sin pais reconocible devuelve una licencia vacia en vez de reventar: un
+    reporte con el manifest mal escrito tiene que poder publicarse igual, y el
+    guardia de esquema es quien lo tiene que cazar.
+    """
+    iso3 = iso3_de_manifest_id(manifest_id)
+    if not iso3:
+        return Licencia()
+    try:
+        fuentes = fuentes_del_pais(iso3)
+    except (OSError, ValueError, KeyError, FileNotFoundError):
+        return Licencia()
+    spdx = spdx_del_derivado(fuentes)
+    return Licencia(
+        cubo=cubo_de(fuentes).value,
+        spdx=spdx,
+        texto=TEXTO_DEL_DERIVADO[spdx],
+        manifiesto_url=URL_DEL_MANIFIESTO.format(iso3=iso3),
+        atribuciones=tuple(
+            Atribuido(titulo=a.titulo, licencia=a.spdx, url=a.url)
+            for a in para_superficie(atribuciones_de(fuentes), REPORTE)
+        ),
     )
 
 
@@ -789,6 +837,8 @@ def build_report(
             notas=notas + nota_de_columnas_ausentes(totales.columnas_ausentes),
         ),
         descargas=Descargas(csv_adm2="adm2.csv", mapa_png="mapa_general.png"),
+        # La licencia viaja **dentro** del artefacto. Ver `Licencia`.
+        licencia=licencia_del_reporte(manifest_id),
         # CUANDO NINGUNA BANDA ALCANZA POBLACION, EL RADIO ES LO UNICO QUE INFORMA.
         #
         # `us7000tdmp`, el primer sismo en vivo: el preliminar publico "610 mil
