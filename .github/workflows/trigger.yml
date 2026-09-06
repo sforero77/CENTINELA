@@ -141,7 +141,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
-          desde=$(git log -1 --format=%cI -- site/status.json 2>/dev/null || echo "")
+          # EL ANCLA SALE DEL PROPIO LATIDO, NO DE GIT.
+          #
+          # `actions/checkout@v4` clona con profundidad 1: hay **un** commit en
+          # el historial, asi que `git log -1 -- site/status.json` no responde
+          # "cuando se publico el ultimo latido" sino, como mucho, "el unico
+          # commit que hay tocaba ese fichero". Verificado clonando este
+          # repositorio con `--depth 1`.
+          #
+          # El fichero que se acaba de sacar del checkout **ya lleva la fecha**:
+          # `latidos[-1].utc` es exactamente el sello que se busca, y no depende
+          # de cuanta historia se haya traido.
+          desde=$(jq -r '.latidos[-1].utc // empty' site/status.json 2>/dev/null || echo "")
           n=1
           if [ -n "$desde" ]; then
             filtro="[.[] | select(.createdAt > \"$desde\")] | length"
@@ -240,9 +251,24 @@ jobs:
       # El estado del evento y el latido van en el mismo commit: son la misma
       # escritura, y dos pushes con rebase compitiendo por la misma rama es el
       # problema que este paso ya resuelve una vez.
+      # `!cancelled()`, NO EL `success()` IMPLICITO.
+      #
+      # Un paso sin `if` propio lleva `success()` puesto de fabrica, y eso
+      # dejaba el comentario de arriba diciendo una cosa y el workflow haciendo
+      # la contraria: `centinela trigger` **sale con 1 a proposito** cuando los
+      # dos feeds de USGS estan caidos, precisamente para que la corrida se vea
+      # roja. Con el `success()` implicito, ese codigo de salida saltaba este
+      # paso — asi que el unico latido que de verdad hacia falta publicar, el
+      # de la pasada ciega, era el unico que nunca se commiteaba.
+      #
+      # Lo mismo con un `status.json` ilegible: el comando ya no muere ahi, pero
+      # termina en rojo, y en rojo esto no corria.
+      #
+      # No hay riesgo en publicar de mas: si no hay nada que commitear, el
+      # `git diff --staged --quiet` de abajo sale solo.
       - name: Publicar estado y latido
         id: publicar
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !cancelled() && !inputs.dry_run }}
         env:
           # Via env, no por interpolacion en el shell: los ids vienen de un
           # tercero y no deben poder convertirse en comandos.
@@ -262,7 +288,15 @@ jobs:
           # Un sismo pequeno nuevo tambien publica, aunque el latido sea
           # reciente: quien acaba de sentirlo lo esta buscando ahora, no dentro
           # de una hora. Son ~3 al dia, asi que no cambia el orden de magnitud.
-          ULTIMO=$(git log -1 --format=%ct -- site/status.json || echo 0)
+          # Misma correccion que arriba: con `--depth 1` el `git log` medi­a el
+          # ultimo commit de CUALQUIER tipo, asi que una PR humana reiniciaba el
+          # freno del latido. Los dos huecos de 85 y 105 min de la serie
+          # publicada coinciden con PRs.
+          ULTIMO_UTC=$(jq -r '.latidos[-1].utc // empty' site/status.json 2>/dev/null || echo "")
+          ULTIMO=0
+          if [ -n "$ULTIMO_UTC" ]; then
+            ULTIMO=$(date -u -d "$ULTIMO_UTC" +%s 2>/dev/null || echo 0)
+          fi
           EDAD=$(( $(date -u +%s) - ${ULTIMO:-0} ))
           if [ "$HAY_TRABAJO" != "true" ] && [ "$OBSERVADOS_CAMBIO" != "true" ] && [ "$EDAD" -lt 3600 ]; then
             echo "latido reciente (hace ${EDAD}s) y sin sismos nuevos; no se publica"
@@ -313,6 +347,17 @@ jobs:
             # `elif`, que **desactiva `set -e`**: sin comprobar el codigo de
             # salida, un regenerado que falla seguia hasta `git add` y
             # `rebase --continue` igual.
+            # EL FICHERO EN CONFLICTO NO ES JSON, Y `centinela status` LO LEE.
+            #
+            # `impact.yml` tiene esta linea desde el 2-sep con su comentario
+            # —«se pierde a lo sumo un latido en vez de todos»— y aqui faltaba.
+            # Regenerar sobre un `status.json` con marcadores hace que
+            # `write_status` no pueda parsearlo y reponga el historial vacio; y
+            # con la red de seguridad de abajo puesta, los cuatro reintentos
+            # fallan igual y el vigia muere justo cuando P2 esta corriendo.
+            git checkout --theirs site/status.json 2>/dev/null || true
+            git checkout --theirs site/observados.json 2>/dev/null || true
+
             uv run centinela status || return 1
             uv run centinela observados || return 1
 
@@ -363,8 +408,13 @@ jobs:
       # `workflow_dispatch` es la excepcion documentada a esa regla, y es el
       # mismo mecanismo con el que este workflow ya dispara P2 unas lineas mas
       # abajo. No hace falta un PAT.
+      # Tambien sin `success()`: si el paso de arriba llego a publicar, la
+      # pagina tiene que enterarse aunque la corrida vaya a terminar en rojo.
+      # Con el `success()` implicito, un latido commiteado en una pasada ciega
+      # se quedaba sin republicar — que es exactamente el desfase de diecisiete
+      # horas que este paso existe para no repetir.
       - name: Republicar el visor
-        if: steps.publicar.outputs.publicado == 'true'
+        if: ${{ !cancelled() && steps.publicar.outputs.publicado == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -388,7 +438,26 @@ jobs:
 
   despachar:
     needs: vigilar
-    if: needs.vigilar.outputs.hay_trabajo == 'true'
+    # `!inputs.dry_run` TAMBIEN AQUI.
+    #
+    # Los otros dos pasos que escriben lo comprueban y este no, asi que un
+    # simulacro **en seco** lanzaba `impact.yml` de verdad: el evento se
+    # publicaba, se commiteaba y se empujaba. Un ensayo que produce el efecto que
+    # ensaya no es un ensayo.
+    #
+    # Y `!cancelled()`, porque `needs` trae `success()` de regalo.
+    #
+    # El sismo se detecta y se escribe en disco al principio del vigia; todo lo
+    # que viene despues —latido, commit, republicacion— es contabilidad. Con la
+    # condicion de antes, cualquier tropiezo en esa contabilidad se llevaba por
+    # delante el despacho de P2: el evento estaba identificado, `hay_trabajo`
+    # decia `true`, y este job se saltaba igual porque el anterior habia
+    # terminado en rojo. Un `status.json` con marcadores de conflicto bastaba
+    # para que un terremoto no se reportara nunca.
+    #
+    # `hay_trabajo` solo vale `true` si el paso del feed llego a escribirlo, asi
+    # que un fallo temprano sigue sin despachar nada: no se dispara a ciegas.
+    if: ${{ !cancelled() && needs.vigilar.outputs.hay_trabajo == 'true' && !inputs.dry_run }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -41,8 +41,46 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: Posible deriva del contrato de una fuente
         run: |
-          gh issue create \
-            --title "Posible deriva del contrato de una fuente" \
-            --label "contrato,automatico" \
-            --body "El test nocturno contra las fuentes vivas fallo. Revisar schemas/usgs/ (feed de USGS), data/manifests/ (release de Overture fijado) y pipelines/p0_exposure/sources/ antes del proximo evento. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # Las etiquetas tienen que existir antes de pedirlas: `gh issue
+          # create --label` con una etiqueta que no esta en el repositorio
+          # **aborta**, y la alarma nocturna se perdia entera por un nombre
+          # que nadie habia creado nunca.
+          gh label create contrato --color D93F0B --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # Este guardia corre cada noche: sin deduplicar, una deriva que tarda
+          # una semana en repararse deja siete issues identicos. Se busca por
+          # titulo exacto porque el camino de respaldo crea **sin etiquetas**.
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            echo "Ya hay una abierta (#$ABIERTA): se anota y no se duplica."
+            gh issue comment "$ABIERTA" --body "Sigue derivando en la revision de las $(date -u +%H:%M) UTC.
+
+          Corrida: $CORRIDA"
+            exit 0
+          fi
+
+          CUERPO=$(cat <<'TXT'
+          El test nocturno contra las fuentes vivas fallo.
+
+          Revisar antes del proximo evento:
+
+          - `schemas/usgs/` (feed y detalle de USGS)
+          - `data/manifests/` (release de Overture fijado; solo conserva dos)
+          - `pipelines/p0_exposure/sources/` (GHSL, WorldPop, WorldCover)
+          TXT
+          )
+          CUERPO="$CUERPO
+
+          Corrida: $CORRIDA"
+
+          # Si `gh label` no pudo crearlas (permisos, cuota), se abre igual sin
+          # etiquetas: mas vale un issue sin clasificar que ninguna alarma.
+          gh issue create --title "$TITULO" --label "contrato,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"

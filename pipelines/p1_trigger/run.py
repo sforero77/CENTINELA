@@ -8,9 +8,14 @@ sobre el mismo feed no crea trabajo duplicado.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from ..common.constants import USGS_FEED_BACKFILL, USGS_FEED_PRIMARY
+from ..common.constants import (
+    MINUTOS_ENTRE_REDESPACHOS,
+    USGS_FEED_BACKFILL,
+    USGS_FEED_PRIMARY,
+)
 from ..common.geo import LATAM_BBOX, BBox
 from ..common.http import Fetcher
 from ..common.logging import get_logger
@@ -145,6 +150,26 @@ def run_trigger(
     return result
 
 
+def _despachado_hace_poco(estado: EventState) -> bool:
+    """¿Se despacho este evento hace menos de `MINUTOS_ENTRE_REDESPACHOS`?
+
+    Sin sello previo devuelve `False`: los eventos que ya estaban vivos cuando
+    esto se anadio se despachan una vez mas y a partir de ahi cuentan.
+    """
+    sello = estado.timestamps.get("despachado")
+    if not sello:
+        return False
+    try:
+        desde = datetime.fromisoformat(sello.replace("Z", "+00:00"))
+    except ValueError:
+        # Un sello ilegible no puede frenar el despacho: ante la duda, se
+        # despacha. Perder una revision es peor que gastar una corrida.
+        return False
+    if desde.tzinfo is None:
+        desde = desde.replace(tzinfo=UTC)
+    return datetime.now(UTC) - desde < timedelta(minutes=MINUTOS_ENTRE_REDESPACHOS)
+
+
 def _solo_le_falto_magnitud(candidate: EventCandidate, bbox: BBox) -> bool:
     """¿Es un sismo de LATAM que solo se descarto por ser pequeno?
 
@@ -223,6 +248,28 @@ def _classify(
     if existing.estado in _TERMINAL:
         return
 
+    # SUELO ENTRE DOS DESPACHOS DEL MISMO EVENTO.
+    #
+    # Esto re-despachaba todo evento vivo en **cada** pasada. Con el vigia a
+    # cinco minutos son 288 despachos al dia por evento: medido, 257 despachos
+    # y 262 commits por dos sismos en 24 h. P2 hace lo correcto —devuelve
+    # OMITIR si la version no avanzo— pero cada despacho cuesta una corrida de
+    # la cola de Actions, que este proyecto documenta como su cuello de botella.
+    #
+    # El trigger no puede saber si la version avanzo sin descargar el detail, y
+    # descargarlo aqui seria pagar el coste de P2 para averiguar si hace falta
+    # P2. Asi que el freno es de reloj, y solo para re-despachos: un evento
+    # nuevo sale en el acto.
+    if _despachado_hace_poco(existing):
+        _log.debug(
+            "re-despacho frenado: el anterior es demasiado reciente",
+            extra={"context": {"usgs_id": candidate.usgs_id}},
+        )
+        return
+
     # Ya conocido: P2 decide si la version de ShakeMap avanzo (RF-04). El
     # trigger no descarga productos — eso lo hace P2 con el feed detail.
     result.revisitados.append(candidate.usgs_id)
+    if not dry_run:
+        existing.timestamps["despachado"] = utcnow_iso()
+        existing.save(events_dir)

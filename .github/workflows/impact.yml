@@ -159,6 +159,11 @@ jobs:
           # evento esta en el catalogo. Descartarlo es dejar de mirar.
           #
           # Se reintenta con el primer candidato, el mejor por epicentro.
+          # El primero de la lista ES el preferido: `paises-candidatos` lo pone
+          # a la cabeza aplicando el desempate por toponimo. Antes esto cogia el
+          # primero por area de caja envolvente —la de Chile mide 1.719 grados
+          # cuadrados por Rapa Nui— y un sismo en Coquimbo se habria publicado
+          # contra el activo de Argentina.
           PRIMERO=$(echo $PAISES | awk '{print $1}')
           if [ -z "$SIN_ACTIVO" ] && [ -n "$PRIMERO" ]; then
             echo "::notice::Ningun activo alcanza celdas para $USGS_ID: la sacudida no llego a poblacion. Se publica con ceros usando $PRIMERO."
@@ -218,10 +223,29 @@ jobs:
           # No es cosmetico. "Latencia medida y publicada" es uno de los dos
           # requisitos que quedan para cerrar Fase 0, y no lo cerraba el primer
           # sismo: lo bloqueaba este `git add`.
-          uv run centinela status
+          # EL GUARDIA DE DIFF IBA DESPUES DE REESCRIBIR UN DERIVADO.
+          #
+          # `centinela status` reescribe `site/status.json` con un
+          # `generado_utc` nuevo en cada corrida, asi que al llegar aqui el
+          # indice **siempre** tenia algo que commitear y el
+          # `git diff --staged --quiet` no podia dispararse nunca. Medido: 470
+          # de 552 commits «P3: reporte de X» no tocan ningun reporte, y cada
+          # uno despacha un despliegue de Pages y una corrida de CI — sobre la
+          # cola de Actions que este proyecto documenta como su cuello de
+          # botella.
+          #
+          # Primero lo que es dato, despues la comprobacion, y solo entonces el
+          # derivado. Asi el guardia vuelve a medir lo que dice medir.
+          git add events/ reports/
+          if git diff --staged --quiet; then
+            echo "::notice::Sin cambios en events/ ni reports/: no se publica commit."
+            exit 0
+          fi
 
-          git add events/ reports/ site/status.json
-          git diff --staged --quiet && exit 0
+          # La latencia se recalcula **solo cuando hay algo que publicar**, que
+          # es cuando puede haber cambiado.
+          uv run centinela status
+          git add site/status.json
           git commit -m "P3: reporte de $USGS_ID"
 
           # Dos eventos simultaneos tienen concurrency groups distintos y
@@ -358,6 +382,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: gh workflow run ci.yml
+
+      # Y LA COBERTURA QUE ABRE UN NAVEGADOR, POR EL MISMO MOTIVO.
+      #
+      # `visor.yml` escucha `push` sobre `reports/**`, pero un push hecho con
+      # `GITHUB_TOKEN` **no dispara otros workflows**: la unica cobertura que ve
+      # la pantalla no corria nunca sobre lo que publica el bot. Es exactamente
+      # la misma regla de GitHub que ya obliga a despachar `site.yml` a mano
+      # —y que dejo el visor diecisiete horas congelado con todo en verde—,
+      # aplicada a la comprobacion en vez de a la publicacion.
+      - name: Abrir el visor sobre el reporte recien publicado
+        if: steps.publicar.outputs.publicado == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run visor.yml
 
 
       # RNF-03: si el contrato USGS se rompe, el pipeline degrada y deja
