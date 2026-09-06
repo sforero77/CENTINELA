@@ -392,16 +392,3 @@ def write_incendios(
 
     _log.info("incendios publicados", extra={"context": datos["totales"]})
     return destino
-
-
-def leer(site_dir: Path | None = None) -> dict[str, Any]:
-    """Lo publicado hasta ahora. Un fichero ausente o corrupto no es un fallo."""
-    destino = (site_dir or SITE_DIR) / INCENDIOS_FILENAME
-    if not destino.exists():
-        return {}
-    try:
-        datos: dict[str, Any] = json.loads(destino.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        _log.warning("incendios.json ilegible; se reconstruye", extra={"context": {}})
-        return {}
-    return datos
