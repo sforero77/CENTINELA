@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from pipelines.p2_impact.pipeline import licencia_del_reporte
 from pipelines.p3_report.model import Evento, Inputs, MunicipioTop, Report, Totales
 from pipelines.p3_report.run import rebuild_index, write_report_bundle
 
@@ -17,6 +18,11 @@ def _reporte() -> Report:
         inputs=Inputs(3, 2, "col-v0.1-draft"),
         totales=Totales(pop_mmi6p=1_240_000, pop_mmi7p=347_129, bld_mmi7p=96_500),
         top_municipios=(MunicipioTop("27001", "Quibdo", 7.4, 118_000),),
+        # `write_report_bundle` valida contra el esquema antes de escribir, y el
+        # bloque de licencia es obligatorio desde que la ODbL dejo de vivir solo
+        # en una pagina del repositorio. Se calcula con la fabrica de
+        # produccion: fue este guardia el que cazo este reporte sin licencia.
+        licencia=licencia_del_reporte("col-v0.6"),
     )
 
 
@@ -41,7 +47,17 @@ def test_escribe_el_paquete_completo(tmp_path: Path) -> None:
         {"usgs_id": "us7000sint", "adm2_id": "27001", "nombre": "Quibdo", "pop_mmi7p": 118_000}
     ]
     escritos = write_report_bundle(_reporte(), filas, reports_root=tmp_path, con_mapa=False)
-    assert set(escritos) == {"report_json", "report_md", "adm2_csv", "hilo_txt", "index_json"}
+    # `licencia_txt` entra en el paquete desde que la carpeta de un reporte dejo
+    # de salir sin un LICENSE: la ODbL §4.3 exige que el aviso viaje con la obra
+    # producida, no en una pagina del repositorio que quiza nadie abra.
+    assert set(escritos) == {
+        "report_json",
+        "report_md",
+        "adm2_csv",
+        "hilo_txt",
+        "licencia_txt",
+        "index_json",
+    }
     for path in escritos.values():
         assert path.exists() and path.stat().st_size > 0
 

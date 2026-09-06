@@ -105,9 +105,12 @@ def decide(state: EventState, products: ProductSet, *, forzar: bool = False) -> 
             anadidas despues. Es una decision de quien opera, no automatica,
             porque reemitir cuesta y cambia un artefacto ya publicado.
     """
-    if state.estado is EventStatus.DESCARTADO:
-        return Decision(Action.OMITIR, "evento descartado")
-
+    # `forzar` VA ANTES DEL CORTE POR ESTADO.
+    #
+    # Estaba despues, asi que ni `centinela impact --reprocesar` podia rescatar
+    # un evento descartado: la unica salida era editar su JSON a mano. Quien
+    # opera tiene que poder revivir un evento sin tocar la base de datos del
+    # sistema.
     if forzar and products.has_shakemap:
         return Decision(
             Action.COMPLETO,
@@ -115,6 +118,9 @@ def decide(state: EventState, products: ProductSet, *, forzar: bool = False) -> 
             products.shakemap_version,
             products.groundfailure_version,
         )
+
+    if state.estado is EventStatus.DESCARTADO:
+        return Decision(Action.OMITIR, "evento descartado")
 
     if not products.has_shakemap:
         if _ventana_preliminar_agotada(state):
@@ -297,7 +303,19 @@ def run_impact(
         return decision
 
     if decision.action is Action.AGOTADO:
-        state.transition(EventStatus.DESCARTADO, nota=decision.razon).save(events_dir)
+        # DEGRADADO, NO DESCARTADO.
+        #
+        # Agotar la ventana de seis horas de RF-03 significa «USGS no publico
+        # ShakeMap a tiempo», no «este evento esta fuera de alcance». Y
+        # `DESCARTADO` es terminal por tres vias independientes: `state.py` no
+        # le declara ninguna transicion de salida, `repaso.py` lo excluye del
+        # repaso de RF-04, y el corte de arriba lo omitia antes incluso de
+        # mirar `forzar`. Para estos eventos, la promesa de RF-04 —re-emitir al
+        # aparecer una version nueva— quedaba anulada por la de RF-03.
+        #
+        # Un ShakeMap que llega tarde llega igual: la mediana de la ultima
+        # revision de un ShakeMap son 63 dias.
+        state.transition(EventStatus.DEGRADADO, nota=decision.razon).save(events_dir)
         return decision
 
     if decision.action is Action.PRELIMINAR:
