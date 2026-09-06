@@ -392,14 +392,38 @@ def _cmd_alertas_terreno(args: argparse.Namespace) -> int:
     """
     from .p3_report.falla_de_terreno import backfill_ground_failure_alerts
 
-    escritos = backfill_ground_failure_alerts(
+    relleno = backfill_ground_failure_alerts(
         args.usgs_id or "", reports_root=Path(args.reports) if args.reports else None
     )
-    if not escritos:
-        print("No se actualizo ninguna alerta de falla de terreno.", file=sys.stderr)
+    for evento in sorted(relleno.escritos):
+        print(relleno.escritos[evento])
+
+    # NO HABER TENIDO NADA QUE HACER NO ES UN FALLO.
+    #
+    # Salia 1 en cuanto `escritos` venia vacio, y eso ocurre en el caso normal:
+    # la segunda corrida, con todos los reportes ya al dia. Un comando
+    # idempotente que sale en rojo cuando no hay trabajo ensena a ignorar su
+    # codigo de salida — y entonces el dia que USGS no conteste tampoco se mira.
+    print(
+        f"escritos: {len(relleno.escritos)} · ya al dia: {len(relleno.ya_al_dia)} · "
+        f"sin producto: {len(relleno.sin_alertas)} · fallidos: {len(relleno.fallidos)}",
+        file=sys.stderr,
+    )
+    _emit_github_output("escritos", str(len(relleno.escritos)))
+    _emit_github_output("fallidos", str(len(relleno.fallidos)))
+    if relleno.ciego:
+        print(
+            f"No se pudo leer el detalle de ninguno de los {relleno.revisados} eventos: "
+            f"la comprobacion no llego a correr.",
+            file=sys.stderr,
+        )
         return 1
-    for evento in sorted(escritos):
-        print(escritos[evento])
+    if relleno.fallidos:
+        print(
+            f"No se pudo consultar {len(relleno.fallidos)} de {relleno.revisados} eventos: "
+            f"{', '.join(sorted(relleno.fallidos))}",
+            file=sys.stderr,
+        )
     return 0
 
 
