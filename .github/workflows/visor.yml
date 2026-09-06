@@ -17,6 +17,18 @@ on:
     branches: [main]
     paths: &vigilado
       - "site/**"
+      # EL VISOR TAMBIEN DEPENDE DE LO QUE LEE.
+      #
+      # `reports/**` no estaba, asi que un reporte nuevo —que cambia lo que el
+      # visor pinta— no disparaba esta cobertura. Y aunque estuviera: un push
+      # hecho con `GITHUB_TOKEN` **no dispara otros workflows**, que es la regla
+      # de GitHub contra los bucles, asi que la unica cobertura que abre un
+      # navegador no corria nunca sobre lo que publica el bot.
+      #
+      # Por eso ademas `impact.yml` lo despacha explicitamente, igual que ya
+      # hace con `site.yml`. La ruta se declara para el caso humano —una PR que
+      # toque un reporte— y el despacho cubre el caso del bot.
+      - "reports/**"
       - "tests/visor/**"
       - ".github/workflows/visor.yml"
   pull_request:

@@ -210,6 +210,9 @@ def test_el_json_del_trigger_sale_limpio_por_stdout(
         "estados_ilegibles": [],
         "feeds_fallidos": [],
         "latido_utc": "2026-08-25T15:00:00Z",
+        # Y el veredicto del latido, que ya no puede matar al comando: `None`
+        # cuando se publico. Ver `test_el_sismo_sobrevive_al_latido`.
+        "latido_fallido": None,
     }
 
 

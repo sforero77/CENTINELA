@@ -39,8 +39,19 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: El simulacro mensual fallo
         run: |
-          gh issue create \
-            --title "El simulacro mensual fallo" \
-            --label "operacion,automatico" \
-            --body "Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # `gh issue create --label` aborta si la etiqueta no existe en el
+          # repositorio, y aqui nadie las creaba: el simulacro fallaba, este
+          # paso fallaba tambien y no quedaba ni el issue ni el aviso.
+          gh label create operacion --color 5319E7 --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CUERPO="El simulacro mensual fallo: el pipeline se oxido entre catastrofes.
+
+          Corrida: $CORRIDA"
+
+          # Respaldo sin etiquetas por si `gh label` no pudo crearlas.
+          gh issue create --title "$TITULO" --label "operacion,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"

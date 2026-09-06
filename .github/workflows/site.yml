@@ -58,8 +58,21 @@ jobs:
           # despliegue. El HTML del repositorio conserva un valor fijo como
           # respaldo para quien sirva `site/` a secas.
           python3 - <<'PY'
-          import json, html, io
+          import json, html, io, sys
+          # ARRANQUE EN FRIO: `max()` SOBRE UNA LISTA VACIA REVIENTA.
+          #
+          # `reports/index.json` esta vacio el dia uno —y despues de cualquier
+          # reconstruccion que no encuentre reportes—, y este `max()` lanzaba
+          # `ValueError` bajo `set -e`: el despliegue moria **antes de publicar
+          # nada**. La pagina no se cae por no tener vista previa; se caia por
+          # intentar calcularla.
+          #
+          # El HTML lleva su `og:image` de respaldo, asi que sin reportes lo
+          # correcto es dejarlo tal cual y seguir.
           eventos = json.load(io.open("reports/index.json", encoding="utf-8"))
+          if not eventos:
+              print("indice vacio: se conserva la vista previa de respaldo del HTML")
+              sys.exit(0)
           ultimo = max(eventos, key=lambda e: e.get("utc") or "")
           usgs = ultimo["usgs_id"]
           mag = str(ultimo.get("mag", "")).replace(".", ",")
