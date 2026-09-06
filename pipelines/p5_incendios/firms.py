@@ -175,11 +175,27 @@ class Lectura:
     #: Cuantos se pidieron. Sin esto, "dos fallidos" no dice si fue un roce o
     #: una caida: dos de seis es un roce, dos de dos es quedarse a ciegas.
     pedidos: int
+    #: Cuantos trajeron **al menos una deteccion**. No es `pedidos - fallidos`:
+    #: un HTTP 200 con el cuerpo vacio, o con la cabecera renombrada, se
+    #: descarga sin error y se parsea a cero filas.
+    leidos: int = 0
 
     @property
     def ciego(self) -> bool:
-        """¿Fallaron TODOS? Entonces no se leyo nada y hay que decirlo."""
-        return self.pedidos > 0 and len(self.fallidos) >= self.pedidos
+        """¿No se leyo nada util? Entonces no se miro, y hay que decirlo.
+
+        Decia "¿fallaron TODOS?", que es una pregunta sobre el transporte y no
+        sobre el dato. Seis HTTP 200 con el cuerpo vacio o con la cabecera
+        renombrada dan `focos=0, fallidos=0` y pasaban por corrida sana: P5
+        salia por el retorno temprano, el workflow quedaba verde, y el visor
+        seguia sirviendo el fuego de la corrida anterior.
+
+        Que FIRMS devuelva seis ficheros vacios a la vez para dos continentes en
+        una ventana de 24 h no es un dia tranquilo: es no haber leido.
+        """
+        if self.pedidos <= 0:
+            return False
+        return len(self.fallidos) >= self.pedidos or self.leidos == 0
 
 
 def fetch_focos(
@@ -198,10 +214,13 @@ def fetch_focos(
     """
     todos: list[Foco] = []
     fallidos: list[str] = []
+    vacios: list[str] = []
+    leidos = 0
 
     for satelite in satelites:
         for region in regiones:
             url = feed_url(satelite, region, ventana)
+            nombre = f"{satelite[1]}/{region}"
             try:
                 texto = fetcher.get_bytes(url).decode("utf-8")
             except Exception as error:
@@ -209,9 +228,17 @@ def fetch_focos(
                     "fichero de FIRMS no disponible",
                     extra={"context": {"url": url, "error": str(error)}},
                 )
-                fallidos.append(f"{satelite[1]}/{region}")
+                fallidos.append(nombre)
                 continue
-            todos.extend(parse_csv(texto))
+            # Un 200 con el cuerpo vacio no es un fallo de transporte y tampoco
+            # es una lectura: se cuenta aparte, porque es lo que distingue "hoy
+            # no ardio nada ahi" de "no lei nada en ninguna parte".
+            leidas = parse_csv(texto)
+            if leidas:
+                leidos += 1
+            else:
+                vacios.append(nombre)
+            todos.extend(leidas)
 
     _log.info(
         "focos leidos de FIRMS",
@@ -220,11 +247,18 @@ def fetch_focos(
                 "detecciones": len(todos),
                 "utiles": sum(1 for f in todos if f.util),
                 "ficheros_fallidos": fallidos,
+                "ficheros_vacios": vacios,
+                "ficheros_leidos": leidos,
                 "ficheros_pedidos": len(satelites) * len(regiones),
             }
         },
     )
-    return Lectura(focos=todos, fallidos=fallidos, pedidos=len(satelites) * len(regiones))
+    return Lectura(
+        focos=todos,
+        fallidos=fallidos,
+        pedidos=len(satelites) * len(regiones),
+        leidos=leidos,
+    )
 
 
 def _fetcher_por_defecto() -> Fetcher:

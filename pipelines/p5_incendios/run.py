@@ -31,6 +31,11 @@ class IncendiosResult:
     #: Ficheros de FIRMS que no se pudieron leer, y cuantos se pidieron.
     fallidos: list[str] = field(default_factory=list)
     pedidos: int = 0
+    #: Cuantos trajeron al menos una deteccion. No es `pedidos - fallidos`: un
+    #: HTTP 200 con el cuerpo vacio se descarga sin error y se parsea a cero.
+    ficheros_leidos: int = 0
+    #: Celdas que quedaron fuera del fichero publicado por el tope de tamanio.
+    celdas_descartadas: int = 0
     #: Corrida de GFS que se uso para el viento. Vacia si no se consiguio
     #: ninguna, que **no** tumba la corrida: el fuego se publica igual. El
     #: viento es contexto util, no el dato; perderlo degrada, no invalida.
@@ -43,8 +48,15 @@ class IncendiosResult:
 
     @property
     def ciego(self) -> bool:
-        """No se pudo leer NADA de FIRMS. La corrida no puede salir en verde."""
-        return self.pedidos > 0 and len(self.fallidos) >= self.pedidos
+        """No se leyo NADA UTIL de FIRMS. La corrida no puede salir en verde.
+
+        Preguntaba solo por el transporte, igual que `Lectura.ciego`: seis
+        HTTP 200 con el cuerpo vacio daban `fallidos=0` y pasaban por corrida
+        sana. Ver el comentario de `firms.Lectura.ciego`.
+        """
+        if self.pedidos <= 0:
+            return False
+        return len(self.fallidos) >= self.pedidos or self.ficheros_leidos == 0
 
 
 def run_incendios(
@@ -81,6 +93,7 @@ def run_incendios(
     # fallen los seis y la corrida salga verde no lo es.
     result.fallidos = list(lectura.fallidos)
     result.pedidos = lectura.pedidos
+    result.ficheros_leidos = lectura.leidos
     if lectura.ciego:
         _log.error(
             "FIRMS no devolvio ni un fichero",
@@ -125,7 +138,22 @@ def run_incendios(
         )
     result.ciclo_viento = viento.ciclo
 
+    # LA MERMA VIAJA AL FICHERO PUBLICADO, NO SOLO AL LOG.
+    #
+    # `fallidos`, `pedidos` y `paises` se median y se quedaban en el dataclass:
+    # no iban al JSON, ni al output del workflow, ni al codigo de salida. Con
+    # tres de los seis ficheros caidos —Sudamerica entera, el 11,9 % del dato—
+    # la capa se publicaba como completa y nada en la pagina lo decia.
     result.publicado = write_incendios(
-        celdas, site_dir=site_dir, viento=viento, avisos=result.avisos
+        celdas,
+        site_dir=site_dir,
+        viento=viento,
+        avisos=result.avisos,
+        lectura={
+            "ficheros_pedidos": lectura.pedidos,
+            "ficheros_leidos": lectura.leidos,
+            "ficheros_fallidos": list(lectura.fallidos),
+            "paises_cruzados": list(result.paises),
+        },
     )
     return result
