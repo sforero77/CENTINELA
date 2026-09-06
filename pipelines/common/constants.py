@@ -167,6 +167,21 @@ PRELIMINARY_MAX_HOURS: Final[int] = 6
 #: bajar a cinco minutos, esos doce intentos pasaron a ser **una** hora y la
 #: ventana se encogio en silencio. Ver `_ventana_preliminar_agotada`.
 CADENCIA_MINIMA_MIN: Final[int] = 5
+
+#: Suelo entre dos despachos del MISMO evento, en minutos.
+#:
+#: P1 re-despachaba todo evento vivo en **cada** pasada. Con el vigia a cinco
+#: minutos eso son 288 despachos al dia por evento: medido, 257 despachos y 262
+#: commits por dos sismos en 24 h, en el directorio que el README llama «la base
+#: de datos del sistema». P2 hace lo correcto —devuelve OMITIR si la version no
+#: avanzo— pero cada despacho cuesta una corrida de la cola de Actions, que este
+#: proyecto documenta como su cuello de botella.
+#:
+#: No afecta a la deteccion: un evento **nuevo** se despacha en el acto. Solo
+#: pone suelo a los re-despachos, y quince minutos son de sobra para no perder
+#: una revision de ShakeMap — un re-despacho a los cinco minutos del anterior
+#: casi siempre trae la misma version y P2 lo descarta.
+MINUTOS_ENTRE_REDESPACHOS: Final[int] = 15
 #: Radios (km) de la exposicion preliminar sin ShakeMap.
 PRELIMINARY_RADII_KM: Final[tuple[int, ...]] = (25, 50, 100)
 

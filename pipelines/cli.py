@@ -56,7 +56,6 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
         "feeds_fallidos": result.feeds_fallidos,
         "latido_utc": result.latido_utc,
     }
-    print(json.dumps(payload, ensure_ascii=False))
     _emit_github_output("eventos", json.dumps(result.a_despachar))
     _emit_github_output("hay_trabajo", "true" if result.a_despachar else "false")
     _emit_github_output("estados_ilegibles", str(len(result.estados_ilegibles)))
@@ -90,28 +89,49 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
     # El latido alimenta /status. Se escribe siempre, tambien cuando no hay
     # eventos: la ausencia de latidos es la senal de que el cron se desactivo,
     # que es el modo de falla mas probable de todo el sistema.
-    write_status(
-        latido={
-            "utc": result.latido_utc,
-            "revisados": result.revisados,
-            "relevantes": result.relevantes,
-            # Cuantas corridas del vigia cubre este latido. El latido se
-            # commitea como mucho una vez por hora, asi que sin este numero el
-            # hueco entre dos latidos se lee como si fuera el ritmo del cron —
-            # y con el disparo externo a cinco minutos eso sobreestima el
-            # intervalo real por un factor de doce.
-            "revisiones": max(1, args.revisiones),
-            # Va al latido para que /status lo ensene: es la unica superficie
-            # publica donde "cero relevantes" se puede distinguir de "no pude
-            # leer". Solo cuando los hay, para no ensuciar los latidos sanos.
-            **(
-                {"estados_ilegibles": len(result.estados_ilegibles)}
-                if result.estados_ilegibles
-                else {}
-            ),
-            **({"feeds_fallidos": result.feeds_fallidos} if result.feeds_fallidos else {}),
-        }
-    )
+    #
+    # UN LATIDO QUE NO SE PUEDE ESCRIBIR NO PUEDE TRAGARSE EL SISMO.
+    #
+    # `write_status` se niega —con razon— a reescribir un `status.json`
+    # ilegible: publicar encima borraria el historial entero de latidos, que es
+    # la unica prueba de que el vigia esta vivo. Pero esa excepcion subia hasta
+    # aqui sin nadie que la parara, y eso convertia un fichero con marcadores de
+    # conflicto en un **evento perdido**: el comando moria antes de escribir
+    # `observados.json`, el paso del workflow se ponia en rojo, y con el en rojo
+    # se saltaban tanto el commit del estado como el despacho de P2. El sismo
+    # estaba detectado y en disco; nadie llegaba a mirarlo.
+    #
+    # Se anota, se termina el resto del trabajo, y la corrida acaba en rojo de
+    # todos modos: visible sin ser destructivo.
+    latido_fallido: str | None = None
+    try:
+        write_status(
+            latido={
+                "utc": result.latido_utc,
+                "revisados": result.revisados,
+                "relevantes": result.relevantes,
+                # Cuantas corridas del vigia cubre este latido. El latido se
+                # commitea como mucho una vez por hora, asi que sin este numero
+                # el hueco entre dos latidos se lee como si fuera el ritmo del
+                # cron — y con el disparo externo a cinco minutos eso
+                # sobreestima el intervalo real por un factor de doce.
+                "revisiones": max(1, args.revisiones),
+                # Va al latido para que /status lo ensene: es la unica
+                # superficie publica donde "cero relevantes" se puede
+                # distinguir de "no pude leer". Solo cuando los hay, para no
+                # ensuciar los latidos sanos.
+                **(
+                    {"estados_ilegibles": len(result.estados_ilegibles)}
+                    if result.estados_ilegibles
+                    else {}
+                ),
+                **({"feeds_fallidos": result.feeds_fallidos} if result.feeds_fallidos else {}),
+            }
+        )
+    except (OSError, ValueError) as error:
+        latido_fallido = str(error)
+        print(f"No se pudo publicar el latido: {error}", file=sys.stderr)
+        _emit_github_output("latido_fallido", "true")
 
     # Y la ventana de cinco dias de lo que se vio y no se despacho. Se
     # reescribe en cada latido aunque no haya nada nuevo, porque la poda
@@ -129,7 +149,13 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
         # minutos para aparecer en el mapa — y quien acaba de sentirlo lo esta
         # buscando ahora.
         _emit_github_output("observados_cambio", "true" if cambio else "false")
-    return 1 if result.ciego else 0
+
+    # El payload sale al final, ya con el veredicto del latido dentro: lo que
+    # imprime este comando es lo que la corrida vio, y un latido que no se pudo
+    # publicar forma parte de eso.
+    payload["latido_fallido"] = latido_fallido
+    print(json.dumps(payload, ensure_ascii=False))
+    return 1 if (result.ciego or latido_fallido) else 0
 
 
 #: Codigo de salida de "el activo no es de este pais; prueba el siguiente".
@@ -908,8 +934,24 @@ def _cmd_paises(args: argparse.Namespace) -> int:
     del_toponimo = pais_del_toponimo(lugar)
     preferido = del_toponimo if del_toponimo in candidatos else candidatos[0]
 
-    print(" ".join(candidatos))
-    _emit_github_output("paises", " ".join(candidatos))
+    # EL PREFERIDO VA PRIMERO EN LA LISTA, NO SOLO EN UN OUTPUT QUE NADIE LEIA.
+    #
+    # Se emitia `pais` a `$GITHUB_OUTPUT` y **ningun workflow lo consumia**:
+    # `impact.yml` captura este stdout y, cuando tiene que publicar sin poder
+    # iterar, coge el primero con `awk '{print $1}'` — el primero por area de
+    # caja envolvente, que es el orden que este mismo fichero documenta como
+    # equivocado. La de Chile mide 1.719 grados cuadrados por Rapa Nui, asi que
+    # un sismo en Coquimbo sale como argentino primero: el reporte se publicaria
+    # contra el activo de Argentina, con la nota de distancia a la poblacion
+    # argentina mas cercana.
+    #
+    # Poniendolo a la cabeza, el desempate por toponimo llega tambien a quien
+    # solo lee la lista, y de paso la iteracion prueba primero el candidato mas
+    # probable — que es un acierto y no un cambio de comportamiento.
+    ordenados = [preferido, *[c for c in candidatos if c != preferido]]
+
+    print(" ".join(ordenados))
+    _emit_github_output("paises", " ".join(ordenados))
     _emit_github_output("pais", preferido)
     return 0
 
