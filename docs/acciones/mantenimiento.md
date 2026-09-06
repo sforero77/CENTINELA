@@ -101,8 +101,20 @@ que las piezas siguen encajando sin esperar a que haya un sismo.
 ## `contract_drift.yml`: ¿cambiaron las fuentes?
 
 Diario, 08:00 UTC. Las fuentes públicas cambian sus formatos sin avisar. Este
-workflow valida los contratos de USGS (feed y productos de detalle) contra
-[`schemas/usgs/`](../../schemas/usgs/) y falla si el esquema derivó.
+workflow valida los contratos de USGS —el feed resumen y **desde el 6-sep-2026
+también los productos del detail**— contra
+[`schemas/usgs/`](../../schemas/usgs/), más el release de Overture y las cajas
+de los países, y falla si algo derivó.
+
+> Este párrafo decía que validaba «feed y productos de detalle» desde antes de
+> que existiera la prueba que lo hace: `grep -rn "detail-products"` sobre todo
+> el repositorio devolvía **una** coincidencia, su propio `$id`. Ningún test,
+> ningún módulo y ningún workflow lo cargaban, así que no es que se validara
+> contra fixtures congeladas: no se validaba contra nada, nunca. Y si se hubiera
+> ejecutado no habría atrapado nada, porque el esquema no tenía un solo
+> `required` dentro de `products` — comprobado: `{"products": {}}` lo pasaba.
+> Ahora exige `status`, `preferredWeight`, `updateTime`, `contents` y
+> `properties.version` por entrada, y al menos un contenido con su `url`.
 
 Es la diferencia entre enterarse el día que cambia y enterarse el día que hay
 un sismo.
