@@ -142,7 +142,13 @@ que cae entre 6,5 y 7,49) y CENTINELA usa **bandas literales**. Puestas en el
 mismo eje, cada cifra de CENTINELA cae dentro del intervalo que las filas de
 PAGER acotan por arriba y por abajo:
 
-| Umbral literal | PAGER | CENTINELA |
+> **Las dos columnas no son de la misma versión.** Las de PAGER salen de la
+> fixture congelada, que es la PAGER del **ShakeMap v7**; las de CENTINELA, del
+> reporte publicado, que va por v8 desde que se re-emitió el 3-sep. La
+> procedencia está en `tests/fixtures/golden/choco_2026_08_10/pager_exposures.origen.json`
+> y refrescarla contra la PAGER vigente está en `PENDIENTES.md`.
+
+| Umbral literal | PAGER del ShakeMap v7 | CENTINELA (v8) |
 |---|---:|---:|
 | MMI ≥ 5,5 | 10.487.959 | — |
 | MMI ≥ 6,0 | — | **7.194.540** |

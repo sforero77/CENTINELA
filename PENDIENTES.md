@@ -190,6 +190,16 @@ unpkg. Para cerrarlo hacen falta los ficheros delante: o se calcula su `sha384`
 y se pone en la etiqueta, o se copian a `site/assets/` (~250 KB), que es lo
 coherente con D6 y elimina al tercero del camino crítico.
 
+**El contraste con PAGER enfrenta dos versiones distintas.** Las cifras de PAGER
+salen de una fixture congelada que es la del **ShakeMap v7** (22-ago-2026); el
+reporte publicado va por **v8** desde que se re-emitió el 3-sep, y USGS
+republicó su PAGER dos minutos después del v8. Nada comparaba esa fixture con
+USGS ni anotaba de qué versión venía; ahora la procedencia está escrita en
+`pager_exposures.origen.json` y las dos tablas dicen de qué versión es cada
+columna. Refrescar la fixture y las cifras exige red: hay que bajar la PAGER
+vigente de `us6000tjl2` y rehacer las dos tablas y el «al 17 % y al 24 %» que se
+deriva de ellas. Aquí no se inventan cifras que no se han medido.
+
 **El arranque descarga y procesa el fichero de fuego entero y luego lo esconde**
 —4,4 MB de JSON, 10.963 hexágonos construidos con `h3.cellToBoundary`, un
 union-find sobre todos ellos— porque el modo por defecto es sismos. Diferirlo a

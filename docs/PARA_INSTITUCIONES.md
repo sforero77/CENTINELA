@@ -126,7 +126,18 @@ su fila «7» es todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas
 cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo,
 que es la única comparación que las dos convenciones admiten:
 
-| Umbral literal | PAGER | CENTINELA |
+> **Las dos columnas no son de la misma versión, y hay que decirlo.** Las cifras
+> de PAGER salen de la fixture `pager_exposures.json`, que es la PAGER del
+> **ShakeMap v7** (publicada el 22-ago-2026 a las 00:16:36Z, dos minutos después
+> del v7); las de CENTINELA salen del reporte publicado, que declara
+> `shakemap_version: 8` desde que se re-emitió el 3-sep. Nada comparaba esa
+> fixture con USGS ni anotaba de qué versión venía: se identificó reconstruyendo
+> las ocho entradas de `losspager` del detail congelado. La procedencia queda
+> escrita en `pager_exposures.origen.json`, y refrescar la fixture y esta tabla
+> contra la PAGER vigente está en `PENDIENTES.md`: exige red, y aquí no se
+> inventan cifras que no se han medido.
+
+| Umbral literal | PAGER del ShakeMap v7 | CENTINELA (v8) |
 |---|---:|---:|
 | MMI ≥ 5,5 | 10.487.959 | — |
 | MMI ≥ 6,0 | — | **7.194.540** |
