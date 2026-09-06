@@ -90,7 +90,59 @@ def test_el_status_conserva_los_latidos(tmp_path: Path) -> None:
 
 def test_el_objetivo_publicado_es_el_de_la_espec(tmp_path: Path) -> None:
     datos = build_status(events_dir=tmp_path)
-    assert datos["objetivo"] == {"p50_min": 60, "p95_min": 90}
+    assert datos["objetivo"]["p50_min"] == 60
+    assert datos["objetivo"]["p95_min"] == 90
+
+
+def test_el_objetivo_declara_contra_que_serie_se_juzga(tmp_path: Path) -> None:
+    """O1 se define «tras la disponibilidad del primer ShakeMap».
+
+    `medido.p50_min` va desde el ORIGEN DEL SISMO: incluye lo que USGS tarda en
+    localizarlo y en publicar su primer ShakeMap, que es justo lo que el
+    objetivo excluye —«el SLO se define sobre lo controlable»—. La pagina
+    pintaba «incumple» comparando una serie contra el objetivo de la otra.
+
+    Sin este campo la pagina tenia que elegir, y elegia la equivocada.
+    """
+    datos = build_status(events_dir=tmp_path)
+    serie = datos["objetivo"]["medido_contra"]
+    assert serie in datos["medido"], f"el objetivo se juzga contra {serie!r}, que no se publica"
+
+
+def test_se_publican_los_dos_relojes(tmp_path: Path) -> None:
+    """El total sigue publicandose: es el tiempo que de verdad pasa."""
+    datos = build_status(events_dir=tmp_path)["medido"]
+    assert "p50_min" in datos, "falta el total desde el origen del sismo"
+    assert set(datos["desde_deteccion"]) == {"eventos", "p50_min", "p95_min", "peor_min"}
+
+
+def test_la_serie_controlable_nunca_es_mayor_que_el_total(tmp_path: Path) -> None:
+    """Detectar ocurre despues del sismo, asi que su latencia es menor.
+
+    Si alguna vez saliera al reves, uno de los dos sellos esta mal leido.
+    """
+    from pipelines.common.status import event_latencies
+
+    for evento in event_latencies():
+        if evento.minutos_desde_deteccion is None:
+            continue
+        assert evento.minutos_desde_deteccion <= evento.minutos + 0.05, (
+            f"{evento.usgs_id}: desde deteccion ({evento.minutos_desde_deteccion}) "
+            f"supera al total ({evento.minutos})"
+        )
+
+
+def test_la_pagina_juzga_la_serie_que_el_objetivo_nombra() -> None:
+    """Y no la que tenga mas a mano."""
+    from pathlib import Path as _Path
+
+    raiz = _Path(__file__).parent.parent.parent
+    js = (raiz / "site" / "assets" / "status.js").read_text(encoding="utf-8")
+    codigo = chr(10).join(linea for linea in js.splitlines() if not linea.lstrip().startswith("//"))
+    assert "objetivo.medido_contra" in codigo
+    assert "clase(medido.p50_min, objetivo.p50_min)" not in codigo, (
+        "la pagina vuelve a juzgar el total contra el objetivo de la otra serie"
+    )
 
 
 # --- Una latencia publicada tiene que tener un reporte detras ---------------
