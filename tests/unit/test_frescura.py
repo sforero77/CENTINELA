@@ -22,6 +22,7 @@ import pytest
 from pipelines.common.frescura import (
     FICHEROS_CON_FECHA,
     HORAS_DE_GRACIA,
+    Congelado,
     Desfase,
     PaginaDesactualizadaError,
     comparar,
@@ -439,16 +440,91 @@ def test_una_corrida_sana_si_devuelve_hallazgos(tmp_path: Path) -> None:
     assert not revisiones[0].preocupa
 
 
-def test_el_comando_de_frescura_falla_cuando_no_pudo_comparar_nada() -> None:
-    """Que la señal esté conectada, no solo disponible.
+def _congelado_falso() -> Congelado:
+    """Un hallazgo local, de los que responden aunque la pagina no conteste."""
+    return Congelado(
+        fichero="status.json", generado_utc="2026-09-05T00:00:00Z", horas=1.0, limite=6.0
+    )
 
-    Es el patrón que este repositorio caza una y otra vez: la pieza correcta
-    escrita y sin nadie que la llame.
+
+def _desfase_falso() -> Desfase:
+    """Un hallazgo que solo existe si la pagina publicada contesto."""
+    return Desfase(
+        fichero="status.json",
+        en_el_repo="2026-09-05T00:00:00Z",
+        en_la_pagina="2026-09-05T00:00:00Z",
+        horas=0.0,
+    )
+
+
+def _correr_frescura(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    de_red: list[object],
+    locales: list[object],
+) -> tuple[int, dict[str, str]]:
+    """Ejecuta `centinela frescura` con las tres fuentes bajo control."""
+    import argparse
+
+    from pipelines import cli
+
+    salidas: dict[str, str] = {}
+    monkeypatch.setattr(cli, "_emit_github_output", lambda k, v: salidas.__setitem__(k, v))
+    monkeypatch.setattr("pipelines.common.http.HttpFetcher", lambda *a, **k: object())
+    monkeypatch.setattr("pipelines.common.frescura.revisar", lambda *a, **k: list(de_red))
+    monkeypatch.setattr("pipelines.common.frescura.revisar_colecciones", lambda *a, **k: [])
+    monkeypatch.setattr("pipelines.common.frescura.revisar_vejez", lambda *a, **k: list(locales))
+
+    args = argparse.Namespace(sitio="https://ejemplo/")
+    return cli._cmd_frescura(args), salidas
+
+
+def test_el_comando_de_frescura_falla_cuando_no_pudo_comparar_nada(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """LA GUARDA ERA INALCANZABLE POR CONSTRUCCION.
+
+    `revisar_vejez` mira el repositorio y no toca la red, asi que siempre
+    devuelve hallazgos. Al meterla en la misma lista que las dos que si
+    preguntan a la pagina, `if not revisiones` no podia dispararse jamas: con
+    GitHub Pages caido el comando salia 0 y `frescura.yml` cerraba la incidencia
+    abierta escribiendo «Recuperado. La pagina publicada vuelve a estar al dia».
+
+    Y la prueba que lo cubria hacia `assert "if not revisiones:" in cuerpo`
+    sobre el texto de `cli.py`: pasaba con la guarda inalcanzable dentro, porque
+    solo comprobaba que las letras estuvieran escritas.
+
+    Ahora se ejecuta el comando con la pagina muda y los hallazgos locales
+    presentes, que es exactamente el caso que se colaba.
     """
-    raiz = Path(__file__).parent.parent.parent
-    fuente = (raiz / "pipelines" / "cli.py").read_text(encoding="utf-8")
-    cuerpo = fuente[fuente.index("def _cmd_frescura") :]
-    cuerpo = cuerpo[: cuerpo.index("\ndef ")]
+    codigo, salidas = _correr_frescura(
+        monkeypatch,
+        de_red=[],
+        locales=[_congelado_falso(), _congelado_falso(), _congelado_falso()],
+    )
+    assert codigo == 1, "la corrida ciega vuelve a salir en verde"
+    assert salidas["pagina_leida"] == "false"
 
-    assert "if not revisiones:" in cuerpo, "nadie mira si se comparo algo"
-    assert "return 1" in cuerpo, "la corrida ciega sigue saliendo en verde"
+
+def test_con_la_pagina_respondiendo_el_comando_sale_en_verde(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """El caso bueno tiene que seguir siendo verde, o la alarma es inutil."""
+    codigo, salidas = _correr_frescura(
+        monkeypatch, de_red=[_desfase_falso()], locales=[_congelado_falso()]
+    )
+    assert codigo == 0
+    assert salidas["pagina_leida"] == "true"
+    assert salidas["comparados"] == "1"
+
+
+def test_el_workflow_solo_cierra_la_incidencia_si_pudo_mirar() -> None:
+    """`success()` a secas autorizaba a escribir «Recuperado» sin haber mirado."""
+    raiz = Path(__file__).parent.parent.parent
+    wf = (raiz / ".github" / "workflows" / "frescura.yml").read_text(encoding="utf-8")
+    cierre = wf[wf.index("Cerrar el aviso") :]
+    condicion = cierre[cierre.index("if:") : cierre.index("\n", cierre.index("if:"))]
+    assert "pagina_leida" in condicion, (
+        f"el cierre de la incidencia sigue condicionado solo a que el comando "
+        f"saliera 0: {condicion.strip()}"
+    )

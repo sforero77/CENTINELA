@@ -571,31 +571,42 @@ def _cmd_frescura(args: argparse.Namespace) -> int:
     # que esto no se regenera?". Las dos primeras comparan repositorio y pagina,
     # y un fichero congelado las pasa las dos — porque los dos lados estan
     # igual de viejos.
-    revisiones: list[Desfase | Ausentes | Congelado] = [
-        *revisar(cliente, sitio=args.sitio),
-        *revisar_colecciones(cliente, sitio=args.sitio),
-        *revisar_vejez(),
-    ]
-    print(resumen(revisiones))
-    raise_if_stale(revisiones)
-
-    # NO PODER MIRAR NO ES "ESTA AL DIA".
+    # LA GUARDA DE CEGUERA CUENTA SOLO LO QUE DEPENDIO DE LA RED.
     #
-    # Una corrida sana devuelve un hallazgo por fichero comparado, con
-    # `preocupa` en falso. Cero hallazgos significa que no se comparo **ninguno**
-    # — la pagina no respondio a nada— y entonces `raise_if_stale` no levanta,
-    # esto devolvia cero y `frescura.yml` se ponia verde.
+    # `revisar` y `revisar_colecciones` preguntan a la pagina publicada;
+    # `revisar_vejez` mira el repositorio y **no toca la red**, asi que responde
+    # siempre. Al meter las tres en la misma lista, `if not revisiones` se volvio
+    # inalcanzable por construccion: con GitHub Pages caido el comando imprimia
+    # los tres hallazgos locales, salia 0, y el paso `if: success()` de
+    # `frescura.yml` cerraba la incidencia abierta comentando «Recuperado. La
+    # pagina publicada vuelve a estar al dia».
     #
     # El peor sitio posible para ese fallo: este modulo existe porque el visor
     # estuvo diecisiete horas congelado con todo en verde, y su propio vigilante
-    # se apuntaba un verde estando ciego.
+    # firmaba el verde estando ciego.
+    de_red: list[Desfase | Ausentes | Congelado] = [
+        *revisar(cliente, sitio=args.sitio),
+        *revisar_colecciones(cliente, sitio=args.sitio),
+    ]
+    locales: list[Desfase | Ausentes | Congelado] = list(revisar_vejez())
+    revisiones = [*de_red, *locales]
+    print(resumen(revisiones))
+
+    # La senal viaja al workflow, que asi puede condicionar el cierre de la
+    # incidencia a "si se pudo mirar" en vez de a `success()`.
+    _emit_github_output("pagina_leida", "true" if de_red else "false")
+    _emit_github_output("comparados", str(len(de_red)))
+
+    raise_if_stale(revisiones)
+
+    # NO PODER MIRAR NO ES "ESTA AL DIA".
     #
     # La distincion es la misma que en la lectura de FIRMS: que falle ALGUN
     # fichero es tolerable —uno recien nacido devuelve 404 hasta el primer
     # despliegue, y eso no es una alarma— pero que no se pueda leer NINGUNO es
     # no haber mirado. Y confundir "la red se cayo" con "la pagina esta vieja"
     # manda a investigar mal, asi que se dice con sus palabras.
-    if not revisiones:
+    if not de_red:
         print(
             "No se pudo leer nada de la pagina publicada: la comprobacion no "
             "llego a correr. No es lo mismo que estar al dia.",
