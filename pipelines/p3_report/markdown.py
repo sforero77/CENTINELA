@@ -624,12 +624,27 @@ def _version_consumida(version: int) -> str:
     return f"**v{version}**" if version > 0 else "**ninguno** (no publicado aún)"
 
 
+def _enlace_al_manifiesto(report: Report) -> str:
+    """El enlace que el cuarto disclaimer prometia y que nadie escribia.
+
+    El disclaimer remite a «el manifiesto enlazado» y esta linea publicaba la
+    cadena `col-v0.6` en texto plano, sin URL: no habia forma de llegar desde un
+    reporte a la lista de fuentes que lo produjo. La url sale del bloque de
+    licencia, asi que un reporte emitido antes de que ese bloque existiera
+    conserva el texto plano — un enlace vacio seria peor que ninguno.
+    """
+    manifiesto = report.inputs.exposure_manifest
+    if not report.licencia.manifiesto_url:
+        return f"`{manifiesto}`"
+    return f"[`{manifiesto}`]({report.licencia.manifiesto_url})"
+
+
 def _seccion_procedencia(report: Report) -> str:
     return (
         "## Procedencia\n\n"
         f"- ShakeMap consumido: {_version_consumida(report.inputs.shakemap_version)}\n"
         f"- Ground Failure consumido: "
         f"{_version_consumida(report.inputs.groundfailure_version)}\n"
-        f"- Manifiesto de exposición: `{report.inputs.exposure_manifest}`\n"
+        f"- Manifiesto de exposición: {_enlace_al_manifiesto(report)}\n"
         f"- Pipeline: `{report.pipeline_version}` · Generado: {report.generado_utc}"
     )

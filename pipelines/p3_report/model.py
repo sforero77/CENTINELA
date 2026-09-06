@@ -66,6 +66,93 @@ class Inputs:
 
 
 @dataclass(frozen=True, slots=True)
+class Atribuido:
+    """Un credito, tal como viaja dentro del artefacto publicado."""
+
+    titulo: str = ""
+    licencia: str = ""
+    url: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"titulo": self.titulo, "licencia": self.licencia, "url": self.url}
+
+
+@dataclass(frozen=True, slots=True)
+class Licencia:
+    """Bajo que se puede usar este reporte, y a quien hay que citar.
+
+    NINGUN ARTEFACTO PUBLICADO DECIA UNA PALABRA DE LICENCIA.
+
+    `ls reports/us7000kg9g/` daba adm2.csv, celdas.json, contornos.json,
+    hilo.txt, dos PNG, report.json y report.md — ni un LICENSE, ni un NOTICE. Y
+    las claves de `report.json` no incluian `licencia`, ni `atribucion`, ni
+    `cubo`: el unico rastro de procedencia era `inputs.exposure_manifest`, la
+    cadena `"dom-v0.2"`, y el cuarto disclaimer remitia a un «manifiesto
+    enlazado» que se escribia en texto plano, sin URL.
+
+    Medido con `resolve_bucket` sobre los diecinueve manifests, **los diecinueve
+    dan `odbl`**. O sea que todo lo que este sistema publica es un derivado de
+    una base ODbL, y la ODbL §4.3 exige que el aviso viaje con la obra producida
+    mientras §4.4 exige que el derivado se publique bajo ODbL. Ninguna de las dos
+    cosas ocurria en ningun fichero de `reports/`.
+    """
+
+    cubo: str = ""
+    spdx: str = ""
+    texto: str = ""
+    #: El enlace que el disclaimer prometia y que se escribia como texto plano.
+    manifiesto_url: str = ""
+    atribuciones: tuple[Atribuido, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "cubo": self.cubo,
+            "spdx": self.spdx,
+            "texto": self.texto,
+            "manifiesto_url": self.manifiesto_url,
+            "atribuciones": [a.to_dict() for a in self.atribuciones],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls(
+            cubo=str(data.get("cubo", "")),
+            spdx=str(data.get("spdx", "")),
+            texto=str(data.get("texto", "")),
+            manifiesto_url=str(data.get("manifiesto_url", "")),
+            atribuciones=tuple(Atribuido(**a) for a in data.get("atribuciones", [])),
+        )
+
+    def como_texto(self) -> str:
+        """El `LICENSE.txt` que viaja al lado del reporte.
+
+        Un `report.json` descargado suelto se abre en un editor; un CSV se abre
+        en una hoja de calculo. El fichero de licencia es el unico sitio donde
+        el aviso se lee sin parsear nada, y es lo que la ODbL §4.3 pide de
+        verdad: que acompane a la obra.
+        """
+        lineas = [
+            "CENTINELA — exposicion sismica abierta",
+            "",
+            self.texto,
+            "",
+            f"Licencia del derivado: {self.spdx} (cubo `{self.cubo}`)",
+            "",
+            "Fuentes que hay que citar:",
+            "",
+        ]
+        lineas += [f"  - {a.titulo} — {a.licencia}\n    {a.url}" for a in self.atribuciones]
+        if self.manifiesto_url:
+            lineas += ["", f"Manifiesto de exposicion: {self.manifiesto_url}"]
+        lineas += [
+            "",
+            "El codigo de CENTINELA es software libre bajo Apache-2.0.",
+            "",
+        ]
+        return "\n".join(lineas)
+
+
+@dataclass(frozen=True, slots=True)
 class Totales:
     """Cifras nacionales por banda de intensidad (RF-05)."""
 
@@ -342,6 +429,8 @@ class Report:
     ground_failure_usgs: GroundFailureUSGS = field(default_factory=GroundFailureUSGS)
     #: Deltas frente a la version anterior del reporte (RF-04).
     changelog: tuple[str, ...] = ()
+    #: Bajo que se publica esto y a quien hay que citar. Ver `Licencia`.
+    licencia: Licencia = field(default_factory=Licencia)
     schema: str = REPORT_SCHEMA_ID
     generado_utc: str = field(default_factory=utcnow_iso)
     pipeline_version: str = PIPELINE_VERSION
@@ -360,6 +449,7 @@ class Report:
             "ground_failure_usgs": self.ground_failure_usgs.to_dict(),
             "descargas": self.descargas.to_dict(),
             "changelog": list(self.changelog),
+            "licencia": self.licencia.to_dict(),
             "disclaimers": list(DISCLAIMERS),
             "generado_utc": self.generado_utc,
             "pipeline_version": self.pipeline_version,
@@ -390,6 +480,7 @@ class Report:
             preliminar=bool(data.get("preliminar", False)),
             backtest=bool(data.get("backtest", False)),
             changelog=tuple(data.get("changelog", [])),
+            licencia=Licencia.from_dict(data.get("licencia") or {}),
             schema=str(data.get("schema", REPORT_SCHEMA_ID)),
             generado_utc=str(data.get("generado_utc", "")),
             pipeline_version=str(data.get("pipeline_version", "")),

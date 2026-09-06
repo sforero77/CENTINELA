@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ..common.atribucion import iso3_de_manifest_id
 from ..common.logging import get_logger
 from ..common.paths import REPORTS_DIR, validate_usgs_id
 from .csv_out import read_adm2_csv, write_adm2_csv
@@ -27,6 +28,31 @@ _log = get_logger(__name__)
 #: directorio: si este archivo no existe, la lista de eventos del sitio queda
 #: vacia para siempre.
 INDEX_FILENAME = "index.json"
+
+
+#: Nombre del aviso de licencia que viaja con cada reporte.
+LICENCIA_FICHERO = "LICENSE.txt"
+
+
+def escribir_licencia(report: Report, directory: Path) -> Path | None:
+    """Deja el aviso de licencia al lado del reporte, o nada si no hay bloque.
+
+    LA CARPETA DE UN REPORTE NO LLEVABA NI UN LICENSE NI UN NOTICE.
+
+    `ls reports/us7000kg9g/` daba ocho ficheros de datos y ni uno de licencia,
+    con `resolve_bucket` dando `odbl` en los diecinueve paises: la ODbL §4.3
+    exige que el aviso viaje **con la obra producida**, no en una pagina del
+    repositorio que quiza nadie abra.
+
+    Devuelve `None` cuando el reporte no trae bloque de licencia —los emitidos
+    antes de que existiera—: escribir un aviso vacio seria peor que no
+    escribirlo, porque parece que la comprobacion se hizo.
+    """
+    if not report.licencia.spdx:
+        return None
+    destino = directory / LICENCIA_FICHERO
+    destino.write_text(report.licencia.como_texto(), encoding="utf-8")
+    return destino
 
 
 def write_report_bundle(
@@ -70,6 +96,9 @@ def write_report_bundle(
     hilo_path = directory / "hilo.txt"
     hilo_path.write_text(render_thread_text(report), encoding="utf-8")
     escritos["hilo_txt"] = hilo_path
+
+    if (licencia := escribir_licencia(report, directory)) is not None:
+        escritos["licencia_txt"] = licencia
 
     escritos["index_json"] = rebuild_index(root).ruta
 
@@ -231,6 +260,11 @@ def regenerate_texts(usgs_id: str = "", *, reports_root: Path | None = None) -> 
         hilo_path.write_text(render_thread_text(report), encoding="utf-8")
         escritos[f"{directory.name}/hilo_txt"] = hilo_path
 
+        # El aviso de licencia es un derivado del reporte como los otros dos, y
+        # rehacerlo aqui es lo que permite ponerselo a los ya publicados.
+        if (licencia := escribir_licencia(report, directory)) is not None:
+            escritos[f"{directory.name}/licencia_txt"] = licencia
+
     _log.info(
         "textos regenerados",
         extra={"context": {"eventos": len(directorios), "artefactos": len(escritos)}},
@@ -244,9 +278,12 @@ def _iso3_del_manifest(manifest_id: str) -> str:
     Los reportes emitidos antes de que el indice llevara pais siguen sin el, y
     eso es una **ausencia**, no un pais equivocado: el visor los agrupa aparte
     en vez de asignarlos a ninguno.
+
+    Delega en `common.atribucion`, que hace lo mismo para resolver el manifest
+    del que sale la licencia. Habia dos implementaciones de la misma regla y
+    dos reglas iguales acaban divergiendo.
     """
-    iso3 = manifest_id.split("-", 1)[0].upper()
-    return iso3 if len(iso3) == 3 and iso3.isalpha() else ""
+    return iso3_de_manifest_id(manifest_id)
 
 
 @dataclass(frozen=True, slots=True)

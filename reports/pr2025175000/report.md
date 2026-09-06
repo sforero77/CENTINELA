@@ -59,7 +59,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 - ShakeMap consumido: **v8**
 - Ground Failure consumido: **ninguno** (no publicado aún)
-- Manifiesto de exposición: `dom-v0.2`
+- Manifiesto de exposición: [`dom-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/DOM.yaml)
 - Pipeline: `0.1.0` · Generado: 2026-09-04T20:30:13Z
 
 ## Advertencias

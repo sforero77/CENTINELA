@@ -4,6 +4,16 @@ Toda salida de CENTINELA (mapa, reporte, CSV, GeoParquet, PMTiles) lleva
 estas atribuciones. No es cortesía: es condición de licencia (§2.4 de la
 especificación) y se verifica en CI.
 
+**«Se verifica en CI» era falso hasta el 6-sep-2026.** No existía una sola
+prueba que comparase este archivo con las licencias de los manifiestos, y por
+ese hueco ESA WorldCover llevaba meses publicando su dato sin aparecer aquí, sin
+estar en el pie del visor y sin salir en ningún crédito. Ahora la lista de
+créditos es **dato** —`pipelines/common/atribucion.py`, con una entrada por
+fuente y las superficies donde su crédito es obligatorio— y
+`tests/unit/test_la_atribucion_viaja_con_el_dato.py` recorre los diecinueve
+manifiestos exigiendo que cada fuente aparezca aquí, en el pie de los mapas y en
+el pie del visor. Una fuente nueva sin crédito ya no es un olvido: es rojo.
+
 ## Datos de evento
 
 - **USGS Earthquake Hazards Program**: feeds GeoJSON en tiempo real, ShakeMap,
@@ -36,7 +46,21 @@ especificación) y se verifica en CI.
   publicados en HDX. ODbL, derivados de OpenStreetMap.
 - **healthsites.io**: publicación en HDX, complemento de la capa de salud.
   ODbL.
+- **ESA WorldCover 2021 v200** (Zanaga, D. et al., 2022): cobertura del suelo
+  a 10 m. **CC BY 4.0**, que exige atribución. Alimenta las columnas
+  `lulc_*_pct` del activo y el bloque `suelo` de `site/incendios.json`, que el
+  visor pinta en el panel de fuego. https://esa-worldcover.org/
 - **OurAirports**: aeropuertos. Dominio público.
+
+## Fuego activo (P5)
+
+- **NASA FIRMS / LANCE**: detecciones de foco de calor VIIRS a 375 m
+  (S-NPP y NOAA-20/21). Obra del gobierno de los Estados Unidos, dominio
+  público; NASA pide citar el servicio.
+  https://firms.modaps.eosdis.nasa.gov/
+  No aparece en ningún manifiesto porque P5 no construye un activo: su crédito
+  y su licencia viven en `pipelines/common/atribucion.py`, que es lo que hace
+  que `resolve_bucket` la vea. Antes no la veía ninguno de los dos.
 
 ### Referencias de población usadas en los asserts de calidad
 
@@ -81,7 +105,12 @@ CENTINELA es software libre bajo **Apache-2.0**. Ver `LICENSE`.
 
 ## Datos derivados
 
-- Núcleo redistribuible: **CC BY 4.0**.
+Medido con `resolve_bucket` sobre los diecinueve manifiestos: **los diecinueve
+resuelven a `odbl`**. Todos fijan Overture `buildings` y `transportation` bajo
+ODbL, y salud/educación bajo ODbL vía HOT. O sea que hoy no existe un activo de
+CENTINELA que se publique bajo CC BY 4.0, y el pie del visor lo afirmaba.
+
+- Núcleo redistribuible, cuando lo haya: **CC BY 4.0**.
 - Capas que incorporan OSM / Overture `buildings` o `transportation`: **ODbL**,
   por share-alike.
 - Derivados de fuentes NC: **no redistribuibles** bajo las licencias anteriores;

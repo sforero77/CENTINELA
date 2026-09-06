@@ -60,7 +60,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 - ShakeMap consumido: **v4**
 - Ground Failure consumido: **ninguno** (no publicado aún)
-- Manifiesto de exposición: `mex-v0.2`
+- Manifiesto de exposición: [`mex-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
 - Pipeline: `0.1.0` · Generado: 2026-09-04T09:54:35Z
 
 ## Advertencias
