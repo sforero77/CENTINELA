@@ -141,3 +141,39 @@ def test_la_cobertura_del_suelo_no_sostiene_una_celda() -> None:
     where = _clausula_where(SQL_EXPOSURE.format(iso3="COL", manifest="m", flags=SQL_FLAGS))
 
     assert "lulc" not in where
+
+
+@pytest.mark.geo
+def test_una_celda_donde_solo_worldpop_ve_gente_no_se_descarta(con: Any) -> None:
+    """EL FILTRO MIRABA SEIS CAPAS DE NUEVE.
+
+    Una celda con poblacion de WorldPop y nada mas se descartaba entera. Eso
+    sesga justo la cifra que existe para medir el desacuerdo entre los dos
+    modelos: la banda de discrepancia divide por `sum(pop_alt_worldpop)`, y ese
+    denominador salia corto porque le faltaban precisamente las celdas donde
+    WorldPop ve gente y GHS-POP no. La incertidumbre publicada era menor que la
+    real.
+    """
+    con.execute("INSERT INTO pop_alt_h3 (h3_08, pop_alt_worldpop) VALUES (1::UBIGINT, 250.0)")
+    assemble_exposure(con, iso3="COL", manifest_id="test")
+
+    fila = con.execute(
+        "SELECT pop_total, pop_alt_worldpop FROM exposure_h3 WHERE h3_08 = 1"
+    ).fetchone()
+    assert fila is not None, "la celda con poblacion de contraste se descarto"
+    assert fila[0] == 0.0, "GHS-POP no ve a nadie ahi, y eso es el dato"
+    assert fila[1] == 250.0
+
+
+@pytest.mark.geo
+def test_las_bandas_etarias_no_sostienen_una_celda_por_si_solas(con: Any) -> None:
+    """Y no hace falta que lo hagan: son cuota de `pop_total`.
+
+    Desde que se publican como cuota, valen cero donde el total vale cero, asi
+    que no pueden mantener viva una celda vacia — ni necesitan estar en el
+    WHERE.
+    """
+    con.execute("INSERT INTO pop_65p_h3 (h3_08, pop_65p) VALUES (2::UBIGINT, 40.0)")
+    assemble_exposure(con, iso3="COL", manifest_id="test")
+
+    assert con.execute("SELECT count(*) FROM exposure_h3 WHERE h3_08 = 2").fetchone()[0] == 0

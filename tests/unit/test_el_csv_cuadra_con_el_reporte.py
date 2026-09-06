@@ -46,10 +46,36 @@ import pytest
 RAIZ = Path(__file__).parent.parent.parent
 REPORTES = RAIZ / "reports"
 
-#: Columna del CSV -> campo de `totales`. Las dos que arrastran el corte viejo.
+#: Columna del CSV -> campo de `totales`. **Las diecinueve, no dos.**
+#:
+#: Cubria `ls_pop` y `lq_pop` y nada mas: dos de las veinticinco columnas
+#: publicadas. Un descuadre en poblacion, en edificaciones, en vias o en
+#: equipamiento —que son las que se leen— pasaba entero. La auditoria del
+#: 5-sep comprobo que las demas cuadran hoy, asi que ampliarlo es gratis y lo
+#: unico que costaba era escribirlo.
+#:
+#: El prefijo basta para encontrar la columna: `pop_mmi6p` es exacta y
+#: `ls_pop_expuesta_mmi6p` empieza por `ls_pop`.
 COLUMNAS: tuple[tuple[str, str], ...] = (
-    ("lq_pop", "pop_lq_alta"),
+    ("pop_mmi6p", "pop_mmi6p"),
+    ("pop_mmi7p", "pop_mmi7p"),
+    ("pop_mmi8p", "pop_mmi8p"),
+    ("pop_65p_mmi6p", "pop_65p_mmi6p"),
+    ("pop_65p_mmi7p", "pop_65p_mmi7p"),
+    ("bld_mmi6p", "bld_mmi6p"),
+    ("bld_mmi7p", "bld_mmi7p"),
+    ("built_m2_mmi6p", "built_m2_mmi6p"),
+    ("built_m2_mmi7p", "built_m2_mmi7p"),
+    ("health_mmi6p", "health_mmi6p"),
+    ("health_mmi7p", "health_mmi7p"),
+    ("edu_mmi6p", "edu_mmi6p"),
+    ("edu_mmi7p", "edu_mmi7p"),
+    ("road_km_mmi6p", "road_km_mmi6p"),
+    ("road_km_mmi7p", "road_km_mmi7p"),
+    ("road_km_principal_mmi6p", "road_km_principal_mmi6p"),
+    ("road_km_principal_mmi7p", "road_km_principal_mmi7p"),
     ("ls_pop", "pop_ls_alta"),
+    ("lq_pop", "pop_lq_alta"),
 )
 
 #: Vacía desde el 1-sep-2026: los veintiuno re-emitidos, los veintiuno cuadran.
@@ -82,7 +108,12 @@ def _descuadres(usgs_id: str) -> list[str]:
 
     fallos = []
     for prefijo, campo in COLUMNAS:
-        columna = next((c for c in filas[0] if c.startswith(prefijo)), None)
+        # Exacta primero: `pop_mmi6p` no puede resolverse a `pop_65p_mmi6p`.
+        columna = (
+            prefijo
+            if prefijo in filas[0]
+            else next((c for c in filas[0] if c.startswith(prefijo)), None)
+        )
         if columna is None:
             continue
         suma = sum(float(f[columna] or 0) for f in filas)

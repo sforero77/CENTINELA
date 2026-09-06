@@ -271,16 +271,33 @@ FROM (
 WHERE ST_GeometryType(d.p.geom) = 'POLYGON'
 """
 
+#: Diccionario municipal: **una fila por `adm2_id`**, y no una por geometria.
+#:
+#: SALIA SIN AGRUPAR Y `SQL_EXPOSURE` HACE `JOIN ... USING (adm2_id)`.
+#:
+#: Un municipio con dos poligonos disjuntos —un exclave, una isla, un
+#: shapefile que parte una multiparte en dos filas— producia dos filas aqui, y
+#: el join duplicaba **todas** las celdas de ese municipio: su poblacion, sus
+#: edificaciones y sus vias contadas dos veces en el activo.
+#:
+#: El unico guardia que existia, `SQL_ASSERT_SIN_DUPLICADOS`, agrupa por `h3_08`
+#: sobre `crosswalk_h3_adm` — otra tabla— asi que no podia verlo. Y
+#: `validate_national_total` tampoco: para Colombia tolera 909.534 personas de
+#: margen, de sobra para absorber un municipio mediano contado dos veces.
+#:
+#: El centroide sale de la union de las partes, que es el centroide del
+#: municipio y no el de una de sus mitades.
 SQL_ADMIN_LOOKUP = """
 CREATE OR REPLACE TABLE admin_lookup AS
 SELECT
     adm2_id,
-    nombre,
-    adm1_id,
-    departamento,
+    any_value(nombre)       AS nombre,
+    any_value(adm1_id)      AS adm1_id,
+    any_value(departamento) AS departamento,
     '{iso3}' AS iso3,
-    ST_AsText(ST_Centroid(geom)) AS centroide
+    ST_AsText(ST_Centroid(ST_Union_Agg(geom))) AS centroide
 FROM admin_geom
+GROUP BY adm2_id
 """
 
 #: Guardia del paso 1: ninguna celda puede pertenecer a dos municipios.
@@ -288,6 +305,18 @@ SQL_ASSERT_SIN_DUPLICADOS = """
 SELECT h3_08, count(*) AS n
 FROM crosswalk_h3_adm
 GROUP BY h3_08 HAVING count(*) > 1
+"""
+
+#: Guardia del diccionario: ningun `adm2_id` puede aparecer dos veces.
+#:
+#: Es el que faltaba. El de arriba mira la tabla equivocada para este fallo:
+#: `crosswalk_h3_adm` puede estar impecable —cada celda con su unico
+#: municipio— y el join seguir duplicando, porque quien tiene la fila repetida
+#: es el diccionario.
+SQL_ASSERT_ADM2_UNICO = """
+SELECT adm2_id, count(*) AS n
+FROM admin_lookup
+GROUP BY adm2_id HAVING count(*) > 1
 """
 
 
@@ -453,6 +482,17 @@ def build_crosswalk(
         raise ValueError(
             f"{len(duplicadas)} celdas reclamadas por mas de un municipio: "
             f"seria doble conteo. Ejemplos: {duplicadas[:5]}"
+        )
+
+    # Y el mismo doble conteo por el otro lado: un `adm2_id` repetido en el
+    # diccionario duplica cada celda de ese municipio al hacer el join, con el
+    # crosswalk impecable. La comprobacion de arriba mira otra tabla.
+    repetidos = con.execute(SQL_ASSERT_ADM2_UNICO).fetchall()
+    if repetidos:
+        raise ValueError(
+            f"{len(repetidos)} codigos municipales aparecen mas de una vez en el "
+            f"diccionario: el JOIN de `SQL_EXPOSURE` duplicaria toda la exposicion "
+            f"de esos municipios. Ejemplos: {repetidos[:5]}"
         )
 
     celdas: int = con.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0]
