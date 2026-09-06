@@ -1,4 +1,4 @@
-# Exposición sísmica — M7,8 · 27 km al SSE de Muisne, Ecuador
+# Exposición sísmica: M7,8 · 27 km al SSE de Muisne, Ecuador
 
 **Evento USGS:** `us20005j32` · **Origen:** 2016-04-16T23:58:36Z UTC · **Profundidad:** 20,6 km
 
@@ -30,19 +30,19 @@ De la población en intensidad MMI≥7, alrededor de **170 mil** personas tienen
 |---:|---|---|---:|---:|
 | 1 | Portoviejo | `EC1301` | 7,5 | 330 mil |
 | 2 | Esmeraldas | `EC0801` | 7,5 | 300 mil |
-| 3 | Quinindé | `EC0804` | 7,5 | 160 mil |
-| 4 | Chone | `EC1303` | 7,5 | 150 mil |
-| 5 | Sucre | `EC1314` | 8,0 | 68 mil |
-| 6 | Pedernales | `EC1317` | 8,0 | 66 mil |
-| 7 | Atacames | `EC0806` | 8,0 | 55 mil |
-| 8 | Muisne | `EC0803` | 8,0 | 38 mil |
-| 9 | Pichincha | `EC1311` | 7,5 | 36 mil |
-| 10 | Rioverde | `EC0807` | 7,5 | 33 mil |
-| 11 | Flavio Alfaro | `EC1305` | 7,5 | 29 mil |
-| 12 | Jama | `EC1320` | 8,0 | 27 mil |
-| 13 | San Vicente | `EC1322` | 8,0 | 27 mil |
-| 14 | Junín | `EC1307` | 7,5 | 23 mil |
-| 15 | Eloy Alfaro | `EC0802` | 7,5 | 6.600 |
+| 3 | Manta | `EC1308` | 7,0 | 270 mil |
+| 4 | Quinindé | `EC0804` | 7,5 | 160 mil |
+| 5 | Chone | `EC1303` | 7,5 | 150 mil |
+| 6 | El Carmen | `EC1304` | 7,5 | 130 mil |
+| 7 | El Empalme | `EC0908` | 7,0 | 87 mil |
+| 8 | Montecristi | `EC1309` | 7,0 | 78 mil |
+| 9 | Sucre | `EC1314` | 8,0 | 68 mil |
+| 10 | Pedernales | `EC1317` | 8,0 | 66 mil |
+| 11 | Santo Domingo | `EC2301` | 7,0 | 59 mil |
+| 12 | Atacames | `EC0806` | 8,0 | 55 mil |
+| 13 | La Concordia | `EC2302` | 7,5 | 54 mil |
+| 14 | Bolívar | `EC1302` | 7,5 | 48 mil |
+| 15 | Tosagua | `EC1315` | 7,5 | 46 mil |
 
 ## Deslizamiento y licuefacción
 
@@ -57,7 +57,7 @@ Fuente: producto *Ground Failure* de USGS (v1), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **naranja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 

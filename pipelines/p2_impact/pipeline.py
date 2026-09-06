@@ -735,8 +735,15 @@ def build_report(
     # de ceros, o sea que la tabla "municipios mas expuestos" salia en orden
     # alfabetico con quince ceros al lado. Tehuantepec 2017, un M8,2 con 98
     # muertos, se publicaba asi.
-    banda = totales.to_totales().banda_titular
-    columna = f"pop_mmi{banda}p" if banda else "pop_mmi6p"
+    #
+    # LA REGLA ES `Totales.banda_publicada` Y NO `banda_titular`. Aqui decia
+    # `banda_titular`, que llega a 8, y el markdown, el hilo, el mapa y el visor
+    # reordenaban por la otra, que no pasa de 7: en los tres reportes que
+    # alcanzan MMI>=8 el recorte a quince se hacia por una columna y la
+    # publicacion por otra. Manta, con 265.263 personas en MMI>=7, no llegaba a
+    # entrar en la tabla de su propio reporte.
+    banda = totales.to_totales().banda_publicada
+    columna = f"pop_mmi{banda}p"
     top = [
         MunicipioTop(
             adm2_id=str(r[0]),

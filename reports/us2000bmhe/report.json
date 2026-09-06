@@ -48,6 +48,13 @@
       "pop_banda": 7400.7181151825935
     },
     {
+      "adm2_id": "CR116",
+      "nombre": "Turrubares",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
       "adm2_id": "CR104",
       "nombre": "Puriscal",
       "mmi_max": 6.5,
@@ -55,9 +62,9 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CR116",
-      "nombre": "Turrubares",
-      "mmi_max": 6.5,
+      "adm2_id": "CR611",
+      "nombre": "Garabito",
+      "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
@@ -71,13 +78,6 @@
     {
       "adm2_id": "CR606",
       "nombre": "Quepos",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "CR611",
-      "nombre": "Garabito",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -97,22 +97,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CR301",
-      "nombre": "Cartago",
-      "mmi_max": 5.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "CR103",
       "nombre": "Desamparados",
-      "mmi_max": 5.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "CR308",
-      "nombre": "El Guarco",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -125,8 +111,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CR120",
-      "nombre": "León Cortés Castro",
+      "adm2_id": "CR301",
+      "nombre": "Cartago",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -134,6 +120,20 @@
     {
       "adm2_id": "CR602",
       "nombre": "Esparza",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR308",
+      "nombre": "El Guarco",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR120",
+      "nombre": "León Cortés Castro",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0

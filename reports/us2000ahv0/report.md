@@ -1,4 +1,4 @@
-# Exposición sísmica — M8,2 · Terremoto de Tehuantepec, México (2017)
+# Exposición sísmica: M8,2 · Terremoto de Tehuantepec, México (2017)
 
 **Evento USGS:** `us2000ahv0` · **Origen:** 2017-09-08T04:49:19Z UTC · **Profundidad:** 47,4 km
 
@@ -11,8 +11,8 @@
 | Indicador | Estimado |
 |---|---:|
 | Población en MMI≥6 | 760 mil |
-| Población en MMI≥7 | — el evento no llegó a esta banda |
-| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Población en MMI≥7 | el evento no llegó a esta banda |
+| Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥6 | 440 mil |
 | Sedes de salud en MMI≥6 | 224 |
 | Sedes educativas en MMI≥6 | 321 |
@@ -56,7 +56,7 @@ Fuente: producto *Ground Failure* de USGS (v1), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **roja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 

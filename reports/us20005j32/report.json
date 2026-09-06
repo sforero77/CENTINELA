@@ -41,109 +41,109 @@
   },
   "top_municipios": [
     {
-      "adm2_id": "EC1317",
-      "nombre": "Pedernales",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 65950.37720756885,
-      "pop_banda": 52795.91896647215
-    },
-    {
-      "adm2_id": "EC1320",
-      "nombre": "Jama",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 27162.78255407419,
-      "pop_banda": 24541.06603837665
-    },
-    {
-      "adm2_id": "EC0803",
-      "nombre": "Muisne",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 37782.30219740607,
-      "pop_banda": 8820.98200934846
-    },
-    {
-      "adm2_id": "EC0806",
-      "nombre": "Atacames",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 55224.02203127928,
-      "pop_banda": 8565.683931555599
-    },
-    {
-      "adm2_id": "EC1322",
-      "nombre": "San Vicente",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 26577.481548885815,
-      "pop_banda": 7353.572487015277
-    },
-    {
-      "adm2_id": "EC1314",
-      "nombre": "Sucre",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 68319.48796129227,
-      "pop_banda": 5826.9082257356495
-    },
-    {
-      "adm2_id": "EC0802",
-      "nombre": "Eloy Alfaro",
+      "adm2_id": "EC1301",
+      "nombre": "Portoviejo",
       "mmi_max": 7.5,
-      "pop_mmi7p": 6604.937012920156,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "EC0804",
-      "nombre": "Quinindé",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 164691.17179264408,
-      "pop_banda": 0.0
+      "pop_mmi7p": 333074.6068843431,
+      "pop_banda": 333074.6068843431
     },
     {
       "adm2_id": "EC0801",
       "nombre": "Esmeraldas",
       "mmi_max": 7.5,
       "pop_mmi7p": 297596.3180903783,
-      "pop_banda": 0.0
+      "pop_banda": 297596.3180903783
+    },
+    {
+      "adm2_id": "EC1308",
+      "nombre": "Manta",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 265263.3823460443,
+      "pop_banda": 265263.3823460443
+    },
+    {
+      "adm2_id": "EC0804",
+      "nombre": "Quinindé",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 164691.17179264408,
+      "pop_banda": 164691.17179264408
     },
     {
       "adm2_id": "EC1303",
       "nombre": "Chone",
       "mmi_max": 7.5,
       "pop_mmi7p": 150742.281617485,
-      "pop_banda": 0.0
+      "pop_banda": 150742.281617485
     },
     {
-      "adm2_id": "EC1301",
-      "nombre": "Portoviejo",
+      "adm2_id": "EC1304",
+      "nombre": "El Carmen",
       "mmi_max": 7.5,
-      "pop_mmi7p": 333074.6068843431,
-      "pop_banda": 0.0
+      "pop_mmi7p": 131651.09960917663,
+      "pop_banda": 131651.09960917663
     },
     {
-      "adm2_id": "EC1305",
-      "nombre": "Flavio Alfaro",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 29456.803168826737,
-      "pop_banda": 0.0
+      "adm2_id": "EC0908",
+      "nombre": "El Empalme",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 87248.68491868488,
+      "pop_banda": 87248.68491868488
     },
     {
-      "adm2_id": "EC1307",
-      "nombre": "Junín",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 23079.771811996587,
-      "pop_banda": 0.0
+      "adm2_id": "EC1309",
+      "nombre": "Montecristi",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 77992.98221841082,
+      "pop_banda": 77992.98221841082
     },
     {
-      "adm2_id": "EC0807",
-      "nombre": "Rioverde",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 32705.750614682212,
-      "pop_banda": 0.0
+      "adm2_id": "EC1314",
+      "nombre": "Sucre",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 68319.48796129227,
+      "pop_banda": 68319.48796129227
     },
     {
-      "adm2_id": "EC1311",
-      "nombre": "Pichincha",
+      "adm2_id": "EC1317",
+      "nombre": "Pedernales",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 65950.37720756885,
+      "pop_banda": 65950.37720756885
+    },
+    {
+      "adm2_id": "EC2301",
+      "nombre": "Santo Domingo",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 59369.58804338612,
+      "pop_banda": 59369.58804338612
+    },
+    {
+      "adm2_id": "EC0806",
+      "nombre": "Atacames",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 55224.02203127928,
+      "pop_banda": 55224.02203127928
+    },
+    {
+      "adm2_id": "EC2302",
+      "nombre": "La Concordia",
       "mmi_max": 7.5,
-      "pop_mmi7p": 35501.74925542157,
-      "pop_banda": 0.0
+      "pop_mmi7p": 53765.84628438018,
+      "pop_banda": 53765.84628438018
+    },
+    {
+      "adm2_id": "EC1302",
+      "nombre": "Bolívar",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 47516.014756060205,
+      "pop_banda": 47516.014756060205
+    },
+    {
+      "adm2_id": "EC1315",
+      "nombre": "Tosagua",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 45943.311521184165,
+      "pop_banda": 45943.311521184165
     }
   ],
   "incertidumbre": {

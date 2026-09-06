@@ -118,8 +118,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PE1601",
-      "nombre": "Maynas",
+      "adm2_id": "PE2206",
+      "nombre": "Mariscal Caceres",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -139,8 +139,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PE2204",
-      "nombre": "Huallaga",
+      "adm2_id": "PE1601",
+      "nombre": "Maynas",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0

@@ -1,4 +1,4 @@
-# Exposición sísmica — M8,0 · 78 km al NE de Navarro, Perú
+# Exposición sísmica: M8,0 · 78 km al NE de Navarro, Perú
 
 **Evento USGS:** `us60003sc0` · **Origen:** 2019-05-26T07:41:15Z UTC · **Profundidad:** 122,6 km
 
@@ -12,7 +12,7 @@
 |---|---:|
 | Población en MMI≥6 | 1,1 millones |
 | Población en MMI≥7 | 250 mil |
-| Población en MMI≥8 | — el evento no llegó a esta banda |
+| Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥7 | 130 mil |
 | Sedes de salud en MMI≥7 | 123 |
 | Sedes educativas en MMI≥7 | 1.303 |
@@ -49,7 +49,7 @@ Fuente: producto *Ground Failure* de USGS (v8), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **naranja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 

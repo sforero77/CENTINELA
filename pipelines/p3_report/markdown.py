@@ -128,7 +128,7 @@ def render_markdown(report: Report) -> str:
         # su cuenta, que es como se llega a un titulo que promete una columna y
         # una columna que trae otra.
         partes.append(
-            f"## Municipios más expuestos, por población en MMI≥{_banda_del_ranking(report)}"
+            f"## Municipios más expuestos, por población en MMI≥{banda_del_ranking(report)}"
         )
         partes.append(_tabla_municipios(report))
 
@@ -307,15 +307,6 @@ def _nota_del_muro_de_ceros(report: Report) -> str:
     )
 
 
-def _banda_del_ranking(report: Report) -> int:
-    """La banda por la que se ordenan los municipios. Vive en el modelo.
-
-    Estuvo aqui, y el `hilo.txt` calculaba la suya: el mismo evento salia con
-    dos rankings distintos. Ver :func:`model.municipios_del_ranking`.
-    """
-    return banda_del_ranking(report)
-
-
 def _tabla_municipios(report: Report) -> str:
     """Ranking municipal, rotulado con la banda que este evento alcanzo.
 
@@ -357,7 +348,7 @@ def _tabla_municipios(report: Report) -> str:
     # Se ordena por MMI≥7, que es donde estan todas las demas cifras del
     # reporte, y solo se baja a 6 cuando el evento no llego a 7 sobre poblacion
     # — el caso para el que `pop_banda` se invento, y ahi sigue sirviendo.
-    banda = _banda_del_ranking(report)
+    banda = banda_del_ranking(report)
     ordenados = municipios_del_ranking(report)
 
     # UNA CABECERA SIN FILAS NO ES UNA TABLA VACIA: ES UNA PREGUNTA SIN

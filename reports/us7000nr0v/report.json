@@ -76,20 +76,6 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CU0513",
-      "nombre": "Yara",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "CU0508",
-      "nombre": "Manzanillo",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "CU0503",
       "nombre": "Buey Arriba",
       "mmi_max": 6.0,
@@ -104,15 +90,22 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CU0502",
-      "nombre": "Bayamo",
-      "mmi_max": 5.5,
+      "adm2_id": "CU0513",
+      "nombre": "Yara",
+      "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CU0505",
-      "nombre": "Cauto Cristo",
+      "adm2_id": "CU0508",
+      "nombre": "Manzanillo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0512",
+      "nombre": "Río Cauto",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -125,8 +118,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CU0512",
-      "nombre": "Río Cauto",
+      "adm2_id": "CU0502",
+      "nombre": "Bayamo",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -139,8 +132,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CU0705",
-      "nombre": "Calixto García",
+      "adm2_id": "CU0505",
+      "nombre": "Cauto Cristo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0704",
+      "nombre": "Cacocum",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0

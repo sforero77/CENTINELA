@@ -1,4 +1,4 @@
-# Exposición sísmica — M7,5 · 20 km al O de Catia La Mar, Venezuela
+# Exposición sísmica: M7,5 · 20 km al O de Catia La Mar, Venezuela
 
 **Evento USGS:** `us6000t7zp` · **Origen:** 2026-06-24T22:05:04Z UTC · **Profundidad:** 10,0 km
 
@@ -30,19 +30,19 @@ De la población en intensidad MMI≥7, alrededor de **230 mil** personas tienen
 |---:|---|---|---:|---:|
 | 1 | Libertador | `VE0101` | 7,5 | 650 mil |
 | 2 | Vargas | `VE2401` | 8,0 | 380 mil |
-| 3 | Puerto Cabello | `VE0811` | 8,0 | 210 mil |
-| 4 | San Felipe | `VE2211` | 8,0 | 140 mil |
-| 5 | Veroes | `VE2214` | 8,5 | 100 mil |
-| 6 | Chacao | `VE1507` | 7,5 | 83 mil |
-| 7 | Juan José Mora | `VE0805` | 8,5 | 58 mil |
-| 8 | Palmasola | `VE1116` | 7,5 | 31 mil |
-| 9 | Manuel Monge | `VE2208` | 7,5 | 13 mil |
-| 10 | Ocumare de la Costa de Oro | `VE0518` | 8,0 | 11 mil |
-| 11 | Silva | `VE1120` | 8,0 | 10 mil |
-| 12 | Bolívar | `VE2202` | 7,5 | 2.600 |
-| 13 | Girardot | `VE0503` | 7,5 | 1.600 |
-| 14 | Bejuma | `VE0801` | 7,5 | 920 |
-| 15 | Tovar | `VE0514` | 7,5 | 690 |
+| 3 | Sucre | `VE1519` | 7,5 | 350 mil |
+| 4 | Puerto Cabello | `VE0811` | 8,0 | 210 mil |
+| 5 | Plaza | `VE1517` | 7,0 | 170 mil |
+| 6 | San Felipe | `VE2211` | 8,0 | 140 mil |
+| 7 | Veroes | `VE2214` | 8,5 | 100 mil |
+| 8 | Chacao | `VE1507` | 7,5 | 83 mil |
+| 9 | Juan José Mora | `VE0805` | 8,5 | 58 mil |
+| 10 | Palmasola | `VE1116` | 7,5 | 31 mil |
+| 11 | Independencia | `VE2205` | 7,0 | 30 mil |
+| 12 | Cocorote | `VE2204` | 7,0 | 25 mil |
+| 13 | Manuel Monge | `VE2208` | 7,5 | 13 mil |
+| 14 | Ocumare de la Costa de Oro | `VE0518` | 8,0 | 11 mil |
+| 15 | Silva | `VE1120` | 8,0 | 10 mil |
 
 ## Deslizamiento y licuefacción
 
@@ -57,7 +57,7 @@ Fuente: producto *Ground Failure* de USGS (v12), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **roja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado —su fila «7» es todo lo que cae entre 6,5 y 7,49— y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
