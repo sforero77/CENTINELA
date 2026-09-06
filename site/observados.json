@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-06T11:30:18Z",
+  "generado_utc": "2026-09-06T12:20:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tepx",
+      "mag": 5.2,
+      "lon": -115.8082,
+      "lat": -24.2436,
+      "depth_km": 10.0,
+      "lugar": "southern East Pacific Rise",
+      "origen_utc": "2026-09-06T12:00:16Z",
+      "razon": "M5.2 < umbral M5.5",
+      "iso3": ""
+    },
     {
       "usgs_id": "us7000tep0",
       "mag": 4.8,
@@ -146,17 +157,6 @@
       "origen_utc": "2026-09-03T05:17:16Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "COL"
-    },
-    {
-      "usgs_id": "us7000tdbi",
-      "mag": 4.6,
-      "lon": -71.9434,
-      "lat": -29.4696,
-      "depth_km": 10.0,
-      "lugar": "79 km al NO de Coquimbo, Chile",
-      "origen_utc": "2026-09-01T12:15:51Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "CHL"
     }
   ]
 }
