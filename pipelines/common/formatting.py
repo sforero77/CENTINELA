@@ -45,6 +45,24 @@ def format_number_es(value: float, decimals: int = 0) -> str:
     return formatted.replace(",", "\x00").replace(".", ",").replace("\x00", ".")
 
 
+def cifra_con_sustantivo(value: float, sustantivo: str) -> str:
+    """La cifra y su sustantivo, con el "de" que el espanol pide en los millones.
+
+    "450 mil edificaciones" es correcto y "1,1 millones edificaciones" no: los
+    multiplos de millon son sustantivos y piden preposicion. El generador
+    concatenaba cifra y sustantivo a pelo, asi que la frase salia mal justo en
+    los reportes grandes, que son los mas leidos.
+
+    >>> cifra_con_sustantivo(450_000, "edificaciones")
+    '450 mil edificaciones'
+    >>> cifra_con_sustantivo(1_120_000, "edificaciones")
+    '1,1 millones de edificaciones'
+    """
+    cifra = format_count_prose(value)
+    enlace = " de " if cifra.endswith(("millón", "millones")) else " "
+    return f"{cifra}{enlace}{sustantivo}"
+
+
 def format_count_prose(value: float) -> str:
     """Cifra de poblacion/conteo para prosa: 2 significativas y escala legible.
 
