@@ -108,7 +108,8 @@ vez de esperar días.
 | Kilómetros de vía en MMI≥7 | **8.791** |
 | De ellos, primarias y secundarias | **1.015** |
 | Personas en celdas con cobertura areal por licuefacción ≥ 0,10 | **1.602.162** |
-| Municipios alcanzados | **299** |
+| Municipios con población en MMI≥6 | **109** |
+| De ellos, con población en MMI≥7 | **44** |
 
 Las cifras salen de `reports/us6000tjl2/report.json`, y
 `tests/unit/test_cifras_del_readme.py` falla si esta tabla se separa de él.
@@ -345,7 +346,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**1.857 pruebas** sin red, más **142 de navegador** que abren el visor en un
+**1.890 pruebas** sin red, más **142 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 5-sep-2026.
 

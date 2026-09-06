@@ -138,11 +138,23 @@ def test_los_enteros_no_se_escriben_como_decimales(con: Any, tmp_path: Path) -> 
 
 
 def test_el_json_va_sin_espacios(con: Any, tmp_path: Path) -> None:
-    """El fichero se sirve tal cual a un navegador; el sangrado es peso puro."""
-    texto = write_cells_json(con, tmp_path / "celdas.json").read_text("utf-8")
+    """El fichero se sirve tal cual a un navegador; el sangrado es peso puro.
 
-    assert ", " not in texto
+    Se comprueba la ESTRUCTURA y no el texto entero: el fichero lleva una nota
+    en prosa que explica sobre que conjunto se calcula cada columna, y esa
+    prosa tiene comas seguidas de espacio como cualquier frase en castellano.
+    Un guardia de texto que no distingue el dato de su explicacion es el que
+    este repositorio ya ha tenido que arreglar cuatro veces.
+    """
+    ruta = write_cells_json(con, tmp_path / "celdas.json")
+    texto = ruta.read_text("utf-8")
+    datos = json.loads(texto)
+
     assert "\n" not in texto
+    # Los separadores del propio JSON, fuera de las cadenas.
+    assert '","' in texto or "],[" in texto
+    assert ": " not in texto.replace(datos["nota"], "")
+    assert ", " not in texto.replace(datos["nota"], "")
 
 
 def test_un_evento_sin_celdas_produce_una_malla_vacia_valida(con: Any, tmp_path: Path) -> None:

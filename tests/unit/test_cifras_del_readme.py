@@ -74,14 +74,40 @@ def test_la_cifra_del_readme_es_la_publicada(
 
 
 def test_los_municipios_alcanzados_son_los_del_csv() -> None:
-    """La fila que no sale de `totales` sino de contar filas del CSV."""
+    """La fila que no sale de `totales` sino de contar filas del CSV.
+
+    DECIA «MUNICIPIOS ALCANZADOS: 299» Y ERAN LAS FILAS DEL FICHERO.
+
+    `SQL_IMPACT_ADM2` agrega desde MMI 5,0 —el suelo del relleno de contornos—
+    mientras `SQL_TOTALES` corta en 6, asi que el CSV trae una fila por cada
+    municipio que el ShakeMap **toca**, tenga o no poblacion en la banda que el
+    reporte publica. De las 299 filas de us6000tjl2, **188 estan enteras en
+    cero**: 109 municipios tienen poblacion en MMI>=6 y 44 en MMI>=7.
+
+    El resto de la tabla del README dice "en MMI≥7" en cada fila, asi que "299"
+    se leia como parte del mismo conjunto. Se publican las dos cifras que si lo
+    son. Las filas por debajo de MMI 6 se conservan en el CSV —llevan su
+    `mmi_max`, que es la unica forma de saber a que municipios llego la sacudida
+    sin alcanzar la banda— y el propio fichero lo declara en su cabecera.
+    """
     import csv
 
     with (RAIZ / "reports" / "us6000tjl2" / "adm2.csv").open(encoding="utf-8") as fh:
         filas = [f for f in csv.DictReader(fh) if not str(f["usgs_id"]).startswith("#")]
 
-    assert f"| Municipios alcanzados | **{format_number_es(len(filas))}** |" in README.read_text(
-        encoding="utf-8"
+    def con_poblacion(columna: str) -> int:
+        return sum(1 for f in filas if float(f[columna] or 0) > 0)
+
+    readme = README.read_text(encoding="utf-8")
+    seis, siete = con_poblacion("pop_mmi6p"), con_poblacion("pop_mmi7p")
+
+    assert f"| Municipios con población en MMI≥6 | **{format_number_es(seis)}** |" in readme
+    assert f"| De ellos, con población en MMI≥7 | **{format_number_es(siete)}** |" in readme
+    assert "Municipios alcanzados" not in readme, (
+        "vuelve a publicarse un recuento cuyo universo no es el de la tabla"
+    )
+    assert seis < len(filas), (
+        "si todas las filas tuvieran poblacion en la banda, esta prueba pierde su sujeto"
     )
 
 
