@@ -32,6 +32,7 @@ from pipelines.p0_exposure.download import (
     _verificar_insumos,
     digest_de_insumos,
     resumen_de_insumos,
+    sha256_of,
 )
 
 
@@ -370,3 +371,89 @@ def test_los_manifests_del_repo_declaran_la_clave_nueva() -> None:
         for fuente in crudo["sources"]:
             assert "sha256" not in fuente, f"{path.name}/{fuente['id']} conserva la clave vieja"
             assert "insumos_sha256" in fuente, f"{path.name}/{fuente['id']} no declara el digest"
+
+
+# --- Que el digest vea de verdad lo que la ruta de produccion baja ----------
+
+
+def _zip_con(ficheros: dict[str, bytes]) -> bytes:
+    """Un ZIP en memoria, como el que sirve un geoportal."""
+    import io
+    import zipfile
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as z:
+        for nombre, contenido in ficheros.items():
+            z.writestr(nombre, contenido)
+    return buffer.getvalue()
+
+
+class _FetcherDeZip:
+    """Sirve siempre el mismo ZIP. Cumple el protocolo `Fetcher` entero."""
+
+    def __init__(self, contenido: bytes) -> None:
+        self.contenido = contenido
+
+    def get_bytes(self, url: str) -> bytes:
+        return self.contenido
+
+    def get_json(self, url: str) -> dict[str, Any]:  # pragma: no cover - no se usa
+        raise NotImplementedError
+
+
+def test_el_digest_ve_el_dbf_y_el_prj_del_shapefile(tmp_path: Path) -> None:
+    """LA PRUEBA DE ARRIBA CONSTRUIA UNA LISTA QUE PRODUCCION NO PODIA PRODUCIR.
+
+    `test_un_fichero_que_falta_da_otro_digest` arma a mano `.shp` + `.dbf` +
+    `.prj` y comprueba que quitar uno mueve el digest. Cierto, e irrelevante: la
+    ruta real calculaba el digest sobre lo que devolvia `_extraer_zip`, que
+    filtraba a las capas que `ST_Read` abre — **solo el `.shp`**.
+
+    Verificado antes del arreglo: el digest salia identico con y sin el `.prj`
+    en disco. Perder el `.prj` no falla al abrir el shapefile: reproyecta mal, y
+    el error sale como una cifra plausible al otro extremo del pipeline. Y el
+    `.dbf` es donde viven los codigos DIVIPOLA.
+
+    Aqui se baja un ZIP de verdad por la ruta de verdad.
+    """
+    from pipelines.p0_exposure.download import download_zip_completo, ficheros_extraidos
+
+    carpeta = tmp_path / "adm"
+    zip_bytes = _zip_con(
+        {
+            "adm2.shp": b"geometria",
+            "adm2.dbf": b"codigos DIVIPOLA",
+            "adm2.prj": b"GEOGCS[...]",
+            "adm2.shx": b"indice",
+        }
+    )
+    capas = download_zip_completo(
+        "https://ejemplo/adm.zip", carpeta, fetcher=_FetcherDeZip(zip_bytes)
+    )
+
+    # Lo que ST_Read abre sigue siendo solo la geometria: eso no cambia.
+    assert [p.name for p in capas] == ["adm2.shp"]
+
+    # Y lo que entra en el digest es todo lo extraido.
+    nombres = {p.name for p in ficheros_extraidos(carpeta)}
+    assert nombres == {"adm2.shp", "adm2.dbf", "adm2.prj", "adm2.shx"}
+
+
+def test_quitar_el_prj_de_verdad_mueve_el_digest(tmp_path: Path) -> None:
+    """El caso del comentario, ejercitado contra el disco y no contra una lista."""
+    from pipelines.p0_exposure.download import (
+        digest_de_insumos,
+        download_zip_completo,
+        ficheros_extraidos,
+    )
+
+    def digest(ficheros: dict[str, bytes], donde: Path) -> str:
+        download_zip_completo(
+            "https://ejemplo/adm.zip", donde, fetcher=_FetcherDeZip(_zip_con(ficheros))
+        )
+        return digest_de_insumos([_bajado(p.name, sha256_of(p)) for p in ficheros_extraidos(donde)])
+
+    completo = {"adm2.shp": b"geometria", "adm2.dbf": b"codigos", "adm2.prj": b"GEOGCS"}
+    sin_prj = {"adm2.shp": b"geometria", "adm2.dbf": b"codigos"}
+
+    assert digest(completo, tmp_path / "a") != digest(sin_prj, tmp_path / "b")

@@ -34,7 +34,7 @@ from urllib.parse import urlparse
 
 from ..common.geo import BBox
 from ..common.hdx import dataset_license, map_license, resolve_attempts
-from ..common.http import PARTIAL_SUFFIX, HttpFetcher, RecursoAusenteError
+from ..common.http import PARTIAL_SUFFIX, Fetcher, HttpFetcher, RecursoAusenteError
 from ..common.licensing import LicenseViolationError
 from ..common.logging import get_logger
 from ..common.manifest import Manifest, Source
@@ -448,6 +448,28 @@ def download_hdx(source: Source, destino: Path, *, fetcher: HttpFetcher) -> list
     )
 
 
+def ficheros_extraidos(carpeta: Path) -> list[Path]:
+    """TODO lo que salio del ZIP, no solo lo que ``ST_Read`` abre.
+
+    Son dos preguntas distintas y se contestaban con la misma lista. El digest
+    de procedencia se calculaba sobre lo que devolvia `_extraer_zip` —solo los
+    `.shp`— asi que **no veia el `.dbf` con los codigos DIVIPOLA ni el `.prj`
+    con el CRS**. Verificado: el digest salia identico con y sin el `.prj` en
+    disco. Perder un `.prj` no falla al abrir el shapefile: reproyecta mal, y el
+    error sale como una cifra plausible al otro extremo del pipeline.
+
+    `test_un_fichero_que_falta_da_otro_digest` afirmaba lo contrario, pero
+    construia a mano una lista con `.shp` + `.dbf` + `.prj` que la ruta de
+    produccion no podia producir jamas.
+    """
+    return sorted(p for p in carpeta.rglob("*") if p.is_file())
+
+
+def _capas_legibles(carpeta: Path) -> list[Path]:
+    """Las que ``ST_Read`` sabe abrir, de entre lo extraido."""
+    return [p for p in ficheros_extraidos(carpeta) if p.suffix.lower() in GEOMETRY_SUFFIXES]
+
+
 def _extraer_zip(contenido: bytes, destino: Path) -> list[Path]:
     """Descomprime en ``destino`` y devuelve las capas que ``ST_Read`` abre.
 
@@ -459,12 +481,10 @@ def _extraer_zip(contenido: bytes, destino: Path) -> list[Path]:
     destino.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(io.BytesIO(contenido)) as z:
         z.extractall(destino)
-    return sorted(
-        p for p in destino.rglob("*") if p.suffix.lower() in GEOMETRY_SUFFIXES and p.is_file()
-    )
+    return _capas_legibles(destino)
 
 
-def download_zip_completo(url: str, destino: Path, *, fetcher: HttpFetcher) -> list[Path]:
+def download_zip_completo(url: str, destino: Path, *, fetcher: Fetcher) -> list[Path]:
     """Baja un ZIP entero y devuelve las capas que ``ST_Read`` sabe abrir.
 
     Una peticion en vez de muchas, y sin depender de que el servidor sirva
@@ -479,9 +499,7 @@ def download_zip_completo(url: str, destino: Path, *, fetcher: HttpFetcher) -> l
     """
     carpeta = destino / "zip"
     if carpeta.is_dir():
-        ya_estan = sorted(
-            p for p in carpeta.rglob("*") if p.suffix.lower() in GEOMETRY_SUFFIXES and p.is_file()
-        )
+        ya_estan = _capas_legibles(carpeta)
         if ya_estan:
             return ya_estan
     rutas = _extraer_zip(fetcher.get_bytes(url), carpeta)
@@ -649,10 +667,16 @@ def _descargar_fuente(
         ]
 
     if source.url.endswith(".zip"):
-        return [
-            _registrar(source, capa)
-            for capa in download_zip_completo(source.url, carpeta / source.id, fetcher=fetcher)
-        ]
+        # SE REGISTRA TODO LO EXTRAIDO, NO SOLO LA GEOMETRIA.
+        #
+        # El inventario alimenta el digest de procedencia, y el digest tiene que
+        # ver el `.dbf` con los codigos administrativos y el `.prj` con el CRS:
+        # son los ficheros cuyo cambio no falla al abrir el shapefile y sale
+        # como una cifra plausible al final del pipeline. Quien necesita solo
+        # las capas legibles ya las filtra por su cuenta (`build.py`).
+        carpeta_zip = carpeta / source.id
+        download_zip_completo(source.url, carpeta_zip, fetcher=fetcher)
+        return [_registrar(source, f) for f in ficheros_extraidos(carpeta_zip)]
 
     if source.url.endswith((".tif", ".csv")):
         carpeta.mkdir(parents=True, exist_ok=True)
