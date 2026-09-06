@@ -223,10 +223,44 @@ def _reporte_publicado() -> dict[str, Any]:
 #: Cifras del backtest publicado. Cambiarlas exige explicar por que en el PR:
 #: son la memoria de lo que el sistema dijo, y moverlas en silencio es
 #: exactamente lo que los golden tests existen para impedir.
-POP_MMI7P_ESPERADO = 2_415_793.0
+#:
+#: EL ANCLA Y EL FICHERO IBAN POR VERSIONES DISTINTAS DE SHAKEMAP.
+#:
+#: La constante valia 2.415.793 —la cifra del **v7**, que es lo que reproduce
+#: G4 con sus insumos congelados— y el `report.json` publicado va por el **v8**,
+#: con 2.424.287. Un 0,352 % de desvio: el 70 % de la tolerancia del +-0,5 %
+#: gastado no por deriva del codigo sino por un cambio de insumo, y consumido en
+#: silencio. La siguiente revision del ShakeMap habria hecho fallar esta prueba
+#: sin que nada del sistema hubiera cambiado.
+#:
+#: Ahora el ancla es la del artefacto que vigila, y `SHAKEMAP_DEL_ANCLA` impide
+#: que vuelvan a separarse: si el reporte se re-emite con otra version, esto
+#: falla y dice que hay que reanclar, en vez de comerse la tolerancia.
+#:
+#: G1 vigila que **el artefacto publicado no derive**. Que el **codigo** no
+#: mueva una cifra lo vigila G4, que recalcula desde los insumos congelados y
+#: fija los decimales.
+POP_MMI7P_ESPERADO = 2_424_287.2030194234
+SHAKEMAP_DEL_ANCLA = 8
 TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
 
 TOP5_ESPERADO = ["66001", "76109", "63001", "76834", "66170"]
+
+
+def test_el_ancla_describe_la_version_publicada() -> None:
+    """El ancla y el fichero tienen que hablar del mismo ShakeMap.
+
+    Sin esto, un cambio de version del producto se come la tolerancia que
+    existe para detectar deriva del codigo — y la gasta antes de que haya
+    ninguna deriva que detectar.
+    """
+    version = _reporte_publicado()["inputs"]["shakemap_version"]
+    assert version == SHAKEMAP_DEL_ANCLA, (
+        f"el reporte publicado va por ShakeMap v{version} y el ancla se fijo con "
+        f"v{SHAKEMAP_DEL_ANCLA}. Reanclar POP_MMI7P_ESPERADO a la cifra de v{version} "
+        f"y explicarlo en el PR: la tolerancia mide deriva del codigo, no cambios "
+        f"de insumo."
+    )
 
 
 def test_pop_mmi7p_estable() -> None:
