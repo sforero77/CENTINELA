@@ -41,7 +41,18 @@ class TriggerResult:
     #: relevantes: descartarlos en silencio haria que "cero eventos" no
     #: distinguiera "ninguno interesante" de "no pude leer ninguno".
     estados_ilegibles: list[str] = field(default_factory=list)
+    #: Feeds que no se pudieron leer. Con los dos caidos la corrida es ciega y
+    #: "cero eventos" significa "no mire", no "no habia".
+    feeds_fallidos: list[str] = field(default_factory=list)
     latido_utc: str = field(default_factory=utcnow_iso)
+
+    @property
+    def ciego(self) -> bool:
+        """No se pudo leer NINGUN feed. Misma regla que FIRMS y que frescura."""
+        return len(self.feeds_fallidos) >= self._feeds_pedidos > 0
+
+    #: Cuantos feeds se pidieron en esta pasada. Lo fija `run_trigger`.
+    _feeds_pedidos: int = 0
 
     @property
     def a_despachar(self) -> list[str]:
@@ -73,10 +84,31 @@ def run_trigger(
         dry_run: no escribe estado; util para el simulacro mensual.
     """
     result = TriggerResult()
+    result._feeds_pedidos = len(feeds)
     vistos: set[str] = set()
 
     for feed in feeds:
-        for candidate in fetch_feed(fetcher, feed):
+        # UN FEED CAIDO NO PUEDE LLEVARSE AL OTRO.
+        #
+        # `fetch_feed` iba sin proteccion, asi que un 503 en `4.5_hour` abortaba
+        # el bucle entero y **el feed de respaldo no se llegaba a leer** — el que
+        # existe precisamente para que no se pierda un sismo cuando algo falla.
+        # La excepcion subia hasta `cli.main`, que solo atrapa
+        # `NotImplementedError`, y mataba la pasada.
+        #
+        # Es el mismo patron que ya aplican `_classify`, `repaso` y `rezago`: se
+        # cuenta el fallo, se sigue con lo demas, y la merma sale del proceso.
+        try:
+            candidatos = fetch_feed(fetcher, feed)
+        except Exception as error:
+            result.feeds_fallidos.append(feed)
+            _log.warning(
+                "no se pudo leer un feed; se sigue con los demas",
+                extra={"context": {"feed": feed, "error": str(error)}},
+            )
+            continue
+
+        for candidate in candidatos:
             if candidate.usgs_id in vistos:
                 continue  # el mismo evento aparece en ambos feeds
             vistos.add(candidate.usgs_id)
@@ -103,6 +135,7 @@ def run_trigger(
                 "revisados": result.revisados,
                 "relevantes": result.relevantes,
                 "estados_ilegibles": len(result.estados_ilegibles),
+                "feeds_fallidos": result.feeds_fallidos,
                 "observados": len(result.observados),
                 "nuevos": result.nuevos,
                 "revisitados": result.revisitados,

@@ -182,7 +182,13 @@ function pintarLatidos(datos) {
     const li = document.createElement("li");
     li.textContent =
       `${comoFecha(l.utc)} · ${plural(l.revisados, "evento revisado", "eventos revisados")}, ` +
-      `${l.relevantes} en alcance`;
+      `${l.relevantes} en alcance` +
+      // «Cero relevantes» y «no pude leer ninguno» se veian igual. Un estado
+      // ilegible saca al sismo del despacho hasta que alguien repare el
+      // fichero, asi que el latido tiene que decirlo donde se mira.
+      (l.estados_ilegibles
+        ? ` · ⚠ ${plural(l.estados_ilegibles, "estado ilegible", "estados ilegibles")}`
+        : "");
     lista.appendChild(li);
   }
   estado.hidden = true;
