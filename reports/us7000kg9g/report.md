@@ -18,7 +18,7 @@
 | Sedes educativas en MMI≥6 | 0 |
 | Kilómetros de vía en MMI≥6 | 0 km |
 
-> **Todas las cifras en cero es un resultado, no un fallo.** El ShakeMap de este evento sí dibuja intensidad, pero no alcanza MMI≥6 sobre territorio habitado del país: la sacudida quedó mar adentro o sobre zona despoblada. El cálculo corrió entero.
+> **Todas las cifras en cero es un resultado, no un fallo.** El sismo ocurrió a **186 km de profundidad**: la energía llega repartida a la superficie y la intensidad no alcanza MMI≥6 sobre territorio habitado, que es el umbral desde el que este sistema publica cifras. El cálculo corrió entero.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 

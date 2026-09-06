@@ -451,6 +451,14 @@ def run_impact(
     # La malla del evento, para que el visor dibuje el dato donde esta y no un
     # circulo en el centroide del municipio. Si falla, el reporte se publica
     # igual: es un derivado, y eso es lo que importa.
+    # UN DERIVADO QUE NO SE ESCRIBIO NO ES UN DERIVADO VACIO.
+    #
+    # El reporte se publica igual —es un derivado y esa decision esta bien—
+    # pero el aviso se quedaba en el log. El visor lee `celdas.json`, no lo
+    # encuentra, y entra en la rama del cero legitimo: escribe que la sacudida
+    # no alcanzo poblacion. Nadie que mire la pagina puede distinguir "no hay
+    # celdas" de "la malla no se escribio".
+    fallos_de_artefacto: list[str] = []
     try:
         from ..p3_report.celdas import write_cells_json
 
@@ -459,6 +467,12 @@ def run_impact(
         _log.warning(
             "no se pudo escribir la malla del evento",
             extra={"context": {"usgs_id": usgs_id, "error": str(exc)}},
+        )
+        fallos_de_artefacto.append(
+            "La malla por celda (`celdas.json`) no se pudo escribir para esta "
+            "emision: el mapa del visor sale sin hexagonos. **No significa que no "
+            "haya celdas alcanzadas**; las cifras de este reporte y el CSV "
+            "municipal estan completos."
         )
 
     # El area de afectacion, que no es la de la exposicion. La malla llega hasta
@@ -473,6 +487,21 @@ def run_impact(
         _log.warning(
             "no se pudieron escribir los contornos del evento",
             extra={"context": {"usgs_id": usgs_id, "error": str(exc)}},
+        )
+        fallos_de_artefacto.append(
+            "Los contornos del ShakeMap (`contornos.json`) no se pudieron escribir "
+            "para esta emision: el mapa sale sin isolineas. El calculo si corrio."
+        )
+
+    # El aviso viaja al reporte, que es lo que lee el visor y lo que se
+    # descarga. En el log solo lo ve quien ya sabia que mirar.
+    if fallos_de_artefacto:
+        reporte = replace(
+            reporte,
+            incertidumbre=replace(
+                reporte.incertidumbre,
+                notas=(*reporte.incertidumbre.notas, *fallos_de_artefacto),
+            ),
         )
 
     escritos.update(write_report_bundle(reporte, filas, reports_root=reports_root))

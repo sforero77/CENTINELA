@@ -686,6 +686,11 @@ function escribirUrl() {
 // El fichero trae índices H3, no geometrías: el contorno de un hexágono en
 // GeoJSON son ~150 bytes y su índice son quince caracteres. Se reconstruye aquí
 // con h3-js, que es exactamente para lo que sirve un índice jerárquico.
+// Devuelve la coleccion, o `null` si h3-js no esta cargado. **No devuelve
+// `null` por no haber celdas**: una coleccion con cero rasgos es un resultado y
+// hay que poder distinguirla de la libreria ausente, que es un fallo. Las dos
+// salian por el mismo `null` y el visor escribia «no hay nadie dentro que
+// contar» con el CDN caido — medido el 28-ago con unpkg sirviendo 404.
 function celdasAGeoJson(datos) {
   if (typeof h3 === "undefined") return null;
   const idx = Object.fromEntries(datos.columnas.map((c, i) => [c, i]));
@@ -831,9 +836,18 @@ async function cargarEventos() {
   try {
     const eventos = await json(INDICE_REPORTES);
     estado.eventos = eventos;
-    if (!eventos.length) {
+    if (listaVacia(eventos)) {
+      // El dia uno de verdad: el indice existe y esta vacio. Pero eso no puede
+      // esconder los otros tres productos, que si existen desde el primer
+      // momento y son justo lo que hay que ensenar mientras no hay reportes.
+      // Se salia por aqui antes de cargar observados, incendios y cobertura.
       aviso.textContent = "Todavía no hay reportes publicados.";
       pintarPanorama([]);
+      cargarObservados();
+      cargarIncendios();
+      cargarCobertura([]).then((nombres) => {
+        estado.nombresPais = nombres;
+      });
       return;
     }
     aviso.hidden = true;
@@ -904,9 +918,29 @@ async function cargarEventos() {
       escribirUrl();
     }
   } catch (error) {
+    // NO PODER LEER EL INDICE NO ES QUE NO HAYA INDICE.
+    //
+    // Este catch escribia «Aún no hay índice de reportes publicado. El primer
+    // reporte real lo genera.» ante cualquier fallo: un 404, un JSON truncado,
+    // la red caida. Con veintisiete reportes publicados esa frase es falsa, y
+    // manda a quien la lee a esperar un reporte que ya existe.
+    //
+    // El texto del vacio legitimo vive arriba, en la rama que comprueba que la
+    // lista llego y esta vacia. Aqui solo cabe decir que no se pudo leer.
+    aviso.hidden = false;
     aviso.textContent =
-      "Aún no hay índice de reportes publicado. El primer reporte real lo genera.";
+      "No se pudo leer el índice de reportes. No significa que no haya ninguno: " +
+      "significa que esta página no consiguió la lista. Recargar suele bastar; " +
+      "las fichas ya publicadas siguen accesibles por su enlace directo.";
+    anotarFallo("indice", String((error && error.message) || error));
     console.warn("índice:", error);
+    // Los otros tres productos no dependen del indice y se cargan igual: el
+    // fuego activo y la cobertura son utiles aunque la lista de sismos falle.
+    cargarObservados();
+    cargarIncendios();
+    cargarCobertura([]).then((nombres) => {
+      estado.nombresPais = nombres;
+    });
   }
 }
 
@@ -2110,6 +2144,27 @@ function anotarPintado(nombre, rasgos) {
   pintado[nombre] = { rasgos, utc: new Date().toISOString() };
 }
 
+// UN FALLO NO SE REGISTRA COMO CERO.
+//
+// `anotarPintado(capa, 0)` significa "se miro y no habia nada", que es una
+// respuesta legitima y frecuente en este sistema. Cuando lo que pasa es que
+// h3-js no cargo, o que el fichero devolvio 404, la respuesta correcta no es
+// cero: es que no se pudo mirar. Registrarlo como cero le miente ademas a la
+// telemetria que leen las pruebas de navegador, que es lo unico que vigila el
+// visor sin que una persona lo mire.
+//
+// `rasgos: null` es la marca: ni un numero ni un cero, ausencia declarada.
+function anotarFallo(nombre, motivo) {
+  pintado[nombre] = { rasgos: null, error: motivo, utc: new Date().toISOString() };
+  erroresAlPintar.push({ capa: nombre, mensaje: motivo });
+}
+
+// ¿La lista existe y esta vacia, o no llego? Es la pregunta que decide entre el
+// texto del cero legitimo y el del fallo tecnico, y no se estaba haciendo.
+function listaVacia(valor) {
+  return Array.isArray(valor) && valor.length === 0;
+}
+
 // Cambiar de capa NO repinta la malla: la reestiliza con `setPaintProperty` y
 // `setFilter` sobre la misma fuente, que es lo eficiente y lo correcto. Por eso
 // no vale contar rasgos aqui — no cambian.
@@ -2980,7 +3035,36 @@ function dibujarCeldas(m, datos, reporte, contornos) {
     ? new Set(datos.celdas.map((c) => c[datos.columnas.indexOf("mmi")]))
     : null;
 
-  const geo = datos && celdasAGeoJson(datos);
+  // SIN h3-js NO ES SIN CELDAS.
+  //
+  // `celdasAGeoJson` devuelve `null` cuando la libreria no cargo, y la rama de
+  // abajo lo trataba igual que a una malla vacia: escribia «la sacudida no
+  // alcanzo poblacion, no hay nadie dentro que contar» al lado de un panel que
+  // decia 2,4 millones de personas, y anotaba `pintado.celdas = 0`. Medido el
+  // 28-ago-2026 con unpkg sirviendo 404 a h3-js.
+  //
+  // Es la direccion contraria del fallo que este proyecto ya arreglo una vez:
+  // no un cero que parece averia, sino una averia que se pinta con el texto del
+  // cero. Y esta es la peligrosa, porque afirma algo sobre el mundo.
+  const sinH3 = typeof h3 === "undefined";
+  const geo = !sinH3 && datos && celdasAGeoJson(datos);
+  if (sinH3 && datos && datos.celdas && datos.celdas.length) {
+    anotarFallo("celdas", "h3-js no cargo: la malla no se pudo dibujar");
+    $("capas").hidden = true;
+    verHaloProporcional(true);
+    const leyenda = $("leyenda-nota");
+    if (leyenda) {
+      $("leyenda").hidden = false;
+      $("leyenda-titulo").textContent = "Malla no disponible";
+      leyenda.textContent =
+        "No se pudo dibujar la malla de celdas: la libreria que convierte los " +
+        "indices H3 en hexagonos no cargo. Las cifras del panel y las descargas " +
+        "de esta ficha siguen completas; lo que falta es el dibujo.";
+    }
+    dibujarContornos(m, contornos, primeraEtiqueta(m));
+    encuadrarSinMalla(m, reporte, contornos);
+    return;
+  }
   if (!geo || !geo.features.length) {
     // SIN MALLA NO ES SIN MAPA.
     //
@@ -3867,6 +3951,36 @@ function iniciarMapa() {
   };
   mapa.once("load", listo);
 
+  // Y SI A LOS OCHO SEGUNDOS EL ESTILO NO LLEGO, SE DICE.
+  //
+  // La red de seguridad de mas abajo hacia `setTimeout(listo, 8000)` a secas:
+  // retiraba el aviso de carga pasara lo que pasara, asi que con el estilo base
+  // sin llegar quedaba un rectangulo vacio y ningun mensaje. El caso gemelo
+  // —maplibre ausente— si tiene su texto desde el 28-ago; este no lo tuvo.
+  //
+  // Un rectangulo gris y mudo se lee como "aqui no hay nada que ver", que es
+  // justo lo contrario de lo que pasa.
+  const listoOSinEstilo = () => {
+    if (mapa.isStyleLoaded && mapa.isStyleLoaded()) {
+      listo();
+      return;
+    }
+    anotarFallo("mapa-base", "el estilo base no llego en 8 s");
+    // Misma presentacion que `avisarSinMapa`, que es el caso gemelo y ya tiene
+    // su hueco y su estilo: dos avisos de la misma cosa no deben verse
+    // distintos.
+    const aviso = $("cargando");
+    if (aviso) {
+      aviso.classList.add("panel-mapa-aviso");
+      aviso.innerHTML =
+        `<span class="mono">El mapa base no cargó</span>` +
+        `<span class="panel-mapa-nota">El fondo cartográfico no llegó. Las ` +
+        `cifras, las tablas y las descargas de cada reporte siguen completas.</span>`;
+      aviso.hidden = false;
+    }
+    anunciar("El mapa base no cargó. Las cifras y las descargas siguen completas.");
+  };
+
   // EL ENCUADRE, AHORA SI ADAPTADO A LA VENTANA.
   //
   // `VISTA_INICIAL` es un centro y un zoom medidos sobre un mapa de 954 px, y
@@ -3914,7 +4028,7 @@ function iniciarMapa() {
       /* con una caja invalida se queda en VISTA_INICIAL, que es correcta */
     }
   });
-  setTimeout(listo, 8000);
+  setTimeout(listoOSinEstilo, 8000);
 
   mapa.on("error", (e) => console.warn("mapa:", e && e.error && e.error.message));
   return mapa;
@@ -4634,15 +4748,40 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
 // radiativa medida y detecciones contadas. La leyenda lo dice y el popup lo
 // repite.
 async function cargarIncendios() {
+  const avisoFocos = $("estado-focos");
   let datos;
   try {
     datos = await json(INCENDIOS);
   } catch (error) {
-    console.info("incendios:", error);
+    // «HOY NO ARDE NADA» NO SE PUEDE DECIR SIN HABER MIRADO.
+    //
+    // Esto caia a `console.info` y volvia en silencio. El modo fuego se queda
+    // entonces con su leyenda de potencia radiativa completa y su nota de
+    // lectura sobre un mapa sin un solo foco: la pantalla entera afirma que se
+    // midio el continente y que no arde nada.
+    anotarFallo("focos", String((error && error.message) || error));
+    if (avisoFocos) {
+      avisoFocos.hidden = false;
+      avisoFocos.textContent =
+        "No se pudo leer la capa de focos activos. El mapa está vacío porque " +
+        "falta el dato, no porque no haya fuego.";
+    }
+    console.warn("incendios:", error);
     return;
   }
   const celdas = (datos && datos.celdas) || [];
-  if (!celdas.length) return;
+  if (!celdas.length) {
+    // Y el vacio legitimo, que tambien existe: el fichero llego y no trae
+    // celdas. Se dice con sus palabras, distintas de las de arriba.
+    anotarPintado("focos", 0);
+    if (avisoFocos) {
+      avisoFocos.hidden = false;
+      avisoFocos.textContent =
+        "Ninguna celda con fuego activo en la ventana publicada.";
+    }
+    return;
+  }
+  if (avisoFocos) avisoFocos.hidden = true;
 
   dibujarIncendios(datos);
   estado.fuegoDatos = datos;
