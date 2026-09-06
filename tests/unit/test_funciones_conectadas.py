@@ -26,6 +26,7 @@ proxima auditoria.
 from __future__ import annotations
 
 import ast
+import collections
 import re
 from pathlib import Path
 
@@ -48,21 +49,24 @@ FUENTES_DE_LLAMADA: tuple[tuple[str, str], ...] = (
 #:
 #: Lo que NO vale como motivo: "esta probada", "la usaremos pronto", "es API
 #: publica". Las tres describen justo el codigo que hay que borrar o cablear.
+#: Las claves llevan el modulo (`paquete.modulo.funcion`) desde que el guardia
+#: dejo de indexar por nombre suelto: dos funciones homonimas en modulos
+#: distintos se cubrian la una a la otra.
 SIN_LLAMADOR_JUSTIFICADO: dict[str, str] = {
-    "prorate": (
+    "p0_exposure.crosswalk.prorate": (
         "Mitad del reparto fraccionario que el modulo documenta y no toma: con "
         "el reparto por contencion, `frac_area` vale siempre 1,0. Se conserva "
         "como puerta de entrada al reparto exacto si alguna vez hace falta."
     ),
-    "validate_fractions": (
+    "p0_exposure.crosswalk.validate_fractions": (
         "Igual que `prorate`. El invariante equivalente lo verifica "
         "`SQL_ASSERT_SIN_DUPLICADOS` en SQL, sobre la tabla entera."
     ),
-    "gate_publication": (
+    "p4_brigada.protocol.gate_publication": (
         "Contrato de la brigada de imagen (P4), que es Fase 2. El modulo entero "
         "es contrato todavia sin pipeline detras."
     ),
-    "global_url": (
+    "p0_exposure.sources.ghsl.global_url": (
         "Mosaico global de GHSL, 5,25 GB. Su propia docstring dice que hay que "
         "preferir `tiles_for_bbox`, que baja 93 MB para Colombia. Se conserva "
         "como escape para un pais cuya caja acabara cubriendo casi todo."
@@ -71,13 +75,29 @@ SIN_LLAMADOR_JUSTIFICADO: dict[str, str] = {
 
 
 def _funciones_publicas() -> dict[str, Path]:
-    """Funciones publicas de modulo definidas en `pipelines/`."""
+    """Funciones publicas de modulo definidas en `pipelines/`.
+
+    LA CLAVE LLEVA EL MODULO, Y NO LO LLEVABA.
+
+    `encontradas[nodo.name] = ruta` sobrescribia, asi que de dos funciones con
+    el mismo nombre en modulos distintos solo quedaba la ultima, y una llamada a
+    cualquiera de las dos satisfacia a las dos. Tres nombres estaban duplicados
+    —`feed_url` en p1_trigger/feed y p5_incendios/firms, `leer` en
+    p1_trigger/observados y p5_incendios/incendios, `tiles_for_bbox` en
+    sources/ghsl y sources/worldcover— y el guardia escondia un huerfano real:
+    `p5_incendios.incendios.leer` no la llamaba nadie en produccion, solo dos
+    pruebas que la ejercitaban a ella misma.
+
+    Un guardia de codigo muerto que se deja engañar por un nombre repetido es
+    justo el escondite que existe para iluminar.
+    """
     encontradas: dict[str, Path] = {}
     for ruta in sorted(PIPELINES.rglob("*.py")):
         arbol = ast.parse(ruta.read_text(encoding="utf-8"))
+        modulo = ruta.relative_to(PIPELINES).with_suffix("").as_posix().replace("/", ".")
         for nodo in arbol.body:  # solo nivel de modulo: los metodos no cuentan
             if isinstance(nodo, ast.FunctionDef) and not nodo.name.startswith("_"):
-                encontradas[nodo.name] = ruta.relative_to(RAIZ)
+                encontradas[f"{modulo}.{nodo.name}"] = ruta.relative_to(RAIZ)
     return encontradas
 
 
@@ -117,13 +137,37 @@ def _texto_de_produccion() -> str:
 
 
 def _sin_llamador() -> dict[str, Path]:
-    """Funciones publicas que solo aparecen en su propia definicion."""
+    """Funciones publicas que solo aparecen en su propia definicion.
+
+    Para un nombre unico basta contar apariciones. Para uno **repetido** no: dos
+    definiciones dejan dos apariciones aunque solo se llame a una, asi que se
+    exige ademas que el modulo que la define este alcanzado —importado o
+    nombrado— en produccion. Sin eso, la duplicada muerta viaja gratis a costa
+    de la viva.
+    """
     produccion = _texto_de_produccion()
+    calificadas = _funciones_publicas()
+    definiciones = collections.Counter(clave.rsplit(".", 1)[1] for clave in calificadas)
+
     huerfanas: dict[str, Path] = {}
-    for nombre, ruta in _funciones_publicas().items():
+    for clave, ruta in calificadas.items():
+        modulo, nombre = clave.rsplit(".", 1)
         apariciones = len(re.findall(rf"\b{re.escape(nombre)}\b", produccion))
-        if apariciones <= 1:  # la definicion se cuenta a si misma
-            huerfanas[nombre] = ruta
+        # Cada definicion se cuenta a si misma.
+        if apariciones <= definiciones[nombre]:
+            huerfanas[clave] = ruta
+            continue
+        if definiciones[nombre] > 1:
+            hoja = modulo.rsplit(".", 1)[-1]
+            # `from .firms import feed_url`, `ghsl.tiles_for_bbox(...)`: el
+            # modulo tiene que aparecer al lado del nombre en alguna parte.
+            juntos = re.search(
+                rf"\b{re.escape(hoja)}\b[^\n]{{0,120}}\b{re.escape(nombre)}\b"
+                rf"|\b{re.escape(nombre)}\b[^\n]{{0,120}}\b{re.escape(hoja)}\b",
+                produccion,
+            )
+            if not juntos:
+                huerfanas[clave] = ruta
     return huerfanas
 
 
@@ -169,3 +213,27 @@ def test_cada_excepcion_explica_por_que() -> None:
     flojas = [n for n, motivo in SIN_LLAMADOR_JUSTIFICADO.items() if len(motivo.split()) < 8]
 
     assert flojas == [], f"Motivos demasiado escuetos para poder discutirse: {flojas}"
+
+
+def test_dos_funciones_homonimas_se_cuentan_por_separado() -> None:
+    """La propiedad que hacia inutil al guardia con los nombres repetidos.
+
+    Con la clave sin modulo, `encontradas[nodo.name] = ruta` sobrescribia: de
+    `feed_url` solo sobrevivia una, y una llamada a cualquiera de las dos
+    satisfacia a las dos. Escondio un huerfano real —`incendios.leer`, con dos
+    pruebas que solo la ejercitaban a ella— hasta la auditoria del 5-sep.
+    """
+    calificadas = _funciones_publicas()
+    por_nombre = collections.Counter(clave.rsplit(".", 1)[1] for clave in calificadas)
+    repetidos = {n for n, veces in por_nombre.items() if veces > 1}
+
+    assert repetidos, (
+        "ya no hay nombres repetidos en pipelines/; si es a proposito, esta "
+        "prueba pierde su sujeto y se puede quitar"
+    )
+    for nombre in repetidos:
+        claves = [c for c in calificadas if c.rsplit(".", 1)[1] == nombre]
+        assert len(claves) == por_nombre[nombre], f"se perdio una definicion de {nombre}"
+        assert len({calificadas[c] for c in claves}) == len(claves), (
+            f"dos definiciones de {nombre} apuntan al mismo fichero"
+        )
