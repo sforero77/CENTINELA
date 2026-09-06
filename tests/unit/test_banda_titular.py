@@ -171,8 +171,39 @@ def test_el_visor_usa_la_misma_regla_que_el_reporte() -> None:
 
     app = (Path(__file__).parent.parent.parent / "site" / "assets" / "app.js").read_text("utf-8")
 
-    assert "function bandaTitular(" in app
+    assert "function bandaPublicada(" in app
     assert "pop_mmi6p" in app, "el visor no puede bajar de banda sin la cifra de MMI≥6"
+
+
+def test_el_visor_no_decide_la_banda_en_tres_sitios() -> None:
+    """La regla vivia escrita a mano en dos sitios y ausente en un tercero.
+
+    `pintarArea` y `pintarMunicipios` llevaban cada uno su `banda === 6 ? 6 : 7`
+    y `dibujarPerimetro` no la usaba: encerraba `bandaDeTotales`, que llega a 8.
+    En Muisne el panel decia «25.251 km² dentro de MMI≥7» y el mapa rodeaba los
+    2.002 km² de MMI≥8. Quien mira el mapa y lee la cifra de al lado esta viendo
+    dos sitios distintos.
+    """
+    from pathlib import Path
+
+    app = (Path(__file__).parent.parent.parent / "site" / "assets" / "app.js").read_text("utf-8")
+
+    # La regla escrita a mano no puede volver a aparecer fuera de su funcion.
+    cuerpo = [
+        linea
+        for linea in app.splitlines()
+        if "=== 6 ? 6 : 7" in linea and not linea.lstrip().startswith("//")
+    ]
+    assert not cuerpo, f"la regla de la banda vuelve a estar escrita a mano: {cuerpo}"
+
+    # Y los tres bloques que rotulan una banda tienen que consultarla.
+    for funcion in ("pintarArea", "pintarMunicipios", "dibujarPerimetro"):
+        inicio = app.index(f"function {funcion}(")
+        fin = app.index("\nfunction ", inicio + 1)
+        assert "bandaPublicada(" in app[inicio:fin], (
+            f"{funcion} no consulta la banda publicada: puede rotular una banda "
+            f"distinta a la de los otros dos bloques"
+        )
 
 
 def test_el_indice_publica_las_dos_bandas() -> None:

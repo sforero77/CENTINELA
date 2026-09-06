@@ -1037,6 +1037,19 @@ function bandaDeTotales(t) {
   return 0;
 }
 
+// LA BANDA QUE EL PANEL ROTULA. Espejo exacto de `Totales.banda_publicada`
+// (`pipelines/p3_report/model.py`): MMI≥7 salvo que el evento no alcance esa
+// banda sobre poblacion, y entonces MMI≥6. Nunca MMI≥8.
+//
+// La regla estaba escrita dos veces —`banda === 6 ? 6 : 7` en `pintarArea` y en
+// `pintarMunicipios`— y `dibujarPerimetro` no la usaba: encerraba `bandaDeTotales`,
+// que llega a 8. En Muisne el panel decia «25.251 km² dentro de MMI≥7» y el mapa
+// rodeaba 2.002 km², los de MMI≥8. Quien mira el mapa y lee la cifra de al lado
+// esta viendo dos sitios distintos.
+function bandaPublicada(t) {
+  return t && t.pop_mmi7p > 0 ? 7 : 6;
+}
+
 function bandaTitular(evento) {
   if (Number.isFinite(evento.pop_mmi7p) && evento.pop_mmi7p > 0) {
     return { pop: evento.pop_mmi7p, banda: 7 };
@@ -1445,8 +1458,7 @@ function pintarArea(reporte, celdas) {
   //
   // Misma regla que `pintarMunicipios`: MMI≥7, y solo se baja a 6 cuando el
   // evento no llego a 7 sobre poblacion.
-  const banda = bandaDeTotales(reporte.totales);
-  const titular = banda === 6 ? 6 : 7;
+  const titular = bandaPublicada(reporte.totales);
   const dentro = reparto.bandas.filter((b) => b.banda >= titular);
   const km2Titular = dentro.reduce((a, b) => a + b.km2, 0);
   const celdasTitular = dentro.reduce((a, b) => a + b.celdas, 0);
@@ -1896,8 +1908,7 @@ function pintarMunicipios(reporte, municipios) {
   // Se ordena por la banda en la que se cuenta el resto del panel —MMI≥7—, y
   // solo se baja a MMI≥6 cuando el evento no llego a 7 sobre poblacion, que es
   // el caso que `pop_banda` cubria bien. Ahi sigue siendo `pop_banda`.
-  const banda = bandaDeTotales(reporte.totales);
-  const bandaMostrada = banda === 6 ? 6 : 7;
+  const bandaMostrada = bandaPublicada(reporte.totales);
   const cifra = (m) =>
     bandaMostrada === 7 ? (m.pop_mmi7p || 0) : (m.pop_banda ?? m.pop_mmi7p ?? 0);
 
@@ -2901,9 +2912,11 @@ function perimetroDeCeldas(datos, minimo) {
 }
 
 function dibujarPerimetro(m, datos, reporte, antes) {
-  // La banda titular es la que rotula el resto del panel. Dibujar el perimetro
-  // de otra banda pondria en el mapa un area que ninguna cifra nombra.
-  const minimo = bandaDeTotales(reporte.totales) || 6;
+  // La banda PUBLICADA es la que rotula el resto del panel. Dibujar el
+  // perimetro de otra pondria en el mapa un area que ninguna cifra nombra, y es
+  // lo que hacia: `bandaDeTotales` llega a 8, asi que en Muisne el panel decia
+  // «25.251 km² dentro de MMI≥7» y el mapa rodeaba los 2.002 km² de MMI≥8.
+  const minimo = bandaPublicada(reporte.totales);
   const per = perimetroDeCeldas(datos, minimo);
   if (!per) {
     anotarPintado("perimetro", 0);
