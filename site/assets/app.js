@@ -5001,13 +5001,31 @@ function referenciaDelFuego() {
   return estado.fuegoRef;
 }
 
-function enLaVentanaFuego(foco) {
+// EL FOCO SE FILTRA ENTERO Y EL MAPA CELDA A CELDA.
+//
+// `agruparFocos` corre sobre TODAS las celdas —y esta bien: un incendio es una
+// componente conexa, y esa topologia no depende de la ventana que se mire—,
+// pero `resumirFoco` sumaba tambien todas. Con la ventana en 6 h, un foco cuya
+// celda mas reciente es de hace dos horas entraba en la lista con **su area
+// entera**, incluidas las celdas de hace veinte; el mapa, que filtra celda a
+// celda, dibujaba solo las recientes.
+//
+// Medido: la lista anunciaba 1.783 km² ardiendo y el mapa dibujaba 1.361. Dos
+// respuestas a la misma pregunta, en la misma pantalla.
+//
+// No se reagrupa —el union-find sobre catorce mil celdas es lo caro— sino que
+// se vuelve a resumir el foco sobre las celdas que pasan el filtro. Un foco que
+// se queda sin celdas dentro de la ventana desaparece de la lista, que es lo
+// mismo que hace el mapa.
+function focoEnLaVentana(foco) {
   const horas = (VENTANAS_FUEGO[estado.ventanaFuego] || VENTANAS_FUEGO.h24).horas;
-  const t = Date.parse(foco.ultimaUtc);
-  // Sin sello legible se deja pasar: es un fallo del dato, no algo que deba
-  // desaparecer de la lista sin decir nada.
-  if (!Number.isFinite(t)) return true;
-  return referenciaDelFuego() - t <= horas * 3600000;
+  const corte = new Date(referenciaDelFuego() - horas * 3600000).toISOString();
+  const dentro = foco.celdas.filter((c) => !c.ultima_utc || c.ultima_utc >= corte);
+  if (!dentro.length) return null;
+  if (dentro.length === foco.celdas.length) return foco;
+  const recortado = resumirFoco(foco.id, dentro);
+  recortado.iso3 = foco.iso3;
+  return recortado;
 }
 
 //: El pais de un foco es el de sus celdas. Casi siempre uno solo; un incendio
@@ -5096,9 +5114,12 @@ function pintarListaFocos({ anunciando = true } = {}) {
   if (!lista || !estado.focos.length) return;
 
   const orden = ORDENES_FOCOS[estado.ordenFocos] || ORDENES_FOCOS.reciente;
-  const dentro = estado.focos.filter(
-    (f) => enLaVentanaFuego(f) && (!estado.paisFuego || f.iso3 === estado.paisFuego)
-  );
+  // Cada foco se re-resume sobre sus celdas dentro de la ventana: sumar las de
+  // fuera hacia que la lista anunciara mas superficie de la que el mapa dibuja.
+  const dentro = estado.focos
+    .filter((f) => !estado.paisFuego || f.iso3 === estado.paisFuego)
+    .map(focoEnLaVentana)
+    .filter(Boolean);
   const listados = dentro
     .slice()
     .sort((a, b) => orden.clave(b) - orden.clave(a))
@@ -5119,7 +5140,7 @@ function pintarListaFocos({ anunciando = true } = {}) {
     // decir CUANTOS son. Medido en la pagina publicada: los diecisiete paises
     // del desplegable sumaban 4.104 y el total era 6.239 — un tercio de los
     // focos no lo alcanza ningun filtro, y nada en pantalla lo insinuaba.
-    const sinPais = estado.focos.filter((f) => enLaVentanaFuego(f) && !f.iso3).length;
+    const sinPais = estado.focos.filter((f) => focoEnLaVentana(f) && !f.iso3).length;
     const apunte = !estado.paisFuego && sinPais ? ` · ${numero(sinPais)} sin país asignado` : "";
     cuenta.textContent = dentro.length
       ? (listados.length < dentro.length
@@ -5286,9 +5307,12 @@ function encuadrarLoFiltrado() {
   }
 
   if (estado.amenaza === "fuego") {
-    const dentro = estado.focos.filter(
-      (f) => enLaVentanaFuego(f) && (!estado.paisFuego || f.iso3 === estado.paisFuego)
-    );
+    // Las mismas celdas que la lista y que el mapa: encuadrar sobre las de
+    // fuera de ventana llevaria la vista a fuego que no se esta dibujando.
+    const dentro = estado.focos
+      .filter((f) => !estado.paisFuego || f.iso3 === estado.paisFuego)
+      .map(focoEnLaVentana)
+      .filter(Boolean);
     const puntos = [];
     for (const f of dentro) {
       for (const h of f.h3s.slice(0, 4)) {
