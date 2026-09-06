@@ -460,9 +460,21 @@ def _linea_ground_failure(report: Report, tipo: str, propia: float) -> str:
     # —lo dice `SQL_TOTALES`— y la linea no lo decia, asi que se leia como si
     # fuera de la banda que titula el reporte. El visor llego a dividirla entre
     # `pop_mmi7p` por esa misma lectura y publicaba «1.119 % de los expuestos».
+    # Y QUE MODELO ES «EL MODELO».
+    #
+    # El fichero se descargaba con el nombre del preferido aunque la url viniera
+    # de las alternativas historicas, asi que un `jessee_2018_model.tif` podia
+    # ser un `nowicki_2014` o un `godt_2008`. La docstring de
+    # `GROUND_FAILURE_HIGH_PROB` dice que no son intercambiables: «las dos
+    # distribuciones son distintas, asi que el mismo 0,10 no marca lo mismo en
+    # cada una». Nombrarlo no arregla la incomparabilidad; hace que se vea.
+    modelo = getattr(
+        report.inputs, "modelo_deslizamiento" if tipo == "ls" else "modelo_licuefaccion", ""
+    )
+    quien = f" según `{modelo}`" if modelo else ""
     linea = (
         f"- **{etiqueta.capitalize()}.** Población en celdas de MMI≥6 donde el modelo "
-        f"espera ≥ {umbral} de {GF_UNIDAD[tipo]}: **{format_count_prose(propia)}**."
+        f"espera ≥ {umbral} de {GF_UNIDAD[tipo]}{quien}: **{format_count_prose(propia)}**."
     )
     if not gf.alerta_viva(tipo):
         return linea

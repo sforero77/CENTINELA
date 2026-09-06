@@ -56,12 +56,27 @@ class Inputs:
     shakemap_version: int
     groundfailure_version: int
     exposure_manifest: str
+    #: QUE MODELO PRODUJO CADA CIFRA DE TERRENO.
+    #:
+    #: El fichero se descargaba con el nombre del modelo **preferido** aunque la
+    #: url viniera de las alternativas historicas, y a partir de ahi nada los
+    #: distinguia: el mismo `GROUND_FAILURE_HIGH_PROB`, la misma etiqueta de
+    #: unidad y solo el numero de version aqui. Y la docstring de ese umbral dice
+    #: que no son intercambiables: «Zhu (2017) entrega cobertura areal, que no es
+    #: una probabilidad (...) el mismo 0,10 no marca lo mismo en cada una».
+    #:
+    #: Vacio en los reportes emitidos antes de que esto se registrara, que es una
+    #: ausencia honesta y no un modelo equivocado.
+    modelo_deslizamiento: str = ""
+    modelo_licuefaccion: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "shakemap_version": self.shakemap_version,
             "groundfailure_version": self.groundfailure_version,
             "exposure_manifest": self.exposure_manifest,
+            "modelo_deslizamiento": self.modelo_deslizamiento,
+            "modelo_licuefaccion": self.modelo_licuefaccion,
         }
 
 
