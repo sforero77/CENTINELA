@@ -2552,7 +2552,18 @@ function aplicarAmenaza() {
   // (solo con evento), potencia radiativa en fuego.
   if (fuego) {
     $("capas").hidden = true;
-    pintarLeyendaFuego(estado.fuegoDatos);
+    // SOLO SI EL FICHERO LLEGO.
+    //
+    // `celdasDeFuego(null)` degrada a `{total: 0, dibujadas: 0}` sin avisar, asi
+    // que con `incendios.json` caido esto pintaba la rampa entera de potencia
+    // radiativa y su nota de lectura —«energia medida por satelite»— sobre un
+    // mapa sin un solo foco. La pantalla afirmaba que se midio el continente.
+    // El aviso de que el fichero no llego lo escribe `cargarIncendios`.
+    if (estado.fuegoDatos) {
+      pintarLeyendaFuego(estado.fuegoDatos);
+    } else {
+      $("leyenda").hidden = true;
+    }
   } else if (!estado.seleccionado) {
     $("leyenda").hidden = true;
   }
@@ -2732,7 +2743,20 @@ function cerrarGlobo() {
 
 function quitarCapa(id) {
   const m = estado.mapa;
-  if (!m || !m.isStyleLoaded() || !m.getSource(id)) return;
+  // `getStyle()`, NO `isStyleLoaded()`.
+  //
+  // `isStyleLoaded()` devuelve false mientras **cualquier** fuente del estilo
+  // esta cargando, teselas del mapa base incluidas, y este fichero ya lo tiene
+  // escrito dos veces —en `verHaloProporcional` y en `cuandoElEstiloEsteListo`—.
+  // Aqui la guarda cortaba en ese instante y `cerrarDetalle` seguia: las tres
+  // capas del evento se quedaban dibujadas sobre el panorama y la linea
+  // siguiente anotaba `pintado = 0` para las tres. El registro publico del visor
+  // afirmaba que no habia nada dibujado con la malla, los contornos y el
+  // perimetro a la vista.
+  //
+  // `removeLayer` y `removeSource` no necesitan que el estilo este ocioso: solo
+  // necesitan que exista.
+  if (!m || !m.getStyle() || !m.getSource(id)) return;
   // El perimetro lleva funda blanca debajo de la linea, asi que una fuente puede
   // tener dos capas colgando. Los sufijos se listan aqui una sola vez.
   for (const sufijo of ["", "-borde"]) {
@@ -4402,19 +4426,37 @@ async function cargarObservados() {
   try {
     datos = await json(OBSERVADOS);
   } catch (error) {
-    // Todavia no hay latido que lo haya escrito. No es un fallo del visor.
-    console.info("observados:", error);
+    // «CERO VISTOS» Y «NO PUDE MIRAR» SE VEIAN IGUAL: LOS DOS, NADA EN PANTALLA.
+    //
+    // Esta capa existe justamente para hacer esa distincion —«lo vi y es
+    // inofensivo» frente a «estoy roto»— y su propio cargador la perdia: un
+    // fallo de red caia a `console.info` y volvia, dejando la pantalla
+    // identica a la de una ventana sin sismos menores.
+    anotarFallo("observados", String((error && error.message) || error));
+    console.warn("observados:", error);
     return;
   }
-  const eventos = (datos && datos.eventos) || [];
-  if (!eventos.length) return;
+  // Un fichero sin la clave `eventos` no es una ventana vacia: es un fichero
+  // que no se puede leer. `[]` si es una medida, y se publica como tal para que
+  // la tarjeta diga «0 vistos, revisado hace X» en vez de desaparecer.
+  if (!datos || !Array.isArray(datos.eventos)) {
+    anotarFallo("observados", "observados.json sin lista de eventos");
+    return;
+  }
+  const eventos = datos.eventos;
+  estado.vivo.ventanaSismos = datos.ventana_dias || 5;
+  estado.vivo.sismosUtc = datos.generado_utc || null;
+  if (!eventos.length) {
+    anotarPintado("observados", 0);
+    estado.vivo.observados = 0;
+    pintarEnVivo();
+    return;
+  }
 
   dibujarObservados(eventos);
   pintarInterruptorObservados(eventos, datos.ventana_dias);
   pintarListaMenores(eventos, datos.ventana_dias);
   estado.vivo.observados = eventos.length;
-  estado.vivo.ventanaSismos = datos.ventana_dias || 5;
-  estado.vivo.sismosUtc = datos.generado_utc || null;
   pintarEnVivo();
 }
 
@@ -6452,10 +6494,18 @@ function totalesDeFuego(celdas) {
 //: Antes era la constante «En toda América Latina», que era cierta porque nada
 //: se filtraba. Ahora que las cifras se cruzan, un rótulo fijo sería peor que
 //: no tenerlo: diría «toda América Latina» debajo del número de Brasil.
+//: Horas de la ventana **elegida**, que es la que recorta las cifras.
+function horasDeLaVentana() {
+  return (VENTANAS_FUEGO[estado.ventanaFuego] || VENTANAS_FUEGO.h24).horas;
+}
+
 function alcanceDelFuego() {
   const partes = [];
   partes.push(estado.paisFuego ? `En ${nombrePais(estado.paisFuego)}` : "En toda América Latina");
   if (estado.soloEnVista) partes.push("dentro del encuadre");
+  // La ventana es un recorte como los otros dos y no se nombraba en ninguna
+  // parte del apunte, asi que no habia nada que corrigiera el «24 h» de al lado.
+  if (estado.ventanaFuego !== "h24") partes.push(`en las últimas ${horasDeLaVentana()} h`);
   // Cuántas quedaron fuera del filtro. Decir «1.240 celdas» sin decir de
   // cuántas convierte un recorte en un total.
   const todas = estado.vivo && estado.vivo.celdasTotales;
@@ -6575,7 +6625,15 @@ function pintarEnVivo() {
         // mentira en cuanto alguien eligiera Brasil. Lo dice `alcanceDelFuego`.
         `<span class="apunte">${alcanceDelFuego()} · ` +
         `${numero(v.incendios.celdas)} celdas · ` +
-        `${numero(v.incendios.detecciones)} detecciones en ${v.ventanaFuego}&nbsp;h` +
+        // LA VENTANA DEL ROTULO, NO LA DEL FICHERO.
+        //
+        // `v.ventanaFuego` se fija una sola vez al cargar `incendios.json` y
+        // no se vuelve a tocar. `v.incendios.detecciones`, en cambio, lo
+        // recalcula `refrescarTablero` desde `celdasDeFuegoFiltradas()`, que
+        // corta por `estado.ventanaFuego`. O sea que el numerador obedecia al
+        // control de 24/12/6 h y el rotulo se quedaba en el del fichero:
+        // 8.143 detecciones de seis horas publicadas como «en 24 h».
+        `${numero(v.incendios.detecciones)} detecciones en ${horasDeLaVentana()}&nbsp;h` +
         `${selloDeRevision(v.fuegoUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
