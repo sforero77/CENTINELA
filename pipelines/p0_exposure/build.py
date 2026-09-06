@@ -22,9 +22,20 @@ from .layers import LAYERS, LayerSpec, required_layers
 
 _log = get_logger(__name__)
 
-#: Release de Overture usado cuando no se pasa uno explicito. Los manifests
-#: fijan el suyo; esto solo cubre la llamada suelta.
-OVERTURE_RELEASE_POR_DEFECTO = "2026-08-19.0"
+#: Capa del manifest de la que sale el release de Overture para los vecinos.
+#:
+#: AQUI HABIA UNA CONSTANTE, Y NO CUBRIA LO QUE SU COMENTARIO DECIA.
+#:
+#: Era `OVERTURE_RELEASE_POR_DEFECTO = "2026-08-19.0"`, con la nota «esto solo
+#: cubre la llamada suelta». Pero `build_country` es el unico llamador en
+#: produccion y nunca pasaba release, asi que la constante cubria **todos** los
+#: builds. Y el propio `exposure_quarterly.yml` documenta que tenia que
+#: divergir: Overture publica release mensual y solo conserva dos, el cron es
+#: trimestral, asi que los manifests renuevan su release por obligacion y nada
+#: renovaba esta linea. El dia que caducara, `select_files` reventaria contra el
+#: catalogo, el `except` de abajo lo convertiria en un aviso, y el activo se
+#: construiria robandole poblacion al vecino sin que nada lo dijera.
+CAPA_DEL_RELEASE_DE_VECINOS = "divisions"
 
 
 @dataclass(frozen=True, slots=True)
@@ -685,7 +696,7 @@ def load_country_neighbours(
     *,
     bbox: BBox,
     fetcher: Fetcher,
-    release: str = "",
+    release: str,
 ) -> int:
     """Carga los paises limitrofes para que el rescate no invada al vecino.
 
@@ -697,37 +708,73 @@ def load_country_neighbours(
     No sustituye al rescate: Chile rescata el 31 % de su poblacion y esta bien,
     porque su rescate es mar. Lo que acota es **de donde** puede rescatar.
 
-    Si Overture no responde se sigue sin vecinos, con el comportamiento anterior:
-    para una isla es correcto y para un pais con frontera terrestre, generoso.
-    Un fallo aqui no puede tumbar un build de casi una hora.
+    NO DEGRADA EN SILENCIO, Y ANTES SI.
+
+    El comentario que habia aqui decia «para una isla es correcto y para un pais
+    con frontera terrestre, generoso», y que un fallo no podia tumbar un build de
+    casi una hora. Las dos mitades estaban mal.
+
+    La primera: en los diecinueve paises del catalogo, cero vecinos **nunca** es
+    la verdad. Solo Cuba no toca a nadie por tierra, y hasta su caja alcanza a
+    Haiti y Jamaica — lo dice `load_neighbours`, que ya lo tenia medido. Asi que
+    no hay caso legitimo que proteger.
+
+    La segunda: lo caro no es perder una hora de build, es publicar un activo
+    que le quita 459.518 personas al vecino y que cuadra en todos los asserts.
+    El activo se publica como Release y de ahi salen los reportes durante meses.
+
+    Raises:
+        ValueError: si Overture no responde, o si responde y no hay ni un
+            poligono de vecino en la caja. Las dos cosas significan lo mismo:
+            este activo se construiria con un reparto que no se puede acotar.
     """
     from .overture_h3 import load_neighbours
     from .sources.overture import THEME_DIVISIONS, resolve_data_urls, select_files
 
     iso2 = ISO3_A_ISO2.get(iso3.upper(), "")
     if not iso2:
-        _log.warning(
-            "sin ISO2 declarado: el rescate no podra distinguir mar de pais vecino",
-            extra={"context": {"iso3": iso3}},
+        raise ValueError(
+            f"{iso3} no tiene ISO2 declarado en ISO3_A_ISO2, asi que el rescate no "
+            f"podria distinguir el mar del pais vecino y reclamaria poblacion del "
+            f"otro lado de la frontera. Declararlo antes de construir."
         )
-        return 0
+    if not release:
+        raise ValueError(
+            f"El manifest de {iso3} no fija el release de Overture para la capa "
+            f"{CAPA_DEL_RELEASE_DE_VECINOS!r}. Sin release explicito habria que "
+            f"seguir el alias `latest` del catalogo STAC, y un activo que sigue un "
+            f"alias deja de ser reproducible (RNF-04)."
+        )
     try:
         ficheros = select_files(
             fetcher,
             bbox,
-            release=release or OVERTURE_RELEASE_POR_DEFECTO,
+            release=release,
             theme=THEME_DIVISIONS[0],
             type_=THEME_DIVISIONS[1],
         )
-        return load_neighbours(
+        vecinos = load_neighbours(
             con, resolve_data_urls(fetcher, ficheros), bbox=bbox, iso2_propio=iso2
         )
-    except Exception as exc:  # el rescate degrada, no se cae
-        _log.warning(
-            "no se pudieron cargar los paises vecinos; el rescate sera mas generoso",
-            extra={"context": {"iso3": iso3, "error": str(exc)}},
+    except Exception as exc:
+        raise ValueError(
+            f"No se pudieron cargar los paises vecinos de {iso3} del release "
+            f"{release} de Overture: {exc}. El build se detiene a proposito. "
+            f"Overture conserva solo los dos releases mas recientes, asi que la "
+            f"causa mas probable es que el release del manifest haya caducado: "
+            f"renovarlo y volver a construir. Seguir sin vecinos publicaria un "
+            f"activo que le reclama poblacion al pais de al lado y que cuadra en "
+            f"todos los asserts."
+        ) from exc
+    if not vecinos:
+        raise ValueError(
+            f"Overture contesto y no dejo ni un poligono de vecino en la caja de "
+            f"{iso3}. En los diecinueve paises del catalogo eso nunca es la verdad: "
+            f"solo Cuba no toca a nadie por tierra, y hasta su caja alcanza a Haiti "
+            f"y Jamaica. Lo normal es que el filtro este mal — asi se descubrio que "
+            f"la poda por contencion descartaba a Brasil entero."
         )
-        return 0
+    return vecinos
 
 
 def build_overture_layers(
@@ -789,6 +836,7 @@ def write_measurement(
     rescate: dict[str, float],
     referencia: dict[str, Any] | None = None,
     insumos: dict[str, Any] | None = None,
+    vecinos: int = 0,
 ) -> Path:
     """Deja junto al activo lo que se midio al construirlo.
 
@@ -816,6 +864,23 @@ def write_measurement(
         "medido_utc": utcnow_iso(),
         "resumen": resumen,
         "rescate": rescate,
+        # CON CUANTOS POLIGONOS SE ACOTO EL REPARTO.
+        #
+        # `rescate` dice cuanta poblacion entro por el rescate; sin esto no se
+        # puede saber si entro **acotada**. El valor de retorno de
+        # `load_country_neighbours` se descartaba en el llamador, asi que un
+        # activo construido sin vecinos —que le roba gente al pais de al lado—
+        # era indistinguible de uno construido con ellos.
+        "vecinos": vecinos,
+        # EL CUBO Y LAS LICENCIAS VIAJAN CON EL ACTIVO.
+        #
+        # `manifest.bucket` es la unica implementacion de la regla de los tres
+        # cubos (§2.4) y moria en dos `_log.info`: no llegaba al parquet, ni
+        # aqui, ni al Release, ni al reporte. Este fichero es lo que se sube
+        # junto al parquet y su docstring lo presenta como «la procedencia
+        # completa del activo»; una procedencia sin licencia no lo es.
+        "cubo": plan.manifest.bucket.value,
+        "licencias": sorted({s.license for s in plan.manifest.sources}),
     }
     # Los hashes de los insumos se calculaban en cada corrida y se tiraban: del
     # inventario de descarga solo llegaba al log un conteo de ficheros. Aqui es
@@ -974,7 +1039,18 @@ def build_country(
     # El rescate de costa necesita saber que celdas tienen dato, asi que va
     # despues de la poblacion y antes del ensamblaje.
     ensure_layer_tables(conexion)
-    load_country_neighbours(conexion, plan.iso3, bbox=caja, fetcher=fetcher)
+    fuentes_vecinos = plan.manifest.by_layer(CAPA_DEL_RELEASE_DE_VECINOS)
+    vecinos = load_country_neighbours(
+        conexion,
+        plan.iso3,
+        bbox=caja,
+        fetcher=fetcher,
+        # El release sale del manifest, igual que para buildings y roads. Se
+        # busca la fuente de Overture entre las de la capa, que trae tambien el
+        # COD-AB y —en Colombia— el MGN del DANE: el `vintage` de esos no es un
+        # release de Overture y pedirselo al catalogo no encontraria nada.
+        release=next((f.vintage for f in fuentes_vecinos if f.url.startswith("s3://")), ""),
+    )
     # Sin argumento: se rescata sobre **todas** las capas con contenido, no solo
     # sobre poblacion. Ver `TABLAS_CANDIDATAS`.
     rescue_unassigned(conexion)
@@ -1000,7 +1076,12 @@ def build_country(
         f"COPY admin_lookup TO '{plan.salida / 'admin_lookup.parquet'}' (FORMAT PARQUET)"
     )
     medicion = write_measurement(
-        plan, resumen, rescate=rescate, referencia=referencia, insumos=insumos
+        plan,
+        resumen,
+        rescate=rescate,
+        referencia=referencia,
+        insumos=insumos,
+        vecinos=vecinos,
     )
     _log.info(
         "activo construido",

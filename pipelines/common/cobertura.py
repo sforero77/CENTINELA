@@ -63,8 +63,23 @@ class PaisCubierto:
 
     iso3: str
     nombre: str
-    #: Hay activo construido y medido. Lo delata `medido_ghs_pop` en el
-    #: manifest, que solo escribe un build de verdad.
+    #: El manifest lleva anotado `medido_ghs_pop`, o sea que **un build midio
+    #: la poblacion de este pais y la cifra se registro**.
+    #:
+    #: LO QUE ESTO NO PRUEBA, Y SU ROTULO DECIA QUE SI.
+    #:
+    #: El visor lo publicaba como «paises con activo publicado». No lo es: este
+    #: campo no mira el Release, que es lo que `impact.yml` necesita para
+    #: calcular un reporte. Un Release retirado a mano dejaria esta cifra
+    #: intacta.
+    #:
+    #: Y hasta el 6-sep-2026 tampoco probaba que hubiera habido un build:
+    #: `medido_ghs_pop` solo lo escribe `centinela calibrar --escribir`, un
+    #: comando manual que ningun workflow invocaba —`exposure_quarterly.yml`
+    #: construia, publicaba el Release y **no commiteaba el manifest**—. La
+    #: afirmacion publica sobre disponibilidad se apoyaba en un YAML que alguien
+    #: edito a mano alguna vez. Ahora el trimestral lo calibra y lo commitea, asi
+    #: que la cifra vuelve a tener relacion causal con lo que se construyo.
     construido: bool
     manifest_id: str
     #: Poblacion que el activo mide. Cero si no se ha construido.
