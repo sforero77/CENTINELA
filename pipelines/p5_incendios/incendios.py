@@ -351,18 +351,34 @@ def write_incendios(
     ventana_horas: int = 24,
     viento: LecturaViento | None = None,
     avisos: tuple[str, ...] = (),
+    lectura: dict[str, Any] | None = None,
 ) -> Path:
     """Publica `site/incendios.json`.
 
     `avisos` lleva lo que el activo consumido no traia y salio como cero. Se
     publica en el fichero, no solo en el log: quien integra esta capa lee el
     JSON, y un cero sin nota al lado es indistinguible de una medida.
+
+    `lectura` lleva la misma idea aplicada a la fuente: cuantos ficheros de
+    FIRMS se pidieron, cuantos trajeron dato y cuales fallaron. Se medi­a y se
+    quedaba en el proceso, asi que con la mitad de los ficheros caidos la capa
+    se publicaba con cara de completa.
     """
     destino = (site_dir or SITE_DIR) / INCENDIOS_FILENAME
     destino.parent.mkdir(parents=True, exist_ok=True)
     datos = build_incendios(celdas, ventana_horas=ventana_horas, viento=viento)
     if avisos:
         datos["avisos"] = list(avisos)
+    if lectura:
+        datos["lectura"] = lectura
+        fallidos = lectura.get("ficheros_fallidos") or []
+        pedidos = int(lectura.get("ficheros_pedidos") or 0)
+        if fallidos:
+            datos["avisos"] = [
+                *datos.get("avisos", []),
+                f"No se pudieron leer {len(fallidos)} de los {pedidos} ficheros de FIRMS "
+                f"({', '.join(fallidos)}): esta capa no es todo el fuego de la ventana.",
+            ]
     # SIN SANGRIA, y no por tacaneria: con todas las celdas dentro, `indent=2`
     # son unos 2 MB de espacios en un fichero que **ninguna persona lee** —lo
     # consume el visor—. El diff de git tampoco pierde nada: este fichero se

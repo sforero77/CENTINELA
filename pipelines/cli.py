@@ -440,12 +440,32 @@ def _cmd_incendios(args: argparse.Namespace) -> int:
                 "leidos": resultado.leidos,
                 "en_latam": resultado.en_latam,
                 "celdas": resultado.celdas,
+                # La merma sale por stdout, no solo al log: es lo que distingue
+                # "hoy ardio poco" de "hoy solo lei la mitad de los ficheros".
+                "ficheros_pedidos": resultado.pedidos,
+                "ficheros_leidos": resultado.ficheros_leidos,
+                "ficheros_fallidos": resultado.fallidos,
                 "publicado": str(resultado.publicado) if resultado.publicado else None,
             },
             ensure_ascii=False,
         )
     )
     _emit_github_output("celdas", str(resultado.celdas))
+    _emit_github_output("ficheros_fallidos", str(len(resultado.fallidos)))
+    _emit_github_output("ficheros_pedidos", str(resultado.pedidos))
+    # UNA LECTURA PARCIAL SE PUBLICA, PERO SE DICE.
+    #
+    # Con tres de los seis ficheros caidos —Sudamerica entera, el 11,9 % del
+    # dato— la corrida salia 0 y la capa se publicaba como completa. Sigue
+    # publicandose, porque medio continente de fuego es mejor que ninguno, pero
+    # el aviso viaja ahora al JSON, al output del workflow y a stderr.
+    if resultado.fallidos and not resultado.ciego:
+        print(
+            f"FIRMS devolvio {resultado.pedidos - len(resultado.fallidos)} de sus "
+            f"{resultado.pedidos} ficheros ({', '.join(resultado.fallidos)}): la capa "
+            f"publicada no es todo el fuego de la ventana.",
+            file=sys.stderr,
+        )
     # UNA CORRIDA CIEGA NO SALE EN VERDE.
     #
     # El 30-ago-2026 fallaron los seis ficheros de FIRMS y esta funcion
@@ -457,8 +477,10 @@ def _cmd_incendios(args: argparse.Namespace) -> int:
     # que fallen todos es quedarse a ciegas, y eso se dice.
     if resultado.ciego:
         print(
-            f"FIRMS no devolvio ninguno de sus {resultado.pedidos} ficheros: "
-            f"no hay dato nuevo que publicar.",
+            f"FIRMS no devolvio dato util en ninguno de sus {resultado.pedidos} "
+            f"ficheros ({len(resultado.fallidos)} fallaron, "
+            f"{resultado.ficheros_leidos} trajeron detecciones): no hay dato nuevo "
+            f"que publicar.",
             file=sys.stderr,
         )
         return 1
