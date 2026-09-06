@@ -1,13 +1,19 @@
 # Pendientes y hoja de ruta
 
-Estado al **28 de agosto de 2026**. El sistema se encendio el 24. Este
-documento es el traspaso: que queda por hacer, quien puede hacerlo, y en que
-orden.
+El sistema se encendio el 24 de agosto de 2026. Este documento es el traspaso:
+que queda por hacer, quien puede hacerlo, y en que orden.
 
-Se revisa contra la realidad, no de memoria: cada cifra de aquí se volvio a
-medir el 28-ago contra los Releases publicados, las corridas de Actions y la
-página viva. Varias estaban desfasadas y se corrigen abajo — un documento de
-traspaso que envejece en silencio es peor que no tenerlo.
+**Ya no lleva fecha de estado, y es a proposito.** Decía «Estado al 28 de agosto»
+y para entonces llevaba seis ediciones posteriores con las mismas cinco cifras
+dentro: 948 pruebas cuando eran 2.227, siete del visor cuando eran 142, veintiun
+reportes cuando eran veintisiete. Una fecha fija sobre un documento vivo no avisa
+de nada; lo que avisa es un guardia, y las cifras de recuento las vigila ahora
+`tests/unit/test_cifras_del_readme.py`, que ya medía las del README y no llegaba
+hasta aquí.
+
+Se revisa contra la realidad, no de memoria: cada cifra de aquí sale de los
+Releases publicados, de `reports/index.json` o de la propia suite. Un documento
+de traspaso que envejece en silencio es peor que no tenerlo.
 
 Ya no hay pasos bloqueados por permisos: la puesta en marcha se completo (§1) y
 **todo lo que queda es código, abordable desde un clon**. Para vigilar el
@@ -32,19 +38,25 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 | P0 activo de exposición (descarga → parquet) | ✅ **publicado en los 19 países** |
 | P2 impacto (contornos → celdas → GF → join) | ✅ funcional, con reintento por país |
 | P3 reporte (json, md, csv, hilo, 2 mapas, malla, contornos) | ✅ funcional |
-| **Catálogo histórico** | ✅ **21 reportes en 15 países** — todos backtest |
+| **Catálogo histórico** | ✅ **27 reportes en 16 países** — 25 backtest y 2 en vivo |
 | Asserts de calidad §6.4, en P0 y en P2 | ✅ funcional |
 | Topónimos en español (RF-06) y changelog de deltas (RF-04) | ✅ funcional |
 | Golden G1 (Chocó), G2 (Venezuela) y G3 | ✅ corren, ninguna saltada |
 | Verificación de insumos (`insumos_sha256`) | ✅ mide y detiene · digests sin fijar, §2.6 |
-| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 7 pruebas en un navegador real |
+| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 142 pruebas en un navegador real |
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**948 pruebas** sin red y sin navegador (más 8 nocturnas contra las fuentes
-vivas y 7 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
-arranque verificado desde clon vacío. Medido el 28-ago-2026. Eran 431 antes de
-la auditoría, 523 al empezarla y 686 el 26-ago.
+**2.259 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
+vivas y 142 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
+arranque verificado desde clon vacío. Eran 431 antes de la auditoría, 523 al
+empezarla, 686 el 26-ago y 948 el 28-ago.
+
+> Estas cinco cifras llevaban seis ediciones de este fichero sin moverse: decían
+> 948 / 8 / 7 / 21 saltadas / 21 reportes, con el encabezado fechado al 28 de
+> agosto sobre un documento que se seguía editando. Una fecha fija sobre un
+> documento vivo es lo que hace creíble una cifra muerta. Ahora las vigila
+> `test_cifras_del_readme.py`, que ya medía las del README y no llegaba aquí.
 
 **El visor ya no depende de que alguien lo mire.** `tests/visor` lo abre en un
 navegador de verdad y espera a `window.CENTINELA` —el registro de lo que ha
@@ -52,9 +64,13 @@ pintado, con el recuento de rasgos de cada capa— en vez de esperar N segundos.
 Corre en `visor.yml` cuando cambia `site/`, no por cron: los turnos que GitHub
 concede al repositorio los necesita el vigía.
 
-Se saltan 21, y todas por la misma razón legítima:
-`test_el_visor_se_republica` está parametrizada por workflow y omite los que no
-publican nada que el visor lea. No hay ninguna saltada por estar rota.
+Se saltan 127, y todas por la misma clase de razón legítima: son pruebas
+parametrizadas sobre un catálogo —los catorce workflows, los veintisiete
+reportes— que se saltan las entradas a las que su pregunta no aplica.
+`test_el_visor_se_republica` omite los workflows que no publican nada que el
+visor lea; `test_las_dos_plantillas_concuerdan` y
+`test_celdas_cuadran_con_el_reporte`, los reportes sin municipios expuestos o
+anteriores a la malla. No hay ninguna saltada por estar rota.
 
 **El cron declara `*/30` y no corre cada treinta minutos.** La cabecera de
 [`trigger.yml`](.github/workflows/trigger.yml) lleva la medición buena y el
@@ -117,7 +133,7 @@ add` incompleto llevaba semanas haciendo pasar por «esperando un sismo» algo q
 no dependia de ningún sismo.
 
 Cerrado eso, las dos las cierra el primer M≥5,5 en LATAM. El camino está probado
-sobre 21 eventos históricos en 15 países: cuando ocurra, lo único manual será
+sobre 25 eventos históricos en 16 países: cuando ocurra, lo único manual será
 publicar el hilo.
 
 ---
@@ -254,10 +270,11 @@ con MMI modelada de **6,4** y `download/cont_mmi.json` publicado. Es un evento
 que este pipeline puede calcular hoy: el activo boliviano está construido y
 medido.
 
-Lo que falta es correrlo:
+Lo que falta es correrlo. La forma completa, que es la que arranca —`--detail-url`
+y `--exposure` son obligatorios, y sin ellos esto sale con código 2:
 
 ```
-uv run centinela impact usp000ahzc
+uv run centinela impact usp000ahzc   --detail-url "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=usp000ahzc&format=geojson"   --exposure data/build/exposure_h3.parquet
 ```
 
 `tests/integration/test_silencio_de_paises_live.py` vuelve a comprobar contra

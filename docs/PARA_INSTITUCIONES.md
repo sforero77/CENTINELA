@@ -41,8 +41,8 @@ es la fuente de verdad del código DIVIPOLA.
 | | |
 |---|---|
 | Activos de exposición publicados | **19 de 19** |
-| Reportes emitidos de punta a punta | **23**, en 15 países |
-| De ellos, disparados en vivo | **2**; los otros 21 son reconstrucciones |
+| Reportes emitidos de punta a punta | **27**, en 16 países |
+| De ellos, disparados en vivo | **2**; los otros 25 son reconstrucciones |
 | Personas ya en la malla hexagonal | **649,8 millones** |
 | Latencia objetivo, sismo → reporte | p50 ≤ 60 min · lo medido, en `/status` |
 
@@ -60,7 +60,7 @@ día) y ahora mismo está **por encima del objetivo**, porque lo que cronometró
 fue la cadena en régimen sino lo que tardó en arreglarse un fallo que sólo podía
 aparecer con un sismo real. La primera medida limpia la dará el siguiente evento.
 
-Los otros veintiún reportes siguen siendo reconstrucciones históricas: prueban
+Los otros veinticinco reportes siguen siendo reconstrucciones históricas: prueban
 que el cálculo funciona sobre eventos reales de USGS, no que la cadena en vivo
 esté ejercitada. Ahora está ejercitada dos veces, y enseñó algo.
 

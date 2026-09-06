@@ -39,13 +39,42 @@ jobs:
   contrastar:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # LAS CUATRO ENTRADAS DE TEXTO LIBRE, VIA ENV Y NUNCA INTERPOLADAS.
+    #
+    # `${{ inputs.x }}` dentro de un `run:` se sustituye **antes** de que bash
+    # vea el script: el valor deja de ser un argumento y pasa a ser codigo. Aqui
+    # se interpolaban cuatro —`fuente`, `etiqueta`, `crs` y `columna`— asi que
+    # cualquiera con permiso para lanzar el workflow ejecutaba lo que quisiera en
+    # el runner. `usgs_id` ya iba por env desde el principio; las otras cuatro no.
+    #
+    # Con `env:` el valor viaja como variable y bash lo trata como dato. Citado,
+    # ademas, para que un espacio no lo parta en dos argumentos.
     env:
       USGS_ID: ${{ inputs.usgs_id }}
+      FUENTE: ${{ inputs.fuente }}
+      ETIQUETA: ${{ inputs.etiqueta }}
+      CRS: ${{ inputs.crs }}
+      COLUMNA: ${{ inputs.columna }}
       DETAIL_URL: >-
         https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=${{
         inputs.usgs_id }}&format=geojson
     steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Es la mitigacion barata del hueco que si queda abierto: **ninguna accion
+      # de este repositorio esta fijada por SHA**, todas van por etiqueta movil,
+      # y una etiqueta de git se puede reapuntar a cualquier commit.
+      # `astral-sh/setup-uv@v5` ademas no es de GitHub. El precedente concreto es
+      # tj-actions/changed-files (CVE-2025-30066, marzo de 2025). Fijar por SHA
+      # exige resolver catorce digests contra la red y queda en PENDIENTES.md.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v5
         with:
@@ -84,14 +113,24 @@ jobs:
       # Para explorar en local, el comando sigue aceptando la URL.
       - name: Descargar la evaluacion de dano
         run: |
-          curl -fsSL "${{ inputs.fuente }}" -o dano.gpkg
+          # Solo https, y comprobado aqui: `curl` acepta `file://`, `scp://` y
+          # una docena mas de esquemas, y esta entrada la escribe una persona.
+          case "$FUENTE" in
+            https://*) ;;
+            *) echo "::error::La fuente tiene que ser una URL https://"; exit 1 ;;
+          esac
+          curl -fsSL "$FUENTE" -o dano.gpkg
           ls -lh dano.gpkg
 
       - name: Contrastar
         id: contraste
         run: |
           set +e
-          uv run centinela contraste dano.gpkg             --exposure data/build/exposure_h3.parquet             --etiqueta "${{ inputs.etiqueta }}"             --crs "${{ inputs.crs }}"             --columna "${{ inputs.columna }}" | tee contraste.json
+          uv run centinela contraste dano.gpkg \
+            --exposure data/build/exposure_h3.parquet \
+            --etiqueta "$ETIQUETA" \
+            --crs "$CRS" \
+            --columna "$COLUMNA" | tee contraste.json
           CODIGO=${PIPESTATUS[0]}
           # `| tee` devuelve el codigo de tee y no el del comando: la primera
           # corrida salio "success" con un traceback dentro. De ahi PIPESTATUS.

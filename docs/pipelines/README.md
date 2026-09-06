@@ -36,8 +36,8 @@ uno, detecciones VIIRS en el otro).
 
 ```bash
 uv run centinela trigger              # P1 contra el feed vivo
-uv run centinela impact <usgs_id>     # P2 + P3 de un evento
-uv run centinela country --iso3 COL   # P0 de un país
+uv run centinela impact <usgs_id> --detail-url <url> --exposure <parquet>
+uv run centinela country COL          # P0 de un país
 uv run centinela incendios            # P5
 uv run centinela status               # recalcula site/status.json
 uv run centinela cobertura            # recalcula site/cobertura.json
@@ -48,11 +48,17 @@ uv run centinela reindexar            # reconstruye reports/index.json
 uv run centinela regenerar-mapas      # re-renderiza los PNG
 uv run centinela regenerar-textos     # rehace report.md y hilo.txt
 uv run centinela contornos <usgs_id>  # extrae contornos MMI
-uv run centinela paises-candidatos    # ¿de qué país es este sismo?
-uv run centinela calibrar             # calibra contra referencia oficial
-uv run centinela contraste            # Fase 2
-uv run centinela fijar-insumos        # congela vintages en el manifest
+uv run centinela paises-candidatos <usgs_id>
+uv run centinela calibrar <medicion.json> [--escribir]
+uv run centinela contraste <dano.gpkg> --exposure <parquet> --etiqueta <quien> --crs <epsg>
+uv run centinela fijar-insumos <ISO3>
 ```
+
+> Los cuatro últimos llevan argumentos obligatorios y este bloque los omitía: sin
+> ellos salen con código 2. `tests/unit/test_los_comandos_documentados_arrancan.py`
+> pasa por el parser de verdad toda línea de comando de los `.md` del
+> repositorio, porque veintiún subcomandos en cinco ficheros no se mantienen
+> sincronizados a mano.
 
 Los atajos habituales están en el `Makefile`: `make setup`, `make check`,
 `make trigger`, `make country ISO=COL`.
