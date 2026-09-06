@@ -456,9 +456,13 @@ def _linea_ground_failure(report: Report, tipo: str, propia: float) -> str:
     gf = report.ground_failure_usgs
     etiqueta = "deslizamiento" if tipo == "ls" else "licuefacción"
     umbral = format_number_es(GROUND_FAILURE_HIGH_PROB, 2)
+    # LA BANDA VA EN LA FRASE. La cifra se cuenta sobre las celdas de MMI≥6
+    # —lo dice `SQL_TOTALES`— y la linea no lo decia, asi que se leia como si
+    # fuera de la banda que titula el reporte. El visor llego a dividirla entre
+    # `pop_mmi7p` por esa misma lectura y publicaba «1.119 % de los expuestos».
     linea = (
-        f"- **{etiqueta.capitalize()}.** Población en celdas donde el modelo espera "
-        f"≥ {umbral} de {GF_UNIDAD[tipo]}: **{format_count_prose(propia)}**."
+        f"- **{etiqueta.capitalize()}.** Población en celdas de MMI≥6 donde el modelo "
+        f"espera ≥ {umbral} de {GF_UNIDAD[tipo]}: **{format_count_prose(propia)}**."
     )
     if not gf.alerta_viva(tipo):
         return linea

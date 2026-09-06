@@ -44,8 +44,8 @@ De la población en intensidad MMI≥7, alrededor de **29 mil** personas tienen 
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **0**. USGS declara para este evento alerta **naranja**, con 1.700 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
-- **Licuefacción.** Población en celdas donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **290 mil**. USGS declara para este evento alerta **naranja**, con 91 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **0**. USGS declara para este evento alerta **naranja**, con 1.700 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **290 mil**. USGS declara para este evento alerta **naranja**, con 91 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 

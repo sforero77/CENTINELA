@@ -1852,15 +1852,27 @@ function pintarTerreno(reporte) {
     { etiqueta: "Licuefacción alta", valor: t.pop_lq_alta, icono: "licuefaccion", tipo: "lq" },
     { etiqueta: "Deslizamiento alto", valor: t.pop_ls_alta, icono: "deslizamiento", tipo: "ls" },
   ];
-  // La cuota se mide sobre los expuestos a MMI≥7, que es la banda con la que se
-  // rotula el resto del panel: asi "1,6 M" y "66 %" hablan del mismo conjunto.
+  // EL NUMERADOR Y EL DENOMINADOR TIENEN QUE SER DEL MISMO CONJUNTO.
+  //
+  // Aqui decia «la cuota se mide sobre los expuestos a MMI≥7, que es la banda
+  // con la que se rotula el resto del panel». El razonamiento es razonable y la
+  // cifra no: `pop_lq_alta` y `pop_ls_alta` se cuentan sobre **MMI≥6** —lo dice
+  // su propio SQL— asi que dividirlas entre `pop_mmi7p` mezcla dos universos.
+  //
+  // Medido sobre lo publicado: us7000nr0v salia con «Licuefaccion alta · 1.119 %
+  // de los expuestos», us2000bmhe con 179 %, us60003sc0 con 135 %. Y en seis
+  // reportes mas el denominador era **cero**, asi que la cuota desaparecia sin
+  // decir por que.
+  //
+  // Se divide por la banda de la que sale el numerador, y la etiqueta la nombra:
+  // una cuota sin su universo escrito al lado es la mitad de una cifra.
   $("detalle-terreno").innerHTML =
     filas
       .map((f) => {
-        const cuota = cuotaDe(f.valor, t.pop_mmi7p);
+        const cuota = cuotaDe(f.valor, t.pop_mmi6p);
         return (
           `<li><span>${iconoSvg(f.icono)}${f.etiqueta}` +
-          (cuota ? ` <span class="cuota-apunte">· <strong>${cuota}</strong> de los expuestos</span>` : "") +
+          (cuota ? ` <span class="cuota-apunte">· <strong>${cuota}</strong> de los expuestos en MMI≥6</span>` : "") +
           `</span><span class="cifra${(f.valor || 0) > 0 ? "" : " cero"}">` +
           `${comoConteo(f.valor)}</span></li>` +
           contrasteDeTerreno(reporte, f.tipo, f.valor)
