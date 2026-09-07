@@ -16,13 +16,13 @@
 | Edificaciones en MMI≥6 | 400 mil |
 | Sedes de salud en MMI≥6 | 358 |
 | Sedes educativas en MMI≥6 | 1.360 |
-| Vías primarias y secundarias en MMI≥6 | 460 km |
-| Vías locales en MMI≥6 | 3.000 km |
+| Vías primarias y secundarias en MMI≥6 | 610 km |
+| Vías locales en MMI≥6 | 3.800 km |
 | Superficie construida en MMI≥6 | 45,8 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥6, alrededor de **67 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥6, alrededor de **66 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥6
 
@@ -43,8 +43,8 @@ De la población en intensidad MMI≥6, alrededor de **67 mil** personas tienen 
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **0**. USGS declara para este evento alerta **amarilla**, con 1 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **0**. USGS declara para este evento alerta **amarilla**, con 580 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**. USGS declara para este evento alerta **amarilla**, con 1 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **0**. USGS declara para este evento alerta **amarilla**, con 580 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -58,7 +58,7 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,4 %**.
 
 ## Descargas
 
@@ -69,8 +69,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
 
 - ShakeMap consumido: **v8**
 - Ground Failure consumido: **v4**
-- Manifiesto de exposición: [`arg-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ARG.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:38Z
+- Manifiesto de exposición: [`arg-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ARG.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-07T16:40:53Z
 
 ## Advertencias
 

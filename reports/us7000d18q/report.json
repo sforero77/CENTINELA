@@ -13,7 +13,9 @@
   "inputs": {
     "shakemap_version": 8,
     "groundfailure_version": 4,
-    "exposure_manifest": "arg-v0.2"
+    "exposure_manifest": "arg-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
@@ -23,13 +25,13 @@
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 67214.4789434503,
+    "pop_65p_mmi6p": 65801.23203075085,
     "bld_mmi6p": 402957.0,
     "built_m2_mmi6p": 45801579.0,
     "health_mmi6p": 358.0,
     "edu_mmi6p": 1360.0,
-    "road_km_mmi6p": 3492.2196291405603,
-    "road_km_principal_mmi6p": 457.8935914310371,
+    "road_km_mmi6p": 4390.813052187726,
+    "road_km_principal_mmi6p": 606.4882998037548,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -125,15 +127,8 @@
       "pop_banda": 4.8950633481144905
     },
     {
-      "adm2_id": "AR050049",
-      "nombre": "Las Heras",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "AR050056",
-      "nombre": "Lavalle",
+      "adm2_id": "AR070035",
+      "nombre": "Caucete",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -144,10 +139,17 @@
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "AR070021",
+      "nombre": "Calingasta",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 3.1,
+    "pop_discrepancia_pct": 3.4,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -217,6 +219,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:38Z",
+  "generado_utc": "2026-09-07T16:40:53Z",
   "pipeline_version": "0.1.0"
 }
