@@ -13,36 +13,25 @@
   "inputs": {
     "shakemap_version": 5,
     "groundfailure_version": 3,
-    "exposure_manifest": "bol-v0.2"
+    "exposure_manifest": "bol-v0.3",
+    "modelo_deslizamiento": "nowicki_2014_global_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 22973.023899161723
-    },
-    {
-      "radio_km": 50,
-      "pop": 268371.03444361547
-    },
-    {
-      "radio_km": 100,
-      "pop": 2122256.434456625
-    }
-  ],
+  "radios": [],
   "backtest": true,
   "totales": {
     "pop_mmi6p": 0.0,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 0,
-    "bld_mmi6p": 0,
-    "built_m2_mmi6p": 0,
-    "health_mmi6p": 0,
-    "edu_mmi6p": 0,
-    "road_km_mmi6p": 0,
-    "road_km_principal_mmi6p": 0,
+    "pop_65p_mmi6p": 0.0,
+    "bld_mmi6p": 0.0,
+    "built_m2_mmi6p": 0.0,
+    "health_mmi6p": 0.0,
+    "edu_mmi6p": 0.0,
+    "road_km_mmi6p": 0.0,
+    "road_km_principal_mmi6p": 0.0,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -126,6 +115,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-05T01:26:41Z",
+  "generado_utc": "2026-09-07T16:41:25Z",
   "pipeline_version": "0.1.0"
 }
