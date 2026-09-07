@@ -230,7 +230,18 @@
           <!-- Lo unico del visor que cambia entre una visita y la siguiente.
                Va antes del panorama a proposito: el archivo importa, pero lo
                que distingue a esto de un PDF es que esta mirando ahora. -->
-          <div class="en-vivo" id="en-vivo" hidden aria-live="polite"></div>
+          <!-- SIN `aria-live`, Y NO POR DESCUIDO.
+               Esta tarjeta se reescribe entera —`caja.innerHTML = ...`— cada vez
+               que cambia un filtro y, con «solo lo que se ve» puesto, en cada
+               `moveend` del mapa. Como region viva eso significa que un lector de
+               pantalla interrumpe y lee las cuatro metricas completas cada vez que
+               alguien arrastra el mapa: entre siete y diez frases por gesto. Una
+               region que interrumpe siempre acaba silenciada por quien la usa, y
+               entonces no avisa de nada.
+               Los cambios que si merecen anuncio ya los dice `#anuncio`, que es
+               `role="status"` y publica una frase, no un panel. La tarjeta se
+               sigue leyendo cuando se llega a ella. -->
+          <div class="en-vivo" id="en-vivo" hidden></div>
 
           <!-- El panorama es del modo sismos y se oculta en modo fuego: un
                panel que habla de los 21 reportes publicados mientras el mapa
@@ -461,7 +472,7 @@
 
   <section id="cobertura" class="cobertura">
     <div class="contenedor">
-      <h2>Cobertura regional</h2>
+      <h2 id="titulo-cobertura">Cobertura regional</h2>
       <p class="seccion-lema">
         Un sismo no espera a que su país esté listo. El activo de exposición se
         construye por adelantado, país por país, y se mide contra la cifra
@@ -470,6 +481,14 @@
 
       <div class="metricas" id="cobertura-resumen"></div>
 
+      <!-- El desplazamiento va en este contenedor y NO en la propia tabla.
+           `display: block` sobre un <table> le quita su rol implicito: el
+           lector de pantalla deja de anunciar filas y columnas y de asociar
+           cada cifra con su encabezado, que es justo lo que hace legible una
+           tabla de cuatro columnas. Con el envoltorio se conserva el rol y se
+           sigue pudiendo deslizar. `tabindex="0"` porque una region que se
+           desplaza tiene que poder recorrerse tambien con el teclado. -->
+      <div class="tabla-scroll" tabindex="0" role="region" aria-labelledby="titulo-cobertura">
       <table class="tabla-cobertura" id="tabla-cobertura" hidden>
         <caption class="oculto-visual">
           Países cubiertos, con la población que mide su activo de exposición y
@@ -485,6 +504,7 @@
         </thead>
         <tbody></tbody>
       </table>
+      </div>
 
       <p class="tabla-pista" aria-hidden="true">Desliza la tabla para ver el desvío y los reportes &rarr;</p>
 

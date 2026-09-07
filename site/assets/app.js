@@ -2142,7 +2142,14 @@ function pintarDescargas(usgsId) {
     ["JSON", `${base}/report.json`],
     ["CSV municipal (HXL)", `${base}/adm2.csv`],
     ["Malla H3", `${base}/celdas.json`],
-    ["Área de afectación", `${base}/contornos.json`],
+    // NO «Área de afectación»: ese rotulo ya nombra otra cosa en este mismo
+    // panel —el bloque `#bloque-area`, que publica la superficie de la MALLA
+    // contada, «no la del ShakeMap», y lo dice en su subtitulo—. Este fichero
+    // son los contornos de intensidad de USGS, que es justo la superficie que
+    // aquel bloque se ocupa de aclarar que no es. Dos cosas distintas con el
+    // mismo nombre a diez centimetros, y la que se descargaba no era la que se
+    // estaba leyendo.
+    ["Contornos de intensidad", `${base}/contornos.json`],
     ["Mapa PNG", `${base}/mapa_general.png`],
     ["Mapa para prensa", `${base}/mapa_prensa.png`],
     ["Hilo para redes", `${base}/hilo.txt`],

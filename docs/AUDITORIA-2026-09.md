@@ -85,8 +85,8 @@ código de ese día**. La columna «Hoy» dice qué se encontró:
 
 | | |
 |---|---|
-| **cerrado** | 50 · 43 lo estaban ya al triar —casi ninguno de rebote: la mayoría tiene arreglo dirigido y su guardia, hecho al cerrar una crítica o una alta de la misma familia— y siete se cerraron el mismo 6-sep, en el barrido del visor |
-| **en pie** | 44 · el síntoma se reprodujo en el código de hoy, con fichero y línea |
+| **cerrado** | 53 · 43 lo estaban ya al triar —casi ninguno de rebote: la mayoría tiene arreglo dirigido y su guardia, hecho al cerrar una crítica o una alta de la misma familia— y diez se cerraron el mismo 6-sep, en el barrido del visor |
+| **en pie** | 41 · el síntoma se reprodujo en el código de hoy, con fichero y línea |
 | **a medias** | 5 · una parte cerrada y otra no. Se puntúan por partes o el recuento sale optimista |
 | **anotado** | 1 · el #129 no es un fallo del código sino una promesa de más: RF-09 pide r6, ficha por municipio y descarga por capa, y `PENDIENTES.md` §2.2 decía que ya solo faltaba lo primero. Corregido ahí |
 | **sin ver** | 5 · exigen reproducir el fallo, no leer el código: quedan para su lote |
@@ -115,12 +115,12 @@ El `·` tras el fichero sigue marcando las rutas que la rama tocó por otro moti
 | # | Sev | Hoy | Dónde | Qué |
 |---|---|---|---|---|
 | 124 | media | cerrado | `site/assets/app.js:3904`· | Si falla el estilo del mapa base, el aviso «Cargando el mapa» se retira a los 8 s y no queda ningun mensaje: rectangulo vacio y silencio |
-| 125 | media | **en pie** | `site/assets/app.js:2065`· | «Área de afectación» nombra dos superficies distintas en el mismo panel, y la que se descarga no es la que se muestra |
+| 125 | media | cerrado | `site/assets/app.js:2065`· | «Área de afectación» nombra dos superficies distintas en el mismo panel, y la que se descarga no es la que se muestra |
 | 128 | media | cerrado | `site/assets/app.js:4632`· | En modo fuego, «no hay focos», «FIRMS no publico nada» y «incendios.json no se pudo leer» se dibujan exactamente igual: nada |
 | 130 | media | a medias | `site/assets/status.js:104`· | En la página de estado, «se cumple» o «no se cumple» el objetivo se cifra solo en el color del número, y encima el valor va en horas contra un obje… |
-| 131 | media | **en pie** | `site/assets/styles.css:1182`  | La tabla de cobertura pierde su semántica de tabla en móvil: `display: block` sobre el <table> tumba el rol y la asociación fila/columna |
+| 131 | media | cerrado | `site/assets/styles.css:1182`  | La tabla de cobertura pierde su semántica de tabla en móvil: `display: block` sobre el <table> tumba el rol y la asociación fila/columna |
 | 184 | baja | cerrado | `site/assets/status.js:105`· | El aviso de «la cadencia se come el objetivo» solo se pinta cuando no hay ningun reporte publicado; hoy ya hay dos, así que no puede aparecer nunca |
-| 185 | baja | **en pie** | `site/index.html:200`· | La tarjeta «Ahora mismo» es una region aria-live completa que se reescribe entera en cada moveend del mapa |
+| 185 | baja | cerrado | `site/index.html:200`· | La tarjeta «Ahora mismo» es una region aria-live completa que se reescribe entera en cada moveend del mapa |
 | 186 | baja | cerrado | `site/index.html:313`· | «El de Venezuela llegó a v14» esta escrito a mano en dos páginas y el reporte publicado va por v15 |
 
 ### hueco-4 (7)
