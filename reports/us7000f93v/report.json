@@ -13,29 +13,31 @@
   "inputs": {
     "shakemap_version": 7,
     "groundfailure_version": 3,
-    "exposure_manifest": "mex-v0.2"
+    "exposure_manifest": "mex-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
     "pop_mmi6p": 1115170.9964241658,
-    "pop_mmi7p": 910714.4594508426,
+    "pop_mmi7p": 910714.4594508423,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 81266.6050451847,
-    "pop_65p_mmi6p": 99126.99103115089,
-    "bld_mmi6p": 453350.0,
-    "built_m2_mmi6p": 60444829.0,
+    "pop_65p_mmi7p": 89222.1803807909,
+    "pop_65p_mmi6p": 109026.04858172443,
+    "bld_mmi6p": 453391.0,
+    "built_m2_mmi6p": 60445589.0,
     "health_mmi6p": 183.0,
     "edu_mmi6p": 3227.0,
-    "road_km_mmi6p": 0.0,
-    "road_km_principal_mmi6p": 0.0,
-    "bld_mmi7p": 331809.0,
-    "built_m2_mmi7p": 46814341.0,
+    "road_km_mmi6p": 7668.249173734086,
+    "road_km_principal_mmi6p": 981.4235665967119,
+    "bld_mmi7p": 331818.0,
+    "built_m2_mmi7p": 46815101.0,
     "health_mmi7p": 152.0,
     "edu_mmi7p": 3132.0,
-    "road_km_mmi7p": 0.0,
-    "road_km_principal_mmi7p": 0.0,
+    "road_km_mmi7p": 4885.506095478937,
+    "road_km_principal_mmi7p": 645.0655082630233,
     "pop_ls_alta": 2383.0424382408382,
     "pop_lq_alta": 66511.65147162467
   },
@@ -44,8 +46,8 @@
       "adm2_id": "MX12001",
       "nombre": "Acapulco de Juárez",
       "mmi_max": 7.5,
-      "pop_mmi7p": 876143.8713419172,
-      "pop_banda": 876143.8713419172
+      "pop_mmi7p": 876143.8713419174,
+      "pop_banda": 876143.8713419174
     },
     {
       "adm2_id": "MX12021",
@@ -83,6 +85,13 @@
       "pop_banda": 0.0
     },
     {
+      "adm2_id": "MX12044",
+      "nombre": "Mochitlán",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
       "adm2_id": "MX12014",
       "nombre": "Benito Juárez",
       "mmi_max": 6.0,
@@ -93,20 +102,6 @@
       "adm2_id": "MX12012",
       "nombre": "Ayutla de los Libres",
       "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "MX12044",
-      "nombre": "Mochitlán",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "MX12051",
-      "nombre": "Quechultenango",
-      "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
@@ -125,8 +120,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "MX12032",
-      "nombre": "General Heliodoro Castillo",
+      "adm2_id": "MX12051",
+      "nombre": "Quechultenango",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12030",
+      "nombre": "Florencio Villarreal",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -139,8 +141,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "MX12011",
-      "nombre": "Atoyac de Álvarez",
+      "adm2_id": "MX12032",
+      "nombre": "General Heliodoro Castillo",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -162,7 +164,9 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 81 mil → 89 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -217,6 +221,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:41Z",
+  "generado_utc": "2026-09-07T16:36:05Z",
   "pipeline_version": "0.1.0"
 }
