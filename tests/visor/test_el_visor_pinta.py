@@ -135,6 +135,25 @@ def _ahora(pagina: Any) -> str:
     return marca
 
 
+def _con_fuego(pagina: Any, nombre: str = "incendios") -> dict[str, Any]:
+    """Entra en modo fuego y espera a que su capa este pintada.
+
+    Desde el 6-sep-2026 `incendios.json` **no se descarga al arrancar**: son
+    3,2 MB de JSON y un union-find sobre 7.987 celdas para alimentar unas cifras
+    que el modo sismos —el de por defecto— esconde. Se pide al entrar en modo
+    fuego, asi que una prueba que quiera fuego tiene que pedirlo, igual que una
+    persona.
+
+    Idempotente: si ya se esta en modo fuego no vuelve a pulsar, porque
+    `cambiarAmenaza` sale temprano cuando el modo ya es ese y el segundo clic no
+    haria nada.
+    """
+    boton = pagina.locator('#amenazas button[data-amenaza="fuego"]')
+    if boton.get_attribute("aria-pressed") != "true":
+        boton.click()
+    return _esperar_capa(pagina, nombre)
+
+
 # --- El panorama ------------------------------------------------------------
 
 
@@ -162,7 +181,7 @@ def test_los_focos_activos_se_dibujan(pagina: Any) -> None:
     y por eso su fuente lleva `tolerance: 0` — con el valor por defecto la
     simplificacion los colapsa y desaparecen antes de dibujarse.
     """
-    anotacion = _esperar_capa(pagina, "incendios")
+    anotacion = _con_fuego(pagina)
 
     assert anotacion["rasgos"] > 0, "la capa de focos no dibujo ni una celda"
     publicadas = pagina.evaluate(
@@ -494,7 +513,7 @@ def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any) -> None:
     """
     pagina.set_viewport_size(MOVIL)
     _esperar_capa(pagina, "epicentros")
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(600)
 
@@ -596,7 +615,7 @@ def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, a
     """
     pagina.set_viewport_size({"width": ancho, "height": alto})
     _esperar_capa(pagina, "epicentros")
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
 
     # Peor estado del modo sismos: un evento abierto, con leyenda y pestañas.
     marca = _ahora(pagina)
@@ -627,7 +646,7 @@ def test_el_modo_fuego_promete_lo_que_dibuja(pagina: Any) -> None:
     interfaz ensena tiene que ser uno que el mapa pueda respaldar, y el recorte
     tiene que decir su criterio.
     """
-    anotacion = _esperar_capa(pagina, "incendios")
+    anotacion = _con_fuego(pagina)
     totales = pagina.evaluate("fetch('incendios.json').then(r => r.json()).then(d => d.totales)")
     dibujadas = anotacion["rasgos"]
     publicadas = totales["celdas_publicadas"]
@@ -991,7 +1010,7 @@ def test_las_cifras_en_vivo_dicen_cuando_se_revisaron(pagina: Any) -> None:
     Un tablero que se presenta como vigilancia en vivo y no fecha sus cifras
     pide una confianza que no ha ganado.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     vivo = pagina.locator("#en-vivo")
 
     assert vivo.is_visible(), "la tarjeta en vivo no salio"
@@ -1203,7 +1222,7 @@ def test_el_globo_de_un_foco_dice_que_arde_y_sobre_quien(pagina: Any) -> None:
     —Amazonia y cerrado, donde arde y no hay epicentros— y se exige el rotulo
     propio del globo de fuego, no cualquier globo.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
@@ -1248,8 +1267,12 @@ def test_el_globo_de_un_foco_dice_que_arde_y_sobre_quien(pagina: Any) -> None:
 def test_el_selector_de_amenaza_cambia_el_lente(pagina: Any) -> None:
     """El fuego deja de ser un checkbox: es un modo con el mismo rango que los
     sismos, con su leyenda en el hueco grande y su URL compartible.
+
+    Esta espera al mapa de sismos y no al de fuego a proposito: la primera
+    afirmacion es que **sismos es el modo por defecto**, y entrar en fuego para
+    comprobarlo la haria trivial.
     """
-    _esperar_capa(pagina, "incendios")
+    _esperar_capa(pagina, "epicentros")
 
     boton_fuego = pagina.locator('#amenazas button[data-amenaza="fuego"]')
     boton_sismos = pagina.locator('#amenazas button[data-amenaza="sismos"]')
@@ -1280,7 +1303,7 @@ def test_abrir_un_evento_desde_el_modo_fuego_vuelve_a_sismos(pagina: Any) -> Non
     radiativa: dos amenazas hablando a la vez, que es justo lo que el selector
     existe para impedir.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
 
@@ -1327,6 +1350,50 @@ def test_el_enlace_profundo_al_modo_fuego(navegador: Any, servidor: str) -> None
         ctx.close()
 
 
+def test_el_fuego_no_se_baja_hasta_que_se_mira(navegador: Any, servidor: str) -> None:
+    """3,2 MB de JSON no se descargan para alimentar cifras que el modo esconde.
+
+    `incendios.json` se pedia al arrancar, **en modo sismos**, y `aplicarAmenaza`
+    escondia acto seguido todos los bloques `data-amenaza="fuego"` de la
+    tarjeta: el coste era entero —la descarga, los 7.987 hexagonos de
+    `cellToBoundary`, el union-find de `agruparFocos`— y el beneficio, cero,
+    hasta que alguien pulsaba «Fuego».
+
+    Se mide contando peticiones en el navegador y no leyendo el codigo: la
+    pregunta es que sale por el cable, y eso solo lo contesta el cable.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    pedidos: list[str] = []
+    pg.on("request", lambda peticion: pedidos.append(peticion.url))
+    try:
+        pg.goto(f"{servidor}/index.html")
+        _esperar_capa(pg, "epicentros")
+        pg.wait_for_timeout(1200)
+
+        assert not [u for u in pedidos if "incendios.json" in u], (
+            "el fuego se descarga al arrancar, en un modo que no lo ensena"
+        )
+
+        pg.locator('#amenazas button[data-amenaza="fuego"]').click()
+        _esperar_capa(pg, "incendios")
+
+        assert [u for u in pedidos if "incendios.json" in u], (
+            "se entro en modo fuego y nadie pidio el fichero: la capa no llegaria nunca"
+        )
+
+        # Y una sola vez, por muchas alternancias que haya: `asegurarIncendios`
+        # guarda la promesa. Sin eso, ir y volver de modo bajaria 3,2 MB cada vez.
+        pg.locator('#amenazas button[data-amenaza="sismos"]').click()
+        pg.wait_for_timeout(300)
+        pg.locator('#amenazas button[data-amenaza="fuego"]').click()
+        pg.wait_for_timeout(900)
+        veces = len([u for u in pedidos if "incendios.json" in u])
+        assert veces == 1, f"el fichero de fuego se pidio {veces} veces"
+    finally:
+        ctx.close()
+
+
 # --- Focos de incendio (30-ago-2026) ----------------------------------------
 #
 # Cinco pruebas para lo que el visor no sabia hacer: un incendio era una celda
@@ -1341,8 +1408,8 @@ def test_las_celdas_contiguas_se_agrupan_en_focos(pagina: Any) -> None:
     total regional o una celda. Ninguna de las dos es un incendio.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    celdas = _esperar_capa(pagina, "incendios")["rasgos"]
-    focos = _esperar_capa(pagina, "focos")["rasgos"]
+    celdas = _con_fuego(pagina)["rasgos"]
+    focos = _con_fuego(pagina, "focos")["rasgos"]
 
     assert focos > 0, "no se agrupo ni un foco"
     assert focos < celdas, (
@@ -1375,8 +1442,8 @@ def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
     `ModuleNotFoundError`. Una prueba que no corre en CI no vigila nada.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "incendios")
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina)
+    _con_fuego(pagina, "focos")
 
     foco = pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
     assert foco and foco["celdas"] >= 1
@@ -1410,7 +1477,7 @@ def test_en_modo_sismos_no_queda_rastro_de_incendios(pagina: Any) -> None:
     existe para evitar.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     # `wait_for_selector` espera a que sea VISIBLE por defecto, y un elemento
     # oculto no lo es nunca: hay que pedir el estado explicitamente.
     pagina.wait_for_selector("#bloque-panorama[hidden]", state="attached", timeout=ESPERA_MS)
@@ -1432,7 +1499,7 @@ def test_volver_de_un_foco_devuelve_el_panorama(pagina: Any) -> None:
     la condicion ya era falsa, y volver a fuego dejaba el lateral en blanco.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
     pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
 
@@ -1455,7 +1522,7 @@ def test_la_cifra_viva_ocupa_la_fila_y_no_se_sale(pagina: Any) -> None:
     `margin: -8px` sacaba el fondo fuera de la tarjeta.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.wait_for_timeout(700)
 
     medidas = pagina.evaluate(
@@ -1484,7 +1551,7 @@ def test_la_tarjeta_viva_dice_de_donde_es_la_cifra(pagina: Any) -> None:
     suma de toda America Latina, y sin decirlo la cifra no significa nada.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.wait_for_timeout(600)
 
     texto = pagina.locator('.metrica-viva[data-capa="incendios"]').inner_text().lower()
@@ -1643,7 +1710,7 @@ def test_volver_a_los_focos_devuelve_tambien_la_camara(pagina: Any) -> None:
     distingue «no se pidió mover la cámara» de «se pidió y no avanzó».
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
     pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
     pagina.evaluate("() => { window.CENTINELA.camara.motivo = null; }")
@@ -1660,7 +1727,7 @@ def test_volver_a_los_focos_devuelve_tambien_la_camara(pagina: Any) -> None:
 def test_ver_en_el_mapa_del_fuego_devuelve_el_panorama(pagina: Any) -> None:
     """La cifra habla de toda América Latina, así que el encuadre es ese."""
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     boton = pagina.locator('.metrica-viva[data-capa="incendios"]')
     boton.wait_for(state="visible", timeout=ESPERA_MS)
     pagina.evaluate("() => { window.CENTINELA.camara.motivo = null; }")
@@ -1709,8 +1776,12 @@ def test_cada_amenaza_tiene_su_indice_y_solo_uno_a_la_vez(pagina: Any) -> None:
     Para saber cuáles son los focos más recientes había que buscar hexágonos a
     ojo entre cuatro mil. Y leer «Reportes publicados» con el mapa lleno de fuego
     es la misma mezcla que el selector de amenaza existe para evitar.
+
+    Espera al mapa de sismos y no al de fuego: la primera mitad de lo que
+    comprueba es como se ve **en modo sismos**, y desde que el fuego se carga a
+    demanda pedirlo aqui abriria la pagina ya en el otro modo.
     """
-    _esperar_capa(pagina, "focos")
+    _esperar_capa(pagina, "epicentros")
     assert pagina.locator("#eventos").is_visible(), "en sismos falta el índice de reportes"
     assert pagina.locator("#focos").is_hidden(), "la lista de focos está en modo sismos"
 
@@ -1729,7 +1800,7 @@ def test_los_focos_se_listan_por_lo_mas_reciente(pagina: Any) -> None:
     ordena la capa del mapa.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
 
     assert pagina.locator("#orden-focos").input_value() == "reciente", (
@@ -1751,7 +1822,7 @@ def test_la_ventana_del_fuego_es_de_horas_y_lo_dice_cuando_vacia(pagina: Any) ->
     mirar».
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
 
     etiquetas = pagina.eval_on_selector_all(
@@ -1841,7 +1912,7 @@ def test_solo_se_ven_los_filtros_de_la_amenaza_al_mando(pagina: Any) -> None:
     assert "campo-pais-fuego" not in en_sismos
 
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     pagina.wait_for_timeout(1200)
 
     en_fuego = pagina.evaluate(visibles)
@@ -2015,7 +2086,7 @@ def test_el_filtro_de_pais_del_fuego_llega_a_las_tres_capas(pagina: Any) -> None
     """
     # La capa del mapa, no la anotacion de la lista. Ver el comentario
     # largo en `test_el_filtro_del_fuego_por_pais_se_construye_bien`.
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     # Esperar a la condición y no al reloj: las capas nacen cuando llegan sus
     # datos, que es después de la primera pasada de filtros.
@@ -2045,7 +2116,7 @@ def test_la_ventana_del_fuego_mueve_el_filtro_del_mapa(pagina: Any) -> None:
     """
     # La capa del mapa, no la anotacion de la lista. Ver el comentario
     # largo en `test_el_filtro_del_fuego_por_pais_se_construye_bien`.
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1000)
 
@@ -2089,7 +2160,7 @@ def test_el_filtro_del_fuego_por_pais_se_construye_bien(pagina: Any) -> None:
     # capas de una prueba anterior. Un verde prestado, que es la peor clase:
     # esta prueba existe para vigilar que el filtro de pais toca el MAPA —el
     # fallo que se reporto— y durante un tiempo no vigilo nada.
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1000)
 
@@ -2170,7 +2241,7 @@ def test_la_flecha_del_viento_apunta_a_donde_empuja_y_no_de_donde_viene(pagina: 
     comprueba contra el JSON publicado en vez de contra una constante.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     pagina.wait_for_timeout(1200)
 
     rejilla = pagina.evaluate(
@@ -2229,7 +2300,7 @@ def test_sin_viento_publicado_el_bloque_queda_vacio_y_no_en_cero(pagina: Any) ->
     vez en la cara del usuario: una calma inventada junto a un incendio.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     pagina.wait_for_timeout(800)
 
     vacio = pagina.evaluate(
@@ -2263,7 +2334,7 @@ def test_sin_filtros_el_tablero_da_lo_mismo_que_el_pipeline(pagina: Any) -> None
     dice 13.031, y no porque ninguna este mal: es que no miran lo mismo. Ese
     caso lo cubre la prueba siguiente.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
@@ -2308,7 +2379,7 @@ def test_con_un_fichero_recortado_no_se_encogen_las_cifras(pagina: Any) -> None:
     aunque el fichero llegue recortado. Solo al filtrar se suma en el navegador,
     y entonces el rotulo dice sobre cuantas celdas se sumo.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
@@ -2339,7 +2410,7 @@ def test_al_filtrar_por_pais_las_cifras_del_tablero_bajan(pagina: Any) -> None:
     suma de America Latina entera. El numero y el mapa contaban cosas distintas
     a la vez.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
@@ -2366,7 +2437,7 @@ def test_al_filtrar_por_pais_las_cifras_del_tablero_bajan(pagina: Any) -> None:
 @pytest.mark.visor
 def test_la_ventana_temporal_tambien_mueve_las_cifras(pagina: Any) -> None:
     """Mismo fallo por el otro filtro: 24 h -> 6 h dejaba las cifras quietas."""
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
@@ -2385,7 +2456,7 @@ def test_la_extension_del_mapa_ya_filtra_el_fuego(pagina: Any) -> None:
     Es el filtro mas natural de un tablero de mapa —lo que veo es de lo que me
     hablan— y era el unico que faltaba.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1000)
 
@@ -2417,7 +2488,7 @@ def test_ver_en_el_mapa_dice_algo_aunque_la_vista_no_cambie(pagina: Any) -> None
     no cambiaba ni un pixel y no anunciaba nada: se leia como roto, y a efectos
     practicos lo estaba.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
@@ -2727,8 +2798,10 @@ def test_la_leyenda_de_simbolos_cambia_con_la_amenaza(pagina: Any) -> None:
 
     Una leyenda que nombra simbolos que no se dibujan ensena a no leer la
     leyenda.
+
+    Al mapa de sismos, que es el modo cuya leyenda se comprueba primero.
     """
-    _esperar_capa(pagina, "incendios")
+    _esperar_capa(pagina, "epicentros")
     pagina.wait_for_timeout(1200)
 
     sismos = pagina.locator("#leyenda-simbolos").inner_text()
@@ -2749,8 +2822,10 @@ def test_el_aviso_de_cabecera_habla_de_lo_que_se_ensena(pagina: Any) -> None:
 
     Es el aviso mas importante del tablero —el que separa exposicion de dano— y
     en modo fuego describia otro mapa.
+
+    Al mapa de sismos: el aviso que se lee primero es el suyo.
     """
-    _esperar_capa(pagina, "incendios")
+    _esperar_capa(pagina, "epicentros")
     assert "franja de intensidad" in pagina.locator("#aviso-lectura").inner_text()
 
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
@@ -2915,7 +2990,7 @@ def test_el_fuego_fuerte_se_dibuja_encima(pagina: Any) -> None:
     —lo que este mapa existe para enseñar— se sorteaban contra 12.752
     competidores. La rampa de color estaba y no se podia leer.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     orden = pagina.evaluate(
         "() => JSON.stringify(window.CENTINELA.ordenDeDibujo('incendios-punto'))"
     )
@@ -2931,7 +3006,7 @@ def test_la_tinta_del_fuego_cabe_en_el_mapa(pagina: Any) -> None:
     los datos reales: una captura no distingue "la tinta cabe" de "la tinta se
     solapa y parece que cabe".
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     medida = pagina.evaluate(
         """() => {
              const r = window.CENTINELA.tintaDelFuego(2);
@@ -2976,7 +3051,7 @@ def test_las_personas_se_cuentan_enteras(pagina: Any) -> None:
     no es cierto es la precision que sugiere. Y al lado, el globo de la celda ya
     escribia «Población 3» en entero: el mismo hecho con dos formatos.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
@@ -3009,7 +3084,7 @@ def test_sin_viento_no_hay_bloque_de_ambiente(pagina: Any) -> None:
     vez de esperar a que ocurra: una prueba que solo pasa porque el escenario no
     se da no vigila nada, y este es el escenario del dia que GFS falle.
     """
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     pagina.wait_for_timeout(1200)
 
@@ -3041,7 +3116,7 @@ def test_cambiar_de_mapa_base_conserva_las_capas(pagina: Any) -> None:
     solo sitio, que repone lo que es dato.
     """
     _esperar_capa(pagina, "epicentros")
-    _esperar_capa(pagina, "incendios")
+    _con_fuego(pagina)
     pagina.wait_for_timeout(1200)
 
     pintados_al_arrancar = pagina.evaluate("() => window.CENTINELA.pintado.epicentros.rasgos")
@@ -3315,7 +3390,7 @@ def test_el_rotulo_de_la_tarjeta_de_fuego_sigue_a_la_ventana_elegida(pagina: Any
     de seis horas rotuladas como un día entero.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    _esperar_capa(pagina, "focos")
+    _con_fuego(pagina, "focos")
     pagina.wait_for_selector("#en-vivo .metrica", timeout=ESPERA_MS)
 
     def apunte() -> str:

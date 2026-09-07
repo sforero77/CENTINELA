@@ -77,15 +77,50 @@ def test_el_indice_distingue_ilegible_de_vacio() -> None:
 
 
 def test_un_indice_ilegible_no_esconde_los_otros_productos() -> None:
-    """Se salia por `return` antes de cargar observados, focos y cobertura."""
+    """Se salia por `return` antes de cargar observados y cobertura.
+
+    El fuego salio de esta lista el 6-sep-2026 y no por descuido: ya no se carga
+    al arrancar en ninguno de los tres caminos, sino al entrar en modo fuego.
+    Lo comprueba `test_el_fuego_se_carga_cuando_se_mira`, que es donde vive esa
+    invariante ahora.
+    """
     cuerpo = _cuerpo("cargarEventos")
     ilegible = cuerpo[cuerpo.index("No se pudo leer el índice") :]
-    for carga in ("cargarObservados()", "cargarIncendios()", "cargarCobertura("):
+    for carga in ("cargarObservados()", "cargarCobertura("):
         assert carga in ilegible, f"con el indice ilegible ya no se carga {carga}"
 
     vacio = cuerpo[cuerpo.index("listaVacia(eventos)") : cuerpo.index("aviso.hidden = true")]
-    for carga in ("cargarObservados()", "cargarIncendios()", "cargarCobertura("):
+    for carga in ("cargarObservados()", "cargarCobertura("):
         assert carga in vacio, f"el dia uno ya no ensena {carga}"
+
+
+def test_el_fuego_se_carga_cuando_se_mira() -> None:
+    """3,2 MB de JSON no se bajan para alimentar cifras que el modo esconde.
+
+    `incendios.json` trae 7.987 celdas que hay que convertir en hexagonos y
+    agrupar con un union-find. Eso corria al arrancar —en modo sismos, el de por
+    defecto— y `aplicarAmenaza` escondia acto seguido todos los bloques
+    `data-amenaza="fuego"` de la tarjeta. El coste era entero y el beneficio,
+    cero, hasta que alguien pulsaba «Fuego».
+
+    Las dos mitades de la invariante: **nadie lo pide al arrancar** y
+    **`cambiarAmenaza` si lo pide**. Sin la segunda, diferirlo seria haberlo
+    quitado.
+    """
+    arranque = _cuerpo("cargarEventos")
+    assert "cargarIncendios()" not in arranque and "asegurarIncendios()" not in arranque, (
+        "el fuego vuelve a bajarse al arrancar, en un modo que lo esconde"
+    )
+
+    cambio = _cuerpo("cambiarAmenaza")
+    assert "asegurarIncendios()" in cambio, (
+        "nadie pide el fuego al entrar en modo fuego: la capa no llegaria nunca"
+    )
+
+    asegurar = _cuerpo("asegurarIncendios")
+    assert "estado.fuegoPedido" in asegurar, (
+        "sin memoria de que ya se pidio, cada alternancia de modo lo bajaria otra vez"
+    )
 
 
 def test_los_focos_distinguen_ilegible_de_sin_fuego() -> None:

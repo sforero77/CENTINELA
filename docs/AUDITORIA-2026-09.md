@@ -54,13 +54,16 @@ sin acentuar, porque son citas del historial y no prosa de este documento:
 - `325102b` — Saca yang2021.html, que entro por un `git add -A` y no es del proyecto
 - `f2dbade` — Un `jessee_2018_model.tif` podia ser en realidad un `godt_2008` (#107)
 
-## Lo que queda abierto a propósito
+## Los cuatro huecos, cerrados el 6-sep-2026
 
-Cuatro cosas necesitan algo que no se puede resolver desde dentro del
-repositorio. Están en [`PENDIENTES.md`](../PENDIENTES.md) §2.0 con su porqué:
+Se dejaron abiertos porque tres necesitaban red y el cuarto parecía una decisión
+de producto. La red estaba, y la decisión de producto no lo era: la objeción que
+tenía parado el #52 —«diferir la carga quita fuego de la tarjeta en el modo por
+defecto»— resultó falsa al comprobarla en el navegador. Los cuatro siguen
+detallados en [`PENDIENTES.md`](../PENDIENTES.md) §2.0, ya con su cierre:
 
-- **#52** · El arranque descarga y procesa entero el fichero de fuego —365 KB en el cable, 4,4 MB de JSON— y acto seguido 
-  — sin tocar: diferirlo quita información de la tarjeta por defecto, y eso es decisión de producto
+- **#52** · ✅ **cerrado el 6-sep-2026**: `incendios.json` se pide al entrar en modo fuego, no al arrancar. La objeción de
+  producto que lo tenía parado —«quita fuego de la tarjeta por defecto»— era falsa: `aplicarAmenaza` ya la escondía
 - **#57** · ✅ **cerrado el 6-sep-2026**: la fixture de PAGER se refrescó contra la vigente (la del ShakeMap v8) y las dos
   tablas y sus porcentajes derivados se rehicieron. `test_contraste_con_pager.py` sigue exigiendo el acotamiento
 - **#67** · ✅ **cerrado el 6-sep-2026**: los siete digests resueltos contra la API y los treinta y dos usos fijados por

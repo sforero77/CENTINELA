@@ -43,12 +43,12 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 | Topónimos en español (RF-06) y changelog de deltas (RF-04) | ✅ funcional |
 | Golden G1 (Chocó), G2 (Venezuela) y G3 | ✅ corren, ninguna saltada |
 | Verificación de insumos (`insumos_sha256`) | ✅ mide y detiene · digests sin fijar, §2.6 |
-| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 144 pruebas en un navegador real |
+| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 145 pruebas en un navegador real |
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**2.316 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
-vivas y 144 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
+**2.317 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
+vivas y 145 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
 arranque verificado desde clon vacío. Eran 431 antes de la auditoría, 523 al
 empezarla, 686 el 26-ago y 948 el 28-ago.
 
@@ -211,14 +211,19 @@ después del v8— y se rehicieron las dos tablas: los umbrales de PAGER pasan a
 a **14 % y 24 %** (seguía en el cuarto inferior, que es lo que los documentos
 afirman), y el factor del intervalo de MMI≥7 a 6,1.
 
-**El arranque descarga y procesa el fichero de fuego entero y luego lo esconde**
-—4,4 MB de JSON, 10.963 hexágonos construidos con `h3.cellToBoundary`, un
-union-find sobre todos ellos— porque el modo por defecto es sismos. Diferirlo a
-`cambiarAmenaza("fuego")` es un cambio de una línea, pero **quita la mitad de
-fuego de la tarjeta «Ahora mismo» en el modo por defecto**: `pintarEnVivo` no
-distingue de modo, y hoy esa tarjeta enseña las detecciones al abrir la página.
-O sea que no es una optimización, es una decisión de producto sobre qué se ve
-sin pedirlo. Queda para quien la tome.
+**✅ El fuego se carga cuando se mira · cerrado el 6-sep-2026.** El arranque
+descargaba y procesaba `incendios.json` entero —3,2 MB de JSON, 7.987 hexágonos
+con `h3.cellToBoundary`, un union-find sobre todos ellos— en el modo sismos, que
+es el de por defecto. Ahora lo pide `cambiarAmenaza("fuego")`, una sola vez.
+
+**Y la objeción que lo tenía parado era falsa, comprobada antes de mover nada.**
+Esta nota decía que diferirlo quitaría fuego de la tarjeta «Ahora mismo» en el
+modo por defecto —«`pintarEnVivo` no distingue de modo»— y por eso lo trataba
+como decisión de producto. `pintarEnVivo` no distingue, es cierto, pero termina
+llamando a `aplicarAmenaza`, que esconde **todos** los bloques
+`data-amenaza="fuego"`: en modo sismos esas cifras no se ven. El coste era
+entero y el beneficio, cero. Lo fija `test_el_fuego_no_se_baja_hasta_que_se_mira`,
+que cuenta peticiones en el navegador en vez de leer el código.
 
 ### 2.1 ✅ Brasil, el país 19 · cerrado el 28-ago-2026
 
