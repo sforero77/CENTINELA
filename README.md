@@ -101,12 +101,12 @@ vez de esperar días.
 |---|---:|
 | Personas en MMI≥6 | **7.194.540** |
 | Personas en MMI≥7 | **2.424.287** |
-| De ellas, 65 años o más | **289.947** |
+| De ellas, 65 años o más | **297.536** |
 | Edificaciones en MMI≥7 | **448.789** |
-| Sedes de salud en MMI≥7 | **516** |
-| Sedes educativas en MMI≥7 | **1.003** |
-| Kilómetros de vía en MMI≥7 | **8.791** |
-| De ellos, primarias y secundarias | **1.015** |
+| Sedes de salud en MMI≥7 | **514** |
+| Sedes educativas en MMI≥7 | **1.004** |
+| Kilómetros de vía en MMI≥7 | **12.674** |
+| De ellos, primarias y secundarias | **1.508** |
 | Personas en celdas con cobertura areal por licuefacción ≥ 0,10 | **1.602.162** |
 | Municipios con población en MMI≥6 | **109** |
 | De ellos, con población en MMI≥7 | **44** |
@@ -355,7 +355,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**2.328 pruebas** sin red, más **150 de navegador** que abren el visor en un
+**2.382 pruebas** sin red, más **157 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 5-sep-2026.
 

@@ -36,7 +36,11 @@ REPORTES = sorted(p for p in (RAIZ / "reports").glob("*/report.json"))
 
 #: Ficheros publicados que todavia no traen `pop7`. Se emitieron antes del
 #: arreglo y se migran al re-emitir su reporte. **Solo puede bajar.**
-SIN_MIGRAR = 27
+#:
+#: Llego a cero el 7-sep-2026, cuando se re-emitieron los veintisiete contra los
+#: activos reconstruidos. Con el trinquete apretado, publicar una malla de la
+#: forma vieja vuelve a poner esto en rojo — que es justo para lo que existia.
+SIN_MIGRAR = 0
 
 
 def _celdas(reporte: Path) -> dict[str, Any] | None:
@@ -81,16 +85,51 @@ def test_el_trinquete_no_puede_subir() -> None:
         )
 
 
+def _celdas_con(datos: dict[str, Any], columna: str) -> int:
+    """Cuantas celdas aportan algo a esa columna. Es la cota del redondeo."""
+    if columna not in datos["columnas"]:
+        return 0
+    i = datos["columnas"].index(columna)
+    return sum(1 for c in datos["celdas"] if float(c[i] or 0) != 0)
+
+
 @pytest.mark.parametrize("reporte", REPORTES, ids=_ids)
 def test_la_poblacion_por_banda_cuadra_con_el_reporte(reporte: Path) -> None:
-    """Sumar `pop7` sobre el fichero da el `pop_mmi7p` del reporte. Exacto."""
+    """Sumar `pop7` sobre el fichero da el `pop_mmi7p` del reporte.
+
+    NO EXACTO, Y NO PUEDE SERLO. `celdas.py` publica `round(sum(pop_total)
+    FILTER (WHERE mmi_max >= 7))`: **cada celda va redondeada a la unidad**, asi
+    que sumar cinco mil enteros redondeados no da el total exacto ni deberia. La
+    prueba exigia `rel=1e-6` y decia «Exacto» en su docstring; paso durante meses
+    porque el trinquete se saltaba casi todas las mallas —eran de la forma
+    vieja, sin `pop7`— y solo miraba las pocas migradas.
+
+    Al re-emitir los veintisiete reportes el 7-sep-2026 todas migraron, y las
+    ocho que quedaron dentro del umbral por suerte dejaron de estarlo: los
+    desvios medidos van de 1,4 a 15 personas sobre cientos de miles, hasta el
+    0,0029 %, o sea treinta veces la tolerancia que pedia.
+
+    Lo que el mecanismo si garantiza es **media persona por celda**: el error de
+    redondear N celdas no puede pasar de N/2. Esa es la cota que se comprueba, y
+    sigue cazando lo que esta prueba existe para cazar —una celda que falta o
+    que se cuenta dos veces mueve su poblacion entera, que son miles.
+    """
     datos = _celdas(reporte)
     if datos is None or "pop7" not in datos["columnas"]:
         pytest.skip("malla anterior a la poblacion por banda; la cuenta el trinquete")
 
     totales = json.loads(reporte.read_text(encoding="utf-8"))["totales"]
-    assert _suma(datos, "pop7") == pytest.approx(totales["pop_mmi7p"], rel=1e-6)
-    assert _suma(datos, "pop8") == pytest.approx(totales["pop_mmi8p"], rel=1e-6)
+    for columna, campo in (("pop7", "pop_mmi7p"), ("pop8", "pop_mmi8p")):
+        suma = _suma(datos, columna)
+        esperado = float(totales[campo])
+        cota = max(0.5 * _celdas_con(datos, columna), 0.5)
+        assert abs(suma - esperado) <= cota, (
+            f"{columna}: la malla suma {suma:,.1f} y el reporte publica "
+            f"{esperado:,.1f}. La diferencia ({suma - esperado:+,.1f}) pasa de "
+            f"media persona por celda ({cota:,.1f} sobre "
+            f"{_celdas_con(datos, columna)} celdas), asi que no es el redondeo: "
+            f"o falta una celda o se esta contando dos veces"
+        )
 
 
 @pytest.mark.parametrize("reporte", REPORTES, ids=_ids)
