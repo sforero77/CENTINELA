@@ -43,12 +43,12 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 | Topónimos en español (RF-06) y changelog de deltas (RF-04) | ✅ funcional |
 | Golden G1 (Chocó), G2 (Venezuela) y G3 | ✅ corren, ninguna saltada |
 | Verificación de insumos (`insumos_sha256`) | ✅ mide y detiene · digests sin fijar, §2.6 |
-| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 145 pruebas en un navegador real |
+| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 149 pruebas en un navegador real |
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**2.317 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
-vivas y 145 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
+**2.323 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
+vivas y 149 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
 arranque verificado desde clon vacío. Eran 431 antes de la auditoría, 523 al
 empezarla, 686 el 26-ago y 948 el 28-ago.
 
@@ -799,10 +799,21 @@ vías y agua. Sigue sin llaves ni cuota (D6). Ya no hay `OVERTURE_RELEASE` en
 `site/assets/app.js` y no hay nada que subir cada trimestre por el lado del
 mapa base.
 
-**Falta:** las coropletas r7/r6 de exposición e impacto. Son datos nuestros y
-necesitan `tippecanoe`, y son la última pieza de RF-09 — el resto del visor
-(lista de eventos, ficha municipal, descargas, malla por celda, área de
-afectación y filtro por país) ya funciona.
+**Falta**, y son tres cosas de RF-09, no una:
+
+* **Las coropletas r7/r6** de exposición e impacto. Son datos nuestros y
+  necesitan `tippecanoe`. De **r6 no hay una sola línea** en el repositorio: lo
+  único construido es la malla r7 que publica `celdas.json`.
+* **La ficha por municipio.** Este documento decía que ya funcionaba. No: el
+  bloque de municipios es un gráfico de barras (`#detalle-barras`), sus filas no
+  se pueden pulsar y no hay ningún panel por municipio. Lo que sí existe es el
+  `adm2.csv`, que trae las veinticinco columnas de cada uno.
+* **La descarga por capa.** El panel ofrece los ocho artefactos del evento
+  —reporte, JSON, CSV, malla, contornos, dos mapas y el hilo—, que no es lo
+  mismo que poder bajarse una capa concreta.
+
+El resto del visor (lista de eventos, descargas del evento, malla por celda,
+área de afectación y filtro por país) sí funciona.
 
 ### 2.3 Simbología del visor · quedan dos cosas
 

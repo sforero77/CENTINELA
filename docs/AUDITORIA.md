@@ -257,7 +257,7 @@ exactamente ese formato. **Ninguna línea del pipeline lo llenaba**, así que la
 sección no apareció en un solo reporte publicado.
 
 Importa durante una emergencia: un ShakeMap se revisa muchas veces (el de
-Venezuela llegó a v14) y quien ya leyó la versión anterior necesita saber que
+Venezuela llegó a v15) y quien ya leyó la versión anterior necesita saber que
 cambio, no releerla entera.
 
 Se compara la cifra **ya redondeada**, no la exacta: si una revisión mueve la

@@ -85,10 +85,11 @@ código de ese día**. La columna «Hoy» dice qué se encontró:
 
 | | |
 |---|---|
-| **cerrado** | 43 · el síntoma ya no existe. Casi ninguno cayó de rebote: la mayoría tiene arreglo dirigido y su guardia, hecho al cerrar una crítica o una alta de la misma familia |
-| **en pie** | 51 · el síntoma se reprodujo en el código de hoy, con fichero y línea |
+| **cerrado** | 50 · 43 lo estaban ya al triar —casi ninguno de rebote: la mayoría tiene arreglo dirigido y su guardia, hecho al cerrar una crítica o una alta de la misma familia— y siete se cerraron el mismo 6-sep, en el barrido del visor |
+| **en pie** | 44 · el síntoma se reprodujo en el código de hoy, con fichero y línea |
 | **a medias** | 5 · una parte cerrada y otra no. Se puntúan por partes o el recuento sale optimista |
-| **sin ver** | 6 · exigen reproducir el fallo, no leer el código: quedan para su lote |
+| **anotado** | 1 · el #129 no es un fallo del código sino una promesa de más: RF-09 pide r6, ficha por municipio y descarga por capa, y `PENDIENTES.md` §2.2 decía que ya solo faltaba lo primero. Corregido ahí |
+| **sin ver** | 5 · exigen reproducir el fallo, no leer el código: quedan para su lote |
 
 Lo que separa a unos de otros tiene forma: **los cerrados compartían síntoma con
 una crítica o una alta**; los que siguen en pie son los solitarios —accesibilidad
@@ -118,9 +119,9 @@ El `·` tras el fichero sigue marcando las rutas que la rama tocó por otro moti
 | 128 | media | cerrado | `site/assets/app.js:4632`· | En modo fuego, «no hay focos», «FIRMS no publico nada» y «incendios.json no se pudo leer» se dibujan exactamente igual: nada |
 | 130 | media | a medias | `site/assets/status.js:104`· | En la página de estado, «se cumple» o «no se cumple» el objetivo se cifra solo en el color del número, y encima el valor va en horas contra un obje… |
 | 131 | media | **en pie** | `site/assets/styles.css:1182`  | La tabla de cobertura pierde su semántica de tabla en móvil: `display: block` sobre el <table> tumba el rol y la asociación fila/columna |
-| 184 | baja | **en pie** | `site/assets/status.js:105`· | El aviso de «la cadencia se come el objetivo» solo se pinta cuando no hay ningun reporte publicado; hoy ya hay dos, así que no puede aparecer nunca |
+| 184 | baja | cerrado | `site/assets/status.js:105`· | El aviso de «la cadencia se come el objetivo» solo se pinta cuando no hay ningun reporte publicado; hoy ya hay dos, así que no puede aparecer nunca |
 | 185 | baja | **en pie** | `site/index.html:200`· | La tarjeta «Ahora mismo» es una region aria-live completa que se reescribe entera en cada moveend del mapa |
-| 186 | baja | **en pie** | `site/index.html:313`· | «El de Venezuela llegó a v14» esta escrito a mano en dos páginas y el reporte publicado va por v15 |
+| 186 | baja | cerrado | `site/index.html:313`· | «El de Venezuela llegó a v14» esta escrito a mano en dos páginas y el reporte publicado va por v15 |
 
 ### hueco-4 (7)
 
@@ -130,7 +131,7 @@ El `·` tras el fichero sigue marcando las rutas que la rama tocó por otro moti
 | 94 | media | cerrado | `pipelines/p2_impact/pipeline.py:765`· | `descargas` publica dos de los seis artefactos que el evento genera, y el esquema cierra la puerta a los otros: la malla H3 y los contornos no exis… |
 | 100 | media | **en pie** | `pipelines/p3_report/changelog.py:66`  | El changelog de RF-04 es el diff de un solo paso y cualquier reproceso sin cambios lo borra: el reporte del Chocó publicó tres deltas y hoy publica… |
 | 105 | media | cerrado | `pipelines/p3_report/markdown.py:553`· | Los 27 reportes cierran diciendo «ver manifiesto enlazado» y no hay enlace en ninguna parte: `col-v0.6` es una cadena que no resuelve a ningún docu… |
-| 129 | media | sin ver | `site/assets/app.js:1910`· | RF-09 pide coropletas r7/r6, ficha por municipio y descarga por capa: r6 no existe en ninguna línea del repositorio y la ficha por municipio tampoco |
+| 129 | media | anotado | `site/assets/app.js:1910`· | RF-09 pide coropletas r7/r6, ficha por municipio y descarga por capa: r6 no existe en ninguna línea del repositorio y la ficha por municipio tampoco |
 | 133 | media | cerrado | `site/index.html:470`· | Los diecinueve manifiestos resuelven al cubo `odbl` y todo lo publicado es share-alike, pero el pie del visor y otros tres documentos ofrecen «dato… |
 | 148 | baja | cerrado | `Makefile:50`· | `make site` —el único comando para levantar el visor— lo sirve sin un solo reporte, y la pantalla resultante es idéntica a «todavía no hay nada pub… |
 
@@ -151,7 +152,7 @@ El `·` tras el fichero sigue marcando las rutas que la rama tocó por otro moti
 |---|---|---|---|---|
 | 104 | media | cerrado | `pipelines/p3_report/markdown.py:272`· | El aviso de «hueco de mapeo» se mide sobre MMI>=7 mientras la tabla que anota publica MMI>=6: se calla en tres reportes que superan el mismo umbral… |
 | 107 | media | cerrado | `pipelines/p3_report/social.py:66`· | `hilo.txt` publica «Dentro de MMI>=7: 0. Edificaciones en MMI>=7: 0» en los trece eventos que no llegan a esa banda, contradiciendo el `report.md` … |
-| 126 | media | **en pie** | `site/assets/app.js:5993`· | El globo de una celda con fuego omite arbustos y construido —las dos clases que P0 anadio por ser las decisivas en LATAM— y deja 373 celdas sin dec… |
+| 126 | media | cerrado | `site/assets/app.js:5993`· | El globo de una celda con fuego omite arbustos y construido —las dos clases que P0 anadio por ser las decisivas en LATAM— y deja 373 celdas sin dec… |
 | 166 | baja | cerrado | `pipelines/p0_exposure/raster_categorico_h3.py:227`  | `lulc_*_pct` se publica como «porcentaje de la celda» pero el denominador excluye agua, suelo desnudo, nieve y musgo: una celda con 1 pixel de 148 … |
 | 169 | baja | **en pie** | `pipelines/p1_trigger/observados.py:81`  | La capa de sismos observados redondea la magnitud a un decimal y puede publicar «M5,5» junto a la razon «M5.49 < umbral M5.5» |
 | 173 | baja | sin ver | `pipelines/p3_report/markdown.py:98`· | La tabla del reporte afirma que todas sus cifras van a dos cifras significativas y tres de sus filas no lo están |
@@ -221,10 +222,10 @@ El `·` tras el fichero sigue marcando las rutas que la rama tocó por otro moti
 | # | Sev | Hoy | Dónde | Qué |
 |---|---|---|---|---|
 | 119 | media | cerrado | `site/assets/app.js:4935`· | La lista de focos filtra por foco entero y el mapa filtra celda a celda: con la ventana de 6 h anuncia 1.783 km2 ardiendo y dibuja 1.361 |
-| 120 | media | **en pie** | `site/assets/app.js:3665`· | `cambiarEstiloBase` repone todas las capas menos el perímetro del foco: el panel sigue describiendo un incendio cuyo contorno el mapa acaba de perder |
-| 121 | media | **en pie** | `site/assets/app.js:3381`· | Cada cambio de mapa base vuelve a registrar los oyentes de clic de epicentros, observados e incendios, que MapLibre conserva a traves de `setStyle` |
-| 122 | media | **en pie** | `site/assets/app.js:4269`· | El filtro de país recorta la capa de sismos menores en el mapa pero no su tarjeta ni su lista: «10 sismos vistos» con un solo punto dibujado |
-| 182 | baja | **en pie** | `site/assets/app.js:3140`· | El globo de la celda —la ficha que el fichero declara «el valor exacto»— redondea población y edificaciones al millar: 1.500 personas se publican c… |
+| 120 | media | cerrado | `site/assets/app.js:3665`· | `cambiarEstiloBase` repone todas las capas menos el perímetro del foco: el panel sigue describiendo un incendio cuyo contorno el mapa acaba de perder |
+| 121 | media | cerrado | `site/assets/app.js:3381`· | Cada cambio de mapa base vuelve a registrar los oyentes de clic de epicentros, observados e incendios, que MapLibre conserva a traves de `setStyle` |
+| 122 | media | cerrado | `site/assets/app.js:4269`· | El filtro de país recorta la capa de sismos menores en el mapa pero no su tarjeta ni su lista: «10 sismos vistos» con un solo punto dibujado |
+| 182 | baja | cerrado | `site/assets/app.js:3140`· | El globo de la celda —la ficha que el fichero declara «el valor exacto»— redondea población y edificaciones al millar: 1.500 personas se publican c… |
 
 ### Actions · evento (4)
 

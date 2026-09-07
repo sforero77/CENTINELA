@@ -117,7 +117,19 @@ function pintarResumen(datos) {
     (objetivo.medido_contra && medido[objetivo.medido_contra]) || medido;
   const hayJuzgada = Number.isFinite(juzgada.p50_min);
 
-  nodo.innerHTML = `<div class="metricas">
+  // EL AVISO DE CADENCIA TAMBIEN VA AQUI, Y ESTE ES EL CAMINO QUE SE RECORRE.
+  //
+  // Vivia solo en la rama de arriba —la de «todavia no hay ningun reporte
+  // publicado»—, que dejo de ejecutarse el dia que se publico el primero. Con
+  // dos reportes en vivo, la unica alarma sobre lo que **no** depende de que
+  // ocurra un sismo no podia aparecer nunca.
+  //
+  // Y es justo el camino en que importa: cuando ya hay latencia medida, la
+  // pregunta «¿cabe el objetivo dentro de la cadencia del vigia?» deja de ser
+  // teorica. `avisoDeCadencia` devuelve cadena vacia si la cadencia cumple, asi
+  // que ponerlo aqui no anade ruido cuando no hay nada que decir.
+  nodo.innerHTML =
+    `<div class="metricas">
     ${metrica(comoDuracion(juzgada.p50_min), `p50 desde detección · objetivo ${objetivo.p50_min} min`,
               hayJuzgada ? clase(juzgada.p50_min, objetivo.p50_min) : "")}
     ${metrica(comoDuracion(juzgada.p95_min), `p95 desde detección · objetivo ${objetivo.p95_min} min`,
@@ -125,7 +137,7 @@ function pintarResumen(datos) {
     ${metrica(comoDuracion(medido.p50_min), "p50 total, desde el sismo")}
     ${metrica(nf.format(medido.eventos_publicados), "reportes en vivo")}
   </div>
-  <p class="nota">${escapar(datos.nota)}</p>`;
+  <p class="nota">${escapar(datos.nota)}</p>` + avisoDeCadencia(datos);
   nodo.classList.remove("cargando");
 }
 

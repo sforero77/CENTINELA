@@ -481,6 +481,28 @@ function comoConteo(v) {
   return comoTexto(Math.round(v));
 }
 
+//: El mismo conteo, pero sin el redondeo de prosa. Para el globo de la celda.
+//:
+//: `comoConteo` acaba en `comoTexto`, que por encima de mil redondea **al
+//: millar**: 1.500 personas se publicaban como «2.000». En la prosa eso es lo
+//: correcto —nadie necesita el 107.904 de un modelo de exposicion— pero el globo
+//: de la celda es el sitio donde este visor promete lo contrario. Lo dice por
+//: escrito, y no de pasada: es la compensacion de WCAG 1.4.11 por la rampa de
+//: color —«la leyenda publica los rangos numericos, **el globo de cada celda da
+//: su valor exacto**, y celdas.json se descarga entero»—. Un valor redondeado al
+//: millar no es el valor exacto, y quien fuera a comprobar la rampa contra el
+//: globo encontraria la cifra movida hasta 499 personas.
+//:
+//: Se redondea a la unidad, que es lo que corrigio «5,7 personas»: GHS-POP es un
+//: raster desagregado y el decimal es real, pero nadie cuenta media persona. Y
+//: por debajo de media se dice «<1» y no «0», por lo mismo de siempre: hay
+//: alguien, y un cero ahi se leeria como «no hay nadie medido».
+function comoConteoExacto(v) {
+  if (!Number.isFinite(v) || v <= 0) return "0";
+  if (v < 0.5) return "<1";
+  return numero(Math.round(v));
+}
+
 // Los nombres del CSV municipal vienen en mayúsculas ("PEREIRA"); los de
 // `report.json` no. Se normalizan aquí para que las barras no griten.
 function capitalizar(nombre) {
@@ -530,6 +552,8 @@ const estado = {
   //: que hay que hacer cada vez que se cambia de mapa base, porque `setStyle`
   //: se lleva por delante todas las fuentes y todas las capas.
   observadosDatos: null,
+  //: La ventana en dias que declara `observados.json`, para el lema de la lista.
+  observadosVentanaDias: 5,
   //: Que amenaza manda en el mapa. La otra queda de contexto discreto.
   //:
   //: El fuego vivia detras de un checkbox apagado en una esquina: 745.000
@@ -2293,6 +2317,22 @@ window.CENTINELA = {
       return [];
     }
   },
+  //: Cuantos oyentes de clic por capa tiene puesto MapLibre ahora mismo.
+  //:
+  //: `map.on(tipo, capa, fn)` **sobrevive a `setStyle`** —los oyentes cuelgan del
+  //: mapa, no del estilo—, asi que un `dibujar*` que los registre en cada pasada
+  //: los acumula en cada cambio de mapa base. El sintoma no se ve en una captura:
+  //: el mapa se ve igual y cada clic se atiende N veces.
+  //:
+  //: Se lee el registro real de MapLibre y no nuestra contabilidad: lo que
+  //: importa es cuantos hay puestos de verdad. Es un campo interno de la
+  //: libreria, y por eso vamos a version fijada; si desapareciera, esto
+  //: devuelve 0 y la prueba que lo usa se pone roja en vez de aprobar en falso.
+  oyentesDeClic: () => {
+    const m = estado.mapa;
+    const delegados = m && m._delegatedListeners;
+    return delegados && delegados.click ? delegados.click.length : 0;
+  },
   //: Cuantas capas de rotulos hablan espanol y cuantas se quedaron en el idioma
   //: local. Se mira la EXPRESION puesta en el estilo y no un texto pintado:
   //: que tesela cae en pantalla depende del encuadre y de la red, y una prueba
@@ -3269,7 +3309,7 @@ function engancharCeldas(m) {
   estado.ganchosCeldas = true;
   let encima = null;
 
-  m.on("click", "celdas", (ev) => {
+  alTocarLaCapa(m, "click", "celdas", (ev) => {
     const p = ev.features[0].properties;
     const fila = (etiqueta, valor) =>
       `<div style="display:flex;justify-content:space-between;gap:1rem">` +
@@ -3296,8 +3336,8 @@ function engancharCeldas(m) {
               `${numero(distanciaKm(estado.epicentro[0], estado.epicentro[1], ev.lngLat.lng, ev.lngLat.lat))} km`
             )
           : "") +
-        fila("Personas", comoConteo(Number(p.pop))) +
-        fila("Edificaciones", comoConteo(Number(p.bld))) +
+        fila("Personas", comoConteoExacto(Number(p.pop))) +
+        fila("Edificaciones", comoConteoExacto(Number(p.bld))) +
         fila("Construido", `${numero(Number(p.built_m2) / 1e6, 2)} km²`) +
         fila("Vías", `${numero(Number(p.vias_km), 1)} km`) +
         fila("Salud", numero(Number(p.salud))) +
@@ -3306,7 +3346,7 @@ function engancharCeldas(m) {
       .addTo(m);
   });
 
-  m.on("mousemove", "celdas", (ev) => {
+  alTocarLaCapa(m, "mousemove", "celdas", (ev) => {
     m.getCanvas().style.cursor = "pointer";
     if (!ev.features.length) return;
     if (encima !== null) m.setFeatureState({ source: "celdas", id: encima }, { encima: false });
@@ -3314,7 +3354,7 @@ function engancharCeldas(m) {
     m.setFeatureState({ source: "celdas", id: encima }, { encima: true });
   });
 
-  m.on("mouseleave", "celdas", () => {
+  alTocarLaCapa(m, "mouseleave", "celdas", () => {
     m.getCanvas().style.cursor = "";
     if (encima !== null) m.setFeatureState({ source: "celdas", id: encima }, { encima: false });
     encima = null;
@@ -3537,12 +3577,14 @@ function dibujarEpicentros(eventos) {
       // grande debajo, pero un clic dentro del circulo pequeno devuelve **los
       // dos** rasgos, y el que el usuario quiso es el de menos poblacion — el
       // que tiene el borde mas cerca del punto que pulso.
-      m.on("click", capa, (ev) => seleccionar(elMasPequeno(ev.features).properties.usgs_id));
-      m.on("mousemove", capa, (ev) => {
+      alTocarLaCapa(m, "click", capa, (ev) =>
+        seleccionar(elMasPequeno(ev.features).properties.usgs_id)
+      );
+      alTocarLaCapa(m, "mousemove", capa, (ev) => {
         m.getCanvas().style.cursor = "pointer";
         rotularEpicentro(m, elMasPequeno(ev.features));
       });
-      m.on("mouseleave", capa, () => {
+      alTocarLaCapa(m, "mouseleave", capa, () => {
         m.getCanvas().style.cursor = "";
         cerrarRotuloDeEpicentro();
       });
@@ -3587,6 +3629,28 @@ function avisarSinMapa() {
 //: aparecer. Existe para que la mascara sepa por debajo de quien tiene que
 //: colocarse: velar el mapa base es el objetivo, velar los hexagonos seria el
 //: fallo.
+//: Un oyente de capa se registra UNA VEZ, aunque la capa se redibuje.
+//:
+//: `map.on(tipo, capa, fn)` en MapLibre **sobrevive a `setStyle`**: los oyentes
+//: cuelgan del mapa, no del estilo. Y `dibujarEpicentros`, `dibujarObservados` y
+//: `dibujarIncendios` los registraban al final de cada pasada, que es justo lo
+//: que `cambiarEstiloBase` vuelve a llamar en cada cambio de mapa base. Tres
+//: cambios de base y cada clic sobre un epicentro abria su globo tres veces,
+//: `seleccionar` corria tres veces, y el vuelo de camara competia consigo mismo.
+//:
+//: No se puede quitar con `off` sin guardar la referencia exacta de cada
+//: funcion, y son flechas anonimas. Se lleva un registro de los pares
+//: (tipo, capa) ya enganchados y no se engancha dos veces: el oyente vive lo que
+//: viva la pagina, que es lo que hace falta.
+const oyentesDeCapa = new Set();
+
+function alTocarLaCapa(m, tipo, capa, fn) {
+  const clave = `${tipo}:${capa}`;
+  if (oyentesDeCapa.has(clave)) return;
+  oyentesDeCapa.add(clave);
+  m.on(tipo, capa, fn);
+}
+
 const CAPAS_DE_DATO = [
   "contornos",
   "perimetro-borde",
@@ -3822,6 +3886,14 @@ function cambiarEstiloBase(clave) {
     if (estado.eventos) dibujarEpicentros(estado.eventos);
     if (estado.observadosDatos) dibujarObservados(estado.observadosDatos);
     if (estado.fuegoDatos) dibujarIncendios(estado.fuegoDatos);
+    // Y EL PERIMETRO DEL FOCO ABIERTO, QUE SE QUEDABA FUERA.
+    //
+    // Repone las tres capas de dato pero no el contorno del foco que el panel
+    // esta describiendo: cambiar de mapa base con un incendio abierto dejaba el
+    // lateral hablando de «17 celdas contiguas ardiendo» y el mapa sin rodear
+    // ninguna. Es la misma clase de fallo que el `abierto`/`capaAbierta` de mas
+    // abajo resuelve para el lado sismico, que aqui faltaba.
+    if (estado.focoAbierto) dibujarPerimetroDeFoco(estado.focoAbierto);
     // El interruptor de sismos menores sobrevive en el DOM, pero su capa acaba
     // de nacer apagada: se le devuelve lo que la casilla dice.
     const casilla = $("interruptor-observados");
@@ -4392,6 +4464,12 @@ function refrescarLista({ anunciando = true } = {}) {
   pintarPanorama((estado.eventos || []).filter(pasaFiltros));
 
   aplicarFiltrosAlMapa();
+  // Y LOS SISMOS MENORES, QUE SON DEL MISMO PANEL Y DEL MISMO FILTRO.
+  //
+  // El mapa ya los recortaba; la cifra viva y la lista no. Se refrescan aqui,
+  // que es el sitio por el que pasan todos los cambios de filtro del lado
+  // sismico —pais y ventana—, para que las tres cosas no puedan separarse.
+  refrescarMenores();
   pintarLimpiar();
   if (anunciando) {
     anunciar(`${visibles} ${visibles === 1 ? "reporte" : "reportes"} en la lista.`);
@@ -4471,6 +4549,7 @@ async function cargarObservados() {
   }
   const eventos = datos.eventos;
   estado.vivo.ventanaSismos = datos.ventana_dias || 5;
+  estado.observadosVentanaDias = datos.ventana_dias || 5;
   estado.vivo.sismosUtc = datos.generado_utc || null;
   if (!eventos.length) {
     anotarPintado("observados", 0);
@@ -4480,10 +4559,7 @@ async function cargarObservados() {
   }
 
   dibujarObservados(eventos);
-  pintarInterruptorObservados(eventos, datos.ventana_dias);
-  pintarListaMenores(eventos, datos.ventana_dias);
-  estado.vivo.observados = eventos.length;
-  pintarEnVivo();
+  refrescarMenores();
 }
 
 // La lista de menores, hermana de la de reportes y de la de focos.
@@ -4642,9 +4718,9 @@ function dibujarObservados(eventos) {
     anotarPintado("observados", eventos.length);
     aplicarAmenaza();
 
-    m.on("mouseenter", "observados", () => (m.getCanvas().style.cursor = "help"));
-    m.on("mouseleave", "observados", () => (m.getCanvas().style.cursor = ""));
-    m.on("click", "observados", (ev) => {
+    alTocarLaCapa(m, "mouseenter", "observados", () => (m.getCanvas().style.cursor = "help"));
+    alTocarLaCapa(m, "mouseleave", "observados", () => (m.getCanvas().style.cursor = ""));
+    alTocarLaCapa(m, "click", "observados", (ev) => {
       const p = ev.features[0].properties;
       abrirGlobo(new maplibregl.Popup({ closeButton: true, maxWidth: "300px" }))
         .setLngLat(ev.lngLat)
@@ -4794,15 +4870,31 @@ function pintarLeyendaSimbolos() {
 
 function pintarInterruptorObservados(eventos, ventanaDias) {
   const anfitrion = $("controles-mapa") || $("leyenda") || $("mapa");
-  if (!anfitrion || $("interruptor-observados")) return;
+  if (!anfitrion) return;
+
+  const rotulo =
+    `(${eventos.length} en ${ventanaDias || 5} días, sin reporte)`;
+
+  // SI YA EXISTE, SE LE CAMBIA LA CIFRA. NO SE VUELVE A CREAR NI SE DEJA VIEJA.
+  //
+  // Salia por `return` en cuanto el control existia, asi que su cuenta se
+  // congelaba en la del arranque: con «Chile» puesto el mapa dejaba cuatro
+  // estrellas y el interruptor seguia ofreciendo «15 en 5 días». Es el tercer
+  // sitio que cuenta lo mismo —con la tarjeta viva y la lista— y el que
+  // quedaba fuera del filtro.
+  const existente = $("interruptor-observados");
+  if (existente) {
+    const cifra = existente.querySelector(".menor");
+    if (cifra) cifra.textContent = rotulo;
+    return;
+  }
 
   const caja = document.createElement("label");
   caja.className = "interruptor-observados";
   caja.id = "interruptor-observados";
   caja.innerHTML =
     `<input type="checkbox"> ` +
-    `<span>Sismos menores vistos <span class="menor">` +
-    `(${eventos.length} en ${ventanaDias || 5} días, sin reporte)</span></span>`;
+    `<span>Sismos menores vistos <span class="menor">${rotulo}</span></span>`;
   // Nace obedeciendo al modo: las capas cargan en paralelo y este control puede
   // crearse despues de que el selector de amenaza ya se aplico.
   caja.hidden = estado.amenaza === "fuego";
@@ -5340,6 +5432,44 @@ function pintarListaFocos({ anunciando = true } = {}) {
 const TODO_PASA = null;
 
 //: Corte de la ventana en milisegundos desde la epoca, o `null` si es "Todo".
+//: Los sismos menores que pasan los filtros del panel de sismos.
+//:
+//: EL MAPA FILTRABA Y LA TARJETA NO. `aplicarFiltrosAlMapa` recorta la capa
+//: `observados` por pais y por ventana desde el 3-sep-2026, pero la cifra de la
+//: tarjeta —«10 sismos vistos, sin reporte»— y la lista del lateral seguian
+//: saliendo de `datos.eventos` entero, que es lo que llega del fichero. Con
+//: «Colombia» puesto se leia «10 sismos vistos» sobre un mapa con un solo punto
+//: dibujado, y la lista enumeraba los diez.
+//:
+//: Los tres —mapa, cifra y lista— preguntan ahora lo mismo. El `iso3` lo publica
+//: P1 desde el toponimo de USGS; los que no lo traen —mar abierto— no son de
+//: ningun pais y salen del recorte en cuanto se elige uno, igual que en el mapa.
+//: Vuelve a pintar la cifra y la lista de sismos menores con los filtros de
+//: ahora. Se llama al cargarlos y cada vez que un filtro cambia, que es lo que
+//: faltaba: sin esto la cifra se congelaba en la del fichero.
+function refrescarMenores() {
+  const visibles = observadosVisibles();
+  const dias = estado.observadosVentanaDias || 5;
+  // Los tres sitios que cuentan sismos menores: el interruptor de la capa, la
+  // lista del lateral y la cifra viva. Contaban dos cosas distintas —el fichero
+  // entero contra lo que el mapa dibuja— y ahora cuentan lo mismo.
+  pintarInterruptorObservados(visibles, dias);
+  pintarListaMenores(visibles, dias);
+  estado.vivo.observados = visibles.length;
+  pintarEnVivo();
+}
+
+function observadosVisibles() {
+  const eventos = estado.observadosDatos || [];
+  const dias = (VENTANAS[estado.ventana] || VENTANAS.todo).dias;
+  const corte = corteDeVentana(dias);
+  return eventos.filter((e) => {
+    if (estado.paisFiltrado && e.iso3 !== estado.paisFiltrado) return false;
+    if (corte !== null && e.origen_utc && Date.parse(e.origen_utc) < corte) return false;
+    return true;
+  });
+}
+
 function corteDeVentana(dias) {
   return dias ? Date.now() - dias * 86400000 : null;
 }
@@ -5899,9 +6029,9 @@ function dibujarIncendios(datos) {
     aplicarAmenaza();
 
     for (const capa of ["incendios", "incendios-punto"]) {
-      m.on("mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
-      m.on("mouseleave", capa, () => (m.getCanvas().style.cursor = ""));
-      m.on("click", capa, (ev) => {
+      alTocarLaCapa(m, "mouseenter", capa, () => (m.getCanvas().style.cursor = "pointer"));
+      alTocarLaCapa(m, "mouseleave", capa, () => (m.getCanvas().style.cursor = ""));
+      alTocarLaCapa(m, "click", capa, (ev) => {
         const props = ev.features[0].properties;
         // El foco manda sobre la celda: la pregunta al pulsar fuego es "¿que
         // tan grande es esto?", y una celda suelta no la responde. El globo se
@@ -6312,10 +6442,24 @@ function abrirFocoDePrueba(indice = 0) {
 }
 
 function cuadroDeIncendio(p) {
+  // LAS SEIS CLASES DEL ACTIVO, NO CUATRO.
+  //
+  // Faltaban `arbustos` y `construido`, que son las dos que P0 anadio por ser
+  // decisivas en LATAM: el matorral es la cobertura del Cerrado, el Chaco y la
+  // Caatinga, y `construido` es la interfaz urbano-forestal, que es justo donde
+  // un foco deja de ser rutina agricola. La tarjeta «Ahora mismo» ya las nombra
+  // desde el 3-sep-2026; este globo se quedo con las cuatro de antes.
+  //
+  // Medido sobre el `incendios.json` del 6-sep-2026: **74 celdas** salian sin
+  // una sola linea de reparto teniendo arbustos o construido por encima del
+  // 5 %, y hay celdas de matorral al 100 % que se describian como si no se
+  // hubiera medido nada debajo. El orden es el del activo, no el alfabetico.
   const suelo = [
     ["arbolado", p.arbolado_pct],
+    ["arbustos", p.arbustos_pct],
     ["pastizal", p.pastizal_pct],
     ["cultivo", p.cultivo_pct],
+    ["construido", p.construido_pct],
     ["humedal", p.humedal_pct],
   ]
     .filter(([, v]) => Number(v) >= 5)
