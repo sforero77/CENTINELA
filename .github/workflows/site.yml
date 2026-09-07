@@ -88,7 +88,23 @@ jobs:
           if not eventos:
               print("indice vacio: se conserva la vista previa de respaldo del HTML")
               sys.exit(0)
-          ultimo = max(eventos, key=lambda e: e.get("utc") or "")
+          # EL ULTIMO **CON POBLACION**, NO EL ULTIMO A SECAS.
+          #
+          # `max()` por fecha daba la vista previa al evento mas reciente, y la
+          # mitad de los sismos de esta region no alcanzan poblacion: son
+          # profundos o mar adentro. El 7-sep-2026 la tarjeta que veia quien
+          # compartia el enlace era la de `us7000tdms`, un M5,9 en la dorsal del
+          # Pacifico Oriental — circulos concentricos sobre fondo blanco, sin
+          # costa, sin ciudad y con cero personas dentro. Es una imagen correcta
+          # de un evento sin nadie expuesto, y la peor carta de presentacion
+          # posible para un sistema que mide cuanta gente queda dentro.
+          #
+          # La razon de que esto se reescriba en el despliegue sigue en pie: una
+          # `og:image` clavada a un evento se rompe el dia que ese reporte se
+          # retira, y un tablero compartido por WhatsApp no puede enseñar
+          # siempre el sismo de agosto de 2026. Lo que cambia es el criterio.
+          con_gente = [e for e in eventos if (e.get("pop_mmi6p") or 0) > 0]
+          ultimo = max(con_gente or eventos, key=lambda e: e.get("utc") or "")
           usgs = ultimo["usgs_id"]
           mag = str(ultimo.get("mag", "")).replace(".", ",")
           lugar = ultimo.get("lugar", "")

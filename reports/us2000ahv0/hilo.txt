@@ -4,4 +4,4 @@
 
 3/4 Municipios más expuestos (MMI≥6): Heroica Ciudad de Juchitán de Zaragoza, Salina Cruz, Tonalá.
 
-4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/reports/us2000ahv0/
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=us2000ahv0

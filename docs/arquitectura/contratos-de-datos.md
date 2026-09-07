@@ -86,6 +86,19 @@ Contrato formal: [`schemas/event-state.schema.json`](../../schemas/event-state.s
 > No se añade una línea de comentario al fichero: iría antes de la cabecera de
 > columnas y cualquier lector CSV corriente la tomaría por la cabecera. Es «la
 > tabla que consume el mundo» y no se rompe un parser para añadir una nota.
+
+> **`mmi_max` es una cota inferior, y su etiqueta HXL dice «max».** Cada celda
+> r8 lleva el valor de la isolínea que contiene su **centro**, así que una celda
+> de 0,74 km² con el centro en la banda 7,0 y una esquina en la de 7,5 se
+> publica como 7,0. El municipio hereda la mayor de sus celdas, que arrastra el
+> mismo sesgo. **Nunca sobreestima**, y por eso el nombre y la etiqueta
+> `#indicator+mmi+max` se conservan —son contrato publicado y renombrarlos rompe
+> a quien ya los consume—, pero quien cruce esta columna contra un umbral de
+> activación tiene que saber que activa tarde, no pronto. Medido contra
+> `grid.xml`, la diferencia llega al +34 % (ver `PENDIENTES.md`, §2.1.sexies).
+> La salvedad vivía solo en el docstring de `pipelines/p2_impact/shakemap.py` y
+> no llegaba ni a los esquemas ni aquí; HXL lo consumen tuberías humanitarias de
+> forma automática, y una tubería no lee docstrings.
 | `celdas.json` | La malla H3 del evento con sus columnas | visor (coropletas) |
 | `contornos.json` | Los contornos MMI de ShakeMap | visor (líneas) |
 | `mapa_general.png` | Mapa de intensidad | prensa |

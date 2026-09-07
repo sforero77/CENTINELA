@@ -336,7 +336,7 @@ def render_map(
     # antes en `set_xlabel` —el sitio donde va la unidad del eje—, debajo de una
     # fila de grados decimales, asi que se leia como si esos numeros fueran
     # poblacion.
-    fig.text(
+    titulo = fig.text(
         0.012,
         0.975,
         f"M{format_number_es(report.event.mag, 1)} · {report.event.lugar}",
@@ -346,6 +346,7 @@ def render_map(
         ha="left",
         weight="bold",
     )
+    _encoger_hasta_que_quepa(fig, titulo, x0=0.012)
     fig.text(
         0.012,
         0.932 if prensa else 0.925,
@@ -842,6 +843,33 @@ def _figsize(limites: tuple[float, float, float, float], spec: MapSpec) -> tuple
     # +1,2" de holgura para el eje, la leyenda y la atribucion.
     ancho = min(max(alto_pulg * (ancho_geo / alto_geo) + 1.2, 4.0), spec.width_px / spec.dpi)
     return (ancho, alto_pulg)
+
+
+def _encoger_hasta_que_quepa(
+    fig: Any, txt: Any, *, x0: float, margen: float = 0.988, minimo: int = 9
+) -> None:
+    """Baja el tamaño del texto hasta que entre en el ancho de la figura.
+
+    **EL TITULAR SALIA CORTADO Y NADIE LO VEIA EN UNA PRUEBA.** El ancho de la
+    figura lo decide la extension del mapa —Chile sale estrecho y vertical,
+    Mexico ancho— y el titulo iba a `fontsize` fijo, asi que un toponimo largo
+    se salia por la derecha sin que matplotlib avisara. En `us6000tjl2`, que es
+    el reporte que el README enseña de ejemplo, `mapa_prensa.png` (838 px de
+    ancho) publicaba «M7,4 · 2 km al SE de San José del Palma»: sin la erre y
+    sin «, Colombia».
+
+    Es el fichero que se manda a prensa y el que viaja como `og:image`, o sea
+    justo donde un titulo a medias se lee como descuido. Se encoge en vez de
+    truncar o partir en dos lineas: perder un punto de cuerpo no cuesta nada y
+    el nombre del sismo tiene que salir entero.
+    """
+    fig.canvas.draw()
+    while txt.get_fontsize() > minimo:
+        ancho = txt.get_window_extent(renderer=fig.canvas.get_renderer()).width
+        if x0 + ancho / fig.bbox.width <= margen:
+            return
+        txt.set_fontsize(txt.get_fontsize() - 1)
+        fig.canvas.draw()
 
 
 def _encuadrar(ax: Any, limites: tuple[float, float, float, float]) -> None:

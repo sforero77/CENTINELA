@@ -234,7 +234,8 @@
           "mmi_max": {
             "type": "number",
             "minimum": 0,
-            "maximum": 12
+            "maximum": 12,
+            "description": "COTA INFERIOR, no un maximo. Lleva el valor de la isolinea que contiene el CENTRO de la celda r8, asi que una celda cuyo centro cae en la banda 7,0 puede tener una esquina en la de 7,5 y aqui sale 7,0. Nunca sobreestima. El nombre y la etiqueta HXL se conservan porque son contrato publicado."
           },
           "pop_mmi7p": {
             "type": "number",

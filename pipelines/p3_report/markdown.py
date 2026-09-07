@@ -554,6 +554,11 @@ def _seccion_ground_failure(report: Report) -> str:
         "población entera de toda celda por encima del umbral, y USGS pondera la "
         "población de cada celda por el valor de esa celda. Son dos preguntas "
         "distintas sobre el mismo ráster.\n\n"
+        "**Y el umbral se evalúa en un solo punto por celda: su centroide.** El "
+        "píxel del ráster es más pequeño que la celda, así que ese punto decide "
+        "si entra la población entera de la celda o no entra ninguna. No es una "
+        "estadística areal, y el sesgo que introduce no está medido: puede "
+        "quedarse corto o pasarse.\n\n"
         "Fuente: producto *Ground Failure* de USGS "
         f"(v{report.inputs.groundfailure_version}), dominio público."
     )

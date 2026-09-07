@@ -59,8 +59,15 @@ publicada.
 | Deslizamiento | `jessee_2018_model.tif` | `nowicki_2014_global_model.tif`, `godt_2008_model.tif` |
 | Licuefacción | `zhu_2017_general_model.tif` | `zhu_2015_model.tif` |
 
-Se muestrea el ráster por celda. Un valor ≥ **0,10** cuenta como "alto" para el
-conteo de población expuesta.
+**Se muestrea un punto por celda: el centroide.** No es una estadística areal.
+El píxel del ráster es más pequeño que la celda —~230 m en el de deslizamiento
+y ~460 m en Zhu, contra los ~0,74 km² de una celda r8—, así que el centroide
+decide el valor de toda la celda con una fracción de su área. Un valor ≥
+**0,10** cuenta como "alto" para el conteo de población expuesta, y ese umbral
+se aplica al punto: la celda entra entera o no entra. A diferencia de
+`mmi_max`, este muestreo **no es cota de nada** — puede quedarse corto o
+pasarse. `NaN` significa fuera de la huella del modelo, no cero, no "sin
+riesgo".
 
 El ráster de licuefacción **no es probabilidad**: el producto de USGS deriva
 por calibración una **cobertura areal** (la fracción de la celda que se espera

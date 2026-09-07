@@ -109,11 +109,23 @@ def render_thread(report: Report) -> list[str]:
             "despoblada."
         )
 
+    # EL ENLACE VA AL VISOR, NO A LA CARPETA DEL REPORTE.
+    #
+    # Aqui decia `{SITIO_PUBLICADO}/reports/{ev.usgs_id}/`, que **es un 404**:
+    # P3 emite `report.json`, `report.md`, los CSV y los PNG, pero no un
+    # `index.html`, y GitHub Pages no lista directorios. Los veintisiete hilos
+    # publicados terminaban en un enlace muerto — y el hilo es el unico paso
+    # manual que todo el sistema se permite, o sea que lo roto estaba justo en
+    # lo unico que un humano publica a mano.
+    #
+    # `?evento=` lo lee `leerUrl()` en `site/assets/app.js` y abre el reporte
+    # con su mapa, su panel y la franja de «exposicion no es daño» arriba. Es
+    # ademas mejor destino que la carpeta: se entiende sin saber leer un JSON.
     posts.append(
         "Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los "
         "servicios geológicos ni a las unidades de gestión del riesgo. "
         "Datos abiertos y metodología: "
-        f"{SITIO_PUBLICADO}/reports/{ev.usgs_id}/"
+        f"{SITIO_PUBLICADO}/?evento={ev.usgs_id}"
     )
 
     return [_truncate(p) for p in posts]

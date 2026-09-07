@@ -105,7 +105,7 @@ impact_h3:
     - {nombre: shakemap_version, tipo: INTEGER, nulo: false}
     - {nombre: h3_08,            tipo: UINT64,  nulo: false}
     - {nombre: mmi_mean,         tipo: DOUBLE,  nulo: false}
-    - {nombre: mmi_max,          tipo: DOUBLE,  nulo: false}
+    - {nombre: mmi_max,          tipo: DOUBLE,  nulo: false, nota: "Cota inferior: isolinea que contiene el centro de la celda. Nunca sobreestima."}
     - {nombre: pga_g,            tipo: DOUBLE,  nulo: true}
     - {nombre: ls_prob,          tipo: DOUBLE,  nulo: false, nota: "0.0 si no hay producto."}
     - {nombre: lq_prob,          tipo: DOUBLE,  nulo: false, nota: "0.0 si no hay producto."}
@@ -119,7 +119,7 @@ impact_adm2:
     - {nombre: shakemap_version, tipo: INTEGER, nulo: false}
     - {nombre: adm2_id,          tipo: VARCHAR, nulo: false}
     - {nombre: nombre,           tipo: VARCHAR, nulo: false}
-    - {nombre: mmi_max,          tipo: DOUBLE,  nulo: false}
+    - {nombre: mmi_max,          tipo: DOUBLE,  nulo: false, nota: "Cota inferior: isolinea que contiene el centro de la celda. Nunca sobreestima."}
     - {nombre: pop_mmi6p,        tipo: DOUBLE,  nulo: false}
     - {nombre: pop_mmi7p,        tipo: DOUBLE,  nulo: false}
     - {nombre: pop_mmi8p,        tipo: DOUBLE,  nulo: false}

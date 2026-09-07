@@ -65,9 +65,21 @@ def sample_rasters(
       (0,00208° el de deslizamiento, 0,00417° el de licuefaccion), asi que se
       muestrean por separado y no se asume una grilla comun. El valor llega ya
       en [0, 1] con ``nodata = NaN``.
-    * El muestreo se hace en el **centroide** de la celda. A r8 (~0,7 km²)
-      frente a los ~230 m del raster de deslizamiento, muestrear el centro es
-      suficiente y evita leer el raster entero.
+    * El muestreo se hace en el **centroide** de la celda: **un punto, no una
+      estadistica areal**. Y conviene decirlo bien, porque la justificacion que
+      habia escrita aqui estaba **al reves**: decia «a r8 (~0,7 km²) frente a
+      los ~230 m del raster, muestrear el centro es suficiente», comparando el
+      **area** de la celda con el **lado** del pixel. 230 m son 0,053 km²: no
+      es un pixel mas grande que la celda sino ~14 mas pequeños, y en Zhu
+      (0,00417°, ~460 m) son ~3,5. El centroide decide el valor de **toda** la
+      celda con el 7,2 % de su area, y a diferencia de `mmi_max` este error
+      **va en las dos direcciones**: no es cota de nada.
+
+      Se conserva por coste y porque el sesgo no esta medido, no porque este
+      justificado. Lo que no se puede es publicarlo como si fuera areal: el
+      arreglo bueno es muestrear los 7 vertices mas el centro (8 puntos, coste
+      despreciable), y hasta que se haga, `docs/` y el reporte dicen «un punto
+      por celda». Ver `PENDIENTES.md`.
     * Un raster ausente (``None``) produce 0.0 en su columna. El reporte
       distingue "probabilidad cero" de "producto no publicado" por la version
       del producto, no por el valor — por eso 0.0 aqui es seguro (golden G3).
