@@ -182,7 +182,19 @@ sources:
     url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_MPIO_GRAFICO.zip
     license: CC-BY-4.0
     vintage: MGN-2025
-    insumos_sha256: "6bd01926b248b9a073b37f9f0a8bd2df24b72d6998222713015914f115f9ebbd"
+    insumos_sha256: "19d45b7fa15c9da203f0812633439f3e95d712c0763b317792030379c024a3a4"
+    # DANE RE-SIRVIO OTROS BYTES BAJO EL MISMO SELLO. Comprobado el 7-sep-2026
+    # antes de re-fijar: el servidor sigue declarando `Last-Modified: 26 Mar
+    # 2026` y un ETag que codifica esa fecha, pero el fichero que entrega hoy no
+    # es el que se fijo el 28-ago. No es una descarga cortada: se bajaron los
+    # 71.576.494 bytes completos desde dos maquinas distintas —el runner y una
+    # local— y las dos dan este digest. El ZIP abre limpio, trae los ocho
+    # ficheros del shapefile y el `.dbf` declara **1.122 municipios**, que es la
+    # cifra oficial de Colombia, con el esquema de campos del MGN intacto.
+    #
+    # Se re-fija porque la fuente es la buena y la anterior ya no se puede
+    # obtener; queda escrito aqui que el sello del servidor no distingue las dos
+    # ediciones, que es lo unico que hace irreproducible este insumo.
     notes: >-
       T0.4 RESUELTA. El Geoportal DANE publica su informacion geografica bajo
       CC BY 4.0: permite uso comercial y redistribucion, y pide citar

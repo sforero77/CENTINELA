@@ -178,8 +178,8 @@ sources:
     url: https://data.humdata.org/dataset/hotosm_cub_health_facilities
     hdx_dataset: hotosm_cub_health_facilities
     license: ODbL-1.0
-    vintage: "2026-08-23"
-    insumos_sha256: "0975912e6c35c2f006126fde9b37d23ce2310b4c7cf43418c2516c5b000462b6"
+    vintage: "2026-09-04"
+    insumos_sha256: "d4eaef2f28e066ad8e87b60245bdb8b5f144203ef1a8de9f0bf72bbfb646d916"
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
       Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital

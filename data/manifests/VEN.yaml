@@ -188,8 +188,8 @@ sources:
     url: https://data.humdata.org/dataset/hotosm_ven_health_facilities
     hdx_dataset: hotosm_ven_health_facilities
     license: ODbL-1.0
-    vintage: "2026-08-06"
-    insumos_sha256: "820e513c040cd51260ea758ed815ce3ed13ec9c6f5ab3267e0fa3f01087f5ed4"
+    vintage: "2026-09-06"
+    insumos_sha256: "2cedd69e2bf40b3ba42bb010b8349f0d442b1de47294a3abfdd5d54f34db33a0"
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: el dataset existe, es
       ODbL y publica Geopackage. El extracto mezcla POINT, POLYGON y

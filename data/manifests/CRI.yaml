@@ -179,8 +179,8 @@ sources:
     url: https://data.humdata.org/dataset/hotosm_cri_health_facilities
     hdx_dataset: hotosm_cri_health_facilities
     license: ODbL-1.0
-    vintage: "2026-08-23"
-    insumos_sha256: "2d373ef7549fec16c2cdf4bc7af914353fc2c420f0144c5ca569940a76a8d4c3"
+    vintage: "2026-09-04"
+    insumos_sha256: "f607aa396fc79623e5f806600e545fb47ff72c1686488dbea672e14c152f1e81"
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
       Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital
