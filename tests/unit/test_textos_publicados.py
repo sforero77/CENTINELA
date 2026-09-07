@@ -185,6 +185,14 @@ DOCUMENTOS: tuple[str, ...] = (
     "ESPECIFICACION.md",
     "LICENSES/README.md",
     "docs/AUDITORIA.md",
+    # `docs/AUDITORIA-2026-09.md` NO ESTA, Y ES UNA DECISION.
+    #
+    # Ese fichero es un traspaso: transcribe **verbatim** los asuntos de los
+    # treinta y dos commits de la rama y los titulos que emitio la herramienta de
+    # auditoria. Acentuarlos para satisfacer este guardia seria citar mal la
+    # fuente, que es peor que una tilde que falta — el mismo criterio por el que
+    # el CSV publicado no lleva una linea de comentario: no vale romper una cosa
+    # para arreglar otra. Su prosa propia si va acentuada.
     "docs/CLEAN_CODE.md",
     "docs/FAMILIAS_DE_FALLO.md",
     "docs/GARANTIAS.md",
