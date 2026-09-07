@@ -13,23 +13,12 @@
   "inputs": {
     "shakemap_version": 6,
     "groundfailure_version": 6,
-    "exposure_manifest": "nic-v0.2"
+    "exposure_manifest": "nic-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 0.0
-    },
-    {
-      "radio_km": 50,
-      "pop": 0.0
-    },
-    {
-      "radio_km": 100,
-      "pop": 1457084.9331211508
-    }
-  ],
+  "radios": [],
   "backtest": true,
   "totales": {
     "pop_mmi6p": 0.0,
@@ -54,6 +43,13 @@
   },
   "top_municipios": [
     {
+      "adm2_id": "NI7520",
+      "nombre": "Diriamba",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
       "adm2_id": "NI5520",
       "nombre": "Villa el Carmen",
       "mmi_max": 5.0,
@@ -70,13 +66,6 @@
     {
       "adm2_id": "NI5535",
       "nombre": "San Rafael del Sur",
-      "mmi_max": 5.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "NI7520",
-      "nombre": "Diriamba",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -153,6 +142,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:07Z",
+  "generado_utc": "2026-09-07T16:35:55Z",
   "pipeline_version": "0.1.0"
 }

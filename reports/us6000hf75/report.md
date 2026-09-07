@@ -22,26 +22,14 @@
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-### Población por distancia al epicentro
-
-Ninguna banda de intensidad alcanza población, así que la única cifra que dimensiona este evento es la distancia:
-
-| Radio desde el epicentro | Población |
-|---|---:|
-| 25 km | 0 |
-| 50 km | 0 |
-| 100 km | 1,5 millones |
-
-Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
-
 ## Municipios más expuestos, por población en MMI≥6
 
 Ningún municipio del país alcanza población dentro de MMI≥6. No es que falte el dato: la intensidad que el ShakeMap dibuja para este evento no llega a esa banda sobre territorio habitado.
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **0**.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **0**.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **0**.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -66,8 +54,8 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 - ShakeMap consumido: **v6**
 - Ground Failure consumido: **v6**
-- Manifiesto de exposición: [`nic-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/NIC.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:07Z
+- Manifiesto de exposición: [`nic-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/NIC.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-07T16:35:55Z
 
 ## Advertencias
 
