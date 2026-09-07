@@ -16,14 +16,15 @@
 | Edificaciones en MMI≥6 | 440 mil |
 | Sedes de salud en MMI≥6 | 224 |
 | Sedes educativas en MMI≥6 | 321 |
-| Kilómetros de vía en MMI≥6 | 0 km |
+| Vías primarias y secundarias en MMI≥6 | 890 km |
+| Vías locales en MMI≥6 | 9.600 km |
 | Superficie construida en MMI≥6 | 71,9 km² |
 
 El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 440 mil edificaciones registradas en MMI≥6. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥6, alrededor de **63 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥6, alrededor de **71 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥6
 
@@ -43,12 +44,12 @@ De la población en intensidad MMI≥6, alrededor de **63 mil** personas tienen 
 | 12 | San Pedro Tapanatepec | `MX20327` | 6,5 | 17 mil |
 | 13 | Santa María Huatulco | `MX20413` | 6,0 | 14 mil |
 | 14 | Chahuites | `MX20025` | 6,0 | 14 mil |
-| 15 | Santo Domingo Zanatepec | `MX20525` | 6,0 | 14 mil |
+| 15 | Santo Domingo Zanatepec | `MX20525` | 6,5 | 14 mil |
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **2.100**. USGS declara para este evento alerta **naranja**, con 210 expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **360 mil**. USGS declara para este evento alerta **roja**, con 150 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **2.100**. USGS declara para este evento alerta **naranja**, con 210 expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **360 mil**. USGS declara para este evento alerta **roja**, con 150 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -62,7 +63,7 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,1 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,0 %**.
 
 ## Descargas
 
@@ -73,8 +74,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,1 %**.
 
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v1**
-- Manifiesto de exposición: [`mex-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:24:54Z
+- Manifiesto de exposición: [`mex-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-07T16:47:11Z
 
 ## Advertencias
 

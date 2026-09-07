@@ -13,23 +13,25 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 1,
-    "exposure_manifest": "mex-v0.2"
+    "exposure_manifest": "mex-v0.3",
+    "modelo_deslizamiento": "nowicki_2014_global_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 760856.238353901,
+    "pop_mmi6p": 760856.2383539012,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 63334.80190407609,
-    "bld_mmi6p": 442616.0,
-    "built_m2_mmi6p": 71886769.0,
+    "pop_65p_mmi6p": 71430.63139389244,
+    "bld_mmi6p": 442745.0,
+    "built_m2_mmi6p": 71886869.0,
     "health_mmi6p": 224.0,
     "edu_mmi6p": 321.0,
-    "road_km_mmi6p": 0.0,
-    "road_km_principal_mmi6p": 0.0,
+    "road_km_mmi6p": 10453.91390980728,
+    "road_km_principal_mmi6p": 894.8074653095462,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -141,13 +143,13 @@
     {
       "adm2_id": "MX20525",
       "nombre": "Santo Domingo Zanatepec",
-      "mmi_max": 6.0,
+      "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 13577.815242281882
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 12.1,
+    "pop_discrepancia_pct": 12.0,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -217,6 +219,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:24:54Z",
+  "generado_utc": "2026-09-07T16:47:11Z",
   "pipeline_version": "0.1.0"
 }
