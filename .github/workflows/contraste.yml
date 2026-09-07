@@ -66,17 +66,17 @@ jobs:
       # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
       # de este workflow no incluye un `git push`.
       #
-      # Es la mitigacion barata del hueco que si queda abierto: **ninguna accion
-      # de este repositorio esta fijada por SHA**, todas van por etiqueta movil,
-      # y una etiqueta de git se puede reapuntar a cualquier commit.
-      # `astral-sh/setup-uv@v5` ademas no es de GitHub. El precedente concreto es
-      # tj-actions/changed-files (CVE-2025-30066, marzo de 2025). Fijar por SHA
-      # exige resolver catorce digests contra la red y queda en PENDIENTES.md.
-      - uses: actions/checkout@v4
+      # Y va con el otro cierre del mismo hueco: **todas las acciones estan
+      # fijadas por SHA** desde el 6-sep-2026, con la version en el comentario
+      # de al lado. Una etiqueta de git se puede reapuntar a cualquier commit
+      # —el precedente es tj-actions/changed-files, CVE-2025-30066— y
+      # `astral-sh/setup-uv` ademas no es de GitHub. Lo vigila
+      # `tests/unit/test_las_acciones_van_fijadas.py`.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
         with:
           enable-cache: true
 
@@ -148,7 +148,7 @@ jobs:
 
 
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: always()
         with:
           name: contraste-${{ inputs.usgs_id }}

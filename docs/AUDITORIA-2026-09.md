@@ -63,8 +63,8 @@ repositorio. Están en [`PENDIENTES.md`](../PENDIENTES.md) §2.0 con su porqué:
   — sin tocar: diferirlo quita información de la tarjeta por defecto, y eso es decisión de producto
 - **#57** · La tabla que va a instituciones enfrenta la cifra de CENTINELA del ShakeMap v8 contra la de PAGER del v7, y la
   — procedencia anotada y las dos tablas dicen de qué versión es cada columna; falta refrescarla
-- **#67** · Doce workflows usan `astral-sh/setup-uv@v5` (etiqueta móvil de un tercero) en jobs cuyo GITHUB_TOKEN puede emp
-  — mitigado con `persist-credentials: false` y dependabot; falta fijarlas por SHA
+- **#67** · ✅ **cerrado el 6-sep-2026**: los siete digests resueltos contra la API y los treinta y dos usos fijados por
+  SHA, con la versión en el comentario. Lo vigila `tests/unit/test_las_acciones_van_fijadas.py`
 - **#132** · El visor carga maplibre y h3-js desde unpkg sin `integrity` (SRI) y sin CSP: quien controle esos dos ficheros 
   — CSP puesta y verificada en Chromium; falta `integrity` o servirlas desde `assets/`
 

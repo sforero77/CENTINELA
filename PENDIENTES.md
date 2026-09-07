@@ -47,7 +47,7 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**2.287 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
+**2.316 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
 vivas y 144 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
 arranque verificado desde clon vacío. Eran 431 antes de la auditoría, 523 al
 empezarla, 686 el 26-ago y 948 el 28-ago.
@@ -187,13 +187,13 @@ Aquí van solo los huecos que quedan abiertos **a propósito**: cada uno necesit
 algo que no se puede decidir ni resolver desde dentro del repositorio, y dejarlos
 escritos es preferible a cerrarlos mal.
 
-**Ninguna acción de Actions está fijada por SHA.** Catorce workflows usan
-`actions/checkout@v4`, `astral-sh/setup-uv@v5` y cinco más por etiqueta móvil, y
-una etiqueta de git se puede reapuntar a cualquier commit; `astral-sh/*` además
-no es de GitHub. El precedente es tj-actions/changed-files (CVE-2025-30066).
-Fijarlas exige resolver catorce digests contra la red. Mitigado mientras tanto:
-`persist-credentials: false` en los nueve workflows que no empujan nada, y
-`dependabot.yml` para que los bumps lleguen como PR revisable.
+**✅ Las acciones ya van por SHA · cerrado el 6-sep-2026.** Los siete digests se
+resolvieron contra la API y se fijaron los treinta y dos usos, con la versión en
+el comentario de al lado (`@11d5960…  # v4.4.0`) para que el bump de dependabot
+siga siendo revisable. Lo vigila `tests/unit/test_las_acciones_van_fijadas.py`,
+que parsea el YAML —no busca cadenas— y falla si aparece una etiqueta móvil o un
+SHA sin versión. Sigue puesto lo de antes: `persist-credentials: false` en los
+nueve workflows que no empujan nada.
 
 **El visor carga maplibre y h3-js de unpkg sin `integrity`.** Ya lleva CSP —lo
 único que GitHub Pages permite— y eso acota todo menos un compromiso del propio
