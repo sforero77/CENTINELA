@@ -16,15 +16,15 @@
 | Edificaciones en MMI≥6 | 32 mil |
 | Sedes de salud en MMI≥6 | 3 |
 | Sedes educativas en MMI≥6 | 17 |
-| Vías primarias y secundarias en MMI≥6 | 73 km |
-| Vías locales en MMI≥6 | 460 km |
+| Vías primarias y secundarias en MMI≥6 | 120 km |
+| Vías locales en MMI≥6 | 730 km |
 | Superficie construida en MMI≥6 | 5,1 km² |
 
 El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 32 mil edificaciones registradas en MMI≥6. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥6, alrededor de **5.800** personas tienen 65 años o más.
+De la población en intensidad MMI≥6, alrededor de **5.700** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥6
 
@@ -37,8 +37,8 @@ De la población en intensidad MMI≥6, alrededor de **5.800** personas tienen 6
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **0**.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **20 mil**. USGS declara para este evento alerta **naranja**, con 23 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **0**.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **20 mil**. USGS declara para este evento alerta **naranja**, con 23 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -63,8 +63,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **1,0 %**.
 
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v8**
-- Manifiesto de exposición: [`pan-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:31Z
+- Manifiesto de exposición: [`pan-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-07T16:41:02Z
 
 ## Advertencias
 
