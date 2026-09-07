@@ -13,7 +13,9 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 0,
-    "exposure_manifest": "per-v0.2"
+    "exposure_manifest": "per-v0.3",
+    "modelo_deslizamiento": "",
+    "modelo_licuefaccion": ""
   },
   "preliminar": false,
   "radios": [],
@@ -23,13 +25,13 @@
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 3329.1499740649083,
-    "bld_mmi6p": 40751.0,
+    "pop_65p_mmi6p": 3059.6393280048037,
+    "bld_mmi6p": 40779.0,
     "built_m2_mmi6p": 2493102.0,
     "health_mmi6p": 22.0,
     "edu_mmi6p": 126.0,
-    "road_km_mmi6p": 1165.076644286161,
-    "road_km_principal_mmi6p": 224.32251238567437,
+    "road_km_mmi6p": 1674.508123524701,
+    "road_km_principal_mmi6p": 337.41797609860595,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -55,15 +57,15 @@
       "pop_banda": 12863.079909861088
     },
     {
-      "adm2_id": "PE0506",
-      "nombre": "Lucanas",
+      "adm2_id": "PE0507",
+      "nombre": "Parinacochas",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PE0507",
-      "nombre": "Parinacochas",
+      "adm2_id": "PE0506",
+      "nombre": "Lucanas",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -84,7 +86,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 11.6,
+    "pop_discrepancia_pct": 11.7,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -154,6 +156,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:24:56Z",
+  "generado_utc": "2026-09-07T16:46:33Z",
   "pipeline_version": "0.1.0"
 }

@@ -16,13 +16,13 @@
 | Edificaciones en MMI≥6 | 41 mil |
 | Sedes de salud en MMI≥6 | 22 |
 | Sedes educativas en MMI≥6 | 126 |
-| Vías primarias y secundarias en MMI≥6 | 220 km |
-| Vías locales en MMI≥6 | 940 km |
+| Vías primarias y secundarias en MMI≥6 | 340 km |
+| Vías locales en MMI≥6 | 1.300 km |
 | Superficie construida en MMI≥6 | 2,5 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥6, alrededor de **3.300** personas tienen 65 años o más.
+De la población en intensidad MMI≥6, alrededor de **3.100** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥6
 
@@ -43,7 +43,7 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,6 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,7 %**.
 
 ## Descargas
 
@@ -54,8 +54,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,6 %**.
 
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **ninguno** (no publicado aún)
-- Manifiesto de exposición: [`per-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:24:56Z
+- Manifiesto de exposición: [`per-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-07T16:46:33Z
 
 ## Advertencias
 
