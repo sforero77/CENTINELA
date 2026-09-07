@@ -382,12 +382,12 @@
     "lon": -79.9218,
     "lat": 0.3819,
     "pop_mmi7p": 2283453.94845534,
-    "pop_mmi6p": 4311549.307839912,
+    "pop_mmi6p": 4311549.307839911,
     "utc": "2016-04-16T23:58:36Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-09-03T03:24:47Z"
+    "generado_utc": "2026-09-07T16:52:12Z"
   },
   {
     "usgs_id": "usp000jd2q",
