@@ -13,7 +13,9 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 6,
-    "exposure_manifest": "slv-v0.2"
+    "exposure_manifest": "slv-v0.3",
+    "modelo_deslizamiento": "nowicki_2014_global_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
@@ -23,13 +25,13 @@
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 4995.835633733214,
+    "pop_65p_mmi6p": 4250.669961259776,
     "bld_mmi6p": 33997.0,
     "built_m2_mmi6p": 4887326.0,
     "health_mmi6p": 2.0,
     "edu_mmi6p": 3.0,
-    "road_km_mmi6p": 500.48689937523386,
-    "road_km_principal_mmi6p": 40.77664970667189,
+    "road_km_mmi6p": 782.9937263447885,
+    "road_km_principal_mmi6p": 58.060798564975826,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -69,8 +71,43 @@
       "pop_banda": 3488.636115895584
     },
     {
-      "adm2_id": "SV11001",
-      "nombre": "San Vicente Norte",
+      "adm2_id": "SV10001",
+      "nombre": "San Salvador Centro",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV06002",
+      "nombre": "La Paz Este",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV04002",
+      "nombre": "Cuscatlán Sur",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV05003",
+      "nombre": "La Libertad Este",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV02002",
+      "nombre": "Cabañas Oeste",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "SV10002",
+      "nombre": "San Salvador Este",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -83,8 +120,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "SV02002",
-      "nombre": "Cabañas Oeste",
+      "adm2_id": "SV11001",
+      "nombre": "San Vicente Norte",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -104,43 +141,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "SV04002",
-      "nombre": "Cuscatlán Sur",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV10002",
-      "nombre": "San Salvador Este",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV10001",
-      "nombre": "San Salvador Centro",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV14003",
-      "nombre": "Usulután Oeste",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "SV05006",
       "nombre": "La Libertad Sur",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV05003",
-      "nombre": "La Libertad Este",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -217,6 +219,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:31Z",
+  "generado_utc": "2026-09-07T16:41:09Z",
   "pipeline_version": "0.1.0"
 }
