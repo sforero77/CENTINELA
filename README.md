@@ -142,29 +142,30 @@ que cae entre 6,5 y 7,49) y CENTINELA usa **bandas literales**. Puestas en el
 mismo eje, cada cifra de CENTINELA cae dentro del intervalo que las filas de
 PAGER acotan por arriba y por abajo:
 
-> **Las dos columnas no son de la misma versión.** Las de PAGER salen de la
-> fixture congelada, que es la PAGER del **ShakeMap v7**; las de CENTINELA, del
-> reporte publicado, que va por v8 desde que se re-emitió el 3-sep. La
-> procedencia está en `tests/fixtures/golden/choco_2026_08_10/pager_exposures.origen.json`
-> y refrescarla contra la PAGER vigente está en `PENDIENTES.md`.
+> **Las dos columnas son de la misma versión, y eso hubo que arreglarlo.** Hasta
+> el 6-sep-2026 la fixture era la PAGER del **ShakeMap v7** y el reporte iba por
+> **v8**: la tabla enfrentaba dos versiones distintas sin decirlo. Se refrescó
+> contra la PAGER vigente, publicada dos minutos y medio después del v8. La
+> procedencia está en
+> `tests/fixtures/golden/choco_2026_08_10/pager_exposures.origen.json`.
 
-| Umbral literal | PAGER del ShakeMap v7 | CENTINELA (v8) |
+| Umbral literal | PAGER (v8) | CENTINELA (v8) |
 |---|---:|---:|
-| MMI ≥ 5,5 | 10.487.959 | — |
+| MMI ≥ 5,5 | 10.677.892 | — |
 | MMI ≥ 6,0 | — | **7.194.540** |
-| MMI ≥ 6,5 | 6.514.486 | — |
+| MMI ≥ 6,5 | 6.630.456 | — |
 | MMI ≥ 7,0 | — | **2.424.287** |
-| MMI ≥ 7,5 | 1.126.902 | — |
+| MMI ≥ 7,5 | 1.079.497 | — |
 
 El acotamiento se cumple, y `tests/unit/test_contraste_con_pager.py` falla si
 deja de cumplirse. Pero **acotar no es coincidir**: el intervalo de MMI≥7 va de
-1,1 a 6,5 millones, un factor de 5,8, y casi cualquier cifra cabría dentro.
+1,1 a 6,6 millones, un factor de 6,1, y casi cualquier cifra cabría dentro.
 
 **En los dos casos CENTINELA queda en el cuarto inferior del intervalo** (al
-17 % y al 24 % contando desde abajo), es decir sistemáticamente por debajo del
+14 % y al 24 % contando desde abajo), es decir sistemáticamente por debajo del
 punto medio y siempre en la misma dirección. Eso es lo que se puede afirmar sin
 elegir un método: cuánto por debajo depende de cómo se interpole entre las filas
-de PAGER, y la respuesta va del 11 % al 37 % según se haga lineal o logarítmica.
+de PAGER, y la respuesta va del 9 % al 37 % según se haga lineal o logarítmica.
 Publicar una sola de esas cifras sería elegir la que conviene. El detalle,
 con la fuente de cada columna, está en
 [`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md).

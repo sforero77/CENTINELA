@@ -61,12 +61,12 @@ repositorio. Están en [`PENDIENTES.md`](../PENDIENTES.md) §2.0 con su porqué:
 
 - **#52** · El arranque descarga y procesa entero el fichero de fuego —365 KB en el cable, 4,4 MB de JSON— y acto seguido 
   — sin tocar: diferirlo quita información de la tarjeta por defecto, y eso es decisión de producto
-- **#57** · La tabla que va a instituciones enfrenta la cifra de CENTINELA del ShakeMap v8 contra la de PAGER del v7, y la
-  — procedencia anotada y las dos tablas dicen de qué versión es cada columna; falta refrescarla
+- **#57** · ✅ **cerrado el 6-sep-2026**: la fixture de PAGER se refrescó contra la vigente (la del ShakeMap v8) y las dos
+  tablas y sus porcentajes derivados se rehicieron. `test_contraste_con_pager.py` sigue exigiendo el acotamiento
 - **#67** · ✅ **cerrado el 6-sep-2026**: los siete digests resueltos contra la API y los treinta y dos usos fijados por
   SHA, con la versión en el comentario. Lo vigila `tests/unit/test_las_acciones_van_fijadas.py`
-- **#132** · El visor carga maplibre y h3-js desde unpkg sin `integrity` (SRI) y sin CSP: quien controle esos dos ficheros 
-  — CSP puesta y verificada en Chromium; falta `integrity` o servirlas desde `assets/`
+- **#132** · ✅ **cerrado el 6-sep-2026**: maplibre y h3-js viven en `site/assets/vendor/` con su licencia, y la CSP de
+  las dos páginas es `script-src 'self'` a secas. Lo vigila `test_lo_que_escribe_un_tercero_no_es_codigo.py`
 
 Y la deuda que arrastra todo lo demás: **los diecinueve activos publicados se
 construyeron con los fallos que esta auditoría arregló** — el bug de

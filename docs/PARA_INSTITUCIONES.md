@@ -126,24 +126,23 @@ su fila «7» es todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas
 cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo,
 que es la única comparación que las dos convenciones admiten:
 
-> **Las dos columnas no son de la misma versión, y hay que decirlo.** Las cifras
-> de PAGER salen de la fixture `pager_exposures.json`, que es la PAGER del
-> **ShakeMap v7** (publicada el 22-ago-2026 a las 00:16:36Z, dos minutos después
-> del v7); las de CENTINELA salen del reporte publicado, que declara
-> `shakemap_version: 8` desde que se re-emitió el 3-sep. Nada comparaba esa
-> fixture con USGS ni anotaba de qué versión venía: se identificó reconstruyendo
-> las ocho entradas de `losspager` del detail congelado. La procedencia queda
-> escrita en `pager_exposures.origen.json`, y refrescar la fixture y esta tabla
-> contra la PAGER vigente está en `PENDIENTES.md`: exige red, y aquí no se
-> inventan cifras que no se han medido.
+> **Las dos columnas son de la misma versión desde el 6-sep-2026.** Hasta ese
+> día la fixture `pager_exposures.json` era la PAGER del **ShakeMap v7**
+> —publicada el 22-ago a las 00:16:36Z, dos minutos después del v7— mientras el
+> reporte declaraba `shakemap_version: 8` desde que se re-emitió el 3-sep: la
+> tabla enfrentaba dos versiones distintas y nada lo comprobaba. Se identificó
+> reconstruyendo las ocho entradas de `losspager` del detail congelado, y se
+> refrescó contra la PAGER vigente (updateTime 1788275013678, dos minutos y
+> medio después del ShakeMap v8). La procedencia queda escrita en
+> `pager_exposures.origen.json`, que ahora incluye la URL exacta del producto.
 
-| Umbral literal | PAGER del ShakeMap v7 | CENTINELA (v8) |
+| Umbral literal | PAGER (v8) | CENTINELA (v8) |
 |---|---:|---:|
-| MMI ≥ 5,5 | 10.487.959 | — |
+| MMI ≥ 5,5 | 10.677.892 | — |
 | MMI ≥ 6,0 | — | **7.194.540** |
-| MMI ≥ 6,5 | 6.514.486 | — |
+| MMI ≥ 6,5 | 6.630.456 | — |
 | MMI ≥ 7,0 | — | **2.424.287** |
-| MMI ≥ 7,5 | 1.126.902 | — |
+| MMI ≥ 7,5 | 1.079.497 | — |
 | MMI ≥ 8,0 | — | **0** |
 
 Léase por parejas: 7.194.540 (≥6,0) tiene que quedar **entre** 6.514.486 (≥6,5)
@@ -152,14 +151,14 @@ y 10.487.959 (≥5,5), y queda. 2.424.287 (≥7,0) tiene que quedar entre 1.126.
 las dos estaría mal, y esa es exactamente la comprobación que corre en CI.
 
 **Y conviene no vender esto como más de lo que es.** El intervalo de MMI≥7 va de
-1,1 a 6,5 millones: un factor de 5,8, dentro del cual cabría casi cualquier
+1,1 a 6,6 millones: un factor de 6,1, dentro del cual cabría casi cualquier
 cifra. Que una cifra caiga dentro es una condición necesaria, no una validación.
 
 **En los dos casos CENTINELA queda en el cuarto inferior del intervalo** (al
-17 % y al 24 % contando desde abajo), es decir sistemáticamente por debajo del
+14 % y al 24 % contando desde abajo), es decir sistemáticamente por debajo del
 punto medio y siempre en la misma dirección. Eso es lo que se puede afirmar sin
 elegir un método: cuánto por debajo depende de cómo se interpole entre las filas
-de PAGER, y la respuesta va del 11 % al 37 % según se haga lineal o logarítmica.
+de PAGER, y la respuesta va del 9 % al 37 % según se haga lineal o logarítmica.
 Publicar una sola de esas cifras sería elegir la que conviene.
 
 Las cifras de PAGER salen de `json/exposures.json` del producto `losspager` del

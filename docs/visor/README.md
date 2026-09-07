@@ -49,8 +49,8 @@ flowchart TB
 
 | Qué | De dónde | Riesgo |
 |---|---|---|
-| MapLibre GL 4.7.1 | unpkg | **Sin `integrity`**: decisión abierta |
-| h3-js 4.1.0 | unpkg | Idem |
+| MapLibre GL 4.7.1 | `assets/vendor/` | Ninguno en tiempo de ejecución: viaja con el repositorio |
+| h3-js 4.1.0 | `assets/vendor/` | Idem |
 | DM Sans, Familjen Grotesk, JetBrains Mono | Google Fonts | Degradación tipográfica si cae |
 | Teselas base | OpenFreeMap | El mapa se queda sin fondo, los datos siguen |
 

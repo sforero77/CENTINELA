@@ -179,9 +179,20 @@ def test_cada_pagina_declara_su_politica_de_contenido(pagina: str) -> None:
     )
     politica = html.split('Content-Security-Policy" content="', 1)[1].split('"', 1)[0]
     assert "default-src 'self'" in politica
-    assert "script-src 'self' https://unpkg.com" in politica
-    # Nada de comodines: una CSP con `*` en script-src no acota nada.
-    assert "*" not in politica.split("script-src", 1)[1].split(";", 1)[0]
+
+    # NINGUN ORIGEN EXTERNO PUEDE SERVIR CODIGO.
+    #
+    # Esto exigia `script-src 'self' https://unpkg.com`, que era lo cierto
+    # mientras maplibre y h3-js venian de un CDN. Desde que viven en
+    # `assets/vendor/` la lista no tiene por que tener a nadie mas, y el guardia
+    # pasa de comprobar una cadena concreta a comprobar la propiedad: en
+    # `script-src` no hay ningun origen con esquema.
+    fuentes = politica.split("script-src", 1)[1].split(";", 1)[0].split()
+    externos = [f for f in fuentes if "//" in f or f == "*"]
+    assert not externos, (
+        f"site/{pagina} deja que {externos} sirvan codigo. Una libreria de "
+        f"terceros en el camino critico va en `assets/vendor/`, que es D6"
+    )
 
 
 @pytest.mark.parametrize("pagina", PAGINAS)

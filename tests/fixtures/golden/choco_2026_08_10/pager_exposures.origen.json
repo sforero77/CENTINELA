@@ -1,8 +1,9 @@
 {
   "fuente": "USGS losspager, producto del evento us6000tjl2",
-  "update_time_ms": 1787357796161,
-  "publicado_utc": "2026-08-22T00:16:36Z",
-  "shakemap_version": 7,
-  "nota": "LA FIXTURE ES DE LA PAGER DEL SHAKEMAP v7 Y EL REPORTE PUBLICADO VA POR v8. Se identifico reconstruyendo las ocho entradas de `losspager` de `detail_superseded.json`: esta PAGER se publico dos minutos despues del ShakeMap v7 (00:14:11Z) y antes del v8 (1-sep). El reporte de `reports/us6000tjl2/` declara `shakemap_version: 8` desde que se re-emitio el 3-sep, asi que la tabla de contraste enfrenta la cifra de CENTINELA del v8 contra la de PAGER del v7. Nada comparaba esta fixture con USGS ni anotaba de que version salio; ahora lo hace `test_detail_contract_live.py` contra el feed vivo, y este fichero deja escrito de donde vino.",
-  "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000tjl2&format=geojson&includesuperseded=true"
+  "update_time_ms": 1788275013678,
+  "publicado_utc": "2026-09-03T00:23:33Z",
+  "shakemap_version": 8,
+  "nota": "Refrescada el 6-sep-2026 contra la PAGER vigente. La anterior era del ShakeMap v7 (22-ago) mientras el reporte publicado iba por v8 desde que se re-emitio el 3-sep: la tabla de contraste enfrentaba dos versiones distintas. Esta PAGER se publico dos minutos y medio despues del ShakeMap v8 (updateTime 1788274855250), asi que las dos columnas de la tabla salen ya de la misma version. Se comprueba contra el feed vivo en `test_detail_contract_live.py`.",
+  "url": "https://earthquake.usgs.gov/product/losspager/us6000tjl2/us/1788275013678/json/exposures.json",
+  "detail_url": "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000tjl2&format=geojson&includesuperseded=true"
 }
