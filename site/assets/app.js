@@ -2360,11 +2360,31 @@ window.CENTINELA = {
     const lienzo = m.getCanvas().clientWidth * m.getCanvas().clientHeight;
     const debiles = celdas.filter((c) => (c.frp_suma || 0) < 10);
     const fuertes = celdas.filter((c) => (c.frp_suma || 0) >= 400);
+    // LA PROPORCION DE TINTA MIDE EL DIA, NO LA SIMBOLOGIA.
+    //
+    // `debilesSobreFuertes` depende de cuantas celdas debiles y cuantas fuertes
+    // trajo FIRMS esa manana, que es meteorologia. El 6-sep-2026 fueron 3.988
+    // contra 52 —un desequilibrio de 76,7 a 1— y la cifra salio 4,4 con la
+    // simbologia intacta, tumbando una prueba que llevaba dias en verde.
+    //
+    // Lo que la simbologia si controla es **cuanto encoge ese desequilibrio**:
+    // 76,7 de cuenta a 4,4 de tinta son 17,4 veces. Medido sobre los mismos
+    // datos, la rampa lineal que esto vino a reemplazar corrige 4,8. Esa es la
+    // cifra que distingue una simbologia buena de una mala sin preguntarle al
+    // tiempo que hizo.
+    const tintaDebiles = tinta(debiles);
+    const tintaFuertes = tinta(fuertes);
+    const desequilibrio = fuertes.length ? debiles.length / fuertes.length : 0;
+    const enTinta = tintaFuertes ? tintaDebiles / tintaFuertes : 0;
     return {
       tinta: tinta(celdas),
       lienzo,
       veces: tinta(celdas) / lienzo,
-      debilesSobreFuertes: fuertes.length ? tinta(debiles) / tinta(fuertes) : 0,
+      debiles: debiles.length,
+      fuertes: fuertes.length,
+      debilesSobreFuertes: enTinta,
+      desequilibrio,
+      correccion: enTinta ? desequilibrio / enTinta : 0,
     };
   },
   //: La caja que el mapa esta enseñando. Para poder afirmar que el encuadre
