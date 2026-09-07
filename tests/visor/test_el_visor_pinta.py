@@ -2943,11 +2943,23 @@ def test_la_tinta_del_fuego_cabe_en_el_mapa(pagina: Any) -> None:
         f"la capa de fuego pone {medida['veces']:.2f} veces la tinta que cabe en el mapa: "
         f"{medida['tinta']:.0f} px² sobre {medida['lienzo']:.0f} px²"
     )
-    # Y la energia manda sobre el numero: las celdas debiles no pueden poner
-    # mucha mas tinta que las fuertes, que es lo que enterraba el dato.
-    assert medida["debilesSobreFuertes"] < 4, (
-        f"las celdas mas debiles ponen {medida['debilesSobreFuertes']:.1f} veces la tinta "
-        f"de las mas fuertes"
+    # Y LA ENERGIA MANDA SOBRE EL NUMERO. Pero se mide lo que la simbologia
+    # controla, no lo que trajo FIRMS esa manana.
+    #
+    # Esto exigia `debilesSobreFuertes < 4` y se puso rojo el 6-sep-2026 con la
+    # simbologia intacta: ese dia hubo 3.988 celdas debiles contra 52 fuertes
+    # —76,7 a 1— y la proporcion de tinta salio 4,4. Un guardia que se pone rojo
+    # porque hubo pocos incendios grandes no esta midiendo el visor.
+    #
+    # Lo que si es una propiedad de la rampa es cuanto encoge ese desequilibrio.
+    # Medido sobre los mismos datos del 6-sep: la rampa de hoy corrige 17,4
+    # veces y la rampa lineal que reemplazo —2 a 4,5 px— corregia 4,8. El
+    # umbral va entre las dos.
+    assert medida["correccion"] >= 10, (
+        f"la simbologia solo encoge {medida['correccion']:.1f} veces el desequilibrio "
+        f"entre celdas debiles y fuertes ({medida['debiles']} contra {medida['fuertes']}, "
+        f"{medida['desequilibrio']:.1f} a 1 en numero y {medida['debilesSobreFuertes']:.1f} "
+        f"a 1 en tinta): con menos de 10 el dato se entierra"
     )
 
 
