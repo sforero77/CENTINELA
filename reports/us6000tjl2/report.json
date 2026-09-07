@@ -13,29 +13,31 @@
   "inputs": {
     "shakemap_version": 8,
     "groundfailure_version": 8,
-    "exposure_manifest": "col-v0.6"
+    "exposure_manifest": "col-v0.6",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 7194539.76674738,
+    "pop_mmi6p": 7194539.766747381,
     "pop_mmi7p": 2424287.2030194234,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 289947.4506439391,
-    "pop_65p_mmi6p": 834096.71032214,
-    "bld_mmi6p": 1163013.0,
+    "pop_65p_mmi7p": 297535.8795328779,
+    "pop_65p_mmi6p": 846808.1230539175,
+    "bld_mmi6p": 1163049.0,
     "built_m2_mmi6p": 191917389.0,
-    "health_mmi6p": 1973.0,
-    "edu_mmi6p": 2480.0,
-    "road_km_mmi6p": 28144.154575692613,
-    "road_km_principal_mmi6p": 2790.8458758566658,
+    "health_mmi6p": 1967.0,
+    "edu_mmi6p": 2483.0,
+    "road_km_mmi6p": 41722.911847220515,
+    "road_km_principal_mmi6p": 4262.361367157562,
     "bld_mmi7p": 448789.0,
     "built_m2_mmi7p": 70306557.0,
-    "health_mmi7p": 516.0,
-    "edu_mmi7p": 1003.0,
-    "road_km_mmi7p": 8791.335779124478,
-    "road_km_principal_mmi7p": 1015.2104602015531,
+    "health_mmi7p": 514.0,
+    "edu_mmi7p": 1004.0,
+    "road_km_mmi7p": 12674.008630809933,
+    "road_km_principal_mmi7p": 1507.626392548995,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 1602162.1454312252
   },
@@ -162,7 +164,10 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 290 mil → 300 mil",
+    "Sedes de salud en MMI≥7: 520 → 510"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -232,6 +237,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:30Z",
+  "generado_utc": "2026-09-07T16:52:29Z",
   "pipeline_version": "0.1.0"
 }
