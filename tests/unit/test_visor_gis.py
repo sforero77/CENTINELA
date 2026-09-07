@@ -533,11 +533,21 @@ def test_el_punto_tambien_abre_el_popup() -> None:
     distancia del comentario quede.
     """
     bloque = cuerpo("dibujarIncendios")
+    # Desde el 6-sep-2026 los oyentes de capa pasan por `alTocarLaCapa`, que los
+    # registra **una sola vez** aunque la capa se redibuje: `m.on(tipo, capa, fn)`
+    # sobrevive a `setStyle` y cada cambio de mapa base los duplicaba. Aqui se
+    # acepta la forma nueva y no la vieja: si alguien vuelve a `m.on` directo,
+    # esta prueba se pone roja y con razon.
     oyentes = re.search(
-        r"for \(const capa of \[([^\]]+)\]\) \{\s*\n\s*m\.on\(\"mouseenter\"", bloque
+        r"for \(const capa of \[([^\]]+)\]\) \{\s*\n\s*alTocarLaCapa\(m, \"mouseenter\"",
+        bloque,
     )
 
-    assert oyentes is not None, "ya no se registran oyentes de raton sobre las capas de fuego"
+    assert oyentes is not None, (
+        "ya no se registran oyentes de raton sobre las capas de fuego, o se "
+        "registran con `m.on` directo en vez de con `alTocarLaCapa`, que es lo "
+        "que los duplicaba en cada cambio de mapa base"
+    )
     assert '"incendios-punto"' in oyentes.group(1), (
         f"el punto dejo de ser clicable; solo se enganchan {oyentes.group(1)}"
     )

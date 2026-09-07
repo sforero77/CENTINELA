@@ -1182,25 +1182,55 @@ def test_estado_dice_que_la_cadencia_se_come_el_objetivo(navegador: Any, servido
     ctx = navegador.new_context(viewport={"width": 1200, "height": 900})
     pg = ctx.new_page()
     try:
+        # SE LE DA EL ESCENARIO, NO SE ESPERA A QUE OCURRA.
+        #
+        # Esto leia el `status.json` publicado y ramificaba: si la cadencia
+        # cumplia, comprobaba que **no** hubiera aviso. Desde que el reloj
+        # externo bajo la cadencia a 5 min esa era siempre la rama, asi que la
+        # prueba llevaba dias verde sin haber ejecutado nunca el aviso — y el
+        # aviso, mientras tanto, vivia en una rama muerta de `status.js` y no
+        # podia aparecer aunque la cadencia se disparase.
+        #
+        # Ahora se sirven los dos escenarios con `route`: uno donde la cadencia
+        # se come el objetivo y otro donde no. Lo que se comprueba deja de
+        # depender del dia que haga.
+        publicado = json.loads((RAIZ / "site" / "status.json").read_text(encoding="utf-8"))
+
+        def _con_cadencia(minutos: float) -> Any:
+            datos = json.loads(json.dumps(publicado))
+            datos["cadencia"]["p50_min"] = minutos
+            # Con reportes en vivo, que es el camino que se recorre de verdad:
+            # la rama del dia cero ya no la pisa nadie.
+            datos["medido"]["eventos_publicados"] = max(
+                1, int(datos["medido"].get("eventos_publicados") or 0)
+            )
+            return lambda ruta: ruta.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps(datos, ensure_ascii=False),
+            )
+
+        objetivo = float(publicado["objetivo"]["p50_min"])
+
+        pg.route("**/status.json", _con_cadencia(objetivo * 3))
         pg.goto(f"{servidor}/status.html")
         pg.wait_for_selector("#resumen:not(.cargando)", timeout=ESPERA_MS)
-
-        datos = pg.evaluate(
-            "fetch('status.json').then(r => r.json())"
-            ".then(d => ({objetivo: d.objetivo.p50_min, cadencia: d.cadencia.p50_min}))"
-        )
-        se_come = datos["cadencia"] is not None and datos["cadencia"] > datos["objetivo"]
-
         aviso = pg.locator(".nota-alarma")
-        if se_come:
-            assert aviso.count() == 1, (
-                f"la cadencia ({datos['cadencia']} min) supera el objetivo "
-                f"({datos['objetivo']} min) y la pagina no lo dice"
-            )
-            texto = aviso.inner_text()
-            assert "vigía" in texto and "objetivo" in texto
-        else:
-            assert aviso.count() == 0, "la cadencia cumple el objetivo y la pagina avisa igualmente"
+        assert aviso.count() == 1, (
+            f"la cadencia ({objetivo * 3:.0f} min) triplica el objetivo "
+            f"({objetivo:.0f} min) y la pagina no lo dice"
+        )
+        texto = aviso.inner_text()
+        assert "vigía" in texto and "objetivo" in texto
+
+        # Y al reves: cumpliendo, no se avisa. Un aviso que sale siempre no es
+        # un aviso.
+        pg.route("**/status.json", _con_cadencia(objetivo / 10))
+        pg.goto(f"{servidor}/status.html")
+        pg.wait_for_selector("#resumen:not(.cargando)", timeout=ESPERA_MS)
+        assert pg.locator(".nota-alarma").count() == 0, (
+            "la cadencia cumple el objetivo y la pagina avisa igualmente"
+        )
     finally:
         ctx.close()
 
@@ -1868,6 +1898,78 @@ def test_el_filtro_de_pais_recorta_el_mapa_y_no_solo_la_lista(pagina: Any) -> No
         f"la capa de epicentros no lleva el filtro del país: {expresion}"
     )
     assert en_la_lista() < todos, "la lista tampoco se recortó"
+
+
+def test_el_filtro_de_pais_tambien_recorta_la_tarjeta_y_la_lista_de_menores(
+    pagina: Any,
+) -> None:
+    """«10 sismos vistos» sobre un mapa con un solo punto dibujado.
+
+    `aplicarFiltrosAlMapa` recorta la capa `observados` por pais desde el
+    3-sep-2026, pero la cifra viva y la lista del lateral seguian saliendo del
+    fichero entero. Con «Colombia» puesto, la tarjeta contaba diez y el mapa
+    dibujaba uno, a diez centimetros de distancia — la misma contradiccion que
+    los filtros del panorama ya tenian resuelta.
+    """
+    _esperar_capa(pagina, "epicentros")
+    _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#campo-pais:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_timeout(600)
+
+    def _cifra_viva() -> int:
+        texto: str = pagina.evaluate(
+            """() => {
+                 const b = document.querySelector('#en-vivo [data-capa="observados"] .valor');
+                 return b ? b.textContent : "";
+               }"""
+        )
+        return int(re.sub(r"[^0-9]", "", texto) or 0)
+
+    def _en_la_lista() -> int:
+        n: int = pagina.locator("#lista-menores li").count()
+        return n
+
+    # El pais que mas sismos menores tiene en la ventana, para que el recorte
+    # deje algo y no todo: elegir uno sin ninguno probaria menos.
+    reparto = pagina.evaluate(
+        """() => fetch('observados.json').then(r => r.json()).then(d => {
+             const cuenta = {};
+             for (const e of d.eventos || []) {
+               if (e.iso3) cuenta[e.iso3] = (cuenta[e.iso3] || 0) + 1;
+             }
+             return cuenta;
+           })"""
+    )
+    if not reparto:
+        pytest.skip("ningun sismo menor publicado trae pais: no hay filtro que probar")
+
+    iso3 = max(reparto, key=lambda k: reparto[k])
+    esperados = reparto[iso3]
+    todos = _cifra_viva()
+    assert todos > esperados, (
+        f"todos los sismos menores publicados son de {iso3}: con este catalogo el "
+        f"filtro no puede recortar nada y la prueba no comprobaria nada"
+    )
+    assert _en_la_lista() == todos, "la lista y la cifra ya empiezan desacordadas"
+
+    pagina.select_option("#filtro-paises", iso3)
+    pagina.wait_for_timeout(1200)
+
+    assert _cifra_viva() == esperados, (
+        f"con {iso3} puesto la tarjeta dice {_cifra_viva()} sismos vistos y en el "
+        f"mapa quedan {esperados}"
+    )
+    assert _en_la_lista() == esperados, (
+        f"la lista de sismos menores enumera {_en_la_lista()} con {iso3} puesto, "
+        f"y el mapa dibuja {esperados}"
+    )
+
+    # Y el tercer sitio que cuenta lo mismo: el interruptor de la capa, que
+    # congelaba su cifra en la del arranque porque solo se pintaba una vez.
+    rotulo = pagina.locator("#interruptor-observados .menor").inner_text()
+    assert f"({esperados} en" in rotulo, (
+        f"el interruptor ofrece «{rotulo}» con {iso3} puesto, y el mapa deja {esperados} estrellas"
+    )
 
 
 def test_los_filtros_son_desplegables_y_estan_arriba(pagina: Any) -> None:
@@ -3042,6 +3144,108 @@ def test_la_tinta_del_fuego_cabe_en_el_mapa(pagina: Any) -> None:
 
 
 @pytest.mark.visor
+def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
+    """Lo promete el propio fichero, y redondeaba al millar.
+
+    `app.js` justifica la rampa de color contra WCAG 1.4.11 diciendo que el dato
+    esta disponible de otra forma: «la leyenda publica los rangos numericos, **el
+    globo de cada celda da su valor exacto**, y celdas.json se descarga entero».
+    Pero el globo usaba `comoConteo`, que por encima de mil redondea al millar:
+    una celda con 1.500 personas publicaba «2.000», y quien fuera a comprobar la
+    rampa contra el globo encontraba la cifra movida hasta 499 personas.
+
+    Se comprueba contra el dato: se lee el indice H3 que el propio globo imprime,
+    se busca esa celda en `celdas.json` y se exige que la cifra sea la suya. Y se
+    busca a proposito una celda de **mas de mil personas**, que es donde el
+    redondeo de prosa y el valor exacto se separan: sobre una celda de veinte los
+    dos formatos coinciden y la prueba pasaria sin comprobar nada.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(2000)
+
+    def _pop_de(h3: str) -> float | None:
+        # `celdas.json` es columnar —`columnas` + `celdas`— y publica el indice
+        # en minusculas mientras el globo lo imprime como venga: sin caso.
+        valor: float | None = pagina.evaluate(
+            """(h3) => fetch('reports/us6000tjl2/celdas.json')
+                 .then(r => r.json())
+                 .then(g => {
+                   const iH3 = g.columnas.indexOf('h3');
+                   const iPop = g.columnas.indexOf('pop');
+                   const fila = g.celdas.find(
+                     c => String(c[iH3]).toLowerCase() === h3.toLowerCase()
+                   );
+                   return fila ? Number(fila[iPop]) : null;
+                 })""",
+            h3,
+        )
+        return valor
+
+    caja = pagina.locator("#mapa").bounding_box()
+    assert caja
+    encontrada: tuple[str, float] | None = None
+    ultima: tuple[str, float] | None = None
+    # A zoom de evento cada pixel cubre varias celdas y la que gana el clic suele
+    # ser rural. Se acerca la camara sobre el punto mas poblado que se vaya
+    # encontrando hasta dar con una celda de mas de mil personas.
+    for acercamiento in range(4):
+        mejor_punto = None
+        for fy in (0.30, 0.40, 0.50, 0.60, 0.70):
+            for fx in (0.30, 0.40, 0.50, 0.60, 0.70):
+                x = caja["x"] + caja["width"] * fx
+                y = caja["y"] + caja["height"] * fy
+                pagina.mouse.click(x, y)
+                pagina.wait_for_timeout(260)
+                if not pagina.locator(".maplibregl-popup .popup-celda").count():
+                    continue
+                h3 = pagina.locator(".maplibregl-popup .ficha-h3").inner_text().strip()
+                pop = _pop_de(h3)
+                if pop is None:
+                    continue
+                ultima = (h3, pop)
+                if mejor_punto is None or pop > mejor_punto[0]:
+                    mejor_punto = (pop, x, y)
+                if pop >= 1000:
+                    encontrada = ultima
+                    break
+            if encontrada:
+                break
+        if encontrada or mejor_punto is None or acercamiento == 3:
+            break
+        pagina.mouse.move(mejor_punto[1], mejor_punto[2])
+        pagina.mouse.wheel(0, -600)
+        pagina.wait_for_timeout(900)
+
+    assert ultima, "no se pudo abrir el globo de ninguna celda de la malla"
+    h3, pop = encontrada or ultima
+    assert pop >= 1000, (
+        f"solo se alcanzaron celdas de menos de mil personas (la ultima, {pop}): "
+        f"sobre esas el redondeo de prosa y el exacto coinciden y esta prueba no "
+        f"comprobaria nada"
+    )
+
+    def _en_espanol(v: float) -> str:
+        # El espanol no separa los millares hasta cinco cifras, que es lo que
+        # hace `numero()` en el visor: 8831 va junto y 15.607 separado.
+        entero = round(v)
+        return f"{entero:,}".replace(",", ".") if entero >= 10000 else str(entero)
+
+    exacto = _en_espanol(pop)
+    prosa = _en_espanol(round(pop / 1000) * 1000)
+    texto = pagina.locator(".maplibregl-popup").inner_text()
+    assert exacto in texto, (
+        f"el globo de {h3} deberia decir {exacto} personas —el dato es {pop}— y "
+        f"dice otra cosa: {texto!r}"
+    )
+    if prosa != exacto:
+        assert prosa not in texto, (
+            f"el globo publica {prosa}, que es el dato redondeado al millar, "
+            f"justo donde el fichero promete el valor exacto"
+        )
+
+
 def test_las_personas_se_cuentan_enteras(pagina: Any) -> None:
     """El panel de un foco pequeno publicaba «5,7 personas».
 
@@ -3146,6 +3350,86 @@ def test_cambiar_de_mapa_base_conserva_las_capas(pagina: Any) -> None:
     assert antes > 0, "el visor no pinto ningun epicentro"
     assert antes == pintados_al_arrancar, (
         f"cambiar de base perdio epicentros: {pintados_al_arrancar} antes, {antes} despues"
+    )
+
+
+@pytest.mark.visor
+def test_el_mapa_base_no_se_lleva_el_perimetro_del_foco(pagina: Any) -> None:
+    """El panel seguia describiendo un incendio que el mapa acababa de perder.
+
+    `cambiarEstiloBase` repone epicentros, sismos menores y focos, pero no el
+    contorno del foco **abierto**: se lee «17 celdas contiguas ardiendo», se toca
+    el mapa base por curiosidad, y el lateral sigue diciendolo con el mapa sin
+    rodear ninguna. Es el mismo caso que ya estaba resuelto para el lado sismico
+    —el evento abierto vuelve con su malla— y que en el lado del fuego faltaba.
+    """
+    # A la capa dibujada, no al agrupado: `pintado.focos` se anota en cuanto
+    # `agruparFocos` termina, y el dibujo de la capa va por `cuandoElEstiloEsteListo`,
+    # asi que puede ir por detras. Esperar al agrupado abria el foco sobre un mapa
+    # sin capas.
+    _con_fuego(pagina)
+    _esperar_capa(pagina, "focos")
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
+    # A la anotacion, no a un reloj: el perimetro se dibuja diferido con
+    # `cuandoElEstiloEsteListo` y un `wait_for_timeout` generoso seguia llegando
+    # antes que el.
+    _esperar_capa(pagina, "foco-perimetro")
+
+    marca = _ahora(pagina)
+    pagina.locator(".ctrl-bases").click()
+    pagina.locator('[data-base="oscuro"]').click()
+
+    # La afirmacion es esta espera: el perimetro tiene que volver a anotarse
+    # **despues** del cambio de base. Sin el arreglo, `cambiarEstiloBase` repone
+    # epicentros, observados e incendios y nunca vuelve a anotar esto, asi que la
+    # espera agota su plazo — que es como se pone roja.
+    _esperar_capa(pagina, "foco-perimetro", desde=marca)
+
+    capas = pagina.evaluate("() => window.CENTINELA.capasDelMapa()")
+    abierto = pagina.evaluate("() => !document.getElementById('detalle-fuego').hidden")
+    assert abierto, "el panel del foco se cerro solo al cambiar de base"
+    assert "foco-perimetro" in capas, (
+        "el perimetro se anoto pero no esta en el estilo: se dibujo sobre el "
+        f"anterior y el nuevo lo perdio. {capas[-8:]}"
+    )
+
+
+@pytest.mark.visor
+def test_los_oyentes_no_se_duplican_al_cambiar_de_base(pagina: Any) -> None:
+    """MapLibre conserva los oyentes de capa a traves de `setStyle`.
+
+    Cuelgan del mapa, no del estilo, y `dibujarEpicentros` los registraba al
+    final de cada pasada — que es justo lo que `cambiarEstiloBase` vuelve a
+    llamar en cada cambio de base. Tres cambios y cada clic sobre un epicentro
+    corria `seleccionar` tres veces, con tres vuelos de camara compitiendo.
+
+    Se cuenta con la API de MapLibre y no a ojo: `map.listens` no distingue por
+    capa, asi que se leen los oyentes registrados del tipo `click`.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(800)
+
+    def _oyentes() -> int:
+        n: int = pagina.evaluate("() => window.CENTINELA.oyentesDeClic()")
+        return n
+
+    antes = _oyentes()
+    assert antes > 0, "no se pudo leer la lista de oyentes de clic de MapLibre"
+
+    for base in ("oscuro", "relieve", "claro"):
+        pagina.locator(".ctrl-bases").click()
+        pagina.locator(f'[data-base="{base}"]').click()
+        pagina.wait_for_function(
+            """() => window.CENTINELA.capasDelMapa().includes('epicentros')""",
+            timeout=ESPERA_MS,
+        )
+        pagina.wait_for_timeout(500)
+
+    despues = _oyentes()
+    assert despues == antes, (
+        f"tras tres cambios de mapa base hay {despues} oyentes de clic donde "
+        f"habia {antes}: cada clic sobre un epicentro se atiende {despues // antes} veces"
     )
 
 
