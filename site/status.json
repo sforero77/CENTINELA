@@ -1,15 +1,22 @@
 {
-  "generado_utc": "2026-09-07T01:55:17Z",
+  "generado_utc": "2026-09-07T03:44:33Z",
   "objetivo": {
     "p50_min": 60,
-    "p95_min": 90
+    "p95_min": 90,
+    "medido_contra": "desde_deteccion"
   },
   "medido": {
     "eventos_publicados": 2,
     "backtests_excluidos": 25,
     "p50_min": 92.1,
     "p95_min": 94.8,
-    "peor_min": 95.1
+    "peor_min": 95.1,
+    "desde_deteccion": {
+      "eventos": 2,
+      "p50_min": 68.9,
+      "p95_min": 70.4,
+      "peor_min": 70.6
+    }
   },
   "eventos": [
     {
@@ -261,8 +268,8 @@
     "p50_min": 5.0,
     "p90_min": 5.3,
     "peor_min": 24.9,
-    "revisiones": 1448,
-    "latidos": 201
+    "revisiones": 1447,
+    "latidos": 200
   },
   "latidos": [
     {
@@ -1466,5 +1473,5 @@
       "revisiones": 14
     }
   ],
-  "nota": "La latencia incluye la demora del cron de GitHub Actions, que el proyecto no controla y que su documentación sitúa entre 5 y 30 minutos. El objetivo se define sobre lo controlable; esta cifra es el total real, sin descontar nada."
+  "nota": "Se publican dos relojes. **Total** va desde el origen del sismo e incluye lo que USGS tarda en localizarlo y en publicar su primer ShakeMap, más la demora del cron de GitHub Actions —entre 5 y 30 minutos según su propia documentación—: es el tiempo real que pasa, sin descontar nada. **Desde detección** empieza cuando el vigía ve el evento en el feed, que es lo que este sistema controla, y es la serie contra la que se juzga el objetivo. El objetivo O1 se define desde la disponibilidad del primer ShakeMap; ese instante no queda registrado en ninguna parte, así que la detección es el ancla medible más cercana."
 }
