@@ -135,6 +135,5 @@ def test_la_forma_posicional_de_country_es_la_que_se_documenta() -> None:
     for ruta in DOCUMENTOS:
         for invocacion in _invocaciones(ruta.read_text(encoding="utf-8")):
             assert not invocacion.startswith("country --iso3"), (
-                f"{ruta.relative_to(RAIZ)}: `--iso3` no existe; la forma es "
-                f"`centinela country COL`"
+                f"{ruta.relative_to(RAIZ)}: `--iso3` no existe; la forma es `centinela country COL`"
             )
