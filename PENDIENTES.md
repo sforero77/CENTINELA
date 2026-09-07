@@ -43,12 +43,12 @@ centinela impact us6000tjl2   --detail-url "https://earthquake.usgs.gov/fdsnws/e
 | Topónimos en español (RF-06) y changelog de deltas (RF-04) | ✅ funcional |
 | Golden G1 (Chocó), G2 (Venezuela) y G3 | ✅ corren, ninguna saltada |
 | Verificación de insumos (`insumos_sha256`) | ✅ mide y detiene · digests sin fijar, §2.6 |
-| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 149 pruebas en un navegador real |
+| Cobertura que **ve la pantalla** | ✅ `tests/visor`, 150 pruebas en un navegador real |
 | Coropletas r7/r6 del visor | ⏳ §2.2 |
 | P4 brigada de imagen | ⏳ Fase 2, solo contrato |
 
-**2.323 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
-vivas y 149 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
+**2.328 pruebas** sin red y sin navegador (más 13 nocturnas contra las fuentes
+vivas y 150 del visor, que abren Chromium), `ruff` y `mypy --strict` limpios,
 arranque verificado desde clon vacío. Eran 431 antes de la auditoría, 523 al
 empezarla, 686 el 26-ago y 948 el 28-ago.
 

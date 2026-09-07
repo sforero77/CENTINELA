@@ -547,6 +547,66 @@ def test_la_pagina_no_se_desplaza_en_horizontal_en_movil(pagina: Any) -> None:
     )
 
 
+def test_la_tabla_de_cobertura_sigue_siendo_una_tabla_en_movil(pagina: Any) -> None:
+    """Desplazarla no puede costar su semantica.
+
+    En 390 px la tabla llevaba `display: block` para que se desplazara ella y no
+    la pagina entera. Pero `display: block` sobre un `<table>` **le quita su rol
+    implicito**: el lector de pantalla deja de anunciar filas y columnas y de
+    asociar cada cifra con su encabezado, que es lo unico que hace legible una
+    tabla de cuatro columnas leida en voz alta. El `<caption>` oculto que
+    describe la tabla se quedaba describiendo una lista de numeros sueltos.
+
+    Ahora el desplazamiento vive en un envoltorio. Se comprueban las dos mitades:
+    que la tabla conserve su rol y que la pagina siga sin moverse de lado.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(500)
+
+    medida = pagina.evaluate(
+        """() => {
+             const t = document.getElementById('tabla-cobertura');
+             if (!t) return null;
+             const env = t.closest('.tabla-scroll');
+             return {
+               display: getComputedStyle(t).display,
+               rol: t.getAttribute('role'),
+               envoltorio: !!env,
+               envoltorioDesplaza: env ? getComputedStyle(env).overflowX : "",
+               desbordaLaTabla: t.scrollWidth > t.clientWidth + 1,
+             };
+           }"""
+    )
+    assert medida, "no existe la tabla de cobertura"
+
+    # `display: table` conserva el rol implicito; cualquier otro valor —salvo que
+    # se declare `role="table"` a mano— lo tira.
+    assert medida["display"].startswith("table") or medida["rol"] == "table", (
+        f"la tabla de cobertura se pinta con `display: {medida['display']}` y sin "
+        f"`role=table`: deja de anunciarse como tabla y sus cifras pierden el "
+        f"encabezado al que pertenecen"
+    )
+    assert medida["envoltorio"], (
+        "la tabla no esta dentro de `.tabla-scroll`: si se desplaza ella misma, "
+        "vuelve el `display: block` que le quita el rol"
+    )
+    assert medida["envoltorioDesplaza"] in ("auto", "scroll"), (
+        f"el envoltorio no desplaza (`overflow-x: {medida['envoltorioDesplaza']}`): "
+        f"la tabla volveria a arrastrar a la pagina entera"
+    )
+
+    ancho = pagina.evaluate(
+        """() => ({
+             scroll: document.documentElement.scrollWidth,
+             visible: document.documentElement.clientWidth,
+           })"""
+    )
+    assert ancho["scroll"] <= ancho["visible"] + 1, (
+        f"la pagina se desplaza en horizontal: {ancho['scroll']}px sobre {ancho['visible']}px"
+    )
+
+
 #: Detecta texto visible que se pisa con otro texto visible. Devuelve los pares.
 #:
 #: `checkVisibility` y no `offsetParent`: un `<details>` cerrado usa
