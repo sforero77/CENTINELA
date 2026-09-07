@@ -14,15 +14,15 @@
 | Población en MMI≥7 | 470 mil |
 | Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥7 | 180 mil |
-| Sedes de salud en MMI≥7 | 126 |
-| Sedes educativas en MMI≥7 | 540 |
-| Vías primarias y secundarias en MMI≥7 | 210 km |
-| Vías locales en MMI≥7 | 1.400 km |
+| Sedes de salud en MMI≥7 | 127 |
+| Sedes educativas en MMI≥7 | 539 |
+| Vías primarias y secundarias en MMI≥7 | 280 km |
+| Vías locales en MMI≥7 | 1.700 km |
 | Superficie construida en MMI≥7 | 19,5 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **56 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **64 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
@@ -32,8 +32,8 @@ De la población en intensidad MMI≥7, alrededor de **56 mil** personas tienen 
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **1.200**. USGS declara para este evento alerta **amarilla**, con 480 expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **210**.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **1.200**. USGS declara para este evento alerta **amarilla**, con 480 expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **210**.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -49,6 +49,10 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **10,4 %**.
 
+## Cambios frente a la versión anterior
+
+- Población de 65 años o más en MMI≥7: 56 mil → 64 mil
+
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -58,8 +62,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **10,4 %**.
 
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v2**
-- Manifiesto de exposición: [`chl-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:06Z
+- Manifiesto de exposición: [`chl-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-07T16:41:41Z
 
 ## Advertencias
 

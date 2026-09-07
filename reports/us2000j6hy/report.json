@@ -13,7 +13,9 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 2,
-    "exposure_manifest": "chl-v0.2"
+    "exposure_manifest": "chl-v0.3",
+    "modelo_deslizamiento": "nowicki_2014_global_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
@@ -22,20 +24,20 @@
     "pop_mmi6p": 697680.3248557751,
     "pop_mmi7p": 467130.3538479116,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 56008.8166943878,
-    "pop_65p_mmi6p": 88973.76746917472,
-    "bld_mmi6p": 408260.0,
+    "pop_65p_mmi7p": 63950.95751125506,
+    "pop_65p_mmi6p": 97773.07282439545,
+    "bld_mmi6p": 408288.0,
     "built_m2_mmi6p": 36912384.0,
-    "health_mmi6p": 190.0,
-    "edu_mmi6p": 804.0,
-    "road_km_mmi6p": 7040.842905219653,
-    "road_km_principal_mmi6p": 652.5313628951105,
-    "bld_mmi7p": 176857.0,
+    "health_mmi6p": 191.0,
+    "edu_mmi6p": 803.0,
+    "road_km_mmi6p": 9075.760526567337,
+    "road_km_principal_mmi6p": 935.5588594981256,
+    "bld_mmi7p": 176861.0,
     "built_m2_mmi7p": 19491798.0,
-    "health_mmi7p": 126.0,
-    "edu_mmi7p": 540.0,
-    "road_km_mmi7p": 1571.992792160019,
-    "road_km_principal_mmi7p": 207.08703789871544,
+    "health_mmi7p": 127.0,
+    "edu_mmi7p": 539.0,
+    "road_km_mmi7p": 2014.848596500977,
+    "road_km_principal_mmi7p": 281.65285675881455,
     "pop_ls_alta": 1199.2567775519565,
     "pop_lq_alta": 214.4236927209422
   },
@@ -78,7 +80,9 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 56 mil → 64 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -133,6 +137,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:06Z",
+  "generado_utc": "2026-09-07T16:41:41Z",
   "pipeline_version": "0.1.0"
 }
