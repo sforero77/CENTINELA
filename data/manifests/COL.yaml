@@ -219,8 +219,8 @@ sources:
     url: https://data.humdata.org/dataset/hotosm_col_health_facilities
     hdx_dataset: hotosm_col_health_facilities
     license: ODbL-1.0
-    vintage: "2026-08-06"
-    insumos_sha256: "8605e1c930d40ac84bd29e61c82cf1f74f3a24e2c7cdb0d16257cfa867bbb6e7"
+    vintage: "2026-09-06"
+    insumos_sha256: "a81c64d1550a5ddff091f88ccd83d1d25db442ac1b89968c7f6d0294d469a125"
     notes: >-
       Extracto OSM de HOT, GeoPackage de ~1 MB, con geometria. Sustituye al REPS
       como fuente de conteo por celda: es la que si trae coordenadas. La URL de
@@ -233,8 +233,8 @@ sources:
     hdx_dataset: colombia-healthsites
     hdx_resource: "colombia-healthsites-geojson"
     license: ODbL-1.0
-    vintage: "2026-06-11"
-    insumos_sha256: "50d09fa39fcb4d035935b42a8c311da37ad8a60e41d87370012212ce3c59acf8"
+    vintage: "2026-08-28"
+    insumos_sha256: "c5a9a9fa382dd0f6f3f05e3f72e6fd8d14f945f2329a498fcfb3b8827baf6b47"
     notes: >-
       healthsites.io publicado en HDX como GeoJSON. Se usa esta via y no la API
       de healthsites.io porque esa exige API key, y O4 pide reconstruir el
@@ -254,8 +254,8 @@ sources:
     url: https://data.humdata.org/dataset/hotosm_col_education_facilities
     hdx_dataset: hotosm_col_education_facilities
     license: ODbL-1.0
-    vintage: "2026-08-06"
-    insumos_sha256: "2c82f984937902f7f714561853c6d8b89f3c31166097cb674e7db59f2725e26b"
+    vintage: "2026-09-06"
+    insumos_sha256: "adfe198ef544cd9fa1c9d88cd42cd382f9ee31c1e2e6c7278ac3c256bb3b2887"
     notes: >-
       Extracto OSM de HOT, GeoPackage de ~5 MB, con geometria. Sustituye al
       directorio del MEN por la misma razon que arriba.

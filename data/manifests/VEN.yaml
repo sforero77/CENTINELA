@@ -201,8 +201,8 @@ sources:
     url: https://data.humdata.org/dataset/hotosm_ven_education_facilities
     hdx_dataset: hotosm_ven_education_facilities
     license: ODbL-1.0
-    vintage: "2026-08-06"
-    insumos_sha256: "be60a933ca25647526c7fa2c8f69de82f39079583dee5aeb729ee3658e3a9a6f"
+    vintage: "2026-09-06"
+    insumos_sha256: "cd7bc86ff3a4cdce5d4fbf5ad11515eede9fb81cb1ea868e0c2a510feb4e6724"
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover

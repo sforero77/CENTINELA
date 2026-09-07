@@ -195,8 +195,8 @@ sources:
     url: https://data.humdata.org/dataset/hotosm_cri_education_facilities
     hdx_dataset: hotosm_cri_education_facilities
     license: ODbL-1.0
-    vintage: "2026-08-23"
-    insumos_sha256: "9c9fb7c403df222c18ff830436dd8098d03f8bcc63829725ac0e8da25c26278a"
+    vintage: "2026-09-04"
+    insumos_sha256: "270dbd291a5daf07b4805604f36fc51d8f87bf26d7370eccbeb1c251c98c577f"
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover

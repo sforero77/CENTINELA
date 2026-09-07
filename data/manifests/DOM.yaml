@@ -194,8 +194,8 @@ sources:
     url: https://data.humdata.org/dataset/hotosm_dom_education_facilities
     hdx_dataset: hotosm_dom_education_facilities
     license: ODbL-1.0
-    vintage: "2026-08-23"
-    insumos_sha256: "63a553151a5d6c520f6cbc357d775cfdd965e5480d5a93d1d910031b4a088f5d"
+    vintage: "2026-09-04"
+    insumos_sha256: "3fc1cdac2faf991b046cbc98dd61acc93c43415c1b01b7dc4bfdb95cb3716762"
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover
