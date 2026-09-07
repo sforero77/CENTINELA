@@ -225,6 +225,27 @@ llamando a `aplicarAmenaza`, que esconde **todos** los bloques
 entero y el beneficio, cero. Lo fija `test_el_fuego_no_se_baja_hasta_que_se_mira`,
 que cuenta peticiones en el navegador en vez de leer el código.
 
+### 2.0.bis Dos cosas que la reconstrucción del 7-sep dejó a la vista
+
+Ninguna se arregló ahí para no mezclarla con la reconstrucción, y las dos cuestan
+tiempo real cada vez que se reconstruye.
+
+**El guardia de insumos para en la primera fuente que no cuadra.** Reconstruir
+los siete países que fallaron costó tres vueltas de once minutos cada una: se
+arreglaba `hotosm_health`, el build volvía a fallar en `hotosm_education`, y
+Colombia todavía en `healthsites_hdx` y `ourairports`. Con 194 fuentes en
+diecinueve manifests, descubrirlas de una en una convierte una tarde en una
+semana. Debería verificarlas **todas** y reportar la lista completa: el coste es
+el mismo, la descarga ya ocurrió.
+
+**`ourairports` caduca sola y no aporta ninguna columna.** Es el CSV global de
+OurAirports, se reescribe a diario con las ediciones de cualquier aeropuerto del
+mundo, y solo Colombia la declara. Su `LayerSpec` tiene `columnas=()`,
+`requerida=False`, y `build.py` no la nombra ni una vez: se baja, se verifica su
+digest y no llega a nada publicado. Fijar su digest garantiza que Colombia no se
+pueda reconstruir dos días seguidos. O se quita del manifest, o se marca como no
+fijable; re-fijarla cada vez es ruido que gasta la señal del guardia.
+
 ### 2.1 ✅ Brasil, el país 19 · cerrado el 28-ago-2026
 
 Fue el último de los diecinueve en tener activo, y no por falta de intento:

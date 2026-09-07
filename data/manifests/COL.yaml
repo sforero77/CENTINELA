@@ -264,8 +264,21 @@ sources:
     layer: airports
     url: https://davidmegginson.github.io/ourairports-data/airports.csv
     license: public-domain
-    vintage: snapshot-2026-08-01
-    insumos_sha256: "a56b85917effb259a69dffe3cc776ab4823580511caf79be7f0cac08bc03d6fb"
+    vintage: snapshot-2026-09-07
+    insumos_sha256: "12f737a7ed5c60b4bb27113d89eb95c7fd762be133efd8a294e363e706ef2594"
+    # ESTE DIGEST CADUCA SOLO, Y NO COMPRA NADA. `airports.csv` es el CSV global
+    # de OurAirports y se reescribe **a diario** con las ediciones de cualquier
+    # aeropuerto del mundo, asi que fijarlo significa que Colombia no puede
+    # reconstruirse dos dias seguidos sin volver a fijarlo: paso el 7-sep-2026,
+    # bloqueando el unico pais que declara esta fuente.
+    #
+    # Y lo que aporta al activo es cero: `LayerSpec(id="airports")` se declara
+    # con `columnas=()` y `requerida=False`, y `build.py` no la nombra ni una
+    # vez. Se baja, se verifica y no llega a ninguna columna publicada.
+    #
+    # Se re-fija para desbloquear la reconstruccion, no porque este bien asi.
+    # Decidir entre quitarla del manifest o marcarla como no fijable queda
+    # anotado en PENDIENTES.md.
     notes: >-
       T1.2 RESUELTA (23-ago-2026). La dedicacion al dominio publico esta en dos
       sitios, y los dos se leyeron directamente.
