@@ -326,13 +326,22 @@ En este orden, sin saltarse ninguno:
 ```
 uv run ruff format .
 uv run ruff check .
-uv run mypy pipelines
+uv run mypy
 uv run pytest -q -p no:randomly
 uv run pytest tests/visor -m visor      # 144 en Chromium
 ```
 
-Y actualizar el recuento de pruebas en `README.md`, `PENDIENTES.md` y
-`docs/CLEAN_CODE.md` — hay guardia sobre los tres.
+**`uv run mypy`, no `uv run mypy pipelines`.** Este documento mandaba el
+segundo, que solo mira el paquete del pipeline; `ci.yml` corre el primero, que
+mira el repositorio entero. Toda la auditoría se validó con el corto y
+dieciocho errores de tipos se acumularon en siete ficheros de `tests/` sin que
+ninguna corrida local los viera. Ahora lo vigila
+`tests/unit/test_el_ritual_documentado_es_el_de_ci.py`.
+
+Y actualizar el recuento de pruebas en `README.md` —lo vigila
+`test_cifras_del_readme.py`— y a mano en `PENDIENTES.md` y
+`docs/CLEAN_CODE.md`, que **no tienen guardia**: este documento decía que los
+tres lo tenían y no era cierto.
 
 ## La lección que más se repitió
 

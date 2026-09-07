@@ -499,7 +499,7 @@ def test_el_readme_nombra_exactamente_los_paises_sin_reporte() -> None:
     mas arriba y dejo esta intacta. La lista se copia a mano en la portada, que
     es la definicion de lo que este fichero vigila.
     """
-    con_reporte = {e.get("iso3") for e in _indice_publicado() if e.get("iso3")}
+    con_reporte = {str(e["iso3"]) for e in _indice_publicado() if e.get("iso3")}
     todos = {p.stem for p in (RAIZ / "data" / "manifests").glob("*.yaml")}
     sin_reporte = sorted(todos - con_reporte)
 

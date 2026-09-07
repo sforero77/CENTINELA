@@ -67,9 +67,12 @@ def test_un_status_ilegible_no_se_traga_el_sismo(
     monkeypatch.setattr(cli, "HttpFetcher", lambda *_a, **_k: object())
     monkeypatch.setattr(cli, "write_status", _que_revienta)
     monkeypatch.setattr(cli, "leer", lambda *_a, **_k: [])
-    monkeypatch.setattr(
-        cli, "write_observados", lambda evs, *_a, **_k: observados_escritos.append(evs) or Path("x")
-    )
+
+    def _anotar_observados(evs: object, *_a: object, **_k: object) -> Path:
+        observados_escritos.append(evs)
+        return Path("x")
+
+    monkeypatch.setattr(cli, "write_observados", _anotar_observados)
 
     codigo = cli.main(["trigger"])
 

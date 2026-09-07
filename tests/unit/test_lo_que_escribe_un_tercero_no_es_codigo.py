@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
@@ -42,8 +43,8 @@ def _workflows() -> list[Path]:
     return sorted(WORKFLOWS.glob("*.yml"))
 
 
-def _pasos(datos: dict) -> list[dict]:
-    pasos: list[dict] = []
+def _pasos(datos: dict[str, Any]) -> list[dict[str, Any]]:
+    pasos: list[dict[str, Any]] = []
     for job in (datos.get("jobs") or {}).values():
         for paso in job.get("steps") or []:
             if isinstance(paso, dict):
