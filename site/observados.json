@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-07T01:55:17Z",
+  "generado_utc": "2026-09-07T23:15:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tez1",
+      "mag": 4.5,
+      "lon": -69.2641,
+      "lat": -25.0539,
+      "depth_km": 90.7,
+      "lugar": "129 km al ENE de Taltal, Chile",
+      "origen_utc": "2026-09-07T21:54:38Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "CHL"
+    },
     {
       "usgs_id": "us7000terb",
       "mag": 4.8,
