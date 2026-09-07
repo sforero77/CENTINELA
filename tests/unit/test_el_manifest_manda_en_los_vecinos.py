@@ -33,6 +33,7 @@ from typing import Any
 import pytest
 import yaml
 
+from pipelines.common.geo import BBox
 from pipelines.p0_exposure import build
 
 RAIZ = Path(__file__).parent.parent.parent
@@ -115,14 +116,25 @@ def test_el_release_no_esta_escrito_a_mano_en_el_codigo() -> None:
 
 
 class _FetcherFalso:
-    """No se llega a usar: los dos caminos se cortan antes o se monkeypatchean."""
+    """No se llega a usar: los dos caminos se cortan antes o se monkeypatchean.
+
+    Cumple el protocolo `Fetcher` en vez de ignorarlo con `type: ignore`, y sus
+    dos metodos revientan: si algun dia uno de esos caminos deja de cortarse
+    antes, la prueba lo dice en vez de bajarse el release de verdad.
+    """
+
+    def get_json(self, url: str) -> dict[str, Any]:
+        raise AssertionError(f"no deberia pedirse nada: {url}")
+
+    def get_bytes(self, url: str) -> bytes:
+        raise AssertionError(f"no deberia pedirse nada: {url}")
 
 
 def test_sin_release_no_se_construye(monkeypatch: pytest.MonkeyPatch) -> None:
     """Un manifest que no fija el release no puede caer a `latest` en silencio."""
     with pytest.raises(ValueError, match="no fija el release"):
         build.load_country_neighbours(
-            None, "COL", bbox=build.BBox(-80, -5, -66, 13), fetcher=_FetcherFalso(), release=""
+            None, "COL", bbox=BBox(-80, -5, -66, 13), fetcher=_FetcherFalso(), release=""
         )
 
 
@@ -144,7 +156,7 @@ def test_overture_caido_detiene_el_build(monkeypatch: pytest.MonkeyPatch) -> Non
         build.load_country_neighbours(
             None,
             "PRY",
-            bbox=build.BBox(-63, -28, -54, -19),
+            bbox=BBox(-63, -28, -54, -19),
             fetcher=_FetcherFalso(),
             release="2026-08-19.0",
         )
@@ -168,7 +180,7 @@ def test_cero_vecinos_detiene_el_build(monkeypatch: pytest.MonkeyPatch) -> None:
         build.load_country_neighbours(
             None,
             "CUB",
-            bbox=build.BBox(-85, 19, -74, 24),
+            bbox=BBox(-85, 19, -74, 24),
             fetcher=_FetcherFalso(),
             release="2026-08-19.0",
         )

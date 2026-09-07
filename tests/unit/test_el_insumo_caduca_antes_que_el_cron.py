@@ -84,7 +84,7 @@ def test_el_release_vigente_pasa_y_pregunta_por_los_tres_temas() -> None:
     donde puede rescatar celdas el reparto.
     """
     catalogo = _Catalogo({"buildings", "transportation", "divisions"})
-    comprobar_release_de_overture(_manifest(), fetcher=catalogo)  # type: ignore[arg-type]
+    comprobar_release_de_overture(_manifest(), fetcher=catalogo)
 
     temas = {u.split("/2026-08-19.0/")[1].split("/")[0] for u in catalogo.pedidas}
     assert temas == {"buildings", "transportation", "divisions"}
@@ -94,7 +94,7 @@ def test_un_release_caducado_para_el_build_antes_de_bajar_nada() -> None:
     """Y lo dice por su nombre, con la reparacion dentro del mensaje."""
     catalogo = _Catalogo(set())
     with pytest.raises(ReleaseCaducadoError) as exc:
-        comprobar_release_de_overture(_manifest(), fetcher=catalogo)  # type: ignore[arg-type]
+        comprobar_release_de_overture(_manifest(), fetcher=catalogo)
 
     mensaje = str(exc.value)
     assert "No se ha descargado nada todavia" in mensaje
@@ -106,7 +106,7 @@ def test_un_solo_tema_caido_ya_detiene_el_build() -> None:
     """Construir sin `divisions` publica un activo que le roba gente al vecino."""
     catalogo = _Catalogo({"buildings", "transportation"})
     with pytest.raises(ReleaseCaducadoError, match="divisions"):
-        comprobar_release_de_overture(_manifest(), fetcher=catalogo)  # type: ignore[arg-type]
+        comprobar_release_de_overture(_manifest(), fetcher=catalogo)
 
 
 # --------------------------------------------------------------------------

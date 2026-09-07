@@ -348,7 +348,7 @@ def _hdx_en_disco(source: Source, destino: Path) -> list[Path]:
     return sueltos
 
 
-def verificar_licencia_declarada(source: Source, *, fetcher: HttpFetcher) -> None:
+def verificar_licencia_declarada(source: Source, *, fetcher: Fetcher) -> None:
     """Contrasta la licencia que publica HDX con la que fija el manifest.
 
     La docstring de `dataset_license` decia desde el principio que esto «se
@@ -392,7 +392,7 @@ def verificar_licencia_declarada(source: Source, *, fetcher: HttpFetcher) -> Non
         )
 
 
-def download_hdx(source: Source, destino: Path, *, fetcher: HttpFetcher) -> list[Path]:
+def download_hdx(source: Source, destino: Path, *, fetcher: Fetcher) -> list[Path]:
     """Descarga un recurso de HDX resolviendo su URL por la API.
 
     Nunca por patron de ruta: la de un mismo dataset de HOTOSM cambia de forma

@@ -31,6 +31,7 @@ from typing import Any
 import pytest
 
 from pipelines.common.hdx import HDX_PACKAGE_SHOW, limpiar_cache_hdx, package_show
+from pipelines.common.licensing import LicenseViolationError
 from pipelines.common.manifest import Manifest, Source
 from pipelines.p0_exposure import download
 
@@ -129,8 +130,8 @@ def test_un_dataset_se_pregunta_una_vez_por_corrida() -> None:
     limpiar_cache_hdx()
     fetcher = _Fetcher()
 
-    primero = package_show(fetcher, "cod-ab-col")  # type: ignore[arg-type]
-    segundo = package_show(fetcher, "cod-ab-col")  # type: ignore[arg-type]
+    primero = package_show(fetcher, "cod-ab-col")
+    segundo = package_show(fetcher, "cod-ab-col")
 
     assert primero == segundo
     assert fetcher.json_pedidos == [HDX_PACKAGE_SHOW.format(dataset="cod-ab-col")]
@@ -155,8 +156,8 @@ def test_la_licencia_se_comprueba_tambien_con_el_fichero_ya_en_disco(
     }
     fetcher = _Fetcher(cambiado)
 
-    with pytest.raises(download.LicenseViolationError, match="cambio la licencia"):
-        download.download_hdx(source, tmp_path, fetcher=fetcher)  # type: ignore[arg-type]
+    with pytest.raises(LicenseViolationError, match="cambio la licencia"):
+        download.download_hdx(source, tmp_path, fetcher=fetcher)
 
 
 def test_con_la_licencia_correcta_el_atajo_por_cache_sigue_funcionando(
@@ -172,7 +173,7 @@ def test_con_la_licencia_correcta_el_atajo_por_cache_sigue_funcionando(
     ya.write_bytes(b"ya estaba")
 
     fetcher = _Fetcher()
-    rutas = download.download_hdx(source, tmp_path, fetcher=fetcher)  # type: ignore[arg-type]
+    rutas = download.download_hdx(source, tmp_path, fetcher=fetcher)
 
     assert rutas == [ya]
     # Se pregunto la licencia, y nada mas: no se resolvieron urls de descarga.

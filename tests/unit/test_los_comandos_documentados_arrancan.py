@@ -98,11 +98,15 @@ def test_todo_comando_documentado_lo_acepta_el_parser(ruta: Path) -> None:
     subparsers = next(
         a for a in parser._actions if isinstance(a.choices, dict) and "country" in a.choices
     )
+    # `choices` esta declarado `Iterable[Any] | None` y el `isinstance` de arriba
+    # vive dentro de un generador, asi que el estrechamiento no llega hasta aqui.
+    subcomandos = subparsers.choices
+    assert isinstance(subcomandos, dict)
 
     for invocacion in _invocaciones(ruta.read_text(encoding="utf-8")):
         argumentos = shlex.split(invocacion, posix=False)
         sub = argumentos[0]
-        assert sub in subparsers.choices, (
+        assert sub in subcomandos, (
             f"{ruta.relative_to(RAIZ)} enseña `centinela {sub}` y ese subcomando no existe"
         )
         if PLANTILLA.search(invocacion):
