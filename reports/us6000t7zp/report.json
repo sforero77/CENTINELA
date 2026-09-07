@@ -13,29 +13,31 @@
   "inputs": {
     "shakemap_version": 15,
     "groundfailure_version": 12,
-    "exposure_manifest": "ven-v0.2"
+    "exposure_manifest": "ven-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 9183151.962815108,
-    "pop_mmi7p": 2276853.9713528785,
+    "pop_mmi6p": 9183151.962815098,
+    "pop_mmi7p": 2276853.971352879,
     "pop_mmi8p": 736970.7352275667,
-    "pop_65p_mmi7p": 226865.5566116786,
-    "pop_65p_mmi6p": 988301.0950526043,
-    "bld_mmi6p": 2386818.0,
+    "pop_65p_mmi7p": 274991.045854545,
+    "pop_65p_mmi6p": 1088837.6847299617,
+    "bld_mmi6p": 2386879.0,
     "built_m2_mmi6p": 379188815.0,
-    "health_mmi6p": 1403.0,
-    "edu_mmi6p": 2661.0,
-    "road_km_mmi6p": 24285.849878841644,
-    "road_km_principal_mmi6p": 3174.1447535450693,
-    "bld_mmi7p": 504955.0,
+    "health_mmi6p": 1408.0,
+    "edu_mmi6p": 2674.0,
+    "road_km_mmi6p": 32753.30578421276,
+    "road_km_principal_mmi6p": 4060.029944245556,
+    "bld_mmi7p": 504981.0,
     "built_m2_mmi7p": 74831146.0,
-    "health_mmi7p": 578.0,
-    "edu_mmi7p": 810.0,
-    "road_km_mmi7p": 5265.768779357779,
-    "road_km_principal_mmi7p": 974.9592220731528,
+    "health_mmi7p": 577.0,
+    "edu_mmi7p": 815.0,
+    "road_km_mmi7p": 7050.471957895134,
+    "road_km_principal_mmi7p": 1221.067936411188,
     "pop_ls_alta": 28985.956875724718,
     "pop_lq_alta": 561150.0343206676
   },
@@ -162,7 +164,10 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 230 mil → 270 mil",
+    "Sedes educativas en MMI≥7: 810 → 820"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -217,6 +222,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:38Z",
+  "generado_utc": "2026-09-07T16:30:41Z",
   "pipeline_version": "0.1.0"
 }
