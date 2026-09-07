@@ -13,7 +13,9 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 2,
-    "exposure_manifest": "cri-v0.2"
+    "exposure_manifest": "cri-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
@@ -22,20 +24,20 @@
     "pop_mmi6p": 28246.993986844085,
     "pop_mmi7p": 7400.7181151825935,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 705.2786429717235,
-    "pop_65p_mmi6p": 3124.8655130830693,
+    "pop_65p_mmi7p": 795.5214395336698,
+    "pop_65p_mmi6p": 3135.42258645593,
     "bld_mmi6p": 21040.0,
     "built_m2_mmi6p": 3495185.0,
     "health_mmi6p": 13.0,
     "edu_mmi6p": 71.0,
-    "road_km_mmi6p": 607.640156079042,
-    "road_km_principal_mmi6p": 64.03396472240948,
+    "road_km_mmi6p": 928.3133350200548,
+    "road_km_principal_mmi6p": 82.91258425599206,
     "bld_mmi7p": 4431.0,
     "built_m2_mmi7p": 859920.0,
     "health_mmi7p": 4.0,
     "edu_mmi7p": 8.0,
-    "road_km_mmi7p": 72.01752344429542,
-    "road_km_principal_mmi7p": 8.519702501369768,
+    "road_km_mmi7p": 116.1643832813362,
+    "road_km_principal_mmi7p": 9.368577098838802,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 13254.762669994496
   },
@@ -48,13 +50,6 @@
       "pop_banda": 7400.7181151825935
     },
     {
-      "adm2_id": "CR116",
-      "nombre": "Turrubares",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "CR104",
       "nombre": "Puriscal",
       "mmi_max": 6.5,
@@ -62,8 +57,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CR611",
-      "nombre": "Garabito",
+      "adm2_id": "CR116",
+      "nombre": "Turrubares",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR606",
+      "nombre": "Quepos",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -76,8 +78,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CR606",
-      "nombre": "Quepos",
+      "adm2_id": "CR611",
+      "nombre": "Garabito",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -86,27 +88,6 @@
       "adm2_id": "CR106",
       "nombre": "Aserrí",
       "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "CR209",
-      "nombre": "Orotina",
-      "mmi_max": 5.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "CR103",
-      "nombre": "Desamparados",
-      "mmi_max": 5.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "CR105",
-      "nombre": "Tarrazú",
-      "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
@@ -125,8 +106,22 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "CR308",
-      "nombre": "El Guarco",
+      "adm2_id": "CR209",
+      "nombre": "Orotina",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR105",
+      "nombre": "Tarrazú",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR103",
+      "nombre": "Desamparados",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -137,10 +132,17 @@
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CR308",
+      "nombre": "El Guarco",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 1.8,
+    "pop_discrepancia_pct": 1.7,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -155,7 +157,9 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 710 → 800"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -210,6 +214,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:24:42Z",
+  "generado_utc": "2026-09-07T16:46:48Z",
   "pipeline_version": "0.1.0"
 }
