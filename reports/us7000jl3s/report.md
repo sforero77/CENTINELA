@@ -14,10 +14,10 @@
 | Población en MMI≥7 | el evento no llegó a esta banda |
 | Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥6 | 1,1 millones |
-| Sedes de salud en MMI≥6 | 1.698 |
-| Sedes educativas en MMI≥6 | 1.570 |
-| Vías primarias y secundarias en MMI≥6 | 1.500 km |
-| Vías locales en MMI≥6 | 15 mil km |
+| Sedes de salud en MMI≥6 | 1.750 |
+| Sedes educativas en MMI≥6 | 1.626 |
+| Vías primarias y secundarias en MMI≥6 | 2.300 km |
+| Vías locales en MMI≥6 | 23 mil km |
 | Superficie construida en MMI≥6 | 177,5 km² |
 
 El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 1,1 millones de edificaciones registradas en MMI≥6. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
@@ -48,8 +48,8 @@ De la población en intensidad MMI≥6, alrededor de **360 mil** personas tienen
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **0**.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **500 mil**. USGS declara para este evento alerta **roja**, con 150 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **500 mil**. USGS declara para este evento alerta **roja**, con 150 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -74,8 +74,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,4 %**.
 
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v9**
-- Manifiesto de exposición: [`ecu-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ECU.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:51Z
+- Manifiesto de exposición: [`ecu-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ECU.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-07T16:35:49Z
 
 ## Advertencias
 

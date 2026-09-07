@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-07T16:35:35Z",
+  "generado_utc": "2026-09-07T16:35:53Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -107,7 +107,7 @@
       "minutos": 1820773.0,
       "backtest": true,
       "shakemap": 7,
-      "actualizado_utc": ""
+      "actualizado_utc": "2026-09-07T16:35:51Z"
     },
     {
       "usgs_id": "us6000hf75",

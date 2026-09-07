@@ -13,23 +13,25 @@
   "inputs": {
     "shakemap_version": 7,
     "groundfailure_version": 9,
-    "exposure_manifest": "ecu-v0.2"
+    "exposure_manifest": "ecu-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 4750724.875813367,
+    "pop_mmi6p": 4750724.875813366,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 358559.2101600085,
-    "bld_mmi6p": 1105735.0,
+    "pop_65p_mmi6p": 360346.99948469247,
+    "bld_mmi6p": 1105831.0,
     "built_m2_mmi6p": 177456832.0,
-    "health_mmi6p": 1698.0,
-    "edu_mmi6p": 1570.0,
-    "road_km_mmi6p": 16795.717884878,
-    "road_km_principal_mmi6p": 1527.8420715451782,
+    "health_mmi6p": 1750.0,
+    "edu_mmi6p": 1626.0,
+    "road_km_mmi6p": 25300.131249126654,
+    "road_km_principal_mmi6p": 2328.9825179043482,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -217,6 +219,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:51Z",
+  "generado_utc": "2026-09-07T16:35:49Z",
   "pipeline_version": "0.1.0"
 }
