@@ -173,9 +173,15 @@ cosa, porque este documento es la lista de trabajo y no el registro de lo hecho.
 ### 2.0 Lo que dejó la auditoría de septiembre
 
 El registro completo —qué se cerró, con qué commit, y los 105 hallazgos de
-severidad media o baja que quedan sin barrer, con fichero y línea— está en
+severidad media o baja con su veredicto de hoy, fichero y línea— está en
 [`docs/AUDITORIA-2026-09.md`](docs/AUDITORIA-2026-09.md). Las **9 críticas y las
 48 altas están cerradas**, cada una con su prueba.
+
+El apéndice se trió el 6-sep-2026, uno a uno contra el código: **43 cerrados, 51
+en pie, 5 a medias y 6 sin ver**. Los cerrados no cayeron de rebote —comparten
+síntoma con una crítica o una alta y se arreglaron ahí—; los que siguen en pie
+son los solitarios, los que no estaban en ninguna familia. Se barren por
+subsistema, no por el orden del informe.
 
 Aquí van solo los huecos que quedan abiertos **a propósito**: cada uno necesita
 algo que no se puede decidir ni resolver desde dentro del repositorio, y dejarlos
