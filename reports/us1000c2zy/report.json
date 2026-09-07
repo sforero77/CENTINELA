@@ -13,23 +13,12 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 0,
-    "exposure_manifest": "hnd-v0.2"
+    "exposure_manifest": "hnd-v0.3",
+    "modelo_deslizamiento": "",
+    "modelo_licuefaccion": ""
   },
   "preliminar": false,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 0.0
-    },
-    {
-      "radio_km": 50,
-      "pop": 0.0
-    },
-    {
-      "radio_km": 100,
-      "pop": 0.0
-    }
-  ],
+  "radios": [],
   "backtest": true,
   "totales": {
     "pop_mmi6p": 0.0,
@@ -61,15 +50,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "HN0901",
-      "nombre": "Puerto Lempira",
+      "adm2_id": "HN0903",
+      "nombre": "Ahuas",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "HN0903",
-      "nombre": "Ahuas",
+      "adm2_id": "HN0901",
+      "nombre": "Puerto Lempira",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -146,6 +135,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:24:16Z",
+  "generado_utc": "2026-09-07T16:46:42Z",
   "pipeline_version": "0.1.0"
 }
