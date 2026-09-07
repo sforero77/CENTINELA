@@ -195,21 +195,21 @@ que parsea el YAML —no busca cadenas— y falla si aparece una etiqueta móvil
 SHA sin versión. Sigue puesto lo de antes: `persist-credentials: false` en los
 nueve workflows que no empujan nada.
 
-**El visor carga maplibre y h3-js de unpkg sin `integrity`.** Ya lleva CSP —lo
-único que GitHub Pages permite— y eso acota todo menos un compromiso del propio
-unpkg. Para cerrarlo hacen falta los ficheros delante: o se calcula su `sha384`
-y se pone en la etiqueta, o se copian a `site/assets/` (~250 KB), que es lo
-coherente con D6 y elimina al tercero del camino crítico.
+**✅ maplibre y h3-js ya no vienen de un tercero · cerrado el 6-sep-2026.** Se
+copiaron a `site/assets/vendor/` con su licencia al lado —1,04 MB en el
+repositorio, ~250 KB por el cable comprimidos, lo mismo que costaban desde
+unpkg— y la CSP de las dos páginas pasó a `script-src 'self'` a secas. Se eligió
+vendorizar sobre `integrity`: el `sha384` acota el fichero cambiado, pero D6 dice
+que el visor solo pide rutas del propio repositorio, y un CDN caído deja la
+página sin mapa aunque su hash sea correcto.
 
-**El contraste con PAGER enfrenta dos versiones distintas.** Las cifras de PAGER
-salen de una fixture congelada que es la del **ShakeMap v7** (22-ago-2026); el
-reporte publicado va por **v8** desde que se re-emitió el 3-sep, y USGS
-republicó su PAGER dos minutos después del v8. Nada comparaba esa fixture con
-USGS ni anotaba de qué versión venía; ahora la procedencia está escrita en
-`pager_exposures.origen.json` y las dos tablas dicen de qué versión es cada
-columna. Refrescar la fixture y las cifras exige red: hay que bajar la PAGER
-vigente de `us6000tjl2` y rehacer las dos tablas y el «al 17 % y al 24 %» que se
-deriva de ellas. Aquí no se inventan cifras que no se han medido.
+**✅ El contraste con PAGER ya compara la misma versión · cerrado el 6-sep-2026.**
+La fixture era la PAGER del **ShakeMap v7** (22-ago) contra un reporte que va por
+**v8** desde el 3-sep. Se bajó la PAGER vigente —publicada dos minutos y medio
+después del v8— y se rehicieron las dos tablas: los umbrales de PAGER pasan a
+10.677.892 / 6.630.456 / 1.079.497, la posición de CENTINELA dentro del intervalo
+a **14 % y 24 %** (seguía en el cuarto inferior, que es lo que los documentos
+afirman), y el factor del intervalo de MMI≥7 a 6,1.
 
 **El arranque descarga y procesa el fichero de fuego entero y luego lo esconde**
 —4,4 MB de JSON, 10.963 hexágonos construidos con `h3.cellToBoundary`, un

@@ -182,14 +182,14 @@ def test_la_cifra_cae_en_el_cuarto_inferior_del_intervalo(
 
     EL SUPERLATIVO GASTABA LA CREDIBILIDAD QUE QUERIA COMPRAR. Los documentos
     decian que el acotamiento era «el unico acuerdo aritmeticamente posible».
-    Pero el intervalo de MMI≥7 va de 1,1 a 6,5 millones —un factor de 5,8— y
+    Pero el intervalo de MMI≥7 va de 1,1 a 6,6 millones —un factor de 6,1— y
     dentro cabe casi cualquier cifra: caer dentro es una condicion necesaria, no
     una validacion.
 
-    Lo que si dice algo es **donde** cae. CENTINELA queda al 17 % y al 24 %
+    Lo que si dice algo es **donde** cae. CENTINELA queda al 14 % y al 24 %
     contando desde abajo: sistematicamente por debajo del punto medio y siempre
     en la misma direccion. Cuanto por debajo depende de como se interpole entre
-    las filas de PAGER —del 11 % al 37 % segun sea lineal o logaritmica— y por
+    las filas de PAGER —del 9 % al 37 % segun sea lineal o logaritmica— y por
     eso no se publica ninguna de esas dos cifras como si fuera la respuesta.
 
     Esta prueba fija lo unico independiente del metodo. Si un ShakeMap nuevo

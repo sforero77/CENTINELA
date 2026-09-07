@@ -107,9 +107,6 @@ que quedan llevan escrito lo que cuestan.
 
 Estas no están cerradas y viven en [`PENDIENTES.md`](../../PENDIENTES.md):
 
-- **MapLibre y h3-js vienen de unpkg sin `integrity`.** Vendorizarlos son ~800 KB
-  en el repo a cambio de eliminar una dependencia de terceros en tiempo de
-  ejecución. Contradice parcialmente el espíritu de D6.
 - **Coropletas r7/r6 en PMTiles**: declaradas en D1/D2, todavía no construidas.
   El resto del visor funciona sin ellas.
 - **`cont_mmi.json` en vez de `grid.xml`: medido, y el argumento no se
