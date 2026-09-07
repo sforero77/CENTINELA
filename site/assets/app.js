@@ -540,6 +540,8 @@ const estado = {
   amenaza: "sismos",
   //: El ultimo incendios.json cargado, para la leyenda del modo fuego.
   fuegoDatos: null,
+  //: La carga del fuego, empezada una sola vez. Ver `asegurarIncendios`.
+  fuegoPedido: null,
   //: Los focos —grupos de celdas contiguas— y el indice celda -> foco.
   focos: [],
   focosPorCelda: null,
@@ -844,7 +846,6 @@ async function cargarEventos() {
       aviso.textContent = "Todavía no hay reportes publicados.";
       pintarPanorama([]);
       cargarObservados();
-      cargarIncendios();
       cargarCobertura([]).then((nombres) => {
         estado.nombresPais = nombres;
       });
@@ -866,7 +867,6 @@ async function cargarEventos() {
     dibujarEpicentros(eventos);
     pintarLeyendaSimbolos();
     cargarObservados();
-    cargarIncendios();
 
     // La cobertura primero: da los nombres de pais que necesita el filtro, y
     // asi el mapeo ISO3 -> nombre vive en un solo sitio, el que lo publica.
@@ -937,7 +937,6 @@ async function cargarEventos() {
     // Los otros tres productos no dependen del indice y se cargan igual: el
     // fuego activo y la cobertura son utiles aunque la lista de sismos falle.
     cargarObservados();
-    cargarIncendios();
     cargarCobertura([]).then((nombres) => {
       estado.nombresPais = nombres;
     });
@@ -2605,6 +2604,13 @@ function cambiarAmenaza(modo, { anunciando = true } = {}) {
   // su panel no significan nada bajo el lente del fuego. Entrar a fuego lo
   // cierra, con su vuelo de vuelta al panorama incluido.
   if (modo === "fuego" && estado.seleccionado) cerrarDetalle();
+
+  // Y AQUI ES DONDE SE PIDE EL FUEGO, NO AL ARRANCAR.
+  //
+  // La primera vez que alguien entra a este modo se descarga `incendios.json`.
+  // Las siguientes, `asegurarIncendios` devuelve la promesa ya resuelta. Ver su
+  // docstring para por que el coste no estaba comprando nada en modo sismos.
+  if (modo === "fuego") asegurarIncendios();
 
   aplicarAmenaza();
   escribirUrl();
@@ -4828,8 +4834,43 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
 // ShakeMap, asi que aqui no hay bandas con significado fisico — hay potencia
 // radiativa medida y detecciones contadas. La leyenda lo dice y el popup lo
 // repite.
+//: El fuego se carga cuando se mira, y no antes.
+//:
+//: `incendios.json` son 3,2 MB de JSON —245 KB por el cable— con 7.987 celdas
+//: que hay que convertir en hexagonos con `cellToBoundary` y agrupar con un
+//: union-find sobre `gridDisk`. Todo eso corria al arrancar, **en el modo
+//: sismos, que es el de por defecto**, para alimentar unas cifras que
+//: `aplicarAmenaza` esconde acto seguido: cada bloque de la tarjeta declara de
+//: que amenaza es y los del fuego salen con `hidden` hasta que alguien pulsa
+//: «Fuego». O sea que el coste era entero y el beneficio, cero, hasta el
+//: momento en que se cambia de lente.
+//:
+//: Se comprobo antes de moverlo, porque la nota de PENDIENTES suponia lo
+//: contrario —que diferirlo quitaria fuego de «Ahora mismo» en el modo por
+//: defecto— y eso habria sido una decision de producto y no una optimizacion.
+//: No lo es: en modo sismos esas cifras no se ven.
+//:
+//: Idempotente y por promesa: `cambiarAmenaza` puede llamarlo en cada
+//: alternancia y el fichero se pide **una vez**. Si la carga fallo, el fallo ya
+//: quedo anotado por `cargarIncendios` y no se reintenta solo, que es el mismo
+//: criterio que el resto de los cargadores.
+function asegurarIncendios() {
+  if (!estado.fuegoPedido) estado.fuegoPedido = cargarIncendios();
+  return estado.fuegoPedido;
+}
+
 async function cargarIncendios() {
   const avisoFocos = $("estado-focos");
+  // MIENTRAS BAJA, SE DICE QUE ESTA BAJANDO.
+  //
+  // Desde que el fichero se pide al entrar en modo fuego y no al arrancar, hay
+  // un momento —el primero, y solo el primero— en que el mapa esta en modo
+  // fuego y vacio. Sin este aviso es indistinguible de «hoy no arde nada», que
+  // es la afirmacion que este visor no puede hacer sin haber mirado.
+  if (avisoFocos) {
+    avisoFocos.hidden = false;
+    avisoFocos.textContent = "Cargando los focos activos…";
+  }
   let datos;
   try {
     datos = await json(INCENDIOS);
