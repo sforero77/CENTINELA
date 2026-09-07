@@ -120,9 +120,21 @@ def test_todo_comando_documentado_lo_acepta_el_parser(ruta: Path) -> None:
 
 
 def test_la_forma_posicional_de_country_es_la_que_se_documenta() -> None:
-    """`--iso3` no existe, y estaba en la cabecera del documento de P0."""
+    """`--iso3` no existe, y estaba en la cabecera del documento de P0.
+
+    OCTAVA VEZ QUE UN GUARDIA IBA A LEER PROSA.
+
+    La primera version buscaba la cadena en el fichero entero, y se puso roja en
+    cuanto `docs/AUDITORIA-2026-09.md` **cito el hallazgo** que describe el
+    fallo. Un guardia que confunde la mencion con el uso obliga a no poder
+    escribir sobre lo que vigila.
+
+    La pregunta correcta es si alguna **invocacion documentada** usa esa forma,
+    que es justo lo que `_invocaciones` sabe distinguir.
+    """
     for ruta in DOCUMENTOS:
-        texto = ruta.read_text(encoding="utf-8")
-        assert "centinela country --iso3" not in texto, (
-            f"{ruta.relative_to(RAIZ)}: `--iso3` no existe; la forma es `centinela country COL`"
-        )
+        for invocacion in _invocaciones(ruta.read_text(encoding="utf-8")):
+            assert not invocacion.startswith("country --iso3"), (
+                f"{ruta.relative_to(RAIZ)}: `--iso3` no existe; la forma es "
+                f"`centinela country COL`"
+            )
