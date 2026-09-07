@@ -16,8 +16,8 @@
 | Edificaciones en MMI≥7 | 130 mil |
 | Sedes de salud en MMI≥7 | 123 |
 | Sedes educativas en MMI≥7 | 1.303 |
-| Vías primarias y secundarias en MMI≥7 | 130 km |
-| Vías locales en MMI≥7 | 1.300 km |
+| Vías primarias y secundarias en MMI≥7 | 190 km |
+| Vías locales en MMI≥7 | 2.000 km |
 | Superficie construida en MMI≥7 | 8,3 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
@@ -38,8 +38,8 @@ De la población en intensidad MMI≥7, alrededor de **15 mil** personas tienen 
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento: **36**. USGS declara para este evento alerta **amarilla**, con 5 expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción: **330 mil**. USGS declara para este evento alerta **roja**, con 75 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **36**. USGS declara para este evento alerta **amarilla**, con 5 expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **330 mil**. USGS declara para este evento alerta **roja**, con 75 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -53,7 +53,7 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,0 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,8 %**.
 
 ## Descargas
 
@@ -64,8 +64,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,0 %**.
 
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v8**
-- Manifiesto de exposición: [`per-v0.2`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-03T03:25:44Z
+- Manifiesto de exposición: [`per-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-07T16:42:00Z
 
 ## Advertencias
 

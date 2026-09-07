@@ -13,7 +13,9 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 8,
-    "exposure_manifest": "per-v0.2"
+    "exposure_manifest": "per-v0.3",
+    "modelo_deslizamiento": "nowicki_2014_global_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
   "preliminar": false,
   "radios": [],
@@ -22,20 +24,20 @@
     "pop_mmi6p": 1051686.814353569,
     "pop_mmi7p": 247720.08142531104,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 15016.067087915095,
-    "pop_65p_mmi6p": 67290.0960985542,
+    "pop_65p_mmi7p": 14581.082847708958,
+    "pop_65p_mmi6p": 68753.6016681789,
     "bld_mmi6p": 563834.0,
     "built_m2_mmi6p": 37740751.0,
     "health_mmi6p": 458.0,
     "edu_mmi6p": 4312.0,
-    "road_km_mmi6p": 7618.21942363034,
-    "road_km_principal_mmi6p": 878.1844009223927,
+    "road_km_mmi6p": 11155.991850444158,
+    "road_km_principal_mmi6p": 1358.4621013347535,
     "bld_mmi7p": 130938.0,
     "built_m2_mmi7p": 8296037.0,
     "health_mmi7p": 123.0,
     "edu_mmi7p": 1303.0,
-    "road_km_mmi7p": 1479.0074452293804,
-    "road_km_principal_mmi7p": 131.21584287129008,
+    "road_km_mmi7p": 2162.86314393694,
+    "road_km_principal_mmi7p": 189.65866789967617,
     "pop_ls_alta": 35.836039489135146,
     "pop_lq_alta": 334307.7655900852
   },
@@ -90,22 +92,8 @@
       "pop_banda": 11424.05573193729
     },
     {
-      "adm2_id": "PE2501",
-      "nombre": "Coronel Portillo",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "PE2203",
       "nombre": "El Dorado",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PE2207",
-      "nombre": "Picota",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -118,16 +106,16 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PE2206",
-      "nombre": "Mariscal Caceres",
-      "mmi_max": 6.0,
+      "adm2_id": "PE2207",
+      "nombre": "Picota",
+      "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PE2201",
-      "nombre": "Moyobamba",
-      "mmi_max": 6.0,
+      "adm2_id": "PE2501",
+      "nombre": "Coronel Portillo",
+      "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
@@ -139,15 +127,29 @@
       "pop_banda": 0.0
     },
     {
+      "adm2_id": "PE2206",
+      "nombre": "Mariscal Caceres",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
       "adm2_id": "PE1601",
       "nombre": "Maynas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE2204",
+      "nombre": "Huallaga",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 3.0,
+    "pop_discrepancia_pct": 2.8,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -217,6 +219,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-03T03:25:44Z",
+  "generado_utc": "2026-09-07T16:42:00Z",
   "pipeline_version": "0.1.0"
 }
