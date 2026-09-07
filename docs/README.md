@@ -25,6 +25,7 @@ qué garantiza y cómo se rompe.
 | [`PUESTA_EN_MARCHA.md`](PUESTA_EN_MARCHA.md) | Levantar el proyecto desde cero |
 | [`PUBLICAR_ACTIVO.md`](PUBLICAR_ACTIVO.md) | Cómo se publica el activo y por qué no va en git |
 | [`AUDITORIA.md`](AUDITORIA.md) | La auditoría del 25-ago-2026 y su cierre |
+| [`AUDITORIA-2026-09.md`](AUDITORIA-2026-09.md) | La del 5-sep-2026: qué se cerró y los 105 hallazgos que quedan |
 | [`CLEAN_CODE.md`](CLEAN_CODE.md) | Las reglas de código, con el caso real que motivó cada una |
 | [`PARA_INSTITUCIONES.md`](PARA_INSTITUCIONES.md) | Qué ofrece el sistema a una entidad de gestión del riesgo |
 
