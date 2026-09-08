@@ -22,6 +22,18 @@
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
+### Población por distancia al epicentro
+
+Ninguna banda de intensidad alcanza población, así que la única cifra que dimensiona este evento es la distancia:
+
+| Radio desde el epicentro | Población |
+|---|---:|
+| 25 km | 0 |
+| 50 km | 0 |
+| 100 km | 72 mil |
+
+Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
+
 ## Deslizamiento y licuefacción
 
 USGS no ha publicado el producto *Ground Failure* para este evento. La sección se omite; el reporte se re-emite automáticamente si aparece.
@@ -48,7 +60,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 - ShakeMap consumido: **v11**
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`dom-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/DOM.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:35:20Z
+- Pipeline: `0.1.0` · Generado: 2026-09-08T00:58:09Z
 
 ## Advertencias
 
