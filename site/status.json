@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-08T00:58:20Z",
+  "generado_utc": "2026-09-08T00:58:23Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -206,7 +206,7 @@
       "minutos": 4547552.8,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-09-07T16:46:44Z"
+      "actualizado_utc": "2026-09-08T00:58:21Z"
     },
     {
       "usgs_id": "us2000bmhe",
