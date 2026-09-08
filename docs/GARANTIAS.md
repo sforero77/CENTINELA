@@ -35,7 +35,7 @@ Esa ventana garantiza que no se pierde un sismo, **no** que se sigan viendo sus
 revisiones: pasadas 24 h el evento se cae del feed. De eso se ocupa
 `repaso.yml`, que pregunta por los eventos de los últimos 90 días por su
 identificador. Hizo falta porque la mediana hasta la última revisión de un
-ShakeMap son 63 días, y el de Venezuela llegó a v15 dos meses después.
+ShakeMap son 63 días, y el de Venezuela llegó a v16 dos meses después.
 
 Solo se perdería con una parada de más de un día, y de eso avisa el monitor
 externo en treinta minutos.

@@ -116,48 +116,65 @@ con prisa, y es lo único que este proyecto no automatiza.
 ## 5. Contraste con PAGER, en las mismas bandas
 
 Es la primera objeción que recibe este proyecto, y conviene resolverla antes de
-que la haga nadie: **para el sismo del Chocó, PAGER (USGS) publica 6.514.486
-personas en su fila «7» y CENTINELA publica 2.424.287 en MMI≥7.** Un factor de
-2,7. Leídas de frente, parece que CENTINELA subcuenta.
+que la haga nadie: **para el sismo del Chocó, PAGER (USGS) publica 7.089.614
+personas en su fila «7» y CENTINELA publica 3.069.003 en MMI≥7.** Un factor de
+2,3. Leídas de frente, parece que CENTINELA subcuenta.
 
-No subcuenta. **Las dos no tabulan igual.** PAGER agrupa por MMI *redondeado*:
-su fila «7» es todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas
-*literales*: MMI≥7 es MMI≥7. Puestas en el mismo eje, cada cifra de CENTINELA
-cae dentro del intervalo que las filas de PAGER acotan por arriba y por abajo,
-que es la única comparación que las dos convenciones admiten:
+**Las dos no tabulan igual.** PAGER agrupa por MMI *redondeado*: su fila «7» es
+todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas *literales*: MMI≥7 es
+MMI≥7. Puestas en el mismo eje, cada cifra de CENTINELA debería caer dentro del
+intervalo que las filas de PAGER acotan por arriba y por abajo, que es la única
+comparación que las dos convenciones admiten. **Una lo hace y la otra dejó de
+hacerlo con el ShakeMap v9**, y eso se publica aquí en vez de esperar a que lo
+encuentre alguien:
 
-> **Las dos columnas son de la misma versión desde el 6-sep-2026.** Hasta ese
-> día la fixture `pager_exposures.json` era la PAGER del **ShakeMap v7**
-> —publicada el 22-ago a las 00:16:36Z, dos minutos después del v7— mientras el
-> reporte declaraba `shakemap_version: 8` desde que se re-emitió el 3-sep: la
-> tabla enfrentaba dos versiones distintas y nada lo comprobaba. Se identificó
-> reconstruyendo las ocho entradas de `losspager` del detail congelado, y se
-> refrescó contra la PAGER vigente (updateTime 1788275013678, dos minutos y
-> medio después del ShakeMap v8). La procedencia queda escrita en
-> `pager_exposures.origen.json`, que ahora incluye la URL exacta del producto.
+> **Las dos columnas son de la misma versión, y ha habido que arreglarlo dos
+> veces.** El 6-sep-2026 la fixture era la PAGER del **ShakeMap v7** contra un
+> reporte en **v8**. El 8-sep volvió a pasar: el repaso dejó de excluir los
+> backtests, re-emitió este reporte a **v9** y la fixture se quedó en la del v8.
+> Las dos veces se refrescó contra la PAGER publicada dos minutos y medio
+> después del ShakeMap correspondiente (ahora updateTime 1788821915886). Que
+> haya pasado dos veces por el mismo motivo dice que la fixture tiene que viajar
+> en el mismo commit que re-emite el reporte. La procedencia, con la URL exacta
+> del producto, está en `pager_exposures.origen.json`.
 
-| Umbral literal | PAGER (v8) | CENTINELA (v8) |
+| Umbral literal | PAGER (v9) | CENTINELA (v9) |
 |---|---:|---:|
-| MMI ≥ 5,5 | 10.677.892 | — |
-| MMI ≥ 6,0 | — | **7.194.540** |
-| MMI ≥ 6,5 | 6.630.456 | — |
-| MMI ≥ 7,0 | — | **2.424.287** |
-| MMI ≥ 7,5 | 1.079.497 | — |
+| MMI ≥ 5,5 | 9.329.268 | — |
+| MMI ≥ 6,0 | — | **6.840.603** |
+| MMI ≥ 6,5 | 7.089.614 | — |
+| MMI ≥ 7,0 | — | **3.069.003** |
+| MMI ≥ 7,5 | 1.647.927 | — |
 | MMI ≥ 8,0 | — | **0** |
 
-Léase por parejas: 7.194.540 (≥6,0) tiene que quedar **entre** 6.514.486 (≥6,5)
-y 10.487.959 (≥5,5), y queda. 2.424.287 (≥7,0) tiene que quedar entre 1.126.902
-(≥7,5) y 6.514.486 (≥6,5), y queda. Si alguna se saliera del intervalo, una de
-las dos estaría mal, y esa es exactamente la comprobación que corre en CI.
+Léase por parejas. 3.069.003 (≥7,0) tiene que quedar **entre** 1.647.927 (≥7,5)
+y 7.089.614 (≥6,5), y queda, al 26 % contando desde abajo: por debajo del punto
+medio, que es donde siempre ha caído. 6.840.603 (≥6,0) tiene que quedar entre 7.089.614 (≥6,5) y
+9.329.268 (≥5,5), y **no queda**: se sale por debajo, 249.011 personas, un
+3,6 %.
+
+**Qué significa y qué no.** Ese 3,6 % es menor que la banda de discrepancia del
+3,7 % que el propio reporte publica, así que las dos cifras se solapan por los
+bordes antes que contradecirse. Y el signo es el esperado: el corte por
+contornos asigna cada celda por la isolínea que contiene su **centro**, o sea
+que subcuenta por construcción, con un delta medido contra `grid.xml` de hasta
+el 34 % (`PENDIENTES.md`, §2.1.sexies). Es el primer sitio donde ese sesgo se ve
+desde fuera del proyecto. No se presenta como casualidad ni se esconde: queda
+como trabajo pendiente, y `tests/unit/test_contraste_con_pager.py` fija el
+estado exacto —MMI≥7 acotado, MMI≥6 fuera por menos que la discrepancia— para
+que un cambio en cualquiera de los dos lados salte.
+
+Hasta el v8 las dos bandas acotaban y este documento lo decía sin condición.
+Dejó de ser verdad cuando USGS publicó el v9 y el sistema se actualizó solo, que
+es lo que tiene que hacer.
 
 **Y conviene no vender esto como más de lo que es.** El intervalo de MMI≥7 va de
-1,1 a 6,6 millones: un factor de 6,1, dentro del cual cabría casi cualquier
+1,6 a 7,1 millones: un factor de 4,3, dentro del cual cabría casi cualquier
 cifra. Que una cifra caiga dentro es una condición necesaria, no una validación.
 
-**En los dos casos CENTINELA queda en el cuarto inferior del intervalo** (al
-14 % y al 24 % contando desde abajo), es decir sistemáticamente por debajo del
-punto medio y siempre en la misma dirección. Eso es lo que se puede afirmar sin
-elegir un método: cuánto por debajo depende de cómo se interpole entre las filas
+**CENTINELA queda por debajo del punto medio del intervalo** donde acota (al
+26 % contando desde abajo), y siempre en la misma dirección. Eso es lo que se puede afirmar sin elegir un método: cuánto por debajo
+depende de cómo se interpole entre las filas
 de PAGER, y la respuesta va del 9 % al 37 % según se haga lineal o logarítmica.
 Publicar una sola de esas cifras sería elegir la que conviene.
 
