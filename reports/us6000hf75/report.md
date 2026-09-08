@@ -22,6 +22,18 @@
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
+### Población por distancia al epicentro
+
+Ninguna banda de intensidad alcanza población, así que la única cifra que dimensiona este evento es la distancia:
+
+| Radio desde el epicentro | Población |
+|---|---:|
+| 25 km | 0 |
+| 50 km | 0 |
+| 100 km | 1,5 millones |
+
+Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
+
 ## Municipios más expuestos, por población en MMI≥6
 
 Ningún municipio del país alcanza población dentro de MMI≥6. No es que falte el dato: la intensidad que el ShakeMap dibuja para este evento no llega a esa banda sobre territorio habitado.
@@ -57,7 +69,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 - ShakeMap consumido: **v6**
 - Ground Failure consumido: **v6**
 - Manifiesto de exposición: [`nic-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/NIC.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:35:55Z
+- Pipeline: `0.1.0` · Generado: 2026-09-08T01:02:50Z
 
 ## Advertencias
 
