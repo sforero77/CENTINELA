@@ -32,12 +32,15 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import duckdb
 import pytest
 
 from pipelines.p2_impact.pipeline import ExposureCountryMismatchError, compute_impact
+
+if TYPE_CHECKING:
+    from pipelines.common.state import EventState
 
 
 class _ProductosFalsos:
@@ -426,6 +429,11 @@ def test_el_corte_esta_en_la_banda_que_se_rellena(
 # corre en cada push. Estas dos pruebas cuestan milisegundos y no necesitan red.
 
 
+def _cualquier_estado() -> EventState:
+    """Un `EventState` que no se llega a leer. Ver las dos pruebas de abajo."""
+    return cast("EventState", object())
+
+
 def test_sin_poblacion_en_ninguna_banda_el_guardia_deja_pasar_los_radios(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -435,7 +443,9 @@ def test_sin_poblacion_en_ninguna_banda_el_guardia_deja_pasar_los_radios(
 
     monkeypatch.setattr(pl, "poblacion_por_radio", lambda con, state: {25: 0.0, 100: 610_000.0})
 
-    radios = pl._radios_si_ninguna_banda_alcanza(object(), object(), Totales())
+    # `state` solo viaja hasta `poblacion_por_radio`, que aqui esta
+    # sustituido: no se lee. El `cast` es para mypy, que corre sobre tests/.
+    radios = pl._radios_si_ninguna_banda_alcanza(object(), _cualquier_estado(), Totales())
 
     assert [r.radio_km for r in radios] == [25, 100]
     assert [r.pop for r in radios] == [0.0, 610_000.0]
@@ -454,4 +464,4 @@ def test_con_poblacion_en_una_banda_el_guardia_corta_sin_consultar(
     monkeypatch.setattr(pl, "poblacion_por_radio", _no_deberia_llamarse)
 
     for totales in (Totales(pop_mmi6p=7_194_540.0), Totales(pop_mmi7p=2_424_287.0)):
-        assert pl._radios_si_ninguna_banda_alcanza(object(), object(), totales) == ()
+        assert pl._radios_si_ninguna_banda_alcanza(object(), _cualquier_estado(), totales) == ()
