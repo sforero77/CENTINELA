@@ -18,7 +18,20 @@
     "modelo_licuefaccion": ""
   },
   "preliminar": false,
-  "radios": [],
+  "radios": [
+    {
+      "radio_km": 25,
+      "pop": 417447.6695457217
+    },
+    {
+      "radio_km": 50,
+      "pop": 2988257.505123783
+    },
+    {
+      "radio_km": 100,
+      "pop": 6935082.224710894
+    }
+  ],
   "backtest": true,
   "totales": {
     "pop_mmi6p": 0.0,
@@ -121,6 +134,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-07T16:52:12Z",
+  "generado_utc": "2026-09-08T01:03:01Z",
   "pipeline_version": "0.1.0"
 }
