@@ -153,16 +153,21 @@ medio, que es donde siempre ha caído. 6.840.603 (≥6,0) tiene que quedar entre
 9.329.268 (≥5,5), y **no queda**: se sale por debajo, 249.011 personas, un
 3,6 %.
 
-**Qué significa y qué no.** Ese 3,6 % es menor que la banda de discrepancia del
-3,7 % que el propio reporte publica, así que las dos cifras se solapan por los
-bordes antes que contradecirse. Y el signo es el esperado: el corte por
-contornos asigna cada celda por la isolínea que contiene su **centro**, o sea
-que subcuenta por construcción, con un delta medido contra `grid.xml` de hasta
-el 34 % (`PENDIENTES.md`, §2.1.sexies). Es el primer sitio donde ese sesgo se ve
-desde fuera del proyecto. No se presenta como casualidad ni se esconde: queda
-como trabajo pendiente, y `tests/unit/test_contraste_con_pager.py` fija el
-estado exacto —MMI≥7 acotado, MMI≥6 fuera por menos que la discrepancia— para
-que un cambio en cualquiera de los dos lados salte.
+**Qué significa y qué no.** Se sabe el hecho y no la causa, y decir más sería
+inventarla. Este documento llegó a dar dos explicaciones y las dos se cayeron al
+comprobarlas. Que el 3,6 % «cabe» en la banda de discrepancia del 3,7 % junta
+dos magnitudes distintas: esa banda mide GHS-POP contra WorldPop sobre las
+mismas celdas, no la distancia a PAGER. Y el delta «de hasta el 34 % contra
+`grid.xml`» no respalda el sesgo del centroide, porque
+`scripts/delta_contornos_vs_grid.py` muestrea las dos ramas en el mismo centro
+de celda y la resta lo cancela.
+
+Lo medido es esto: 249.011 personas, un 3,6 %, por debajo del piso. Y lo que el
+sistema afirma de su propio muestreo lo imprime cada reporte: «el sesgo que
+introduce no está medido: puede quedarse corto o pasarse». Es el primer sitio
+donde el método de contornos se ve desde fuera del proyecto.
+`tests/unit/test_contraste_con_pager.py` fija el estado exacto —MMI≥7 acotado,
+MMI≥6 fuera— para que un cambio en cualquiera de los dos lados salte.
 
 Hasta el v8 las dos bandas acotaban y este documento lo decía sin condición.
 Dejó de ser verdad cuando USGS publicó el v9 y el sistema se actualizó solo, que

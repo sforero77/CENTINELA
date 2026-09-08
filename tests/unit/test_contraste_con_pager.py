@@ -67,10 +67,22 @@ def pager() -> dict[float, int]:
 #: (banda literal de CENTINELA, cota inferior de PAGER, cota superior de PAGER).
 #: La cota inferior es el umbral de PAGER inmediatamente **por encima** de la
 #: banda; la superior, el inmediatamente por debajo.
-#: La banda que el propio reporte publica en `incertidumbre.pop_discrepancia_pct`.
-#: `pop_mmi6p` se sale del acotamiento de PAGER por menos que esto, que es lo que
-#: separa "las dos cifras se solapan por los bordes" de "una de las dos esta mal".
-DISCREPANCIA_DECLARADA = 0.037
+#: Cuanto puede alejarse `pop_mmi6p` del piso de PAGER antes de que deje de ser
+#: "el desvio conocido" y pase a ser "algo se rompio".
+#:
+#: **NO ES LA BANDA DE DISCREPANCIA DEL REPORTE, Y LLEGO A ESTARLO.** Esta
+#: constante valia 0.037 "porque es lo que el reporte declara", y era un error de
+#: razonamiento: `pop_discrepancia_pct` mide GHS-POP contra WorldPop **sobre las
+#: mismas celdas** (`SUM(pop_total)` vs `SUM(pop_alt_worldpop)` en
+#: `p2_impact/pipeline.py`), no la distancia a una cifra de PAGER calculada con
+#: otro insumo y otra convencion de bandas. Que 3,6 fuera menor que 3,7 era una
+#: coincidencia numerica sin contenido, y estuvo publicada en el README.
+#:
+#: Ahora es lo que dice ser: un margen elegido a mano, con holgura sobre el
+#: 3,6 % medido el 8-sep-2026 para que un ShakeMap nuevo no lo haga saltar por
+#: decimas, y lo bastante estrecho para que un cambio de verdad no pase. No
+#: pretende explicar nada.
+MARGEN_TOLERADO_BAJO_EL_PISO = 0.06
 
 ACOTAMIENTOS: tuple[tuple[str, float, float], ...] = (
     ("pop_mmi6p", 6.5, 5.5),
@@ -104,10 +116,13 @@ def test_la_cifra_de_centinela_cae_dentro_del_intervalo_de_pager(
     discrepancia que el reporte declara, esta prueba tiene que enterarse. Bajar
     el listado a un `<=` generoso seria justo lo que este proyecto no hace.
 
-    El signo es el esperado y esta documentado: el corte por contornos asigna
-    cada celda por la isolinea que contiene su **centro**, o sea que subcuenta
-    por construccion (`PENDIENTES.md`, §2.1.sexies mide hasta +34 % contra
-    `grid.xml`). Es el primer sitio donde ese sesgo se ve desde fuera.
+    **La causa no se conoce, y las dos que se llegaron a escribir eran falsas.**
+    Ni el 3,6 % "cabe" en la banda de discrepancia del reporte —que mide GHS-POP
+    contra WorldPop sobre las mismas celdas, no la distancia a PAGER— ni el delta
+    contra `grid.xml` respalda el sesgo del centroide: `delta_contornos_vs_grid.py`
+    muestrea las dos ramas en el mismo centro de celda y la resta lo cancela. Lo
+    que el sistema sí afirma de su muestreo lo imprime cada reporte: «el sesgo que
+    introduce no está medido: puede quedarse corto o pasarse».
     """
     nuestra = centinela[campo]
     piso, techo = pager[umbral_inferior], pager[umbral_superior]
@@ -122,11 +137,11 @@ def test_la_cifra_de_centinela_cae_dentro_del_intervalo_de_pager(
             "noticia: quita el `if` de esta prueba y actualiza README.md y "
             "docs/PARA_INSTITUCIONES.md, que hoy publican que no acota."
         )
-        assert falta <= DISCREPANCIA_DECLARADA, (
+        assert falta <= MARGEN_TOLERADO_BAJO_EL_PISO, (
             f"{campo} = {nuestra:,.0f} se queda {falta:.1%} por debajo del piso "
-            f"({piso:,} en ≥{umbral_inferior}), y eso ya no cabe en la banda de "
-            f"discrepancia del {DISCREPANCIA_DECLARADA:.1%} que el reporte declara. "
-            "Deja de ser el sesgo conocido del corte por contornos."
+            f"({piso:,} en ≥{umbral_inferior}), y el margen tolerado es "
+            f"{MARGEN_TOLERADO_BAJO_EL_PISO:.1%}. Era 3,6 % el 8-sep-2026: se movio "
+            "de mas. Mira si cambio el ShakeMap o si se rompio el corte por bandas."
         )
         assert nuestra <= techo, f"{campo} = {nuestra:,.0f} supera el techo {techo:,}"
         return

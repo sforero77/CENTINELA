@@ -183,14 +183,25 @@ contando desde abajo, o sea bien por debajo del punto medio, que es donde
 siempre ha caído: ahí no ha cambiado nada. La de MMI≥6 se queda **249.011 personas por debajo** del piso que
 impone la fila ≥6,5 de PAGER: un **3,6 %**.
 
-Ese 3,6 % es **menor que la banda de discrepancia del 3,7 % que el propio
-reporte publica**, así que las dos cifras no se contradicen tanto como se solapan
-por los bordes. Y va en la dirección que este sistema ya tiene documentada: el
-corte por contornos asigna cada celda por la isolínea que contiene su centro y
-por eso **subcuenta**, con un delta medido contra `grid.xml` de hasta el 34 %
-(`PENDIENTES.md`, §2.1.sexies). No es un empate cómodo: es el primer sitio donde
-el método de contornos se ve desde fuera, y está anotado como trabajo pendiente
-en vez de explicado como casualidad.
+**Y no se sabe por qué, que es lo único honesto que se puede decir hoy.** Este
+documento llegó a explicarlo con dos causas y las dos estaban mal. La primera
+—que el 3,6 % cabe dentro de «la banda de discrepancia del 3,7 %» que el reporte
+publica— junta dos magnitudes distintas: esa banda mide el desacuerdo entre
+GHS-POP y WorldPop sobre las mismas celdas (`SUM(pop_total)` contra
+`SUM(pop_alt_worldpop)`, `p2_impact/pipeline.py`), no la distancia a una cifra de
+PAGER. Que 3,6 sea menor que 3,7 es una coincidencia numérica sin contenido. La
+segunda —que el corte por contornos subcuenta, «medido contra `grid.xml` hasta el
+34 %»— tampoco sirve de respaldo: `scripts/delta_contornos_vs_grid.py` muestrea
+las dos ramas en el mismo centro de celda, así que la resta cancela justo el
+sesgo que se le quería atribuir; lo que mide es el suelo de banda, que es otro
+mecanismo.
+
+Lo que sí está medido es el hecho: 249.011 personas, un 3,6 %, por debajo del
+piso. Y lo que el sistema sí afirma de su propio muestreo lo imprime cada
+reporte: **«el sesgo que introduce no está medido: puede quedarse corto o
+pasarse»**. Es el primer sitio donde el método de contornos se ve desde fuera del
+proyecto, y queda anotado como trabajo pendiente en vez de explicado con una
+causa que no aguanta.
 
 Hasta el v8 el acotamiento se cumplía en las dos bandas, y este documento lo
 decía sin condición. Dejó de ser verdad cuando USGS publicó el v9 y el sistema
