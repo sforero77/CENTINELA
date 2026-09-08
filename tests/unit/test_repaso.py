@@ -112,15 +112,47 @@ def test_lo_viejo_se_queda_fuera(tmp_path: Path) -> None:
     assert ids == ["us1"], "un evento de hace 200 dias no se repasa a diario"
 
 
-def test_lo_descartado_y_los_backtest_no_se_repasan(tmp_path: Path) -> None:
-    """`descartado` es terminal. Un backtest es una reconstruccion congelada:
-    re-emitirlo cada vez que USGS retoca su Atlas convertiria el catalogo
-    historico en ruido."""
+def test_solo_lo_descartado_queda_fuera(tmp_path: Path) -> None:
+    """`descartado` es terminal y es el unico que no se repasa."""
     _evento(tmp_path, "us1", dias=1)
     _evento(tmp_path, "us2", dias=1, estado=EventStatus.DESCARTADO)
-    _evento(tmp_path, "us3", dias=1, backtest=True)
 
     assert [e.usgs_id for e in eventos_a_repasar(tmp_path)] == ["us1"]
+
+
+def test_un_backtest_si_se_repasa(tmp_path: Path) -> None:
+    """RF-04 no dice «salvo los historicos», y excluirlos costo caro.
+
+    Se excluian porque re-emitirlos «convertiria el catalogo en ruido». Medido
+    el 8-sep-2026 contra USGS sobre los 27 reportes publicados: solo dos
+    estaban atrasados, y los veinticuatro historicos —de 441 a 5.360 dias— no
+    se habian movido ni uno. El ruido temido eran dos eventos.
+
+    Lo que si costaba: `us6000tjl2`, el reporte que el README enseña de
+    ejemplo, se quedo en ShakeMap v8 con USGS publicando el v9, y nada iba a
+    moverlo nunca.
+    """
+    _evento(tmp_path, "us1", dias=1, backtest=True)
+
+    assert [e.usgs_id for e in eventos_a_repasar(tmp_path)] == ["us1"]
+
+
+def test_repasar_un_backtest_no_le_quita_la_marca(tmp_path: Path) -> None:
+    """La marca vive en el `event_state`, no en el despacho.
+
+    `--backtest` solo se consulta cuando **no hay** estado previo
+    (`p2_impact/run.py`), y al repasar siempre lo hay: el evento se re-emite
+    con su `backtest=True` intacto y sigue sin contar para la latencia de
+    `/status`. Sin esto, re-emitir un historico de hace 29 dias lo metria en la
+    serie de latencia como si el sistema hubiera tardado 29 dias en responder.
+    """
+    from pipelines.common.state import EventState
+
+    _evento(tmp_path, "us1", dias=1, backtest=True)
+
+    estado = EventState.load("us1", tmp_path)
+    assert estado is not None
+    assert estado.backtest, "el estado en disco tiene que conservar la marca"
 
 
 def test_el_degradado_si_se_repasa(tmp_path: Path) -> None:
@@ -248,10 +280,12 @@ def test_si_falla_alguno_pero_no_todos_la_corrida_sigue_valiendo(tmp_path: Path)
 
 
 def test_sin_eventos_que_repasar_no_es_estar_ciego(tmp_path: Path) -> None:
-    """Hoy es el caso real: los 25 eventos son backtests y quedan fuera.
+    """Cero revisados y cero fallidos es "no había nada que mirar", no "no se
+    pudo mirar". Confundirlos pondría el workflow en rojo todos los días.
 
-    Cero revisados y cero fallidos es "no había nada que mirar", no "no se pudo
-    mirar". Confundirlos pondría el workflow en rojo todos los días.
+    Dejo de ser el caso corriente cuando los backtests entraron al repaso —antes
+    los 25 quedaban fuera y el directorio salia vacio casi siempre—, pero el
+    caso sigue existiendo: un directorio sin eventos, o con todos descartados.
     """
     r = repasar(_FetcherFalso({}), events_dir=tmp_path)
 
