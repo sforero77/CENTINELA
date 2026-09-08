@@ -384,7 +384,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**2.407 pruebas** sin red, más **157 de navegador** que abren el visor en un
+**2.408 pruebas** sin red, más **157 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 5-sep-2026.
 

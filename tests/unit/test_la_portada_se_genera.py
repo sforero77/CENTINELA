@@ -130,3 +130,34 @@ def test_la_salida_del_cli_aguanta_una_consola_que_no_es_utf8() -> None:
 
     consola.flush()
     assert codigo == 0, "la portada del repositorio tendria que estar al dia"
+
+
+def test_sincronizar_la_portada_no_puede_tumbar_una_publicacion() -> None:
+    """El derivado no manda sobre el producto.
+
+    `sincronizar-portada` lee el `report.json` del Choco, que no tiene nada que
+    ver con el evento que se esta publicando. `impact.yml` corre con `bash -e`,
+    asi que sin guarda un sismo en Chile se quedaria **sin reporte** porque un
+    fichero de otro evento no se puede leer. Comprobado: con el `report.json`
+    fuera de sitio, el comando lanza `FileNotFoundError`.
+
+    La alarma no se pierde: `test_cifras_del_readme.py` sigue comprobando que
+    la portada este al dia, e `impact.yml` despacha `ci.yml` al terminar. Lo
+    que se pierde es la sincronizacion automatica de esa vez.
+    """
+    import yaml
+
+    flujo = yaml.safe_load(
+        (RAIZ / ".github" / "workflows" / "impact.yml").read_text(encoding="utf-8")
+    )
+    pasos = flujo["jobs"]["impacto"]["steps"]
+    publicar = next(p for p in pasos if p.get("id") == "publicar")
+    lineas = publicar["run"].splitlines()
+
+    i = next(n for n, s in enumerate(lineas) if "sincronizar-portada" in s)
+    invocacion = " ".join(linea.strip().rstrip("\\") for linea in lineas[i : i + 2])
+
+    assert "||" in invocacion, (
+        "`sincronizar-portada` volvio a quedar sin guarda en impact.yml: un fallo "
+        "suyo aborta el paso entero y el evento se queda sin publicar."
+    )
