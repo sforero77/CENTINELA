@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-08T15:10:27Z",
+  "generado_utc": "2026-09-08T15:22:41Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -43,8 +43,8 @@
       "publicado_utc": "2026-09-03T03:25:32Z",
       "minutos": 34011.1,
       "backtest": true,
-      "shakemap": 8,
-      "actualizado_utc": "2026-09-07T16:52:31Z"
+      "shakemap": 9,
+      "actualizado_utc": "2026-09-08T15:22:41Z"
     },
     {
       "usgs_id": "us6000t7zp",
@@ -268,8 +268,8 @@
     "p50_min": 5.0,
     "p90_min": 5.3,
     "peor_min": 24.9,
-    "revisiones": 1897,
-    "latidos": 201
+    "revisiones": 1896,
+    "latidos": 200
   },
   "latidos": [
     {

@@ -10,52 +10,52 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 7,2 millones |
-| Población en MMI≥7 | 2,4 millones |
+| Población en MMI≥6 | 6,8 millones |
+| Población en MMI≥7 | 3,1 millones |
 | Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥7 | 450 mil |
-| Sedes de salud en MMI≥7 | 514 |
-| Sedes educativas en MMI≥7 | 1.004 |
-| Vías primarias y secundarias en MMI≥7 | 1.500 km |
-| Vías locales en MMI≥7 | 11 mil km |
-| Superficie construida en MMI≥7 | 70,3 km² |
+| Edificaciones en MMI≥7 | 520 mil |
+| Sedes de salud en MMI≥7 | 971 |
+| Sedes educativas en MMI≥7 | 1.068 |
+| Vías primarias y secundarias en MMI≥7 | 1.900 km |
+| Vías locales en MMI≥7 | 14 mil km |
+| Superficie construida en MMI≥7 | 85,4 km² |
 
-El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 450 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 520 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **300 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **370 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Pereira | `66001` | 7,5 | 500 mil |
-| 2 | Buenaventura | `76109` | 7,0 | 400 mil |
-| 3 | Armenia | `63001` | 7,0 | 340 mil |
-| 4 | Tuluá | `76834` | 7,0 | 260 mil |
+| 1 | Santiago de Cali | `76001` | 7,0 | 770 mil |
+| 2 | Pereira | `66001` | 7,5 | 500 mil |
+| 3 | Buenaventura | `76109` | 7,0 | 410 mil |
+| 4 | Armenia | `63001` | 7,5 | 340 mil |
 | 5 | Dosquebradas | `66170` | 7,5 | 180 mil |
 | 6 | Cartago | `76147` | 7,5 | 130 mil |
 | 7 | Quibdó | `27001` | 7,0 | 110 mil |
-| 8 | Santa Rosa de Cabal | `66682` | 7,0 | 68 mil |
-| 9 | La Tebaida | `63401` | 7,0 | 54 mil |
+| 8 | Santa Rosa de Cabal | `66682` | 7,0 | 69 mil |
+| 9 | La Tebaida | `63401` | 7,5 | 54 mil |
 | 10 | Zarzal | `76895` | 7,5 | 40 mil |
 | 11 | Alcalá | `76020` | 7,0 | 37 mil |
 | 12 | La Unión | `76400` | 7,5 | 35 mil |
-| 13 | Montenegro | `63470` | 7,0 | 32 mil |
-| 14 | Quimbaya | `63594` | 7,0 | 32 mil |
+| 13 | Montenegro | `63470` | 7,5 | 32 mil |
+| 14 | Quimbaya | `63594` | 7,5 | 32 mil |
 | 15 | Chinchiná | `17174` | 7,0 | 30 mil |
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**. USGS declara para este evento alerta **naranja**, con 1.700 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **1,6 millones**. USGS declara para este evento alerta **roja**, con 460 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**. USGS declara para este evento alerta **naranja**, con 5.800 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **1,8 millones**. USGS declara para este evento alerta **roja**, con 520 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v8), dominio público.
+Fuente: producto *Ground Failure* de USGS (v9), dominio público.
 
 ## Referencia cruzada
 
@@ -65,12 +65,19 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,3 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,7 %**.
 
 ## Cambios frente a la versión anterior
 
-- Población de 65 años o más en MMI≥7: 290 mil → 300 mil
-- Sedes de salud en MMI≥7: 520 → 510
+- ShakeMap: v8 → v9
+- Ground Failure: v8 → v9
+- Población en MMI≥6: 7,2 millones → 6,8 millones
+- Población en MMI≥7: 2,4 millones → 3,1 millones
+- Población de 65 años o más en MMI≥7: 300 mil → 370 mil
+- Edificaciones en MMI≥7: 450 mil → 520 mil
+- Sedes de salud en MMI≥7: 510 → 970
+- Sedes educativas en MMI≥7: 1.000 → 1.100
+- Población en cobertura areal alta por licuefacción: 1,6 millones → 1,8 millones
 
 ## Descargas
 
@@ -79,10 +86,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,3 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v8**
-- Ground Failure consumido: **v8**
+- ShakeMap consumido: **v9**
+- Ground Failure consumido: **v9**
 - Manifiesto de exposición: [`col-v0.6`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/COL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:52:29Z
+- Pipeline: `0.1.0` · Generado: 2026-09-08T15:22:38Z
 
 ## Advertencias
 

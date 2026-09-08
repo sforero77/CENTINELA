@@ -11,8 +11,8 @@
     "lat": 4.8836
   },
   "inputs": {
-    "shakemap_version": 8,
-    "groundfailure_version": 8,
+    "shakemap_version": 9,
+    "groundfailure_version": 9,
     "exposure_manifest": "col-v0.6",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif"
@@ -21,61 +21,61 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 7194539.766747381,
-    "pop_mmi7p": 2424287.2030194234,
+    "pop_mmi6p": 6840603.205263513,
+    "pop_mmi7p": 3069002.8690395486,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 297535.8795328779,
-    "pop_65p_mmi6p": 846808.1230539175,
-    "bld_mmi6p": 1163049.0,
-    "built_m2_mmi6p": 191917389.0,
-    "health_mmi6p": 1967.0,
-    "edu_mmi6p": 2483.0,
-    "road_km_mmi6p": 41722.911847220515,
-    "road_km_principal_mmi6p": 4262.361367157562,
-    "bld_mmi7p": 448789.0,
-    "built_m2_mmi7p": 70306557.0,
-    "health_mmi7p": 514.0,
-    "edu_mmi7p": 1004.0,
-    "road_km_mmi7p": 12674.008630809933,
-    "road_km_principal_mmi7p": 1507.626392548995,
+    "pop_65p_mmi7p": 373245.79219203,
+    "pop_65p_mmi6p": 807028.2845927299,
+    "bld_mmi6p": 1193119.0,
+    "built_m2_mmi6p": 182268076.0,
+    "health_mmi6p": 1913.0,
+    "edu_mmi6p": 2385.0,
+    "road_km_mmi6p": 40642.957008958554,
+    "road_km_principal_mmi6p": 4217.85122829437,
+    "bld_mmi7p": 519018.0,
+    "built_m2_mmi7p": 85408288.0,
+    "health_mmi7p": 971.0,
+    "edu_mmi7p": 1068.0,
+    "road_km_mmi7p": 15748.986987636239,
+    "road_km_principal_mmi7p": 1897.2192546584308,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 1602162.1454312252
+    "pop_lq_alta": 1816973.1075647753
   },
   "top_municipios": [
+    {
+      "adm2_id": "76001",
+      "nombre": "Santiago de Cali",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 772110.1329042781,
+      "pop_banda": 772110.1329042781
+    },
     {
       "adm2_id": "66001",
       "nombre": "Pereira",
       "mmi_max": 7.5,
-      "pop_mmi7p": 498353.04256354645,
-      "pop_banda": 498353.04256354645
+      "pop_mmi7p": 500314.1681933543,
+      "pop_banda": 500314.1681933543
     },
     {
       "adm2_id": "76109",
       "nombre": "Buenaventura",
       "mmi_max": 7.0,
-      "pop_mmi7p": 401098.31587321125,
-      "pop_banda": 401098.31587321125
+      "pop_mmi7p": 413997.36102016456,
+      "pop_banda": 413997.36102016456
     },
     {
       "adm2_id": "63001",
       "nombre": "Armenia",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 337713.9560095044,
-      "pop_banda": 337713.9560095044
-    },
-    {
-      "adm2_id": "76834",
-      "nombre": "Tuluá",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 263098.86719076894,
-      "pop_banda": 263098.86719076894
+      "mmi_max": 7.5,
+      "pop_mmi7p": 338048.82900427,
+      "pop_banda": 338048.82900427
     },
     {
       "adm2_id": "66170",
       "nombre": "Dosquebradas",
       "mmi_max": 7.5,
-      "pop_mmi7p": 180620.49054662883,
-      "pop_banda": 180620.49054662883
+      "pop_mmi7p": 180905.68603482842,
+      "pop_banda": 180905.68603482842
     },
     {
       "adm2_id": "76147",
@@ -88,22 +88,22 @@
       "adm2_id": "27001",
       "nombre": "Quibdó",
       "mmi_max": 7.0,
-      "pop_mmi7p": 111747.45435422566,
-      "pop_banda": 111747.45435422566
+      "pop_mmi7p": 111709.84636211488,
+      "pop_banda": 111709.84636211488
     },
     {
       "adm2_id": "66682",
       "nombre": "Santa Rosa de Cabal",
       "mmi_max": 7.0,
-      "pop_mmi7p": 68465.74396868609,
-      "pop_banda": 68465.74396868609
+      "pop_mmi7p": 68511.19666785747,
+      "pop_banda": 68511.19666785747
     },
     {
       "adm2_id": "63401",
       "nombre": "La Tebaida",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 54234.688553707674,
-      "pop_banda": 54234.688553707674
+      "mmi_max": 7.5,
+      "pop_mmi7p": 54278.832213515416,
+      "pop_banda": 54278.832213515416
     },
     {
       "adm2_id": "76895",
@@ -123,20 +123,20 @@
       "adm2_id": "76400",
       "nombre": "La Unión",
       "mmi_max": 7.5,
-      "pop_mmi7p": 34735.664364411496,
-      "pop_banda": 34735.664364411496
+      "pop_mmi7p": 34822.47236200515,
+      "pop_banda": 34822.47236200515
     },
     {
       "adm2_id": "63470",
       "nombre": "Montenegro",
-      "mmi_max": 7.0,
+      "mmi_max": 7.5,
       "pop_mmi7p": 31681.55454718042,
       "pop_banda": 31681.55454718042
     },
     {
       "adm2_id": "63594",
       "nombre": "Quimbaya",
-      "mmi_max": 7.0,
+      "mmi_max": 7.5,
       "pop_mmi7p": 31506.350372412242,
       "pop_banda": 31506.350372412242
     },
@@ -144,19 +144,19 @@
       "adm2_id": "17174",
       "nombre": "Chinchiná",
       "mmi_max": 7.0,
-      "pop_mmi7p": 29636.281944232993,
-      "pop_banda": 29636.281944232993
+      "pop_mmi7p": 30360.095054543577,
+      "pop_banda": 30360.095054543577
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 2.3,
+    "pop_discrepancia_pct": 3.7,
     "notas": []
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "orange",
-    "ls_pop_usgs": "1700",
+    "ls_pop_usgs": "5800",
     "lq_alerta_usgs": "red",
-    "lq_pop_usgs": "460000"
+    "lq_pop_usgs": "520000"
   },
   "descargas": {
     "geoparquet": "",
@@ -165,8 +165,15 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
-    "Población de 65 años o más en MMI≥7: 290 mil → 300 mil",
-    "Sedes de salud en MMI≥7: 520 → 510"
+    "ShakeMap: v8 → v9",
+    "Ground Failure: v8 → v9",
+    "Población en MMI≥6: 7,2 millones → 6,8 millones",
+    "Población en MMI≥7: 2,4 millones → 3,1 millones",
+    "Población de 65 años o más en MMI≥7: 300 mil → 370 mil",
+    "Edificaciones en MMI≥7: 450 mil → 520 mil",
+    "Sedes de salud en MMI≥7: 510 → 970",
+    "Sedes educativas en MMI≥7: 1.000 → 1.100",
+    "Población en cobertura areal alta por licuefacción: 1,6 millones → 1,8 millones"
   ],
   "licencia": {
     "cubo": "odbl",
@@ -237,6 +244,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-07T16:52:29Z",
+  "generado_utc": "2026-09-08T15:22:38Z",
   "pipeline_version": "0.1.0"
 }
