@@ -91,7 +91,10 @@ ORDER BY 2 DESC
 #: respuesta no es la misma para todas.
 NOTA = (
     "Malla agregada a r{resolucion} desde la resolucion de computo r8. "
-    "`mmi` es la intensidad MAXIMA de las celdas r8 que caen dentro. "
+    "`mmi` es la mayor de las celdas r8 que caen dentro, y cada una de esas "
+    "es una COTA INFERIOR: lleva el valor de la isolinea que contiene el CENTRO de "
+    "la celda, asi que una celda con el centro en la banda 7,0 y una esquina en la "
+    "de 7,5 sale como 7,0. Nunca sobreestima. "
     "`pop`, `pop7` y `pop8` son la poblacion de las celdas r8 con MMI>={mmi_minimo:g}, "
     ">=7 y >=8 respectivamente: sumar `pop7` sobre todo el fichero da el "
     "`pop_mmi7p` del reporte. "

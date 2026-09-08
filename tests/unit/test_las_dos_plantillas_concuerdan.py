@@ -90,9 +90,22 @@ def test_un_muro_de_ceros_se_explica(usgs_id: str) -> None:
 
 @pytest.mark.parametrize("usgs_id", _eventos())
 def test_el_hilo_enlaza_el_reporte_que_promete(usgs_id: str) -> None:
-    """Decia «ver el reporte completo» y no daba dónde."""
+    """Decia «ver el reporte completo» y no daba dónde.
+
+    **Y despues dio uno muerto, en veintisiete hilos.** Esta prueba exigia
+    `/reports/<id>/`, que es justo la ruta que devuelve 404: P3 no emite
+    `index.html` y GitHub Pages no lista directorios. Comprobar que el enlace
+    *existe* no comprueba que *resuelva*, asi que iba en verde mientras el
+    unico paso manual de todo el sistema publicaba un enlace roto.
+
+    Ahora se fija la forma que sirve —`?evento=<id>`, la que lee `leerUrl()` en
+    `site/assets/app.js`— y se prohibe la que no.
+    """
     hilo = render_thread_text(_reporte(usgs_id))
-    assert f"/reports/{usgs_id}/" in hilo, f"{usgs_id}: el hilo no enlaza su reporte"
+    assert f"/?evento={usgs_id}" in hilo, f"{usgs_id}: el hilo no enlaza su reporte"
+    assert f"/reports/{usgs_id}/" not in hilo, (
+        f"{usgs_id}: vuelve a enlazar la carpeta del reporte, que no tiene index.html"
+    )
 
 
 @pytest.mark.parametrize("usgs_id", _eventos())

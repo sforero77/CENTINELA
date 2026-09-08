@@ -13,7 +13,7 @@ municipio y por celda H3, con datos descargables y en español.
 > [`DISCLAIMER.md`](DISCLAIMER.md).
 
 **[Ver el visor](https://sforero77.github.io/CENTINELA/)** · [un reporte de
-ejemplo](https://sforero77.github.io/CENTINELA/reports/us6000tjl2/) ·
+ejemplo](https://sforero77.github.io/CENTINELA/?evento=us6000tjl2) ·
 [`DISCLAIMER.md`](DISCLAIMER.md)
 
 ### Dos palabras que este documento usa todo el rato
@@ -39,20 +39,33 @@ en media hora. Lo que tardó días fue saber **dónde**, con qué infraestructur
 por municipio. Las cifras oficiales oscilaron durante semanas. Siete semanas
 antes, en Venezuela, pasó lo mismo.
 
-Capacidad regional hay, y conviene decirlo bien: el SGC calcula y publica sus
-propios mapas de intensidad instrumental de forma automática, el IGAC voló
-ortofoto de 10 cm, FUNVISIS habilitó reporte ciudadano de daño, el hub LAC de
-HOT coordinó con OSM Colombia desde el primer día, y GEM SARA se construyó con
-más de cincuenta expertos de diecisiete instituciones de la región.
+Capacidad regional hay, y conviene decirlo bien —y con el cuidado que se le
+debe a una institución que se nombra—: el SGC calcula y publica sus propios
+mapas de intensidad instrumental de forma automática, el IGAC voló ortofoto de
+10 cm, el hub LAC de HOT se activó con OSM Colombia en los días siguientes al
+sismo, y GEM SARA se construyó con más de cincuenta expertos de diecisiete
+instituciones de la región.
+
+Este párrafo decía dos cosas más de las que podía sostener, y las dos se
+cayeron al buscarles la fuente: que HOT coordinó «desde el primer día» —su
+propia bitácora de activación arranca al día siguiente— y una atribución a
+FUNVISIS que no se pudo verificar en ninguna fuente primaria. Afirmar de menos
+sobre el trabajo de otro cuesta una palabra; afirmar de más cuesta la
+credibilidad de todo lo demás que este documento dice.
 
 Y GEM no se quedó en SARA: el **23 de junio de 2026** liberó su modelo global
 2026, con el primer análisis global de vías cruzadas con licuefacción. Conviene
 decirlo antes que nadie, porque es lo más parecido a este proyecto que existe.
-Lo que sigue faltando es el encaje: la versión abierta de GEM llega a **Adm1**,
-es **CC BY-NC-SA** (no reutilizable comercialmente ni por muchas agencias), es
-**probabilística** (riesgo esperado, no un evento concreto) y no cuenta salud ni
-educación. CENTINELA publica **Adm2 por evento ocurrido**, bajo CC BY y ODbL, y
-con la vigencia del dato declarada en cada celda.
+
+Y conviene decirlo **producto por producto**, porque GEM no los licencia igual y
+generalizar aquí sería cómodo y falso. Los mapas del modelo de riesgo 2026.1 —el
+póster y los PNG— salen bajo **CC BY-SA 4.0**, que sí permite uso comercial. Lo
+que se compara con este proyecto no es el mapa sino el **Global Exposure Model**,
+y ese es el que llega a **Adm1**, es **CC BY-NC-SA 4.0** (no reutilizable
+comercialmente ni por muchas agencias), es **probabilística** (riesgo esperado,
+no un evento concreto) y cubre solo parque residencial, comercial e industrial:
+no cuenta salud ni educación. CENTINELA publica **Adm2 por evento ocurrido**,
+bajo CC BY y ODbL, y con la vigencia del dato declarada en cada celda.
 
 **Lo que no hay es la pieza del medio**: un activo de exposición ya construido,
 por municipio y por celda, que convierta la intensidad en cuánta gente e
@@ -64,12 +77,17 @@ proyecto es esa pieza.
 Tres cosas, y las tres se pueden citar de documentos del propio USGS:
 
 * **PAGER no publica el corte.** Estima población por banda de MMI
-  *redondeada* y pérdidas, para el país entero: sin municipio, sin celda y sin
-  equipamiento. Su insumo de población, LandScan Global, es abierto desde 2022
-  (CC BY 4.0, ORNL), así que el argumento nunca fue la licencia del dato: es que
-  la cadena de PAGER no la rehace nadie de fuera. El activo de CENTINELA se
-  reconstruye entero desde fuentes abiertas, sin credenciales, con un comando, y
-  sale cortado por el código administrativo nacional.
+  *redondeada* y pérdidas, para el país entero. Sí tabula intensidad y
+  población en una lista corta de **ciudades cercanas** —y decirlo importa,
+  porque «PAGER no da nada local» es falso—, pero es una selección de
+  asentamientos, no una partición: sin código administrativo, sin cobertura
+  exhaustiva del área afectada, sin celda y sin equipamiento. Nadie puede
+  sumar esa lista y obtener el total de un departamento. Su insumo de
+  población, LandScan Global, es abierto desde 2022 (CC BY 4.0, ORNL), así que
+  el argumento nunca fue la licencia del dato: es que la cadena de PAGER no la
+  rehace nadie de fuera. El activo de CENTINELA se reconstruye entero desde
+  fuentes abiertas, sin credenciales, con un comando, y sale cortado por el
+  código administrativo nacional.
 * **PAGER no cuenta escuelas, hospitales ni vías.** No aparecen ni en su FAQ ni
   en su *Scientific Background*: estima población y pérdidas, y el equipamiento
   expuesto no es su pregunta.
@@ -355,7 +373,7 @@ Lo que ya funciona está en [`docs/`](docs/), componente por componente, y en
 [`docs/GARANTIAS.md`](docs/GARANTIAS.md), que además dice qué **no** está
 garantizado.
 
-**2.382 pruebas** sin red, más **157 de navegador** que abren el visor en un
+**2.384 pruebas** sin red, más **157 de navegador** que abren el visor en un
 Chromium de verdad y **13 contra fuentes vivas** que corren en el nocturno,
 `ruff` y `mypy --strict` limpios. Medido el 5-sep-2026.
 

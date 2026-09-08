@@ -813,7 +813,8 @@ def build_report(
     # alcanzan MMI>=8 el recorte a quince se hacia por una columna y la
     # publicacion por otra. Manta, con 265.263 personas en MMI>=7, no llegaba a
     # entrar en la tabla de su propio reporte.
-    banda = totales.to_totales().banda_publicada
+    tot = totales.to_totales()
+    banda = tot.banda_publicada
     columna = f"pop_mmi{banda}p"
     top = [
         MunicipioTop(
@@ -848,7 +849,7 @@ def build_report(
             exposure_manifest=manifest_id,
             **modelos_de_terreno(products),
         ),
-        totales=totales.to_totales(),
+        totales=tot,
         ground_failure_usgs=GroundFailureUSGS(**products.ground_failure_alerts()),
         # El estado del evento sabe si es una reconstruccion; el reporte tiene
         # que decirlo, porque cambia lo que sus cifras afirman.
@@ -874,15 +875,34 @@ def build_report(
         # El cero por banda sigue siendo correcto y se queda: dice "nada que
         # priorizar". Pero deja de ser lo unico que se publica. Tres de los
         # veintiun reconstruidos y los dos en vivo caen en este caso.
-        radios=_radios_si_ninguna_banda_alcanza(con, state, banda),
+        radios=_radios_si_ninguna_banda_alcanza(con, state, tot),
     )
 
 
 def _radios_si_ninguna_banda_alcanza(
-    con: Any, state: EventState, banda: int
+    con: Any, state: EventState, totales: Totales
 ) -> tuple[PoblacionEnRadio, ...]:
-    """Los radios, solo cuando la tabla por intensidad va a salir en ceros."""
-    if banda:
+    """Los radios, solo cuando la tabla por intensidad va a salir en ceros.
+
+    **SE LE PREGUNTA AL DATO, NO A `banda_publicada`.** Aqui llegaba la banda y
+    el guardia era `if banda: return ()`. `banda_publicada` devuelve 7 o 6 y
+    **nunca 0** —es su trabajo: dice por cual de las dos se ordena y se titula,
+    y para un evento sin poblacion en ninguna sigue teniendo que contestar 6—,
+    asi que el guardia se disparaba siempre y los radios salian vacios en los
+    **veintisiete** reportes, no solo en los nueve sin banda.
+
+    Lo introdujo `6aad992` al unificar las dos reglas de banda en competencia:
+    el camino de los radios murio sin que nada se pusiera rojo, porque lo unico
+    que lo miraba era la suite de navegador. Es justo el fallo que
+    `test_funciones_conectadas.py` persigue —una pieza correcta que nadie
+    invoca—, con la vuelta de tuerca de que aqui si habia llamador y lo que
+    fallaba era su condicion.
+
+    Y el cero que quedaba publicado era exactamente el que `README.md` promete
+    que no se publica nunca: `us7000tdmp` enseñaba una tabla de ceros donde el
+    preliminar habia dicho "610 mil personas a 100 km".
+    """
+    if totales.pop_mmi6p > 0 or totales.pop_mmi7p > 0:
         return ()
     return tuple(
         PoblacionEnRadio(radio_km=km, pop=pop)

@@ -32,12 +32,15 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import duckdb
 import pytest
 
 from pipelines.p2_impact.pipeline import ExposureCountryMismatchError, compute_impact
+
+if TYPE_CHECKING:
+    from pipelines.common.state import EventState
 
 
 class _ProductosFalsos:
@@ -408,3 +411,57 @@ def test_el_corte_esta_en_la_banda_que_se_rellena(
     contornos = [SimpleNamespace(value=n) for n in niveles]
 
     assert _toda_por_debajo_del_relleno(contornos) is esperado
+
+
+# --- El guardia de los radios, que preguntaba a quien no sabia --------------
+#
+# LAS PRUEBAS DE ARRIBA CONSTRUYEN EL `Report` A MANO CON SUS `radios=` YA
+# PUESTOS, y por eso las tres pasaban en verde mientras los veintisiete
+# reportes publicados salian con `radios: []`.
+#
+# `_radios_si_ninguna_banda_alcanza` recibia la banda y cortaba con
+# `if banda: return ()`. Pero `banda_publicada` devuelve **7 o 6 y nunca 0**:
+# para un evento sin poblacion en ninguna banda sigue contestando 6, porque su
+# trabajo es decir por cual columna se ordena la tabla de municipios, no si
+# alguien quedo dentro. El guardia se disparaba siempre.
+#
+# Lo unico que lo miraba era la suite de navegador, que tarda once minutos y no
+# corre en cada push. Estas dos pruebas cuestan milisegundos y no necesitan red.
+
+
+def _cualquier_estado() -> EventState:
+    """Un `EventState` que no se llega a leer. Ver las dos pruebas de abajo."""
+    return cast("EventState", object())
+
+
+def test_sin_poblacion_en_ninguna_banda_el_guardia_deja_pasar_los_radios(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """El caso de `us7000tdmp`: la unica cifra que dimensiona el evento."""
+    from pipelines.p2_impact import pipeline as pl
+    from pipelines.p3_report.model import Totales
+
+    monkeypatch.setattr(pl, "poblacion_por_radio", lambda con, state: {25: 0.0, 100: 610_000.0})
+
+    # `state` solo viaja hasta `poblacion_por_radio`, que aqui esta
+    # sustituido: no se lee. El `cast` es para mypy, que corre sobre tests/.
+    radios = pl._radios_si_ninguna_banda_alcanza(object(), _cualquier_estado(), Totales())
+
+    assert [r.radio_km for r in radios] == [25, 100]
+    assert [r.pop for r in radios] == [0.0, 610_000.0]
+
+
+def test_con_poblacion_en_una_banda_el_guardia_corta_sin_consultar(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Y corta **antes** de tocar la conexion: hay algo mejor que la distancia."""
+    from pipelines.p2_impact import pipeline as pl
+    from pipelines.p3_report.model import Totales
+
+    def _no_deberia_llamarse(con: Any, state: Any) -> dict[int, float]:
+        raise AssertionError("con banda alcanzada, el radio no se calcula")
+
+    monkeypatch.setattr(pl, "poblacion_por_radio", _no_deberia_llamarse)
+
+    for totales in (Totales(pop_mmi6p=7_194_540.0), Totales(pop_mmi7p=2_424_287.0)):
+        assert pl._radios_si_ninguna_banda_alcanza(object(), _cualquier_estado(), totales) == ()
