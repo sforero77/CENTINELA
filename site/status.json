@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-08T05:20:18Z",
+  "generado_utc": "2026-09-08T06:05:22Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -268,16 +268,10 @@
     "p50_min": 5.0,
     "p90_min": 5.3,
     "peor_min": 24.9,
-    "revisiones": 1781,
+    "revisiones": 1789,
     "latidos": 201
   },
   "latidos": [
-    {
-      "utc": "2026-09-03T02:30:25Z",
-      "revisados": 16,
-      "relevantes": 2,
-      "revisiones": 1
-    },
     {
       "utc": "2026-09-03T02:35:19Z",
       "revisados": 16,
@@ -1471,6 +1465,12 @@
       "revisados": 6,
       "relevantes": 0,
       "revisiones": 75
+    },
+    {
+      "utc": "2026-09-08T06:05:21Z",
+      "revisados": 5,
+      "relevantes": 0,
+      "revisiones": 9
     }
   ],
   "nota": "Se publican dos relojes. **Total** va desde el origen del sismo e incluye lo que USGS tarda en localizarlo y en publicar su primer ShakeMap, más la demora del cron de GitHub Actions —entre 5 y 30 minutos según su propia documentación—: es el tiempo real que pasa, sin descontar nada. **Desde detección** empieza cuando el vigía ve el evento en el feed, que es lo que este sistema controla, y es la serie contra la que se juzga el objetivo. El objetivo O1 se define desde la disponibilidad del primer ShakeMap; ese instante no queda registrado en ninguna parte, así que la detección es el ancla medible más cercana."

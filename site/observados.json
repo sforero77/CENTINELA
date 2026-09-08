@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-08T05:20:18Z",
+  "generado_utc": "2026-09-08T06:05:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -157,17 +157,6 @@
       "origen_utc": "2026-09-03T11:33:52Z",
       "razon": "M4.8 < umbral M5.5",
       "iso3": "MEX"
-    },
-    {
-      "usgs_id": "us7000tduc",
-      "mag": 5.1,
-      "lon": -71.6979,
-      "lat": -29.7346,
-      "depth_km": 55.2,
-      "lugar": "42 km al NO de Coquimbo, Chile",
-      "origen_utc": "2026-09-03T06:04:02Z",
-      "razon": "M5.1 < umbral M5.5",
-      "iso3": "CHL"
     }
   ]
 }
