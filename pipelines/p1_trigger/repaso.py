@@ -20,6 +20,14 @@ salen —185, 571 y 2.024 dias— no son revisiones del evento: son reprocesos d
 catalogo entero que USGS hace cada varios anos, y perseguirlos a diario seria
 gastar peticiones en algo que no va a pasar hoy.
 
+SE REPASA TODO LO PUBLICADO, INCLUIDOS LOS BACKTESTS. Hasta el 8-sep-2026 los
+historicos quedaban fuera por miedo a que re-emitirlos ensuciara el catalogo.
+La medicion contra USGS ese dia dijo lo contrario: de los 27 reportes
+publicados solo dos estaban atrasados y los veinticuatro historicos no se
+habian movido. Mientras tanto el reporte que el README enseña de ejemplo
+llevaba desde el 7-sep en ShakeMap v8 con USGS en v9, y nada iba a moverlo.
+Ver `_SIN_REPASO`.
+
 Este modulo NO descarga productos ni recalcula nada: pregunta por el detail de
 cada evento, compara versiones contra `versiones_procesadas` y devuelve la
 lista de los que avanzaron. Quien recalcula es P2, por el camino de siempre.
@@ -44,9 +52,25 @@ _log = get_logger(__name__)
 #: los 20 eventos medidos, y los que se salen son reprocesos de catalogo.
 DIAS_DE_REPASO = 90
 
-#: Estados que no se repasan. `descartado` es terminal; un `backtest` es una
-#: reconstruccion congelada de un historico y re-emitirlo cada vez que USGS
-#: retoca su Atlas convertiria el catalogo en ruido.
+#: Estados que no se repasan. `descartado` es terminal, y es el unico.
+#:
+#: **LOS BACKTESTS SE REPASAN, Y ANTES NO.** Aqui se excluian con el argumento
+#: de que "re-emitirlo cada vez que USGS retoca su Atlas convertiria el catalogo
+#: en ruido". Sonaba razonable y resulto ser falso: medido el 8-sep-2026 contra
+#: USGS, de los 27 reportes publicados solo **dos** estaban atrasados, y los dos
+#: dentro de la ventana. Los veinticuatro historicos —de 441 a 5.360 dias— no
+#: se habian movido ni uno. El ruido temido eran dos eventos.
+#:
+#: Y el precio de excluirlos era el contrario del que se temia: `us6000tjl2`,
+#: el reporte que el README enseña de ejemplo, se quedo en ShakeMap v8 mientras
+#: USGS publicaba el v9, y nada iba a moverlo nunca. RF-04 promete que **al
+#: aparecer una version nueva el reporte se re-emite**; no dice "salvo los
+#: historicos", y un backtest desactualizado es exactamente lo que el proyecto
+#: no quiere publicar: una cifra que ya no es la mejor disponible.
+#:
+#: La marca de backtest sobrevive a la re-emision sin tocar nada: `--backtest`
+#: solo se consulta cuando **no hay** estado previo (`p2_impact/run.py`), y
+#: aqui siempre lo hay. El evento sigue sin contar para la latencia.
 _SIN_REPASO = frozenset({EventStatus.DESCARTADO})
 
 
@@ -111,7 +135,7 @@ def eventos_a_repasar(
                 extra={"context": {"ruta": str(ruta), "error": str(error)}},
             )
             continue
-        if estado.estado in _SIN_REPASO or estado.backtest:
+        if estado.estado in _SIN_REPASO:
             continue
         origen = _parse(estado.origen_utc)
         if origen is None or origen < corte:
