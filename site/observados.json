@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-08T15:10:27Z",
+  "generado_utc": "2026-09-08T17:00:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -157,17 +157,6 @@
       "origen_utc": "2026-09-03T21:18:21Z",
       "razon": "M4.8 < umbral M5.5",
       "iso3": "CHL"
-    },
-    {
-      "usgs_id": "us7000te20",
-      "mag": 4.5,
-      "lon": -73.0977,
-      "lat": 6.8385,
-      "depth_km": 144.7,
-      "lugar": "11 km al N de Jordán, Colombia",
-      "origen_utc": "2026-09-03T16:58:46Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "COL"
     }
   ]
 }
