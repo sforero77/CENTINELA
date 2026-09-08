@@ -263,7 +263,20 @@ jobs:
           # primera al top de municipios, o que el acotamiento con PAGER dejara
           # de cumplirse en MMI≥6— lo escribe una persona, y lo siguen cazando
           # las pruebas.
-          uv run centinela sincronizar-portada
+          #
+          # `|| warning`: ESTE PASO NO PUEDE TUMBAR UNA PUBLICACION.
+          #
+          # Lee el `report.json` del Choco, que no tiene nada que ver con el
+          # evento que se esta publicando. Sin la guarda, un sismo en Chile se
+          # quedaria sin reporte porque un fichero de otro evento no se puede
+          # leer — y este job corre con `bash -e`. El reporte es el producto;
+          # la portada es un derivado suyo.
+          #
+          # Tragarselo no deja el fallo a oscuras: `test_cifras_del_readme.py`
+          # sigue comprobando que la portada este al dia, y el propio
+          # `impact.yml` despacha `ci.yml` al terminar. Se pierde la
+          # sincronizacion automatica de esa vez, no la alarma.
+          uv run centinela sincronizar-portada             || echo "::warning::no se pudo sincronizar la portada; el reporte se publica igual"
           git add README.md
 
           git commit -m "P3: reporte de $USGS_ID"
