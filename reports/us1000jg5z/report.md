@@ -22,6 +22,18 @@
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
+### Población por distancia al epicentro
+
+Ninguna banda de intensidad alcanza población, así que la única cifra que dimensiona este evento es la distancia:
+
+| Radio desde el epicentro | Población |
+|---|---:|
+| 25 km | 23 mil |
+| 50 km | 270 mil |
+| 100 km | 2,1 millones |
+
+Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
+
 ## Deslizamiento y licuefacción
 
 - **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **0**.
@@ -55,7 +67,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 - ShakeMap consumido: **v5**
 - Ground Failure consumido: **v3**
 - Manifiesto de exposición: [`bol-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/BOL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:41:25Z
+- Pipeline: `0.1.0` · Generado: 2026-09-08T00:58:39Z
 
 ## Advertencias
 
