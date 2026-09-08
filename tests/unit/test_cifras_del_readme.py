@@ -24,30 +24,11 @@ import pytest
 import yaml
 
 from pipelines.common.formatting import format_number_es
+from pipelines.p3_report.portada import FILAS
 
 RAIZ = Path(__file__).parent.parent.parent
 README = RAIZ / "README.md"
 REPORTE_GOLDEN = RAIZ / "reports" / "us6000tjl2" / "report.json"
-
-#: Fila del README -> campo de `totales` en el reporte. El README redondea al
-#: entero, que es como se lee una cifra de exposicion: nadie publica "2.415.793,46
-#: personas".
-#: Las etiquetas van **con tildes**: el README las llevaba sin ellas y el
-#: proyecto tiene una prueba que exige lo contrario en todo lo publicado. La
-#: fila de licuefaccion ademas cambio de nombre: decia "zona de licuefaccion
-#: alta", y "alta" afirmaba una categoria que USGS no publica a ese umbral
-#: sobre una magnitud —cobertura areal— que no es una probabilidad.
-FILAS: tuple[tuple[str, str], ...] = (
-    ("Personas en MMI≥6", "pop_mmi6p"),
-    ("Personas en MMI≥7", "pop_mmi7p"),
-    ("De ellas, 65 años o más", "pop_65p_mmi7p"),
-    ("Edificaciones en MMI≥7", "bld_mmi7p"),
-    ("Sedes de salud en MMI≥7", "health_mmi7p"),
-    ("Sedes educativas en MMI≥7", "edu_mmi7p"),
-    ("Kilómetros de vía en MMI≥7", "road_km_mmi7p"),
-    ("De ellos, primarias y secundarias", "road_km_principal_mmi7p"),
-    ("Personas en celdas con cobertura areal por licuefacción ≥ 0,10", "pop_lq_alta"),
-)
 
 
 @pytest.fixture(scope="module")

@@ -446,6 +446,34 @@ def _cmd_regenerar_mapas(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_sincronizar_portada(args: argparse.Namespace) -> int:
+    """Pone la tabla de cifras del README al dia con el reporte publicado.
+
+    Existe porque la portada se desincronizo tres veces y la tercera dejo
+    `main` en rojo: el bot re-emitio el reporte de ShakeMap v8 a v9 y la tabla
+    se quedo escrita a mano. `impact.yml` lo corre **antes** de commitear, asi
+    que la tabla viaja en el mismo commit que el reporte.
+
+    Con `--comprobar` no escribe: informa y devuelve 1 si algo se movio. Sirve
+    para preguntar en CI sin arreglar nada.
+    """
+    from .common.paths import REPO_ROOT
+    from .p3_report.portada import sincronizar_portada
+
+    cambios = sincronizar_portada(
+        REPO_ROOT / "README.md",
+        reports_root=Path(args.reports) if args.reports else None,
+        escribir=not args.comprobar,
+    )
+    if not cambios:
+        print("la portada ya dice lo que dice el reporte")
+        return 0
+    verbo = "habria que cambiar" if args.comprobar else "actualizado"
+    for c in cambios:
+        print(f"{verbo}: {c}")
+    return 1 if args.comprobar else 0
+
+
 def _cmd_regenerar_textos(args: argparse.Namespace) -> int:
     """Rehace `report.md` y `hilo.txt` de un reporte ya publicado, o de todos.
 
@@ -1139,6 +1167,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_textos.add_argument("--reports", help="raiz de reports/")
     p_textos.set_defaults(func=_cmd_regenerar_textos)
 
+    p_portada = sub.add_parser(
+        "sincronizar-portada",
+        help="pone la tabla de cifras del README al dia con el reporte publicado",
+    )
+    p_portada.add_argument(
+        "--comprobar",
+        action="store_true",
+        help="no escribe: informa y sale con 1 si la portada se separo",
+    )
+    p_portada.add_argument("--reports", help="raiz de reports/")
+    p_portada.set_defaults(func=_cmd_sincronizar_portada)
+
     p_contornos = sub.add_parser(
         "contornos", help="trae de USGS el area de afectacion de reportes ya publicados"
     )
@@ -1238,6 +1278,23 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # LA SALIDA VA EN UTF-8 AUNQUE LA CONSOLA DIGA OTRA COSA.
+    #
+    # Esta herramienta imprime español y notacion de intensidad: `MMI≥7`,
+    # `≥ 0,10`, nombres con tilde. En una consola de Windows sin configurar,
+    # `sys.stdout` sale en cp1252 y `print` de un `≥` lanza
+    # `UnicodeEncodeError` — el comando revienta **despues** de haber hecho su
+    # trabajo, o sea que deja el fichero escrito y sale con traza y codigo 1.
+    # Paso con `sincronizar-portada` la primera vez que corrio en la maquina
+    # del autor.
+    #
+    # `errors="replace"` y no `"strict"`: perder un simbolo en un mensaje de
+    # consola es un defecto cosmetico; abortar una publicacion por el juego de
+    # caracteres de la terminal, no.
+    for flujo in (sys.stdout, sys.stderr):
+        if hasattr(flujo, "reconfigure"):
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+
     args = build_parser().parse_args(argv)
     try:
         exit_code: int = args.func(args)

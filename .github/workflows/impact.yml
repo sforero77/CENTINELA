@@ -246,6 +246,26 @@ jobs:
           # es cuando puede haber cambiado.
           uv run centinela status
           git add site/status.json
+
+          # LA PORTADA VIAJA EN EL MISMO COMMIT QUE EL REPORTE.
+          #
+          # El 8-sep-2026 el repaso empezo a incluir los backtests, re-emitio
+          # `us6000tjl2` de ShakeMap v8 a v9 —`pop_mmi7p` subio un 26,6 %— y
+          # `main` se quedo en rojo: el bot publica el reporte y la tabla de
+          # cifras del README seguia escrita a mano con las del v8.
+          #
+          # `test_cifras_del_readme.py` lo cazo, que para eso existe, pero
+          # avisar no basta cuando quien re-emite es un workflow. Se genera
+          # aqui, antes del commit, para que no exista el instante en que el
+          # reporte y la portada dicen cosas distintas.
+          #
+          # Solo toca cifras. Lo que cambia de argumento —que Cali entrara
+          # primera al top de municipios, o que el acotamiento con PAGER dejara
+          # de cumplirse en MMI≥6— lo escribe una persona, y lo siguen cazando
+          # las pruebas.
+          uv run centinela sincronizar-portada
+          git add README.md
+
           git commit -m "P3: reporte de $USGS_ID"
 
           # Dos eventos simultaneos tienen concurrency groups distintos y
