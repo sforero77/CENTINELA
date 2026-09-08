@@ -142,7 +142,10 @@ def _reporte_publicado(usgs_id: str) -> dict[str, Any]:
 #: parte **no** es un fallo del pipeline: GHS-POP deriva de la ronda censal de
 #: 2010 y no modela la emigracion venezolana.
 POP_MMI7P_ESPERADO: dict[str, float] = {
-    CATIA_LA_MAR: 2_276_853.971352878,
+    # Reanclado al ShakeMap v16 el 8-sep-2026, cuando el repaso empezo a incluir
+    # los backtests y re-emitio este reporte desde el v15. Insumo nuevo, no
+    # deriva de codigo.
+    CATIA_LA_MAR: 2_575_684.688750344,
     SAN_FELIPE: 491_580.875195766,
 }
 TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)

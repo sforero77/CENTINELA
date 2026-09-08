@@ -117,17 +117,17 @@ vez de esperar días.
 
 | Indicador | Cifra |
 |---|---:|
-| Personas en MMI≥6 | **7.194.540** |
-| Personas en MMI≥7 | **2.424.287** |
-| De ellas, 65 años o más | **297.536** |
-| Edificaciones en MMI≥7 | **448.789** |
-| Sedes de salud en MMI≥7 | **514** |
-| Sedes educativas en MMI≥7 | **1.004** |
-| Kilómetros de vía en MMI≥7 | **12.674** |
-| De ellos, primarias y secundarias | **1.508** |
-| Personas en celdas con cobertura areal por licuefacción ≥ 0,10 | **1.602.162** |
-| Municipios con población en MMI≥6 | **109** |
-| De ellos, con población en MMI≥7 | **44** |
+| Personas en MMI≥6 | **6.840.603** |
+| Personas en MMI≥7 | **3.069.003** |
+| De ellas, 65 años o más | **373.246** |
+| Edificaciones en MMI≥7 | **519.018** |
+| Sedes de salud en MMI≥7 | **971** |
+| Sedes educativas en MMI≥7 | **1.068** |
+| Kilómetros de vía en MMI≥7 | **15.749** |
+| De ellos, primarias y secundarias | **1.897** |
+| Personas en celdas con cobertura areal por licuefacción ≥ 0,10 | **1.816.973** |
+| Municipios con población en MMI≥6 | **116** |
+| De ellos, con población en MMI≥7 | **59** |
 
 Las cifras salen de `reports/us6000tjl2/report.json`, y
 `tests/unit/test_cifras_del_readme.py` falla si esta tabla se separa de él.
@@ -140,11 +140,11 @@ prueba, no.
 
 *Sobre la precisión.* Siete dígitos significativos sobre un modelo interpolado
 fingen una exactitud que no existe: el mismo reporte publica una banda de
-discrepancia del 2,3 %, o sea 7.194.540 ± ~165.000. La tabla reproduce el JSON
-al dígito porque su trabajo es ser trazable; **en prosa, estas cifras son «7,2
-millones» y «2,4 millones»**, que es como las escribe el `report.md` generado.
+discrepancia del 3,7 %, o sea 6.840.603 ± ~253.000. La tabla reproduce el JSON
+al dígito porque su trabajo es ser trazable; **en prosa, estas cifras son «6,8
+millones» y «3,1 millones»**, que es como las escribe el `report.md` generado.
 
-*Sobre la licuefacción.* 1,6 millones **no es la cifra de USGS y no se puede
+*Sobre la licuefacción.* 1,8 millones **no es la cifra de USGS y no se puede
 comparar con ella**. El modelo de Zhu (2017) entrega **cobertura areal** (la
 fracción del área de la celda que se espera cubierta), no probabilidad; aquí se
 cuenta la población entera de toda celda por encima de 0,10, y USGS pondera la
@@ -157,36 +157,47 @@ ráster. El reporte lo dice ahora en cada emisión.
 Es la objeción que el proyecto recibe primero, y conviene resolverla antes de
 que la haga nadie. PAGER tabula por **MMI redondeado** (su fila «7» es todo lo
 que cae entre 6,5 y 7,49) y CENTINELA usa **bandas literales**. Puestas en el
-mismo eje, cada cifra de CENTINELA cae dentro del intervalo que las filas de
-PAGER acotan por arriba y por abajo:
+mismo eje, cada cifra de CENTINELA debería caer dentro del intervalo que las
+filas de PAGER acotan por arriba y por abajo. Una lo hace y la otra ya no:
 
-> **Las dos columnas son de la misma versión, y eso hubo que arreglarlo.** Hasta
-> el 6-sep-2026 la fixture era la PAGER del **ShakeMap v7** y el reporte iba por
-> **v8**: la tabla enfrentaba dos versiones distintas sin decirlo. Se refrescó
-> contra la PAGER vigente, publicada dos minutos y medio después del v8. La
-> procedencia está en
-> `tests/fixtures/golden/choco_2026_08_10/pager_exposures.origen.json`.
+> **Las dos columnas son de la misma versión, y ha habido que arreglarlo dos
+> veces.** El 6-sep-2026 la fixture era la PAGER del **v7** contra un reporte en
+> **v8**; el 8-sep volvió a pasar, esta vez porque el repaso dejó de excluir los
+> backtests, re-emitió el reporte a **v9** y la fixture se quedó en el v8. Las
+> dos veces se refrescó contra la PAGER publicada dos minutos y medio después
+> del ShakeMap correspondiente. Que haya pasado dos veces dice que la fixture
+> tiene que viajar en el mismo commit que re-emite el reporte. La procedencia
+> está en `tests/fixtures/golden/choco_2026_08_10/pager_exposures.origen.json`.
 
-| Umbral literal | PAGER (v8) | CENTINELA (v8) |
+| Umbral literal | PAGER (v9) | CENTINELA (v9) |
 |---|---:|---:|
-| MMI ≥ 5,5 | 10.677.892 | — |
-| MMI ≥ 6,0 | — | **7.194.540** |
-| MMI ≥ 6,5 | 6.630.456 | — |
-| MMI ≥ 7,0 | — | **2.424.287** |
-| MMI ≥ 7,5 | 1.079.497 | — |
+| MMI ≥ 5,5 | 9.329.268 | — |
+| MMI ≥ 6,0 | — | **6.840.603** |
+| MMI ≥ 6,5 | 7.089.614 | — |
+| MMI ≥ 7,0 | — | **3.069.003** |
+| MMI ≥ 7,5 | 1.647.927 | — |
 
-El acotamiento se cumple, y `tests/unit/test_contraste_con_pager.py` falla si
-deja de cumplirse. Pero **acotar no es coincidir**: el intervalo de MMI≥7 va de
-1,1 a 6,6 millones, un factor de 6,1, y casi cualquier cifra cabría dentro.
+**En MMI≥7 el acotamiento se cumple y en MMI≥6 ya no, y conviene decirlo antes
+que nadie.** La cifra de MMI≥7 cae dentro del intervalo que PAGER acota, al 26 %
+contando desde abajo, o sea bien por debajo del punto medio, que es donde
+siempre ha caído: ahí no ha cambiado nada. La de MMI≥6 se queda **249.011 personas por debajo** del piso que
+impone la fila ≥6,5 de PAGER: un **3,6 %**.
 
-**En los dos casos CENTINELA queda en el cuarto inferior del intervalo** (al
-14 % y al 24 % contando desde abajo), es decir sistemáticamente por debajo del
-punto medio y siempre en la misma dirección. Eso es lo que se puede afirmar sin
-elegir un método: cuánto por debajo depende de cómo se interpole entre las filas
-de PAGER, y la respuesta va del 9 % al 37 % según se haga lineal o logarítmica.
-Publicar una sola de esas cifras sería elegir la que conviene. El detalle,
-con la fuente de cada columna, está en
-[`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md).
+Ese 3,6 % es **menor que la banda de discrepancia del 3,7 % que el propio
+reporte publica**, así que las dos cifras no se contradicen tanto como se solapan
+por los bordes. Y va en la dirección que este sistema ya tiene documentada: el
+corte por contornos asigna cada celda por la isolínea que contiene su centro y
+por eso **subcuenta**, con un delta medido contra `grid.xml` de hasta el 34 %
+(`PENDIENTES.md`, §2.1.sexies). No es un empate cómodo: es el primer sitio donde
+el método de contornos se ve desde fuera, y está anotado como trabajo pendiente
+en vez de explicado como casualidad.
+
+Hasta el v8 el acotamiento se cumplía en las dos bandas, y este documento lo
+decía sin condición. Dejó de ser verdad cuando USGS publicó el v9 y el sistema
+se actualizó solo, que es lo que tiene que hacer. **Acotar tampoco era
+coincidir**: el intervalo de MMI≥7 va de 1,6 a 7,1 millones, un factor de 4,3, y
+casi cualquier cifra cabría dentro. El detalle, con la fuente de cada columna,
+está en [`docs/PARA_INSTITUCIONES.md`](docs/PARA_INSTITUCIONES.md).
 
 ### La validación externa
 
@@ -412,9 +423,19 @@ Su desvío contra la referencia del DANE es **−0,72 %**, y solo el 0,32 % de l
 población entra por celdas rescatadas.
 
 Y el dato que cambia la conversación: los municipios más expuestos no estaban en
-el Chocó sino en el Eje Cafetero y el Valle: Pereira, Buenaventura, Armenia,
-Tuluá, Dosquebradas. Por eso este README dejó de llamarlo «el terremoto del
-Chocó»: el nombre contradecía la tesis del propio reporte.
+el Chocó sino en el Valle y el Eje Cafetero. Con el ShakeMap v9 encabeza
+**Santiago de Cali**, con 772.110 personas en MMI≥7, y detrás van Pereira
+(500.314), Buenaventura (413.997), Armenia (338.049) y Dosquebradas (180.906).
+Quibdó aparece de séptimo, con 111.710. Por eso este README dejó de llamarlo «el
+terremoto del Chocó»: el nombre contradecía la tesis del propio reporte.
+
+**Y esa lista se mueve con cada revisión de USGS, que es justo lo que hay que
+enseñar.** Hasta el v8 encabezaba Pereira y Cali no estaba ni entre los diez
+primeros; el v9 la puso primera. La tesis aguanta —los más expuestos siguen sin
+estar en el Chocó— pero los nombres no son un hecho fijo: son la lectura de un
+modelo que se revisa. Un reporte que se congela en la primera versión publica la
+lista equivocada sin enterarse, y por eso el repaso re-emite también los
+históricos.
 
 ## Documentación
 

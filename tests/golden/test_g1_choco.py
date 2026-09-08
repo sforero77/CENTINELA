@@ -240,11 +240,21 @@ def _reporte_publicado() -> dict[str, Any]:
 #: G1 vigila que **el artefacto publicado no derive**. Que el **codigo** no
 #: mueva una cifra lo vigila G4, que recalcula desde los insumos congelados y
 #: fija los decimales.
-POP_MMI7P_ESPERADO = 2_424_287.2030194234
-SHAKEMAP_DEL_ANCLA = 8
+#: REANCLADO AL v9 EL 8-SEP-2026. El repaso dejo de excluir los backtests, USGS
+#: ya tenia publicado el v9 y el reporte se re-emitio solo: `pop_mmi7p` paso de
+#: 2.424.287 a 3.069.003, un +26,6 %. **No es deriva del codigo** —que es lo que
+#: esta tolerancia vigila— sino un insumo nuevo, y por eso `SHAKEMAP_DEL_ANCLA`
+#: existe: obliga a reanclar a mano y a decir por que, en vez de dejar que una
+#: revision de USGS pase por un cambio de calculo.
+POP_MMI7P_ESPERADO = 3_069_002.8690395486
+SHAKEMAP_DEL_ANCLA = 9
 TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
 
-TOP5_ESPERADO = ["66001", "76109", "63001", "76834", "66170"]
+#: El v9 metio a **Santiago de Cali** (76001) en el primer puesto con 772.110
+#: personas en MMI≥7; con el v8 no aparecia ni en los diez primeros. Tulua
+#: (76834) salio del top 5. La tesis del reporte no cambia —los mas expuestos
+#: siguen en el Valle y el Eje Cafetero, no en el Choco— pero los nombres si.
+TOP5_ESPERADO = ["76001", "66001", "76109", "63001", "66170"]
 
 
 def test_el_ancla_describe_la_version_publicada() -> None:

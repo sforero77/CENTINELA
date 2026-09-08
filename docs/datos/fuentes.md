@@ -13,7 +13,7 @@ sistema declara públicamente sobre ella.
 | **Productos** | ShakeMap (`cont_mmi.json`), Ground Failure (rásters) |
 | **Licencia** | Dominio público (obra del gobierno de EE. UU.) |
 | **Cadencia** | Continua |
-| **Limitación** | ShakeMap se revisa muchas veces; el de Venezuela llegó a v15 |
+| **Limitación** | ShakeMap se revisa muchas veces; el de Venezuela llegó a v16 |
 
 > **FDSN está prohibido en el camino crítico.** El propio USGS recomienda los
 > feeds GeoJSON para aplicaciones automatizadas y desaconseja el polling a
