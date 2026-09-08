@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-09-08T01:02:52Z",
+  "generado_utc": "2026-09-08T01:03:02Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -98,7 +98,7 @@
       "minutos": 1650140.5,
       "backtest": true,
       "shakemap": 11,
-      "actualizado_utc": "2026-09-07T16:35:51Z"
+      "actualizado_utc": "2026-09-08T01:03:01Z"
     },
     {
       "usgs_id": "us7000jl3s",
