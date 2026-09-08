@@ -51,13 +51,13 @@
     "iso3": "VEN",
     "lon": -67.2205,
     "lat": 10.5955,
-    "pop_mmi7p": 2276853.971352879,
-    "pop_mmi6p": 9183151.962815098,
+    "pop_mmi7p": 2575684.688750344,
+    "pop_mmi6p": 7471691.358112413,
     "utc": "2026-06-24T22:05:04Z",
-    "shakemap_version": 15,
+    "shakemap_version": 16,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-09-07T16:30:41Z"
+    "generado_utc": "2026-09-08T15:22:39Z"
   },
   {
     "usgs_id": "us6000t7zc",

@@ -10,44 +10,46 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 9,2 millones |
-| Población en MMI≥7 | 2,3 millones |
-| Población en MMI≥8 | 740 mil |
-| Edificaciones en MMI≥7 | 500 mil |
-| Sedes de salud en MMI≥7 | 577 |
-| Sedes educativas en MMI≥7 | 815 |
-| Vías primarias y secundarias en MMI≥7 | 1.200 km |
-| Vías locales en MMI≥7 | 5.800 km |
-| Superficie construida en MMI≥7 | 74,8 km² |
+| Población en MMI≥6 | 7,5 millones |
+| Población en MMI≥7 | 2,6 millones |
+| Población en MMI≥8 | 700 mil |
+| Edificaciones en MMI≥7 | 560 mil |
+| Sedes de salud en MMI≥7 | 770 |
+| Sedes educativas en MMI≥7 | 1.034 |
+| Vías primarias y secundarias en MMI≥7 | 1.300 km |
+| Vías locales en MMI≥7 | 6.500 km |
+| Superficie construida en MMI≥7 | 85,4 km² |
+
+El satélite detecta **1,5 veces** más superficie construida de la que explicarían las 560 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **270 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **320 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Libertador | `VE0101` | 7,5 | 650 mil |
+| 1 | Libertador | `VE0101` | 7,5 | 990 mil |
 | 2 | Vargas | `VE2401` | 8,0 | 380 mil |
-| 3 | Sucre | `VE1519` | 7,5 | 350 mil |
+| 3 | Sucre | `VE1519` | 7,5 | 360 mil |
 | 4 | Puerto Cabello | `VE0811` | 8,0 | 210 mil |
-| 5 | Plaza | `VE1517` | 7,0 | 170 mil |
+| 5 | Baruta | `VE1503` | 7,0 | 140 mil |
 | 6 | San Felipe | `VE2211` | 8,0 | 140 mil |
 | 7 | Veroes | `VE2214` | 8,5 | 100 mil |
-| 8 | Chacao | `VE1507` | 7,5 | 83 mil |
+| 8 | Chacao | `VE1507` | 7,5 | 88 mil |
 | 9 | Juan José Mora | `VE0805` | 8,5 | 58 mil |
-| 10 | Palmasola | `VE1116` | 7,5 | 31 mil |
+| 10 | Palmasola | `VE1116` | 7,5 | 30 mil |
 | 11 | Independencia | `VE2205` | 7,0 | 30 mil |
-| 12 | Cocorote | `VE2204` | 7,0 | 25 mil |
-| 13 | Manuel Monge | `VE2208` | 7,5 | 13 mil |
+| 12 | Silva | `VE1120` | 8,0 | 13 mil |
+| 13 | Manuel Monge | `VE2208` | 7,5 | 12 mil |
 | 14 | Ocumare de la Costa de Oro | `VE0518` | 8,0 | 11 mil |
-| 15 | Silva | `VE1120` | 8,0 | 10 mil |
+| 15 | El Hatillo | `VE1509` | 7,0 | 3.600 |
 
 ## Deslizamiento y licuefacción
 
 - **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **29 mil**. USGS declara para este evento alerta **roja**, con 13 mil expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **560 mil**. USGS declara para este evento alerta **roja**, con 190 mil expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **340 mil**. USGS declara para este evento alerta **roja**, con 190 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -63,12 +65,19 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,8 %**.
 
 ## Cambios frente a la versión anterior
 
-- Población de 65 años o más en MMI≥7: 230 mil → 270 mil
-- Sedes educativas en MMI≥7: 810 → 820
+- ShakeMap: v15 → v16
+- Población en MMI≥6: 9,2 millones → 7,5 millones
+- Población en MMI≥7: 2,3 millones → 2,6 millones
+- Población en MMI≥8: 740 mil → 700 mil
+- Población de 65 años o más en MMI≥7: 270 mil → 320 mil
+- Edificaciones en MMI≥7: 500 mil → 560 mil
+- Sedes de salud en MMI≥7: 580 → 770
+- Sedes educativas en MMI≥7: 820 → 1.000
+- Población en cobertura areal alta por licuefacción: 560 mil → 340 mil
 
 ## Descargas
 
@@ -77,10 +86,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,8 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v15**
+- ShakeMap consumido: **v16**
 - Ground Failure consumido: **v12**
 - Manifiesto de exposición: [`ven-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:30:41Z
+- Pipeline: `0.1.0` · Generado: 2026-09-08T15:22:39Z
 
 ## Advertencias
 
