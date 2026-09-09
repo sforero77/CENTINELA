@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-08T21:20:23Z",
+  "generado_utc": "2026-09-09T15:10:27Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tg12",
+      "mag": 5.0,
+      "lon": -66.5049,
+      "lat": -26.1386,
+      "depth_km": 10.0,
+      "lugar": "53 km al O de Cafayate, Argentina",
+      "origen_utc": "2026-09-09T10:06:57Z",
+      "razon": "M5.0 < umbral M5.5",
+      "iso3": "ARG"
+    },
     {
       "usgs_id": "us7000tfty",
       "mag": 4.7,
@@ -135,17 +146,6 @@
       "origen_utc": "2026-09-04T23:38:40Z",
       "razon": "M5.1 < umbral M5.5",
       "iso3": ""
-    },
-    {
-      "usgs_id": "us7000te8p",
-      "mag": 4.5,
-      "lon": -68.5636,
-      "lat": -21.3768,
-      "depth_km": 130.7,
-      "lugar": "36 km al OSO de Ollagüe, Chile",
-      "origen_utc": "2026-09-04T06:48:06Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "CHL"
     }
   ]
 }
