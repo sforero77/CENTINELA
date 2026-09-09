@@ -1,0 +1,319 @@
+"""Cuanta poblacion entra por el rescate de celdas fronterizas.
+
+El rescate asigna municipio a las celdas cuyo centro cae fuera de todo poligono
+—costa y frontera— pero que tienen poblacion. Es necesario: sin el, esa gente
+desaparece del reporte municipal.
+
+Tambien es el sospechoso principal de un sesgo que aparecio al medir los 18
+paises de LATAM. Los desvios de GHS-POP frente a la ONU van de -0,80 % (Chile)
+a +6,59 % (Paraguay) y se ordenan por cuanta frontera tiene cada pais en
+proporcion a su area, no por cuando fue su ultimo censo. Si el rescate esta
+reclamando gente del otro lado de la linea, esta cifra lo delata.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+import pytest
+
+from pipelines.p0_exposure.crosswalk import poblacion_rescatada
+
+
+@pytest.fixture
+def con() -> Any:
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE TABLE crosswalk_h3_adm (h3_08 UBIGINT, adm2_id VARCHAR, "
+        "frac_area DOUBLE, rescatada BOOLEAN)"
+    )
+    con.execute("CREATE TABLE pop_h3 (h3_08 UBIGINT, pop_total DOUBLE)")
+    return con
+
+
+def _celda(con: Any, h3: int, pop: float, *, rescatada: bool) -> None:
+    con.execute(f"INSERT INTO crosswalk_h3_adm VALUES ({h3}::UBIGINT, '05001', 1.0, {rescatada})")
+    con.execute(f"INSERT INTO pop_h3 VALUES ({h3}::UBIGINT, {pop})")
+
+
+@pytest.mark.geo
+def test_sin_rescate_la_fraccion_es_cero(con: Any) -> None:
+    _celda(con, 1, 1000.0, rescatada=False)
+    assert poblacion_rescatada(con, "pop_h3")["pop_rescatada_pct"] == 0.0
+
+
+@pytest.mark.geo
+def test_se_mide_la_gente_y_no_solo_las_celdas(con: Any) -> None:
+    """Una celda rescatada puede traer mucha o ninguna poblacion.
+
+    Contar celdas no distingue entre rescatar un islote vacio y reclamar una
+    ciudad del pais vecino.
+    """
+    _celda(con, 1, 9000.0, rescatada=False)
+    _celda(con, 2, 1000.0, rescatada=True)
+    medida = poblacion_rescatada(con, "pop_h3")
+    assert medida["pop_rescatada"] == 1000
+    assert medida["pop_total"] == 10000
+    assert medida["pop_rescatada_pct"] == 10.0
+
+
+@pytest.mark.geo
+def test_un_pais_sin_datos_no_divide_por_cero(con: Any) -> None:
+    assert poblacion_rescatada(con, "pop_h3")["pop_rescatada_pct"] == 0.0
+
+
+@pytest.mark.geo
+def test_sin_tabla_de_poblacion_devuelve_vacio(con: Any) -> None:
+    """El rescate corre tambien sobre capas sin `pop_total`; no debe reventar."""
+    assert poblacion_rescatada(con, "no_existe") == {}
+
+
+def test_el_rescate_registra_la_poblacion_no_solo_el_conteo() -> None:
+    """Guardia de texto: la medicion no puede desaparecer en un refactor."""
+    import inspect
+
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    assert "poblacion_rescatada" in inspect.getsource(rescue_unassigned)
+
+
+# --- Acotar el rescate al mar, no al pais vecino ----------------------------
+
+
+@pytest.fixture
+def escenario() -> Any:
+    """Un pais cuadrado, un vecino pegado al este, y mar al oeste."""
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE TABLE admin_geom AS SELECT '001' AS adm2_id, 'Costa' AS nombre, "
+        "'01' AS adm1_id, 'Depto' AS departamento, "
+        "ST_GeomFromText('POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))') AS geom"
+    )
+    con.execute(
+        "CREATE TABLE vecinos AS SELECT 'XX' AS iso2, "
+        "ST_GeomFromText('POLYGON((1 0, 2 0, 2 1, 1 1, 1 0))') AS geom"
+    )
+    con.execute(
+        "CREATE TABLE crosswalk_h3_adm (h3_08 UBIGINT, adm2_id VARCHAR, "
+        "frac_area DOUBLE, rescatada BOOLEAN)"
+    )
+    con.execute("CREATE TABLE pop_h3 (h3_08 UBIGINT, pop_total DOUBLE)")
+    con.execute(
+        "CREATE OR REPLACE TEMP TABLE pais AS SELECT ST_Union_Agg(geom) AS geom FROM admin_geom"
+    )
+    return con
+
+
+def _sembrar_celda(con: Any, lon: float, lat: float, pop: float) -> int:
+    h3 = con.execute(f"SELECT h3_latlng_to_cell({lat}, {lon}, 8)").fetchone()[0]
+    con.execute(f"INSERT INTO pop_h3 VALUES ({h3}::UBIGINT, {pop})")
+    return int(h3)
+
+
+@pytest.mark.geo
+def test_una_celda_en_el_mar_si_se_rescata(escenario: Any) -> None:
+    """Es el caso para el que existe el rescate: costa con poblacion.
+
+    Chile rescata asi el 31 % de su poblacion y su cifra nacional es correcta;
+    sin el rescate perderia 6,1 millones de personas.
+    """
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    _sembrar_celda(escenario, -0.005, 0.5, 800.0)  # justo al oeste, en el mar
+    rescue_unassigned(escenario, tabla_datos="pop_h3", max_grados=0.02)
+    assert escenario.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0] == 1
+
+
+@pytest.mark.geo
+def test_una_celda_dentro_del_vecino_no_se_rescata(escenario: Any) -> None:
+    """El fallo que medimos: Paraguay se llevaba 459.518 personas de sus vecinos.
+
+    Una celda cuyo centro esta en tierra del vecino es del vecino, por cerca que
+    este de la linea.
+    """
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    _sembrar_celda(escenario, 1.005, 0.5, 800.0)  # justo al este, dentro de XX
+    rescue_unassigned(escenario, tabla_datos="pop_h3", max_grados=0.02)
+    assert escenario.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0] == 0
+
+
+@pytest.mark.geo
+def test_sin_tabla_de_vecinos_el_rescate_sigue_funcionando(escenario: Any) -> None:
+    """Overture puede fallar; un build de una hora no puede caerse por eso."""
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    escenario.execute("DELETE FROM vecinos")
+    _sembrar_celda(escenario, -0.005, 0.5, 800.0)
+    rescue_unassigned(escenario, tabla_datos="pop_h3", max_grados=0.02)
+    assert escenario.execute("SELECT count(*) FROM crosswalk_h3_adm").fetchone()[0] == 1
+
+
+# --- El reparto tiene que ver las islas ------------------------------------
+
+
+def _con_isla() -> Any:
+    """Un municipio de dos partes disjuntas, repartido por el camino real."""
+    from pipelines.p0_exposure.crosswalk import build_crosswalk
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE TABLE admin_geom AS SELECT 'X' AS adm2_id, 'Isla' AS nombre, "
+        "'01' AS adm1_id, 'Depto' AS departamento, ST_GeomFromText("
+        "'MULTIPOLYGON(((0 0, 1 0, 1 1, 0 1, 0 0)), ((5 5, 6 5, 6 6, 5 6, 5 5)))'"
+        ") AS geom"
+    )
+    build_crosswalk(con, iso3="XXX")
+    return con
+
+
+@pytest.mark.geo
+def test_un_municipio_multipoligono_reparte_sus_dos_partes() -> None:
+    """`h3_polygon_wkt_to_cells` devuelve CERO celdas ante un MULTIPOLYGON.
+
+    No la primera parte: cero. Un municipio con una isla, un exclave o un trozo
+    separado por un rio es un MULTIPOLYGON, asi que sin `ST_Dump` no aportaba
+    una sola celda al reparto.
+
+    No se noto porque el rescate lo tapaba, y la cifra nacional salia bien por
+    un camino que no era el suyo. Lo delato Uruguay, rescatando el 48 % de su
+    poblacion.
+    """
+    con = _con_isla()
+
+    def celdas_en(lon: float, lat: float) -> int:
+        return int(
+            con.execute(
+                "SELECT count(*) FROM crosswalk_h3_adm WHERE h3_08 = "
+                f"h3_latlng_to_cell({lat}, {lon}, 8)::UBIGINT"
+            ).fetchone()[0]
+        )
+
+    # Una celda de cada parte: las dos tienen que estar.
+    assert celdas_en(0.5, 0.5) == 1, "la primera parte no entro en el reparto"
+    assert celdas_en(5.5, 5.5) == 1, "la segunda parte no entro en el reparto"
+
+
+@pytest.mark.geo
+def test_el_reparto_no_marca_como_rescatado_lo_que_reparte() -> None:
+    """`rescatada = TRUE` significa "esto es una aproximacion, auditalo".
+
+    Puesto sobre medio pais no significa nada, y ese era el coste real del
+    fallo del MULTIPOLYGON.
+    """
+    con = _con_isla()
+    assert con.execute("SELECT count(*) FROM crosswalk_h3_adm WHERE rescatada").fetchone()[0] == 0
+
+
+@pytest.mark.geo
+def test_las_teselas_cubren_la_caja_sin_huecos() -> None:
+    """El troceado no puede perder area: eso serian celdas sin municipio."""
+    from pipelines.p0_exposure.crosswalk import _teselas
+
+    t = _teselas(-70.0, -56.0, -66.0, -52.0, paso=0.5)
+    assert len(t) == 64
+    assert min(x0 for x0, _, _, _ in t) == pytest.approx(-70.0)
+    assert max(x1 for _, _, x1, _ in t) == pytest.approx(-66.0)
+    assert min(y0 for _, y0, _, _ in t) == pytest.approx(-56.0)
+    assert max(y1 for _, _, _, y1 in t) == pytest.approx(-52.0)
+    area = sum((x1 - x0) * (y1 - y0) for x0, y0, x1, y1 in t)
+    assert area == pytest.approx(16.0)
+
+
+@pytest.mark.geo
+def test_un_municipio_menor_que_una_tesela_no_se_trocea() -> None:
+    from pipelines.p0_exposure.crosswalk import _teselas
+
+    assert _teselas(-74.1, 4.5, -74.0, 4.6) == [(-74.1, 4.5, -74.0, 4.6)]
+
+
+# --- Que celdas llegan siquiera a ser candidatas ---------------------------
+
+
+@pytest.fixture
+def costa() -> Any:
+    """Un municipio, y dos celdas r8 **distintas** justo fuera de su borde: una
+    con gente y otra con un hospital y nada mas. Las dos caen fuera del
+    poligono, como una celda partida por la linea de costa.
+
+    Que sean distintas importa: puestas a 0,002° la una de la otra caian en la
+    misma celda r8 —unos 460 m de lado— y la prueba del hospital pasaba por el
+    rescate de la poblacion, sin comprobar nada."""
+    from pipelines.p0_exposure.crosswalk import TABLAS_CANDIDATAS
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE TABLE crosswalk_h3_adm (h3_08 UBIGINT, adm2_id VARCHAR, "
+        "frac_area DOUBLE, rescatada BOOLEAN)"
+    )
+    con.execute(
+        "CREATE TABLE admin_geom AS SELECT '05001' AS adm2_id, ST_GeomFromText("
+        "'POLYGON((-75.0 4.0, -74.9 4.0, -74.9 4.1, -75.0 4.1, -75.0 4.0))') AS geom"
+    )
+    # `h3_latlng_to_cell` da celdas reales, que es lo que el rescate indexa.
+    con.execute(
+        """
+        CREATE TABLE pop_h3 AS
+        SELECT h3_latlng_to_cell(4.02, -74.893, 8) AS h3_08, 500.0 AS pop_total
+        """
+    )
+    con.execute(
+        """
+        CREATE TABLE health_h3 AS
+        SELECT h3_latlng_to_cell(4.08, -74.893, 8) AS h3_08, 1::BIGINT AS health_count
+        """
+    )
+    for tabla in TABLAS_CANDIDATAS:
+        con.execute(f"CREATE TABLE IF NOT EXISTS {tabla} (h3_08 UBIGINT)")
+    return con
+
+
+@pytest.mark.geo
+def test_una_celda_con_hospital_y_sin_poblacion_se_rescata(costa: Any) -> None:
+    """EL HUECO QUE CIERRA.
+
+    `rescue_unassigned` se llamaba con `tabla_datos="pop_h3"` y nada mas, asi
+    que una celda costera con un hospital dentro y sin poblacion modelada no
+    llegaba a ser candidata: no entraba al crosswalk y desaparecia del activo
+    con el hospital. Es la misma leccion que el ensamblaje ya habia aprendido
+    —«una escuela remota... es justo el sitio que un reporte de exposicion no
+    puede permitirse perder»— aplicada solo en la puerta de abajo.
+    """
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    rescue_unassigned(costa)
+
+    celda_hospital: int = costa.execute(
+        "SELECT h3_08 FROM health_h3 WHERE health_count IS NOT NULL"
+    ).fetchone()[0]
+    asignadas = {r[0] for r in costa.execute("SELECT h3_08 FROM crosswalk_h3_adm").fetchall()}
+
+    assert celda_hospital in asignadas, "la celda del hospital no llego ni a candidata"
+
+
+@pytest.mark.geo
+def test_el_rescate_de_poblacion_sigue_funcionando(costa: Any) -> None:
+    """La ampliacion no puede costar el caso que ya funcionaba."""
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    rescatadas = rescue_unassigned(costa)
+
+    celda_pop: int = costa.execute("SELECT h3_08 FROM pop_h3").fetchone()[0]
+    asignadas = {r[0] for r in costa.execute("SELECT h3_08 FROM crosswalk_h3_adm").fetchall()}
+
+    assert celda_pop in asignadas
+    assert rescatadas == 2
+
+
+@pytest.mark.geo
+def test_pasar_una_sola_tabla_sigue_valiendo(costa: Any) -> None:
+    """La firma acepta una cadena suelta: hay llamadas y pruebas que la pasan asi."""
+    from pipelines.p0_exposure.crosswalk import rescue_unassigned
+
+    assert rescue_unassigned(costa, tabla_datos="pop_h3") == 1

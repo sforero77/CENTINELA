@@ -1,0 +1,151 @@
+{
+  "schema": "centinela/observados/1.0",
+  "generado_utc": "2026-09-08T21:20:23Z",
+  "ventana_dias": 5,
+  "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
+  "eventos": [
+    {
+      "usgs_id": "us7000tfty",
+      "mag": 4.7,
+      "lon": -68.8236,
+      "lat": -21.4066,
+      "depth_km": 110.7,
+      "lugar": "62 km al OSO de Ollagüe, Chile",
+      "origen_utc": "2026-09-08T13:42:08Z",
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": "CHL"
+    },
+    {
+      "usgs_id": "us7000tfs1",
+      "mag": 4.7,
+      "lon": -69.1624,
+      "lat": 10.733,
+      "depth_km": 10.0,
+      "lugar": "43 km al NO de Aroa, Venezuela",
+      "origen_utc": "2026-09-08T06:49:48Z",
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": "VEN"
+    },
+    {
+      "usgs_id": "us7000tez1",
+      "mag": 4.5,
+      "lon": -69.2641,
+      "lat": -25.0539,
+      "depth_km": 90.7,
+      "lugar": "129 km al ENE de Taltal, Chile",
+      "origen_utc": "2026-09-07T21:54:38Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "CHL"
+    },
+    {
+      "usgs_id": "us7000terb",
+      "mag": 4.8,
+      "lon": -99.242,
+      "lat": 16.3632,
+      "depth_km": 10.0,
+      "lugar": "39 km al SO de Copala, México",
+      "origen_utc": "2026-09-06T18:46:18Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "MEX"
+    },
+    {
+      "usgs_id": "us7000tepx",
+      "mag": 5.2,
+      "lon": -115.8082,
+      "lat": -24.2436,
+      "depth_km": 10.0,
+      "lugar": "southern East Pacific Rise",
+      "origen_utc": "2026-09-06T12:00:16Z",
+      "razon": "M5.2 < umbral M5.5",
+      "iso3": ""
+    },
+    {
+      "usgs_id": "us7000tep0",
+      "mag": 4.8,
+      "lon": -68.7038,
+      "lat": -22.2344,
+      "depth_km": 115.5,
+      "lugar": "33 km al NE de Calama, Chile",
+      "origen_utc": "2026-09-06T10:39:32Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "CHL"
+    },
+    {
+      "usgs_id": "us7000tepa",
+      "mag": 5.2,
+      "lon": -116.0305,
+      "lat": -24.5229,
+      "depth_km": 10.0,
+      "lugar": "southern East Pacific Rise",
+      "origen_utc": "2026-09-06T10:38:18Z",
+      "razon": "M5.2 < umbral M5.5",
+      "iso3": ""
+    },
+    {
+      "usgs_id": "us7000tep6",
+      "mag": 5.2,
+      "lon": -115.6112,
+      "lat": -24.5304,
+      "depth_km": 10.0,
+      "lugar": "southern East Pacific Rise",
+      "origen_utc": "2026-09-06T10:32:28Z",
+      "razon": "M5.2 < umbral M5.5",
+      "iso3": ""
+    },
+    {
+      "usgs_id": "us7000tem2",
+      "mag": 5.3,
+      "lon": -93.2487,
+      "lat": 14.1551,
+      "depth_km": 10.0,
+      "lugar": "108 km al SO de Puerto Madero, México",
+      "origen_utc": "2026-09-06T02:56:32Z",
+      "razon": "M5.3 < umbral M5.5",
+      "iso3": "MEX"
+    },
+    {
+      "usgs_id": "us7000tej2",
+      "mag": 5.1,
+      "lon": -66.7176,
+      "lat": -26.1078,
+      "depth_km": 10.0,
+      "lugar": "69 km al E de Antofagasta de la Sierra, Argentina",
+      "origen_utc": "2026-09-05T11:37:12Z",
+      "razon": "M5.1 < umbral M5.5",
+      "iso3": "ARG"
+    },
+    {
+      "usgs_id": "us7000tehe",
+      "mag": 5.0,
+      "lon": -83.151,
+      "lat": 3.5071,
+      "depth_km": 10.0,
+      "lugar": "Cerca de la costa de Central America",
+      "origen_utc": "2026-09-05T05:00:06Z",
+      "razon": "M5.0 < umbral M5.5",
+      "iso3": ""
+    },
+    {
+      "usgs_id": "us7000tefw",
+      "mag": 5.1,
+      "lon": -40.8475,
+      "lat": 9.4666,
+      "depth_km": 10.0,
+      "lugar": "central Mid-Atlantic Ridge",
+      "origen_utc": "2026-09-04T23:38:40Z",
+      "razon": "M5.1 < umbral M5.5",
+      "iso3": ""
+    },
+    {
+      "usgs_id": "us7000te8p",
+      "mag": 4.5,
+      "lon": -68.5636,
+      "lat": -21.3768,
+      "depth_km": 130.7,
+      "lugar": "36 km al OSO de Ollagüe, Chile",
+      "origen_utc": "2026-09-04T06:48:06Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "CHL"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# Los bumps de acciones llegan como PR revisable, no como una etiqueta que se
+# mueve sola bajo los pies.
+#
+# Ninguna accion de este repositorio esta fijada por SHA: catorce workflows usan
+# `actions/checkout@v4`, `astral-sh/setup-uv@v5` y cinco mas por **etiqueta
+# movil**, y una etiqueta de git se puede reapuntar a cualquier commit.
+# `astral-sh/*` ademas no es de GitHub. El precedente concreto de esta clase es
+# tj-actions/changed-files (CVE-2025-30066, marzo de 2025): se reapuntaron las
+# etiquetas de version a un commit hostil y miles de repositorios lo ejecutaron
+# sin cambiar una linea.
+#
+# Donde corre importa: `trigger.yml`, `impact.yml` y `exposure_quarterly.yml`
+# llevan `contents: write`, y `site.yml` despliega la pagina publica.
+#
+# Esto no cierra el hueco —lo cierra fijar por SHA— pero hace que el dia que se
+# fijen, los digests nuevos lleguen solos y revisables en vez de congelarse.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "acciones"

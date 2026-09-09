@@ -1,0 +1,2340 @@
+/* Visor de CENTINELA.
+ *
+ * La identidad es la de GeoAI LATAM: arena calida, verde bosque, acento
+ * esmeralda, monoespaciada para lo cartografico y una reticula de coordenadas
+ * de fondo. Los valores estan medidos sobre el sitio de la comunidad
+ * (geoai-latam.inspow.tech), no aproximados a ojo.
+ *
+ * Las fuentes se cargan de Google Fonts con `display=swap` y una pila de
+ * respaldo completa: el texto aparece de inmediato con la fuente del sistema y
+ * cambia cuando llega la buena. En una pagina que promete abrir con mala
+ * conexion, lo que no se puede es quedarse en blanco esperando. */
+
+:root {
+  color-scheme: light;
+
+  /* --- Identidad GeoAI LATAM ------------------------------------------- */
+  --arena: #e6e4d8;        /* fondo */
+  --crema: #f4f2ea;        /* superficie elevada */
+  --crema-alt: #eeebdf;    /* superficie hundida */
+  --bosque: #1c3328;       /* texto y superficies oscuras */
+  --verde: #0f5636;        /* acento principal */
+  --verde-vivo: #157049;
+  --esmeralda: #2eb479;
+  --ambar: #c8941a;
+  --ambar-texto: #6f4f0c;  /* el ambar de marca sobre arena da 2,1:1; este da 5,4:1 */
+  --teal: #2f6e78;
+  --alarma: #8f2c14;
+
+  /* Los dos grises de texto estan fijados por contraste, no por gusto: sobre
+     arena dan 6,5:1 y 4,9:1. Los anteriores (0.68 y 0.45 de alfa) daban 4,4:1 y
+     2,3:1 — el segundo rotulaba todas las metricas del tablero. */
+  --tenue: rgba(28, 51, 40, 0.82);
+  --tenue-mas: rgba(28, 51, 40, 0.72);
+  --borde: rgba(28, 51, 40, 0.15);
+  --borde-fuerte: rgba(28, 51, 40, 0.28);
+  --reticula: rgba(28, 51, 40, 0.07);
+
+  --radio-pastilla: 9999px;
+  --radio-grande: 24px;
+  --radio-medio: 16px;
+  --radio-chico: 10px;
+
+  --sombra: 0 1px 2px rgba(28, 51, 40, 0.05), 0 12px 32px rgba(28, 51, 40, 0.08);
+  --sombra-corta: 0 1px 2px rgba(28, 51, 40, 0.06), 0 4px 12px rgba(28, 51, 40, 0.07);
+
+  --tipo-titulo: "Familjen Grotesk", "DM Sans", system-ui, -apple-system, sans-serif;
+  --tipo-texto: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tipo-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ancho-panel: 25rem;
+  --ancho-texto: 82rem;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--arena);
+  color: var(--bosque);
+  font: 15px/1.6 var(--tipo-texto);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 {
+  font-family: var(--tipo-titulo);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+a { color: var(--verde); text-underline-offset: 3px; }
+a:hover { color: var(--verde-vivo); }
+
+/* Un foco visible y de marca. Antes no habia ninguno: el visor era navegable
+   con teclado y no se veia donde estaba uno. */
+:where(a, button, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--verde);
+  outline-offset: 2px;
+  border-radius: var(--radio-chico);
+}
+
+.salto-contenido {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 60;
+  padding: 0.55rem 1rem;
+  background: var(--bosque);
+  color: var(--crema);
+  border-radius: var(--radio-pastilla);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: top 0.16s ease;
+}
+
+.salto-contenido:focus { top: 0.75rem; color: var(--crema); }
+
+.oculto-visual {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Etiqueta micro en monoespaciada: es el gesto cartografico de la identidad,
+   el mismo que rotula las lineas de latitud en el sitio de la comunidad.
+   0.7rem y no 0.66: a 10 px la JetBrains Mono en versalitas con 0.13em de
+   espaciado deja de leerse de un vistazo, que es justamente para lo que esta. */
+.mono {
+  font-family: var(--tipo-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tenue-mas);
+}
+
+/* Reticula de coordenadas: el fondo del sitio de la comunidad. Decorativa, va
+   detras del contenido y no cambia con el zoom del dato. */
+.graticula {
+  position: relative;
+  background-image:
+    linear-gradient(to right, var(--reticula) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--reticula) 1px, transparent 1px);
+  background-size: 12.5rem 12.5rem;
+  background-position: center top;
+}
+
+/* La etiqueta iba clavada a 0,85rem del borde y terminaba en el pixel 41; el
+   titular de la seccion empieza en el 28 —`#eventos` tiene 1,75rem de padding—
+   asi que se pisaban. Y no solo en movil: medido, de 360 a 1200 px, y solo se
+   libraba a partir de 1440, cuando el contenedor se centra y deja hueco.
+
+   Ahora la etiqueta se coloca **respecto al mismo canal que el texto**: se
+   queda pegada al borde mientras haya sitio y desaparece cuando no lo hay, que
+   es lo que tiene que hacer una marca de reticula decorativa. */
+.paralelo {
+  position: absolute;
+  left: max(0.35rem, calc((100% - var(--ancho-texto)) / 2 - 3.2rem));
+  font-family: var(--tipo-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: rgba(28, 51, 40, 0.3);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Por debajo de esto no hay margen que ocupar: la retícula ya se ve de fondo y
+   la etiqueta solo estorbaría. Decorativa quiere decir prescindible. */
+@media (max-width: 90rem) {
+  .paralelo { display: none; }
+}
+
+/* --- Barra ---------------------------------------------------------------- */
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 0.75rem 1.75rem;
+  border-bottom: 1px solid var(--borde);
+  background: rgba(244, 242, 234, 0.85);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.marca { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: inherit; }
+.marca-sello { width: 1.75rem; height: 1.75rem; flex: 0 0 auto; display: block; }
+.marca-texto { display: flex; align-items: baseline; gap: 0.42rem; }
+.marca-nombre { font-family: var(--tipo-titulo); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.03em; }
+.marca-lema { font-family: var(--tipo-titulo); font-size: 1.1rem; font-style: italic; color: var(--verde); }
+
+.selector { display: flex; align-items: center; gap: 0.55rem; margin-left: 0.9rem; min-width: 0; }
+
+/* El chevron nativo del `select` rompe el lenguaje de pastillas del resto de
+   la barra; se dibuja uno propio y se apaga el del sistema. */
+.selector select {
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--bosque);
+  background-color: var(--crema);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%231c3328' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  appearance: none;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  padding: 0.44rem 2.3rem 0.44rem 1rem;
+  max-width: 26rem;
+  /* `min-width: 0` es lo que impide el scroll horizontal: un select no se
+     encoge por debajo del ancho de su opcion mas larga, y la del Choco mide
+     media pantalla. */
+  min-width: 0;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.selector select:hover { border-color: var(--verde); }
+
+.barra nav { margin-left: auto; display: flex; align-items: center; gap: 1.15rem; font-size: 0.87rem; }
+.barra nav a { color: var(--tenue); text-decoration: none; }
+.barra nav a:hover { color: var(--bosque); }
+
+.boton-pastilla {
+  padding: 0.42rem 1.05rem;
+  border-radius: var(--radio-pastilla);
+  background: var(--bosque);
+  color: var(--crema) !important;
+  font-size: 0.84rem;
+  /* Una pastilla es un boton, y un boton no se subraya. Vivia dentro de
+     `.barra nav`, que ya quitaba el subrayado; fuera de la barra salia
+     subrayada. La regla va donde vive el componente, no donde se le use. */
+  text-decoration: none;
+  display: inline-block;
+}
+
+.boton-pastilla:hover { background: var(--verde); }
+
+/* Endoso de la comunidad: el mismo bloqueo que usa su sitio — el globo y
+   "GeoAI" en bosque con "LATAM" en verde cursiva. */
+
+/* EL GLOBO ES LA MARCA DE VERDAD, NO UN EMOJI.
+
+   Aqui hubo un F30E durante toda la vida del visor, y un emoji lo dibuja
+   cada sistema a su manera: en Windows sale azul, en Android verde plano, en
+   algun Linux no sale. El sello de GeoAI LATAM tiene una sola forma —globo
+   marino con America en verde— y es el que sirve su sitio. Va como PNG de 180
+   con las esquinas transparentes, asi que el circulo cae limpio sobre la arena
+   y sirve tambien de icono de pantalla de inicio.
+
+   No sustituye al favicon: ese sigue siendo el hexagono, que es de CENTINELA.
+   Este identifica a quien lo hace; aquel, a la cosa. */
+.globo {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+}
+
+.pie-marca .globo { width: 1.1rem; height: 1.1rem; }
+.endoso {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-left: 1.15rem;
+  border-left: 1px solid var(--borde);
+  font-family: var(--tipo-titulo);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--bosque) !important;
+  white-space: nowrap;
+}
+
+.endoso em { font-style: italic; color: var(--verde); font-weight: 600; }
+.endoso:hover em { color: var(--verde-vivo); }
+
+/* --- Aviso permanente ------------------------------------------------------ */
+
+.aviso {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.65rem 1.75rem;
+  background: rgba(200, 148, 26, 0.13);
+  border-bottom: 1px solid rgba(200, 148, 26, 0.32);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.aviso .mono { color: var(--ambar-texto); flex: 0 0 auto; }
+
+/* --- Tablero -------------------------------------------------------------- */
+
+/* La primera pantalla es el tablero entero y nada mas: barra, aviso y el par
+   mapa/panel ocupando lo que sobre. Antes el mapa tenia una altura fija mas
+   alta que la ventana y la leyenda quedaba cortada por debajo del pliegue. */
+.pantalla {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* `grid-template-rows: minmax(0, 1fr)` no es decorativo: sin el, la fila se
+   estira hasta la altura del panel lateral —que es larguisimo— y arrastra
+   consigo el mapa y la pantalla entera. Con la fila acotada, el panel scrollea
+   dentro de si mismo y la leyenda del mapa queda donde se ve. */
+.tablero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--ancho-panel);
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 24rem;
+  border-bottom: 1px solid var(--borde);
+}
+
+.lienzo { position: relative; min-height: 0; }
+#mapa { position: absolute; inset: 0; }
+
+/* El lienzo arranca del color del mapa base, no del de la pagina: heredar el
+   fondo dejaria un salto de color mientras cargan las teselas. */
+.maplibregl-canvas-container { background: #ece9de; }
+.maplibregl-popup-content {
+  font-family: var(--tipo-texto);
+  border-radius: var(--radio-medio);
+  padding: 0.8rem 0.95rem;
+  box-shadow: var(--sombra);
+}
+
+/* EN PANTALLA ESTRECHA, FUERA LOS BOTONES DE ZOOM.
+   La esquina de arriba a la derecha es la única libre del mapa, y en 390 px la
+   pila ya no cabe: medido con un evento abierto, la barra de escala caía 67 px
+   dentro de la leyenda de intensidad — y ya se metía 22 px antes de añadir los
+   botones de inicio y mapa base.
+
+   De los tres controles, el zoom es el prescindible: en una pantalla táctil se
+   hace pellizcando, y el propio aviso de gestos cooperativos que MapLibre pinta
+   sobre el mapa dice «Usa dos dedos para mover el mapa». Los otros dos no
+   tienen gesto equivalente.
+
+   `:has()` porque MapLibre no marca sus grupos: el que contiene los botones de
+   zoom es el suyo. */
+@media (max-width: 48rem) {
+  .maplibregl-ctrl-group:has(.maplibregl-ctrl-zoom-in) { display: none; }
+}
+
+/* Los dos botones propios del mapa —inicio y mapa base— y la galería que abre
+   el segundo. Viven en un solo `maplibregl-ctrl-group` para no gastar dos veces
+   los 10 px de margen que MapLibre da a cada grupo: en un móvil de 390 px esa
+   esquina ya llega hasta la leyenda. */
+.ctrl-centinela { position: relative; }
+
+/* `> button` y no `button`: la galería cuelga de este mismo grupo y sus
+   opciones NO son botones de 29 px. */
+.ctrl-centinela > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bosque);
+}
+
+/* Cuelga del grupo hacia la izquierda: hacia abajo taparía la barra de escala,
+   y hacia la derecha se saldría de la pantalla. */
+.galeria-bases {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 8px);
+  width: 15rem;
+  padding: 0.35rem;
+  border-radius: var(--radio-medio);
+  background: var(--crema);
+  border: 1px solid var(--borde);
+  box-shadow: var(--sombra);
+}
+
+/* `.galeria-bases .base-opcion` y no `.base-opcion` a secas: MapLibre define
+   `.maplibregl-ctrl-group button { width: 29px; height: 29px }`, que gana por
+   especificidad a una sola clase. Con esa regla encima, las tres opciones
+   salían aplastadas en cuadrados de 29 px con el texto encima del de al lado.
+   Medido en pantalla: ilegible. */
+.galeria-bases .base-opcion {
+  display: block;
+  width: 100%;
+  height: auto;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border: 0;
+  border-radius: var(--radio-chico);
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--bosque);
+  overflow: visible;
+}
+
+.galeria-bases .base-opcion + .base-opcion { margin-top: 0.15rem; }
+.galeria-bases .base-opcion:hover { background: var(--crema-alt); }
+.galeria-bases .base-opcion[aria-pressed="true"] { background: var(--bosque); color: var(--crema); }
+
+.base-nombre { display: block; font-size: 0.86rem; font-weight: 600; }
+.base-apunte {
+  display: block;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  margin-top: 0.1rem;
+  color: var(--tenue);
+}
+.galeria-bases .base-opcion[aria-pressed="true"] .base-apunte { color: rgba(244, 242, 234, 0.78); }
+
+/* El rotulo que sale al pasar por encima de un epicentro. Es un apunte, no una
+   ficha: mas apretado que el resto de globos y sin puntero para el raton, para
+   que no se robe a si mismo el `mouseleave` que lo cierra. */
+.rotulo-epicentro { pointer-events: none; }
+.rotulo-epicentro .maplibregl-popup-content { padding: 0.45rem 0.65rem; }
+.rotulo-epicentro-titulo {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--bosque);
+}
+.rotulo-epicentro-cifra {
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  color: var(--tenue);
+}
+
+.lateral {
+  border-left: 1px solid var(--borde);
+  background: var(--crema);
+  padding: 1.35rem 1.5rem 2.5rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.vacio p { margin: 0 0 0.75rem; }
+.vacio .pista { color: var(--tenue); font-size: 0.86rem; }
+
+/* --- Controles sobre el mapa ---------------------------------------------- */
+
+.capas {
+  position: absolute;
+  top: 0.9rem;
+  left: 0.9rem;
+  right: 4.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.28rem;
+  width: fit-content;
+  max-width: calc(100% - 5.4rem);
+  background: rgba(244, 242, 234, 0.95);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  box-shadow: var(--sombra-corta);
+  z-index: 3;
+}
+
+/* `display: flex` de autor le gana al `display: none` que el navegador aplica
+   por `[hidden]`. Sin esta regla la barra de capas seguia dibujada —vacia, como
+   una pastilla suelta en la esquina— antes de elegir evento y despues de
+   cerrarlo. */
+.capas[hidden] { display: none; }
+
+.capas button {
+  font: inherit;
+  font-size: 0.79rem;
+  padding: 0.3rem 0.8rem;
+  border: none;
+  border-radius: var(--radio-pastilla);
+  background: transparent;
+  color: var(--tenue);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.capas button:hover { background: rgba(28, 51, 40, 0.07); color: var(--bosque); }
+.capas button[aria-selected="true"] { background: var(--bosque); color: var(--crema); }
+
+.panel-mapa {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  background: #ece9de;
+  color: var(--tenue);
+  font-size: 0.88rem;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.panel-mapa[hidden] { display: none; }
+
+/* El mismo panel cuando deja de ser un «espere» y pasa a ser una respuesta:
+   sin girito, dos lineas y sitio para la segunda. */
+.panel-mapa-aviso {
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.panel-mapa-nota {
+  max-width: 26rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--tenue-mas);
+}
+
+.giro {
+  width: 0.9rem; height: 0.9rem;
+  border: 2px solid rgba(28, 51, 40, 0.18);
+  border-top-color: var(--verde);
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .giro { animation: none; } }
+
+.leyenda {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 2.4rem;
+  width: 14rem;
+  padding: 0.85rem 0.95rem;
+  background: rgba(244, 242, 234, 0.96);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-medio);
+  box-shadow: var(--sombra-corta);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  z-index: 3;
+}
+
+.leyenda[hidden] { display: none; }
+
+.leyenda-titulo { margin: 0 0 0.5rem; color: var(--bosque); }
+.leyenda-escala { list-style: none; margin: 0 0 0.55rem; padding: 0; }
+.leyenda-escala li { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.18rem; }
+
+/* EL CONTORNO DE LA MUESTRA HACE UN TRABAJO, Y A 0,2 NO LO HACIA.
+ *
+ * La clase mas baja de cada rampa esta entre 1,24 y 1,48:1 contra el fondo de
+ * la leyenda: casi invisible. El contorno existia para eso y a alfa 0,2 se
+ * pintaba en #c9ccc3, que da 1,45:1 contra el fondo y 1,02:1 contra la muestra
+ * mas clara — o sea, tan invisible como lo que venia a delimitar.
+ *
+ * A 0,6 sale #727f76: 3,74:1 contra el fondo. La muestra queda delimitada
+ * aunque su relleno no se distinga, que es lo que exige WCAG 1.4.11 para un
+ * objeto grafico que transporta informacion.
+ *
+ * Es el arreglo que la coropleta del mapa NO puede tener; ver la nota de
+ * `CAPAS` en app.js. Aqui si, porque la leyenda es donde se aprende el codigo:
+ * si la muestra no se ve, el color del mapa no significa nada. */
+.leyenda-escala .muestra {
+  width: 1.6rem; height: 0.65rem;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  border: 1px solid rgba(28, 51, 40, 0.6);
+}
+
+/* LA MUESTRA DE UNA ISOLINEA ES UNA LINEA.
+ *
+ * Cuando el evento no tiene malla, lo unico que hay en el mapa son los
+ * contornos del ShakeMap. Explicarlos con la casilla rellena de la coropleta
+ * prometeria un area medida —"esto es lo que hay dentro"— que es justo lo que
+ * en esos eventos no existe: no hay celdas, no hay nadie contado dentro.
+ *
+ * Conserva el borde de `.muestra`, que no es decoracion: es lo que delimita el
+ * gris #9a8f7d de los niveles bajos contra el fondo claro de la caja. */
+.leyenda-escala .muestra-linea { height: 0.28rem; border-radius: 1px; }
+
+.leyenda-valor { font-family: var(--tipo-mono); font-size: 0.72rem; }
+.leyenda-nota { margin: 0; color: var(--tenue-mas); font-size: 0.72rem; line-height: 1.45; }
+
+/* LA ATRIBUCION DEL MAPA BASE VA POR ENCIMA DE TODO LO NUESTRO.
+   No es estetica: OpenStreetMap es ODbL y exige que la atribucion se vea. En
+   movil la pila de interruptores caia justo sobre ella —medido el 28-ago-2026:
+   `elementFromPoint` sobre el centro de `.maplibregl-ctrl-attrib` devolvia el
+   interruptor de sismos menores— y este proyecto rechaza fuentes enteras por
+   incompatibilidad de licencia como para taparle el credito al mapa que usa. */
+/* Dos clases y no una: `maplibre-gl.css` declara `z-index: 2` en esa misma
+   regla y se carga despues, asi que con igual especificidad ganaba ella. */
+.lienzo .maplibregl-ctrl-bottom-right,
+.lienzo .maplibregl-ctrl-bottom-left {
+  z-index: 5;
+}
+
+@media (max-width: 34rem) {
+  /* EL PIE DEL MAPA NO CABE EN UN TELEFONO, Y SE APILABA SOBRE SI MISMO.
+     Medido el 28-ago-2026 en 390x844, con evento y focos: leyenda 553-708,
+     interruptores 599-728, atribucion 706-730. Las tres cajas sobre el mismo
+     rincon de 506 px de mapa: la leyenda de intensidad —la que explica los
+     colores— quedaba ilegible debajo de los interruptores.
+
+     La leyenda sube al hueco que queda bajo la barra de capas, que esta vacio.
+     Entre esa barra y la atribucion hay 349 px libres y las dos cajas suman
+     296: caben, solo estaban mal repartidas. */
+  .leyenda { width: auto; }
+
+  /* POR `#leyenda` Y NO POR `.leyenda`. La leyenda de simbolos declara
+     `class="leyenda leyenda-simbolos"`, asi que una regla de clase la movia a
+     ella tambien — y acababa exactamente encima de la de intensidad, que es lo
+     que este bloque venia a evitar. Lo caza `test_ningun_texto_se_pisa_con_otro`.
+     Solo se recoloca la de intensidad, que es la unica suelta sobre el mapa: la
+     de simbolos vive dentro de `.controles-mapa` y se apila con ellos. */
+  #leyenda {
+    left: 0.9rem;
+    right: 0.9rem;
+    top: 1rem;
+    bottom: auto;
+  }
+
+  /* `.capas` va antes que `#leyenda` en el DOM, asi que el hermano general
+     sirve para bajarla solo cuando hay barra de pestañas — en panorama no la
+     hay y la leyenda puede ocupar el borde superior. */
+  .capas:not([hidden]) ~ #leyenda {
+    top: 8.6rem;
+  }
+
+  .capas { right: 4.2rem; max-width: none; width: auto; justify-content: flex-start; }
+}
+
+/* --- Panel lateral --------------------------------------------------------- */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+  font-family: var(--tipo-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--verde);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 0.85rem;
+  height: 1px;
+  flex: 0 0 auto;
+  background: var(--verde);
+}
+
+#lateral h2 { font-size: 1.3rem; line-height: 1.22; margin-bottom: 0.45rem; }
+.detalle-meta { margin: 0; color: var(--tenue); font-size: 0.76rem; line-height: 1.6; font-family: var(--tipo-mono); overflow-wrap: anywhere; }
+
+.distintivos { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.75rem 0 0; padding: 0; list-style: none; }
+
+.distintivo {
+  display: inline-block;
+  padding: 0.22rem 0.7rem;
+  border: 1px solid rgba(200, 148, 26, 0.55);
+  border-radius: var(--radio-pastilla);
+  color: var(--ambar-texto);
+  background: rgba(200, 148, 26, 0.14);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  cursor: help;
+}
+
+.distintivo.alarma { border-color: rgba(143, 44, 20, 0.45); background: rgba(143, 44, 20, 0.1); color: var(--alarma); }
+
+.bloque { margin-top: 1.7rem; }
+.bloque:first-of-type { margin-top: 1.5rem; }
+
+/* Franjas de intensidad: las tres que calcula el sistema, no solo MMI>=7.
+   Publicar una sola franja obliga a quien lee a suponer las otras dos. */
+.franjas { list-style: none; margin: 0; padding: 0; }
+
+.franja {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.42rem 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.franja:last-child { border-bottom: none; }
+.franja-nombre { font-family: var(--tipo-mono); font-size: 0.72rem; color: var(--tenue); }
+.franja-valor { font-family: var(--tipo-titulo); font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.franja-pista { height: 0.4rem; background: rgba(28, 51, 40, 0.08); border-radius: var(--radio-pastilla); overflow: hidden; }
+/* `display: block` obligatorio: es un span dentro de un span, no un hijo de
+   grid, y en `inline` ignoraba el ancho — las tres franjas salian vacias. */
+.franja-relleno { display: block; height: 100%; border-radius: var(--radio-pastilla); }
+
+.metricas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--borde);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-medio);
+  overflow: hidden;
+}
+
+.metrica { padding: 0.8rem 0.9rem; background: var(--crema); }
+
+/* Con un numero impar de metricas, la rejilla de dos columnas deja un hueco que
+   se ve —el fondo del contenedor, que es la linea de 1px hecha con background—
+   y parece una tarjeta rota. La ultima ocupa el ancho.
+
+   Paso al anadir "paises con reporte" al panorama: tres metricas, un agujero. */
+.metrica:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+.metrica .valor {
+  display: block;
+  font-family: var(--tipo-titulo);
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.metrica .etiqueta {
+  display: block;
+  margin-top: 0.24rem;
+  font-family: var(--tipo-mono);
+  font-size: 0.66rem;
+  color: var(--tenue-mas);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+}
+
+.metrica .apunte { display: block; margin-top: 0.3rem; font-size: 0.72rem; color: var(--tenue); line-height: 1.4; }
+
+/* Siete metricas en una rejilla de dos columnas dejan una huerfana; la de vias,
+   que es la que lleva apunte, ocupa la fila entera. */
+.metrica.ancha { grid-column: 1 / -1; }
+
+/* Terreno: licuefaccion y deslizamiento. El pipeline los calcula y el visor no
+   los ensenaba — 1,6 M de personas sobre suelo licuable no caben en una nota. */
+.terreno { list-style: none; margin: 0; padding: 0; }
+
+.terreno li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.3rem;
+  background: var(--crema-alt);
+  border-radius: var(--radio-chico);
+  font-size: 0.82rem;
+}
+
+/* LA ALERTA DE USGS VA PEGADA A LA CIFRA QUE MATIZA, NO SUELTA.
+ *
+ * Es una nota sobre la fila de encima —"nuestro cero y su naranja hablan del
+ * mismo evento"—, asi que se cuelga de ella: sin fondo propio, con sangria y un
+ * filete del color de la alerta. Una fila mas del mismo aspecto se leeria como
+ * una tercera medicion, que es justo lo que no es.
+ *
+ * El color va como refuerzo del texto, nunca solo: la palabra "naranja" o
+ * "roja" esta escrita en la nota. WCAG 1.4.1 — la informacion no puede
+ * depender del color. */
+.terreno .contraste-terreno {
+  display: block;
+  background: none;
+  padding: 0.35rem 0 0.55rem 0.7rem;
+  margin: -0.2rem 0 0.45rem 0.75rem;
+  border-left: 2px solid var(--borde-fuerte);
+}
+
+.terreno .contraste-terreno[data-alerta="yellow"] { border-left-color: #d9a406; }
+.terreno .contraste-terreno[data-alerta="orange"] { border-left-color: #e07a3f; }
+.terreno .contraste-terreno[data-alerta="red"] { border-left-color: #c0392b; }
+
+.terreno .cifra { font-family: var(--tipo-titulo); font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.terreno .cero { color: var(--tenue-mas); }
+
+/* LOS DELTAS DEL REPROCESO.
+ *
+ * Filete a la izquierda y no fondo lleno: es un aviso de lectura —"esto se
+ * movio desde la version que leiste"—, no una cifra mas del reporte. Compite
+ * con el bloque de franjas que va justo debajo y tiene que perder esa pelea.
+ *
+ * Las lineas vienen de `format_delta_prose` y traen flechas: "340k → 355k".
+ * Cifras tabulares para que los dos lados de la flecha se lean alineados. */
+.cambios { list-style: none; margin: 0; padding: 0; }
+
+.cambios li {
+  padding: 0.4rem 0 0.4rem 0.7rem;
+  margin-bottom: 0.25rem;
+  border-left: 2px solid var(--bosque);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Barras en CSS puro: una libreria de graficos para ocho barras horizontales
+   es una dependencia que mantener y una peticion mas en una pagina que promete
+   abrir con mala conexion. */
+.barras { list-style: none; margin: 0; padding: 0; }
+.barras li { margin-bottom: 0.62rem; font-size: 0.82rem; }
+
+.barra-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin-bottom: 0.22rem; }
+.barra-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barra-valor { color: var(--tenue); font-family: var(--tipo-mono); font-size: 0.74rem; flex: 0 0 auto; }
+
+.barra-pista { height: 0.34rem; background: rgba(28, 51, 40, 0.09); border-radius: var(--radio-pastilla); overflow: hidden; }
+.barra-relleno { height: 100%; border-radius: var(--radio-pastilla); }
+
+.ficha-mmi {
+  display: inline-block;
+  min-width: 1.85rem;
+  margin-right: 0.4rem;
+  padding: 0.04rem 0.3rem;
+  border-radius: 4px;
+  border: 1px solid rgba(28, 51, 40, 0.2);
+  font-family: var(--tipo-mono);
+  font-size: 0.64rem;
+  text-align: center;
+  /* NO es `--bosque`. Medido sobre el naranja de la banda 7 —#ef6548, donde
+     cae la mitad de los municipios de un evento grande— el verde bosque da
+     4,26:1 y a 10,2 px hacen falta 4,5. Y no se arregla bajando el umbral de
+     `sobre-oscuro`: el blanco sobre ese mismo naranja da 3,17, peor. Casi
+     negro da 5,96 y no desentona con la paleta, porque es el mismo gris de
+     tinta con el que se dibujan los simbolos del mapa. */
+  color: #1c1b1a;
+  vertical-align: 0.06em;
+}
+
+/* Sobre los tres rojos altos de la rampa, el verde bosque de la ficha daba
+   menos de 2:1: la intensidad, que es el dato de la ficha, no se leia. */
+.ficha-mmi.sobre-oscuro { color: #fff; border-color: rgba(255, 255, 255, 0.35); }
+
+.contraste, .apostilla {
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  background: var(--crema-alt);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-medio);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--tenue);
+}
+
+.contraste strong { color: var(--bosque); font-weight: 600; }
+
+.descargas { margin: 0; font-size: 0.8rem; color: var(--tenue); line-height: 2; overflow-wrap: anywhere; }
+.descargas a { white-space: nowrap; }
+
+/* Panorama del estado vacio: el tablero sin evento seleccionado ensenaba un
+   panel en blanco. La superficie principal del producto no puede estar vacia
+   en su estado por defecto. */
+.panorama-lista { list-style: none; margin: 0.9rem 0 0; padding: 0; }
+
+.panorama-lista button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.4rem;
+  background: var(--crema-alt);
+  border: 1px solid transparent;
+  border-radius: var(--radio-chico);
+  cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.panorama-lista button:hover { border-color: var(--borde-fuerte); background: var(--crema); }
+.panorama-lista .titulo { display: block; font-family: var(--tipo-titulo); font-weight: 600; font-size: 0.92rem; letter-spacing: -0.015em; }
+.panorama-lista .pie { display: block; margin-top: 0.2rem; font-family: var(--tipo-mono); font-size: 0.68rem; color: var(--tenue-mas); }
+
+/* --- Lista de eventos ------------------------------------------------------ */
+
+#eventos { padding: 3rem 1.75rem 2.5rem; }
+.contenedor { max-width: var(--ancho-texto); margin: 0 auto; }
+#eventos h2 { font-size: 1.55rem; margin-bottom: 0.3rem; }
+.seccion-lema { margin: 0 0 1.4rem; color: var(--tenue); font-size: 0.9rem; }
+
+.lista-eventos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  /* `minmax(20rem, ...)` no encoge: en un movil de 320 px la columna seguia
+     pidiendo 320 y arrastraba a **toda la pagina** 35 px de lado, mapa
+     incluido. Medido: 320 -> 35 px de desborde, 344 -> 11, 360 y por encima ->
+     0. `min()` deja que la columna ceda cuando la ventana es mas estrecha que
+     la columna, que es justo el caso que faltaba. */
+  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+  gap: 0.85rem;
+}
+
+/* El atributo `hidden` del navegador es `display: none` con especificidad de
+   elemento: cualquier regla de clase lo pisa. `aplicarFiltro` marcaba
+   `li.hidden = true` en dieciocho tarjetas, la pastilla del pais se ponia en
+   `aria-pressed="true"`, se anunciaba "3 reportes en la lista" al lector de
+   pantalla... y las veintiuna seguian en pantalla.
+
+   La trampa ya se conocia —`.leyenda[hidden]` la guarda desde su propia regla—
+   y aqui no se aplico. Medido el 28-ago-2026: 28 elementos con [hidden] en la
+   pagina, 18 visibles, y los 18 eran estas tarjetas. */
+.lista-eventos li[hidden] { display: none; }
+
+.lista-eventos li {
+  display: flex;
+  flex-direction: column;
+  padding: 1.05rem 1.15rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--crema);
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.lista-eventos li:hover {
+  border-color: var(--borde-fuerte);
+  transform: translateY(-2px);
+  box-shadow: var(--sombra);
+}
+
+@media (prefers-reduced-motion: reduce) { .lista-eventos li:hover { transform: none; } }
+
+.lista-eventos li.activo { border-color: var(--verde); box-shadow: 0 0 0 1px var(--verde); }
+
+.evento-cabecera { display: flex; align-items: baseline; gap: 0.6rem; }
+
+.evento-mag {
+  flex: 0 0 auto;
+  font-family: var(--tipo-titulo);
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--crema);
+  background: var(--bosque);
+  border-radius: var(--radio-pastilla);
+  padding: 0.1rem 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lista-eventos a { font-family: var(--tipo-titulo); font-weight: 600; font-size: 1rem; text-decoration: none; color: var(--bosque); letter-spacing: -0.015em; }
+.lista-eventos a:hover { color: var(--verde); }
+
+.evento-meta { margin: 0.45rem 0 0; color: var(--tenue-mas); font-size: 0.72rem; line-height: 1.5; font-family: var(--tipo-mono); }
+.evento-cifra { display: block; margin-top: auto; padding-top: 0.6rem; font-family: var(--tipo-titulo); font-size: 1.3rem; font-weight: 600; letter-spacing: -0.02em; }
+.evento-cifra small { font-family: var(--tipo-mono); font-size: 0.64rem; font-weight: 400; color: var(--tenue-mas); text-transform: uppercase; letter-spacing: 0.08em; margin-left: 0.4rem; }
+
+.cargando, .nota { color: var(--tenue); font-size: 0.88rem; }
+
+/* --- Pie ------------------------------------------------------------------- */
+
+footer {
+  border-top: 1px solid var(--borde);
+  padding: 1.75rem;
+  color: var(--tenue-mas);
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+
+footer .contenedor { display: grid; gap: 0.5rem; }
+footer p { margin: 0; }
+footer a { color: var(--tenue); }
+.pie-marca { display: flex; align-items: center; gap: 0.4rem; font-family: var(--tipo-titulo); font-weight: 600; color: var(--bosque); text-decoration: none; }
+.pie-marca em { font-style: italic; color: var(--verde); }
+
+/* El aviso que hace la resta: objetivo contra cadencia real. Se marca porque
+   es lo unico de la pagina de estado que dice "esto no se esta cumpliendo", y
+   perderlo entre notas grises seria enterrarlo. */
+.nota-alarma {
+  border-left: 3px solid var(--alarma);
+  padding-left: 0.8rem;
+  color: var(--tenue);
+}
+
+/* --- Cuando se reviso cada cifra ------------------------------------------- */
+/*
+ * El comentario de `pintarEnVivo` prometia desde siempre que las cifras llevan
+ * la hora de su ultima revision —"sin ella, 14.984 celdas con fuego podria ser
+ * de hace un mes"— y no la llevaban. Va dentro del apunte, no en una linea
+ * aparte: la antiguedad es una propiedad de la cifra, no un pie de pagina.
+ */
+.revisado { white-space: nowrap; }
+
+.pie-vivo {
+  margin: 0.75rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--tenue-mas);
+}
+
+/* La linea que dice que la tabla se desplaza. Solo donde no cabe. */
+.tabla-pista { display: none; }
+
+@media (max-width: 48rem) {
+  .tabla-pista {
+    display: block;
+    margin: 0.5rem 0 0;
+    font-family: var(--tipo-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    color: var(--tenue-mas);
+  }
+}
+
+/* --- Controles de la lista ------------------------------------------------- */
+/*
+ * Ordenar y recortar al encuadre. Van en una fila que se parte sola: en un
+ * movil las pastillas de orden ocupan la primera linea, el interruptor la
+ * segunda y la cuenta cae debajo, sin que ninguna se salga.
+ */
+.solo-en-vista {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--tenue);
+  cursor: pointer;
+  user-select: none;
+}
+
+.solo-en-vista input { margin: 0; accent-color: var(--verde); }
+.solo-en-vista[hidden] { display: none; }
+
+/* A la derecha del todo, y en monoespaciada: es un contador, no una etiqueta.
+   `margin-left: auto` lo empuja solo cuando cabe; al partirse la fila cae
+   debajo alineado a la izquierda, que es como se lee en un movil. */
+.cuenta-lista { margin-left: auto; font-size: 0.68rem; }
+
+/* --- Area de afectacion ---------------------------------------------------- */
+
+.area-total { display: flex; align-items: baseline; gap: 0.55rem; margin: 0.2rem 0 0; }
+.area-total strong {
+  font-family: var(--tipo-titulo);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.area-total span {
+  font-family: var(--tipo-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--tenue-mas);
+}
+.area-apunte { margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--tenue-mas); }
+
+.area-franjas { list-style: none; margin: 0.8rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+
+/* Tres columnas fijas: la etiqueta y la cifra no se mueven de banda a banda, y
+   asi las barras se comparan entre si sin tener que leerlas. */
+.area-franjas li {
+  display: grid;
+  grid-template-columns: 4.1rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+.area-banda { font-size: 0.68rem; color: var(--tenue-mas); }
+.area-pista { height: 0.5rem; border-radius: var(--radio-pastilla); background: var(--crema-alt); overflow: hidden; }
+.area-relleno { display: block; height: 100%; border-radius: var(--radio-pastilla); }
+.area-cifra { font-size: 0.72rem; font-variant-numeric: tabular-nums; color: var(--tenue); }
+
+/* La proporcion que convierte un conteo en una noticia: 289.000 mayores no dice
+   nada hasta que se sabe que son el 12 % de los expuestos. */
+.cuota-apunte { color: var(--tenue-mas); }
+.cuota-apunte strong { color: var(--tenue); font-weight: 600; }
+
+/* --- Pagina de estado ------------------------------------------------------ */
+
+/* Antes esta pagina no tenia ni una regla propia: heredaba los tokens y salia
+   con el texto de borde a borde y la tabla en crudo. */
+.hoja { max-width: 58rem; margin: 0 auto; padding: 2.5rem 1.75rem 3rem; }
+.hoja h2 { font-size: 1.35rem; margin: 2.2rem 0 0.6rem; }
+.hoja h2:first-of-type { margin-top: 1.6rem; }
+.hoja p { margin: 0 0 0.75rem; }
+.hoja > .entradilla { font-size: 1.02rem; line-height: 1.65; color: var(--tenue); max-width: 46rem; }
+
+.objetivo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.6rem;
+  margin: 0 0 0.9rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--crema);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-medio);
+}
+
+.objetivo div { display: flex; align-items: baseline; gap: 0.5rem; }
+.objetivo .valor { font-family: var(--tipo-titulo); font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.tabla-scroll { overflow-x: auto; margin-bottom: 0.75rem; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+thead th {
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--borde-fuerte);
+  font-family: var(--tipo-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--tenue-mas);
+  white-space: nowrap;
+}
+
+/* Acotado a `.hoja` (el main de status.html): estos selectores estuvieron
+   desnudos y se fugaban a la tabla de cobertura del indice, que definia su
+   propio lenguaje —hover, sin rayado— y recibia este encima. El bandeado
+   resultante parecia un fallo de render. */
+.hoja tbody td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--borde); }
+.hoja tbody tr:last-child td { border-bottom: none; }
+.hoja tbody tr:nth-child(odd) td { background: rgba(244, 242, 234, 0.55); }
+
+.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--tipo-mono); font-size: 0.8rem; }
+.cumple { color: var(--verde-vivo); }
+.incumple { color: var(--alarma); }
+
+/* Una discrepancia enorme entre los dos productos de poblacion no puede leerse
+   con la misma tipografia que un 0,8 %. Ver `pintarIncertidumbre`. */
+.cifra-alerta { color: var(--alarma); }
+
+.latidos { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+
+.latidos li {
+  padding: 0.5rem 0.8rem;
+  background: var(--crema);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-chico);
+  font-family: var(--tipo-mono);
+  font-size: 0.74rem;
+  color: var(--tenue);
+}
+
+/* --- Adaptacion a pantallas estrechas -------------------------------------- */
+
+@media (max-width: 64rem) {
+  .pantalla { height: auto; }
+  .tablero { grid-template-columns: 1fr; grid-template-rows: auto auto; min-height: 0; }
+  .lienzo { min-height: 26rem; height: 60vh; }
+  .lateral { border-left: none; border-top: 1px solid var(--borde); overflow: visible; }
+  .barra { flex-wrap: wrap; gap: 0.75rem 1rem; padding: 0.7rem 1.1rem; }
+  .selector { order: 3; margin-left: 0; width: 100%; }
+  .selector select { max-width: none; flex: 1; }
+  .barra nav { gap: 0.9rem; }
+  .aviso { padding: 0.65rem 1.1rem; }
+  #eventos { padding: 2.25rem 1.1rem 2rem; }
+  footer { padding: 1.5rem 1.1rem; }
+  .hoja { padding: 2rem 1.1rem 2.5rem; }
+}
+
+/* Por debajo de 30rem el endoso de la comunidad y el aviso compiten por la
+   misma linea; el endoso baja al pie, donde la atribucion ya vive. */
+@media (max-width: 30rem) {
+  .endoso { display: none; }
+  .marca-lema { display: none; }
+  .aviso { flex-direction: column; gap: 0.3rem; }
+  .metricas { grid-template-columns: 1fr; }
+}
+
+/* --- Cobertura regional ----------------------------------------------------
+
+   El tablero listaba eventos y nada mas. Con pocos reportes eso se lee como una
+   demo, y lo que hay detras —dieciocho paises con su activo construido y medido
+   contra la cifra oficial de cada uno— no aparecia en ninguna pantalla.
+
+   Se dibuja como una tabla y no como tarjetas a proposito: son cifras
+   comparables entre si, y una tabla es lo que deja compararlas. */
+
+.cobertura {
+  padding: clamp(3rem, 7vw, 5rem) 0;
+  background: var(--crema-alt);
+  border-top: 1px solid var(--borde);
+}
+
+.tabla-cobertura {
+  width: 100%;
+  margin-top: 2rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+/* Diecinueve filas de cuatro columnas no caben en 390 px, y sin esto la tabla
+   se salia 96 px y arrastraba a **toda la pagina** a desplazarse en horizontal:
+   el mapa, el panel y las tarjetas se movian de lado al leer la cobertura.
+   Medido el 28-ago-2026: `scrollWidth` 486 sobre un viewport de 390.
+   Que se desplace la tabla y no la pagina. */
+/* EL DESPLAZAMIENTO VA EN EL ENVOLTORIO, NO EN LA TABLA.
+   Esto estaba puesto sobre `.tabla-cobertura` con `display: block`, y eso le
+   quita al <table> su rol implicito: el lector de pantalla deja de anunciar
+   filas y columnas y de asociar cada cifra con su encabezado. Una tabla de
+   cuatro columnas sin esa asociacion se lee como una lista de numeros sueltos,
+   que es exactamente lo que el `<caption>` de al lado existe para evitar.
+   Con el envoltorio se conserva la semantica y se sigue pudiendo deslizar. */
+.tabla-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Desplazarse ya lo hacia; decirlo no. En 390 px la columna "Reportes" no se ve
+   y "Desvio vs. oficial" queda cortada a media cifra: se lee "+0," y "-1,", que
+   no parece "hay mas a la derecha" — parece un dato roto. Lo dice
+   `.tabla-pista`, aqui arriba.
+
+   Se probo primero la sombra de borde con gradientes y `background-attachment`,
+   el truco de siempre, y aqui no sirve: las celdas llevan fondo propio y lo
+   tapan. Se dice con palabras, que ademas es lo que hace este proyecto en todas
+   partes. */
+
+.tabla-cobertura th,
+.tabla-cobertura td {
+  padding: 0.62rem 0.75rem;
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+}
+
+.tabla-cobertura thead th {
+  font-family: var(--tipo-mono, monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tenue-mas);
+  border-bottom: 1px solid var(--borde-fuerte);
+}
+
+.tabla-cobertura .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla-cobertura tbody th { font-weight: 600; }
+.tabla-cobertura tbody tr:hover { background: var(--crema); }
+
+/* Un pais sin construir no se esconde: se marca. Ocultarlo daria una cobertura
+   del 100 % que no es cierta. */
+.tabla-cobertura tr.pendiente th,
+.tabla-cobertura tr.pendiente td { color: var(--tenue-mas); }
+
+.marca-pendiente {
+  font-size: 0.66rem;
+  padding: 0.1rem 0.42rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  color: var(--ambar-texto);
+  white-space: nowrap;
+}
+
+/* --- Filtro por pais ------------------------------------------------------ */
+
+.filtro-paises {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 1.4rem 0 0.4rem;
+}
+
+.filtro-paises button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.78rem;
+  font: inherit;
+  font-size: 0.84rem;
+  color: var(--bosque);
+  background: var(--crema);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-pastilla);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.filtro-paises button:hover { border-color: var(--verde); }
+
+.filtro-paises button[aria-pressed="true"] {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: var(--crema);
+}
+
+.filtro-paises .cuenta {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  opacity: 0.75;
+}
+
+@media (max-width: 620px) {
+  .tabla-cobertura { font-size: 0.84rem; }
+  .tabla-cobertura th,
+  .tabla-cobertura td { padding: 0.5rem 0.4rem; }
+}
+
+/* Un evento cuya sacudida no alcanzo poblacion en ninguna banda publicada. Es
+   un resultado, no un hueco: se rotula en vez de dejar un cero suelto, que se
+   lee como que el sistema fallo. */
+.evento-cifra .sin-alcance {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--tenue-mas);
+}
+
+/* El indice H3 de la celda, en la ficha. Es la clave con la que esa celda se
+   encuentra en el `celdas.json` descargable y en el parquet del activo: se
+   escribe para poder copiarla, no para adornar. */
+.ficha-h3 {
+  font-size: 0.68rem;
+  color: var(--tenue-mas);
+  user-select: all;
+  cursor: text;
+}
+
+
+/* --- Sismos vistos y no despachados --------------------------------------
+ *
+ * Todo aqui empuja en la misma direccion: que no parezca una alarma. El
+ * control va abajo del todo, en cuerpo pequeno y color apagado, y la capa
+ * arranca apagada. Un sismo que nadie midio no puede competir visualmente con
+ * uno que si.
+ */
+.controles-mapa {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 3;
+  display: flex;
+  /* En columna y no en fila: dos etiquetas con sus conteos —"Focos activos
+     (14.984 celdas en 24 h)"— no caben una al lado de otra en un movil, y en
+     fila se salian del mapa. Apiladas caben siempre. */
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  /* Y EL ALTO, QUE FALTABA. La pila esta anclada abajo, asi que crece hacia
+     arriba; con la leyenda de simbolos y la de potencia radiativa puestas a la
+     vez se sale del mapa por encima. Medido el 28-ago-2026 con 603 px utiles
+     —un portatil normal—: la caja subia a `top: -66px` y desde ahi tapaba la
+     banda de "Exposicion no es dano" y dejaba tres pestañas de capa
+     **inpulsables**, Intensidad entre ellas, que es la capa por defecto.
+     `elementFromPoint` sobre sus centros devolvia la leyenda, no el boton. */
+  /* Los 84px reservan la banda superior donde vive `#capas`, la barra de
+     pestañas de capa. Las dos cajas son `absolute` con el mismo `z-index: 3`,
+     asi que gana la ultima del DOM —esta— y con solo `calc(100% - 24px)` la
+     pila dejaba de salirse del mapa pero seguia aterrizando encima de las
+     pestañas: `elementFromPoint` sobre el centro de Intensidad, Poblacion y
+     Edificaciones devolvia la leyenda. Subir el `z-index` de `#capas` las
+     haria pulsables y las dibujaria montadas sobre la leyenda; reservar el
+     espacio las deja pulsables **y** legibles.
+     Quien necesite mas sitio puede plegar "Que hay en el mapa": es un
+     `<details>`. */
+  max-height: calc(100% - 84px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* --- Una sola caja de capas ------------------------------------------------ */
+/*
+ * Eran tres: "Que hay en el mapa", la rampa de potencia radiativa y los dos
+ * interruptores, cada una con su borde, su fondo y su sombra, apiladas en la
+ * misma esquina. La pregunta que se hace quien mira es una sola —"¿que hay aqui
+ * y que puedo encender?"— y habia que buscar en cual de las tres estaba la
+ * respuesta. Wildfire Aware lo resuelve al reves: una lista, y cada capa lleva
+ * su leyenda colgando de su propia casilla.
+ *
+ * El ancho se acota, no se fija. Al quitarle el suyo a cada hijo, la caja pasaba
+ * a medir lo que midiera la linea mas larga —la nota de la rampa de fuego— y
+ * crecia hasta 470 px sobre el mapa. Con `min()` manda el tope en escritorio y
+ * el porcentaje en un movil, que es donde clavar 17rem devolveria el problema
+ * que ya costo una correccion: 248 px de caja sobre 390 tapando media Colombia.
+ */
+.controles-mapa {
+  max-width: min(17rem, calc(100% - 24px));
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  background: rgba(244, 242, 234, 0.96);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-medio);
+  box-shadow: var(--sombra-corta);
+}
+
+/* Los hijos pierden su cromo: dentro de una caja, tres bordes redondeados son
+   ruido. Se quedan con su contenido y su orden. */
+.controles-mapa > .leyenda,
+.controles-mapa > .interruptor-observados {
+  width: auto;
+  max-width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+/* La casilla mantiene su area de pulsacion aunque pierda el fondo. */
+.controles-mapa > .interruptor-observados { padding: 0.15rem 0; }
+.controles-mapa > .interruptor-observados:hover { color: var(--bosque); }
+
+
+.controles-mapa:empty {
+  display: none;
+}
+
+/* DESPUES de la regla base a proposito: una media query no anade especificidad,
+   asi que `.controles-mapa { bottom: 12px }` de arriba ganaba a un bloque movil
+   escrito mas arriba en el fichero. Se perdio una iteracion averiguandolo. */
+@media (max-width: 34rem) {
+  .controles-mapa {
+    /* Deja libre la franja de la atribucion del mapa base, que es obligatoria. */
+    bottom: 2.4rem;
+    /* Y no puede crecer hasta comerse la leyenda, que ahora vive arriba: con
+       los focos encendidos la pila gana la leyenda de potencia radiativa. */
+    max-height: 30%;
+  }
+}
+
+.interruptor-observados {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border: 1px solid rgba(28, 27, 26, 0.14);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(3px);
+  font-size: 0.78rem;
+  color: #4a4640;
+  cursor: pointer;
+  user-select: none;
+}
+
+.interruptor-observados:hover {
+  border-color: rgba(28, 27, 26, 0.28);
+}
+
+.interruptor-observados input {
+  margin: 0;
+  accent-color: #6b6660;
+}
+
+.popup-observado {
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+/* La linea que impide el falso negativo: quien vea el punto tiene que leer
+ * que no hay medicion, no que la medicion dio cero. */
+.nota-observado {
+  margin: 8px 0 0;
+  padding-top: 7px;
+  border-top: 1px solid rgba(28, 27, 26, 0.12);
+  color: #6b6660;
+  font-size: 0.78rem;
+}
+
+
+/* --- Focos activos --------------------------------------------------------
+ *
+ * A diferencia de los sismos menores, aqui SI hay una medicion: potencia
+ * radiativa observada por el sensor. Por eso esta capa si puede pintar de
+ * color, y por eso su popup si lleva tabla de cifras.
+ *
+ * Lo que no puede es prestarse la rampa de MMI. Ver `FUEGO_COLORES` en app.js.
+ */
+.popup-incendio {
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.popup-incendio table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0 0;
+}
+
+.popup-incendio th {
+  text-align: left;
+  font-weight: 500;
+  color: #4a4640;
+  padding: 2px 10px 2px 0;
+  white-space: nowrap;
+}
+
+.popup-incendio td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 0;
+}
+
+/* La linea que impide leer "celda con fuego" como "hectareas quemadas". */
+.nota-incendio {
+  margin: 8px 0 0;
+  padding-top: 7px;
+  border-top: 1px solid rgba(28, 27, 26, 0.12);
+  color: #6b6660;
+  font-size: 0.76rem;
+}
+
+
+/* --- Lo que esta pasando ahora --------------------------------------------
+ *
+ * El punto que late es la unica animacion del visor, y esta ahi por una razon:
+ * separa "el sistema tiene un archivo" de "el sistema esta mirando". Respeta
+ * `prefers-reduced-motion`, donde se queda quieto sin perder el significado
+ * —sigue siendo un punto verde junto a "Ahora mismo"—.
+ */
+.en-vivo {
+  margin: 0 0 18px;
+  padding: 14px 16px 4px;
+  border: 1px solid rgba(28, 27, 26, 0.1);
+  border-left: 3px solid #1f6f4a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(31, 111, 74, 0.05), transparent 70%);
+}
+
+.eyebrow-vivo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #1f6f4a;
+}
+
+.pulso {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1f6f4a;
+  box-shadow: 0 0 0 0 rgba(31, 111, 74, 0.5);
+  animation: latido 2.4s ease-out infinite;
+}
+
+@keyframes latido {
+  0% { box-shadow: 0 0 0 0 rgba(31, 111, 74, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(31, 111, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(31, 111, 74, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulso { animation: none; }
+}
+
+
+
+/* Una cifra que lleva a verla. Hereda de `.metrica` y solo anade lo que la
+ * convierte en control: area de pulsacion, foco visible y la pista de que
+ * pasa al pulsar. */
+/* LA CIFRA VIVA OCUPA LA FILA ENTERA.
+ *
+ * `.metricas` es una rejilla de dos columnas pensada para los pares de cifras
+ * del detalle de un sismo. `.metrica-suelo` y `.metrica-servicios` ya declaran
+ * `grid-column: 1 / -1` porque su contenido es una frase, no un numero — y a
+ * esta se le olvido. Resultado: el titular de la tarjeta —"586.000 personas en
+ * celdas con fuego activo"— vivia en media columna de 148 px con el texto
+ * apretado, y su `margin: -6px -8px` sacaba el fondo del hover 8 px fuera de la
+ * tarjeta. Es el "no tiene margen" que se ve en cuanto alguien mira el panel.
+ *
+ * Sin margen negativo: con el padding de `.metrica` el fondo cubre la celda
+ * entera, que es lo que se queria conseguir con el truco. */
+.metrica-viva {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: var(--crema);
+  padding: 0.8rem 0.9rem;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.metrica-viva:hover {
+  background: rgba(31, 111, 74, 0.07);
+}
+
+.metrica-viva:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 1px;
+}
+
+.metrica-viva .ver {
+  margin-top: 5px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1f6f4a;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.metrica-viva:hover .ver,
+.metrica-viva:focus-visible .ver {
+  opacity: 1;
+}
+
+/* Sin hover —tactil— la pista se queda puesta: si no, no hay forma de saber
+ * que la cifra hace algo. */
+@media (hover: none) {
+  .metrica-viva .ver { opacity: 1; }
+}
+
+
+/* El foco del selector de capas. Con `tabindex` rotatorio el foco se mueve
+ * dentro del grupo sin tabular, asi que **tiene** que verse: si no, quien
+ * navega con teclado no sabe donde esta. */
+.capas button:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 2px;
+}
+
+
+/* La salida de un evento. Arriba del todo del panel y con flecha: es lo primero
+ * que se busca cuando uno quiere volver, y hasta ahora no existia. */
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  color: #4a4640;
+  cursor: pointer;
+}
+
+.volver:hover {
+  border-color: var(--borde-fuerte);
+  background: rgba(31, 111, 74, 0.06);
+}
+
+.volver:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 2px;
+}
+
+
+/* Que es cada cosa en el mapa. Siempre visible: es la pregunta que se hace
+ * quien llega, y no deberia haber que buscarla. */
+.leyenda-simbolos {
+  position: static;
+  order: -2;
+  width: 15.5rem;
+  max-width: 100%;
+}
+
+.leyenda-simbolos-lista {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.leyenda-simbolos-lista li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  line-height: 1.35;
+}
+
+.sim {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* Las estrellas se dibujan con `clip-path` y no con una imagen: el simbolo del
+ * mapa se genera en un canvas, y duplicarlo como PNG seria dos fuentes de
+ * verdad para la misma forma. */
+.sim-epicentro,
+.sim-observado {
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%,
+    50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
+  );
+}
+
+.sim-epicentro {
+  background: #1c1b1a;
+}
+
+.sim-observado {
+  background: #6b6660;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+}
+
+.sim-fuego {
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f4a621, #c02a4a 55%, #4a1370);
+  border: 1px solid #3d0f52;
+}
+
+
+/* Sobre que arde. Barras y no una tarta: comparar longitudes es lo unico que el
+ * ojo hace bien, y aqui la pregunta es "¿cual pesa mas?". */
+.metrica-suelo {
+  grid-column: 1 / -1;
+}
+
+.suelo-reparto {
+  list-style: none;
+  margin: 0.45rem 0 0.3rem;
+  padding: 0;
+  display: grid;
+  gap: 0.28rem;
+}
+
+.suelo-reparto li {
+  display: grid;
+  grid-template-columns: 4.6rem 1fr 2.6rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.suelo-nombre {
+  color: #4a4640;
+}
+
+.suelo-barra {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(28, 27, 26, 0.08);
+  overflow: hidden;
+}
+
+.suelo-barra > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #1f6f4a;
+}
+
+.suelo-pct {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #4a4640;
+}
+
+
+/* La nota de la capa, plegada por defecto. Sigue estando —es lo que explica los
+ * huecos de la malla— pero no ocupa media pantalla a zoom cercano. */
+.leyenda-detalle > summary {
+  margin-top: 0.5rem;
+  font-size: 0.74rem;
+  color: #4a4640;
+  cursor: pointer;
+  list-style: none;
+}
+
+.leyenda-detalle > summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.leyenda-detalle[open] > summary::before {
+  content: "▾ ";
+}
+
+.leyenda-detalle > summary::-webkit-details-marker {
+  display: none;
+}
+
+.leyenda-detalle > summary:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 2px;
+}
+
+.leyenda-detalle .leyenda-nota {
+  margin-top: 0.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leyenda-detalle > summary::before { transition: none; }
+}
+
+
+/* La caja de simbolos, plegable. En movil arranca cerrada: 248 px de leyenda
+ * sobre 390 de pantalla no dejan ver el mapa que la leyenda explica. */
+.leyenda-simbolos > summary {
+  cursor: pointer;
+  list-style: none;
+  margin: 0;
+}
+
+.leyenda-simbolos > summary::-webkit-details-marker {
+  display: none;
+}
+
+.leyenda-simbolos > summary::after {
+  content: " ▸";
+  color: #6b6660;
+}
+
+.leyenda-simbolos[open] > summary::after {
+  content: " ▾";
+}
+
+.leyenda-simbolos > summary:focus-visible {
+  outline: 2px solid #1f6f4a;
+  outline-offset: 2px;
+}
+}
+
+
+/* Una linea bajo cada titulo que dice de que va el bloque.
+ *
+ * Los titulos eran correctos y opacos: "Expuesto en MMI≥7", "Terreno: peligros
+ * secundarios", "Contraste con evaluacion de dano". Quien no trae el vocabulario
+ * puesto veia cifras sin saber que preguntaban.
+ *
+ * En cuerpo pequeno y color apagado: acompana, no compite con la cifra. */
+.subtitulo-bloque {
+  margin: 0.1rem 0 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #6b6660;
+  max-width: 34rem;
+}
+
+
+/* Salud y educacion bajo fuego, en una sola fila. Dos cifras pequenas juntas
+ * pesan lo que deben: menos que la poblacion, mas que un dato de popup. */
+.metrica-servicios {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1.1rem;
+}
+
+.metrica-servicios .servicio {
+  font-size: 0.92rem;
+  color: #1c1b1a;
+}
+
+.metrica-servicios .servicio strong {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrica-servicios .etiqueta {
+  flex-basis: 100%;
+}
+
+
+/* --- Indicadores con icono y nivel ---------------------------------------
+ *
+ * El icono ayuda a encontrar la cifra de un vistazo; el nivel dice si es mucha
+ * o poca **comparada con lo que este sistema ha publicado**, que es la unica
+ * comparacion honesta que tenemos. Tres barras y no una etiqueta: ocupa menos y
+ * no compite con el numero.
+ */
+.metrica .cabeza {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.icono {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #6b6660;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* La rosa del viento: una flecha girada, no una animacion.
+
+   `transform` no se aplica a un elemento en linea, asi que el envoltorio tiene
+   que ser `inline-flex`. Sin eso el giro se ignora en silencio y la flecha
+   apunta siempre al norte — que es peor que no tenerla, porque parece un dato.
+
+   No lleva transicion: no es un movimiento, es un rumbo. */
+.rosa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 50% 50%;
+}
+
+.rosa .icono { stroke: var(--verde); stroke-width: 2; }
+
+/* La llama y el birrete se leen mejor rellenos que perfilados. */
+.metrica[data-nivel] .icono { stroke: #4a4640; }
+
+.nivel {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-left: auto;
+  height: 12px;
+  cursor: help;
+}
+
+.nivel i {
+  display: block;
+  width: 3px;
+  border-radius: 1px;
+  background: rgba(28, 27, 26, 0.16);
+}
+
+.nivel i:nth-child(1) { height: 5px; }
+.nivel i:nth-child(2) { height: 8px; }
+.nivel i:nth-child(3) { height: 11px; }
+
+.metrica[data-nivel="bajo"] .nivel i:nth-child(1),
+.metrica[data-nivel="medio"] .nivel i:nth-child(-n + 2),
+.metrica[data-nivel="alto"] .nivel i {
+  background: #1f6f4a;
+}
+
+/* Solo el tercio alto tira a rojo: es el que pide mirar. */
+.metrica[data-nivel="alto"] .nivel i { background: #8f2c14; }
+
+.metrica-servicios .servicio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+
+/* --- Aire (auditoria visual del 30-ago-2026) ------------------------------- */
+/* Nueve correcciones de margen y densidad, medidas en pantallazos a 390 y
+   1440. Van juntas y al final del fichero a proposito: dos de las tres
+   correcciones anteriores de esta hoja se perdieron por escribirse antes que
+   la regla base a la que querian ganar. */
+
+/* Los municipios se encadenaban: nombre, barra y el siguiente nombre a diez
+   pixeles. La barra de uno parecia el subrayado del otro. */
+.barras li { margin-bottom: 0.95rem; }
+.barra-fila { margin-bottom: 0.3rem; }
+
+/* Dentro de la caja de capas, tres familias de contenido —simbolos, rampa de
+   fuego, interruptores— iban sin separacion: un muro. Un hilo entre grupos.
+   `[hidden]` no pinta borde, asi que la rampa apagada no deja hilo doble. */
+/* `> * + *` perdia: el bloque "una sola caja" pone `border: 0` a los hijos con
+   especificidad (0,2,0) y el universal se queda en (0,1,0). `:not(:first-child)`
+   toma la especificidad de su argumento y empata; estando despues, gana. La
+   tercera mordida de la cascada en esta hoja — por eso esta seccion vive al
+   final del fichero. */
+.controles-mapa > :not(:first-child) {
+  border-top: 1px solid var(--borde);
+  padding-top: 0.65rem;
+}
+
+/* Las pastillas de orden se leian como una fila mas del filtro de paises:
+   mismo lenguaje visual, seis pixeles de distancia. El aire es lo que dice
+   "esto es otro grupo". */
+.tabla-pista { margin-bottom: 0.9rem; }
+
+/* La seccion de cobertura no tenia canal lateral: en cualquier pantalla mas
+   estrecha que el contenedor (82rem), las metricas, la tabla y la nota tocaban
+   el borde del viewport. #eventos siempre lo tuvo (1.75rem); esta seccion se
+   quedo sin el. */
+.cobertura { padding-left: 1.75rem; padding-right: 1.75rem; }
+
+@media (max-width: 48rem) {
+  /* Las pestañas de capa se partian en tres filas y, con la leyenda de
+     intensidad debajo, entre las dos se comian el mapa entero de un telefono.
+     Una fila que se desplaza: las siete capas siguen ahi y el mapa vuelve a
+     verse. Es el mismo patron que la tabla de cobertura. */
+  .capas {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .capas::-webkit-scrollbar { display: none; }
+  .capas button { flex: 0 0 auto; }
+
+  /* Con las pestañas en una fila, la leyenda ya no necesita esconderse a
+     8,6rem: sube al hueco real — que empieza bajo la barra de escala, no bajo
+     las pestañas. A 5rem le pisaba la esquina a la escala (~12 px). */
+  .capas:not([hidden]) ~ #leyenda { top: 6.1rem; }
+}
+
+
+/* --- El selector de amenaza (30-ago-2026) ---------------------------------- */
+/* Un lente a la vez: la amenaza activa manda y la otra queda de contexto. El
+   conmutador ocupa la esquina que era de las pestañas de capa, que bajan una
+   fila: la amenaza se elige antes que la variable. */
+
+.amenazas {
+  position: absolute;
+  top: 0.9rem;
+  left: 0.9rem;
+  z-index: 6;
+  display: flex;
+  gap: 0.2rem;
+  padding: 0.22rem;
+  background: rgba(244, 242, 234, 0.95);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  box-shadow: var(--sombra-corta);
+}
+
+.amenazas button {
+  font: inherit;
+  font-family: var(--tipo-titulo);
+  font-size: 0.86rem;
+  font-weight: 600;
+  border: 0;
+  background: none;
+  color: var(--tenue);
+  padding: 0.3rem 0.95rem;
+  border-radius: var(--radio-pastilla);
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.amenazas button:hover { color: var(--bosque); }
+.amenazas button[aria-pressed="true"] { background: var(--bosque); color: var(--crema); }
+
+/* El fuego activo no se pinta del verde de marca: se pinta del magenta hondo de
+   su propia rampa (FUEGO_COLORES[4]), que es su identidad en el mapa. Sobre el
+   texto crema da 7,3:1. */
+.amenazas button[data-amenaza="fuego"][aria-pressed="true"] { background: #8c1d64; }
+
+/* Las pestañas de variable bajan una fila: primero se elige la amenaza. */
+.capas { top: 3.55rem; }
+
+@media (max-width: 48rem) {
+  /* La fila de pestañas se acorta para no cruzarse con la barra de escala, que
+     vive a la derecha bajo el zoom. Sigue siendo desplazable. */
+  .capas { max-width: calc(100% - 8.6rem); }
+
+  /* La leyenda vive bajo TODO lo de arriba: conmutador, pestañas cuando las
+     hay, y la barra de escala — que esta a la derecha bajo el zoom y fue la
+     que pisaba el titulo en modo fuego ("2000 km" sobre "Potencia radiativa",
+     cazado por la sonda de solapes). Un solo tope que libra a los tres. */
+  #leyenda { top: 6.15rem; }
+  .capas:not([hidden]) ~ #leyenda { top: 6.35rem; }
+}
+
+/* La trampa del [hidden], otra vez: el atributo es display:none con
+   especificidad de elemento y `.interruptor-observados { display: flex }` lo
+   pisa — el mismo fallo que este repositorio ya documento en la lista de
+   eventos. El control de sismos menores se oculta en modo fuego por atributo,
+   asi que necesita su regla. */
+.interruptor-observados[hidden] { display: none; }
+
+/* --- El detalle de un foco de incendio (30-ago-2026) --------------------- */
+
+/* Hereda del detalle de sismo: mismo lateral, misma retorica de bloques. Lo que
+   cambia es la cifra de portada, que aqui es superficie y no poblacion — un
+   incendio se mide primero por lo grande que es. */
+#detalle-fuego .cifra-area {
+  margin: 0;
+  font-family: var(--tipo-titulo, inherit);
+  font-size: 1.9rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+#detalle-fuego .cifra-area strong {
+  font-weight: 700;
+}
+
+#detalle-fuego .apunte {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--tinta-suave, #6b6862);
+}
+
+/* La rejilla del foco no hereda el `:nth-child(odd)` del detalle de sismo: con
+   dos cifras de deteccion siempre pares, y con una a cuatro de exposicion, la
+   regla de "la ultima impar ocupa el ancho" es exactamente la que se quiere. */
+#fuego-metricas .metrica .cabeza,
+#fuego-deteccion .metrica .cabeza {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#detalle-fuego .suelo-reparto {
+  margin: 0;
+}
+
+#fuego-apostilla {
+  margin-top: 14px;
+}
+
+/* En modo fuego la tarjeta viva se queda con una sola cifra: sin esto, el hueco
+   de la que se oculta deja ver la linea de 1px del contenedor y parece rota.
+   Es el mismo sintoma que motivo `.metrica:last-child:nth-child(odd)`. */
+.metrica[hidden] {
+  display: none;
+}
+
+/* --- Iconos en las categorías (31-ago-2026) ------------------------------ */
+
+/* Los iconos ya existían para las métricas de un reporte —personas, salud,
+   vías— pero las categorías de cobertura del suelo, terreno, detección y
+   panorama iban sin ninguno: una lista de palabras donde el resto del panel
+   lleva silueta. Estos tres contextos son texto en línea, no cabeceras de
+   cifra, así que el icono se alinea con la letra y no con el número. */
+/* El `:not(.contraste-terreno)` no es cosmética: la nota de la alerta de USGS
+   es una frase con un `<strong>` dentro, y como primer hijo del `li` caía en
+   esta regla. `inline-flex` convertía cada trozo del texto en un ítem, así que
+   "USGS declara alerta / roja / , con 460.000 expuestas" salía repartido en
+   tres columnas verticalmente centradas — legible en el DOM y roto en pantalla.
+   Esa fila no lleva icono y no quiere alineación de icono. */
+.suelo-nombre,
+.terreno li:not(.contraste-terreno) > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* El de suelo va con el color de su barra, que es lo que lo hace legible de un
+   vistazo: la silueta dice qué es y el tono lo confirma. */
+.suelo-nombre .icono {
+  stroke: #4b7f5a;
+  opacity: 0.85;
+}
+
+/* En una lista de dos filas el icono compite con la cifra si pesa lo mismo. */
+.terreno .icono {
+  opacity: 0.7;
+}
+
+/* --- La sección de focos, gemela de la de reportes (31-ago-2026) ---------- */
+
+/* LA TRAMPA DEL [hidden], POR CUARTA VEZ EN ESTE REPOSITORIO.
+ *
+ * `.filtro-paises { display: flex }` es un selector de clase (0,1,0) y el
+ * atributo `hidden` es una regla de agente de usuario que pierde contra él. El
+ * filtro de reportes tenía el mismo fallo desde el principio y no se veía
+ * porque se muestra en cuanto hay dos países; el de focos arranca oculto y sin
+ * `iso3` en el dato se queda así, que es como lo cazó
+ * `test_ningun_elemento_oculto_se_sigue_viendo`.
+ *
+ * La regla cubre los dos, que es donde estaba de verdad el problema. */
+.filtro-paises[hidden] {
+  display: none;
+}
+
+/* El mismo aire y la misma jerarquía que `#eventos`: son dos índices gemelos y
+   verlos distintos sugeriría que se leen distinto. Sin esto la sección quedaba
+   pegada al panel y su título chocaba con el pie de la tarjeta viva, que es lo
+   que cazó la sonda de solapes en 1280×620. */
+#focos {
+  padding: 3rem 1.75rem 2.5rem;
+}
+
+#focos h2 {
+  font-size: 1.55rem;
+  margin-bottom: 0.3rem;
+}
+
+/* --- El atributo `hidden` gana. Punto. (31-ago-2026) --------------------- */
+
+/* QUINTA VEZ QUE ESTE FALLO MUERDE EN ESTE REPOSITORIO.
+ *
+ * `hidden` es una regla del agente de usuario con especificidad de elemento, y
+ * cualquier `.clase { display: flex }` la pisa. Lo hemos arreglado uno a uno en
+ * la lista de eventos, en el interruptor de observados, en la métrica viva y en
+ * el filtro de países — y a la sexta clase con `display` alguien vuelve a
+ * escribir `nodo.hidden = true` esperando que funcione, porque en HTML funciona.
+ *
+ * Arreglarlo por clase es jugar al topo. Esta regla lo cierra de una vez.
+ *
+ * Lleva `!important` a propósito y es de los pocos sitios donde se justifica:
+ * sin él basta con que una regla de clase se declare más abajo para volver a
+ * romperlo, que es exactamente cómo llegamos hasta aquí. Si algún día hace
+ * falta enseñar algo marcado como oculto, la respuesta es quitarle el atributo,
+ * no pisarlo desde el CSS.
+ *
+ * `test_ningun_elemento_oculto_se_sigue_viendo` es quien lo vigila. */
+[hidden] {
+  display: none !important;
+}
+
+/* --- La barra de filtros (31-ago-2026) ----------------------------------- */
+
+/* Se viste como el selector de evento de la cabecera —mismo chevron, misma
+   pastilla, mismo verde al pasar— porque hace lo mismo: elegir qué se mira.
+   Verlos distintos sugeriría dos sistemas de control donde hay uno. */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.9rem;
+  padding: 0.7rem 1.75rem;
+  background: var(--crema);
+  border-bottom: 1px solid var(--borde);
+}
+
+.filtros-titulo {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+
+.filtro {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.filtro > .mono {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  white-space: nowrap;
+}
+
+/* El mismo tratamiento que `.selector select`: chevron propio, el del sistema
+   apagado. Repetir la declaración en vez de encadenar selectores mantiene los
+   dos independientes — la cabecera puede cambiar sin arrastrar esto. */
+.filtro select {
+  font: inherit;
+  font-size: 0.84rem;
+  color: var(--bosque);
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%231c3328' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  appearance: none;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  padding: 0.36rem 2.1rem 0.36rem 0.85rem;
+  max-width: 15rem;
+  /* Sin esto un `select` no baja del ancho de su opción más larga y «Todos los
+     países (21)» empuja la barra fuera de la pantalla en un teléfono. */
+  min-width: 0;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.filtro select:hover {
+  border-color: var(--verde);
+}
+
+.filtros-cuenta {
+  margin: 0 0 0 auto;
+  font-size: 0.76rem;
+  color: var(--tenue);
+  white-space: nowrap;
+}
+
+/* Solo aparece cuando hay algo que quitar. Un botón de limpiar siempre visible
+   no informa; visible solo cuando un filtro está actuando es además la señal de
+   que lo está — que es justo lo que se pierde cuando los controles viven lejos
+   del mapa. */
+.filtros-limpiar {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.32rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radio-pastilla);
+  background: transparent;
+  color: var(--verde);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.filtros-limpiar:hover {
+  border-color: var(--verde);
+  text-decoration: none;
+}
+
+/* EN UN TELÉFONO LA BARRA ES UNA SOLA FILA, Y SE DESPLAZA.
+ *
+ * Envolviendo se comía el alto del mapa: en 390×844 los seis controles caían en
+ * cinco líneas, empujaban el lienzo hacia abajo y la atribución de OpenStreetMap
+ * —que la ODbL exige que se vea— quedaba fuera de la ventana. Lo cazó
+ * `test_la_atribucion_del_mapa_no_queda_debajo_de_nada`.
+ *
+ * Los rótulos («PAÍS», «PERÍODO») se van con ellas: el propio desplegable ya
+ * dice qué es —«Todos los países», «24 h», «Reciente»— así que en pantalla eran
+ * repetición, no ayuda. El `aria-label` de cada `select` se queda, que es quien
+ * lo cuenta a un lector de pantalla. */
+@media (max-width: 700px) {
+  .filtros {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0.5rem 1rem;
+    gap: 0.45rem;
+  }
+  .filtros::-webkit-scrollbar {
+    display: none;
+  }
+  .filtros-titulo,
+  .filtro > .mono {
+    display: none;
+  }
+  .filtro,
+  .filtros-limpiar,
+  .solo-en-vista {
+    flex: 0 0 auto;
+  }
+  .filtros-cuenta {
+    margin-left: 0.3rem;
+    flex: 0 0 auto;
+  }
+  .filtro select {
+    max-width: 9.5rem;
+  }
+}
+
+/* --- Los sismos menores: la misma tarjeta, en voz baja -------------------- */
+/* Comparte `.lista-eventos` con los reportes a proposito: es la misma clase de
+   objeto. Lo que cambia es el peso, porque aqui no hay nada que medir. */
+.lista-eventos li.menor {
+  border-style: dashed;
+}
+
+.menor-lugar {
+  font-family: var(--tipo-titulo);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.015em;
+  color: var(--bosque);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menor-lugar:hover { color: var(--verde); }
+
+/* La casilla que en un reporte lleva la cifra. Aqui lleva su ausencia, y va
+   tenue para que no compita con las cifras de verdad de la lista de arriba. */
+.evento-cifra .sin-medicion {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--tenue-mas);
+}

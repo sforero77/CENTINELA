@@ -1,0 +1,226 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000nr0v",
+    "mag": 6.8,
+    "depth_km": 14.0,
+    "utc": "2024-11-10T16:49:50Z",
+    "lugar": "42 km al SSO de Bartolomé Masó, Cuba",
+    "pager_alert": "yellow",
+    "lon": -77.0506,
+    "lat": 19.7974
+  },
+  "inputs": {
+    "shakemap_version": 9,
+    "groundfailure_version": 9,
+    "exposure_manifest": "cub-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 173017.51925783232,
+    "pop_mmi7p": 3291.1863567195833,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 520.7828947336083,
+    "pop_65p_mmi6p": 27391.581323633232,
+    "bld_mmi6p": 95776.0,
+    "built_m2_mmi6p": 3579186.0,
+    "health_mmi6p": 28.0,
+    "edu_mmi6p": 99.0,
+    "road_km_mmi6p": 2926.6490569213884,
+    "road_km_principal_mmi6p": 266.6462195630307,
+    "bld_mmi7p": 2049.0,
+    "built_m2_mmi7p": 149238.0,
+    "health_mmi7p": 1.0,
+    "edu_mmi7p": 7.0,
+    "road_km_mmi7p": 77.56814516391333,
+    "road_km_principal_mmi7p": 35.493994150045395,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 36844.000733979046
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "CU0511",
+      "nombre": "Pilón",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 2960.987789724022,
+      "pop_banda": 2960.987789724022
+    },
+    {
+      "adm2_id": "CU1502",
+      "nombre": "Guamá",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 275.445321418345,
+      "pop_banda": 275.445321418345
+    },
+    {
+      "adm2_id": "CU0501",
+      "nombre": "Bartolomé Masó",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 54.75324557721615,
+      "pop_banda": 54.75324557721615
+    },
+    {
+      "adm2_id": "CU0504",
+      "nombre": "Campechuela",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0509",
+      "nombre": "Media Luna",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0513",
+      "nombre": "Yara",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0503",
+      "nombre": "Buey Arriba",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0508",
+      "nombre": "Manzanillo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0510",
+      "nombre": "Niquero",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0505",
+      "nombre": "Cauto Cristo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0502",
+      "nombre": "Bayamo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0506",
+      "nombre": "Guisa",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0512",
+      "nombre": "Río Cauto",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0507",
+      "nombre": "Jiguaní",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CU0704",
+      "nombre": "Cacocum",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 0.8,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "yellow",
+    "ls_pop_usgs": "33",
+    "lq_alerta_usgs": "orange",
+    "lq_pop_usgs": "12000"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 380 → 520"
+  ],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CUB.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-07T16:35:32Z",
+  "pipeline_version": "0.1.0"
+}

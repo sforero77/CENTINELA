@@ -1,0 +1,227 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us6000t7zc",
+    "mag": 7.2,
+    "depth_km": 10.0,
+    "utc": "2026-06-24T22:04:31Z",
+    "lugar": "20 km al E de San Felipe, Venezuela",
+    "pager_alert": "red",
+    "lon": -68.5564,
+    "lat": 10.3713
+  },
+  "inputs": {
+    "shakemap_version": 9,
+    "groundfailure_version": 7,
+    "exposure_manifest": "ven-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 2771861.4076254987,
+    "pop_mmi7p": 491580.875195766,
+    "pop_mmi8p": 233421.8223408031,
+    "pop_65p_mmi7p": 41274.316317491764,
+    "pop_65p_mmi6p": 274241.5644855366,
+    "bld_mmi6p": 970072.0,
+    "built_m2_mmi6p": 145385586.0,
+    "health_mmi6p": 229.0,
+    "edu_mmi6p": 736.0,
+    "road_km_mmi6p": 14805.40010656272,
+    "road_km_principal_mmi6p": 1633.7222872360408,
+    "bld_mmi7p": 194049.0,
+    "built_m2_mmi7p": 23632205.0,
+    "health_mmi7p": 32.0,
+    "edu_mmi7p": 92.0,
+    "road_km_mmi7p": 3075.1554558428743,
+    "road_km_principal_mmi7p": 536.1350628619095,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 287308.6002515801
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "VE2211",
+      "nombre": "San Felipe",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 134194.50676600868,
+      "pop_banda": 134194.50676600868
+    },
+    {
+      "adm2_id": "VE2214",
+      "nombre": "Veroes",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 101251.28157760017,
+      "pop_banda": 101251.28157760017
+    },
+    {
+      "adm2_id": "VE0805",
+      "nombre": "Juan José Mora",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 58001.31473601004,
+      "pop_banda": 58001.31473601004
+    },
+    {
+      "adm2_id": "VE2203",
+      "nombre": "Bruzual",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 44033.2049280568,
+      "pop_banda": 44033.2049280568
+    },
+    {
+      "adm2_id": "VE2205",
+      "nombre": "Independencia",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 30384.867612460046,
+      "pop_banda": 30384.867612460046
+    },
+    {
+      "adm2_id": "VE2201",
+      "nombre": "Arístides Bastidas",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 27080.431010633707,
+      "pop_banda": 27080.431010633707
+    },
+    {
+      "adm2_id": "VE2212",
+      "nombre": "Sucre",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 26627.09749570489,
+      "pop_banda": 26627.09749570489
+    },
+    {
+      "adm2_id": "VE2204",
+      "nombre": "Cocorote",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 24954.645382418064,
+      "pop_banda": 24954.645382418064
+    },
+    {
+      "adm2_id": "VE2207",
+      "nombre": "La Trinidad",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 24800.116239912808,
+      "pop_banda": 24800.116239912808
+    },
+    {
+      "adm2_id": "VE0811",
+      "nombre": "Puerto Cabello",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 15496.421104748733,
+      "pop_banda": 15496.421104748733
+    },
+    {
+      "adm2_id": "VE1116",
+      "nombre": "Palmasola",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 1674.0007273815572,
+      "pop_banda": 1674.0007273815572
+    },
+    {
+      "adm2_id": "VE1120",
+      "nombre": "Silva",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 1585.1530282101594,
+      "pop_banda": 1585.1530282101594
+    },
+    {
+      "adm2_id": "VE0801",
+      "nombre": "Bejuma",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 1497.8345866203308,
+      "pop_banda": 1497.8345866203308
+    },
+    {
+      "adm2_id": "VE2209",
+      "nombre": "Nirgua",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE2202",
+      "nombre": "Bolívar",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 27.0,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "orange",
+    "ls_pop_usgs": "1700",
+    "lq_alerta_usgs": "orange",
+    "lq_pop_usgs": "91000"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 29 mil → 41 mil",
+    "Sedes de salud en MMI≥7: 31 → 32"
+  ],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-07T16:30:42Z",
+  "pipeline_version": "0.1.0"
+}

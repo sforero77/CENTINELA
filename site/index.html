@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <!--
+    SIN CABECERAS, LA ETIQUETA ES LA UNICA DEFENSA QUE HAY.
+
+    GitHub Pages no deja fijar cabeceras HTTP, asi que esta pagina no tenia
+    ninguna politica de contenido: `grep -n "Content-Security" site/*.html` no
+    devolvia nada. Y por aqui entran dos librerias de terceros sin verificar —
+    h3-js es lo que convierte los indices H3 en la geometria de cada hexagono y
+    maplibre decide donde cae cada poligono en la pantalla: quien controle esos
+    dos ficheros controla los numeros que ve quien mira.
+
+    Lo que esta politica acota: un script inyectado en el HTML no corre, **ningun
+    origen externo puede servir codigo** —`script-src 'self'` a secas desde el
+    6-sep-2026—, la pagina no puede exfiltrar a ningun host fuera de la lista, y
+    no se puede embeber en un iframe ajeno.
+
+    El hueco que quedaba era un compromiso del propio unpkg, y la CSP no lo
+    acotaba: se cerro sacando al tercero del camino en vez de hasheandolo.
+    maplibre y h3-js viven ahora en `assets/vendor/` con su licencia al lado
+    —1,04 MB en el repositorio, unos 250 KB por el cable comprimidos, lo mismo
+    que costaban desde unpkg— y eso es ademas lo que D6 dice: el visor solo pide
+    rutas del propio repositorio.
+
+    `worker-src blob:` y `img-src blob:` no son laxitud: maplibre arranca sus
+    workers y compone sus texturas desde blobs, y sin ellos el mapa no dibuja.
+
+    Y no lleva `frame-ancestors`: el navegador la **ignora** cuando llega en un
+    `<meta>` y lo dice por consola. Ponerla seria dejar escrita una proteccion
+    que no protege, que es la forma de fallo que esta auditoria persigue.
+    Comprobado en Chromium contra las dos paginas: con esta politica no queda
+    ni una violacion.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org; base-uri 'none'; form-action 'none'; object-src 'none'" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CENTINELA: exposición sísmica en América Latina</title>
+  <meta name="description" content="Reportes automáticos de exposición sísmica por celda H3 y por municipio para América Latina. Datos abiertos, sin backend. Un proyecto de GeoAI LATAM." />
+  <meta name="color-scheme" content="light" />
+
+  <!-- El color con el que iOS y Android pintan su barra alrededor de la pagina.
+       No es una eleccion nueva: es el mismo `#1c3328` que declara el sitio de
+       GeoAI LATAM, y que aqui ya vive como `--bosque`. -->
+  <meta name="theme-color" content="#1c3328" />
+
+  <!-- El sello va en SVG embebido: un hexágono H3 con el epicentro y dos
+       frentes de onda. Sin petición extra y nítido a cualquier tamaño. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e6e4d8'/%3E%3Cpath d='M16 4.2 26.2 10v12L16 27.8 5.8 22V10z' fill='none' stroke='%230f5636' stroke-width='2.1' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%230f5636'/%3E%3Cpath d='M11.2 20.8a6.8 6.8 0 0 1 0-9.6M20.8 11.2a6.8 6.8 0 0 1 0 9.6' fill='none' stroke='%232eb479' stroke-width='1.9' stroke-linecap='round'/%3E%3C/svg%3E" />
+
+  <!-- Un tablero de crisis viaja por WhatsApp y por X, y ahi salia como un
+       enlace pelado: habia `og:title` y `og:description` y ni `og:image` ni
+       `og:url`. La imagen no hace falta inventarla: el sistema ya genera un
+       `mapa_prensa.png` por evento; esta es la del ultimo publicado, que es la
+       que corresponde a la portada. -->
+  <meta property="og:title" content="CENTINELA: exposición sísmica en América Latina" />
+  <meta property="og:description" content="Cuánta población e infraestructura quedó dentro de cada franja de intensidad, celda a celda. Datos abiertos, sin backend." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://sforero77.github.io/CENTINELA/" />
+  <meta property="og:locale" content="es_LA" />
+  <meta property="og:site_name" content="CENTINELA" />
+  <meta property="og:image" content="https://sforero77.github.io/CENTINELA/reports/us6000tjl2/mapa_prensa.png" />
+  <meta property="og:image:alt" content="Mapa de exposición del M7,4 al sur de San José del Palmar, Colombia: la malla hexagonal coloreada por intensidad Mercalli sobre el occidente colombiano." />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Tipografías de la identidad de GeoAI LATAM. `display=swap` y una pila de
+       respaldo completa: el texto sale de inmediato con la fuente del sistema y
+       cambia al llegar la buena. Una página que promete abrir con mala conexión
+       no se puede quedar en blanco esperando una fuente. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Familjen+Grotesk:ital,wght@0,400;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="assets/styles.css" />
+  <!-- Sin llaves de API en el camino crítico (D6). -->
+  <link rel="stylesheet" href="assets/vendor/maplibre-gl.css" />
+</head>
+<body>
+  <a class="salto-contenido" href="#lateral">Saltar al panel de datos</a>
+
+  <div class="pantalla">
+    <header class="barra">
+      <a class="marca" href="./" aria-label="CENTINELA, inicio">
+        <svg class="marca-sello" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <path d="M16 4.2 26.2 10v12L16 27.8 5.8 22V10z" fill="none" stroke="#0f5636" stroke-width="2.1" stroke-linejoin="round" />
+          <circle cx="16" cy="16" r="2.5" fill="#0f5636" />
+          <path d="M11.2 20.8a6.8 6.8 0 0 1 0-9.6M20.8 11.2a6.8 6.8 0 0 1 0 9.6" fill="none" stroke="#2eb479" stroke-width="1.9" stroke-linecap="round" />
+        </svg>
+        <span class="marca-texto">
+          <span class="marca-nombre">CENTINELA</span>
+          <span class="marca-lema">exposición</span>
+        </span>
+      </a>
+
+      <h1 class="oculto-visual">CENTINELA: exposición sísmica en América Latina</h1>
+
+      <label class="selector" for="selector-evento">
+        <span class="mono">Evento</span>
+        <select id="selector-evento" aria-label="Evento a mostrar en el tablero">
+          <option value="">Todos los eventos</option>
+        </select>
+      </label>
+
+      <nav aria-label="Secciones">
+        <a href="status.html">Estado</a>
+        <a class="boton-pastilla" href="https://github.com/sforero77/CENTINELA">Código</a>
+        <a class="endoso" href="https://geoai-latam.inspow.tech/" rel="noopener">
+          <img class="globo" src="assets/geoai-latam.png" alt="" width="20" height="20" decoding="async" />
+          <span>GeoAI <em>LATAM</em></span>
+        </a>
+      </nav>
+    </header>
+
+    <!-- El aviso es del modo, no de la página. En fuego hablaba de "franjas de
+         intensidad" sobre un mapa de incendios, que es una frase sin referente.
+         El texto lo escribe `pintarAvisoDeLectura`; esto es el de arranque, para
+         que sea correcto también sin JavaScript. -->
+    <p class="aviso" role="note" id="aviso-lectura">
+      <span class="mono">Léase así</span>
+      <span id="aviso-lectura-texto">
+        <strong>Exposición no es daño.</strong> No es una alerta temprana, no
+        estima víctimas y no dictamina habitabilidad. Informa cuánta población e
+        infraestructura quedó <em>dentro</em> de cada franja de intensidad.
+      </span>
+    </p>
+
+    <!-- LOS FILTROS, ARRIBA Y SOBRE EL MAPA.
+         Vivian debajo, dentro de la lista, y solo recortaban filas: elegir
+         "Colombia" dejaba veintiun epicentros repartidos por el continente. Un
+         filtro que dice una cosa y un mapa que ensena otra.
+
+         Son desplegables y no pastillas. Diecinueve paises en una fila de
+         pastillas son dos lineas de ruido que empujan el mapa fuera de la
+         pantalla; un desplegable ocupa lo mismo con uno que con cincuenta, y en
+         un telefono abre el selector nativo del sistema. Se visten como el
+         selector de evento de la cabecera (mismo chevron, misma pastilla) porque
+         hacen lo mismo: elegir que se mira. -->
+    <div class="filtros" id="barra-filtros">
+      <p class="filtros-titulo mono" id="filtros-titulo">Filtrar</p>
+
+      <label class="filtro" id="campo-pais" hidden>
+        <span class="mono">País</span>
+        <select id="filtro-paises" aria-label="Filtrar por país"></select>
+      </label>
+
+      <label class="filtro" id="campo-pais-fuego" hidden>
+        <span class="mono">País</span>
+        <select id="filtro-paises-fuego" aria-label="Filtrar focos por país"></select>
+      </label>
+
+      <label class="filtro" id="campo-ventana">
+        <span class="mono">Período</span>
+        <select id="ventana-lista" aria-label="Filtrar reportes por fecha"></select>
+      </label>
+
+      <label class="filtro" id="campo-ventana-fuego" hidden>
+        <span class="mono">Período</span>
+        <select id="ventana-focos" aria-label="Filtrar focos por hora de detección"></select>
+      </label>
+
+      <label class="filtro" id="campo-orden">
+        <span class="mono">Ordenar</span>
+        <select id="orden-lista" aria-label="Ordenar los reportes"></select>
+      </label>
+
+      <label class="filtro" id="campo-orden-fuego" hidden>
+        <span class="mono">Ordenar</span>
+        <select id="orden-focos" aria-label="Ordenar los focos"></select>
+      </label>
+
+      <label class="solo-en-vista" id="etiqueta-en-vista" hidden>
+        <input type="checkbox" id="solo-en-vista" />
+        <span>Solo lo que se ve en el mapa</span>
+      </label>
+
+      <p class="filtros-cuenta mono" id="cuenta-lista" aria-live="polite"></p>
+      <p class="filtros-cuenta mono" id="cuenta-focos" hidden aria-live="polite"></p>
+
+      <button type="button" class="filtros-limpiar" id="limpiar-filtros" hidden>
+        Quitar filtros
+      </button>
+    </div>
+
+    <main class="tablero">
+      <section class="lienzo" id="lienzo" aria-label="Mapa de exposición">
+        <div id="mapa" role="region" aria-label="Mapa de exposición sísmica. Use los controles de capa para cambiar la variable dibujada." tabindex="0"></div>
+
+        <div class="panel-mapa" id="cargando">
+          <span class="giro" aria-hidden="true"></span>
+          <span class="mono">Cargando el mapa</span>
+        </div>
+
+        <!-- La amenaza es el primer control del mapa, no una casilla de esquina.
+             El activo es agnostico: las mismas celdas cuentan gente bajo MMI 7 y
+             bajo fuego, asi que el lente se elige aqui: una amenaza al mando y
+             la otra de contexto discreto. -->
+        <div class="amenazas" id="amenazas" role="group" aria-label="Amenaza mostrada en el mapa">
+          <button type="button" data-amenaza="sismos" aria-pressed="true">Sismos</button>
+          <button type="button" data-amenaza="fuego" aria-pressed="false">Fuego</button>
+        </div>
+
+        <div class="capas" id="capas" hidden role="tablist" aria-label="Variable a dibujar en la malla"></div>
+
+        <div class="leyenda" id="leyenda" hidden>
+          <p class="leyenda-titulo mono" id="leyenda-titulo"></p>
+          <ul class="leyenda-escala" id="leyenda-escala"></ul>
+          <!-- Plegable: la nota explica por que hay huecos en la malla y por
+               que las lineas del ShakeMap si llegan al mar. Es informacion que
+               hay que tener disponible y que no hace falta tener delante todo
+               el rato: nueve lineas fijas se comen el mapa a zoom cercano. -->
+          <details class="leyenda-detalle">
+            <summary>Cómo leer esta capa</summary>
+            <p class="leyenda-nota" id="leyenda-nota"></p>
+          </details>
+        </div>
+
+        <!-- Los sismos menores que el vigia vio y no despacho. El interruptor
+             lo inyecta el visor solo si hay algo que enseñar: un control
+             siempre vacio enseña a ignorarlo. -->
+        <div class="controles-mapa" id="controles-mapa"></div>
+      </section>
+
+      <!-- `tabindex="-1"` para que el enlace de salto pueda **poner el foco aqui** y
+           no solo desplazar la pagina. Chrome y Firefox mueven solos el punto de
+           partida del tabulador; Safari historicamente no, y sin foco el salto
+           deja al teclado donde estaba. -->
+      <aside class="lateral" id="lateral" tabindex="-1" aria-label="Datos del evento seleccionado">
+        <div class="vacio" id="lateral-vacio">
+          <!-- Lo unico del visor que cambia entre una visita y la siguiente.
+               Va antes del panorama a proposito: el archivo importa, pero lo
+               que distingue a esto de un PDF es que esta mirando ahora. -->
+          <!-- SIN `aria-live`, Y NO POR DESCUIDO.
+               Esta tarjeta se reescribe entera —`caja.innerHTML = ...`— cada vez
+               que cambia un filtro y, con «solo lo que se ve» puesto, en cada
+               `moveend` del mapa. Como region viva eso significa que un lector de
+               pantalla interrumpe y lee las cuatro metricas completas cada vez que
+               alguien arrastra el mapa: entre siete y diez frases por gesto. Una
+               region que interrumpe siempre acaba silenciada por quien la usa, y
+               entonces no avisa de nada.
+               Los cambios que si merecen anuncio ya los dice `#anuncio`, que es
+               `role="status"` y publica una frase, no un panel. La tarjeta se
+               sigue leyendo cuando se llega a ella. -->
+          <div class="en-vivo" id="en-vivo" hidden></div>
+
+          <!-- El panorama es del modo sismos y se oculta en modo fuego: un
+               panel que habla de los 21 reportes publicados mientras el mapa
+               dibuja focos de calor son dos amenazas hablando a la vez. -->
+          <div id="bloque-panorama">
+            <p class="eyebrow">Panorama</p>
+            <div id="panorama"></div>
+            <p class="pista">
+              <!-- Decía «la malla hexagonal de 5,2 km² con la que se calcula», y
+                   el cálculo no va en esa malla: va en H3 r8 (0,74 km², la
+                   constante `H3_RES_COMPUTE`) y se agrega a r7 para dibujarlo
+                   (`H3_RES_VIEWER`). La frase daba por medido a 5,2 km² un dato
+                   que se mide siete veces más fino. -->
+              Elige un evento arriba, pulsa un epicentro en el mapa o abre uno de
+              la lista. Cada evento se dibuja sobre una malla hexagonal de
+              5,2&nbsp;km²; el cálculo va una resolución más fina (celdas de
+              0,74&nbsp;km²) y se agrega para pintarlo.
+            </p>
+          </div>
+
+          <!-- Su equivalente en modo fuego: que hacer con el mapa que se ve. -->
+          <p class="pista" id="pista-fuego" hidden>
+            Cada hexágono es una celda de 0,74&nbsp;km² con detección de satélite en
+            las últimas 24&nbsp;h. Pulsa cualquiera para ver el foco al que pertenece:
+            su superficie, cuánta gente vive dentro y sobre qué está ardiendo.
+          </p>
+        </div>
+
+        <!-- El detalle de un foco. Un incendio no es una celda suelta: es el
+             grupo de celdas contiguas que estan ardiendo, y su area es la de
+             ese grupo. Antes solo habia un globo sobre el mapa con la celda
+             pulsada, asi que la pregunta "¿que superficie cubre esto?" no
+             tenia respuesta en ninguna parte. -->
+        <div id="detalle-fuego" hidden>
+          <button type="button" class="volver" id="volver-fuego">
+            <span aria-hidden="true">&#8592;</span> Volver a los focos
+          </button>
+
+          <p class="eyebrow">Foco activo</p>
+          <h2 id="fuego-titulo"></h2>
+          <p class="detalle-meta" id="fuego-meta"></p>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Área del foco</h3>
+            <p class="subtitulo-bloque">Superficie de las celdas contiguas con detección en las últimas 24 h. No es área quemada: es dónde el satélite vio fuego.</p>
+            <div id="fuego-area"></div>
+          </section>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Expuesto dentro del foco</h3>
+            <p class="subtitulo-bloque">Lo que el activo de exposición cuenta dentro de esas celdas. Exposición, no daño.</p>
+            <div class="metricas" id="fuego-metricas"></div>
+          </section>
+
+          <section class="bloque" id="bloque-fuego-suelo" hidden>
+            <h3 class="eyebrow">Sobre qué está ardiendo</h3>
+            <p class="subtitulo-bloque">Reparto de la potencia radiativa medida dentro del foco. Un fuego sobre pastizal en agosto es rutina agrícola; el mismo sobre arbolado no.</p>
+            <ul class="suelo-reparto" id="fuego-suelo"></ul>
+          </section>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Detección</h3>
+            <p class="subtitulo-bloque">Cuántas veces lo vieron los satélites y con cuánta energía. Tres satélites sobre el mismo fuego producen tres detecciones.</p>
+            <div class="metricas" id="fuego-deteccion"></div>
+          </section>
+
+          <!-- Ambiente. Va DESPUES de la deteccion y no antes: lo primero es
+               que arde y cuanto, que es lo medido; el viento es del modelo y
+               contextualiza. Vacio cuando no se pudo leer GFS, que es distinto
+               de "no hace viento" y por eso no se pinta un cero. -->
+          <section class="bloque" id="bloque-fuego-ambiente">
+            <h3 class="eyebrow">Ambiente</h3>
+            <p class="subtitulo-bloque">Hacia dónde empuja el viento y con qué sequedad. Viento de la zona según el modelo NOAA GFS, no medido en el incendio: su malla es de unos 27&nbsp;km y una celda son 0,74.</p>
+            <div class="metricas" id="fuego-ambiente"></div>
+          </section>
+
+          <p class="apostilla" id="fuego-apostilla"></p>
+        </div>
+
+        <div id="lateral-detalle" hidden>
+          <!-- La unica salida de un evento era el desplegable de la cabecera, y
+               no se lee como "salir". Quien llegaba desde el mapa o la lista se
+               quedaba dentro. -->
+          <button type="button" class="volver" id="volver">
+            <span aria-hidden="true">&larr;</span> Volver al panorama
+          </button>
+          <p class="eyebrow" id="detalle-eyebrow">Reporte</p>
+          <h2 id="detalle-titulo"></h2>
+          <p class="detalle-meta" id="detalle-meta"></p>
+          <ul class="distintivos" id="detalle-distintivos"></ul>
+
+          <!-- DE CUÁNDO SON LAS CIFRAS DE UNA RECONSTRUCCIÓN.
+               Esto vivía sólo como `title` del distintivo «reconstrucción
+               retrospectiva»: invisible sin ratón e inalcanzable en un móvil. Y
+               es el aviso interpretativo más importante del panel, y el `.md` lo
+               publica en prosa desde siempre y el visor no. Sin él, «cuánta
+               gente vivía dentro» se lee como la población de 2016 cuando es la
+               de hoy. -->
+          <p class="apostilla" id="detalle-epoca" hidden></p>
+
+          <!-- QUÉ CAMBIÓ DESDE LA VERSIÓN ANTERIOR.
+               RF-04 pide re-emitir con changelog de deltas cuando aparece un
+               ShakeMap nuevo, y `changelog.py` lo calcula desde hace tiempo: va
+               en `report.json` y el `.md` le da su sección. El visor —que es
+               donde alguien mira esto durante una emergencia— sólo pintaba el
+               número de versión suelto. Un «ShakeMap v4» que ayer decía v3 no
+               se distingue de uno que siempre fue v4.
+               Va arriba, junto a la época y antes de las cifras, porque es
+               justamente para quien ya leyó la versión anterior y no quiere
+               releer el reporte entero. -->
+          <section class="bloque" id="bloque-cambios" hidden>
+            <h3 class="eyebrow">Cambios frente a la versión anterior</h3>
+            <p class="subtitulo-bloque">Un ShakeMap se revisa muchas veces —el de Venezuela llegó a v16—. Esto es lo que se movió al reprocesar.</p>
+            <ul class="cambios" id="detalle-cambios"></ul>
+          </section>
+
+          <!-- Cuanto territorio, antes de cuanta gente. El visor contaba
+               personas, edificaciones y vias y no decia nunca sobre que
+               superficie: "2,4 M en MMI≥7" no distingue una ciudad sacudida de
+               media cordillera. Sale de contar las celdas que ya se dibujan. -->
+          <section class="bloque" id="bloque-area" hidden>
+            <h3 class="eyebrow">Área de afectación</h3>
+            <p class="subtitulo-bloque">Superficie de la malla contada, no la del ShakeMap: llega hasta donde hay algo expuesto, y por eso no entra en el mar.</p>
+            <div id="detalle-area"></div>
+          </section>
+
+          <section class="bloque" id="bloque-franjas">
+            <h3 class="eyebrow">Población por franja de intensidad</h3>
+            <p class="subtitulo-bloque">Cuánta gente vivía dentro de cada nivel de sacudida. Las franjas se acumulan: quien está en MMI≥7 también cuenta en MMI≥6.</p>
+            <ul class="franjas" id="detalle-franjas"></ul>
+          </section>
+
+          <section class="bloque">
+            <h3 class="eyebrow" id="titulo-metricas">Expuesto en MMI≥7</h3>
+            <p class="subtitulo-bloque" id="subtitulo-metricas">MMI 7 es la sacudida que asusta a todo el mundo y agrieta construcción corriente. Esto es lo que quedó dentro de esa franja, no lo que se dañó.</p>
+            <div class="metricas" id="detalle-metricas"></div>
+          </section>
+
+          <section class="bloque" id="bloque-terreno" hidden>
+            <h3 class="eyebrow">Terreno: peligros secundarios</h3>
+            <p class="subtitulo-bloque">Deslizamientos y licuefacción: dos formas en que el suelo falla después del sismo, a veces lejos del epicentro.</p>
+            <ul class="terreno" id="detalle-terreno"></ul>
+          </section>
+
+          <section class="bloque" id="bloque-municipios">
+            <h3 class="eyebrow" id="titulo-municipios">Municipios más expuestos</h3>
+            <p class="subtitulo-bloque">Dónde se concentra. La misma cifra nacional repartida entre quienes tienen que responder.</p>
+            <ol class="barras" id="detalle-barras"></ol>
+          </section>
+
+          <section class="bloque" id="bloque-contraste" hidden>
+            <h3 class="eyebrow">Contraste con evaluación de daño</h3>
+            <p class="subtitulo-bloque">Cuántas de las edificaciones expuestas resultaron dañadas según una evaluación independiente. Es la comprobación de que exposición no es daño.</p>
+            <p class="contraste" id="detalle-contraste"></p>
+          </section>
+
+          <section class="bloque" id="bloque-incertidumbre" hidden>
+            <h3 class="eyebrow">Incertidumbre</h3>
+            <p class="subtitulo-bloque">Dos productos de población abiertos no cuentan lo mismo en la misma zona. Ésta es la distancia entre ellos, publicada en vez de escondida.</p>
+            <p class="apostilla" id="detalle-incertidumbre"></p>
+          </section>
+
+          <section class="bloque">
+            <h3 class="eyebrow">Descargas</h3>
+            <p class="descargas" id="detalle-descargas"></p>
+          </section>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <section id="eventos" class="graticula">
+    <span class="paralelo" style="top: 4.5rem" aria-hidden="true">12°N</span>
+    <span class="paralelo" style="bottom: 4.5rem" aria-hidden="true">4°N</span>
+    <div class="contenedor">
+      <h2>Reportes publicados</h2>
+      <p class="seccion-lema" id="lema-reportes">Cada uno lo calculó el mismo pipeline, sin intervención manual.</p>
+
+      <!-- Ordenar y recortar al encuadre. La lista respondia solo "¿que ha
+           pasado ultimamente?"; ahora tambien "¿cual fue el mas fuerte?",
+           "¿cual afecto a mas gente?" y "¿cuales caen donde estoy mirando?". -->
+      <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
+      <ul class="lista-eventos" id="lista-eventos"></ul>
+      <p class="pista" id="sin-resultados" hidden></p>
+    </div>
+  </section>
+
+  <!-- LOS MENORES, EL TERCER INDICE.
+       Tenian estrella en el mapa, globo al hacer clic y un interruptor que
+       decia cuantos son, y ninguna forma de leer CUALES: tocaba pinchar
+       estrella por estrella o abrir el JSON crudo. Es el mismo hueco que ya se
+       le arreglo al fuego con su lista, y por la misma razon.
+
+       La columna de la derecha NO lleva cifra, y ese es el punto de la
+       seccion entera: un cero ahi se leeria como "no habia nadie", cuando lo
+       que pasa es que nadie lo midio. -->
+  <section id="menores" class="graticula" hidden>
+    <div class="contenedor">
+      <h2>Sismos menores, vistos y no reportados</h2>
+      <p class="seccion-lema" id="lema-menores">
+        Por debajo del umbral de reporte. Se vieron; no se midió su impacto.
+      </p>
+
+      <ul class="lista-eventos" id="lista-menores"></ul>
+    </div>
+  </section>
+
+  <!-- LA LISTA DE FOCOS, gemela de la de reportes y del otro lado del selector
+       de amenaza.
+       El fuego tenia mapa y panel de detalle pero ningun indice: para saber
+       cuales son los focos mas recientes, o los de un pais, habia que buscar
+       hexagonos a ojo entre cuatro mil. La lista de sismos responde "¿que ha
+       pasado ultimamente?" desde el primer dia; esta no respondia nada.
+       Su ventana temporal es distinta a proposito: el fuego es una foto de 24
+       horas, no un archivo de catorce anos. -->
+  <section id="focos" class="graticula" hidden>
+    <div class="contenedor">
+      <h2>Focos activos</h2>
+      <p class="seccion-lema" id="lema-focos">
+        Celdas contiguas con detección de satélite en las últimas 24&nbsp;horas.
+      </p>
+
+      <p class="cargando" id="estado-focos">Cargando focos&hellip;</p>
+      <ul class="lista-eventos" id="lista-focos"></ul>
+      <p class="pista" id="sin-focos" hidden></p>
+    </div>
+  </section>
+
+  <section id="cobertura" class="cobertura">
+    <div class="contenedor">
+      <h2 id="titulo-cobertura">Cobertura regional</h2>
+      <p class="seccion-lema">
+        Un sismo no espera a que su país esté listo. El activo de exposición se
+        construye por adelantado, país por país, y se mide contra la cifra
+        oficial de su instituto de estadística o de la ONU antes de publicarse.
+      </p>
+
+      <div class="metricas" id="cobertura-resumen"></div>
+
+      <!-- El desplazamiento va en este contenedor y NO en la propia tabla.
+           `display: block` sobre un <table> le quita su rol implicito: el
+           lector de pantalla deja de anunciar filas y columnas y de asociar
+           cada cifra con su encabezado, que es justo lo que hace legible una
+           tabla de cuatro columnas. Con el envoltorio se conserva el rol y se
+           sigue pudiendo deslizar. `tabindex="0"` porque una region que se
+           desplaza tiene que poder recorrerse tambien con el teclado. -->
+      <div class="tabla-scroll" tabindex="0" role="region" aria-labelledby="titulo-cobertura">
+      <table class="tabla-cobertura" id="tabla-cobertura" hidden>
+        <caption class="oculto-visual">
+          Países cubiertos, con la población que mide su activo de exposición y
+          su desvío frente a la cifra oficial de referencia.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">País</th>
+            <th scope="col" class="num">Población en la malla</th>
+            <th scope="col" class="num">Desvío vs. oficial</th>
+            <th scope="col" class="num">Reportes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      </div>
+
+      <p class="tabla-pista" aria-hidden="true">Desliza la tabla para ver el desvío y los reportes &rarr;</p>
+
+      <p class="apostilla" id="cobertura-nota"></p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="contenedor">
+      <!--
+        CITABA CUATRO FUENTES DE LAS DIEZ QUE ENTRAN AL ACTIVO.
+
+        Faltaban WorldPop —de donde sale «65 años o más»—, ESA WorldCover —que
+        el panel de fuego pinta como porcentajes de suelo—, OCHA COD-AB —los
+        límites municipales de dieciocho países—, HOT —salud y educación— y
+        NASA FIRMS, la fuente de los focos de calor, que además no aparecía en
+        ningún manifiesto: `resolve_bucket` no la había visto jamás.
+
+        La lista la fija `pipelines/common/atribucion.py` (superficie `visor`) y
+        `test_la_atribucion_viaja_con_el_dato.py` comprueba que este pie no se
+        quede atrás cuando entre una fuente nueva.
+      -->
+      <p>
+        Intensidad: USGS ShakeMap (dominio público) &middot;
+        Población: GHS-POP y GHS-BUILT-S, JRC/Comisión Europea &middot;
+        Estructura por edad: WorldPop (CC BY 4.0) &middot;
+        Edificaciones y vías: Overture Maps, &copy; OpenStreetMap contributors (ODbL) &middot;
+        Límites municipales: OCHA COD-AB (CC BY-IGO) &middot;
+        Salud y educación: HOT / OpenStreetMap (ODbL) &middot;
+        Cobertura del suelo: ESA WorldCover (CC BY 4.0) &middot;
+        Focos de calor: NASA FIRMS (VIIRS) &middot;
+        Mapa base: <a href="https://openfreemap.org">OpenFreeMap</a>
+      </p>
+      <!--
+        Y DECÍA CC BY 4.0 SOBRE DATOS ODbL.
+
+        Medido con `resolve_bucket` sobre los diecinueve manifiestos: los
+        diecinueve dan `odbl`. La ODbL §4.4 exige que el derivado se publique
+        bajo ODbL, así que la línea anterior no era una imprecisión, era la
+        licencia equivocada.
+      -->
+      <p>
+        Código bajo Apache-2.0 &middot;
+        Datos derivados bajo
+        <a href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL 1.0</a>
+      </p>
+      <p>
+        <a class="pie-marca" href="https://geoai-latam.inspow.tech/" rel="noopener">
+          <img class="globo" src="assets/geoai-latam.png" alt="" width="18" height="18" decoding="async" />
+          Un proyecto de GeoAI <em>LATAM</em>
+        </a>
+      </p>
+    </div>
+  </footer>
+
+  <p class="oculto-visual" id="anuncio" role="status" aria-live="polite"></p>
+
+  <script src="assets/vendor/maplibre-gl.js"></script>
+  <script src="assets/vendor/h3-js.umd.js"></script>
+  <script src="assets/app.js" type="module"></script>
+</body>
+</html>

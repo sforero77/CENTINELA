@@ -1,0 +1,213 @@
+# Manifest de vintages — Cuba (Fase 1).
+#
+# REGLA DURA: nunca "latest". Overture publica release mensual y su catalogo
+# STAC apunta siempre al ultimo; fijar el release explicito es lo que hace que
+# un reporte de hace seis meses siga siendo reproducible (RNF-04).
+#
+# ESTADO: activo construido y publicado. La ultima reconstruccion midio
+# 11.152.627 habitantes y fijo los `insumos_sha256` de cada fuente
+# descargable; las que se leen en remoto no llevan digest porque no pasan por
+# disco. Las cifras vivas estan en `medicion.json`, publicado en el Release al
+# lado del parquet — aqui no se repiten a mano.
+
+manifest_id: cub-v0.3
+iso3: CUB
+generated_utc: "2026-08-23T00:00:00Z"
+
+# Referencia oficial para el assert de calidad de §6.4.
+#
+# Se usa la ONU por uniformidad regional: cada instituto nacional publica con su
+# propia metodologia, su propio anio base y su propio calendario censal, y un
+# assert que compara diecinueve paises contra diecinueve criterios distintos no
+# compara nada. World Population Prospects da una serie homogenea.
+#
+# Obtenida sin credenciales: el endpoint de datos de la propia ONU responde 401
+# y exige un Bearer token, lo que viola O4. La API del Banco Mundial republica
+# la serie y responde en abierto; sus metadatos de SP.POP.TOTL citan como fuente
+# primaria "World Population Prospects, United Nations (UN), publisher: UN
+# Population Division".
+#
+#   https://api.worldbank.org/v2/country/CUB/indicator/SP.POP.TOTL?format=json&date=2025:2025
+#
+# Un instituto nacional con censo reciente es mejor referencia que la ONU para
+# su propio pais: el mantenedor de pais puede sustituirla, como hace Colombia
+# con el DANE, y estrechar la tolerancia.
+referencia_oficial:
+  poblacion_2025: 10937203
+  fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
+  tolerancia_pct: 2.47
+  medido_ghs_pop: 11152627
+  nota: >-
+    La cifra medida vive en `medido_ghs_pop` y la fija cada build; la
+    tolerancia sale de `centinela calibrar`, que la estrecha con lo medido y
+    nunca la ensancha sola. Aqui no se repiten numeros a proposito: una prosa
+    con cifras se queda contradiciendo al dato de al lado en cuanto se
+    recalibra.
+    El desvio de GHS-POP frente a la referencia oficial es esperable y no es un
+    fallo: GHS-POP desagrega censos con teledeteccion y no reproduce una
+    proyeccion demografica. Lo que si era un fallo, y se corrigio el
+    24-ago-2026, es que el reparto reclamaba poblacion del pais vecino y no
+    veia los municipios multipoligono. La medida antes y despues, pais por
+    pais, esta en VERIFICACIONES.md.
+
+notas:
+  - "Caja envolvente medida sobre `division_area` de Overture (subtype=country,
+     release 2026-08-19.0): lon -85.168..-73.919, lat 19.6275..23.4817. En COUNTRY_BBOX se declara redondeada
+     hacia afuera. El build comprueba que la caja declarada contenga la
+     geometria administrativa real, asi que un error aqui falla en vez de
+     perder territorio en silencio."
+  - "Los `hdx_dataset` NO se descargan por la url de este archivo: esa url es la
+     pagina estable del dataset. La de descarga se resuelve por la API de HDX en
+     cada build, porque la ruta real de un mismo dataset de HOTOSM cambia de
+     forma segun el pais."
+  - "Verificado el 2026-08-23: este COD-AB publica un unico recurso del formato
+     preferido, asi que no necesita `hdx_resource`. De los 19 paises de LATAM
+     revisados, **solo Colombia** publica varios recursos del mismo formato."
+  - "PENDIENTE DEL MANTENEDOR DE PAIS antes de publicar un reporte: validar los
+     toponimos del COD-AB y su codificacion. En Venezuela salen mal codificados
+     ('Falc?n' por 'Falcón') y esos nombres se imprimen en el reporte."
+
+sources:
+  - id: ghs_pop_2025
+    layer: pop_ghs
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_POP_GLOBE_R2023A/GHS_POP_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_POP_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    insumos_sha256: "2d01d6d6c969494602a06dd07c34f9a59fe85b2e5fb5c9533c65b9cb9af85a6d"
+    notes: >-
+      No se descarga esta URL: el mosaico global pesa 5,25 GB. El JRC publica el
+      mismo producto en 375 teselas y la seleccion la hace
+      pipelines/p0_exposure/sources/ghsl.py a partir de la caja del pais.
+      nodata = -200 (todo oceano): enmascarar antes de sumar o la poblacion sale
+      negativa. Schiavina et al. 2023, doi:10.2905/2FF68A52.
+
+  - id: ghs_built_s_2025
+    layer: built_ghsl
+    url: https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL/GHS_BUILT_S_GLOBE_R2023A/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100/V1-0/GHS_BUILT_S_E2025_GLOBE_R2023A_54009_100_V1_0.zip
+    license: EC-reuse-attribution
+    vintage: R2023A-E2025-54009-100m
+    insumos_sha256: "e99f9ecd7170e489474933323f748fe91492964288c18a61b7a4ef5c0067c5d7"
+    notes: >-
+      Superficie construida en m² por pixel, derivada de Sentinel-2 y Landsat.
+      Misma retícula y misma epoca que GHS-POP. No hereda los huecos de OSM en
+      asentamientos informales, que es donde el conteo de edificaciones falla y
+      donde vive la poblacion mas expuesta. Contrasta a Overture, no lo
+      sustituye: mide cuanto hay construido, no cuantas edificaciones son.
+
+  - id: worldpop_agesex_2025
+    layer: pop_worldpop_agesex
+    url: https://data.worldpop.org/GIS/AgeSex_structures/Global_2015_2030/R2025A/2025/CUB/v1/100m/constrained/
+    license: CC-BY-4.0
+    vintage: R2025A-2025-constrained-100m
+    insumos_sha256: "dc773173894ebf4dfd1b2a50273d99ef90b3a7af41014a9cfec42157258d24e2"
+    notes: >-
+      Verificado: HTTP 200 y las 20 bandas de la serie combinada `cub_t_<edad>`,
+      de 00 a 90. La url apunta al DIRECTORIO; solo se baja la serie `_t_`, que
+      es la combinada. El mismo directorio publica `_f_` y `_m_`, y sumar las
+      tres contaria a cada persona dos veces.
+
+  - id: worldpop_total_2025
+    layer: pop_worldpop_total
+    url: https://data.worldpop.org/GIS/Population/Global_2015_2030/R2025A/2025/CUB/v1/100m/constrained/cub_pop_2025_CN_100m_R2025A_v1.tif
+    license: CC-BY-4.0
+    vintage: R2025A-2025-constrained-100m
+    insumos_sha256: "78b1cee89e2347105701ad5ebd3eb2b89d89d871a401e8c04d2a74af1880233c"
+    notes: >-
+      Verificado: HTTP 200. Alimenta la banda de discrepancia publicada, nunca
+      la cifra principal.
+
+  - id: overture_buildings
+    layer: buildings
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    insumos_sha256: ""
+    notes: >-
+      No se descarga: DuckDB lee los parquet en remoto podando por la columna
+      `bbox`. `type=building` trae las huellas; `type=building_part` es
+      geometria auxiliar y contarla inflaria bld_count. Overture fusiona
+      OpenStreetMap, Microsoft ML Buildings y Google Open Buildings.
+
+  - id: overture_transportation
+    layer: roads
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    insumos_sha256: ""
+    notes: >-
+      `type=segment` es la geometria lineal; `type=connector` son nodos. Se
+      filtra `subtype = 'road'`: el tema tambien publica ferrocarril y agua.
+
+  - id: overture_divisions
+    layer: divisions
+    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=divisions/type=division_area
+    license: ODbL-1.0
+    vintage: "2026-08-19.0"
+    insumos_sha256: ""
+    notes: >-
+      SE CONSUMIA SIN DECLARARSE. `load_country_neighbours` baja este tema en
+      **todos** los builds —no solo en el de Colombia— para acotar de donde
+      puede rescatar celdas el reparto: sin los poligonos del vecino, "fuera del
+      pais y cerca" incluye el otro lado de la frontera, y medido eso le daba a
+      Paraguay 459.518 personas de Brasil, Argentina y Bolivia.
+      O sea que una fuente ODbL entraba al activo de dieciocho paises sin
+      aparecer en su manifest, y `resolve_bucket` evaluaba la regla de los tres
+      cubos sobre un conjunto de licencias que no era el que se consumio. El
+      cubo salia igual de rebote —buildings y roads ya son ODbL—, pero la
+      relacion causal, que es lo que este fichero promete, estaba rota.
+      `type=division_area` trae los poligonos; `division` son puntos.
+
+  - id: cod_ab_cub
+    layer: divisions
+    url: https://data.humdata.org/dataset/cod-ab-cub
+    hdx_dataset: cod-ab-cub
+    license: CC-BY-IGO
+    vintage: COD-AB-2026-08
+    insumos_sha256: "7ed2968bee4c0fd3b9692defac7300decd74eb6d2386ec8c68d318815c6139e4"
+    notes: >-
+      Common Operational Dataset de OCHA, fuente de verdad de adm1/adm2. Es la
+      unica geometria administrativa de este manifest, asi que si el recurso
+      cambia de nombre el build falla en `pick_admin_source` en vez de construir
+      un crosswalk silenciosamente equivocado.
+      El nivel municipal se elige por nombre (`admin2`/`adm2`) y, si hay empate,
+      por las columnas que el pais declare en ADMIN_COLUMNS. Por defecto se
+      asumen las del COD-AB: adm2_pcode, adm2_name, adm1_pcode, adm1_name.
+
+  - id: hotosm_health
+    layer: health
+    url: https://data.humdata.org/dataset/hotosm_cub_health_facilities
+    hdx_dataset: hotosm_cub_health_facilities
+    license: ODbL-1.0
+    vintage: "2026-09-09"
+    insumos_sha256: "9d2d226e18fc4575cbf2a6ebb619fa40c2bc7e5cd5ab2221dc6470c2d7fa0df4"
+    notes: >-
+      Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
+      Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital
+      grande esta mapeado como edificio, no como nodo—, y el agregador toma el
+      centroide de lo que venga.
+      Si algun dia se anade healthsites.io como segunda fuente de salud, tiene
+      que ir DESPUES de esta: se deduplica por proximidad contra la primera, y
+      en Colombia el 96,6% de sus puntos resulto ser el mismo establecimiento.
+
+  - id: hotosm_education
+    layer: education
+    url: https://data.humdata.org/dataset/hotosm_cub_education_facilities
+    hdx_dataset: hotosm_cub_education_facilities
+    license: ODbL-1.0
+    vintage: "2026-09-04"
+    insumos_sha256: "cfda11e518504110df3b7f2329f37031387c45daff3fb16cf1b1a7eb87f968e5"
+    notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
+  - id: worldcover-esa-2021
+    layer: landcover
+    url: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/
+    license: CC-BY-4.0
+    vintage: "2021"
+    insumos_sha256: ""
+    notes: >-
+      ESA WorldCover 10 m v200. Cobertura del suelo en once clases, de las que se
+      publican seis: arbolado, matorral, pastizal, cultivo, construido y humedal.
+      Agua, nieve, suelo desnudo y musgo se omiten porque no arden y serian
+      columnas siempre a cero. No se descarga: son COG con overviews y se leen
+      por rangos HTTP a /8 (~80 m), unos 140 pixeles por celda r8. Los
+      porcentajes son sobre pixeles clasificados, no sobre la superficie de la
+      celda, asi que en la costa el denominador excluye el mar.

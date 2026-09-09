@@ -1,0 +1,158 @@
+"""El `adm2.csv` publicado suma lo que dice el `report.json` de al lado.
+
+EL HUECO QUE CIERRA. `test_ground_failure_cuadra.py` vigila el **SQL**: que las
+dos consultas cuenten sobre las mismas celdas. Nadie vigilaba el **artefacto**.
+
+Y esa distinción no es teórica: el SQL se arregló y los veintiún `adm2.csv`
+publicados se quedaron con la columna vieja, calculada desde MMI 5,0. Medido
+sobre la página publicada el 1-sep-2026, quince de los veintiuno no cuadran, y
+Tehuantepec se pasa en 229.663 personas. Quien baje el CSV para repartir ayuda y
+lo contraste contra la cifra nacional del reporte encuentra hoy una diferencia
+que nadie sabe explicar.
+
+Es la misma familia que este proyecto ya tiene nombrada —la defensa escrita y el
+artefacto sin tocar— y la única forma de que no se repita es comprobar el
+fichero, no el código que lo escribe.
+
+**Cerrado el 1-sep-2026.** Los veintiún eventos se re-emitieron con
+`impact.yml` y los veintiún CSV suman su cifra nacional. La re-emisión trajo
+además lo que nadie vigilaba: el Chocó publicaba el ShakeMap v7 cuando USGS ya
+servía el v8, y con él se movieron las nueve cifras que cita la portada.
+
+POR QUE HAY UNA LISTA DE PENDIENTES Y NO UNA TOLERANCIA. Rehacer un `adm2.csv`
+exige correr P2 entero por evento contra el activo de exposición de su país, que
+no vive en el repositorio: `regenerar-textos` y `regenerar-mapas` no llegan,
+porque los dos son derivados del `report.json` y esta columna no. Hasta que se
+re-emitan hay quince ficheros que fallan, y esconderlos tras un margen sería
+exactamente lo que este proyecto le reprocha a las tolerancias que nadie ve.
+
+Así que están **enumerados**, con nombre y apellido, y la lista sólo puede
+encoger: `test_la_lista_de_pendientes_no_se_pudre` falla si alguno ya cuadra y
+sigue en la lista. Cuando quede vacía, la guardia es total.
+
+Cómo se vacía, en `docs/OPERACION.md`: un despacho de `impact.yml` por evento
+con `backtest` y `reprocesar`.
+"""
+
+from __future__ import annotations
+
+import csv
+import io
+import json
+from pathlib import Path
+
+import pytest
+
+RAIZ = Path(__file__).parent.parent.parent
+REPORTES = RAIZ / "reports"
+
+#: Columna del CSV -> campo de `totales`. **Las diecinueve, no dos.**
+#:
+#: Cubria `ls_pop` y `lq_pop` y nada mas: dos de las veinticinco columnas
+#: publicadas. Un descuadre en poblacion, en edificaciones, en vias o en
+#: equipamiento —que son las que se leen— pasaba entero. La auditoria del
+#: 5-sep comprobo que las demas cuadran hoy, asi que ampliarlo es gratis y lo
+#: unico que costaba era escribirlo.
+#:
+#: El prefijo basta para encontrar la columna: `pop_mmi6p` es exacta y
+#: `ls_pop_expuesta_mmi6p` empieza por `ls_pop`.
+COLUMNAS: tuple[tuple[str, str], ...] = (
+    ("pop_mmi6p", "pop_mmi6p"),
+    ("pop_mmi7p", "pop_mmi7p"),
+    ("pop_mmi8p", "pop_mmi8p"),
+    ("pop_65p_mmi6p", "pop_65p_mmi6p"),
+    ("pop_65p_mmi7p", "pop_65p_mmi7p"),
+    ("bld_mmi6p", "bld_mmi6p"),
+    ("bld_mmi7p", "bld_mmi7p"),
+    ("built_m2_mmi6p", "built_m2_mmi6p"),
+    ("built_m2_mmi7p", "built_m2_mmi7p"),
+    ("health_mmi6p", "health_mmi6p"),
+    ("health_mmi7p", "health_mmi7p"),
+    ("edu_mmi6p", "edu_mmi6p"),
+    ("edu_mmi7p", "edu_mmi7p"),
+    ("road_km_mmi6p", "road_km_mmi6p"),
+    ("road_km_mmi7p", "road_km_mmi7p"),
+    ("road_km_principal_mmi6p", "road_km_principal_mmi6p"),
+    ("road_km_principal_mmi7p", "road_km_principal_mmi7p"),
+    ("ls_pop", "pop_ls_alta"),
+    ("lq_pop", "pop_lq_alta"),
+)
+
+#: Vacía desde el 1-sep-2026: los veintiuno re-emitidos, los veintiuno cuadran.
+#: Se deja el mecanismo —no la lista— porque la próxima vez que un arreglo del
+#: SQL deje atrás a los artefactos hará falta otra vez, y con él la prueba de
+#: abajo que impide que una excepción temporal se vuelva permanente.
+PENDIENTES_DE_REEMITIR: frozenset[str] = frozenset()
+
+
+def _eventos() -> list[str]:
+    return sorted(p.parent.name for p in REPORTES.glob("*/report.json"))
+
+
+def _descuadres(usgs_id: str) -> list[str]:
+    """Las columnas de este evento cuya suma municipal no da la cifra nacional."""
+    directorio = REPORTES / usgs_id
+    reporte = json.loads((directorio / "report.json").read_text(encoding="utf-8"))
+    csv_path = directorio / "adm2.csv"
+    if not csv_path.is_file():
+        return []
+
+    # La segunda fila del CSV son las etiquetas HXL, no un municipio.
+    filas = [
+        f
+        for f in csv.DictReader(io.StringIO(csv_path.read_text(encoding="utf-8")))
+        if f.get("adm2_id", "").strip() and not f["adm2_id"].startswith("#")
+    ]
+    if not filas:
+        return []
+
+    fallos = []
+    for prefijo, campo in COLUMNAS:
+        # Exacta primero: `pop_mmi6p` no puede resolverse a `pop_65p_mmi6p`.
+        columna = (
+            prefijo
+            if prefijo in filas[0]
+            else next((c for c in filas[0] if c.startswith(prefijo)), None)
+        )
+        if columna is None:
+            continue
+        suma = sum(float(f[columna] or 0) for f in filas)
+        nacional = float(reporte["totales"].get(campo, 0.0))
+        # Una persona de margen por el redondeo del CSV, no por tolerancia: la
+        # columna se escribe con decimales y la suma acumula error de coma
+        # flotante sobre cientos de municipios.
+        if abs(suma - nacional) > 1.0:
+            fallos.append(
+                f"{columna}: el CSV suma {suma:,.0f} y el reporte publica "
+                f"{nacional:,.0f} en {campo} (diferencia {suma - nacional:+,.0f})"
+            )
+    return fallos
+
+
+@pytest.mark.parametrize("usgs_id", _eventos())
+def test_el_csv_municipal_suma_la_cifra_nacional(usgs_id: str) -> None:
+    """Quien baje el CSV y lo sume tiene que llegar a la cifra del reporte."""
+    if usgs_id in PENDIENTES_DE_REEMITIR:
+        pytest.skip("pendiente de re-emitir")
+    fallos = _descuadres(usgs_id)
+    assert not fallos, f"{usgs_id}: " + " · ".join(fallos)
+
+
+def test_la_lista_de_pendientes_no_se_pudre() -> None:
+    """La lista sólo puede encoger.
+
+    Sin esto, un evento re-emitido se quedaría en la lista para siempre y su
+    guardia no volvería a correr — que es como una excepción temporal se vuelve
+    permanente sin que nadie lo decida.
+    """
+    ya_cuadran = sorted(e for e in PENDIENTES_DE_REEMITIR if not _descuadres(e))
+    assert not ya_cuadran, (
+        "estos ya cuadran y siguen en PENDIENTES_DE_REEMITIR, así que su guardia "
+        f"no corre: {ya_cuadran}. Quítalos de la lista."
+    )
+
+
+def test_la_lista_no_nombra_eventos_que_no_existen() -> None:
+    """Un id mal copiado dejaría un evento sin vigilar sin que nada lo diga."""
+    fantasmas = sorted(PENDIENTES_DE_REEMITIR - set(_eventos()))
+    assert not fantasmas, f"la lista nombra eventos que no están publicados: {fantasmas}"

@@ -1,0 +1,224 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000d18q",
+    "mag": 6.4,
+    "depth_km": 20.81,
+    "utc": "2021-01-19T02:46:22Z",
+    "lugar": "26 km al SO de Pocito, Argentina",
+    "pager_alert": "yellow",
+    "lon": -68.7992,
+    "lat": -31.8334
+  },
+  "inputs": {
+    "shakemap_version": 8,
+    "groundfailure_version": 4,
+    "exposure_manifest": "arg-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 583082.6162497867,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "pop_65p_mmi6p": 65801.23203075085,
+    "bld_mmi6p": 402957.0,
+    "built_m2_mmi6p": 45801579.0,
+    "health_mmi6p": 358.0,
+    "edu_mmi6p": 1360.0,
+    "road_km_mmi6p": 4390.813052187726,
+    "road_km_principal_mmi6p": 606.4882998037548,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "AR070077",
+      "nombre": "Rawson",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 123675.77555274963
+    },
+    {
+      "adm2_id": "AR070028",
+      "nombre": "Capital",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 122508.8541828692
+    },
+    {
+      "adm2_id": "AR070042",
+      "nombre": "Chimbas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 95694.02289914805
+    },
+    {
+      "adm2_id": "AR070084",
+      "nombre": "Rivadavia",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 95172.8727248921
+    },
+    {
+      "adm2_id": "AR070070",
+      "nombre": "Pocito",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 64987.575408427045
+    },
+    {
+      "adm2_id": "AR070098",
+      "nombre": "Santa Lucía",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 51343.15113552939
+    },
+    {
+      "adm2_id": "AR070105",
+      "nombre": "Sarmiento",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 20898.23771486897
+    },
+    {
+      "adm2_id": "AR070063",
+      "nombre": "9 de Julio",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 7463.2202634187415
+    },
+    {
+      "adm2_id": "AR070126",
+      "nombre": "25 de Mayo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 671.9175411388278
+    },
+    {
+      "adm2_id": "AR070133",
+      "nombre": "Zonda",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 652.3880682764575
+    },
+    {
+      "adm2_id": "AR070112",
+      "nombre": "Ullum",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 9.705695120152086
+    },
+    {
+      "adm2_id": "AR070007",
+      "nombre": "Albardón",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 4.8950633481144905
+    },
+    {
+      "adm2_id": "AR070035",
+      "nombre": "Caucete",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "AR070091",
+      "nombre": "San Martín",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "AR070021",
+      "nombre": "Calingasta",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 3.4,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "yellow",
+    "ls_pop_usgs": "1",
+    "lq_alerta_usgs": "yellow",
+    "lq_pop_usgs": "580"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ARG.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-07T16:40:53Z",
+  "pipeline_version": "0.1.0"
+}

@@ -1,0 +1,7 @@
+1/4 Sismo M6,6 · 32 km al S de La Libertad, El Salvador (2019-05-30 09:03 UTC, 58 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+
+2/4 Personas dentro de intensidad MMI≥6: 66 mil. Edificaciones en MMI≥6: 34 mil.
+
+3/4 Municipios más expuestos (MMI≥6): La Paz Oeste, La Libertad Costa, La Paz Centro.
+
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=us70003t2n

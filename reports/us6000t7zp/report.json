@@ -1,0 +1,234 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us6000t7zp",
+    "mag": 7.5,
+    "depth_km": 10.0,
+    "utc": "2026-06-24T22:05:04Z",
+    "lugar": "20 km al O de Catia La Mar, Venezuela",
+    "pager_alert": "red",
+    "lon": -67.2205,
+    "lat": 10.5955
+  },
+  "inputs": {
+    "shakemap_version": 16,
+    "groundfailure_version": 12,
+    "exposure_manifest": "ven-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 7471691.358112413,
+    "pop_mmi7p": 2575684.688750344,
+    "pop_mmi8p": 704244.7487885547,
+    "pop_65p_mmi7p": 315900.7078476147,
+    "pop_65p_mmi6p": 900379.1340067544,
+    "bld_mmi6p": 1820109.0,
+    "built_m2_mmi6p": 282576434.0,
+    "health_mmi6p": 1279.0,
+    "edu_mmi6p": 2062.0,
+    "road_km_mmi6p": 25744.582957040122,
+    "road_km_principal_mmi6p": 3507.8339273882193,
+    "bld_mmi7p": 555469.0,
+    "built_m2_mmi7p": 85418853.0,
+    "health_mmi7p": 770.0,
+    "edu_mmi7p": 1034.0,
+    "road_km_mmi7p": 7769.158652964429,
+    "road_km_principal_mmi7p": 1264.3882517116297,
+    "pop_ls_alta": 28985.956875724718,
+    "pop_lq_alta": 338783.76795375464
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "VE0101",
+      "nombre": "Libertador",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 994319.9776679482,
+      "pop_banda": 994319.9776679482
+    },
+    {
+      "adm2_id": "VE2401",
+      "nombre": "Vargas",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 384463.77310162643,
+      "pop_banda": 384463.77310162643
+    },
+    {
+      "adm2_id": "VE1519",
+      "nombre": "Sucre",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 355353.54933551117,
+      "pop_banda": 355353.54933551117
+    },
+    {
+      "adm2_id": "VE0811",
+      "nombre": "Puerto Cabello",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 206401.24243218917,
+      "pop_banda": 206401.24243218917
+    },
+    {
+      "adm2_id": "VE1503",
+      "nombre": "Baruta",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 143689.0062840362,
+      "pop_banda": 143689.0062840362
+    },
+    {
+      "adm2_id": "VE2211",
+      "nombre": "San Felipe",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 135247.57142168516,
+      "pop_banda": 135247.57142168516
+    },
+    {
+      "adm2_id": "VE2214",
+      "nombre": "Veroes",
+      "mmi_max": 8.5,
+      "pop_mmi7p": 101400.31401313655,
+      "pop_banda": 101400.31401313655
+    },
+    {
+      "adm2_id": "VE1507",
+      "nombre": "Chacao",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 88052.44687300106,
+      "pop_banda": 88052.44687300106
+    },
+    {
+      "adm2_id": "VE0805",
+      "nombre": "Juan José Mora",
+      "mmi_max": 8.5,
+      "pop_mmi7p": 58001.31473601004,
+      "pop_banda": 58001.31473601004
+    },
+    {
+      "adm2_id": "VE1116",
+      "nombre": "Palmasola",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 30393.666667059995,
+      "pop_banda": 30393.666667059995
+    },
+    {
+      "adm2_id": "VE2205",
+      "nombre": "Independencia",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 30384.867612460046,
+      "pop_banda": 30384.867612460046
+    },
+    {
+      "adm2_id": "VE1120",
+      "nombre": "Silva",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 13185.258499137126,
+      "pop_banda": 13185.258499137126
+    },
+    {
+      "adm2_id": "VE2208",
+      "nombre": "Manuel Monge",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 12289.461162228137,
+      "pop_banda": 12289.461162228137
+    },
+    {
+      "adm2_id": "VE0518",
+      "nombre": "Ocumare de la Costa de Oro",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 11378.510404363275,
+      "pop_banda": 11378.510404363275
+    },
+    {
+      "adm2_id": "VE1509",
+      "nombre": "El Hatillo",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 3576.6233906489797,
+      "pop_banda": 3576.6233906489797
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 12.8,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "red",
+    "ls_pop_usgs": "13000",
+    "lq_alerta_usgs": "red",
+    "lq_pop_usgs": "190000"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [
+    "ShakeMap: v15 → v16",
+    "Población en MMI≥6: 9,2 millones → 7,5 millones",
+    "Población en MMI≥7: 2,3 millones → 2,6 millones",
+    "Población en MMI≥8: 740 mil → 700 mil",
+    "Población de 65 años o más en MMI≥7: 270 mil → 320 mil",
+    "Edificaciones en MMI≥7: 500 mil → 560 mil",
+    "Sedes de salud en MMI≥7: 580 → 770",
+    "Sedes educativas en MMI≥7: 820 → 1.000",
+    "Población en cobertura areal alta por licuefacción: 560 mil → 340 mil"
+  ],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-08T15:22:39Z",
+  "pipeline_version": "0.1.0"
+}
