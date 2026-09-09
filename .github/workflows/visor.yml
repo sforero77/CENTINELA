@@ -1,0 +1,95 @@
+name: Visor · abierto en un navegador
+
+# LA UNICA COBERTURA QUE VE LA PANTALLA.
+#
+# El resto de la suite comprueba que `app.js` **declara** las cosas: que la
+# rampa es la acordada, que el epicentro es una estrella, que la leyenda se
+# construye con las clases del evento. Los tres bugs de la auditoria de UX/UI
+# —mapa en blanco al seleccionar un evento, hexagonos a 0,05 pixeles, capa de
+# fuego invisible sobre el suelo— pasaron esa suite entera.
+#
+# No lleva cron a proposito. GitHub concede unos pocos turnos por repositorio y
+# el vigia sismico los necesita todos; esto corre cuando cambia lo que vigila,
+# que ademas es cuando sirve.
+
+on:
+  push:
+    branches: [main]
+    paths: &vigilado
+      - "site/**"
+      # EL VISOR TAMBIEN DEPENDE DE LO QUE LEE.
+      #
+      # `reports/**` no estaba, asi que un reporte nuevo —que cambia lo que el
+      # visor pinta— no disparaba esta cobertura. Y aunque estuviera: un push
+      # hecho con `GITHUB_TOKEN` **no dispara otros workflows**, que es la regla
+      # de GitHub contra los bucles, asi que la unica cobertura que abre un
+      # navegador no corria nunca sobre lo que publica el bot.
+      #
+      # Por eso ademas `impact.yml` lo despacha explicitamente, igual que ya
+      # hace con `site.yml`. La ruta se declara para el caso humano —una PR que
+      # toque un reporte— y el despacho cubre el caso del bot.
+      - "reports/**"
+      - "tests/visor/**"
+      - ".github/workflows/visor.yml"
+  pull_request:
+    paths: *vigilado
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: visor-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mirar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    timeout-minutes: 15
+    steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Y va con el otro cierre del mismo hueco: **todas las acciones estan
+      # fijadas por SHA** desde el 6-sep-2026, con la version en el comentario
+      # de al lado. Una etiqueta de git se puede reapuntar a cualquier commit
+      # —el precedente es tj-actions/changed-files, CVE-2025-30066— y
+      # `astral-sh/setup-uv` ademas no es de GitHub. Lo vigila
+      # `tests/unit/test_las_acciones_van_fijadas.py`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - run: uv sync --python 3.12 --extra dev --extra visor
+
+      # El navegador se cachea por version de Playwright: son ~115 MB y bajarlos
+      # en cada corrida es la mitad del tiempo de este job.
+      - name: Version de Playwright
+        id: pw
+        run: echo "v=$(uv run python -c 'import playwright; print(playwright.__version__)')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+        id: cache-navegador
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.v }}
+
+      - name: Instalar Chromium
+        if: steps.cache-navegador.outputs.cache-hit != 'true'
+        run: uv run playwright install --with-deps chromium
+
+      # `-m visor` revierte la exclusion por defecto de pyproject. Si el
+      # navegador no estuviera, las pruebas **fallan** en vez de saltarse: un
+      # salto silencioso en el unico guardia que ve la pantalla es peor que no
+      # tenerlo — la misma leccion que dejo el nocturno de deriva de contrato.
+      - name: Abrir el visor y comprobar que pinta
+        run: uv run pytest tests/visor -m visor

@@ -1,0 +1,226 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us7000f93v",
+    "mag": 7.0,
+    "depth_km": 20.0,
+    "utc": "2021-09-08T01:47:47Z",
+    "lugar": "Acapulco, México",
+    "pager_alert": "red",
+    "lon": -99.753,
+    "lat": 16.9465
+  },
+  "inputs": {
+    "shakemap_version": 7,
+    "groundfailure_version": 3,
+    "exposure_manifest": "mex-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 1115170.9964241658,
+    "pop_mmi7p": 910714.4594508423,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 89222.1803807909,
+    "pop_65p_mmi6p": 109026.04858172443,
+    "bld_mmi6p": 453391.0,
+    "built_m2_mmi6p": 60445589.0,
+    "health_mmi6p": 183.0,
+    "edu_mmi6p": 3227.0,
+    "road_km_mmi6p": 7668.249173734086,
+    "road_km_principal_mmi6p": 981.4235665967119,
+    "bld_mmi7p": 331818.0,
+    "built_m2_mmi7p": 46815101.0,
+    "health_mmi7p": 152.0,
+    "edu_mmi7p": 3132.0,
+    "road_km_mmi7p": 4885.506095478937,
+    "road_km_principal_mmi7p": 645.0655082630233,
+    "pop_ls_alta": 2383.0424382408382,
+    "pop_lq_alta": 66511.65147162467
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "MX12001",
+      "nombre": "Acapulco de Juárez",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 876143.8713419174,
+      "pop_banda": 876143.8713419174
+    },
+    {
+      "adm2_id": "MX12021",
+      "nombre": "Coyuca de Benítez",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 29502.848212338053,
+      "pop_banda": 29502.848212338053
+    },
+    {
+      "adm2_id": "MX12053",
+      "nombre": "San Marcos",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 5063.2659500993905,
+      "pop_banda": 5063.2659500993905
+    },
+    {
+      "adm2_id": "MX12039",
+      "nombre": "Juan R. Escudero",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 4.473946487531066,
+      "pop_banda": 4.473946487531066
+    },
+    {
+      "adm2_id": "MX12056",
+      "nombre": "Tecoanapa",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12029",
+      "nombre": "Chilpancingo de los Bravo",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12044",
+      "nombre": "Mochitlán",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12014",
+      "nombre": "Benito Juárez",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12012",
+      "nombre": "Ayutla de los Libres",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12025",
+      "nombre": "Cuautepec",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12076",
+      "nombre": "Acatepec",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12051",
+      "nombre": "Quechultenango",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12030",
+      "nombre": "Florencio Villarreal",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12040",
+      "nombre": "Leonardo Bravo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX12032",
+      "nombre": "General Heliodoro Castillo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 9.9,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "orange",
+    "ls_pop_usgs": "2200",
+    "lq_alerta_usgs": "orange",
+    "lq_pop_usgs": "12000"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 81 mil → 89 mil"
+  ],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-07T16:36:05Z",
+  "pipeline_version": "0.1.0"
+}

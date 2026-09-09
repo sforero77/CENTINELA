@@ -1,0 +1,3794 @@
+"""El visor, abierto en un navegador de verdad.
+
+EL HUECO QUE CIERRA. El resto de la suite comprueba que `app.js` **declara** las
+cosas: que la rampa es la acordada, que el epicentro es una estrella, que la
+leyenda se construye con las clases del evento. Nada de eso ve la pantalla, y
+los tres bugs de la auditoria de UX/UI —mapa en blanco al seleccionar un evento,
+hexagonos a 0,05 pixeles, capa de fuego invisible— pasaron la suite entera.
+
+POR QUE SE ESPERA AL REGISTRO Y NO AL RELOJ. El 28-ago-2026 se reviso el visor a
+ojo y se dieron por rotas tres capas que estaban perfectamente: se habian medido
+antes de que terminaran de pintar. La malla de un evento tarda ~5,7 s en local y
+unos 10 s contra la pagina publicada.
+
+Una prueba con `sleep(4)` habria "encontrado" los mismos tres bugs inexistentes,
+y una con `sleep(15)` tardaria un minuto en cuatro comprobaciones y seguiria
+fallando el dia que la red va lenta. Por eso `app.js` publica `window.CENTINELA`
+—lo que ha pintado y cuantos rasgos— y aqui se espera a eso.
+
+Cuenta rasgos y no un booleano a proposito: "la capa existe" no distingue una
+malla dibujada de una malla vacia, que es el cero silencioso de siempre.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import shutil
+import threading
+from collections.abc import Iterator
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+pytestmark = pytest.mark.visor
+
+RAIZ = Path(__file__).parent.parent.parent
+
+#: Cuanto se espera a que una capa aparezca en el registro. Holgado a proposito:
+#: el fallo que esta prueba tiene que dar es "no se pinto", no "tarde mas de lo
+#: que yo supuse". Si de verdad tarda 25 s, eso es un hallazgo y no un flake.
+ESPERA_MS = 25_000
+
+
+def _sitio(destino: Path) -> Path:
+    """Arma `_site` igual que `site.yml`, que es lo que se publica.
+
+    Se replica el workflow en vez de servir `site/` a secas porque los reportes
+    viven en la raiz del repositorio y en la pagina cuelgan de `/reports`. Servir
+    otra cosa comprobaria un visor que nadie usa.
+    """
+    shutil.copytree(RAIZ / "site", destino, dirs_exist_ok=True)
+    shutil.copytree(RAIZ / "reports", destino / "reports", dirs_exist_ok=True)
+    return destino
+
+
+@pytest.fixture(scope="module")
+def servidor(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+    """Sirve el sitio armado en un puerto libre."""
+    raiz = _sitio(tmp_path_factory.mktemp("_site"))
+    manejador = partial(SimpleHTTPRequestHandler, directory=str(raiz))
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), manejador)
+    hilo = threading.Thread(target=httpd.serve_forever, daemon=True)
+    hilo.start()
+    try:
+        yield f"http://127.0.0.1:{httpd.server_address[1]}"
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+@pytest.fixture(scope="module")
+def navegador() -> Iterator[Any]:
+    """Chromium, y **falla si no esta** en vez de saltarse.
+
+    Un salto silencioso en el unico guardia que ve la pantalla es peor que no
+    tenerlo — la misma leccion que dejo el nocturno de deriva de contrato.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:  # pragma: no cover - depende del entorno
+        pytest.fail(
+            "playwright no esta instalado y estas pruebas se pidieron con `-m visor`.\n"
+            "  uv sync --extra visor && uv run playwright install chromium"
+        )
+
+    with sync_playwright() as pw:
+        try:
+            nav = pw.chromium.launch()
+        except Exception as exc:  # pragma: no cover - depende del entorno
+            pytest.fail(f"no se pudo abrir Chromium: {exc}\n  uv run playwright install chromium")
+        try:
+            yield nav
+        finally:
+            nav.close()
+
+
+@pytest.fixture
+def pagina(navegador: Any, servidor: str) -> Iterator[Any]:
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    errores: list[str] = []
+    pg.on("pageerror", lambda e: errores.append(str(e)))
+    pg.goto(f"{servidor}/index.html")
+    yield pg
+    # Un error de JS no lanzado deja el visor a medias sin decir nada, que es
+    # como se perdio la malla de un evento durante dos horas de diagnostico.
+    assert not errores, f"la pagina lanzo errores de JavaScript: {errores}"
+    ctx.close()
+
+
+def _esperar_capa(pagina: Any, nombre: str, *, desde: str = "") -> dict[str, Any]:
+    """Espera a que el visor declare esa capa pintada y devuelve su anotacion.
+
+    ``desde`` permite exigir una anotacion **nueva**: al cambiar de evento la
+    clave ya existe de la carga anterior, y sin comparar la marca de tiempo la
+    espera devolveria al instante la malla del evento anterior.
+    """
+    pagina.wait_for_function(
+        """([nombre, desde]) => {
+             const p = window.CENTINELA && window.CENTINELA.pintado;
+             return !!(p && p[nombre] && p[nombre].utc > desde);
+           }""",
+        arg=[nombre, desde],
+        timeout=ESPERA_MS,
+    )
+    anotacion: dict[str, Any] = pagina.evaluate(f"window.CENTINELA.pintado[{nombre!r}]")
+    return anotacion
+
+
+def _ahora(pagina: Any) -> str:
+    marca: str = pagina.evaluate("new Date().toISOString()")
+    return marca
+
+
+def _con_fuego(pagina: Any, nombre: str = "incendios") -> dict[str, Any]:
+    """Entra en modo fuego y espera a que su capa este pintada.
+
+    Desde el 6-sep-2026 `incendios.json` **no se descarga al arrancar**: son
+    3,2 MB de JSON y un union-find sobre 7.987 celdas para alimentar unas cifras
+    que el modo sismos —el de por defecto— esconde. Se pide al entrar en modo
+    fuego, asi que una prueba que quiera fuego tiene que pedirlo, igual que una
+    persona.
+
+    Idempotente: si ya se esta en modo fuego no vuelve a pulsar, porque
+    `cambiarAmenaza` sale temprano cuando el modo ya es ese y el segundo clic no
+    haria nada.
+    """
+    boton = pagina.locator('#amenazas button[data-amenaza="fuego"]')
+    if boton.get_attribute("aria-pressed") != "true":
+        boton.click()
+    return _esperar_capa(pagina, nombre)
+
+
+# --- El panorama ------------------------------------------------------------
+
+
+def test_el_panorama_dibuja_los_epicentros(pagina: Any) -> None:
+    """Veintiun reportes son veintiuna estrellas.
+
+    Se dieron por ausentes al mirar la captura: a zoom continental un epicentro
+    ocupa pocos pixeles. Contarlos no admite esa duda.
+    """
+    anotacion = _esperar_capa(pagina, "epicentros")
+
+    assert anotacion["rasgos"] > 0, "el panorama no dibujo ni un epicentro"
+    catalogo = pagina.evaluate(
+        "fetch('reports/index.json').then(r => r.json()).then(e => e.length)"
+    )
+    assert anotacion["rasgos"] == catalogo, (
+        f"el catalogo trae {catalogo} reportes y el mapa dibujo {anotacion['rasgos']}"
+    )
+
+
+def test_los_focos_activos_se_dibujan(pagina: Any) -> None:
+    """La capa de fuego fue uno de los tres bugs invisibles de la auditoria.
+
+    Y sigue siendo la mas fragil: sus hexagonos son subpixel a zoom continental,
+    y por eso su fuente lleva `tolerance: 0` — con el valor por defecto la
+    simplificacion los colapsa y desaparecen antes de dibujarse.
+    """
+    anotacion = _con_fuego(pagina)
+
+    assert anotacion["rasgos"] > 0, "la capa de focos no dibujo ni una celda"
+    publicadas = pagina.evaluate(
+        "fetch('incendios.json').then(r => r.json()).then(d => d.celdas.length)"
+    )
+    assert anotacion["rasgos"] == publicadas, (
+        f"incendios.json trae {publicadas} celdas y el mapa dibujo {anotacion['rasgos']}"
+    )
+
+
+# --- Un evento --------------------------------------------------------------
+
+
+def test_seleccionar_un_evento_dibuja_su_malla(pagina: Any) -> None:
+    """El bug: "el mapa en blanco al seleccionar un evento".
+
+    Aqui no se mira si el mapa "parece" lleno: se exige que la malla declare
+    rasgos y que los contornos tambien, que son las dos capas que el tablero
+    promete al mostrar sus cifras de poblacion por franja.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+
+    celdas = _esperar_capa(pagina, "celdas", desde=marca)
+    contornos = _esperar_capa(pagina, "contornos", desde=marca)
+
+    assert celdas["rasgos"] > 0, "se selecciono un evento y la malla salio vacia"
+    assert contornos["rasgos"] > 0, "el area de afectacion no se dibujo"
+
+
+def _eventos_sin_malla() -> list[str]:
+    """Los publicados cuya sacudida no dejo ni una celda debajo.
+
+    Sale del catalogo en cada corrida y no de una lista escrita: los cinco de
+    hoy fueron uno solo hace una semana, y el sexto tiene que entrar aqui sin
+    que nadie se acuerde de anadirlo.
+    """
+    sin = []
+    for celdas in sorted((RAIZ / "reports").glob("*/celdas.json")):
+        if json.loads(celdas.read_text(encoding="utf-8")).get("celdas"):
+            continue
+        contornos = celdas.parent / "contornos.json"
+        if not contornos.is_file():
+            continue
+        if json.loads(contornos.read_text(encoding="utf-8")).get("features"):
+            sin.append(celdas.parent.name)
+    return sin
+
+
+@pytest.mark.parametrize("usgs_id", _eventos_sin_malla())
+def test_un_evento_sin_malla_ensena_igual_su_sacudida(pagina: Any, usgs_id: str) -> None:
+    """El mapa en blanco, esta vez del lado del catalogo que no tiene celdas.
+
+    Cinco de los veintitres reportes publicados no tienen ni un hexagono: su
+    sacudida no alcanzo MMI 6 sobre poblacion. La rama que los atendia volvia
+    antes de dibujar los contornos, asi que el evento traia su `contornos.json`
+    calculado y servido y el mapa no pintaba una sola linea. Quedaba una
+    estrella sobre nada, igual que un reporte que no se proceso.
+
+    El peor era `us1000c2zy`: un M7,5 con isolineas hasta MMI 8 sobre el Caribe.
+
+    Se cuentan rasgos y ademas se pregunta al estilo. El registro dice lo que el
+    visor **quiso** pintar; que la capa este de verdad en el mapa solo lo puede
+    decir MapLibre, y ya hubo tres pruebas que pasaron con capas prestadas.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", usgs_id)
+
+    celdas = _esperar_capa(pagina, "celdas", desde=marca)
+    contornos = _esperar_capa(pagina, "contornos", desde=marca)
+
+    assert celdas["rasgos"] == 0, (
+        f"{usgs_id} no tiene celdas en su celdas.json y el visor dibujo {celdas['rasgos']}"
+    )
+    assert contornos["rasgos"] > 0, (
+        f"{usgs_id} publica isolineas y el visor no dibujo ninguna: sin malla y "
+        f"sin contorno, su mapa no dice donde estuvo la sacudida"
+    )
+    assert "contornos" in pagina.evaluate("window.CENTINELA.capasDelMapa()"), (
+        "el registro anota los contornos y el estilo no los tiene"
+    )
+
+
+@pytest.mark.parametrize("usgs_id", _eventos_sin_malla())
+def test_las_isolineas_solas_van_con_su_leyenda(pagina: Any, usgs_id: str) -> None:
+    """Una linea palida sobre el mar, sin nada que la nombre, no es informacion.
+
+    La caja de la leyenda describe la malla —sus cortes, sus huecos— asi que en
+    esta rama se ocultaba. Con los contornos dibujados eso deja en pantalla el
+    unico rasgo del mapa sin escala y sin explicacion.
+
+    Se comprueba que rotula **los niveles que este ShakeMap trae**, no la rampa
+    entera: en un evento que topa en MMI 5, seis casillas hasta 8,5 pondrian en
+    la caja intensidades que no estan en el mapa.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", usgs_id)
+    _esperar_capa(pagina, "contornos", desde=marca)
+
+    leyenda = pagina.locator("#leyenda")
+    assert leyenda.is_visible(), f"{usgs_id} dibuja isolineas y no las rotula"
+
+    publicados = {
+        float(r["properties"]["mmi"])
+        for r in json.loads(
+            (RAIZ / "reports" / usgs_id / "contornos.json").read_text(encoding="utf-8")
+        )["features"]
+    }
+    escala = pagina.locator("#leyenda-escala li").all_inner_texts()
+    rotulados = {float(t.strip().replace(",", ".")) for t in escala if t.strip()}
+
+    assert rotulados == publicados, (
+        f"{usgs_id} publica isolineas {sorted(publicados)} y la leyenda rotula {sorted(rotulados)}"
+    )
+
+
+def test_la_leyenda_y_la_malla_hablan_del_mismo_dato(pagina: Any) -> None:
+    """Si no, se lee una cifra plausible y equivocada.
+
+    Una malla coloreada por intensidad bajo una leyenda de poblacion no rompe
+    nada: se ve bien, y quien la mire interpretara naranjas con una escala
+    turquesa. Es el modo de fallo que este proyecto persigue en todas partes.
+
+    NO se comprueba un repintado. Cambiar de capa **no** repinta la malla: la
+    reestiliza con `setPaintProperty` y `setFilter` sobre la misma fuente, que es
+    lo correcto. La primera version de esta prueba esperaba rasgos nuevos y
+    agotaba los 25 s con el visor funcionando perfectamente.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    antes = _ahora(pagina)
+    # Por el rol `tab` y no por `button`: el selector de capas es un `tablist`
+    # ARIA, y buscarlo asi comprueba de paso que ese contrato sigue en pie.
+    # `role="tab"` sustituye al rol implicito, asi que `get_by_role("button")`
+    # no encuentra nada.
+    pagina.get_by_role("tab", name="Población").click()
+    pagina.wait_for_function(
+        """desde => {
+             const c = window.CENTINELA.pintado.capa;
+             return !!(c && c.utc > desde);
+           }""",
+        arg=antes,
+        timeout=ESPERA_MS,
+    )
+
+    capa = pagina.evaluate("window.CENTINELA.pintado.capa")
+    assert capa["id"] == "pop", f"se pulso Poblacion y la malla quedo en {capa['id']!r}"
+
+    leyenda = pagina.locator("#leyenda").inner_text()
+    assert "POBLACIÓN" in leyenda.upper(), (
+        f"la malla se colorea por {capa['columna']!r} y la leyenda dice otra cosa: {leyenda[:60]!r}"
+    )
+
+
+def test_el_visor_no_se_traga_sus_errores(pagina: Any) -> None:
+    """`cuandoElEstiloEsteListo` corre diferido y MapLibre se come lo que lance.
+
+    Costo dos horas de diagnostico un fallo que no dejaba ni una linea en
+    consola. Desde entonces se captura y se anota; esta prueba exige que el
+    registro salga limpio en el camino normal.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    errores = pagina.evaluate("window.CENTINELA.errores")
+    assert errores == [], f"el visor anoto fallos al pintar: {errores}"
+
+
+# --- Que el registro no se quede atras --------------------------------------
+
+
+def test_el_registro_cubre_todas_las_capas_del_visor() -> None:
+    """Una capa nueva sin anotar es una capa que esta prueba no puede vigilar.
+
+    No hace falta navegador: lee `app.js`. Vive aqui, junto a lo que protege,
+    porque separarla la volveria invisible para quien anada la siguiente capa.
+    """
+    app = (RAIZ / "site" / "assets" / "app.js").read_text(encoding="utf-8")
+
+    for capa in ("celdas", "contornos", "epicentros", "incendios", "observados"):
+        assert f'anotarPintado("{capa}"' in app, (
+            f"la capa {capa!r} se dibuja y no se anota en window.CENTINELA: "
+            f"las pruebas de visor no pueden esperarla"
+        )
+
+
+def test_el_registro_es_superficie_publica() -> None:
+    """Sin `window.CENTINELA` no hay forma de esperar sin adivinar."""
+    app = (RAIZ / "site" / "assets" / "app.js").read_text(encoding="utf-8")
+
+    assert "window.CENTINELA = {" in app
+    for clave in ("pintado,", "errores: erroresAlPintar,"):
+        assert clave in app, f"el registro publico perdio {clave!r}"
+
+
+# --- Lo que se oculta tiene que dejar de verse -------------------------------
+
+
+def test_ningun_elemento_oculto_se_sigue_viendo(pagina: Any) -> None:
+    """`[hidden]` es `display: none` con especificidad de elemento: lo pisa
+    cualquier regla de clase.
+
+    El filtro por pais marcaba `hidden` en dieciocho tarjetas, ponia la pastilla
+    del pais en `aria-pressed="true"`, anunciaba "3 reportes en la lista" al
+    lector de pantalla — y las veintiuna seguian en pantalla, porque
+    `.lista-eventos li { display: flex }` gana. Nada fallaba: la funcion
+    simplemente no hacia nada.
+
+    La trampa ya se conocia —`.leyenda[hidden]` la guarda desde su propia
+    regla— y no se habia aplicado aqui. Por eso esta prueba es generica: mira
+    **todos** los `[hidden]` de la pagina, para que la proxima clase con
+    `display` no repita el descuido.
+    """
+    _esperar_capa(pagina, "epicentros")
+    # Acotado al filtro: "Venezuela" aparece tambien en las tarjetas de
+    # evento y en la tabla de cobertura, y sin acotar son cuatro nodos.
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Venezuela"))
+
+    visibles = pagina.evaluate("""() =>
+        [...document.querySelectorAll('[hidden]')]
+          .filter(e => getComputedStyle(e).display !== 'none')
+          .map(e => `${e.tagName}${e.id ? '#' + e.id : ''}: ${(e.innerText||'').slice(0,40)}`)
+    """)
+
+    assert visibles == [], f"elementos con [hidden] que el CSS sigue mostrando: {visibles}"
+
+
+def test_el_filtro_por_pais_deja_solo_los_suyos(pagina: Any) -> None:
+    """Y el efecto visible, no solo el atributo."""
+    _esperar_capa(pagina, "epicentros")
+    contar = """() => [...document.querySelectorAll('#lista-eventos li')]
+                   .filter(l => l.offsetParent !== null).length"""
+
+    todos = pagina.evaluate(contar)
+    # Acotado al filtro: "Venezuela" aparece tambien en las tarjetas de
+    # evento y en la tabla de cobertura, y sin acotar son cuatro nodos.
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Venezuela"))
+    filtrado = pagina.evaluate(contar)
+
+    assert todos > filtrado > 0, f"el filtro no redujo la lista: {todos} -> {filtrado}"
+    paises = pagina.evaluate("""() =>
+        [...document.querySelectorAll('#lista-eventos li')]
+          .filter(l => l.offsetParent !== null)
+          .map(l => l.dataset.iso3)
+    """)
+    assert set(paises) == {"VEN"}, f"con Venezuela seleccionado quedan {set(paises)}"
+
+
+# --- Los controles del mapa no pueden comerse los botones -------------------
+
+
+def test_las_pestanas_de_capa_se_pueden_pulsar(pagina: Any) -> None:
+    """El peor caso: evento seleccionado, focos encendidos, pantalla de portatil.
+
+    La pila de leyendas esta anclada abajo y crece hacia arriba. Con la leyenda
+    de simbolos y la de potencia radiativa puestas a la vez se salia del mapa,
+    tapaba la banda de "Exposición no es daño" y dejaba **tres pestañas
+    inpulsables** —Intensidad entre ellas, que es la capa por defecto—.
+
+    No basta con mirar si las cajas se solapan: hay que preguntar quien recibe
+    el clic. Las dos son `absolute` con el mismo `z-index`, asi que el solape
+    visual y el funcional no son el mismo problema.
+    """
+    # Ventana corta a proposito. Con 720 px de alto la pila cabe y la prueba
+    # pasaba sobre el codigo roto — comprobado desactivando el arreglo. El
+    # fallo se midio con 603 px utiles, que es un portatil de 768 px con su
+    # barra de navegador: la ventana mas comun que existe.
+    pagina.set_viewport_size({"width": 1280, "height": 620})
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    # Ya no se enciende el fuego encima: con el selector de amenaza, "evento +
+    # focos" dejo de existir — entrar a fuego cierra el evento. El peor estado
+    # del modo sismos es el evento con su leyenda y el conmutador delante.
+
+    tapadas = pagina.evaluate("""() =>
+        [...document.querySelectorAll('#capas button')].filter(b => {
+          const r = b.getBoundingClientRect();
+          const e = document.elementFromPoint(r.left + r.width/2, r.top + r.height/2);
+          return !(e && e.closest('#capas'));
+        }).map(b => b.innerText)
+    """)
+
+    assert tapadas == [], f"pestañas que no reciben el clic: {tapadas}"
+
+
+def test_los_controles_no_tapan_el_aviso_de_que_esto_no_es_dano(pagina: Any) -> None:
+    """«Exposición no es daño» es el encuadre entero de este sistema.
+
+    Taparlo con una leyenda no rompe nada y cambia lo que la pagina significa.
+    """
+    # Ventana corta a proposito. Con 720 px de alto la pila cabe y la prueba
+    # pasaba sobre el codigo roto — comprobado desactivando el arreglo. El
+    # fallo se midio con 603 px utiles, que es un portatil de 768 px con su
+    # barra de navegador: la ventana mas comun que existe.
+    pagina.set_viewport_size({"width": 1280, "height": 620})
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    solapa = pagina.evaluate("""() => {
+        const p = document.querySelector('.controles-mapa').getBoundingClientRect();
+        const a = document.querySelector('.aviso').getBoundingClientRect();
+        return p.top < a.bottom;
+    }""")
+
+    assert not solapa, "la pila de controles vuelve a montarse sobre el aviso"
+
+
+# --- Movil ------------------------------------------------------------------
+
+#: Un telefono corriente. Es donde se amontona todo lo que en escritorio cabe.
+MOVIL = {"width": 390, "height": 844}
+
+
+def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any) -> None:
+    """No es estetica: OpenStreetMap es ODbL y exige que su credito se vea.
+
+    Medido el 28-ago-2026 en 390x844: la pila de interruptores caia justo sobre
+    `.maplibregl-ctrl-attrib` y `elementFromPoint` sobre su centro devolvia el
+    interruptor de sismos menores. Un proyecto que rechaza fuentes enteras por
+    incompatibilidad de licencia no puede taparle el credito al mapa que usa.
+
+    `maplibre-gl.css` declara `z-index: 2` en esa regla y se carga despues, asi
+    que la nuestra necesita dos clases para ganarle.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(600)
+
+    encima = pagina.evaluate("""() => {
+        const a = document.querySelector('.maplibregl-ctrl-attrib');
+        const r = a.getBoundingClientRect();
+        const e = document.elementFromPoint(r.left + r.width/2, r.top + r.height/2);
+        return e && a.contains(e) ? null : (e ? (e.className || e.tagName).toString() : 'nada');
+    }""")
+
+    assert encima is None, f"algo tapa la atribucion del mapa base: {encima}"
+
+
+def test_la_pagina_no_se_desplaza_en_horizontal_en_movil(pagina: Any) -> None:
+    """La tabla de cobertura arrastraba a toda la pagina.
+
+    Diecinueve filas de cuatro columnas no caben en 390 px: la tabla se salia
+    96 px y con ella se movian de lado el mapa, el panel y las tarjetas. Que se
+    desplace la tabla, no la pagina.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+
+    medida = pagina.evaluate("""() => ({
+        scroll: document.documentElement.scrollWidth,
+        visible: document.documentElement.clientWidth,
+    })""")
+
+    assert medida["scroll"] <= medida["visible"] + 1, (
+        f"la pagina se desplaza en horizontal: {medida['scroll']}px sobre {medida['visible']}px"
+    )
+
+
+def test_la_tabla_de_cobertura_sigue_siendo_una_tabla_en_movil(pagina: Any) -> None:
+    """Desplazarla no puede costar su semantica.
+
+    En 390 px la tabla llevaba `display: block` para que se desplazara ella y no
+    la pagina entera. Pero `display: block` sobre un `<table>` **le quita su rol
+    implicito**: el lector de pantalla deja de anunciar filas y columnas y de
+    asociar cada cifra con su encabezado, que es lo unico que hace legible una
+    tabla de cuatro columnas leida en voz alta. El `<caption>` oculto que
+    describe la tabla se quedaba describiendo una lista de numeros sueltos.
+
+    Ahora el desplazamiento vive en un envoltorio. Se comprueban las dos mitades:
+    que la tabla conserve su rol y que la pagina siga sin moverse de lado.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(500)
+
+    medida = pagina.evaluate(
+        """() => {
+             const t = document.getElementById('tabla-cobertura');
+             if (!t) return null;
+             const env = t.closest('.tabla-scroll');
+             return {
+               display: getComputedStyle(t).display,
+               rol: t.getAttribute('role'),
+               envoltorio: !!env,
+               envoltorioDesplaza: env ? getComputedStyle(env).overflowX : "",
+               desbordaLaTabla: t.scrollWidth > t.clientWidth + 1,
+             };
+           }"""
+    )
+    assert medida, "no existe la tabla de cobertura"
+
+    # `display: table` conserva el rol implicito; cualquier otro valor —salvo que
+    # se declare `role="table"` a mano— lo tira.
+    assert medida["display"].startswith("table") or medida["rol"] == "table", (
+        f"la tabla de cobertura se pinta con `display: {medida['display']}` y sin "
+        f"`role=table`: deja de anunciarse como tabla y sus cifras pierden el "
+        f"encabezado al que pertenecen"
+    )
+    assert medida["envoltorio"], (
+        "la tabla no esta dentro de `.tabla-scroll`: si se desplaza ella misma, "
+        "vuelve el `display: block` que le quita el rol"
+    )
+    assert medida["envoltorioDesplaza"] in ("auto", "scroll"), (
+        f"el envoltorio no desplaza (`overflow-x: {medida['envoltorioDesplaza']}`): "
+        f"la tabla volveria a arrastrar a la pagina entera"
+    )
+
+    ancho = pagina.evaluate(
+        """() => ({
+             scroll: document.documentElement.scrollWidth,
+             visible: document.documentElement.clientWidth,
+           })"""
+    )
+    assert ancho["scroll"] <= ancho["visible"] + 1, (
+        f"la pagina se desplaza en horizontal: {ancho['scroll']}px sobre {ancho['visible']}px"
+    )
+
+
+#: Detecta texto visible que se pisa con otro texto visible. Devuelve los pares.
+#:
+#: `checkVisibility` y no `offsetParent`: un `<details>` cerrado usa
+#: `content-visibility`, asi que su contenido conserva caja y no se pinta. Sin
+#: eso la sonda reportaba solapes que nadie ve — paso, y costo media hora
+#: perseguir un fallo inexistente entre la leyenda y la atribucion.
+SONDA_SOLAPES = """
+() => {
+  // `getBoundingClientRect` devuelve la posicion SIN recortar: un hijo dentro
+  // de un contenedor con scroll se reporta donde estaria si el contenedor no
+  // recortara, aunque no se pinte ahi. Sin esto la sonda daba por solapada la
+  // leyenda de simbolos con la de intensidad — y el texto estaba recortado.
+  const visibleTrasRecorte = e => {
+    let r = e.getBoundingClientRect();
+    for (let p = e.parentElement; p; p = p.parentElement) {
+      const s = getComputedStyle(p);
+      if (s.overflowY === 'visible' && s.overflowX === 'visible') continue;
+      const c = p.getBoundingClientRect();
+      if (r.bottom <= c.top + 1 || r.top >= c.bottom - 1) return false;
+      if (r.right <= c.left + 1 || r.left >= c.right - 1) return false;
+    }
+    return true;
+  };
+
+  const conTexto = [...document.querySelectorAll('body *')].filter(e => {
+    if (!e.checkVisibility({ contentVisibilityAuto: true, opacityProperty: true,
+                             visibilityProperty: true })) return false;
+    const r = e.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return false;
+    if (r.bottom < 0 || r.top > innerHeight) return false;
+    if (!visibleTrasRecorte(e)) return false;
+    return [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 1);
+  });
+  const pares = [];
+  for (let i = 0; i < conTexto.length; i++) {
+    for (let j = i + 1; j < conTexto.length; j++) {
+      const a = conTexto[i], b = conTexto[j];
+      if (a.contains(b) || b.contains(a)) continue;
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+      const ix = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+      const iy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+      if (ix > 3 && iy > 3) pares.push(
+        `«${a.textContent.trim().slice(0,24)}» sobre «${b.textContent.trim().slice(0,24)}»`);
+    }
+  }
+  return pares;
+}
+"""
+
+
+@pytest.mark.parametrize(
+    ("etiqueta", "ancho", "alto"),
+    [("movil", 390, 844), ("portatil", 1280, 620), ("escritorio", 1600, 900)],
+)
+def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, alto: int) -> None:
+    """El pie del mapa se apilaba sobre si mismo en un telefono.
+
+    Medido el 28-ago-2026 en 390x844 con evento y focos: leyenda de intensidad
+    553-708, interruptores 599-728, atribucion 706-730 — las tres cajas sobre el
+    mismo rincon de 506 px de mapa. La leyenda, que es la que explica los
+    colores, quedaba ilegible debajo de los interruptores.
+
+    Se comprueba en los tres tamanos y con el peor estado (evento + focos)
+    porque el fallo no existia en escritorio: el hueco solo aparece cuando el
+    mapa se estrecha.
+    """
+    pagina.set_viewport_size({"width": ancho, "height": alto})
+    _esperar_capa(pagina, "epicentros")
+    _con_fuego(pagina)
+
+    # Peor estado del modo sismos: un evento abierto, con leyenda y pestañas.
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    solapes = pagina.evaluate(SONDA_SOLAPES)
+    assert solapes == [], f"en {etiqueta} ({ancho}x{alto}), modo sismos: {solapes}"
+
+    # Y el modo fuego, que es un estado nuevo con su propia leyenda grande.
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_timeout(800)
+
+    solapes = pagina.evaluate(SONDA_SOLAPES)
+    assert solapes == [], f"en {etiqueta} ({ancho}x{alto}), modo fuego: {solapes}"
+
+
+# --- Lo que un control promete tiene que ser lo que enciende -----------------
+
+
+def test_el_modo_fuego_promete_lo_que_dibuja(pagina: Any) -> None:
+    """La casilla decia 15.607 celdas y el mapa dibujaba 4.000.
+
+    El control cambio —el checkbox de esquina es hoy el selector de amenaza—
+    pero la invariante que esta prueba guarda es la misma: el numero que la
+    interfaz ensena tiene que ser uno que el mapa pueda respaldar, y el recorte
+    tiene que decir su criterio.
+    """
+    anotacion = _con_fuego(pagina)
+    totales = pagina.evaluate("fetch('incendios.json').then(r => r.json()).then(d => d.totales)")
+    dibujadas = anotacion["rasgos"]
+    publicadas = totales["celdas_publicadas"]
+    total = totales["celdas"]
+
+    assert dibujadas == publicadas, (
+        f"el mapa dibujo {dibujadas} celdas y el JSON declara {publicadas} publicadas"
+    )
+
+    def es(n: int) -> str:
+        # Agrupado siempre, como lo hace el visor con este par de cifras: por
+        # defecto el español no separa los millares hasta cinco digitos y
+        # "4000 de 15.607" parece una errata.
+        texto: str = pagina.evaluate(
+            "n => new Intl.NumberFormat('es', { useGrouping: 'always' }).format(n)", n
+        )
+        return texto
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+
+    # `inner_text` devuelve versalitas (la trampa de siempre) y la nota vive
+    # dentro del <details> plegado: se abre, que ademas comprueba que la
+    # explicacion es alcanzable.
+    pagina.locator("#leyenda .leyenda-detalle summary").click()
+    leyenda = pagina.locator("#leyenda").inner_text()
+    assert "potencia radiativa" in leyenda.lower(), f"el modo fuego no trae su leyenda: {leyenda!r}"
+    if publicadas < total:
+        assert es(dibujadas) in leyenda and es(total) in leyenda, (
+            f"la leyenda no dice el recorte ({es(dibujadas)} de {es(total)}): {leyenda!r}"
+        )
+        assert "gente debajo" in leyenda, f"la leyenda no dice el criterio del recorte: {leyenda!r}"
+
+
+# --- Sin libreria de mapas ---------------------------------------------------
+
+
+def test_sin_libreria_de_mapas_el_aviso_no_se_queda_eterno(navegador: Any, servidor: str) -> None:
+    """«Cargando el mapa» giraba para siempre si unpkg no respondia.
+
+    La red de seguridad existia —`setTimeout(listo, 8000)`— pero vivia dentro de
+    `iniciarMapa()`, **despues** del `return` temprano que se dispara cuando
+    `maplibregl` es `undefined`: justo el caso que tenia que cubrir era el unico
+    que no cubria. Medido el 28-ago-2026 con los `<script>` de unpkg apuntando a
+    404: treinta y un segundos girando.
+
+    Lo que hace grave a un aviso eterno es lo que hay debajo: los veintiun
+    reportes, la cobertura y el panel de un evento entero funcionaban. La pagina
+    servia y parecia rota.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    errores: list[str] = []
+    pg.on("pageerror", lambda e: errores.append(str(e)))
+    # El CDN, caido. Se corta la libreria de mapas y se deja todo lo demas.
+    pg.route("**/maplibre-gl.js*", lambda ruta: ruta.abort())
+    try:
+        pg.goto(f"{servidor}/index.html")
+        pg.wait_for_function(
+            "() => document.querySelectorAll('#lista-eventos li').length > 0", timeout=ESPERA_MS
+        )
+
+        aviso = pg.locator("#cargando")
+        # `inner_text` devuelve el texto **renderizado** y `.mono` va en
+        # versalitas, asi que aqui llega "CARGANDO EL MAPA". Comparar sin
+        # normalizar la caja dejaba pasar la prueba por el motivo equivocado.
+        texto = aviso.inner_text()
+
+        assert "cargando" not in texto.lower(), (
+            f"el aviso de carga sigue puesto sin libreria de mapas: {texto!r}"
+        )
+        assert texto.strip(), "el aviso se quito sin decir que el mapa no esta"
+        assert "mapa" in texto.lower(), (
+            f"el aviso no explica que lo que falta es el mapa: {texto!r}"
+        )
+        assert aviso.locator(".giro").count() == 0, (
+            "el girito sigue girando sobre un mapa que no va a existir"
+        )
+
+        # Y lo de debajo, intacto: es la mitad del argumento para no alarmar.
+        eventos = pg.evaluate("document.querySelectorAll('#lista-eventos li').length")
+        catalogo = pg.evaluate(
+            "fetch('reports/index.json').then(r => r.json()).then(e => e.length)"
+        )
+        assert eventos == catalogo, f"sin mapa la lista quedo en {eventos} de {catalogo}"
+        assert pg.evaluate("document.querySelectorAll('#tabla-cobertura tbody tr').length") > 0, (
+            "sin mapa la cobertura regional no se pinto"
+        )
+
+        assert not errores, f"la pagina lanzo errores de JavaScript: {errores}"
+    finally:
+        ctx.close()
+
+
+# --- Cuanto territorio, no solo cuanta gente --------------------------------
+
+
+def test_el_area_de_afectacion_cuadra_con_la_malla(pagina: Any) -> None:
+    """El tablero contaba gente y no decia nunca sobre que superficie.
+
+    "2,4 M de personas en MMI≥7" describe igual de bien una ciudad sacudida que
+    media cordillera, y son dos emergencias distintas. El area sale de contar
+    las celdas que ya se dibujan, asi que se puede comprobar contra el registro
+    de pintado: si el bloque dice mas km² de los que hay celdas, esta inventando.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    celdas = _esperar_capa(pagina, "celdas", desde=marca)
+
+    bloque = pagina.locator("#bloque-area")
+    assert bloque.is_visible(), "el evento trae malla y el bloque de area no salio"
+
+    # El total de la malla que declara el panel no puede exceder el de la capa.
+    dibujadas = celdas["rasgos"]
+    area = pagina.locator("#detalle-area").inner_text()
+    numeros = [
+        int(n.replace(".", "")) for n in re.findall(r"([\d.]+) km²", area.replace("KM²", "km²"))
+    ]
+    assert numeros, f"el bloque de area no publica ninguna cifra: {area!r}"
+    assert max(numeros) <= dibujadas * 5.2 + 1, (
+        f"el area declarada ({max(numeros)} km²) supera la de las {dibujadas} celdas dibujadas"
+    )
+
+
+def test_las_cifras_vulnerables_llevan_su_proporcion(pagina: Any) -> None:
+    """Un conteo no dice si es mucho.
+
+    "289.000 personas de 65 anos o mas" no significa nada hasta saber que son el
+    12 % de los expuestos, y "1,6 M sobre suelo licuable" tampoco hasta saber que
+    son dos de cada tres. La division se podia hacer con los numeros que el
+    reporte ya trae y no se hacia.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    metricas = pagina.locator("#detalle-metricas").inner_text()
+    assert "de los expuestos" in metricas, (
+        f"la cifra de mayores de 65 sigue sin su proporcion: {metricas!r}"
+    )
+
+    terreno = pagina.locator("#detalle-terreno").inner_text()
+    assert "de los expuestos" in terreno, f"la licuefaccion sigue sin su proporcion: {terreno!r}"
+
+
+# --- El area de afectacion tiene forma, no solo cifra ------------------------
+
+
+def test_el_perimetro_encierra_exactamente_lo_que_se_cuenta(pagina: Any) -> None:
+    """A escala regional 890 hexagonos no se leen como una zona: se leen como
+    textura. La pregunta "¿que area quedo dentro?" tenia cifra y no tenia forma.
+
+    Lo que hace honesto a este perimetro es que sale de disolver **las mismas
+    celdas que se cuentan**, no de una isolinea de otro producto: el borde y el
+    "4.628 km²" del panel son el mismo objeto. Por eso la prueba compara el
+    numero de celdas disueltas con las que el panel declara.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    perimetro = _esperar_capa(pagina, "perimetro", desde=marca)
+
+    assert perimetro["rasgos"] > 0, "la malla se dibujo y el perimetro salio vacio"
+
+    area = pagina.locator("#detalle-area").inner_text()
+    encaje = re.search(r"([\d.]+) celdas", area)
+    assert encaje, f"el bloque de area no dice cuantas celdas hay detras: {area!r}"
+    celdas_panel = int(encaje.group(1).replace(".", ""))
+    assert perimetro["rasgos"] == celdas_panel, (
+        f"el panel dice {celdas_panel} celdas y el perimetro disolvio {perimetro['rasgos']}"
+    )
+
+
+def test_volver_al_panorama_no_deja_capas_del_evento(pagina: Any) -> None:
+    """`cerrarDetalle` quitaba la malla y se dejaba los contornos.
+
+    No se notaba porque las isolineas son palidas sobre un mapa continental. Al
+    anadir el perimetro —tinta oscura— quedo a la vista: al volver al panorama
+    flotaba el borde de un area cuyo panel ya no existia.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    _esperar_capa(pagina, "perimetro", desde=marca)
+
+    pagina.locator("#volver").click()
+    pagina.wait_for_function(
+        """() => {
+             const p = window.CENTINELA.pintado;
+             return ['celdas', 'contornos', 'perimetro'].every((c) => p[c] && p[c].rasgos === 0);
+           }""",
+        timeout=ESPERA_MS,
+    )
+
+    quedan = pagina.evaluate(
+        "['celdas','contornos','perimetro'].filter(c => window.CENTINELA.pintado[c].rasgos > 0)"
+    )
+    assert quedan == [], f"al volver al panorama quedaron capas del evento: {quedan}"
+
+
+# --- La lista responde a mas de una pregunta --------------------------------
+
+
+def _titulos_visibles(pagina: Any) -> list[str]:
+    titulos: list[str] = pagina.evaluate(
+        """() => [...document.querySelectorAll('#lista-eventos li')]
+                   .filter(li => !li.hidden)
+                   .map(li => li.querySelector('a').textContent)"""
+    )
+    return titulos
+
+
+def test_la_lista_se_ordena_por_lo_que_se_le_pide(pagina: Any) -> None:
+    """Iba siempre por fecha, que responde "¿que ha pasado ultimamente?".
+
+    Las otras dos preguntas no tenian respuesta sin leer las veintiuna tarjetas,
+    y no son la misma: el M8 de Peru deja 248.000 personas en MMI≥7 y el M7,4 del
+    Choco deja 2,4 millones. Ordenar por magnitud y por exposicion tiene que dar
+    listas distintas, y esa diferencia es justamente el hallazgo.
+    """
+    _esperar_capa(pagina, "epicentros")
+
+    pagina.select_option("#orden-lista", "mag")
+    por_mag = pagina.evaluate(
+        """() => [...document.querySelectorAll('#lista-eventos li')]
+                   .filter(li => !li.hidden).map(li => Number(li.dataset.mag))"""
+    )
+    assert por_mag == sorted(por_mag, reverse=True), f"el orden por magnitud no baja: {por_mag}"
+
+    pagina.select_option("#orden-lista", "pop")
+    por_pop = pagina.evaluate(
+        """() => [...document.querySelectorAll('#lista-eventos li')]
+                   .filter(li => !li.hidden).map(li => Number(li.dataset.pop))"""
+    )
+    assert por_pop == sorted(por_pop, reverse=True), f"el orden por exposicion no baja: {por_pop}"
+
+    assert _titulos_visibles(pagina) != [], "la lista se quedo vacia al reordenar"
+    assert pagina.locator("#orden-lista").input_value() == "pop", (
+        "el control no refleja el orden puesto"
+    )
+
+
+def test_la_lista_se_recorta_al_encuadre_del_mapa(pagina: Any) -> None:
+    """El mapa ensenaba dos epicentros y la lista seguia ensenando veintiuno.
+
+    Es el gesto de Wildfire Aware —"138 incendios a la vista", y uno solo al
+    acercarse— y aqui vale igual: mapa y lista son el mismo conjunto mirado de
+    dos maneras, y no lo eran.
+    """
+    _esperar_capa(pagina, "epicentros")
+    todos = len(_titulos_visibles(pagina))
+    assert todos > 1, "hacen falta varios reportes para que esta prueba diga algo"
+
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    pagina.locator("#solo-en-vista").check()
+    pagina.wait_for_function(
+        "(n) => document.querySelectorAll('#lista-eventos li:not([hidden])').length < n",
+        arg=todos,
+        timeout=ESPERA_MS,
+    )
+
+    en_vista = _titulos_visibles(pagina)
+    assert 0 < len(en_vista) < todos, (
+        f"con el mapa sobre el Choco la lista deberia recortarse; "
+        f"quedo en {len(en_vista)} de {todos}"
+    )
+    assert "encuadre" in pagina.locator("#cuenta-lista").inner_text().lower(), (
+        "el contador no dice que la lista esta recortada al encuadre"
+    )
+
+
+# --- Lo que la sonda de solapes no veia -------------------------------------
+
+
+#: Solapes **dentro de una seccion**, ignorando la barra fija.
+#:
+#: `SONDA_SOLAPES` recorre la pantalla entera, y en cuanto se desplaza la pagina
+#: la barra pegajosa queda sobre el contenido y da siete pares que no son un
+#: fallo: para eso lleva fondo. Esta sonda mira una sola seccion.
+SONDA_SOLAPES_EN = """
+(sel) => {
+  const raiz = document.querySelector(sel);
+  const conTexto = [...raiz.querySelectorAll('*'), raiz].filter(e => {
+    if (!e.checkVisibility({ visibilityProperty: true, opacityProperty: true })) return false;
+    const r = e.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) return false;
+    return [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 1);
+  });
+  const pares = [];
+  for (let i = 0; i < conTexto.length; i++) {
+    for (let j = i + 1; j < conTexto.length; j++) {
+      const a = conTexto[i], b = conTexto[j];
+      if (a.contains(b) || b.contains(a)) continue;
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+      const ox = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+      const oy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+      if (ox > 2 && oy > 2) {
+        const corta = (e) => e.textContent.trim().slice(0, 22);
+        pares.push(`«${corta(a)}» sobre «${corta(b)}»`);
+      }
+    }
+  }
+  return pares;
+}
+"""
+
+
+@pytest.mark.parametrize("ancho", [360, 390, 768, 1024, 1280, 1600])
+def test_la_reticula_no_se_pisa_con_el_titular(pagina: Any, ancho: int) -> None:
+    """La sonda de solapes solo mira lo que cabe en pantalla, y esta seccion vive
+    bajo el pliegue: por eso paso desapercibido durante toda una auditoria.
+
+    La etiqueta "12°N" iba clavada a 0,85rem del borde y terminaba en el pixel
+    41; el titular de "Reportes publicados" empieza en el 28. Se pisaban de 360 a
+    1200 px —cualquier telefono y casi cualquier portatil— y solo se libraba a
+    partir de 1440, cuando el contenedor se centra y deja hueco.
+    """
+    pagina.set_viewport_size({"width": ancho, "height": 800})
+    _esperar_capa(pagina, "epicentros")
+    pagina.locator("#eventos h2").scroll_into_view_if_needed()
+    pagina.wait_for_timeout(400)
+
+    solapes = pagina.evaluate(SONDA_SOLAPES_EN, "#eventos")
+
+    assert solapes == [], f"a {ancho} px hay texto encima de otro en la lista: {solapes}"
+
+
+@pytest.mark.parametrize("ancho", [320, 344, 360, 390])
+def test_la_pagina_no_se_desplaza_de_lado_en_pantallas_estrechas(pagina: Any, ancho: int) -> None:
+    """La rejilla de tarjetas pedia columnas de 20rem que no encogian.
+
+    En un iPhone SE de 320 px la lista empujaba 35 px fuera de la ventana y
+    arrastraba a toda la pagina, mapa incluido. Medido: 320 -> 35, 344 -> 11,
+    360 -> 0. La prueba que ya habia solo miraba 390, justo por encima del
+    umbral donde el fallo empieza.
+    """
+    pagina.set_viewport_size({"width": ancho, "height": 780})
+    _esperar_capa(pagina, "epicentros")
+
+    medida = pagina.evaluate("""() => ({
+        scroll: document.documentElement.scrollWidth,
+        visible: document.documentElement.clientWidth,
+    })""")
+
+    assert medida["scroll"] <= medida["visible"] + 1, (
+        f"a {ancho} px la pagina se desplaza de lado: {medida['scroll']} sobre {medida['visible']}"
+    )
+
+
+# --- Que se sepa de cuando es cada cifra ------------------------------------
+
+
+def test_las_cifras_en_vivo_dicen_cuando_se_revisaron(pagina: Any) -> None:
+    """El comentario de `pintarEnVivo` lo prometia desde que se escribio —"por
+    eso llevan la hora de la ultima revision: sin ella, «14.984 celdas con
+    fuego» podria ser de hace un mes"— y no lo cumplia.
+
+    Un tablero que se presenta como vigilancia en vivo y no fecha sus cifras
+    pide una confianza que no ha ganado.
+    """
+    _con_fuego(pagina)
+    vivo = pagina.locator("#en-vivo")
+
+    assert vivo.is_visible(), "la tarjeta en vivo no salio"
+    texto = vivo.inner_text()
+    assert "revisado" in texto.lower(), f"ninguna cifra dice cuando se reviso: {texto!r}"
+
+    # Y la marca exacta, para quien la quiera, en el `title`.
+    sellos = pagina.locator("#en-vivo .revisado")
+    assert sellos.count() > 0
+    assert sellos.first.get_attribute("title"), "el sello no lleva la fecha exacta"
+
+
+# --- El globo no puede sobrevivir a lo que describe -------------------------
+
+
+def test_el_globo_de_una_celda_se_va_con_su_evento(pagina: Any) -> None:
+    """Se abria una celda, se pulsaba "Volver al panorama" y el globo se quedaba
+    flotando sobre el mapa continental: describia una celda de un evento cerrado
+    sobre una malla que ya no estaba, y era el unico de los tres popups sin
+    boton de cerrar.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    # Se espera a que el vuelo al evento termine: pulsar mientras la camara se
+    # mueve es pulsar sobre una malla que todavia no esta donde se ve.
+    pagina.wait_for_timeout(2000)
+
+    # Y la malla tiene huecos —son ausencia de gente, no de sacudida— asi que el
+    # centro del mapa no siempre cae sobre una celda. Se barre una rejilla.
+    caja = pagina.locator("#mapa").bounding_box()
+    assert caja
+    abierto = False
+    for fy in (0.35, 0.45, 0.55, 0.65):
+        for fx in (0.35, 0.45, 0.55):
+            pagina.mouse.click(caja["x"] + caja["width"] * fx, caja["y"] + caja["height"] * fy)
+            pagina.wait_for_timeout(320)
+            # El globo de la CELDA, no cualquier globo. El rotulo que sale al
+            # pasar por encima de un epicentro tambien es un `.maplibregl-popup`
+            # y esta busqueda lo daba por bueno: la prueba pasaba a la asercion
+            # del boton de cerrar sin haber abierto ninguna celda, y fallaba ahi
+            # por la razon equivocada.
+            if pagina.locator(".maplibregl-popup .popup-celda").count():
+                abierto = True
+                break
+        if abierto:
+            break
+    assert abierto, "no se pudo abrir el globo de ninguna celda de la malla"
+
+    assert pagina.locator(".maplibregl-popup-close-button").count() > 0, (
+        "el globo de celda sigue sin boton de cerrar"
+    )
+
+    pagina.locator("#volver").click()
+    pagina.wait_for_selector(".maplibregl-popup", state="detached", timeout=ESPERA_MS)
+
+    assert pagina.locator(".maplibregl-popup").count() == 0, (
+        "al volver al panorama quedo un globo describiendo un evento cerrado"
+    )
+
+
+# --- Un enlace roto tiene que decir que lo esta -----------------------------
+
+
+def test_un_enlace_a_un_reporte_que_no_existe_lo_dice(navegador: Any, servidor: str) -> None:
+    """`?evento=NO_EXISTE` caia al panorama en silencio, con el parametro todavia
+    en la barra. Quien llega desde un enlace compartido a un reporte retirado
+    cree que pulso mal.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    try:
+        pg.goto(f"{servidor}/index.html?evento=NO_EXISTE")
+        pg.wait_for_function(
+            "() => document.querySelectorAll('#lista-eventos li').length > 0",
+            timeout=ESPERA_MS,
+        )
+
+        aviso = pg.locator("#estado-lista")
+        assert aviso.is_visible(), "no se dijo nada sobre el reporte que no existe"
+        assert "NO_EXISTE" in aviso.inner_text(), (
+            f"el aviso no nombra el identificador pedido: {aviso.inner_text()!r}"
+        )
+        # Y el panorama entero sigue delante, que es lo que hay que ofrecer.
+        assert pg.locator("#lateral-detalle").is_hidden()
+        assert "evento=" not in pg.url, (
+            "el parametro roto sigue en la barra: recargar repite el error"
+        )
+    finally:
+        ctx.close()
+
+
+def test_un_enlace_profundo_deja_la_camara_sobre_su_evento(navegador: Any, servidor: str) -> None:
+    """El encuadre de apertura le robaba la camara al enlace profundo.
+
+    `cuandoElEstiloEsteListo` se dispara con `isStyleLoaded()`, que llega antes
+    que `load`: con `?evento=...` la secuencia real era volar al evento y luego
+    que el encuadre de apertura lo devolviera al panorama. Se veia la malla del
+    sismo del tamano de un sello en mitad de America Latina.
+
+    Las otras pruebas abren el evento con `select_option` **despues** de cargar,
+    y por ese camino no hay carrera: esta entra por la URL, que es como llega
+    quien recibe un enlace compartido.
+
+    Se comprueba con el recorte al encuadre, que ya existe: si la camara esta
+    sobre el Choco solo cae un reporte dentro; si volvio al panorama, los 21.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    try:
+        # La carrera solo aparece cuando `load` llega **tarde**, y en local no
+        # llega tarde: el servidor esta a un milisegundo. Se retrasan las teselas
+        # —no el estilo— para reproducir el orden de la pagina publicada.
+        #
+        # Sin esto la prueba pasaba con el fallo puesto, que es una prueba que no
+        # prueba nada. Comprobado: sin el arreglo da "21 de 21 en el encuadre".
+        def _lento(ruta: Any) -> None:
+            import time
+
+            time.sleep(1.2)
+            ruta.continue_()
+
+        pg.route("**/tiles.openfreemap.org/**/*.pbf", _lento)
+
+        pg.goto(f"{servidor}/index.html?evento=us6000tjl2")
+        pg.wait_for_function(
+            """() => {
+                 const p = window.CENTINELA && window.CENTINELA.pintado;
+                 return !!(p && p.celdas && p.celdas.rasgos > 0);
+               }""",
+            timeout=ESPERA_MS,
+        )
+        # El vuelo dura `VUELO` ms, y hay que dejar que `load` llegue y haga —o
+        # no haga— lo suyo.
+        pg.wait_for_timeout(5000)
+
+        pg.locator("#solo-en-vista").check()
+        pg.wait_for_timeout(600)
+
+        en_vista = pg.evaluate(
+            "document.querySelectorAll('#lista-eventos li:not([hidden])').length"
+        )
+        total = pg.evaluate("document.querySelectorAll('#lista-eventos li').length")
+
+        assert en_vista < total, (
+            f"con un enlace profundo la camara se quedo en el panorama: "
+            f"{en_vista} de {total} reportes en el encuadre"
+        )
+    finally:
+        ctx.close()
+
+
+# --- La pagina de estado hace la resta --------------------------------------
+
+
+def test_estado_dice_que_la_cadencia_se_come_el_objetivo(navegador: Any, servidor: str) -> None:
+    """El objetivo y la cadencia real vivian en dos bloques distintos de la
+    pagina y nadie los ponia uno al lado del otro.
+
+    La conclusion sale de datos que ya se publican: si el vigia tarda 157 min de
+    mediana solo en **mirar** el feed, un objetivo de 60 min desde que hay
+    ShakeMap no se puede cumplir aunque el resto del pipeline fuera instantaneo.
+
+    Decirlo es lo mismo que hace el resto del sistema con el desvio de poblacion
+    —publicarlo aunque incomode— y es lo que impide que un objetivo se quede de
+    adorno.
+    """
+    ctx = navegador.new_context(viewport={"width": 1200, "height": 900})
+    pg = ctx.new_page()
+    try:
+        # SE LE DA EL ESCENARIO, NO SE ESPERA A QUE OCURRA.
+        #
+        # Esto leia el `status.json` publicado y ramificaba: si la cadencia
+        # cumplia, comprobaba que **no** hubiera aviso. Desde que el reloj
+        # externo bajo la cadencia a 5 min esa era siempre la rama, asi que la
+        # prueba llevaba dias verde sin haber ejecutado nunca el aviso — y el
+        # aviso, mientras tanto, vivia en una rama muerta de `status.js` y no
+        # podia aparecer aunque la cadencia se disparase.
+        #
+        # Ahora se sirven los dos escenarios con `route`: uno donde la cadencia
+        # se come el objetivo y otro donde no. Lo que se comprueba deja de
+        # depender del dia que haga.
+        publicado = json.loads((RAIZ / "site" / "status.json").read_text(encoding="utf-8"))
+
+        def _con_cadencia(minutos: float) -> Any:
+            datos = json.loads(json.dumps(publicado))
+            datos["cadencia"]["p50_min"] = minutos
+            # Con reportes en vivo, que es el camino que se recorre de verdad:
+            # la rama del dia cero ya no la pisa nadie.
+            datos["medido"]["eventos_publicados"] = max(
+                1, int(datos["medido"].get("eventos_publicados") or 0)
+            )
+            return lambda ruta: ruta.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps(datos, ensure_ascii=False),
+            )
+
+        objetivo = float(publicado["objetivo"]["p50_min"])
+
+        pg.route("**/status.json", _con_cadencia(objetivo * 3))
+        pg.goto(f"{servidor}/status.html")
+        pg.wait_for_selector("#resumen:not(.cargando)", timeout=ESPERA_MS)
+        aviso = pg.locator(".nota-alarma")
+        assert aviso.count() == 1, (
+            f"la cadencia ({objetivo * 3:.0f} min) triplica el objetivo "
+            f"({objetivo:.0f} min) y la pagina no lo dice"
+        )
+        texto = aviso.inner_text()
+        assert "vigía" in texto and "objetivo" in texto
+
+        # Y al reves: cumpliendo, no se avisa. Un aviso que sale siempre no es
+        # un aviso.
+        pg.route("**/status.json", _con_cadencia(objetivo / 10))
+        pg.goto(f"{servidor}/status.html")
+        pg.wait_for_selector("#resumen:not(.cargando)", timeout=ESPERA_MS)
+        assert pg.locator(".nota-alarma").count() == 0, (
+            "la cadencia cumple el objetivo y la pagina avisa igualmente"
+        )
+    finally:
+        ctx.close()
+
+
+# --- El globo de un foco de fuego -------------------------------------------
+
+
+def test_el_globo_de_un_foco_dice_que_arde_y_sobre_quien(pagina: Any) -> None:
+    """El ultimo eslabon del E2E de fuego que faltaba por ejercitar.
+
+    La cadena FIRMS -> P5 -> JSON -> capa dibujada ya esta cubierta; el globo
+    del foco —`cuadroDeIncendio`, el unico sitio donde una celda de fuego
+    concreta cuenta su potencia y su gente— no lo estaba. Y no es plumbing
+    duplicado: su handler cuelga de capas propias ("incendios",
+    "incendios-punto") y su contenido tiene logica —omitir la poblacion cero
+    para no venderla como medicion— que nadie mas ejercita.
+
+    Se busca un foco barriendo el cursor por el interior este del continente
+    —Amazonia y cerrado, donde arde y no hay epicentros— y se exige el rotulo
+    propio del globo de fuego, no cualquier globo.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    caja = pagina.locator("#mapa").bounding_box()
+    assert caja
+
+    abierto = False
+    for fy in (0.52, 0.56, 0.6, 0.64, 0.68, 0.72, 0.76):
+        for fx in (0.56, 0.6, 0.64, 0.68, 0.72, 0.76, 0.8):
+            x = caja["x"] + caja["width"] * fx
+            y = caja["y"] + caja["height"] * fy
+            pagina.mouse.move(x, y)
+            cursor = pagina.evaluate("document.querySelector('#mapa canvas').style.cursor")
+            if cursor == "pointer":
+                pagina.mouse.click(x, y)
+                pagina.wait_for_timeout(500)
+                if pagina.locator(".popup-incendio").count():
+                    abierto = True
+                    break
+                # Era otra cosa pulsable (un epicentro despistado): se cierra y
+                # se sigue barriendo.
+                pagina.keyboard.press("Escape")
+                pagina.wait_for_timeout(300)
+        if abierto:
+            break
+
+    assert abierto, "no se pudo abrir el globo de ningun foco en la zona de quemas"
+
+    # `inner_text` devuelve el texto renderizado y el eyebrow va en versalitas
+    # por CSS — la misma trampa que ya mordio en "CARGANDO EL MAPA".
+    texto = pagina.locator(".popup-incendio").inner_text()
+    assert "celda con fuego activo" in texto.lower(), f"el globo no se rotula como fuego: {texto!r}"
+    assert "Potencia radiativa" in texto and "MW" in texto, (
+        f"el globo no dice la energia medida: {texto!r}"
+    )
+    assert "Detecciones" in texto, f"el globo no dice cuantas veces se vio: {texto!r}"
+
+
+# --- El selector de amenaza --------------------------------------------------
+
+
+def test_el_selector_de_amenaza_cambia_el_lente(pagina: Any) -> None:
+    """El fuego deja de ser un checkbox: es un modo con el mismo rango que los
+    sismos, con su leyenda en el hueco grande y su URL compartible.
+
+    Esta espera al mapa de sismos y no al de fuego a proposito: la primera
+    afirmacion es que **sismos es el modo por defecto**, y entrar en fuego para
+    comprobarlo la haria trivial.
+    """
+    _esperar_capa(pagina, "epicentros")
+
+    boton_fuego = pagina.locator('#amenazas button[data-amenaza="fuego"]')
+    boton_sismos = pagina.locator('#amenazas button[data-amenaza="sismos"]')
+    assert boton_sismos.get_attribute("aria-pressed") == "true", "sismos es el defecto"
+
+    boton_fuego.click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+
+    assert boton_fuego.get_attribute("aria-pressed") == "true"
+    assert "amenaza=fuego" in pagina.url, "el modo no viaja en la URL"
+    assert "potencia radiativa" in pagina.locator("#leyenda").inner_text().lower()
+    assert pagina.locator("#interruptor-observados").is_hidden(), (
+        "el control de sismos menores es del modo sismos y sigue a la vista"
+    )
+
+    # Y de vuelta: el hueco grande se libera y la URL queda limpia.
+    boton_sismos.click()
+    pagina.wait_for_selector("#leyenda[hidden]", state="attached", timeout=ESPERA_MS)
+    assert "amenaza" not in pagina.url
+    assert pagina.locator("#interruptor-observados").is_visible()
+
+
+def test_abrir_un_evento_desde_el_modo_fuego_vuelve_a_sismos(pagina: Any) -> None:
+    """Un evento abierto es contenido del modo sismos, llegue de donde llegue.
+
+    Sin esta regla, elegir un reporte en modo fuego dejaria el panel contando
+    poblacion por franja de intensidad sobre un mapa que dibuja potencia
+    radiativa: dos amenazas hablando a la vez, que es justo lo que el selector
+    existe para impedir.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    assert (
+        pagina.locator('#amenazas button[data-amenaza="sismos"]').get_attribute("aria-pressed")
+        == "true"
+    ), "el evento se abrio y el fuego sigue al mando"
+    assert "intensidad" in pagina.locator("#leyenda").inner_text().lower(), (
+        "la leyenda no volvio a la variable de la malla"
+    )
+    assert "evento=us6000tjl2" in pagina.url and "amenaza" not in pagina.url
+
+
+def test_el_enlace_profundo_al_modo_fuego(navegador: Any, servidor: str) -> None:
+    """?amenaza=fuego abre con el fuego al mando aunque sus capas carguen tarde.
+
+    Las capas llegan en paralelo y el modo se aplica cuando cada una termina de
+    dibujarse: sin eso, un enlace compartido en modo fuego abriria en sismos
+    con el fuego invisible, que es el estado que el enlace venia a evitar.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    try:
+        pg.goto(f"{servidor}/index.html?amenaza=fuego")
+        pg.wait_for_function(
+            """() => {
+                 const p = window.CENTINELA && window.CENTINELA.pintado;
+                 return !!(p && p.incendios && p.incendios.rasgos > 0);
+               }""",
+            timeout=ESPERA_MS,
+        )
+        pg.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+
+        assert (
+            pg.locator('#amenazas button[data-amenaza="fuego"]').get_attribute("aria-pressed")
+            == "true"
+        )
+        assert "potencia radiativa" in pg.locator("#leyenda").inner_text().lower()
+    finally:
+        ctx.close()
+
+
+def test_el_fuego_no_se_baja_hasta_que_se_mira(navegador: Any, servidor: str) -> None:
+    """3,2 MB de JSON no se descargan para alimentar cifras que el modo esconde.
+
+    `incendios.json` se pedia al arrancar, **en modo sismos**, y `aplicarAmenaza`
+    escondia acto seguido todos los bloques `data-amenaza="fuego"` de la
+    tarjeta: el coste era entero —la descarga, los 7.987 hexagonos de
+    `cellToBoundary`, el union-find de `agruparFocos`— y el beneficio, cero,
+    hasta que alguien pulsaba «Fuego».
+
+    Se mide contando peticiones en el navegador y no leyendo el codigo: la
+    pregunta es que sale por el cable, y eso solo lo contesta el cable.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    pedidos: list[str] = []
+    pg.on("request", lambda peticion: pedidos.append(peticion.url))
+    try:
+        pg.goto(f"{servidor}/index.html")
+        _esperar_capa(pg, "epicentros")
+        pg.wait_for_timeout(1200)
+
+        assert not [u for u in pedidos if "incendios.json" in u], (
+            "el fuego se descarga al arrancar, en un modo que no lo ensena"
+        )
+
+        pg.locator('#amenazas button[data-amenaza="fuego"]').click()
+        _esperar_capa(pg, "incendios")
+
+        assert [u for u in pedidos if "incendios.json" in u], (
+            "se entro en modo fuego y nadie pidio el fichero: la capa no llegaria nunca"
+        )
+
+        # Y una sola vez, por muchas alternancias que haya: `asegurarIncendios`
+        # guarda la promesa. Sin eso, ir y volver de modo bajaria 3,2 MB cada vez.
+        pg.locator('#amenazas button[data-amenaza="sismos"]').click()
+        pg.wait_for_timeout(300)
+        pg.locator('#amenazas button[data-amenaza="fuego"]').click()
+        pg.wait_for_timeout(900)
+        veces = len([u for u in pedidos if "incendios.json" in u])
+        assert veces == 1, f"el fichero de fuego se pidio {veces} veces"
+    finally:
+        ctx.close()
+
+
+# --- Focos de incendio (30-ago-2026) ----------------------------------------
+#
+# Cinco pruebas para lo que el visor no sabia hacer: un incendio era una celda
+# suelta con un globo, la tarjeta daba el total de America Latina sin decirlo, y
+# el panel mezclaba las dos amenazas.
+
+
+def test_las_celdas_contiguas_se_agrupan_en_focos(pagina: Any) -> None:
+    """Un incendio no es un hexagono de 5,2 km²: es el grupo que arde junto.
+
+    Sin agrupar, la unica respuesta a "¿que tan grande es este fuego?" era el
+    total regional o una celda. Ninguna de las dos es un incendio.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    celdas = _con_fuego(pagina)["rasgos"]
+    focos = _con_fuego(pagina, "focos")["rasgos"]
+
+    assert focos > 0, "no se agrupo ni un foco"
+    assert focos < celdas, (
+        f"{focos} focos para {celdas} celdas: si no hay ninguna celda contigua "
+        "a otra, el agrupado no esta uniendo nada"
+    )
+
+
+def test_abrir_un_foco_dice_su_area_y_dibuja_su_perimetro(pagina: Any) -> None:
+    """La pregunta que el visor no respondia: cuanta superficie cubre esto.
+
+    El area sale de contar celdas, asi que tiene que cuadrar con el numero de
+    celdas que el propio panel declara. Publicar un area que no se deduce de lo
+    que se ve al lado seria una cifra sin respaldo.
+
+    ESTA PRUEBA CODIFICABA EL ERROR QUE VENIA A VIGILAR. Multiplicaba por 5,2,
+    que es el area de una celda **r7**, cuando P5 publica **r8** —siete veces
+    mas pequena—. Exigia 556 km² para 107 celdas cuando son 79, asi que el panel
+    y la prueba estaban de acuerdo en un numero equivocado y el error sobrevivio
+    meses. Encontrado el 31-ago-2026 revisando los textos del visor.
+
+    Aqui se comprueba el CABLEADO: que el area del panel sea la que sale de
+    multiplicar sus propias celdas por su propia constante. Que **esa constante**
+    valga lo que mide una celda r8 de verdad lo comprueba
+    `test_una_celda_de_fuego_mide_lo_que_dice_el_visor`, en la suite unitaria,
+    que es donde vive `h3`: este trabajo de CI instala solo el extra `visor`.
+
+    Repartido asi a proposito, y aprendido fallando: la primera version importaba
+    `h3` aqui para recalcular lo mismo, y reventó en el PR #34 con
+    `ModuleNotFoundError`. Una prueba que no corre en CI no vigila nada.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina)
+    _con_fuego(pagina, "focos")
+
+    foco = pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    assert foco and foco["celdas"] >= 1
+
+    pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
+    _esperar_capa(pagina, "foco-perimetro")
+
+    texto = pagina.locator("#fuego-area").inner_text().lower()
+    por_celda = pagina.evaluate("() => window.CENTINELA.areaDeUnaCeldaDeFuego()")
+    esperado = foco["celdas"] * por_celda
+
+    assert abs(foco["areaKm2"] - esperado) < 0.01, (
+        f"el foco dice {foco['areaKm2']} km² y {foco['celdas']} celdas por "
+        f"{por_celda} son {esperado:.2f}"
+    )
+    # Y que el panel ensene esa cifra y no otra. El formato lleva un decimal por
+    # debajo de 10 km² y ninguno por encima.
+    en_pantalla = f"{esperado:.1f}" if esperado < 10 else str(round(esperado))
+    assert en_pantalla.replace(".", ",") in texto or en_pantalla in texto, (
+        f"el panel deberia decir {en_pantalla} km²: {texto!r}"
+    )
+    assert "km²" in texto and texto.strip(), f"el panel no dice el area: {texto!r}"
+
+
+def test_en_modo_sismos_no_queda_rastro_de_incendios(pagina: Any) -> None:
+    """El fallo que se veia de un vistazo en el panel.
+
+    En modo fuego el lateral seguia mostrando "9 sismos vistos y no despachados"
+    y debajo el panorama sismico entero. Al reves, en modo sismos seguia la
+    tarjeta de fuego. Dos amenazas hablando a la vez es lo que el selector
+    existe para evitar.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina)
+    # `wait_for_selector` espera a que sea VISIBLE por defecto, y un elemento
+    # oculto no lo es nunca: hay que pedir el estado explicitamente.
+    pagina.wait_for_selector("#bloque-panorama[hidden]", state="attached", timeout=ESPERA_MS)
+
+    pagina.locator('#amenazas button[data-amenaza="sismos"]').click()
+    pagina.wait_for_selector("#bloque-panorama:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_timeout(600)
+
+    lateral = pagina.locator("#lateral").inner_text().lower()
+    intrusos = [p for p in ("fuego", "incendio", "ardiendo", "radiativa") if p in lateral]
+    assert not intrusos, f"el panel de sismos habla de incendios: {intrusos}"
+
+
+def test_volver_de_un_foco_devuelve_el_panorama(pagina: Any) -> None:
+    """La regresion que se introdujo al arreglar esto, cazada en el navegador.
+
+    `cerrarFoco` restauraba el panel solo si la amenaza seguia siendo fuego, y
+    `aplicarAmenaza` lo llama **despues** de cambiar de modo: al pasar a sismos
+    la condicion ya era falsa, y volver a fuego dejaba el lateral en blanco.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
+
+    # El camino largo: salir por el cambio de modo, no por el boton.
+    pagina.locator('#amenazas button[data-amenaza="sismos"]').click()
+    pagina.wait_for_timeout(700)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(700)
+
+    assert pagina.locator("#lateral-vacio").is_visible(), "el lateral se quedo en blanco"
+    assert "ahora mismo" in pagina.locator("#lateral").inner_text().lower()
+
+
+def test_la_cifra_viva_ocupa_la_fila_y_no_se_sale(pagina: Any) -> None:
+    """El "no tiene margen" que se ve en cuanto alguien mira el panel.
+
+    `.metricas` es una rejilla de dos columnas. `.metrica-suelo` y
+    `.metrica-servicios` declaran `grid-column: 1 / -1`; a `.metrica-viva` se le
+    olvido, asi que el titular vivia en media columna de 148 px y su
+    `margin: -8px` sacaba el fondo fuera de la tarjeta.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina)
+    pagina.wait_for_timeout(700)
+
+    medidas = pagina.evaluate(
+        """() => {
+        const b = document.querySelector('.metrica-viva:not([hidden])');
+        const g = document.querySelector('#en-vivo .metricas');
+        if (!b || !g) return null;
+        const rb = b.getBoundingClientRect(), rg = g.getBoundingClientRect();
+        return { bx: rb.left, br: rb.right, bw: rb.width, gx: rg.left, gr: rg.right, gw: rg.width };
+    }"""
+    )
+
+    assert medidas, "no hay cifra viva que medir"
+    assert medidas["bx"] >= medidas["gx"] - 1, "la cifra se sale por la izquierda"
+    assert medidas["br"] <= medidas["gr"] + 1, "la cifra se sale por la derecha"
+    assert abs(medidas["bw"] - medidas["gw"]) <= 3, (
+        f"la cifra ocupa {medidas['bw']:.0f} px de {medidas['gw']:.0f}: "
+        "deberia ocupar la fila entera"
+    )
+
+
+def test_la_tarjeta_viva_dice_de_donde_es_la_cifra(pagina: Any) -> None:
+    """ "586.000 personas en celdas con fuego activo" — ¿de donde?
+
+    Se podia leer como un incendio, como un pais o como la region entera. Es la
+    suma de toda America Latina, y sin decirlo la cifra no significa nada.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina)
+    pagina.wait_for_timeout(600)
+
+    texto = pagina.locator('.metrica-viva[data-capa="incendios"]').inner_text().lower()
+    assert "américa latina" in texto, f"la cifra no declara su alcance: {texto!r}"
+
+
+# --- "Ver en el mapa" tiene que llevar al sitio (31-ago-2026) ----------------
+
+
+def _iso_de(pagina: Any, nombre: str) -> str:
+    """El valor (ISO3) de la opción que empieza por ese nombre.
+
+    Se elige por valor y no por etiqueta porque la etiqueta lleva la cuenta
+    entre paréntesis —«Venezuela (3)»— y esa cuenta cambia con los datos.
+    """
+    iso: str = pagina.evaluate(
+        """(nombre) => {
+          const sel = document.getElementById('filtro-paises');
+          const o = [...sel.options].find(x => x.text.startsWith(nombre));
+          return o ? o.value : '';
+        }""",
+        nombre,
+    )
+    assert iso, f"no hay una opción para {nombre}"
+    return iso
+
+
+def _escala(pagina: Any) -> str:
+    """Lo que dice la barra de escala. Es la lectura fiable de la cámara.
+
+    En una pestaña oculta `requestAnimationFrame` va a ~1 fps y el lienzo puede
+    parecer congelado; la barra de escala sí refleja el zoom.
+    """
+    texto: str = pagina.locator(".maplibregl-ctrl-scale").first.inner_text()
+    return texto.strip()
+
+
+def _km(texto: str) -> float:
+    """La misma conversión, para una escala ya capturada."""
+    numero_, unidad = texto.replace(" ", " ").split()
+    return float(numero_.replace(",", ".")) * (1.0 if unidad == "km" else 0.001)
+
+
+def _camara_quieta(pagina: Any, intentos: int = 40) -> float:
+    """Espera a que el vuelo termine y devuelve la escala en km.
+
+    Dos trampas, las dos aprendidas aquí:
+
+    1. Los vuelos de MapLibre llevan duración. Medir a mitad da una lectura
+       intermedia —1.000 km cuando la cámara va camino de 5— y un
+       `wait_for_timeout` fijo hace fallar la prueba por la máquina y no por el
+       fallo que busca.
+    2. Con la pestaña de fondo, `requestAnimationFrame` cae a ~1 fps y el vuelo
+       **se para**: dos lecturas seguidas salen iguales a mitad de camino y una
+       espera ingenua las toma por el final. Por eso aquí se empuja con un
+       `resize` entre lecturas —lo mismo que hace falta para validar a mano— y
+       se exigen tres iguales, no dos.
+    """
+    estables = 0
+    anterior = _escala_km(pagina)
+    for _ in range(intentos):
+        pagina.evaluate("() => window.dispatchEvent(new Event('resize'))")
+        pagina.wait_for_timeout(350)
+        ahora = _escala_km(pagina)
+        estables = estables + 1 if ahora == anterior else 0
+        anterior = ahora
+        if estables >= 3:
+            return ahora
+    return anterior
+
+
+def _escala_km(pagina: Any) -> float:
+    """La escala como número, para poder comparar cuánto se alejó la cámara.
+
+    Comparar las cadenas obliga a acertar el encuadre exacto, y no es lo que
+    interesa: «volvió al panorama» es «se alejó un orden de magnitud», no «dice
+    2000 km». La barra salta entre valores redondos, así que exigir uno concreto
+    hace la prueba frágil por un motivo que no es el fallo que busca.
+    """
+    texto = _escala(pagina).replace(" ", " ")
+    numero_, unidad = texto.split()
+    return float(numero_.replace(",", ".")) * (1.0 if unidad == "km" else 0.001)
+
+
+def test_ver_en_el_mapa_encuadra_los_sismos_vistos(pagina: Any) -> None:
+    """El botón decía «Ver en el mapa» y no llevaba a ninguna parte.
+
+    Encendía nueve estrellas huecas repartidas por un continente, sin mover la
+    cámara y sin decir nada. En un portátil, donde el mapa ya se ve entero, el
+    `scrollIntoView` tampoco hacía nada: para quien lo pulsa, el botón está roto.
+    """
+    _esperar_capa(pagina, "observados")
+    boton = pagina.locator('.metrica-viva[data-capa="observados"]')
+    boton.wait_for(state="visible", timeout=ESPERA_MS)
+
+    boton.click()
+    pagina.wait_for_timeout(600)
+    _camara_quieta(pagina)
+
+    casilla = pagina.locator("#interruptor-observados input")
+    assert casilla.is_checked(), "la capa que el botón promete encender sigue apagada"
+    # Se mira la ORDEN, no el píxel, que es para lo que existe `camara` y lo
+    # dice su propio comentario. La versión anterior comparaba la barra de
+    # escala antes y después, y eso no distingue "no se pidió mover" de "se
+    # pidió y el encuadre coincide con el de partida": los sismos vistos van de
+    # Chile a México, así que el rectángulo que los contiene ES casi el
+    # panorama, y la barra marcaba 1000 km en los dos lados. La prueba fallaba
+    # con el botón funcionando.
+    motivo = pagina.evaluate("() => window.CENTINELA.camara.motivo")
+    assert motivo == "observados", (
+        f"«Ver en el mapa» no le pidió a la cámara ir a los sismos vistos: última orden {motivo!r}"
+    )
+
+
+def test_ver_en_el_mapa_no_es_un_boton_de_un_solo_uso(pagina: Any) -> None:
+    """La segunda pulsación no hacía literalmente nada.
+
+    `cambiarAmenaza` sale temprano si el modo ya es ese, y la casilla solo se
+    marcaba `if (!casilla.checked)`. Encendida la capa, el botón quedaba mudo.
+    """
+    _esperar_capa(pagina, "observados")
+    boton = pagina.locator('.metrica-viva[data-capa="observados"]')
+    boton.wait_for(state="visible", timeout=ESPERA_MS)
+
+    boton.click()
+    pagina.wait_for_timeout(600)
+    _camara_quieta(pagina)
+    encuadrado = _escala(pagina)
+
+    # Alejarse a mano, como haría cualquiera que se mueva por el mapa.
+    pagina.locator(".maplibregl-ctrl-zoom-out").click()
+    pagina.locator(".maplibregl-ctrl-zoom-out").click()
+    _camara_quieta(pagina)
+    assert _escala(pagina) != encuadrado, "el zoom manual no movió la cámara"
+
+    boton.click()
+    pagina.wait_for_timeout(600)
+    _camara_quieta(pagina)
+
+    assert _escala(pagina) == encuadrado, (
+        "la segunda pulsación no devolvió el encuadre: el botón sigue siendo de un solo uso"
+    )
+
+
+def test_volver_a_los_focos_devuelve_tambien_la_camara(pagina: Any) -> None:
+    """El botón dice «Volver a los focos», en plural, y dejaba uno solo delante.
+
+    Cerraba el panel y quitaba el perímetro, pero la vista se quedaba clavada
+    sobre el foco recién cerrado, a cinco kilómetros de escala: el panel decía
+    una cosa y el mapa otra. «Volver al panorama» de un sismo sí devolvía la
+    cámara desde el primer día.
+
+    Se comprueba sobre `window.CENTINELA.camara`, no sobre la barra de escala, y
+    por el mismo motivo que las capas se comprueban sobre `pintado`: en esta
+    pestaña los vuelos de MapLibre se paran a medias, así que el píxel no
+    distingue «no se pidió mover la cámara» de «se pidió y no avanzó».
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
+    pagina.evaluate("() => { window.CENTINELA.camara.motivo = null; }")
+
+    pagina.locator("#volver-fuego").click()
+    pagina.wait_for_timeout(900)
+
+    assert pagina.locator("#detalle-fuego").is_hidden()
+    assert (
+        pagina.evaluate("() => window.CENTINELA.camara.motivo") == "panorama:volver-a-los-focos"
+    ), "cerrar el foco no pidió devolver la vista"
+
+
+def test_ver_en_el_mapa_del_fuego_devuelve_el_panorama(pagina: Any) -> None:
+    """La cifra habla de toda América Latina, así que el encuadre es ese."""
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    boton = pagina.locator('.metrica-viva[data-capa="incendios"]')
+    boton.wait_for(state="visible", timeout=ESPERA_MS)
+    pagina.evaluate("() => { window.CENTINELA.camara.motivo = null; }")
+
+    boton.click()
+    pagina.wait_for_timeout(900)
+
+    assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "panorama:fuego", (
+        "el botón no pidió devolver el panorama"
+    )
+
+
+# --- Filtros de tiempo y país (31-ago-2026) ---------------------------------
+
+
+def test_la_ventana_temporal_recorta_la_lista_de_reportes(pagina: Any) -> None:
+    """El catálogo cubre catorce años y la lista los daba todos de golpe.
+
+    «¿Qué ha pasado últimamente?» obligaba a leerla entera o a fiarse del orden.
+    """
+    pagina.wait_for_function(
+        "() => document.querySelectorAll('#lista-eventos li').length > 0", timeout=ESPERA_MS
+    )
+
+    def visibles() -> int:
+        n: int = pagina.locator("#lista-eventos li:not([hidden])").count()
+        return n
+
+    todos = visibles()
+    assert todos > 0
+
+    pagina.select_option("#ventana-lista", "ano")
+    pagina.wait_for_timeout(700)
+    ultimo_ano = visibles()
+
+    assert ultimo_ano < todos, f"la ventana de 12 meses no recortó nada: {ultimo_ano} de {todos}"
+
+    pagina.select_option("#ventana-lista", "todo")
+    pagina.wait_for_timeout(700)
+    assert visibles() == todos, "volver a «Todo» no devolvió la lista entera"
+
+
+def test_cada_amenaza_tiene_su_indice_y_solo_uno_a_la_vez(pagina: Any) -> None:
+    """El fuego tenía mapa y panel de detalle pero ningún índice.
+
+    Para saber cuáles son los focos más recientes había que buscar hexágonos a
+    ojo entre cuatro mil. Y leer «Reportes publicados» con el mapa lleno de fuego
+    es la misma mezcla que el selector de amenaza existe para evitar.
+
+    Espera al mapa de sismos y no al de fuego: la primera mitad de lo que
+    comprueba es como se ve **en modo sismos**, y desde que el fuego se carga a
+    demanda pedirlo aqui abriria la pagina ya en el otro modo.
+    """
+    _esperar_capa(pagina, "epicentros")
+    assert pagina.locator("#eventos").is_visible(), "en sismos falta el índice de reportes"
+    assert pagina.locator("#focos").is_hidden(), "la lista de focos está en modo sismos"
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(900)
+
+    assert pagina.locator("#focos").is_visible(), "en fuego falta el índice de focos"
+    assert pagina.locator("#eventos").is_hidden(), "la lista de reportes está en modo fuego"
+    assert pagina.locator("#lista-focos li").count() > 0
+
+
+def test_los_focos_se_listan_por_lo_mas_reciente(pagina: Any) -> None:
+    """La pregunta que trae a alguien a un mapa de fuego es qué arde AHORA.
+
+    Por eso «Reciente» es el orden por defecto y no la energía, que es lo que
+    ordena la capa del mapa.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
+
+    assert pagina.locator("#orden-focos").input_value() == "reciente", (
+        "no ordena por reciente al abrir"
+    )
+
+    sellos = pagina.eval_on_selector_all(
+        "#lista-focos li", "els => els.map(e => e.dataset.utc).filter(Boolean)"
+    )
+    assert sellos == sorted(sellos, reverse=True), "las filas no van de lo más reciente a lo menos"
+
+
+def test_la_ventana_del_fuego_es_de_horas_y_lo_dice_cuando_vacia(pagina: Any) -> None:
+    """El fuego es una foto de 24 h, no un archivo de catorce años.
+
+    Y cuando la ventana no deja nada, el aviso dice **cuándo se revisó**: con un
+    fichero de hace once horas «últimas 6 h» sale vacío siempre, y sin ese
+    apunte se lee como «no hay fuego» cuando lo cierto es «no lo hemos vuelto a
+    mirar».
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
+
+    etiquetas = pagina.eval_on_selector_all(
+        "#ventana-focos option", "els => els.map(e => e.textContent.trim())"
+    )
+    assert etiquetas == ["24 h", "12 h", "6 h"], f"la ventana del fuego no es de horas: {etiquetas}"
+
+    pagina.select_option("#ventana-focos", "h6")
+    pagina.wait_for_timeout(700)
+
+    vacio = pagina.locator("#sin-focos")
+    if vacio.is_visible():
+        texto = vacio.inner_text().lower()
+        assert "se revisó" in texto or "se reviso" in texto, (
+            f"el aviso no dice cuándo se miró por última vez: {texto!r}"
+        )
+
+
+def test_el_filtro_de_pais_recorta_el_mapa_y_no_solo_la_lista(pagina: Any) -> None:
+    """Los filtros vivían debajo, dentro de la lista, y solo recortaban filas.
+
+    Elegir «Colombia» dejaba la lista con los suyos y el mapa con veintiún
+    epicentros repartidos por el continente: el filtro diciendo una cosa y el
+    mapa otra, que es la misma contradicción que el selector de amenaza existe
+    para evitar.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_selector("#campo-pais:not([hidden])", timeout=ESPERA_MS)
+
+    def en_la_lista() -> int:
+        n: int = pagina.locator("#lista-eventos li:not([hidden])").count()
+        return n
+
+    todos = en_la_lista()
+    pagina.select_option("#filtro-paises", "COL")
+    pagina.wait_for_timeout(1500)
+
+    # La expresión que MapLibre tiene puesta sobre la capa: es la prueba de que
+    # el mapa está filtrado y no solo la lista. Contar hexágonos en una captura
+    # no distingue «filtrado» de «la animación no avanzó».
+    expresion = pagina.evaluate("() => JSON.stringify(window.CENTINELA.filtroDeCapa('epicentros'))")
+    assert expresion and "COL" in expresion, (
+        f"la capa de epicentros no lleva el filtro del país: {expresion}"
+    )
+    assert en_la_lista() < todos, "la lista tampoco se recortó"
+
+
+def test_el_filtro_de_pais_tambien_recorta_la_tarjeta_y_la_lista_de_menores(
+    pagina: Any,
+) -> None:
+    """«10 sismos vistos» sobre un mapa con un solo punto dibujado.
+
+    `aplicarFiltrosAlMapa` recorta la capa `observados` por pais desde el
+    3-sep-2026, pero la cifra viva y la lista del lateral seguian saliendo del
+    fichero entero. Con «Colombia» puesto, la tarjeta contaba diez y el mapa
+    dibujaba uno, a diez centimetros de distancia — la misma contradiccion que
+    los filtros del panorama ya tenian resuelta.
+    """
+    _esperar_capa(pagina, "epicentros")
+    _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#campo-pais:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_timeout(600)
+
+    def _cifra_viva() -> int:
+        texto: str = pagina.evaluate(
+            """() => {
+                 const b = document.querySelector('#en-vivo [data-capa="observados"] .valor');
+                 return b ? b.textContent : "";
+               }"""
+        )
+        return int(re.sub(r"[^0-9]", "", texto) or 0)
+
+    def _en_la_lista() -> int:
+        n: int = pagina.locator("#lista-menores li").count()
+        return n
+
+    # El pais que mas sismos menores tiene en la ventana, para que el recorte
+    # deje algo y no todo: elegir uno sin ninguno probaria menos.
+    reparto = pagina.evaluate(
+        """() => fetch('observados.json').then(r => r.json()).then(d => {
+             const cuenta = {};
+             for (const e of d.eventos || []) {
+               if (e.iso3) cuenta[e.iso3] = (cuenta[e.iso3] || 0) + 1;
+             }
+             return cuenta;
+           })"""
+    )
+    if not reparto:
+        pytest.skip("ningun sismo menor publicado trae pais: no hay filtro que probar")
+
+    iso3 = max(reparto, key=lambda k: reparto[k])
+    esperados = reparto[iso3]
+    todos = _cifra_viva()
+    assert todos > esperados, (
+        f"todos los sismos menores publicados son de {iso3}: con este catalogo el "
+        f"filtro no puede recortar nada y la prueba no comprobaria nada"
+    )
+    assert _en_la_lista() == todos, "la lista y la cifra ya empiezan desacordadas"
+
+    pagina.select_option("#filtro-paises", iso3)
+    pagina.wait_for_timeout(1200)
+
+    assert _cifra_viva() == esperados, (
+        f"con {iso3} puesto la tarjeta dice {_cifra_viva()} sismos vistos y en el "
+        f"mapa quedan {esperados}"
+    )
+    assert _en_la_lista() == esperados, (
+        f"la lista de sismos menores enumera {_en_la_lista()} con {iso3} puesto, "
+        f"y el mapa dibuja {esperados}"
+    )
+
+    # Y el tercer sitio que cuenta lo mismo: el interruptor de la capa, que
+    # congelaba su cifra en la del arranque porque solo se pintaba una vez.
+    rotulo = pagina.locator("#interruptor-observados .menor").inner_text()
+    assert f"({esperados} en" in rotulo, (
+        f"el interruptor ofrece «{rotulo}» con {iso3} puesto, y el mapa deja {esperados} estrellas"
+    )
+
+
+def test_los_filtros_son_desplegables_y_estan_arriba(pagina: Any) -> None:
+    """Diecinueve países en una fila de pastillas son dos líneas de ruido que
+    empujan el mapa fuera de la pantalla.
+
+    Un desplegable ocupa lo mismo con uno que con cincuenta, y en un teléfono
+    abre el selector nativo. Y arriba, no debajo: un filtro que gobierna el mapa
+    tiene que verse junto al mapa.
+    """
+    barra = pagina.locator("#barra-filtros")
+    assert barra.is_visible()
+
+    orden = pagina.evaluate(
+        """() => {
+          const b = document.getElementById('barra-filtros').getBoundingClientRect();
+          const m = document.getElementById('mapa').getBoundingClientRect();
+          return b.top < m.top;
+        }"""
+    )
+    assert orden, "la barra de filtros está por debajo del mapa"
+
+    for campo in ("#filtro-paises", "#ventana-lista", "#orden-lista"):
+        assert pagina.locator(campo).evaluate("e => e.tagName") == "SELECT", (
+            f"{campo} no es un desplegable"
+        )
+
+
+def test_solo_se_ven_los_filtros_de_la_amenaza_al_mando(pagina: Any) -> None:
+    """Dos «País» uno al lado del otro serían dos amenazas hablando a la vez.
+
+    Pasó: el campo de la otra amenaza dependía de que su pintor corriera, y al
+    cambiar a fuego se quedaban Colombia y Brasil compitiendo en la misma barra.
+    """
+    _esperar_capa(pagina, "epicentros")
+    visibles = "() => [...document.querySelectorAll('#barra-filtros > *')]"
+    visibles += ".filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)"
+
+    en_sismos = pagina.evaluate(visibles)
+    assert "campo-ventana" in en_sismos
+    assert "campo-ventana-fuego" not in en_sismos
+    assert "campo-pais-fuego" not in en_sismos
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    pagina.wait_for_timeout(1200)
+
+    en_fuego = pagina.evaluate(visibles)
+    assert "campo-ventana-fuego" in en_fuego
+    assert "campo-ventana" not in en_fuego, "el período de sismos sigue en modo fuego"
+    assert "campo-pais" not in en_fuego, "dos «País» a la vez"
+
+
+def test_quitar_filtros_aparece_solo_cuando_hay_algo_que_quitar(pagina: Any) -> None:
+    """Un botón de limpiar siempre visible no informa.
+
+    Visible solo cuando un filtro está actuando es además la señal de que lo
+    está — que es justo lo que se pierde de vista cuando los controles viven
+    lejos del mapa.
+    """
+    _esperar_capa(pagina, "epicentros")
+    boton = pagina.locator("#limpiar-filtros")
+    assert boton.is_hidden(), "sin filtros puestos ya ofrece quitarlos"
+
+    pagina.select_option("#ventana-lista", "ano")
+    pagina.wait_for_timeout(900)
+    assert boton.is_visible(), "con un filtro puesto no ofrece quitarlo"
+
+    boton.click()
+    pagina.wait_for_timeout(1200)
+
+    assert boton.is_hidden()
+    assert pagina.locator("#ventana-lista").input_value() == "todo", (
+        "el control se quedó enseñando el filtro que acaba de quitarse"
+    )
+
+
+def test_los_sismos_menores_obedecen_al_filtro_de_pais(pagina: Any) -> None:
+    """Con «Colombia» puesto el mapa dejaba un epicentro y seguían los diez
+    menores repartidos por el continente.
+
+    El primer arreglo fue apagar la capa entera al elegir país, con la excusa de
+    que «de estos no se sabe de qué país son». Era falso: el país estaba en el
+    dato, al final del topónimo que publica USGS. Apagar una capa porque no
+    supimos leer lo que ya teníamos es peor que no filtrarla.
+    """
+    _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#campo-pais:not([hidden])", timeout=ESPERA_MS)
+
+    casilla = pagina.locator("#interruptor-observados input")
+    casilla.check()
+    pagina.wait_for_timeout(1200)
+
+    sin_filtro = pagina.evaluate("() => window.CENTINELA.filtroDeCapa('observados')")
+    assert sin_filtro in (None, ["all"]), f"sin país elegido no debería filtrar: {sin_filtro}"
+
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Chile"))
+    pagina.wait_for_timeout(1500)
+
+    con_filtro = pagina.evaluate(
+        "() => JSON.stringify(window.CENTINELA.filtroDeCapa('observados'))"
+    )
+    assert con_filtro and "iso3" in con_filtro, (
+        f"la capa de menores no filtra por país: {con_filtro}"
+    )
+    assert "__ninguno__" not in con_filtro, (
+        "la capa se apaga entera en vez de filtrarse: el país está en el dato"
+    )
+
+
+def test_un_evento_sin_banda_ensena_radios_y_no_una_pared_de_ceros(pagina: Any) -> None:
+    """Puerto Madero (M5,6 a 71 km mar adentro) salia con todo en cero.
+
+    Personas, mayores, sedes de salud, educativas, edificaciones, vias: cero.
+    Y en el mismo `report.json` viajaban 614.310 personas a 100 km, que el
+    panel no enseñaba. En Bani eran **6.935.082**.
+
+    El panel ya tenia escrito el principio que incumplia, tres lineas encima de
+    la condicion mala: «Enseñar "MMI>=7: 0" seria una cifra falsa y creible».
+    Lo cumplia solo para el preliminar. `markdown.py` ya lo tenia arreglado
+    para los dos casos.
+    """
+    pagina.select_option("select", "us7000tdmp")
+    pagina.wait_for_timeout(1500)
+
+    titulo = pagina.locator("#titulo-metricas").inner_text()
+    assert "radio" in titulo.lower(), (
+        f"un evento sin banda deberia titular por radios y dice {titulo!r}"
+    )
+
+    detalle = pagina.locator("#detalle-metricas").inner_text()
+    assert "614" in detalle.replace(".", "").replace(",", "") or "614" in detalle, (
+        f"no aparece la poblacion dentro de los 100 km: {detalle!r}"
+    )
+    assert "sedes de salud" not in detalle, (
+        "sigue pintando las cifras de MMI>=7, que aqui son ceros inventados"
+    )
+
+    subtitulo = pagina.locator("#subtitulo-metricas").inner_text()
+    assert "no son bandas de intensidad" in subtitulo, (
+        "los radios se dan sin avisar de que no son intensidad: "
+        "un sismo hondo y uno superficial tienen el mismo circulo"
+    )
+
+
+def test_sin_ground_failure_el_terreno_lo_dice_en_vez_de_poner_cero(pagina: Any) -> None:
+    """`pop_lq_alta` sale 0.0 cuando USGS no publico el producto, y 0.0 es
+    finito, asi que el bloque pintaba "Licuefaccion alta 0".
+
+    Se lee como "se miro y no hay nadie sobre suelo licuable". Lo que pasa es
+    que no hubo con que mirar. Son siete reportes finales publicados.
+    """
+    pagina.select_option("select", "us7000tdmp")
+    pagina.wait_for_timeout(1500)
+
+    terreno = pagina.locator("#detalle-terreno").inner_text()
+    assert "no ha publicado" in terreno, f"el bloque no dice que falta el producto: {terreno!r}"
+    assert "Licuefacción alta" not in terreno, "sigue enseñando la fila con un cero que nadie midio"
+
+
+def test_los_menores_tienen_lista_y_ninguna_cifra_de_impacto(pagina: Any) -> None:
+    """El interruptor decía «12 en 5 días» y el mapa los pintaba, y para saber
+    CUÁLES eran había que pinchar estrella por estrella o abrir el JSON crudo.
+
+    Un conteo no es un índice. Es el mismo hueco que ya se le arregló al fuego
+    con su lista de focos, y por la misma razón.
+
+    Lo segundo que exige esta prueba es lo que la hace valer: la casilla de la
+    derecha va **sin cifra**. En la lista de reportes ahí vive «610 mil personas
+    en MMI≥6»; un cero en el mismo sitio se leería como «no había nadie», cuando
+    lo que pasa es que nadie lo midió. La lista tiene que decir la ausencia, no
+    imprimir un número.
+    """
+    capa = _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#menores:not([hidden])", timeout=ESPERA_MS)
+
+    filas = pagina.locator("#lista-menores li")
+    assert filas.count() == capa["rasgos"] > 0, (
+        "la lista y el mapa salen del mismo fichero y no cuentan lo mismo: "
+        f"{filas.count()} filas contra {capa['rasgos']} estrellas"
+    )
+
+    assert filas.first.locator(".sin-medicion").count() == 1, (
+        "la fila no dice que no se midió el impacto"
+    )
+    texto = pagina.locator("#lista-menores").inner_text()
+    assert "personas" not in texto, (
+        "la lista de menores imprime una cifra de personas: es medir lo que justamente no se midió"
+    )
+
+
+def test_pinchar_un_menor_lo_enciende_en_el_mapa(pagina: Any) -> None:
+    """La lista sin el mapa responde «cuáles», y deja «dónde» sin respuesta.
+
+    La capa nace apagada a propósito (una estrella se lee como alarma diga lo
+    que diga el pie), así que la fila tiene que encenderla ella: si no, pinchar
+    no hace nada visible y la lista parece rota.
+    """
+    _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#menores:not([hidden])", timeout=ESPERA_MS)
+
+    casilla = pagina.locator("#interruptor-observados input")
+    assert not casilla.is_checked(), "la capa debería nacer apagada"
+
+    pagina.locator("#lista-menores .menor-lugar").first.click()
+    pagina.wait_for_timeout(800)
+
+    assert casilla.is_checked(), "pinchar un sismo de la lista no encendió su capa en el mapa"
+
+
+def test_el_filtro_de_pais_del_fuego_llega_a_las_tres_capas(pagina: Any) -> None:
+    """Lo mismo que se le exige a los sismos, y por el mismo motivo.
+
+    El fuego se dibuja en tres capas —relleno, punto y borde— y filtrar solo una
+    dejaría el contorno de celdas que ya no están, o puntos sin su hexágono.
+    """
+    # La capa del mapa, no la anotacion de la lista. Ver el comentario
+    # largo en `test_el_filtro_del_fuego_por_pais_se_construye_bien`.
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    # Esperar a la condición y no al reloj: las capas nacen cuando llegan sus
+    # datos, que es después de la primera pasada de filtros.
+    pagina.wait_for_function(
+        "() => window.CENTINELA.filtroDeCapa('incendios-borde') != null",
+        timeout=ESPERA_MS,
+    )
+
+    expresiones = pagina.evaluate(
+        """() => ['incendios', 'incendios-punto', 'incendios-borde']
+                   .map(c => JSON.stringify(window.CENTINELA.filtroDeCapa(c)))"""
+    )
+    assert len(set(expresiones)) == 1, (
+        f"las tres capas del fuego no llevan el mismo filtro: {expresiones}"
+    )
+    assert "ultima_utc" in (expresiones[0] or ""), (
+        f"el filtro del fuego no acota por hora de detección: {expresiones[0]}"
+    )
+
+
+def test_la_ventana_del_fuego_mueve_el_filtro_del_mapa(pagina: Any) -> None:
+    """Que la lista y el mapa cuenten desde el mismo sitio.
+
+    Si contaran desde referencias distintas, uno enseñaría focos que el otro dice
+    que no existen — y la ventana se mide desde la detección más reciente del
+    fichero, no desde el reloj.
+    """
+    # La capa del mapa, no la anotacion de la lista. Ver el comentario
+    # largo en `test_el_filtro_del_fuego_por_pais_se_construye_bien`.
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1000)
+
+    def corte() -> str:
+        crudo: str = pagina.evaluate(
+            "() => JSON.stringify(window.CENTINELA.filtroDeCapa('incendios'))"
+        )
+        return crudo
+
+    de_24 = corte()
+    pagina.select_option("#ventana-focos", "h6")
+    pagina.wait_for_timeout(1500)
+    de_6 = corte()
+
+    assert de_24 != de_6, "cambiar la ventana no movió el filtro del mapa"
+
+    # Y la lista no se queda vacía: la ventana se cuenta desde el dato, no desde
+    # el reloj. Con un fichero de once horas, «6 h» desde ahora sería siempre
+    # cero — que es exactamente el fallo que esto arregla.
+    assert pagina.locator("#lista-focos li").count() > 0, (
+        "«6 h» dejó la lista vacía: la ventana volvió a contarse desde el reloj"
+    )
+
+
+def test_el_filtro_del_fuego_por_pais_se_construye_bien(pagina: Any) -> None:
+    """El desplegable de país sólo aparece cuando el dato trae `iso3`.
+
+    Hasta que P5 corra con la columna nueva no hay países que ofrecer, y un
+    control que no filtra nada es ruido con aspecto de control. Lo que sí se
+    puede comprobar hoy es que, en cuanto los haya, la expresión sale bien.
+    """
+    # SE ESPERA "incendios", NO "focos", Y LA DIFERENCIA NO ES COSMETICA.
+    #
+    # `pintado.focos` lo anota la LISTA, que no necesita mapa; las capas del
+    # mapa las crea `dibujarIncendios` cuando el estilo esta listo, mas tarde.
+    # Esperando "focos" esta prueba afirmaba sobre `getFilter('incendios')`
+    # antes de que la capa existiera: `filtroDeCapa` devolvia `null` y el
+    # assert de mas abajo comparaba contra la nada.
+    #
+    # Pasaba igualmente porque `pagina` es de ambito modulo y arrastraba las
+    # capas de una prueba anterior. Un verde prestado, que es la peor clase:
+    # esta prueba existe para vigilar que el filtro de pais toca el MAPA —el
+    # fallo que se reporto— y durante un tiempo no vigilo nada.
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1000)
+
+    expresion = pagina.evaluate(
+        """() => {
+          const antes = window.CENTINELA.filtroDeCapa('incendios');
+          return JSON.stringify(antes);
+        }"""
+    )
+    campo = pagina.locator("#campo-pais-fuego")
+    hay_paises = pagina.evaluate(
+        "() => document.getElementById('filtro-paises-fuego').options.length > 1"
+    )
+
+    if not hay_paises:
+        assert campo.is_hidden(), "el desplegable de país aparece sin países que ofrecer"
+        assert "iso3" not in (expresion or ""), "filtra por un país que el dato no trae"
+        return
+
+    valor = pagina.evaluate("() => document.getElementById('filtro-paises-fuego').options[1].value")
+    pagina.select_option("#filtro-paises-fuego", valor)
+    pagina.wait_for_timeout(1500)
+
+    despues = pagina.evaluate("() => JSON.stringify(window.CENTINELA.filtroDeCapa('incendios'))")
+    assert valor in despues, f"la capa de fuego no filtra por {valor}: {despues}"
+
+
+# --- La marca de quien lo hace ----------------------------------------------
+
+
+@pytest.mark.visor
+def test_el_sello_de_geoai_latam_carga_de_verdad(pagina: Any) -> None:
+    """Una ruta rota aqui no se ve: el `alt` esta vacio a proposito.
+
+    El globo es decorativo —el nombre "GeoAI LATAM" va al lado en texto—, asi
+    que lleva `alt=""` para que un lector de pantalla no lo lea dos veces. El
+    precio de esa decision es que si el PNG desaparece o cambia de sitio no
+    aparece ningun icono roto ni ningun texto: queda un hueco de veinte pixeles
+    y la cabecera se ve perfectamente normal. Es el mismo fallo mudo que el cero
+    silencioso de los pipelines, en version tipografica.
+
+    Durante toda la vida del visor aqui hubo un emoji, que cada sistema dibuja a
+    su manera —azul en Windows, verde plano en Android, ausente en algun Linux—.
+    Se comprueba tambien que no haya vuelto.
+    """
+    globos = pagina.locator("img.globo")
+    assert globos.count() >= 1, "no queda ningun sello de GeoAI LATAM en la pagina"
+
+    cargados = pagina.evaluate(
+        """() => [...document.querySelectorAll('img.globo')].map((g) => ({
+             ok: g.complete && g.naturalWidth > 0,
+             src: g.getAttribute('src'),
+             ancho: Math.round(g.getBoundingClientRect().width),
+           }))"""
+    )
+    for globo in cargados:
+        assert globo["ok"], f"el sello no carga: {globo['src']}"
+        assert globo["ancho"] >= 12, f"el sello se pinta a {globo['ancho']}px, invisible"
+
+    assert "🌎" not in pagina.content(), "volvio el emoji en vez del sello de la marca"
+
+
+# --- El viento del panel de un foco -----------------------------------------
+
+
+@pytest.mark.visor
+def test_la_flecha_del_viento_apunta_a_donde_empuja_y_no_de_donde_viene(pagina: Any) -> None:
+    """La comprobacion mas importante de la capa de viento.
+
+    `dir_grados` es la convencion meteorologica: DE DONDE sopla. Un viento de 90
+    grados —del este— empuja el fuego HACIA EL OESTE. La flecha tiene que girar
+    `dir + 180`.
+
+    Equivocarse aqui no rompe nada, no saca ningun valor de rango, no aparece en
+    ningun log y pone todas las flechas exactamente al reves. En un mapa de
+    incendios eso significa alejarse en la direccion del fuego. Es el unico
+    sitio del visor donde un signo cambiado tiene esa consecuencia, y por eso se
+    comprueba contra el JSON publicado en vez de contra una constante.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    pagina.wait_for_timeout(1200)
+
+    rejilla = pagina.evaluate(
+        """() => fetch('incendios.json').then((r) => r.json()).then((d) => d.viento || null)"""
+    )
+    if not rejilla:
+        pytest.skip("el incendios.json publicado aun no trae viento (hace falta P5 con GFS)")
+
+    assert pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_timeout(600)
+
+    ambiente = pagina.locator("#fuego-ambiente")
+    html = ambiente.inner_html()
+    if not html.strip():
+        pytest.skip("el primer foco cae lejos de todo punto de la reticula")
+
+    giro = pagina.evaluate(
+        r"""() => {
+             const r = document.querySelector('#fuego-ambiente .rosa');
+             if (!r) return null;
+             const m = /rotate\(([-0-9.]+)deg\)/.exec(r.style.transform || '');
+             return m ? Math.round(parseFloat(m[1])) : null;
+           }"""
+    )
+    assert giro is not None, "la flecha no lleva giro: apuntaria siempre al norte"
+
+    # El punto que el visor debio elegir: el mas cercano al centro del foco.
+    esperado = pagina.evaluate(
+        """() => {
+             const p = window.CENTINELA.vientoDelFocoAbierto();
+             return p ? p.dir_grados : null;
+           }"""
+    )
+    if esperado is not None:
+        assert giro == (esperado + 180) % 360, (
+            f"la flecha gira {giro} para un viento de {esperado}: "
+            "apunta a de donde viene, no a donde empuja"
+        )
+
+    # El giro tiene que ser uno de los rumbos publicados, invertido. Sin el
+    # gancho anterior esto sigue atrapando una flecha sin invertir.
+    rumbos = {(p["dir_grados"] + 180) % 360 for p in rejilla["puntos"]}
+    assert giro in rumbos, f"giro {giro} que no corresponde a ningun punto invertido"
+
+    # Y el rotulo tiene que decir con letras lo mismo que la flecha: una flecha
+    # girada se lee mal, y aqui leerla al reves es el fallo que importa.
+    assert "empuja hacia el" in html, "la flecha va sola, sin rumbo escrito"
+    assert "27" in html, "falta el aviso de que son 27 km de reticula, no la celda"
+
+
+@pytest.mark.visor
+def test_sin_viento_publicado_el_bloque_queda_vacio_y_no_en_cero(pagina: Any) -> None:
+    """Que no se pudiera leer GFS no es "no hace viento".
+
+    Pintar 0 km/h cuando falta el dato seria el cero silencioso otra vez, esta
+    vez en la cara del usuario: una calma inventada junto a un incendio.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    pagina.wait_for_timeout(800)
+
+    vacio = pagina.evaluate(
+        r"""() => {
+             const antes = document.getElementById('fuego-ambiente').innerHTML;
+             return { tieneCero: /">0<\/span>/.test(antes) && !/[1-9]/.test(antes) };
+           }"""
+    )
+    assert not vacio["tieneCero"], "se pinto un cero donde falta el dato"
+
+
+# --- El tablero se cruza con los filtros ------------------------------------
+
+
+@pytest.mark.visor
+def test_sin_filtros_el_tablero_da_lo_mismo_que_el_pipeline(pagina: Any) -> None:
+    """LA PRUEBA QUE SOSTIENE TODO LO DEMAS.
+
+    Las cifras de la tarjeta se calculaban antes copiando el bloque `totales`
+    del JSON. Ahora se suman en el navegador desde las celdas que pasan los
+    filtros, que es lo que permite cruzarlas. El precio es que hay **dos
+    implementaciones de la misma suma** —una en Python y otra en JavaScript— y
+    dos implementaciones divergen en cuanto nadie las compara.
+
+    Sin filtros tienen que dar exactamente lo mismo. Si algun dia no coinciden,
+    una de las dos esta mal y da igual cual.
+
+    **Solo se puede comparar si el fichero trae todas las celdas.** Con un
+    `incendios.json` recortado en origen —los publicados antes del 31-ago-2026
+    traian 4.000 de 13.031— la suma del navegador daria 3.575 donde el pipeline
+    dice 13.031, y no porque ninguna este mal: es que no miran lo mismo. Ese
+    caso lo cubre la prueba siguiente.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    if not pagina.evaluate("() => window.CENTINELA.ficheroCompleto()"):
+        pytest.skip("el incendios.json servido viene recortado; hace falta P5 con el tope nuevo")
+
+    comparacion = pagina.evaluate(
+        """async () => {
+             const pub = (await (await fetch('incendios.json')).json()).totales;
+             const mio = window.CENTINELA.sumaDelVisor();
+             const campos = [
+               'celdas', 'detecciones', 'detecciones_baja', 'celdas_con_poblacion',
+               'pop_en_celdas_con_fuego', 'salud_en_celdas_con_fuego',
+               'edu_en_celdas_con_fuego', 'bld_en_celdas_con_fuego',
+             ];
+             return campos.map((k) => ({ campo: k, pipeline: pub[k], visor: mio[k] }));
+           }"""
+    )
+    for fila in comparacion:
+        # La poblacion sale de redondear una suma de flotantes, y ahi las dos
+        # lenguas no coinciden por convencion: `round` de Python redondea al par
+        # y `Math.round` de JavaScript hacia arriba. Sobre 435.782 personas la
+        # diferencia medida es de UNA, y forzar un redondeo identico entre
+        # lenguajes no arregla nada que importe. Los enteros si tienen que
+        # cuadrar exactos, porque ahi no hay convencion que valga.
+        margen = 1 if fila["campo"] == "pop_en_celdas_con_fuego" else 0
+        assert abs(fila["pipeline"] - fila["visor"]) <= margen, (
+            f"{fila['campo']}: el pipeline dice {fila['pipeline']} y el visor {fila['visor']}"
+        )
+
+
+@pytest.mark.visor
+def test_con_un_fichero_recortado_no_se_encogen_las_cifras(pagina: Any) -> None:
+    """El regreso que este cambio estuvo a punto de introducir.
+
+    Al pasar las cifras a calcularse en el navegador, un `incendios.json`
+    recortado en origen —4.000 celdas de 13.031— las habria hecho caer a la
+    suma de la muestra: 566.535 personas pasaban a ser las de 3.575 celdas, sin
+    que nada fallara ni nadie se enterara. Lo cazo esta prueba antes de subirlo.
+
+    La regla: **sin filtros mandan los totales del pipeline**, que son exactos
+    aunque el fichero llegue recortado. Solo al filtrar se suma en el navegador,
+    y entonces el rotulo dice sobre cuantas celdas se sumo.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    estado = pagina.evaluate(
+        """async () => {
+             const pub = (await (await fetch('incendios.json')).json()).totales;
+             return {
+               completo: window.CENTINELA.ficheroCompleto(),
+               ensenado: window.CENTINELA.totalesDelTablero(),
+               publicado: pub,
+             };
+           }"""
+    )
+    # Con o sin recorte, sin filtros la tarjeta ensena lo que publica el
+    # pipeline. Es la unica cifra que siempre es cierta.
+    assert estado["ensenado"]["celdas"] == estado["publicado"]["celdas"]
+    assert (
+        estado["ensenado"]["pop_en_celdas_con_fuego"]
+        == estado["publicado"]["pop_en_celdas_con_fuego"]
+    )
+
+
+@pytest.mark.visor
+def test_al_filtrar_por_pais_las_cifras_del_tablero_bajan(pagina: Any) -> None:
+    """El fallo que se reporto: "567.000 personas" no se movia al filtrar.
+
+    Elegir Brasil recortaba la lista y el mapa, y la tarjeta seguia diciendo la
+    suma de America Latina entera. El numero y el mapa contaban cosas distintas
+    a la vez.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    opciones = pagina.evaluate(
+        "() => [...document.getElementById('filtro-paises-fuego').options].map((o) => o.value)"
+    )
+    if len(opciones) < 2:
+        pytest.skip("no hay paises que ofrecer en el filtro de fuego")
+
+    antes = pagina.evaluate("() => window.CENTINELA.totalesDelTablero()")
+    pagina.select_option("#filtro-paises-fuego", opciones[1])
+    pagina.wait_for_timeout(1200)
+    despues = pagina.evaluate("() => window.CENTINELA.totalesDelTablero()")
+
+    assert despues["celdas"] < antes["celdas"], "el filtro de pais no recorto las celdas"
+    assert despues["pop_en_celdas_con_fuego"] <= antes["pop_en_celdas_con_fuego"]
+
+    # Y el rotulo tiene que dejar de decir "toda America Latina", que con un
+    # pais elegido pasa de aclaracion a mentira.
+    apunte = pagina.locator("#en-vivo .metrica-viva .apunte").first.inner_text()
+    assert "toda América Latina" not in apunte, f"el rotulo sigue diciendo: {apunte}"
+
+
+@pytest.mark.visor
+def test_la_ventana_temporal_tambien_mueve_las_cifras(pagina: Any) -> None:
+    """Mismo fallo por el otro filtro: 24 h -> 6 h dejaba las cifras quietas."""
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    antes = pagina.evaluate("() => window.CENTINELA.totalesDelTablero().celdas")
+    pagina.select_option("#ventana-focos", "h6")
+    pagina.wait_for_timeout(1200)
+    despues = pagina.evaluate("() => window.CENTINELA.totalesDelTablero().celdas")
+
+    assert despues < antes, "pasar de 24 h a 6 h no recorto ninguna celda"
+
+
+@pytest.mark.visor
+def test_la_extension_del_mapa_ya_filtra_el_fuego(pagina: Any) -> None:
+    """Estaba escondida en modo fuego: mover el mapa no recortaba nada.
+
+    Es el filtro mas natural de un tablero de mapa —lo que veo es de lo que me
+    hablan— y era el unico que faltaba.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1000)
+
+    assert pagina.locator("#etiqueta-en-vista").is_visible(), (
+        "la casilla de extension sigue oculta en modo fuego"
+    )
+
+    antes = pagina.evaluate("() => window.CENTINELA.totalesDelTablero().celdas")
+    pagina.evaluate(
+        """() => {
+             const c = document.getElementById('solo-en-vista');
+             c.checked = true;
+             c.dispatchEvent(new Event('change', { bubbles: true }));
+           }"""
+    )
+    pagina.wait_for_timeout(1500)
+    despues = pagina.evaluate("() => window.CENTINELA.totalesDelTablero().celdas")
+
+    assert despues <= antes
+    apunte = pagina.locator("#en-vivo .metrica-viva .apunte").first.inner_text()
+    assert "encuadre" in apunte, f"el rotulo no dice que se esta recortando: {apunte}"
+
+
+@pytest.mark.visor
+def test_ver_en_el_mapa_dice_algo_aunque_la_vista_no_cambie(pagina: Any) -> None:
+    """El boton volvia siempre al encuadre general.
+
+    Si ya estabas en fuego mirando el panorama —que es cuando lees esa tarjeta—
+    no cambiaba ni un pixel y no anunciaba nada: se leia como roto, y a efectos
+    practicos lo estaba.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    boton = pagina.locator('#en-vivo .metrica-viva[data-capa="incendios"]')
+    if not boton.count():
+        pytest.skip("no hay tarjeta de incendios que pulsar")
+
+    boton.first.click()
+    pagina.wait_for_timeout(1500)
+
+    anuncio = pagina.locator("#anuncio").inner_text()
+    assert "celdas con fuego en el mapa" in anuncio, f"el boton no anuncio nada util: {anuncio!r}"
+
+
+# --- El encuadre: lo primero que se ve --------------------------------------
+#
+# La caja de America Latina es alta —73° por 76°— y el panel del mapa es
+# apaisado en todo escritorio. `fitBounds` encaja por la altura y el ancho
+# sobrante cae en el Atlantico y en Africa occidental **rotulada**. Medido en la
+# pagina publicada: 191° de longitud visibles en una ventana de 1540 px, con
+# LATAM ocupando el 38 % del ancho util y Nigeria, Argelia, Senegal y Namibia
+# compitiendo por la atencion en un tablero de exposicion sismica latinoamericana.
+#
+# La respuesta no es recortar latitud —eso deja fuera Ciudad de Mexico y
+# Santiago— sino apagar lo que no es la region.
+
+
+@pytest.mark.visor
+def test_la_mascara_tapa_el_mapa_base_y_no_el_dato(pagina: Any) -> None:
+    """El velo va encima del estilo base y debajo de todo lo que es dato.
+
+    Al reves taparia los epicentros y la malla, que es lo unico que la pagina
+    tiene que dejar ver. Se comprueba el ORDEN de las capas y no la captura: en
+    una pestana de fondo una captura no distingue "no se dibujo" de "no se ha
+    pintado todavia".
+    """
+    _esperar_capa(pagina, "epicentros")
+    # El velo lo pone `prepararEstilo` desde `styledata`/`idle`, que no van al
+    # paso de las capas de dato: se espera a el, no al reloj.
+    pagina.wait_for_function(
+        "() => window.CENTINELA.capasDelMapa().includes('mascara')", timeout=ESPERA_MS
+    )
+    capas: list[str] = pagina.evaluate("() => window.CENTINELA.capasDelMapa()")
+
+    assert "mascara" in capas, "no se puso el velo sobre lo que no es America Latina"
+    velo = capas.index("mascara")
+
+    # Debajo de todo lo que es dato.
+    for capa in ("epicentros", "epicentros-halo"):
+        assert capa in capas, f"la capa de dato {capa!r} no esta en el estilo"
+        assert velo < capas.index(capa), f"el velo tapa {capa!r}"
+
+    # Y encima de todo lo que es mapa base: la ultima capa del estilo de
+    # OpenFreeMap tiene que quedar por debajo. Se identifica como "lo que no es
+    # nuestro", que es lo unico estable entre versiones del estilo.
+    nuestras = {
+        "mascara",
+        "contornos",
+        "perimetro",
+        "perimetro-borde",
+        "celdas",
+        "celdas-borde",
+        "epicentros",
+        "epicentros-halo",
+        "observados",
+        "incendios",
+        "incendios-punto",
+        "incendios-borde",
+        "foco-perimetro",
+        "foco-perimetro-borde",
+    }
+    del_estilo = [i for i, c in enumerate(capas) if c not in nuestras]
+    assert del_estilo, "el estilo base no trajo ninguna capa"
+    assert velo > max(del_estilo), (
+        "hay capas del mapa base por encima del velo: sus rotulos siguen compitiendo con la region"
+    )
+
+
+@pytest.mark.visor
+def test_el_encuadre_inicial_mira_a_america_latina(pagina: Any) -> None:
+    """El borde este de la vista no puede llegar al continente africano.
+
+    Dakar esta en -17,4. Medido en la pagina publicada antes del velo: la vista
+    llegaba a +24,8 en una ventana de 1540 px, con Nigeria, Argelia, Chad y
+    Namibia rotuladas. El velo apaga el mapa base de fuera, pero el encuadre
+    tiene que seguir centrado en la region: si `ENCUADRE_UTIL` o el reparto de
+    columnas cambian y la vista se va al este, esto lo dice.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1500)
+    caja = pagina.evaluate("() => window.CENTINELA.encuadre()")
+
+    assert caja, "el mapa no supo decir que esta enseñando"
+    # La region entera, de Tijuana a Chiloe, tiene que caber.
+    assert caja["norte"] >= 25, f"el encuadre corta el norte de Mexico: {caja}"
+    assert caja["sur"] <= -42, f"el encuadre corta el sur de Chile: {caja}"
+    assert caja["oeste"] <= -95, f"el encuadre corta el Pacifico americano: {caja}"
+
+
+@pytest.mark.visor
+def test_la_rueda_no_se_lleva_por_delante_el_encuadre(pagina: Any) -> None:
+    """Bajar a leer la lista no puede destruir la vista del mapa.
+
+    Medido en la pagina publicada: un solo gesto de tres clics sobre el mapa
+    movia el zoom de 2,05 a 1,65 **y** desplazaba la pagina 300 px. Se llegaba a
+    ver China y Etiopia en un tablero de America Latina, y sin forma de volver.
+
+    Con `cooperativeGestures` la rueda desplaza y solo Ctrl+rueda acerca.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1500)
+
+    caja = pagina.locator("#mapa").bounding_box()
+    assert caja
+    centro = (caja["x"] + caja["width"] / 2, caja["y"] + caja["height"] / 2)
+
+    antes = pagina.evaluate("() => window.CENTINELA.encuadre().zoom")
+    pagina.mouse.move(*centro)
+    pagina.mouse.wheel(0, 400)
+    pagina.wait_for_timeout(900)
+    despues = pagina.evaluate("() => window.CENTINELA.encuadre().zoom")
+
+    assert despues == pytest.approx(antes, abs=0.01), (
+        f"la rueda sobre el mapa cambio el zoom de {antes} a {despues}"
+    )
+
+
+@pytest.mark.visor
+def test_el_boton_devuelve_el_encuadre(pagina: Any) -> None:
+    """Perder la vista de la region tenia que dejar de ser irreversible.
+
+    `volverAlEncuadre` existia desde siempre y solo lo llamaba `cerrarDetalle`:
+    en modo panorama no habia forma de llegar a el salvo recargando.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1500)
+
+    boton = pagina.locator(".ctrl-inicio")
+    assert boton.is_visible(), "el mapa no ofrece un boton de inicio"
+
+    # Alejar a mano, como haria un arrastre desafortunado.
+    antes = pagina.evaluate("() => window.CENTINELA.encuadre().zoom")
+    pagina.locator(".maplibregl-ctrl-zoom-out").click()
+    pagina.locator(".maplibregl-ctrl-zoom-out").click()
+    pagina.wait_for_timeout(1400)
+    assert pagina.evaluate("() => window.CENTINELA.encuadre().zoom") < antes - 0.5
+
+    boton.click()
+    pagina.wait_for_timeout(1800)
+    assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "boton:inicio"
+    despues = pagina.evaluate("() => window.CENTINELA.encuadre().zoom")
+    assert abs(despues - antes) < 0.15, f"el inicio no devolvio el encuadre: {antes} -> {despues}"
+
+
+@pytest.mark.visor
+def test_los_toponimos_del_mapa_base_estan_en_espanol(pagina: Any) -> None:
+    """ "Gulf of Mexico" y "Brazil" en un producto escrito entero en espanol.
+
+    OpenMapTiles publica `name:es` en la misma tesela; no cuesta una peticion
+    mas. Se comprueba la EXPRESION puesta en el estilo y no un rotulo pintado:
+    que tesela cae en pantalla depende del encuadre y de la red.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1500)
+    espanol = pagina.evaluate("() => window.CENTINELA.rotulosEnEspanol()")
+    assert espanol["tocadas"] > 0, "no se retradujo ni una capa de rotulos"
+    assert espanol["sinTraducir"] == 0, (
+        f"quedan capas rotulando en el idioma local: {espanol['sinTraducir']}"
+    )
+
+
+# --- El panel de al lado tiene que obedecer al mismo filtro ------------------
+
+
+@pytest.mark.visor
+def test_el_panorama_del_panel_obedece_al_filtro(pagina: Any) -> None:
+    """Dos cifras contradictorias a diez centimetros una de otra.
+
+    Con "Venezuela (3)" puesto, la cabecera decia "3 reportes publicados", el
+    mapa dejaba tres epicentros y la rejilla de abajo tres tarjetas — y el panel
+    pegado al mapa seguia diciendo "21 reportes publicados", "mayor exposicion
+    registrada: San Jose del Palmar, Colombia" y listando los veintiuno.
+    `pintarPanorama` se llamaba una sola vez al arrancar y nunca mas.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Venezuela"))
+    pagina.wait_for_timeout(1500)
+
+    # La cifra de la metrica, no el texto entero: en el panel hay fechas
+    # ("21 ago 2018") donde un `"21" not in` daria un falso positivo.
+    cuenta = pagina.locator("#panorama .metrica .valor").first.inner_text()
+    assert cuenta.strip() == "3", f"el panel sigue contando el catalogo entero: {cuenta!r}"
+
+    panorama = pagina.locator("#panorama").inner_text()
+    assert "Colombia" not in panorama, (
+        f"con Venezuela elegido el panel sigue nombrando un evento de Colombia: {panorama[:200]!r}"
+    )
+    filas = pagina.locator("#panorama .panorama-lista li").count()
+    assert filas == 3, f"el panel lista {filas} eventos con un filtro que deja 3"
+
+
+@pytest.mark.visor
+def test_la_cifra_mayor_dice_en_que_banda_es_mayor(pagina: Any) -> None:
+    """ "2,4 M · mayor exposicion registrada" con "4,8 M en MMI≥6" tres filas abajo.
+
+    Las dos cifras eran ciertas y se comparaban en bandas distintas. Un maximo
+    mas pequeno que un numero visible al lado se lee como un error aunque no lo
+    sea.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1200)
+    # El CSS pone las etiquetas en versalitas, asi que `inner_text` las devuelve
+    # en mayusculas: se compara sin caso.
+    etiquetas = pagina.locator("#panorama .metrica .etiqueta").all_inner_texts()
+    mayor = [e for e in etiquetas if "mayor exposición" in e.lower()]
+    assert mayor, f"no esta la metrica de mayor exposicion: {etiquetas}"
+    assert "MMI≥" in mayor[0], f"la cifra mayor no dice su banda: {mayor[0]!r}"
+
+
+@pytest.mark.visor
+def test_un_filtro_sin_resultados_lo_dice_y_devuelve_la_camara(pagina: Any) -> None:
+    """Cuba + 90 dias dejaba una pagina que parecia rota.
+
+    "0 REPORTES PUBLICADOS" en mono pequeno arriba a la derecha, el mapa
+    mirando Venezuela —donde lo habia dejado el filtro anterior— sin un solo
+    simbolo, y el panel de al lado con las cifras del catalogo entero.
+    `encuadrarPuntos` devuelve `false` cuando no le queda ni un punto y nadie
+    recogia ese `false`.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Cuba"))
+    pagina.wait_for_timeout(1500)
+    pagina.select_option("#ventana-lista", "trimestre")
+    pagina.wait_for_timeout(1800)
+
+    assert pagina.evaluate("() => window.CENTINELA.camara.motivo") == "filtro:vacio", (
+        "la camara se quedo donde la dejo el filtro anterior"
+    )
+    panorama = pagina.locator("#panorama").inner_text()
+    assert "Ningún reporte" in panorama, f"el panel no dice por que esta vacio: {panorama!r}"
+    assert pagina.locator("#panorama [data-limpiar]").count() == 1, (
+        "no se ofrece salir del filtro desde donde se esta mirando"
+    )
+
+
+@pytest.mark.visor
+def test_los_filtros_viajan_en_la_url(pagina: Any) -> None:
+    """Una vista filtrada no se podia mandar a nadie.
+
+    `?evento=` y `?capa=` y `?amenaza=` viajaban; pais y periodo no, y son los
+    que eligen QUE se mira. Orden y "solo lo que se ve" siguen sin viajar a
+    proposito: son preferencias de lectura, no contenido.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.select_option("#filtro-paises", _iso_de(pagina, "Chile"))
+    pagina.wait_for_timeout(1200)
+    pagina.select_option("#ventana-lista", "decada")
+    pagina.wait_for_timeout(1200)
+
+    url = pagina.evaluate("() => location.search")
+    assert "pais=CHL" in url, f"el pais no viaja en la URL: {url!r}"
+    assert "periodo=decada" in url, f"el periodo no viaja en la URL: {url!r}"
+    assert "orden=" not in url and "envista=" not in url, (
+        f"la manera de mirar no deberia viajar: {url!r}"
+    )
+
+
+@pytest.mark.visor
+def test_un_enlace_con_filtros_abre_ya_filtrado(navegador: Any, servidor: str) -> None:
+    """Y al abrirlo, los desplegables tienen que nacer diciendo la verdad."""
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/index.html?pais=VEN")
+    pg.wait_for_function(
+        """() => {
+             const p = window.CENTINELA && window.CENTINELA.pintado;
+             return !!(p && p.epicentros);
+           }""",
+        timeout=ESPERA_MS,
+    )
+    pg.wait_for_timeout(1500)
+
+    assert pg.locator("#filtro-paises").input_value() == "VEN"
+    assert "3" in pg.locator("#cuenta-lista").inner_text()
+    ctx.close()
+
+
+@pytest.mark.visor
+def test_la_opcion_de_todos_los_paises_no_cuenta_reportes(pagina: Any) -> None:
+    """Decia "Todos los países (21)" con quince paises en la lista.
+
+    El 21 eran los reportes, y la misma fila ya publica esa cifra dos palmos a
+    la derecha.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1200)
+    primera = pagina.locator("#filtro-paises option").first.inner_text()
+    assert primera.strip() == "Todos los países", f"la opcion sigue llevando cuenta: {primera!r}"
+
+
+# --- La leyenda no puede nombrar lo que no esta ------------------------------
+
+
+@pytest.mark.visor
+def test_la_leyenda_de_simbolos_cambia_con_la_amenaza(pagina: Any) -> None:
+    """En modo fuego seguia explicando "Sismo visto, sin reporte".
+
+    Una leyenda que nombra simbolos que no se dibujan ensena a no leer la
+    leyenda.
+
+    Al mapa de sismos, que es el modo cuya leyenda se comprueba primero.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(1200)
+
+    sismos = pagina.locator("#leyenda-simbolos").inner_text()
+    assert "Foco activo" not in sismos, f"en modo sismos explica el fuego: {sismos!r}"
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+    fuego = pagina.locator("#leyenda-simbolos").inner_text()
+    assert "Foco activo" in fuego, f"en modo fuego no explica el fuego: {fuego!r}"
+    assert "sin reporte" not in fuego, (
+        f"en modo fuego sigue explicando el sismo menor, que no se dibuja: {fuego!r}"
+    )
+
+
+@pytest.mark.visor
+def test_el_aviso_de_cabecera_habla_de_lo_que_se_ensena(pagina: Any) -> None:
+    """ "cada franja de intensidad" sobre un mapa de incendios.
+
+    Es el aviso mas importante del tablero —el que separa exposicion de dano— y
+    en modo fuego describia otro mapa.
+
+    Al mapa de sismos: el aviso que se lee primero es el suyo.
+    """
+    _esperar_capa(pagina, "epicentros")
+    assert "franja de intensidad" in pagina.locator("#aviso-lectura").inner_text()
+
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1000)
+    fuego = pagina.locator("#aviso-lectura").inner_text()
+    assert "Exposición no es daño" in fuego, "se perdio la frase que sostiene el aviso"
+    assert "franja de intensidad" not in fuego, f"el aviso sigue siendo el de sismos: {fuego!r}"
+
+
+# --- Un reporte no puede contradecirse a si mismo ---------------------------
+#
+# Es el modo de fallo que este proyecto persigue en todas partes: una cifra
+# plausible y equivocada. Estos tres estaban publicados.
+
+
+@pytest.mark.visor
+def test_un_evento_que_llega_a_mmi8_no_niega_su_mmi7(pagina: Any) -> None:
+    """La frase estaba escrita para un caso y se imprimia en el contrario.
+
+    `bandaDeTotales` devuelve 8 en cuanto hay alguien en MMI≥8 y 6 cuando la
+    sacudida no llego a 7 sobre poblacion; la rama cubria los dos y ponia la
+    misma nota: "La sacudida no alcanzo MMI 7 sobre poblacion: ninguna de las
+    cifras de abajo aplica a este evento".
+
+    En Muisne hay 2.283.454 personas en MMI≥7 y el propio panel lo dice dos
+    bloques mas arriba. Afectaba a los tres eventos mas fuertes del catalogo.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")  # M7,8 Muisne, llega a MMI 8
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    bloque = pagina.locator("#detalle-metricas").inner_text()
+    assert "no alcanzó MMI 7" not in bloque, (
+        f"el panel niega el MMI≥7 de un evento que lo tiene: {bloque!r}"
+    )
+    # Y las dos bandas se enseñan rotuladas, para que "174.000 de 65 años o mas"
+    # no quede debajo de una cifra menor que el.
+    assert "MMI≥7" in bloque and "MMI≥8" in bloque, f"falta alguna banda: {bloque!r}"
+
+
+@pytest.mark.visor
+def test_un_evento_que_no_llega_a_mmi7_si_lo_dice(pagina: Any) -> None:
+    """Y el caso para el que la nota se escribio sigue teniendola."""
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us2000ahv0")  # Tehuantepec: nadie en MMI≥7
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    # El CSS pone el titulo en versalitas: se compara en mayusculas.
+    assert "EXPUESTO EN MMI≥6" in pagina.locator("#titulo-metricas").inner_text().upper()
+    assert "no alcanzó MMI 7" in pagina.locator("#detalle-metricas").inner_text()
+
+
+@pytest.mark.visor
+def test_los_municipios_mas_expuestos_lo_estan(pagina: Any) -> None:
+    """El ranking ordenaba por la banda cumbre y escondia a los mas expuestos.
+
+    En Muisne salia Muisne con 9.000 y Quinindé con **0** —teniendo 164.691
+    personas en MMI≥7— y Portoviejo, con 333.075, no salia. El bloque se titula
+    "la misma cifra nacional repartida entre quienes tienen que responder": a
+    quien responde desde Portoviejo le decia cero.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    filas = pagina.locator("#detalle-barras li").all_inner_texts()
+    assert filas, "el bloque de municipios se quedo vacio"
+
+    # Ni una fila en cero: un ranking rematado con ceros no ensena donde se
+    # concentra, ensena que se relleno hasta ocho.
+    valores = pagina.locator("#detalle-barras .barra-valor").all_inner_texts()
+    assert all(v.strip() != "0" for v in valores), f"hay municipios en cero: {valores}"
+
+    # Y el primero es el que de verdad tiene mas gente dentro.
+    assert "Portoviejo" in filas[0], f"el mas expuesto no encabeza la lista: {filas[0]!r}"
+
+    # El titulo dice en que banda ordena. El `.md` siempre lo decia y el visor no.
+    assert "MMI≥7" in pagina.locator("#titulo-municipios").inner_text().upper()
+
+
+@pytest.mark.visor
+def test_la_incertidumbre_nombra_las_dos_fuentes(pagina: Any) -> None:
+    """El visor explicaba esta cifra al reves de como la calcula el pipeline.
+
+    El SQL es el desacuerdo entre GHS-POP y WorldPop dentro del area afectada, y
+    el `report.md` del mismo evento lo dice asi. El panel decia "difiere del
+    total nacional del mismo producto" y lo atribuia al "remuestreo a
+    hexagonos". Ni nacional, ni el mismo producto, ni remuestreo.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    texto = pagina.locator("#bloque-incertidumbre").inner_text()
+    assert "GHS-POP" in texto and "WorldPop" in texto, f"no nombra las dos fuentes: {texto!r}"
+    assert "remuestreo" not in texto, f"sigue culpando al remuestreo: {texto!r}"
+    assert "total nacional" not in texto, f"sigue diciendo que es nacional: {texto!r}"
+
+
+@pytest.mark.visor
+def test_una_discrepancia_enorme_no_se_publica_como_nota_al_pie(pagina: Any) -> None:
+    """Carupano publica 416,9 % con la tipografia de un 0,8 %.
+
+    Sobre 3.416 personas expuestas dos productos de poblacion pueden discrepar
+    en varias veces la cifra sin que ninguno este roto, pero enseñarlo como un
+    apunte rutinario invita a leer el reporte con una confianza que no tiene.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us1000gez7")  # Carupano
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    assert pagina.locator("#bloque-incertidumbre .cifra-alerta").count() == 1, (
+        "una discrepancia de tres cifras se publica con el mismo peso que un 0,8 %"
+    )
+    assert "orden de magnitud" in pagina.locator("#bloque-incertidumbre").inner_text()
+
+
+@pytest.mark.visor
+def test_una_reconstruccion_dice_de_cuando_son_sus_cifras(pagina: Any) -> None:
+    """El aviso vivia solo como `title` de un distintivo.
+
+    Invisible sin raton, inalcanzable en un movil, y es el que decide como se lee
+    todo lo demas: el panel dice "cuanta gente vivia dentro" sobre un sismo de
+    2016 y cuenta con poblacion de 2025.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    epoca = pagina.locator("#detalle-epoca")
+    assert epoca.is_visible(), "una reconstruccion no dice de cuando son sus cifras"
+    texto = epoca.inner_text()
+    assert "2025" in texto and "actuales" in texto, f"el aviso no dice lo que hace falta: {texto!r}"
+
+
+# --- La capa de fuego tiene que caber en el lienzo ---------------------------
+#
+# 12.767 simbolos con radio de 3 a 5,5 px suman 413.000 px² de tinta sobre una
+# franja util de 335.000: 1,23 veces el lienzo entero. La mancha no era mala
+# suerte, era aritmetica. Y el 69 % de las celdas cae, a zoom 2, sobre un pixel
+# ya ocupado por otra.
+
+
+@pytest.mark.visor
+def test_el_fuego_fuerte_se_dibuja_encima(pagina: Any) -> None:
+    """Sin `circle-sort-key` gana el que venga despues en el fichero.
+
+    Medido a zoom 2: las 150 celdas mas energeticas comparten pixel con otra
+    **sin una sola excepcion**, asi que los quince focos de mas de 1.000 MW
+    —lo que este mapa existe para enseñar— se sorteaban contra 12.752
+    competidores. La rampa de color estaba y no se podia leer.
+    """
+    _con_fuego(pagina)
+    orden = pagina.evaluate(
+        "() => JSON.stringify(window.CENTINELA.ordenDeDibujo('incendios-punto'))"
+    )
+    assert orden and orden != "null", "la capa de fuego no ordena por nada"
+    assert "frp_suma" in orden, f"no ordena por energia: {orden}"
+
+
+@pytest.mark.visor
+def test_la_tinta_del_fuego_cabe_en_el_mapa(pagina: Any) -> None:
+    """El area que suman los circulos, contra el area del mapa.
+
+    Se calcula con la MISMA expresion que MapLibre tiene puesta, evaluada sobre
+    los datos reales: una captura no distingue "la tinta cabe" de "la tinta se
+    solapa y parece que cabe".
+    """
+    _con_fuego(pagina)
+    medida = pagina.evaluate(
+        """() => {
+             const r = window.CENTINELA.tintaDelFuego(2);
+             return r;
+           }"""
+    )
+    assert medida, "el visor no sabe medir su propia tinta"
+    assert medida["veces"] < 0.6, (
+        f"la capa de fuego pone {medida['veces']:.2f} veces la tinta que cabe en el mapa: "
+        f"{medida['tinta']:.0f} px² sobre {medida['lienzo']:.0f} px²"
+    )
+    # Y LA ENERGIA MANDA SOBRE EL NUMERO. Pero se mide lo que la simbologia
+    # controla, no lo que trajo FIRMS esa manana.
+    #
+    # Esto exigia `debilesSobreFuertes < 4` y se puso rojo el 6-sep-2026 con la
+    # simbologia intacta: ese dia hubo 3.988 celdas debiles contra 52 fuertes
+    # —76,7 a 1— y la proporcion de tinta salio 4,4. Un guardia que se pone rojo
+    # porque hubo pocos incendios grandes no esta midiendo el visor.
+    #
+    # Lo que si es una propiedad de la rampa es cuanto encoge ese desequilibrio.
+    # Medido sobre los mismos datos del 6-sep: la rampa de hoy corrige 17,4
+    # veces y la rampa lineal que reemplazo —2 a 4,5 px— corregia 4,8. El
+    # umbral va entre las dos.
+    assert medida["correccion"] >= 10, (
+        f"la simbologia solo encoge {medida['correccion']:.1f} veces el desequilibrio "
+        f"entre celdas debiles y fuertes ({medida['debiles']} contra {medida['fuertes']}, "
+        f"{medida['desequilibrio']:.1f} a 1 en numero y {medida['debilesSobreFuertes']:.1f} "
+        f"a 1 en tinta): con menos de 10 el dato se entierra"
+    )
+
+
+# --- Nadie cuenta media persona ---------------------------------------------
+
+
+@pytest.mark.visor
+def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
+    """Lo promete el propio fichero, y redondeaba al millar.
+
+    `app.js` justifica la rampa de color contra WCAG 1.4.11 diciendo que el dato
+    esta disponible de otra forma: «la leyenda publica los rangos numericos, **el
+    globo de cada celda da su valor exacto**, y celdas.json se descarga entero».
+    Pero el globo usaba `comoConteo`, que por encima de mil redondea al millar:
+    una celda con 1.500 personas publicaba «2.000», y quien fuera a comprobar la
+    rampa contra el globo encontraba la cifra movida hasta 499 personas.
+
+    Se comprueba contra el dato: se lee el indice H3 que el propio globo imprime,
+    se busca esa celda en `celdas.json` y se exige que la cifra sea la suya. Y se
+    busca a proposito una celda de **mas de mil personas**, que es donde el
+    redondeo de prosa y el valor exacto se separan: sobre una celda de veinte los
+    dos formatos coinciden y la prueba pasaria sin comprobar nada.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(2000)
+
+    def _pop_de(h3: str) -> float | None:
+        # `celdas.json` es columnar —`columnas` + `celdas`— y publica el indice
+        # en minusculas mientras el globo lo imprime como venga: sin caso.
+        valor: float | None = pagina.evaluate(
+            """(h3) => fetch('reports/us6000tjl2/celdas.json')
+                 .then(r => r.json())
+                 .then(g => {
+                   const iH3 = g.columnas.indexOf('h3');
+                   const iPop = g.columnas.indexOf('pop');
+                   const fila = g.celdas.find(
+                     c => String(c[iH3]).toLowerCase() === h3.toLowerCase()
+                   );
+                   return fila ? Number(fila[iPop]) : null;
+                 })""",
+            h3,
+        )
+        return valor
+
+    caja = pagina.locator("#mapa").bounding_box()
+    assert caja
+    encontrada: tuple[str, float] | None = None
+    ultima: tuple[str, float] | None = None
+    # A zoom de evento cada pixel cubre varias celdas y la que gana el clic suele
+    # ser rural. Se acerca la camara sobre el punto mas poblado que se vaya
+    # encontrando hasta dar con una celda de mas de mil personas.
+    for acercamiento in range(4):
+        mejor_punto = None
+        for fy in (0.30, 0.40, 0.50, 0.60, 0.70):
+            for fx in (0.30, 0.40, 0.50, 0.60, 0.70):
+                x = caja["x"] + caja["width"] * fx
+                y = caja["y"] + caja["height"] * fy
+                pagina.mouse.click(x, y)
+                pagina.wait_for_timeout(260)
+                if not pagina.locator(".maplibregl-popup .popup-celda").count():
+                    continue
+                h3 = pagina.locator(".maplibregl-popup .ficha-h3").inner_text().strip()
+                pop = _pop_de(h3)
+                if pop is None:
+                    continue
+                ultima = (h3, pop)
+                if mejor_punto is None or pop > mejor_punto[0]:
+                    mejor_punto = (pop, x, y)
+                if pop >= 1000:
+                    encontrada = ultima
+                    break
+            if encontrada:
+                break
+        if encontrada or mejor_punto is None or acercamiento == 3:
+            break
+        pagina.mouse.move(mejor_punto[1], mejor_punto[2])
+        pagina.mouse.wheel(0, -600)
+        pagina.wait_for_timeout(900)
+
+    assert ultima, "no se pudo abrir el globo de ninguna celda de la malla"
+    h3, pop = encontrada or ultima
+    assert pop >= 1000, (
+        f"solo se alcanzaron celdas de menos de mil personas (la ultima, {pop}): "
+        f"sobre esas el redondeo de prosa y el exacto coinciden y esta prueba no "
+        f"comprobaria nada"
+    )
+
+    def _en_espanol(v: float) -> str:
+        # El espanol no separa los millares hasta cinco cifras, que es lo que
+        # hace `numero()` en el visor: 8831 va junto y 15.607 separado.
+        entero = round(v)
+        return f"{entero:,}".replace(",", ".") if entero >= 10000 else str(entero)
+
+    exacto = _en_espanol(pop)
+    prosa = _en_espanol(round(pop / 1000) * 1000)
+    texto = pagina.locator(".maplibregl-popup").inner_text()
+    assert exacto in texto, (
+        f"el globo de {h3} deberia decir {exacto} personas —el dato es {pop}— y "
+        f"dice otra cosa: {texto!r}"
+    )
+    if prosa != exacto:
+        assert prosa not in texto, (
+            f"el globo publica {prosa}, que es el dato redondeado al millar, "
+            f"justo donde el fichero promete el valor exacto"
+        )
+
+
+def test_las_personas_se_cuentan_enteras(pagina: Any) -> None:
+    """El panel de un foco pequeno publicaba «5,7 personas».
+
+    `comoTexto` conserva el decimal por debajo de diez, y tiene su razon —el
+    primer corte de la leyenda de vias es 0,5 km—, pero se aplicaba tambien a la
+    gente. GHS-POP es un raster desagregado, asi que el 5,7 es el dato; lo que
+    no es cierto es la precision que sugiere. Y al lado, el globo de la celda ya
+    escribia «Población 3» en entero: el mismo hecho con dos formatos.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    # Un foco pequeno es donde aparece: se abre por la puerta de las pruebas.
+    encontrado = False
+    for i in range(12):
+        pagina.evaluate("(i) => window.CENTINELA.abrirFoco(i)", i)
+        pagina.wait_for_timeout(400)
+        texto = pagina.locator("#fuego-metricas").inner_text()
+        if "personas" in texto.lower():
+            encontrado = True
+            cifras = re.findall(r"^([\d.,<]+)$", texto, re.M)
+            assert not any("," in c for c in cifras), (
+                f"el foco {i} publica una persona fraccionaria: {texto!r}"
+            )
+    assert encontrado, "ningun foco de los doce primeros publica personas"
+
+
+@pytest.mark.visor
+def test_sin_viento_no_hay_bloque_de_ambiente(pagina: Any) -> None:
+    """El rotulo «Ambiente» con su parrafo y debajo nada.
+
+    `cuadroDeViento` devuelve vacio cuando GFS no cubre el foco —correcto: un
+    cero ahi diria "no hace viento" cuando lo que pasa es que no se midio— pero
+    el `<section>` se quedaba en pie, y un bloque vacio con titulo se lee como
+    un fallo de carga.
+
+    CON EL FICHERO DE HOY NO PASA: los 3.337 puntos de la rejilla cubren los
+    6.239 focos. Asi que la prueba **provoca** el caso vaciando la rejilla, en
+    vez de esperar a que ocurra: una prueba que solo pasa porque el escenario no
+    se da no vigila nada, y este es el escenario del dia que GFS falle.
+    """
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_timeout(1200)
+
+    # Con viento: el bloque esta y tiene cifras.
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_timeout(500)
+    assert pagina.locator("#bloque-fuego-ambiente").is_visible()
+    assert pagina.locator("#fuego-ambiente .metrica").count() > 0, "el bloque no trae viento"
+
+    # Sin rejilla de viento: el bloque entero desaparece.
+    pagina.evaluate("() => window.CENTINELA.olvidarElViento()")
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_timeout(500)
+    assert not pagina.locator("#bloque-fuego-ambiente").is_visible(), (
+        "sin viento se sigue enseñando el rotulo «Ambiente» y su párrafo, sin nada debajo"
+    )
+
+
+# --- Cambiar de mapa base no puede llevarse el dato -------------------------
+
+
+@pytest.mark.visor
+def test_cambiar_de_mapa_base_conserva_las_capas(pagina: Any) -> None:
+    """`setStyle` no cambia el fondo: tira el estilo entero.
+
+    Y con el se van **todas** las fuentes y todas las capas, incluidas las
+    nuestras. Un conmutador que solo llame a `setStyle` deja un mapa base bonito
+    y vacio: sin epicentros, sin fuego, sin velo. Por eso el cambio pasa por un
+    solo sitio, que repone lo que es dato.
+    """
+    _esperar_capa(pagina, "epicentros")
+    _con_fuego(pagina)
+    pagina.wait_for_timeout(1200)
+
+    pintados_al_arrancar = pagina.evaluate("() => window.CENTINELA.pintado.epicentros.rasgos")
+
+    pagina.locator(".ctrl-bases").click()
+    pagina.locator('[data-base="oscuro"]').click()
+    # El estilo entero viaja por red: se espera a que las capas vuelvan.
+    pagina.wait_for_function(
+        """() => {
+             const c = window.CENTINELA.capasDelMapa();
+             return ['epicentros', 'incendios-punto', 'mascara'].every((x) => c.includes(x));
+           }""",
+        timeout=ESPERA_MS,
+    )
+
+    capas = pagina.evaluate("() => window.CENTINELA.capasDelMapa()")
+    velo = capas.index("mascara")
+    assert velo < capas.index("epicentros"), "tras cambiar de base el velo tapa el dato"
+    # EL VEINTIUNO ESTABA ESCRITO A MANO Y CADUCO.
+    #
+    # Era cierto cuando se escribio y dejo de serlo el 2-sep-2026, en cuanto el
+    # catalogo crecio con el primer evento en vivo: la prueba fallo diciendo
+    # "23 == 21" sin que el visor tuviera nada mal. Lo que comprueba es que
+    # **no se pierde ningun epicentro** al cambiar de base, y eso se pregunta
+    # contra el dato, no contra una constante que hay que recordar actualizar.
+    antes = pagina.evaluate("() => window.CENTINELA.pintado.epicentros.rasgos")
+    assert antes > 0, "el visor no pinto ningun epicentro"
+    assert antes == pintados_al_arrancar, (
+        f"cambiar de base perdio epicentros: {pintados_al_arrancar} antes, {antes} despues"
+    )
+
+
+@pytest.mark.visor
+def test_el_mapa_base_no_se_lleva_el_perimetro_del_foco(pagina: Any) -> None:
+    """El panel seguia describiendo un incendio que el mapa acababa de perder.
+
+    `cambiarEstiloBase` repone epicentros, sismos menores y focos, pero no el
+    contorno del foco **abierto**: se lee «17 celdas contiguas ardiendo», se toca
+    el mapa base por curiosidad, y el lateral sigue diciendolo con el mapa sin
+    rodear ninguna. Es el mismo caso que ya estaba resuelto para el lado sismico
+    —el evento abierto vuelve con su malla— y que en el lado del fuego faltaba.
+    """
+    # A la capa dibujada, no al agrupado: `pintado.focos` se anota en cuanto
+    # `agruparFocos` termina, y el dibujo de la capa va por `cuandoElEstiloEsteListo`,
+    # asi que puede ir por detras. Esperar al agrupado abria el foco sobre un mapa
+    # sin capas.
+    _con_fuego(pagina)
+    _esperar_capa(pagina, "focos")
+    pagina.evaluate("() => window.CENTINELA.abrirFoco(0)")
+    pagina.wait_for_selector("#detalle-fuego:not([hidden])", timeout=ESPERA_MS)
+    # A la anotacion, no a un reloj: el perimetro se dibuja diferido con
+    # `cuandoElEstiloEsteListo` y un `wait_for_timeout` generoso seguia llegando
+    # antes que el.
+    _esperar_capa(pagina, "foco-perimetro")
+
+    marca = _ahora(pagina)
+    pagina.locator(".ctrl-bases").click()
+    pagina.locator('[data-base="oscuro"]').click()
+
+    # La afirmacion es esta espera: el perimetro tiene que volver a anotarse
+    # **despues** del cambio de base. Sin el arreglo, `cambiarEstiloBase` repone
+    # epicentros, observados e incendios y nunca vuelve a anotar esto, asi que la
+    # espera agota su plazo — que es como se pone roja.
+    _esperar_capa(pagina, "foco-perimetro", desde=marca)
+
+    capas = pagina.evaluate("() => window.CENTINELA.capasDelMapa()")
+    abierto = pagina.evaluate("() => !document.getElementById('detalle-fuego').hidden")
+    assert abierto, "el panel del foco se cerro solo al cambiar de base"
+    assert "foco-perimetro" in capas, (
+        "el perimetro se anoto pero no esta en el estilo: se dibujo sobre el "
+        f"anterior y el nuevo lo perdio. {capas[-8:]}"
+    )
+
+
+@pytest.mark.visor
+def test_los_oyentes_no_se_duplican_al_cambiar_de_base(pagina: Any) -> None:
+    """MapLibre conserva los oyentes de capa a traves de `setStyle`.
+
+    Cuelgan del mapa, no del estilo, y `dibujarEpicentros` los registraba al
+    final de cada pasada — que es justo lo que `cambiarEstiloBase` vuelve a
+    llamar en cada cambio de base. Tres cambios y cada clic sobre un epicentro
+    corria `seleccionar` tres veces, con tres vuelos de camara compitiendo.
+
+    Se cuenta con la API de MapLibre y no a ojo: `map.listens` no distingue por
+    capa, asi que se leen los oyentes registrados del tipo `click`.
+    """
+    _esperar_capa(pagina, "epicentros")
+    pagina.wait_for_timeout(800)
+
+    def _oyentes() -> int:
+        n: int = pagina.evaluate("() => window.CENTINELA.oyentesDeClic()")
+        return n
+
+    antes = _oyentes()
+    assert antes > 0, "no se pudo leer la lista de oyentes de clic de MapLibre"
+
+    for base in ("oscuro", "relieve", "claro"):
+        pagina.locator(".ctrl-bases").click()
+        pagina.locator(f'[data-base="{base}"]').click()
+        pagina.wait_for_function(
+            """() => window.CENTINELA.capasDelMapa().includes('epicentros')""",
+            timeout=ESPERA_MS,
+        )
+        pagina.wait_for_timeout(500)
+
+    despues = _oyentes()
+    assert despues == antes, (
+        f"tras tres cambios de mapa base hay {despues} oyentes de clic donde "
+        f"habia {antes}: cada clic sobre un epicentro se atiende {despues // antes} veces"
+    )
+
+
+@pytest.mark.visor
+def test_el_mapa_base_no_se_lleva_el_evento_abierto(pagina: Any) -> None:
+    """Con un reporte delante, cambiar de base tiene que devolver su malla.
+
+    Es el caso que mas duele: se esta leyendo un evento, se toca el mapa base
+    por curiosidad y el mapa se queda sin la malla que sostiene las cifras del
+    panel — que siguen ahi, describiendo algo que ya no se dibuja.
+    """
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us20005j32")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(1000)
+
+    marca2 = _ahora(pagina)
+    pagina.locator(".ctrl-bases").click()
+    pagina.locator('[data-base="relieve"]').click()
+    anotacion = _esperar_capa(pagina, "celdas", desde=marca2)
+
+    assert anotacion["rasgos"] > 0, "la malla del evento no volvio tras cambiar de base"
+    assert pagina.locator("#lateral-detalle").is_visible(), "se perdio el panel del evento"
+
+
+@pytest.mark.visor
+def test_la_galeria_de_bases_dice_lo_que_cuesta_cada_una(pagina: Any) -> None:
+    """ "Con relieve" cuesta legibilidad del dato, y quien la elige tiene derecho
+    a saberlo antes y no despues."""
+    _esperar_capa(pagina, "epicentros")
+    pagina.locator(".ctrl-bases").click()
+    texto = pagina.locator("#galeria-bases").inner_text()
+
+    for nombre in ("Claro", "Oscuro", "Con relieve"):
+        assert nombre in texto, f"falta el mapa base {nombre!r}: {texto!r}"
+    assert "compita con el dato" in texto, "no se avisa de lo que cuesta el relieve"
+    # El que esta puesto, marcado.
+    assert pagina.locator('#galeria-bases [aria-pressed="true"]').count() == 1
+
+
+@pytest.mark.visor
+def test_la_barra_de_escala_no_cae_dentro_de_la_leyenda(navegador: Any, servidor: str) -> None:
+    """La esquina de arriba a la derecha del mapa tiene fondo, y en 390 px se acaba.
+
+    Medido con un evento abierto: la barra de escala caia **22 px dentro** de la
+    leyenda de intensidad ya antes de añadir los botones de inicio y mapa base,
+    y con ellos pasaba a 67. Se libera sitio escondiendo el zoom en pantalla
+    estrecha —el unico de los tres que tiene gesto equivalente— pero la holgura
+    resultante es de un pixel, asi que esto la vigila: cualquier control nuevo
+    en esa esquina, o un tipo mas grande, la vuelve negativa.
+
+    `SONDA_SOLAPES` no lo cazaba porque compara cajas de TEXTO, y aqui lo que se
+    monta encima es una barra sobre el fondo de un panel.
+    """
+    ctx = navegador.new_context(viewport=MOVIL)
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/index.html")
+    pg.wait_for_function(
+        """() => {
+             const p = window.CENTINELA && window.CENTINELA.pintado;
+             return !!(p && p.epicentros);
+           }""",
+        timeout=ESPERA_MS,
+    )
+    marca = _ahora(pg)
+    pg.select_option("select", "us6000tjl2")
+    pg.wait_for_function(
+        """([desde]) => {
+             const p = window.CENTINELA && window.CENTINELA.pintado;
+             return !!(p && p.celdas && p.celdas.utc > desde);
+           }""",
+        arg=[marca],
+        timeout=ESPERA_MS,
+    )
+    pg.wait_for_timeout(1500)
+
+    holgura = pg.evaluate(
+        """() => {
+             const escala = document.querySelector('.maplibregl-ctrl-scale');
+             const leyenda = document.querySelector('#leyenda');
+             if (!escala || !leyenda) return null;
+             return Math.round(leyenda.getBoundingClientRect().top
+                               - escala.getBoundingClientRect().bottom);
+           }"""
+    )
+    ctx.close()
+    assert holgura is not None, "no se encontraron la escala o la leyenda"
+    assert holgura >= 0, f"la barra de escala cae {abs(holgura)} px dentro de la leyenda"
+
+
+def _eventos_con_changelog() -> list[str]:
+    """Los publicados que ya traen deltas de un reproceso.
+
+    Del catalogo, no de una lista: aparecen solos en cuanto USGS revisa un
+    ShakeMap y P1 lo ve. Hoy son dos —Puerto Madero v3->v4 y East Pacific
+    v2->v3— y manana pueden ser otros.
+    """
+    con = []
+    for reporte in sorted((RAIZ / "reports").glob("*/report.json")):
+        if json.loads(reporte.read_text(encoding="utf-8")).get("changelog"):
+            con.append(reporte.parent.name)
+    return con
+
+
+@pytest.mark.parametrize("usgs_id", _eventos_con_changelog())
+def test_el_panel_dice_que_cambio_al_reprocesar(pagina: Any, usgs_id: str) -> None:
+    """El visor pintaba `ShakeMap v4` y nada mas.
+
+    `changelog.py` calcula los deltas para esto exactamente —"quien ya leyo la
+    version anterior necesita saber que cambio, no volver a leerlo entero
+    durante una emergencia"— y el visor, que es donde se lee en una emergencia,
+    no los enseñaba. Un numero que cambia sin decir que cambio no se distingue
+    de uno que siempre fue ese.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", usgs_id)
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    bloque = pagina.locator("#bloque-cambios")
+    assert bloque.is_visible(), f"{usgs_id} publica changelog y el panel no lo enseña"
+
+    publicadas = json.loads(
+        (RAIZ / "reports" / usgs_id / "report.json").read_text(encoding="utf-8")
+    )["changelog"]
+    pintadas = pagina.locator("#detalle-cambios li").all_inner_texts()
+
+    assert [t.strip() for t in pintadas] == [str(p).strip() for p in publicadas], (
+        f"{usgs_id} publica {publicadas} y el panel pinta {pintadas}"
+    )
+
+
+def test_un_reporte_sin_reproceso_no_enseña_el_bloque(pagina: Any) -> None:
+    """La primera emision no tiene con que compararse.
+
+    Un bloque que dice "sin cambios" en veintiuno de veintitres reportes enseña
+    a no leer el bloque — y `[hidden]` sobre un `.bloque` con `display` puesto
+    es la trampa que ya costo dieciocho tarjetas visibles con el filtro puesto.
+    """
+    sin_cambios = [
+        p.parent.name
+        for p in sorted((RAIZ / "reports").glob("*/report.json"))
+        if not json.loads(p.read_text(encoding="utf-8")).get("changelog")
+    ]
+    assert sin_cambios, "todos los reportes traen changelog: no hay caso que comprobar"
+
+    marca = _ahora(pagina)
+    pagina.select_option("select", sin_cambios[0])
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    assert not pagina.locator("#bloque-cambios").is_visible(), (
+        f"{sin_cambios[0]} no tiene changelog y el bloque se ve igual"
+    )
+
+
+def _con_alerta_de_terreno() -> list[str]:
+    """Publicados donde USGS declara alerta de terreno distinta de verde.
+
+    Del catalogo: basta que USGS publique Ground Failure de un evento nuevo
+    para que entre aqui sin tocar esta lista.
+    """
+    con = []
+    for reporte in sorted((RAIZ / "reports").glob("*/report.json")):
+        gf = json.loads(reporte.read_text(encoding="utf-8")).get("ground_failure_usgs") or {}
+        vivas = [
+            str(gf.get(f"{t}_alerta_usgs") or "").lower() not in ("", "green") for t in ("ls", "lq")
+        ]
+        if any(vivas):
+            con.append(reporte.parent.name)
+    return con
+
+
+@pytest.mark.parametrize("usgs_id", _con_alerta_de_terreno())
+def test_el_panel_cruza_el_terreno_con_la_alerta_de_usgs(pagina: Any, usgs_id: str) -> None:
+    """El visor enseñaba la cifra propia y callaba la ajena.
+
+    En el Choco pintaba "Licuefaccion alta 460.000" sin decir que USGS declara
+    alerta **roja** para el mismo evento. Y en cinco pares del catalogo nuestro
+    conteo da cero con la alerta de USGS viva, que es un cero correcto que se
+    lee justo al reves.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", usgs_id)
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    bloque = pagina.locator("#bloque-terreno")
+    assert bloque.is_visible(), f"{usgs_id} tiene Ground Failure y el bloque no se ve"
+
+    notas = pagina.locator("#detalle-terreno .contraste-terreno").all_inner_texts()
+    assert notas, f"{usgs_id} trae alerta de terreno de USGS y el panel no la nombra"
+
+    gf = json.loads((RAIZ / "reports" / usgs_id / "report.json").read_text(encoding="utf-8"))[
+        "ground_failure_usgs"
+    ]
+    colores = {"yellow": "amarilla", "orange": "naranja", "red": "roja"}
+    vivas = [
+        colores[str(gf[f"{t}_alerta_usgs"]).lower()]
+        for t in ("ls", "lq")
+        if str(gf.get(f"{t}_alerta_usgs") or "").lower() in colores
+    ]
+    texto = " ".join(notas)
+    for color in vivas:
+        assert color in texto, (
+            f"{usgs_id} declara alerta {color} y el panel no la escribe: {texto[:120]!r}"
+        )
+
+
+def test_un_cero_contra_una_alerta_viva_se_explica(pagina: Any) -> None:
+    """El peor caso: cifra correcta que se lee al reves.
+
+    Un `0` junto a una alerta naranja de USGS con 1.700 personas dice "aqui no
+    hay este peligro" y lo que dice de verdad es "ninguna celda llega al
+    umbral". La frase la escribio `markdown.py`; aqui se exige en pantalla.
+    """
+    candidatos = []
+    for usgs_id in _con_alerta_de_terreno():
+        datos = json.loads((RAIZ / "reports" / usgs_id / "report.json").read_text(encoding="utf-8"))
+        gf, t = datos["ground_failure_usgs"], datos["totales"]
+        for tipo, propia in (("ls", "pop_ls_alta"), ("lq", "pop_lq_alta")):
+            viva = str(gf.get(f"{tipo}_alerta_usgs") or "").lower() in ("yellow", "orange", "red")
+            if viva and t[propia] == 0:
+                candidatos.append(usgs_id)
+    assert candidatos, "ningun reporte tiene el cero propio contra una alerta viva"
+
+    marca = _ahora(pagina)
+    pagina.select_option("select", candidatos[0])
+    _esperar_capa(pagina, "celdas", desde=marca)
+
+    texto = " ".join(pagina.locator("#detalle-terreno .contraste-terreno").all_inner_texts())
+    assert "umbral" in texto, (
+        f"{candidatos[0]} publica 0 con alerta viva y el panel no explica el cero: {texto[:150]!r}"
+    )
+
+
+def test_el_rotulo_de_la_tarjeta_de_fuego_sigue_a_la_ventana_elegida(pagina: Any) -> None:
+    """El numerador obedecía al control de 24/12/6 h y el rótulo no.
+
+    `estado.vivo.ventanaFuego` se fija una sola vez al cargar `incendios.json` y
+    no se vuelve a tocar; `v.incendios.detecciones`, en cambio, lo recalcula
+    `refrescarTablero` desde `celdasDeFuegoFiltradas()`. Así que elegir «6 h»
+    recortaba la cifra y la seguía publicando como «en 24 h»: 8.143 detecciones
+    de seis horas rotuladas como un día entero.
+    """
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    _con_fuego(pagina, "focos")
+    pagina.wait_for_selector("#en-vivo .metrica", timeout=ESPERA_MS)
+
+    def apunte() -> str:
+        texto: str = pagina.locator("#en-vivo").inner_text()
+        return texto
+
+    assert "detecciones en 24" in apunte().replace("\u00a0", " ")
+
+    pagina.select_option("#ventana-focos", "h6")
+    pagina.wait_for_timeout(900)
+
+    ahora = apunte().replace("\u00a0", " ")
+    assert "detecciones en 6 h" in ahora, (
+        f"la tarjeta recorta por 6 h y sigue rotulando otra ventana: {ahora!r}"
+    )
+    assert "detecciones en 24 h" not in ahora
+
+
+def test_cerrar_el_detalle_borra_de_verdad_las_tres_capas(pagina: Any) -> None:
+    """`quitarCapa` se guardaba con `isStyleLoaded()`, que es falso con teselas cargando.
+
+    En ese instante la guarda cortaba, `cerrarDetalle` seguía, y las tres capas
+    del evento se quedaban dibujadas sobre el panorama mientras la línea
+    siguiente anotaba `pintado = 0` para las tres. El registro público del visor
+    —el que existe justamente para poder comprobar esto desde fuera— afirmaba
+    que no había nada dibujado con la malla, los contornos y el perímetro a la
+    vista.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    _esperar_capa(pagina, "perimetro", desde=marca)
+
+    pagina.locator("#volver").click()
+    pagina.wait_for_function(
+        """() => {
+             const p = window.CENTINELA.pintado;
+             return ['celdas', 'contornos', 'perimetro'].every((c) => p[c] && p[c].rasgos === 0);
+           }""",
+        timeout=ESPERA_MS,
+    )
+
+    # `capasDelMapa()` son los ids del estilo en orden de dibujo: es la
+    # superficie que este visor ya expone para comprobar lo que hay puesto, y no
+    # depende de contar pixeles en una captura.
+    en_el_mapa = set(pagina.evaluate("() => window.CENTINELA.capasDelMapa()"))
+    registro = pagina.evaluate("() => window.CENTINELA.pintado") or {}
+
+    for capa in ("celdas", "contornos", "perimetro"):
+        anotado = registro.get(capa)
+        cero = anotado == 0 or (isinstance(anotado, dict) and anotado.get("rasgos") == 0)
+        if not cero:
+            continue
+        assert capa not in en_el_mapa, (
+            f"el registro dice que {capa} está en cero y la capa sigue dibujada; "
+            f"capas del estilo: {sorted(en_el_mapa)}"
+        )

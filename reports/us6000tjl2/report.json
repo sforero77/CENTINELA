@@ -1,0 +1,249 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us6000tjl2",
+    "mag": 7.4,
+    "depth_km": 108.174,
+    "utc": "2026-08-10T12:34:28Z",
+    "lugar": "2 km al SE de San José del Palmar, Colombia",
+    "pager_alert": "red",
+    "lon": -76.2182,
+    "lat": 4.8836
+  },
+  "inputs": {
+    "shakemap_version": 9,
+    "groundfailure_version": 9,
+    "exposure_manifest": "col-v0.6",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 6840603.205263513,
+    "pop_mmi7p": 3069002.8690395486,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 373245.79219203,
+    "pop_65p_mmi6p": 807028.2845927299,
+    "bld_mmi6p": 1193119.0,
+    "built_m2_mmi6p": 182268076.0,
+    "health_mmi6p": 1913.0,
+    "edu_mmi6p": 2385.0,
+    "road_km_mmi6p": 40642.957008958554,
+    "road_km_principal_mmi6p": 4217.85122829437,
+    "bld_mmi7p": 519018.0,
+    "built_m2_mmi7p": 85408288.0,
+    "health_mmi7p": 971.0,
+    "edu_mmi7p": 1068.0,
+    "road_km_mmi7p": 15748.986987636239,
+    "road_km_principal_mmi7p": 1897.2192546584308,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 1816973.1075647753
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "76001",
+      "nombre": "Santiago de Cali",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 772110.1329042781,
+      "pop_banda": 772110.1329042781
+    },
+    {
+      "adm2_id": "66001",
+      "nombre": "Pereira",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 500314.1681933543,
+      "pop_banda": 500314.1681933543
+    },
+    {
+      "adm2_id": "76109",
+      "nombre": "Buenaventura",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 413997.36102016456,
+      "pop_banda": 413997.36102016456
+    },
+    {
+      "adm2_id": "63001",
+      "nombre": "Armenia",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 338048.82900427,
+      "pop_banda": 338048.82900427
+    },
+    {
+      "adm2_id": "66170",
+      "nombre": "Dosquebradas",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 180905.68603482842,
+      "pop_banda": 180905.68603482842
+    },
+    {
+      "adm2_id": "76147",
+      "nombre": "Cartago",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 129910.50064553693,
+      "pop_banda": 129910.50064553693
+    },
+    {
+      "adm2_id": "27001",
+      "nombre": "Quibdó",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 111709.84636211488,
+      "pop_banda": 111709.84636211488
+    },
+    {
+      "adm2_id": "66682",
+      "nombre": "Santa Rosa de Cabal",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 68511.19666785747,
+      "pop_banda": 68511.19666785747
+    },
+    {
+      "adm2_id": "63401",
+      "nombre": "La Tebaida",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 54278.832213515416,
+      "pop_banda": 54278.832213515416
+    },
+    {
+      "adm2_id": "76895",
+      "nombre": "Zarzal",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 39669.865389760584,
+      "pop_banda": 39669.865389760584
+    },
+    {
+      "adm2_id": "76020",
+      "nombre": "Alcalá",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 37139.00253418367,
+      "pop_banda": 37139.00253418367
+    },
+    {
+      "adm2_id": "76400",
+      "nombre": "La Unión",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 34822.47236200515,
+      "pop_banda": 34822.47236200515
+    },
+    {
+      "adm2_id": "63470",
+      "nombre": "Montenegro",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 31681.55454718042,
+      "pop_banda": 31681.55454718042
+    },
+    {
+      "adm2_id": "63594",
+      "nombre": "Quimbaya",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 31506.350372412242,
+      "pop_banda": 31506.350372412242
+    },
+    {
+      "adm2_id": "17174",
+      "nombre": "Chinchiná",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 30360.095054543577,
+      "pop_banda": 30360.095054543577
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 3.7,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "orange",
+    "ls_pop_usgs": "5800",
+    "lq_alerta_usgs": "red",
+    "lq_pop_usgs": "520000"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [
+    "ShakeMap: v8 → v9",
+    "Ground Failure: v8 → v9",
+    "Población en MMI≥6: 7,2 millones → 6,8 millones",
+    "Población en MMI≥7: 2,4 millones → 3,1 millones",
+    "Población de 65 años o más en MMI≥7: 300 mil → 370 mil",
+    "Edificaciones en MMI≥7: 450 mil → 520 mil",
+    "Sedes de salud en MMI≥7: 510 → 970",
+    "Sedes educativas en MMI≥7: 1.000 → 1.100",
+    "Población en cobertura areal alta por licuefacción: 1,6 millones → 1,8 millones"
+  ],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/COL.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Departamento Administrativo Nacional de Estadística - DANE: www.dane.gov.co",
+        "licencia": "CC-BY-4.0",
+        "url": "https://geoportal.dane.gov.co/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "healthsites.io, vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://healthsites.io/"
+      },
+      {
+        "titulo": "OurAirports",
+        "licencia": "public-domain",
+        "url": "https://ourairports.com/data/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-08T15:22:38Z",
+  "pipeline_version": "0.1.0"
+}

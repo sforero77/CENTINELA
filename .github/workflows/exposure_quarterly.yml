@@ -1,0 +1,391 @@
+name: P0 · Activo de exposicion (trimestral)
+
+# El pais va en el nombre de la corrida: con varios paises en paralelo, la
+# lista de Actions es indistinguible sin esto.
+run-name: "Activo de exposicion — ${{ inputs.iso3 || 'todos los publicados' }}"
+
+on:
+  schedule:
+    # Dia 1 de enero, abril, julio y octubre, 06:00 UTC.
+    - cron: "0 6 1 1,4,7,10 *"
+  workflow_dispatch:
+    inputs:
+      iso3:
+        description: "Pais a reconstruir (ISO3). Vacio = todos los publicados"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  # LA CORRIDA PROGRAMADA RECONSTRUIA UN SOLO PAIS, Y HABIA DIECIOCHO.
+  #
+  # El workflow fijaba `ISO3: ${{ inputs.iso3 || 'COL' }}` desde cuando Fase 0
+  # construia solo Colombia. Fase 1 llego antes de que nadie volviera aqui: hay
+  # 18 activos publicados y el trimestral refrescaba uno.
+  #
+  # No era solo envejecimiento. Los 19 manifests fijan el mismo release de
+  # Overture y Overture conserva **dos** (~2 meses): pasado ese plazo, un pais
+  # que no se haya reconstruido no se puede reconstruir — la url del release
+  # fijado deja de existir. Diecisiete paises a un trimestre de quedarse sin
+  # camino de vuelta a sus propias fuentes.
+  elegir:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    outputs:
+      paises: ${{ steps.lista.outputs.paises }}
+    steps:
+      - name: Decidir que paises se reconstruyen
+        id: lista
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          # Via env y siempre citada: `inputs.iso3` es texto libre y no debe
+          # poder convertirse en comando al interpolarse en un `run`.
+          ISO3: ${{ inputs.iso3 }}
+        run: |
+          if [ -n "$ISO3" ]; then
+            echo "$ISO3" | grep -Eq '^[A-Z]{3}$' || {
+              echo "::error::ISO3 invalido: $ISO3"; exit 1;
+            }
+            PAISES=$(printf '["%s"]' "$ISO3")
+          else
+            # Se reconstruye lo que el sistema **sirve**: los paises con activo
+            # publicado. Un pais con manifest y sin Release no se ha construido
+            # nunca, y esa primera vez se pide a mano — es la corrida que hay
+            # que mirar, porque estrena la tolerancia y los toponimos.
+            PAISES=$(gh release list --limit 200 --json tagName --jq '
+              [ .[] | .tagName
+                | select(startswith("exposure-"))
+                | split("-")[1] | ascii_upcase
+              ] | unique')
+          fi
+
+          # Una matriz vacia no falla: se salta el job entero y la corrida sale
+          # verde sin haber reconstruido nada. Es justo el silencio que este
+          # repositorio persigue en todas partes.
+          #
+          # La comprobacion es textual y no con `jq` a proposito: `gh --jq` ya
+          # trae su interprete embebido, pero `jq` suelto es un binario mas del
+          # runner que este workflow no necesita.
+          if [ -z "$PAISES" ] || [ "$PAISES" = "[]" ]; then
+            echo "::error::No hay ningun activo publicado que reconstruir."
+            exit 1
+          fi
+
+          echo "paises=$PAISES" >> "$GITHUB_OUTPUT"
+          echo "se reconstruyen: $PAISES"
+
+  construir:
+    needs: elegir
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # Para republicar el visor con `gh workflow run site.yml`: un push hecho
+      # con GITHUB_TOKEN no dispara `site.yml`, asi que la cobertura recalculada
+      # se quedaria commiteada y sin llegar a la pagina.
+      actions: write
+      # Para la alarma por pais: una matriz de dieciocho en rojo no avisa a
+      # nadie por si sola.
+      issues: write
+    # Un build de un pais mediano ronda los 45 min y con dos horas sobraba.
+    # **Brasil no cabe en dos horas.** Medido el 25-ago-2026: 36 teselas de
+    # GHS-POP y otras 29 de superficie construida son 419 MB, y su serie age-sex
+    # de WorldPop son **9,1 GB** en veinte ficheros de 453 MB. Terminar en 120
+    # min exigiria sostener 1,3 MB/s durante las dos horas enteras, y el fallo
+    # llegaria al final, con la descarga larga ya pagada.
+    #
+    # Cinco horas, no seis: una corrida colgada tiene que seguir fallando en un
+    # plazo conocido, que es para lo que existe este limite. El default de
+    # GitHub —360 min— seria no poner ninguno.
+    #
+    # Con la descarga por streaming y reanudable, un timeout ya no tira lo
+    # bajado: el `.parcial` sobrevive y el siguiente intento sigue desde ahi.
+    timeout-minutes: 300
+    strategy:
+      # Un pais roto no puede impedir que se reconstruyan los demas: es
+      # exactamente el caso en que hay que reconstruir los demas.
+      fail-fast: false
+      # No es un limite de GitHub, es cortesia con las fuentes: HDX, WorldPop y
+      # el bucket de Overture son servicios publicos y gratuitos, y dieciocho
+      # descargas simultaneas de ~1 GB son un abuso que ademas acaba en 429.
+      max-parallel: 4
+      matrix:
+        iso3: ${{ fromJSON(needs.elegir.outputs.paises) }}
+    env:
+      ISO3: ${{ matrix.iso3 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo + geo
+        run: uv sync --python 3.12 --extra geo
+
+      - name: Validar manifest antes de descargar nada
+        run: uv run centinela lint-manifests
+
+      - name: Validar el codigo de pais
+        run: |
+          echo "$ISO3" | grep -Eq '^[A-Z]{3}$' || {
+            echo "::error::ISO3 invalido: $ISO3"; exit 1;
+          }
+
+      # `--liberar-rasters` borra cada raster en cuanto esta agregado a H3.
+      #
+      # EL DISCO ES EL LIMITE DE ESTE JOB, NO EL TIEMPO. Brasil murio dos veces
+      # en el mismo punto —a 1h43m y a 1h46m, con timeouts de 120 y 300 min— 38
+      # segundos despues de materializar `pop_h3` con 4,29 millones de celdas.
+      # A esa altura el runner tenia 9,1 GB de WorldPop y 437 MB de GHSL en
+      # disco, que nadie libera, y DuckDB necesitaba derramar encima. Un runner
+      # de GitHub trae ~14 GB.
+      #
+      # Aqui no se pierde nada al borrarlos: el runner arranca vacio en cada
+      # corrida, asi que no hay reanudado que abaratar. En local es al reves y
+      # por eso la opcion no viene puesta por defecto.
+      # SE REINTENTA EL PAIS, NO EL FICHERO.
+      #
+      # El reintento por fichero de `HttpFetcher` son tres intentos con esperas
+      # de 2, 4 y 8 segundos: catorce segundos, contra caidas que duran horas.
+      # El 27-ago-2026 el JRC estuvo caido tres y Peru gasto 2 h 40 min
+      # concluyendo, tesela a tesela, que el pais es todo oceano.
+      #
+      # Esto solo es barato porque el chequeo previo de origenes falla en
+      # segundos: reintentar cuesta la espera y nada mas. Y solo se reintenta el
+      # codigo 4 —origen caido—; un activo que no pasa los asserts de calidad no
+      # se arregla volviendo a intentarlo, y repetirlo tres veces solo retrasaria
+      # el diagnostico media hora.
+      - name: Construir exposure_h3
+        run: |
+          ESPERAS="600 1800"
+          INTENTO=0
+          for ESPERA in $ESPERAS ""; do
+            INTENTO=$((INTENTO + 1))
+            set +e
+            uv run centinela country "$ISO3" --liberar-rasters
+            CODIGO=$?
+            set -e
+            if [ "$CODIGO" -eq 0 ]; then
+              exit 0
+            fi
+            if [ "$CODIGO" -eq 5 ]; then
+              echo "::error::$ISO3: el release de Overture que fija su manifest ya no existe. Actualizalo en data/manifests/$ISO3.yaml y relanza este workflow."
+              exit 5
+            fi
+            if [ "$CODIGO" -ne 4 ]; then
+              echo "::error::$ISO3 fallo con codigo $CODIGO. No es un origen caido: no se reintenta."
+              exit "$CODIGO"
+            fi
+            if [ -n "$ESPERA" ]; then
+              echo "::warning::$ISO3: origen caido en el intento $INTENTO. Reintento en ${ESPERA}s."
+              sleep "$ESPERA"
+            fi
+          done
+          echo "::error::$ISO3: el origen sigue sin contestar tras $INTENTO intentos."
+          exit 4
+
+      - name: Publicar Release versionado
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-$(date -u +%Y%m%d)"
+          # `**` no expande sin `shopt -s globstar`, y el bash de Actions lo
+          # trae apagado: el glob se quedaba en un solo nivel y el activo vive
+          # en data/build/iso3=COL/layer=exposure/. Fallaba con "no matches
+          # found" DESPUES de construirlo entero, que es el peor sitio posible.
+          # `find` no depende de opciones del shell.
+          mapfile -t PARQUETS < <(find data/build -name '*.parquet' -type f)
+          if [ ${#PARQUETS[@]} -eq 0 ]; then
+            echo "::error::El build no dejo ningun .parquet en data/build"
+            exit 1
+          fi
+          # La medicion pesa un kilobyte y evita bajar el log entero para leer
+          # tres numeros al reajustar la tolerancia del manifest.
+          mapfile -t MEDICION < <(find data/build -name 'medicion.json' -type f)
+          PARQUETS+=("${MEDICION[@]}")
+          printf 'publicando: %s\n' "${PARQUETS[@]}"
+          # El tag lleva la fecha, asi que dos construcciones el mismo dia
+          # chocan — y reconstruir el mismo dia es exactamente lo que pasa
+          # cuando se corrige algo. Un Release del mismo dia es una correccion
+          # del mismo activo, no un vintage nuevo: se reemplazan los ficheros
+          # en su sitio. Dias distintos siguen creando tags distintos, asi que
+          # el historial de vintages se conserva.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::notice::$TAG ya existe; se reemplazan sus ficheros"
+            gh release upload "$TAG" "${PARQUETS[@]}" --clobber
+            gh release edit "$TAG" --notes-file "data/manifests/$ISO3.yaml"
+          else
+            gh release create "$TAG" "${PARQUETS[@]}" \
+              --title "Activo de exposicion $ISO3 — $TAG" \
+              --notes-file "data/manifests/$ISO3.yaml"
+          fi
+
+      # LA CIFRA QUE EL VISOR PUBLICA TENIA QUE VOLVER AL REPOSITORIO.
+      #
+      # `site/cobertura.json` cuenta «paises con activo construido» mirando
+      # `medido_ghs_pop` en cada manifest, y ese campo solo lo escribia
+      # `centinela calibrar --escribir`: un comando manual que ningun workflow
+      # invocaba. Este job construia, publicaba el Release y **no commiteaba el
+      # manifest**, asi que la afirmacion publica sobre disponibilidad se
+      # apoyaba en un YAML que alguien edito a mano alguna vez.
+      #
+      # `calibrar` es seguro en automatico por diseno: **estrecha la tolerancia
+      # y nunca la ensancha**. Si el desvio medido se sale de la tolerancia
+      # vigente, no toca nada y lo dice — esa decision sigue siendo de una
+      # persona.
+      #
+      # Va despues del Release a proposito: si la publicacion falla, el manifest
+      # no debe quedar diciendo que hay un activo publicado que no existe.
+      - name: Anotar la medicion en el manifest y commitearla
+        id: anotar
+        run: |
+          MEDICION=$(find data/build -name 'medicion.json' -type f | head -1)
+          if [ -z "$MEDICION" ]; then
+            echo "::error::el build no dejo medicion.json; no hay nada que anotar"
+            exit 1
+          fi
+          uv run centinela calibrar --escribir "$MEDICION"
+
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+          git add "data/manifests/$ISO3.yaml"
+          if git diff --staged --quiet; then
+            echo "el manifest de $ISO3 ya estaba al dia"
+            exit 0
+          fi
+          git commit -m "P0: medicion de $ISO3 anotada en su manifest"
+
+          # La matriz corre hasta cuatro paises a la vez sobre la misma rama.
+          # Cada uno toca **su** fichero, asi que el rebase no puede conflictar
+          # por contenido; lo que si pasa es que el push del segundo llegue con
+          # la rama ya movida.
+          for intento in 1 2 3 4; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then
+              echo "publicado=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            git rebase --abort || true
+            sleep $((2 ** intento))
+          done
+          echo "::error::no se pudo commitear el manifest de $ISO3"
+          exit 1
+
+      # La cobertura que sirve el visor sale de los manifests, asi que se
+      # regenera aqui o se queda contando lo de antes. Un solo job la reescribe
+      # —el ultimo que termine—, y por eso se recalcula en vez de editarse.
+      - name: Recalcular y commitear la cobertura
+        id: publicar
+        run: |
+          uv run centinela cobertura
+          git add site/cobertura.json
+          git diff --staged --quiet && exit 0
+          git commit -m "P0: cobertura regional recalculada"
+          for intento in 1 2 3 4; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}"; then
+              if git push; then
+                echo "publicado=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+            # `cobertura.json` es un derivado entero: no se fusiona, se rehace.
+            # Mismo manejador que el vigia: el fichero en conflicto no es JSON,
+            # asi que primero se toma la version de la rama y luego se recalcula.
+            git checkout --theirs site/cobertura.json 2>/dev/null || true
+            uv run centinela cobertura || true
+            git add site/cobertura.json
+            GIT_EDITOR=true git rebase --continue || git rebase --abort || true
+            sleep $((2 ** intento))
+          done
+          echo "::error::no se pudo publicar site/cobertura.json"
+          exit 1
+
+      # UN PUSH HECHO CON `GITHUB_TOKEN` NO DISPARA OTROS WORKFLOWS.
+      #
+      # Es la regla de GitHub contra los bucles infinitos, y es la que dejo el
+      # visor diecisiete horas sirviendo una pagina vieja. `site.yml` escucha
+      # `push` sobre `site/**`, y los dos pasos de arriba commitean ahi.
+      #
+      # Va en su propio paso y con el comando solo en la linea: el guardia de
+      # `test_el_visor_se_republica.py` pide exactamente esa forma para no
+      # confundir el comando con una frase que lo menciona.
+      - name: Republicar el visor
+        if: >-
+          ${{ !cancelled()
+          && (steps.publicar.outputs.publicado == 'true'
+              || steps.anotar.outputs.publicado == 'true') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run site.yml
+
+      # UNA MATRIZ DE DIECIOCHO PAISES EN ROJO NO AVISABA A NADIE.
+      #
+      # Con `fail-fast: false` —que es lo correcto: un pais roto no puede
+      # impedir que se reconstruyan los demas— el resultado es una lista de
+      # corridas en rojo que nadie mira, mientras `docs/OPERACION.md` le promete
+      # al operador que «exposure_quarterly.yml lo reconstruye solo».
+      #
+      # Un pais que lleva tres meses sin reconstruirse es un pais que ya no se
+      # puede reconstruir: su release de Overture caduco.
+      - name: Abrir incidencia si este pais no se pudo reconstruir
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: "No se pudo reconstruir el activo de ${{ matrix.iso3 }}"
+        run: |
+          gh label create activo --color 1D76DB --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # Una por pais, y se comenta en vez de duplicar: el trimestral vuelve
+          # a fallar en el siguiente turno si nadie lo arreglo.
+          ABIERTA=$(gh issue list --state open --limit 200 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            gh issue comment "$ABIERTA" --body "Sigue sin reconstruirse.
+
+          Corrida: $CORRIDA"
+            exit 0
+          fi
+
+          CUERPO=$(cat <<'TXT'
+          El activo de exposicion de este pais no se pudo reconstruir.
+
+          **Lo primero que hay que mirar es el release de Overture.** Es el unico
+          insumo con caducidad: Overture publica release mensual y conserva dos,
+          asi que el que fija el manifest deja de existir en unos dos meses. El
+          chequeo previo lo detecta en segundos y sale con codigo 5.
+
+          Reparacion: actualizar el release en `data/manifests/<ISO3>.yaml` —las
+          tres fuentes `s3://` van al mismo— y relanzar este workflow con el ISO3
+          del pais.
+
+          Mientras tanto **el activo publicado sigue sirviendo**: los reportes se
+          calculan contra el Release, no contra las fuentes. Lo que se pierde es
+          la capacidad de reconstruirlo.
+          TXT
+          )
+          CUERPO="$CUERPO
+
+          Corrida: $CORRIDA"
+
+          gh issue create --title "$TITULO" --label "activo,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"
+
+      # Y la otra mitad de la alarma: decir que ya paso.
+      - name: Cerrar la incidencia si el pais volvio
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: "No se pudo reconstruir el activo de ${{ matrix.iso3 }}"
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 200 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          [ -n "$ABIERTA" ] || exit 0
+          gh issue close "$ABIERTA" --comment "Reconstruido. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

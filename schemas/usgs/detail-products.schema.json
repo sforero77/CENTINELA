@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://centinela.dev/schemas/usgs/detail-products.schema.json",
+  "title": "Contrato del feed detail de USGS (objeto products)",
+  "description": "El feed detail es la puerta unica a shakemap, ground-failure y losspager. Cada producto es una lista de versiones; CENTINELA elige por preferredWeight y updateTime. EL CONTRATO SE EXIGE PRODUCTO POR PRODUCTO, Y ANTES SE EXIGIA A TODOS. Hasta el 8-sep-2026 los requisitos colgaban de `additionalProperties`, o sea que se les pedia `properties.version` y `contents[*].url` a los doce productos que USGS publica —`general-text`, `impact-text`, `event-sequence`, `dyfi`...— cuando esta tuberia solo lee tres. El 7-sep USGS dejo de mandar `url` y `version` en el nivel superior de cada producto y el nocturno empezo a fallar por `impact-text`, que nadie abre. La tuberia no se entero, porque `ProductRef.from_dict` ya leia `properties.version` primero. Un contrato que se rompe por lo que no se usa gasta la señal que hara falta el dia que se rompa lo que si. Ahora cada uno de los tres pide lo que su lector necesita, y del resto solo se exige que sea una lista.",
+  "type": "object",
+  "required": [
+    "id",
+    "properties"
+  ],
+  "$defs": {
+    "contenidos": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "length": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "contentType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    },
+    "productoVersionado": {
+      "description": "shakemap y ground-failure. `properties.version` es lo que decide si un reporte publicado se quedo atras: si USGS deja de mandarla, el sistema deja de re-emitir sin que nada avise. Es la parte del contrato que mas cara sale perder en silencio.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "status",
+          "preferredWeight",
+          "updateTime",
+          "contents",
+          "properties"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "preferredWeight": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "updateTime": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "contents": {
+            "$ref": "#/$defs/contenidos"
+          },
+          "properties": {
+            "type": "object",
+            "required": [
+              "version"
+            ],
+            "properties": {
+              "version": {
+                "type": [
+                  "string",
+                  "integer"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "productoPager": {
+      "description": "losspager no trae `properties.version` —comprobado contra el feed vivo el 8-sep-2026— y no le hace falta: lo unico que CENTINELA le lee es `alertlevel`, y solo como referencia cruzada. Exigirle version era pedirle algo que nunca tuvo; se le pide `alertlevel`, que si se consume.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "status",
+          "preferredWeight",
+          "updateTime",
+          "contents",
+          "properties"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "preferredWeight": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "updateTime": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "contents": {
+            "$ref": "#/$defs/contenidos"
+          },
+          "properties": {
+            "type": "object",
+            "required": [
+              "alertlevel"
+            ],
+            "properties": {
+              "alertlevel": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "properties": {
+      "type": "object",
+      "required": [
+        "products"
+      ],
+      "properties": {
+        "products": {
+          "type": "object",
+          "required": [
+            "shakemap"
+          ],
+          "minProperties": 1,
+          "description": "NO TENIA UN SOLO `required` DENTRO: seis payloads vacios pasaban el contrato, `{\"products\": {}}` incluido. Un esquema que acepta la ausencia de todo no es un contrato, es una descripcion — y esta frase llevaba desde entonces siendo falsa: el `required` se puso dentro de `items`, que no corre si la lista esta vacia, asi que `{\"products\": {}}` y `{\"shakemap\": []}` seguian pasando. Comprobado contra el esquema anterior el 8-sep-2026. Ahora se exige `shakemap` presente y con al menos una version. Los tres que se consumen van nombrados; del resto solo se exige que sea una lista, porque nadie los abre y su forma no es asunto de esta tuberia.",
+          "properties": {
+            "shakemap": {
+              "$ref": "#/$defs/productoVersionado"
+            },
+            "ground-failure": {
+              "$ref": "#/$defs/productoVersionado"
+            },
+            "losspager": {
+              "$ref": "#/$defs/productoPager"
+            }
+          },
+          "additionalProperties": {
+            "type": "array"
+          }
+        }
+      }
+    }
+  }
+}
