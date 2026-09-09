@@ -1,0 +1,155 @@
+name: Fase 2 · Contraste con evaluacion de dano externa
+
+# Exposicion no es dano. Este workflow compara lo que CENTINELA publica con lo
+# que otro midio del mismo sismo, sobre las mismas celdas H3.
+#
+# No corre solo: se dispara a mano con el evento y el dataset, porque para cada
+# sismo hay que saber quien publico que y con que licencia. Automatizar el
+# descubrimiento seria automatizar una decision de atribucion.
+
+on:
+  workflow_dispatch:
+    inputs:
+      usgs_id:
+        description: "Identificador USGS del evento"
+        required: true
+        type: string
+      fuente:
+        description: "URL del vector de dano (https://... ; se lee por rangos)"
+        required: true
+        type: string
+      crs:
+        description: "EPSG del vector de dano (p. ej. EPSG:32619)"
+        required: true
+        type: string
+      etiqueta:
+        description: "Quien publica la evaluacion, para la atribucion"
+        required: true
+        type: string
+      columna:
+        description: "Columna binaria de dano"
+        required: false
+        default: "damaged"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  contrastar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # LAS CUATRO ENTRADAS DE TEXTO LIBRE, VIA ENV Y NUNCA INTERPOLADAS.
+    #
+    # `${{ inputs.x }}` dentro de un `run:` se sustituye **antes** de que bash
+    # vea el script: el valor deja de ser un argumento y pasa a ser codigo. Aqui
+    # se interpolaban cuatro —`fuente`, `etiqueta`, `crs` y `columna`— asi que
+    # cualquiera con permiso para lanzar el workflow ejecutaba lo que quisiera en
+    # el runner. `usgs_id` ya iba por env desde el principio; las otras cuatro no.
+    #
+    # Con `env:` el valor viaja como variable y bash lo trata como dato. Citado,
+    # ademas, para que un espacio no lo parta en dos argumentos.
+    env:
+      USGS_ID: ${{ inputs.usgs_id }}
+      FUENTE: ${{ inputs.fuente }}
+      ETIQUETA: ${{ inputs.etiqueta }}
+      CRS: ${{ inputs.crs }}
+      COLUMNA: ${{ inputs.columna }}
+      DETAIL_URL: >-
+        https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=${{
+        inputs.usgs_id }}&format=geojson
+    steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Y va con el otro cierre del mismo hueco: **todas las acciones estan
+      # fijadas por SHA** desde el 6-sep-2026, con la version en el comentario
+      # de al lado. Una etiqueta de git se puede reapuntar a cualquier commit
+      # —el precedente es tj-actions/changed-files, CVE-2025-30066— y
+      # `astral-sh/setup-uv` ademas no es de GitHub. Lo vigila
+      # `tests/unit/test_las_acciones_van_fijadas.py`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo + geo
+        run: uv sync --python 3.12 --extra geo
+
+      # Mismo enrutado por epicentro que P2: el activo es por pais y el sismo
+      # dice cual. Duplicar el ISO3 a mano seria duplicar una fuente de error.
+      - name: Descargar activo del pais del evento
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p data/build
+          PAISES=$(uv run centinela paises-candidatos "$USGS_ID" --detail-url "$DETAIL_URL")
+          echo "candidatos por epicentro: $PAISES"
+          for ISO3 in $PAISES; do
+            PREFIJO="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-"
+            TAG=$(gh release list --limit 100 --json tagName \
+                   --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
+                         | sort_by(.tagName) | last | .tagName")
+            if [ -n "$TAG" ] && [ "$TAG" != "null" ]; then
+              gh release download "$TAG" --dir data/build --clobber
+              echo "usando $TAG para $ISO3"
+              exit 0
+            fi
+          done
+          echo "::error::Sin activo publicado para el pais de $USGS_ID"
+          exit 1
+
+      # Se baja en vez de leerlo por rangos. `/vsicurl/` funciona contra un
+      # fichero servido directo, pero HDX redirige a una URL de S3 firmada y
+      # GDAL no siempre la sigue: "Could not open GDAL dataset". En CI el ancho
+      # de banda es gratis, asi que se baja y se acaba la clase de problema.
+      # Para explorar en local, el comando sigue aceptando la URL.
+      - name: Descargar la evaluacion de dano
+        run: |
+          # Solo https, y comprobado aqui: `curl` acepta `file://`, `scp://` y
+          # una docena mas de esquemas, y esta entrada la escribe una persona.
+          case "$FUENTE" in
+            https://*) ;;
+            *) echo "::error::La fuente tiene que ser una URL https://"; exit 1 ;;
+          esac
+          curl -fsSL "$FUENTE" -o dano.gpkg
+          ls -lh dano.gpkg
+
+      - name: Contrastar
+        id: contraste
+        run: |
+          set +e
+          uv run centinela contraste dano.gpkg \
+            --exposure data/build/exposure_h3.parquet \
+            --etiqueta "$ETIQUETA" \
+            --crs "$CRS" \
+            --columna "$COLUMNA" | tee contraste.json
+          CODIGO=${PIPESTATUS[0]}
+          # `| tee` devuelve el codigo de tee y no el del comando: la primera
+          # corrida salio "success" con un traceback dentro. De ahi PIPESTATUS.
+          #
+          # Y el 2 no es un fallo: es "hay celdas evaluadas que el activo no
+          # cubre", que es un hallazgo. Distinguirlo importa porque la version
+          # anterior avisaba de un hueco de cobertura cada vez que fallaba
+          # cualquier cosa — incluido no poder abrir el fichero, que es justo lo
+          # que estaba pasando.
+          if [ "$CODIGO" = "2" ]; then
+            echo "::warning::Hay celdas evaluadas que el activo no cubre. Ver contraste.json"
+            exit 0
+          fi
+          exit "$CODIGO"
+
+
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        if: always()
+        with:
+          name: contraste-${{ inputs.usgs_id }}
+          path: contraste.json

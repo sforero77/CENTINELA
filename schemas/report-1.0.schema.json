@@ -1,0 +1,407 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://centinela.dev/schemas/report-1.0.schema.json",
+  "title": "CENTINELA — reporte de exposicion sismica v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "event",
+    "inputs",
+    "totales",
+    "disclaimers",
+    "generado_utc",
+    "pipeline_version",
+    "licencia"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "centinela/report/1.0"
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "usgs_id",
+        "mag",
+        "depth_km",
+        "utc",
+        "lugar"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "usgs_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mag": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "depth_km": {
+          "type": "number",
+          "minimum": 0
+        },
+        "utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lugar": {
+          "type": "string"
+        },
+        "pager_alert": {
+          "type": "string",
+          "enum": [
+            "",
+            "green",
+            "yellow",
+            "orange",
+            "red"
+          ]
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180,
+          "description": "Longitud del epicentro. Anadida despues de publicar el primer reporte: el dato estaba en el event_state y no llegaba al artefacto publico, asi que nadie podia situar el sismo sin volver a USGS. Opcional para que los reportes ya publicados sigan validando."
+        },
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "description": "Latitud del epicentro. Ver la nota de 'lon'."
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "required": [
+        "shakemap_version",
+        "groundfailure_version",
+        "exposure_manifest"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "shakemap_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "groundfailure_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exposure_manifest": {
+          "type": "string"
+        },
+        "modelo_deslizamiento": {
+          "type": "string",
+          "description": "Fichero del modelo de deslizamiento que se consumio. Vacio en los reportes emitidos antes de que se registrara: el fichero se guardaba con el nombre del modelo preferido aunque viniera de una alternativa historica, asi que para esos no se puede saber cual fue."
+        },
+        "modelo_licuefaccion": {
+          "type": "string",
+          "description": "Fichero del modelo de licuefaccion que se consumio."
+        }
+      }
+    },
+    "preliminar": {
+      "type": "boolean"
+    },
+    "backtest": {
+      "type": "boolean"
+    },
+    "totales": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pop_mmi6p",
+        "pop_mmi7p",
+        "pop_mmi8p",
+        "pop_65p_mmi7p",
+        "pop_65p_mmi6p",
+        "bld_mmi6p",
+        "built_m2_mmi6p",
+        "health_mmi6p",
+        "edu_mmi6p",
+        "road_km_mmi6p",
+        "road_km_principal_mmi6p",
+        "bld_mmi7p",
+        "built_m2_mmi7p",
+        "health_mmi7p",
+        "edu_mmi7p",
+        "road_km_mmi7p",
+        "road_km_principal_mmi7p",
+        "pop_ls_alta",
+        "pop_lq_alta"
+      ],
+      "properties": {
+        "pop_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_mmi8p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_65p_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_65p_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bld_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "built_m2_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "health_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "edu_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "road_km_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "road_km_principal_mmi6p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bld_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "built_m2_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "health_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "edu_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "road_km_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "road_km_principal_mmi7p": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_ls_alta": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pop_lq_alta": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "top_municipios": {
+      "type": "array",
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "required": [
+          "adm2_id",
+          "nombre",
+          "mmi_max",
+          "pop_mmi7p"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "adm2_id": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "mmi_max": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 12,
+            "description": "COTA INFERIOR, no un maximo. Lleva el valor de la isolinea que contiene el CENTRO de la celda r8, asi que una celda cuyo centro cae en la banda 7,0 puede tener una esquina en la de 7,5 y aqui sale 7,0. Nunca sobreestima. El nombre y la etiqueta HXL se conservan porque son contrato publicado."
+          },
+          "pop_mmi7p": {
+            "type": "number",
+            "minimum": 0
+          },
+          "pop_banda": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Poblacion en la banda por la que este reporte ordena (totales.banda_titular). Igual a pop_mmi7p cuando el evento alcanza MMI>=7."
+          }
+        }
+      }
+    },
+    "incertidumbre": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pop_discrepancia_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Desacuerdo entre GHS-POP y WorldPop dentro de las bandas publicadas. null = no se pudo medir; no es cero."
+        },
+        "notas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "descargas": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "geoparquet": {
+          "type": "string"
+        },
+        "pmtiles": {
+          "type": "string"
+        },
+        "csv_adm2": {
+          "type": "string"
+        },
+        "mapa_png": {
+          "type": "string"
+        }
+      }
+    },
+    "changelog": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "disclaimers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "generado_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pipeline_version": {
+      "type": "string"
+    },
+    "radios": {
+      "type": "array",
+      "description": "Poblacion por radio del epicentro. Solo en reportes preliminares (RF-03), donde sustituye a 'totales': sin ShakeMap las cifras por intensidad valen cero y publicarlas seria una respuesta falsa y creible.",
+      "items": {
+        "type": "object",
+        "required": [
+          "radio_km",
+          "pop"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "radio_km": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pop": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "ground_failure_usgs": {
+      "type": "object",
+      "description": "Alertas del producto Ground Failure del propio USGS, como referencia cruzada. No son cifras de CENTINELA: USGS pondera la poblacion de cada celda por el valor de esa celda, y CENTINELA cuenta la poblacion entera de toda celda por encima del umbral. Opcional: los reportes emitidos antes del 1-sep-2026 no lo traen.",
+      "properties": {
+        "ls_alerta_usgs": {
+          "type": "string"
+        },
+        "ls_pop_usgs": {
+          "type": "string"
+        },
+        "lq_alerta_usgs": {
+          "type": "string"
+        },
+        "lq_pop_usgs": {
+          "type": "string"
+        }
+      }
+    },
+    "licencia": {
+      "type": "object",
+      "description": "Bajo que licencia se publica este reporte y a quien hay que citar. Se calcula con resolve_bucket sobre las fuentes del manifest del pais: los diecinueve resuelven a ODbL, y la ODbL 4.3 exige que el aviso viaje con la obra producida, no en una pagina del repositorio.",
+      "required": [
+        "cubo",
+        "spdx",
+        "texto",
+        "atribuciones"
+      ],
+      "properties": {
+        "cubo": {
+          "type": "string",
+          "enum": [
+            "core",
+            "odbl",
+            "nc"
+          ]
+        },
+        "spdx": {
+          "type": "string",
+          "minLength": 1
+        },
+        "texto": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifiesto_url": {
+          "type": "string"
+        },
+        "atribuciones": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "titulo",
+              "licencia",
+              "url"
+            ],
+            "properties": {
+              "titulo": {
+                "type": "string",
+                "minLength": 1
+              },
+              "licencia": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

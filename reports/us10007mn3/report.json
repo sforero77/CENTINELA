@@ -1,0 +1,156 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us10007mn3",
+    "mag": 7.6,
+    "depth_km": 38.0,
+    "utc": "2016-12-25T14:22:27Z",
+    "lugar": "41 km al SO de Quellón, Chile",
+    "pager_alert": "yellow",
+    "lon": -73.9413,
+    "lat": -43.4064
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 0,
+    "exposure_manifest": "chl-v0.3",
+    "modelo_deslizamiento": "",
+    "modelo_licuefaccion": ""
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 198283.5895812628,
+    "pop_mmi7p": 56588.415672381874,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 5764.66267709663,
+    "pop_65p_mmi6p": 26813.64375945107,
+    "bld_mmi6p": 178654.0,
+    "built_m2_mmi6p": 17868286.0,
+    "health_mmi6p": 78.0,
+    "edu_mmi6p": 211.0,
+    "road_km_mmi6p": 5784.012185474994,
+    "road_km_principal_mmi6p": 345.0569050497044,
+    "bld_mmi7p": 45176.0,
+    "built_m2_mmi7p": 4202947.0,
+    "health_mmi7p": 23.0,
+    "edu_mmi7p": 50.0,
+    "road_km_mmi7p": 1856.3230543738712,
+    "road_km_principal_mmi7p": 108.39491896922846,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "CL102",
+      "nombre": "Chiloe",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 54311.665505310055,
+      "pop_banda": 54311.665505310055
+    },
+    {
+      "adm2_id": "CL112",
+      "nombre": "Aysén",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 2276.7501670718193,
+      "pop_banda": 2276.7501670718193
+    },
+    {
+      "adm2_id": "CL104",
+      "nombre": "Palena",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CL101",
+      "nombre": "Llanquihue",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "CL111",
+      "nombre": "Coyhaique",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 36.2,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "",
+    "ls_pop_usgs": "",
+    "lq_alerta_usgs": "",
+    "lq_pop_usgs": ""
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [
+    "Población de 65 años o más en MMI≥7: 4.200 → 5.800"
+  ],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-07T16:51:55Z",
+  "pipeline_version": "0.1.0"
+}

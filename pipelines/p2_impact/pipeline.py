@@ -1,0 +1,910 @@
+"""Ejecucion del computo de impacto: de los productos USGS al reporte.
+
+Este modulo es el que encadena. Todas las piezas —polyfill de contornos,
+muestreo de Ground Failure, join contra el activo, emision del reporte— viven
+en sus propios modulos y estan probadas por separado; aqui se llaman en orden y
+se persiste el resultado.
+
+Es la diferencia entre "las piezas funcionan" y "el sistema funciona", que es
+literalmente la puerta de salida de Fase 0: *un reporte real publicado
+end-to-end sin intervencion*.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from ..common.atribucion import (
+    REPORTE,
+    TEXTO_DEL_DERIVADO,
+    URL_DEL_MANIFIESTO,
+    atribuciones_de,
+    cubo_de,
+    fuentes_del_pais,
+    iso3_de_manifest_id,
+    para_superficie,
+    spdx_del_derivado,
+)
+from ..common.constants import (
+    GROUND_FAILURE_HIGH_PROB,
+    MMI_BAND_AGE_BREAKDOWN,
+    PRELIMINARY_RADII_KM,
+    TOP_ADM2_COUNT,
+)
+from ..common.formatting import titulo_es
+from ..common.geo import haversine_km
+from ..common.http import Fetcher
+from ..common.logging import get_logger
+from ..common.state import EventState
+from ..p3_report.model import (
+    Atribuido,
+    Descargas,
+    Evento,
+    GroundFailureUSGS,
+    Incertidumbre,
+    Inputs,
+    Licencia,
+    MunicipioTop,
+    PoblacionEnRadio,
+    Report,
+    Totales,
+)
+from .exposure_join import register_cells
+from .ground_failure import (
+    LANDSLIDE_FALLBACKS,
+    LANDSLIDE_MODEL,
+    LIQUEFACTION_FALLBACKS,
+    LIQUEFACTION_MODEL,
+    sample_rasters,
+)
+from .products import ProductSet
+from .shakemap import contours_to_h3, parse_contours
+
+_log = get_logger(__name__)
+
+#: Banda MMI minima que se rellena. El reporte publica desde MMI 6; rellenar
+#: los niveles bajos multiplica las celdas sin cambiar una sola cifra.
+MMI_MIN_POLYFILL = 5.0
+
+
+class ExposureCountryMismatchError(ValueError):
+    """El activo descargado no es del pais donde ocurrio el sismo.
+
+    Se distingue del resto de errores porque **no es un fallo: es un descarte**.
+    P1 vigila toda la ventana LATAM y las cajas de los paises se solapan, asi
+    que `countries_for_point` devuelve varios candidatos y el llamador tiene que
+    probarlos en orden hasta que uno alcance celdas.
+
+    Que haga falta reintentar no es hipotetico. La caja de Chile mide 1.719
+    grados cuadrados por Rapa Nui y la de Argentina 671, asi que **un sismo en
+    Coquimbo se ordena como argentino antes que como chileno**. Sin reintento,
+    el evento se calcularia contra el activo de Argentina, el join quedaria
+    vacio y Chile —de los paises mas sismicos de la region— se quedaria sin
+    reporte cada vez.
+
+    Hereda de `ValueError` para no cambiar el comportamiento de quien ya
+    capturaba el error anterior.
+    """
+
+
+@dataclass(frozen=True, slots=True)
+class ImpactTotals:
+    """Cifras nacionales del evento, tal como salen del join."""
+
+    pop_mmi6p: float = 0.0
+    pop_mmi7p: float = 0.0
+    pop_mmi8p: float = 0.0
+    pop_65p_mmi7p: float = 0.0
+    # LA BANDA 6, PARA TODO Y NO SOLO PARA POBLACION. Ver
+    # `MMI_BANDS_INFRAESTRUCTURA` en `common/constants.py`: trece de veintitres
+    # reportes no alcanzan MMI>=7, y publicaban cero equipamiento con millones
+    # de personas en MMI>=6.
+    pop_65p_mmi6p: float = 0.0
+    bld_mmi6p: float = 0.0
+    built_m2_mmi6p: float = 0.0
+    health_mmi6p: float = 0.0
+    edu_mmi6p: float = 0.0
+    road_km_mmi6p: float = 0.0
+    road_km_principal_mmi6p: float = 0.0
+    bld_mmi7p: float = 0.0
+    built_m2_mmi7p: float = 0.0
+    health_mmi7p: float = 0.0
+    edu_mmi7p: float = 0.0
+    road_km_mmi7p: float = 0.0
+    #: Solo troncal, autopista, primaria y secundaria. Se publica aparte
+    #: porque no es lo mismo que quede cortada una troncal que una calle de
+    #: barrio, y porque es la cifra comparable con las estadisticas viales
+    #: oficiales. `road_km_mmi7p` sigue siendo el total de red rodada.
+    road_km_principal_mmi7p: float = 0.0
+    pop_ls_alta: float = 0.0
+    pop_lq_alta: float = 0.0
+    #: `None` cuando **no se pudo medir**, que no es lo mismo que cero.
+    #:
+    #: El SQL divide por `SUM(pop_alt_worldpop)` con `NULLIF(...,0)`: si ninguna
+    #: celda alcanzada tiene poblacion de WorldPop, el resultado es NULL. Con
+    #: `float(v or 0.0)` salia **0,0 %**, y "los dos productos coinciden
+    #: perfectamente" es lo contrario de "no habia con que compararlos". Tres
+    #: reportes publicados lo decian: us1000c2zy, us6000hf75 y usp000jd2q.
+    discrepancia_pct: float | None = None
+    #: Columnas que el activo no traia y `register_exposure_view` sustituyo por
+    #: cero. No sale del SQL: la pone el llamador.
+    #:
+    #: Existe porque el aviso se perdia. `register_exposure_view` devolvia la
+    #: lista y los tres llamadores de produccion descartaban el retorno; solo
+    #: una prueba lo miraba. El `report.json` publicaba `built_m2_mmi7p: 0.0`
+    #: sin distinguir "no medido" de "medido y da cero", y el CSV igual. El
+    #: markdown escondia la fila, que tapa el problema para quien lee y lo deja
+    #: intacto para quien integra — que es el consumidor al que mas dano hace.
+    #:
+    #: `kw_only` porque no es una cifra del evento sino un aviso sobre como se
+    #: midio, y no debe poder colarse en una construccion posicional.
+    columnas_ausentes: tuple[str, ...] = field(default=(), kw_only=True)
+
+    def to_totales(self) -> Totales:
+        return Totales(
+            pop_mmi6p=self.pop_mmi6p,
+            pop_mmi7p=self.pop_mmi7p,
+            pop_mmi8p=self.pop_mmi8p,
+            pop_65p_mmi7p=self.pop_65p_mmi7p,
+            pop_65p_mmi6p=self.pop_65p_mmi6p,
+            bld_mmi6p=self.bld_mmi6p,
+            built_m2_mmi6p=self.built_m2_mmi6p,
+            health_mmi6p=self.health_mmi6p,
+            edu_mmi6p=self.edu_mmi6p,
+            road_km_mmi6p=self.road_km_mmi6p,
+            road_km_principal_mmi6p=self.road_km_principal_mmi6p,
+            bld_mmi7p=self.bld_mmi7p,
+            built_m2_mmi7p=self.built_m2_mmi7p,
+            health_mmi7p=self.health_mmi7p,
+            edu_mmi7p=self.edu_mmi7p,
+            road_km_mmi7p=self.road_km_mmi7p,
+            road_km_principal_mmi7p=self.road_km_principal_mmi7p,
+            pop_ls_alta=self.pop_ls_alta,
+            pop_lq_alta=self.pop_lq_alta,
+        )
+
+
+# --- Descarga de los contenidos del producto -------------------------------
+
+
+def download_products(
+    products: ProductSet, workdir: Path, *, fetcher: Fetcher
+) -> tuple[Path | None, Path | None, Path | None]:
+    """Baja lo que el computo necesita: contornos y los dos rasters vigentes.
+
+    Returns:
+        ``(cont_mmi, deslizamiento, licuefaccion)``. Cualquiera puede ser
+        ``None``: un evento sin Ground Failure publicado es normal y el reporte
+        lo declara en vez de fallar (golden G3).
+    """
+    workdir.mkdir(parents=True, exist_ok=True)
+
+    contornos = None
+    url = products.cont_mmi_url()
+    if url:
+        contornos = workdir / "cont_mmi.json"
+        contornos.write_bytes(fetcher.get_bytes(url))
+
+    def bajar(nombre: str, alternativas: tuple[str, ...]) -> Path | None:
+        if products.ground_failure is None:
+            return None
+        # EL FICHERO SE GUARDA CON EL NOMBRE QUE SE RESOLVIO.
+        #
+        # Se guardaba con el del modelo **preferido** aunque la url viniera de
+        # las alternativas historicas —`nowicki_2014`, `godt_2008`,
+        # `zhu_2015`—, asi que un `jessee_2018_model.tif` en `workdir` podia ser
+        # cualquiera de los tres. A partir de ahi nada los distinguia: el mismo
+        # `GROUND_FAILURE_HIGH_PROB`, la misma etiqueta de unidad y un
+        # `report.json` que solo guarda el numero de version.
+        clave = products.ground_failure.content_key(nombre, *alternativas)
+        if not clave:
+            return None
+        destino = workdir / clave
+        destino.write_bytes(fetcher.get_bytes(products.ground_failure.contents[clave]))
+        return destino
+
+    deslizamiento = bajar(LANDSLIDE_MODEL, LANDSLIDE_FALLBACKS)
+    licuefaccion = bajar(LIQUEFACTION_MODEL, LIQUEFACTION_FALLBACKS)
+
+    _log.info(
+        "productos descargados",
+        extra={
+            "context": {
+                "usgs_id": products.usgs_id,
+                "contornos": contornos is not None,
+                "deslizamiento": deslizamiento is not None,
+                "licuefaccion": licuefaccion is not None,
+            }
+        },
+    )
+    return contornos, deslizamiento, licuefaccion
+
+
+# --- Compatibilidad con activos anteriores ---------------------------------
+
+#: Columnas que el activo gano despues de haberse publicado, con el valor que
+#: las sustituye si faltan. La clave del contrato: **un activo viejo tiene que
+#: seguir produciendo un reporte**.
+#:
+#: El caso real es `built_m2`, que llega en col-v0.5. El Release publicado en
+#: ese momento era col-v0.4 y no la tiene. Si P2 exigiera la columna, el primer
+#: sismo despues de actualizar el codigo y antes de republicar el activo se
+#: quedaria **sin reporte** — y no hay peor momento para eso. Con el sustituto,
+#: el reporte sale sin la fila de superficie construida, que es una ausencia
+#: honesta y no un cero: `_nota_superficie` y la tabla de totales omiten la
+#: cifra cuando vale 0 en vez de publicar "0 km² construidos".
+#: Columnas que un activo viejo puede no traer, con el valor que las sustituye.
+#:
+#: Los diecinueve activos publicados se construyeron antes de que existiera la
+#: capa de cobertura del suelo, y reconstruirlos cuesta horas de CI. Sin esto,
+#: P2 y P5 reventarian con "column not found" contra cualquier activo anterior
+#: a la Fase 1 — un fallo total por una columna que solo describe el terreno.
+#:
+#: El cero no miente aqui porque `register_exposure_view` devuelve la lista de
+#: sustituidas y deja aviso: quien lo lea sabe que es "no medido", no "medido y
+#: da cero". Es la misma distincion que sostiene toda la capa de observados.
+COLUMNAS_OPCIONALES: dict[str, str] = {
+    "built_m2": "0.0",
+    "lulc_arbolado_pct": "0.0",
+    "lulc_arbustos_pct": "0.0",
+    "lulc_pastizal_pct": "0.0",
+    "lulc_cultivo_pct": "0.0",
+    "lulc_construido_pct": "0.0",
+    "lulc_humedal_pct": "0.0",
+    "lulc_px": "0",
+}
+
+
+def manifiesto_del_activo(con: Any, declarado: str) -> str:
+    """El manifiesto que el activo **dice traer**, no el que le pasaron al CLI.
+
+    EL REPORTE DECLARABA UNA RECETA QUE PODIA NO HABER CONSUMIDO.
+
+    `impact.yml` lee `data/manifests/<ISO3>.yaml` del repositorio y se lo pasa a
+    P2 por `--manifest`; P2 lo escribia tal cual en `inputs.exposure_manifest`.
+    Pero el activo que se descarga es un Release, y el Release puede ser mas
+    viejo que el YAML: el reporte declaraba `col-v0.6` habiendose calculado
+    contra un activo `col-v0.5`, y nadie podia saberlo.
+
+    Eso rompe RNF-04 por donde mas duele —la trazabilidad de un reporte a sus
+    insumos— y ademas dejaba ciego a `rezago.py`: comparaba el manifiesto del
+    reporte contra `data/manifests/`, que es de donde habia salido, asi que
+    comparaba el repositorio consigo mismo.
+
+    El parquet trae `src_manifest`, escrito por P0 al construirlo. Esa es la
+    fuente. El declarado solo se usa si el activo no lo trae —los anteriores a
+    Fase 1— y entonces se avisa.
+    """
+    try:
+        filas = con.execute("SELECT DISTINCT src_manifest FROM exposure").fetchall()
+    except Exception:  # activo sin la columna
+        _log.warning(
+            "el activo no declara src_manifest; se usa el manifiesto del CLI",
+            extra={"context": {"declarado": declarado}},
+        )
+        return declarado
+
+    valores = sorted({str(f[0]) for f in filas if f[0]})
+    if not valores:
+        return declarado
+    if len(valores) > 1:
+        # Un join contra dos activos de recetas distintas no es un reporte: es
+        # dos reportes sumados. Se nombra en vez de elegir uno.
+        raise ValueError(
+            f"El activo mezcla manifiestos distintos: {valores}. "
+            "Un reporte no puede declarar dos recetas."
+        )
+    if declarado and declarado != valores[0]:
+        _log.warning(
+            "el manifiesto declarado no es el del activo; manda el del activo",
+            extra={"context": {"declarado": declarado, "activo": valores[0]}},
+        )
+    return valores[0]
+
+
+def register_exposure_view(con: Any, exposure_glob: str) -> list[str]:
+    """Publica la vista ``exposure``, rellenando las columnas que falten.
+
+    Returns:
+        Las columnas que hubo que sustituir. Vacio con un activo al dia.
+    """
+    con.execute(
+        f"CREATE OR REPLACE VIEW _exposure_cruda AS SELECT * FROM read_parquet('{exposure_glob}')"
+    )
+    presentes = {
+        str(f[0]).lower() for f in con.execute("DESCRIBE SELECT * FROM _exposure_cruda").fetchall()
+    }
+    faltan = {c: v for c, v in COLUMNAS_OPCIONALES.items() if c.lower() not in presentes}
+    extra = "".join(f", {valor} AS {col}" for col, valor in faltan.items())
+    con.execute(f"CREATE OR REPLACE VIEW exposure AS SELECT *{extra} FROM _exposure_cruda")
+
+    if faltan:
+        _log.warning(
+            "el activo no trae columnas que el reporte sabe publicar; se omitiran",
+            extra={
+                "context": {
+                    "columnas_ausentes": sorted(faltan),
+                    "activo": exposure_glob,
+                    "accion": "reconstruir y republicar el activo para incluirlas",
+                }
+            },
+        )
+    return sorted(faltan)
+
+
+# --- SQL del computo -------------------------------------------------------
+
+SQL_IMPACT_H3 = """
+CREATE OR REPLACE TABLE impact_h3 AS
+SELECT
+    ? AS usgs_id, ? AS shakemap_version,
+    e.*, m.mmi_mean, m.mmi_max,
+    COALESCE(g.ls_prob, 0.0) AS ls_prob,
+    COALESCE(g.lq_prob, 0.0) AS lq_prob
+FROM exposure AS e
+JOIN mmi_cells AS m USING (h3_08)
+LEFT JOIN gf_cells AS g USING (h3_08)
+"""
+
+#: Agregado municipal. **Toda** columna lleva su propio corte de MMI, incluidas
+#: las dos de Ground Failure: `impact_h3` arranca en MMI 5,0 y sin ese corte las
+#: celdas de 5-5,5 entraban solo en la exposicion a deslizamiento y licuefaccion,
+#: que es exactamente el conjunto que `SQL_TOTALES` no cuenta. La suma del CSV
+#: daba mas que la cifra nacional del mismo evento, las dos positivas y del orden
+#: correcto, asi que ninguna prueba lo veia. El corte va en los dos sitios y en
+#: el nombre de la columna.
+SQL_IMPACT_ADM2 = """
+CREATE OR REPLACE TABLE impact_adm2 AS
+SELECT
+    usgs_id, shakemap_version, adm2_id,
+    MAX(mmi_max) AS mmi_max,
+    SUM(CASE WHEN mmi_max >= 6 THEN pop_total ELSE 0 END) AS pop_mmi6p,
+    SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END) AS pop_mmi7p,
+    SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END) AS pop_mmi8p,
+    SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END) AS pop_65p_mmi7p,
+    SUM(CASE WHEN mmi_max >= 6 THEN pop_65p ELSE 0 END) AS pop_65p_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN bld_count ELSE 0 END) AS bld_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN built_m2 ELSE 0 END) AS built_m2_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN health_count ELSE 0 END) AS health_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN edu_count ELSE 0 END) AS edu_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6
+             THEN road_km_primary + road_km_secondary + road_km_other
+             ELSE 0 END) AS road_km_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6
+             THEN road_km_primary + road_km_secondary
+             ELSE 0 END) AS road_km_principal_mmi6p,
+    SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END) AS bld_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END) AS built_m2_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END) AS health_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END) AS edu_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7
+             THEN road_km_primary + road_km_secondary + road_km_other
+             ELSE 0 END) AS road_km_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7
+             THEN road_km_primary + road_km_secondary
+             ELSE 0 END) AS road_km_principal_mmi7p,
+    SUM(CASE WHEN mmi_max >= 6 AND ls_prob >= {gf}
+             THEN pop_total ELSE 0 END) AS ls_pop_expuesta_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 AND lq_prob >= {gf}
+             THEN pop_total ELSE 0 END) AS lq_pop_expuesta_mmi6p,
+    NULLIF(STRING_AGG(DISTINCT flags_calidad, ','), '') AS flags_calidad
+FROM impact_h3
+GROUP BY ALL
+ORDER BY pop_mmi7p DESC
+"""
+
+#: Cifras nacionales del evento. **Cada expresion lleva el nombre del campo de
+#: :class:`ImpactTotals` al que va**, y el dataclass se construye por ese nombre.
+#:
+#: Se rellenaba por posicion, con veinte sumas sin alias volcadas en orden sobre
+#: el constructor. Comprobado: intercambiar las dos lineas de salud y educacion
+#: dejaba la suite entera en verde y publicaba "1.003 sedes de salud" donde hay
+#: 516. Es un fallo que no se puede ver leyendo ninguno de los dos ficheros por
+#: separado, porque los dos son correctos; lo que estaba mal era la costura.
+SQL_TOTALES = """
+SELECT
+    SUM(CASE WHEN mmi_max >= 6 THEN pop_total ELSE 0 END)      AS pop_mmi6p,
+    SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END)      AS pop_mmi7p,
+    SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END)      AS pop_mmi8p,
+    SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END)   AS pop_65p_mmi7p,
+    SUM(CASE WHEN mmi_max >= 6 THEN pop_65p ELSE 0 END)        AS pop_65p_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN bld_count ELSE 0 END)      AS bld_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN built_m2 ELSE 0 END)       AS built_m2_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN health_count ELSE 0 END)   AS health_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6 THEN edu_count ELSE 0 END)      AS edu_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6
+             THEN road_km_primary + road_km_secondary + road_km_other
+             ELSE 0 END)                                       AS road_km_mmi6p,
+    SUM(CASE WHEN mmi_max >= 6
+             THEN road_km_primary + road_km_secondary
+             ELSE 0 END)                                       AS road_km_principal_mmi6p,
+    SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END)      AS bld_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END)       AS built_m2_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END)   AS health_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END)      AS edu_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7
+             THEN road_km_primary + road_km_secondary + road_km_other
+             ELSE 0 END)                                       AS road_km_mmi7p,
+    SUM(CASE WHEN mmi_max >= 7
+             THEN road_km_primary + road_km_secondary
+             ELSE 0 END)                                       AS road_km_principal_mmi7p,
+    SUM(CASE WHEN mmi_max >= 6 AND ls_prob >= {gf} THEN pop_total ELSE 0 END)
+                                                               AS pop_ls_alta,
+    SUM(CASE WHEN mmi_max >= 6 AND lq_prob >= {gf} THEN pop_total ELSE 0 END)
+                                                               AS pop_lq_alta,
+    100 * abs(SUM(pop_total) - SUM(pop_alt_worldpop))
+        / NULLIF(SUM(pop_alt_worldpop), 0)                     AS discrepancia_pct
+FROM impact_h3
+WHERE mmi_max >= 6
+"""
+
+
+def leer_totales(con: Any, *, columnas_ausentes: tuple[str, ...] = ()) -> ImpactTotals:
+    """Ejecuta :data:`SQL_TOTALES` y arma :class:`ImpactTotals` **por nombre**.
+
+    Los nombres salen del cursor, no de una lista paralela: si el SQL renombra o
+    pierde una columna, esto revienta con un `TypeError` que la nombra, en vez
+    de correr los valores una posicion y publicar las sedes de salud como
+    educativas.
+    """
+    cursor = con.execute(
+        SQL_TOTALES.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB)
+    )
+    nombres = [descripcion[0] for descripcion in cursor.description]
+    crudos = dict(zip(nombres, cursor.fetchone(), strict=True))
+
+    # La discrepancia sale aparte: es la unica columna donde NULL significa "no
+    # se pudo medir" y no "cero". Ver `ImpactTotals.discrepancia_pct`.
+    discrepancia = crudos.pop("discrepancia_pct")
+    return ImpactTotals(
+        **{nombre: float(valor or 0.0) for nombre, valor in crudos.items()},
+        discrepancia_pct=None if discrepancia is None else float(discrepancia),
+        columnas_ausentes=columnas_ausentes,
+    )
+
+
+def _toda_por_debajo_del_relleno(contornos: Sequence[Any]) -> bool:
+    """El ShakeMap dibuja intensidad, pero toda por debajo de lo que se rellena.
+
+    Distingue el ShakeMap **roto** del ShakeMap **debil**, que hasta hoy
+    compartian excepcion y mensaje. Con contornos validos cuya isolinea mas alta
+    no llega a `MMI_MIN_POLYFILL` no hay nada que rellenar y tampoco hay nada
+    que reparar: es el resultado.
+
+    Un fichero sin un solo contorno **no** entra aqui. Eso si es entrada rota
+    —o un producto que llego a medias— y tiene que seguir elevando: publicar
+    ceros ahi seria afirmar que no hubo sacudida cuando lo que no hubo es dato.
+    """
+    valores = [float(c.value) for c in contornos]
+    return bool(valores) and max(valores) < MMI_MIN_POLYFILL
+
+
+def compute_impact(
+    con: Any,
+    products: ProductSet,
+    *,
+    exposure_glob: str,
+    contornos: Path,
+    deslizamiento: Path | None,
+    licuefaccion: Path | None,
+    aunque_no_alcance: bool = False,
+) -> ImpactTotals:
+    """Corre el computo completo y deja ``impact_h3`` e ``impact_adm2``."""
+    import json
+
+    leidos = parse_contours(json.loads(contornos.read_text(encoding="utf-8")))
+    celdas_mmi = contours_to_h3(leidos, min_value=MMI_MIN_POLYFILL)
+
+    # CERO CELDAS AQUI TAMBIEN SIGNIFICA DOS COSAS, Y ESTE MENSAJE DECIA LA QUE
+    # NO ERA.
+    #
+    # "Contornos vacios o degenerados" es un fallo de entrada, y con el se
+    # aborta el evento entero: el workflow solo reintenta con el siguiente pais
+    # ante el codigo 3, y esto sale con 1.
+    #
+    # Pero un ShakeMap cuya isolinea mas alta esta **por debajo** de
+    # `MMI_MIN_POLYFILL` no tiene nada de degenerado: sus contornos son
+    # perfectamente validos y describen una sacudida real, mas debil que la
+    # banda mas baja que este sistema rellena. Es el mismo resultado legitimo
+    # que `aunque_no_alcance` ya sabe publicar, una puerta antes.
+    #
+    # Se descubrio el 4-sep-2026 despachando los cuatro backtests encolados
+    # desde el 25-ago. Dos publicaron —sus contornos llegan a MMI 5— y dos
+    # murieron aqui: `us1000jg5z` (Tarata, Bolivia) solo dibuja MMI 3,0 y
+    # `us7000kg9g` (Loncopue, Argentina) llega a 4,0. Llevaban diez dias sin
+    # reporte y el unico rastro era un traceback que culpaba al ShakeMap de
+    # estar roto.
+    #
+    # Dejandolo pasar, la malla queda vacia, `impact_h3` tambien, y el evento
+    # cae en la rama de "no alcanza poblacion" de mas abajo — que eleva el error
+    # que el workflow SI sabe leer. La decision de publicar en ceros sigue
+    # siendo del llamador, como debe.
+    if not celdas_mmi and not _toda_por_debajo_del_relleno(leidos):
+        raise ValueError(
+            f"El ShakeMap de {products.usgs_id} no produjo ninguna celda: "
+            f"contornos vacios o degenerados."
+        )
+    celdas_gf = sample_rasters(deslizamiento, licuefaccion, list(celdas_mmi))
+
+    from .exposure_join import JoinInputs
+
+    register_cells(
+        con,
+        JoinInputs(
+            usgs_id=products.usgs_id,
+            shakemap_version=products.shakemap_version,
+            exposure_glob=exposure_glob,
+            mmi_cells=celdas_mmi,
+            gf_cells=celdas_gf,
+        ),
+    )
+    ausentes = register_exposure_view(con, exposure_glob)
+    con.execute(SQL_IMPACT_H3, [products.usgs_id, products.shakemap_version])
+
+    # CERO CELDAS SIGNIFICA DOS COSAS MUY DISTINTAS.
+    #
+    # **Pais equivocado**: el join no encuentra una sola celda porque el activo
+    # es de otro pais. `SQL_TOTALES` devuelve NULL en cada columna, se
+    # convierten en ceros y se publicaria un reporte diciendo que no hay nadie
+    # expuesto, durante un terremoto real, en el visor publico. Ahi hay que
+    # reintentar con el siguiente candidato, y por eso esto eleva.
+    #
+    # **Pais correcto y la sacudida no llego a poblacion**: un M5,6 a 71 km mar
+    # adentro cuyo contorno MMI≥5 se queda sobre el agua. Eso **no es un
+    # fallo**: es el resultado, y uno que hay que publicar — porque el ShakeMap
+    # se revisa y la version siguiente puede alcanzar tierra, y solo se seguira
+    # mirando si el evento esta en el catalogo. Descartarlo es dejar de mirar.
+    #
+    # Desde fuera no se distinguen; quien sabe cual es cual es el llamador, que
+    # es el que ha agotado los candidatos. Por eso lo decide `aunque_no_alcance`
+    # y no una heuristica de aqui dentro.
+    alcanzadas: int = con.execute("SELECT count(*) FROM impact_h3").fetchone()[0]
+    if alcanzadas == 0 and not aunque_no_alcance:
+        raise ExposureCountryMismatchError(
+            f"El ShakeMap de {products.usgs_id} no toca ninguna celda del activo "
+            f"({exposure_glob}). Significa que el sismo cayo en un pais distinto al "
+            f"del activo descargado. Un reporte calculado asi saldria con ceros en "
+            f"todas las cifras, que es peor que no publicarlo: hay que reintentar "
+            f"con el activo del siguiente pais candidato."
+        )
+    _log.info(
+        "celdas alcanzadas por el ShakeMap",
+        extra={"context": {"usgs_id": products.usgs_id, "celdas": alcanzadas}},
+    )
+
+    con.execute(SQL_IMPACT_ADM2.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB))
+
+    totales = leer_totales(con, columnas_ausentes=tuple(ausentes))
+    _log.info(
+        "impacto calculado",
+        extra={
+            "context": {
+                "usgs_id": products.usgs_id,
+                "celdas_mmi": len(celdas_mmi),
+                "pop_mmi7p": totales.pop_mmi7p,
+            }
+        },
+    )
+    return totales
+
+
+# --- Reporte preliminar sin ShakeMap (RF-03) -------------------------------
+
+
+def poblacion_por_radio(con: Any, state: EventState) -> dict[int, float]:
+    """Poblacion dentro de cada radio del epicentro. Sin juicio, solo distancia.
+
+    Asume la vista ``exposure`` ya registrada. Se saca aparte porque la usan los
+    dos caminos: el preliminar la publica **en lugar** de la tabla por
+    intensidad, y el reporte completo la publica **ademas** cuando ninguna banda
+    alcanzo poblacion. Ver `build_report`.
+    """
+    filas = con.execute(
+        "SELECT h3_cell_to_lat(h3_08), h3_cell_to_lng(h3_08), pop_total FROM exposure"
+    ).fetchall()
+
+    por_radio = dict.fromkeys(PRELIMINARY_RADII_KM, 0.0)
+    for lat, lon, pop in filas:
+        d = haversine_km(state.lon, state.lat, float(lon), float(lat))
+        for radio in PRELIMINARY_RADII_KM:
+            if d <= radio:
+                por_radio[radio] += float(pop or 0.0)
+    return por_radio
+
+
+def compute_preliminary(
+    con: Any,
+    state: EventState,
+    *,
+    exposure_glob: str,
+    aunque_no_alcance: bool = False,
+) -> dict[int, float]:
+    """Poblacion dentro de radios alrededor del epicentro.
+
+    Cuando USGS aun no ha publicado ShakeMap, el corte por radios es lo unico
+    honesto que se puede decir: no hay modelo de intensidad, solo distancia. El
+    reporte lo declara asi y se re-emite solo en cuanto aparezca el ShakeMap.
+    """
+    register_exposure_view(con, exposure_glob)
+    por_radio = poblacion_por_radio(con, state)
+
+    # EL PRELIMINAR TAMBIEN PUEDE CAER SOBRE EL ACTIVO EQUIVOCADO, Y NO MIRABA.
+    #
+    # El camino completo lo comprueba treinta lineas mas arriba y este no lo
+    # hacia. Con el activo de otro pais ninguna celda entra en el radio mayor y
+    # la funcion devolvia {25: 0, 50: 0, 100: 0}: `run_impact` salia con exito,
+    # `impact.yml` daba el evento por resuelto en el primer candidato y no
+    # probaba los demas. Publicar "0 personas a 100 km" en la primera hora de un
+    # sismo real es la cifra falsa y creible que este sistema no se permite en
+    # ningun otro sitio, y ademas se queda: el bucle reintenta siempre el mismo.
+    #
+    # LO QUE ESTE CRITERIO NO SEPARA, Y HAY QUE SABERLO. "Cero dentro de 100 km"
+    # tambien es la respuesta verdadera de un sismo mar adentro con el activo
+    # correcto. Los dos casos se tratan igual —no se publica y se prueba el
+    # siguiente pais— porque el resultado util es el mismo: sin ShakeMap y sin
+    # nadie cerca, un preliminar no informa. Si se agotan los candidatos,
+    # `impact.yml` abre error; para un evento oceanico eso es ruido, y la
+    # decision de suavizarlo es de operacion, no de calculo.
+    # LA VENTANA PRELIMINAR ES LA QUE MAS IMPORTA, Y AQUI SEGUIA ROTA.
+    #
+    # `--aunque-no-alcance` se puso el 2-sep para el camino completo y no llego
+    # hasta aqui. El resultado: un M5,5+ mar adentro **antes de que USGS
+    # publique el ShakeMap** —los primeros diez a treinta minutos— seguia
+    # fallando en rojo con el enrutado bien hecho, que es justo lo que se creia
+    # arreglado.
+    #
+    # El comentario de abajo ya decia que suavizarlo era "decision de operacion,
+    # no de calculo". Esta bandera **es** esa decision, tomada por quien agoto
+    # los candidatos, y por eso entra aqui y no como heuristica.
+    if not any(por_radio.values()) and not aunque_no_alcance:
+        raise ExposureCountryMismatchError(
+            f"Ninguna celda del activo ({exposure_glob}) queda a menos de "
+            f"{max(PRELIMINARY_RADII_KM)} km del epicentro de {state.usgs_id}. "
+            f"O el sismo cayo en un pais distinto al del activo descargado, o "
+            f"cayo lo bastante mar adentro para que no haya nadie cerca. En los "
+            f"dos casos un preliminar de ceros seria una respuesta falsa y "
+            f"creible: hay que reintentar con el siguiente candidato."
+        )
+
+    _log.info(
+        "corte preliminar por radios",
+        extra={
+            "context": {"usgs_id": state.usgs_id, **{f"r{k}km": v for k, v in por_radio.items()}}
+        },
+    )
+    return por_radio
+
+
+def build_preliminary_report(
+    state: EventState,
+    products: ProductSet,
+    por_radio: dict[int, float],
+    *,
+    manifest_id: str,
+) -> Report:
+    """Arma el reporte preliminar de RF-03, el que sale sin ShakeMap.
+
+    Deliberadamente **no** lleva `Totales`: sin ShakeMap todas las cifras por
+    intensidad valen cero, y publicar "poblacion en MMI>=7: 0" seria una
+    respuesta falsa y creible. El markdown publica la tabla por radios en su
+    lugar, no ademas.
+    """
+    return Report(
+        event=Evento(
+            usgs_id=state.usgs_id,
+            mag=state.mag,
+            depth_km=state.depth_km,
+            utc=state.origen_utc,
+            lugar=state.lugar,
+            pager_alert=products.pager_alert(),
+            lon=state.lon,
+            lat=state.lat,
+        ),
+        inputs=Inputs(
+            shakemap_version=0,
+            groundfailure_version=products.groundfailure_version,
+            exposure_manifest=manifest_id,
+        ),
+        totales=Totales(),
+        radios=tuple(
+            PoblacionEnRadio(radio_km=int(km), pop=float(pop))
+            for km, pop in sorted(por_radio.items())
+        ),
+        preliminar=True,
+        backtest=state.backtest,
+        # Tambien en el preliminar: es un artefacto publicado como cualquier
+        # otro, y durante las dos horas que puede vivir solo es el unico que hay.
+        licencia=licencia_del_reporte(manifest_id),
+    )
+
+
+# --- Construccion del reporte ----------------------------------------------
+
+
+def nota_de_columnas_ausentes(columnas: tuple[str, ...]) -> tuple[str, ...]:
+    """Convierte el aviso de `register_exposure_view` en una nota publicada.
+
+    Sin esto, una columna que el activo no trae sale como `0.0` en el JSON y en
+    el CSV, indistinguible de una medida que da cero. El markdown esconde la
+    fila —que es lo correcto para quien lee— y por eso el problema solo lo
+    sufria quien integra, que es a quien mas le cuesta.
+    """
+    if not columnas:
+        return ()
+    return (
+        f"El activo consumido no trae {len(columnas)} columna(s) que este reporte sabe "
+        f"publicar ({', '.join(columnas)}); salen como cero y **no estan medidas**. "
+        "Se corrige reconstruyendo y republicando el activo del pais.",
+    )
+
+
+def licencia_del_reporte(manifest_id: str) -> Licencia:
+    """El bloque `licencia` de un reporte, calculado sobre su propio manifest.
+
+    Se calcula y no se escribe a mano porque la regla ya existe —`resolve_bucket`
+    y el catalogo de creditos— y una segunda copia en prosa es como el pie del
+    visor acabo diciendo «Datos del núcleo bajo CC BY 4.0» sobre datos que los
+    diecinueve manifests resuelven a ODbL.
+
+    Sin pais reconocible devuelve una licencia vacia en vez de reventar: un
+    reporte con el manifest mal escrito tiene que poder publicarse igual, y el
+    guardia de esquema es quien lo tiene que cazar.
+    """
+    iso3 = iso3_de_manifest_id(manifest_id)
+    if not iso3:
+        return Licencia()
+    try:
+        fuentes = fuentes_del_pais(iso3)
+    except (OSError, ValueError, KeyError, FileNotFoundError):
+        return Licencia()
+    spdx = spdx_del_derivado(fuentes)
+    return Licencia(
+        cubo=cubo_de(fuentes).value,
+        spdx=spdx,
+        texto=TEXTO_DEL_DERIVADO[spdx],
+        manifiesto_url=URL_DEL_MANIFIESTO.format(iso3=iso3),
+        atribuciones=tuple(
+            Atribuido(titulo=a.titulo, licencia=a.spdx, url=a.url)
+            for a in para_superficie(atribuciones_de(fuentes), REPORTE)
+        ),
+    )
+
+
+def modelos_de_terreno(products: ProductSet) -> dict[str, str]:
+    """Que fichero de modelo resolvio cada capa de Ground Failure.
+
+    Se calcula del mismo `ProductSet` que decide la descarga, asi que no puede
+    desviarse de lo que se bajo: es la misma llamada a `content_key`.
+    """
+    gf = products.ground_failure
+    if gf is None:
+        return {}
+    return {
+        "modelo_deslizamiento": gf.content_key(LANDSLIDE_MODEL, *LANDSLIDE_FALLBACKS) or "",
+        "modelo_licuefaccion": gf.content_key(LIQUEFACTION_MODEL, *LIQUEFACTION_FALLBACKS) or "",
+    }
+
+
+def build_report(
+    con: Any,
+    state: EventState,
+    products: ProductSet,
+    totales: ImpactTotals,
+    *,
+    manifest_id: str,
+    notas: tuple[str, ...] = (),
+) -> Report:
+    """Arma el ``Report`` a partir de lo ya calculado en la conexion."""
+    # SE ORDENA POR LA BANDA QUE ESTE EVENTO ALCANZO, NO SIEMPRE POR MMI≥7.
+    #
+    # Casi la mitad de los sismos reales de LATAM no llegan a MMI≥7 sobre
+    # poblacion —ocho de los primeros dieciocho reportes— porque son profundos
+    # o mar adentro. Para esos, `ORDER BY pop_mmi7p` ordenaba por una columna
+    # de ceros, o sea que la tabla "municipios mas expuestos" salia en orden
+    # alfabetico con quince ceros al lado. Tehuantepec 2017, un M8,2 con 98
+    # muertos, se publicaba asi.
+    #
+    # LA REGLA ES `Totales.banda_publicada` Y NO `banda_titular`. Aqui decia
+    # `banda_titular`, que llega a 8, y el markdown, el hilo, el mapa y el visor
+    # reordenaban por la otra, que no pasa de 7: en los tres reportes que
+    # alcanzan MMI>=8 el recorte a quince se hacia por una columna y la
+    # publicacion por otra. Manta, con 265.263 personas en MMI>=7, no llegaba a
+    # entrar en la tabla de su propio reporte.
+    tot = totales.to_totales()
+    banda = tot.banda_publicada
+    columna = f"pop_mmi{banda}p"
+    top = [
+        MunicipioTop(
+            adm2_id=str(r[0]),
+            nombre=titulo_es(str(r[1])),
+            mmi_max=float(r[2]),
+            pop_mmi7p=float(r[3]),
+            pop_banda=float(r[4]),
+        )
+        for r in con.execute(
+            f"""
+            SELECT i.adm2_id, a.nombre, i.mmi_max, i.pop_mmi7p, i.{columna}
+            FROM impact_adm2 i JOIN admin_lookup a USING (adm2_id)
+            ORDER BY i.{columna} DESC, i.mmi_max DESC LIMIT {TOP_ADM2_COUNT}
+            """
+        ).fetchall()
+    ]
+    return Report(
+        event=Evento(
+            usgs_id=state.usgs_id,
+            mag=state.mag,
+            depth_km=state.depth_km,
+            utc=state.origen_utc,
+            lugar=state.lugar,
+            pager_alert=products.pager_alert(),
+            lon=state.lon,
+            lat=state.lat,
+        ),
+        inputs=Inputs(
+            shakemap_version=products.shakemap_version,
+            groundfailure_version=products.groundfailure_version,
+            exposure_manifest=manifest_id,
+            **modelos_de_terreno(products),
+        ),
+        totales=tot,
+        ground_failure_usgs=GroundFailureUSGS(**products.ground_failure_alerts()),
+        # El estado del evento sabe si es una reconstruccion; el reporte tiene
+        # que decirlo, porque cambia lo que sus cifras afirman.
+        backtest=state.backtest,
+        top_municipios=tuple(top),
+        incertidumbre=Incertidumbre(
+            pop_discrepancia_pct=(
+                None if totales.discrepancia_pct is None else round(totales.discrepancia_pct, 1)
+            ),
+            notas=notas + nota_de_columnas_ausentes(totales.columnas_ausentes),
+        ),
+        descargas=Descargas(csv_adm2="adm2.csv", mapa_png="mapa_general.png"),
+        # La licencia viaja **dentro** del artefacto. Ver `Licencia`.
+        licencia=licencia_del_reporte(manifest_id),
+        # CUANDO NINGUNA BANDA ALCANZA POBLACION, EL RADIO ES LO UNICO QUE INFORMA.
+        #
+        # `us7000tdmp`, el primer sismo en vivo: el preliminar publico "610 mil
+        # personas a 100 km" a los 22 minutos, y dos horas despues el reporte
+        # completo lo sustituyo por una tabla de ceros —el ShakeMap de USGS no
+        # pasa de MMI 5,0 en ese evento—. El sistema calculo la respuesta buena
+        # y luego la borro: las 610 mil solo sobrevivian en el historial de git.
+        #
+        # El cero por banda sigue siendo correcto y se queda: dice "nada que
+        # priorizar". Pero deja de ser lo unico que se publica. Tres de los
+        # veintiun reconstruidos y los dos en vivo caen en este caso.
+        radios=_radios_si_ninguna_banda_alcanza(con, state, tot),
+    )
+
+
+def _radios_si_ninguna_banda_alcanza(
+    con: Any, state: EventState, totales: Totales
+) -> tuple[PoblacionEnRadio, ...]:
+    """Los radios, solo cuando la tabla por intensidad va a salir en ceros.
+
+    **SE LE PREGUNTA AL DATO, NO A `banda_publicada`.** Aqui llegaba la banda y
+    el guardia era `if banda: return ()`. `banda_publicada` devuelve 7 o 6 y
+    **nunca 0** —es su trabajo: dice por cual de las dos se ordena y se titula,
+    y para un evento sin poblacion en ninguna sigue teniendo que contestar 6—,
+    asi que el guardia se disparaba siempre y los radios salian vacios en los
+    **veintisiete** reportes, no solo en los nueve sin banda.
+
+    Lo introdujo `6aad992` al unificar las dos reglas de banda en competencia:
+    el camino de los radios murio sin que nada se pusiera rojo, porque lo unico
+    que lo miraba era la suite de navegador. Es justo el fallo que
+    `test_funciones_conectadas.py` persigue —una pieza correcta que nadie
+    invoca—, con la vuelta de tuerca de que aqui si habia llamador y lo que
+    fallaba era su condicion.
+
+    Y el cero que quedaba publicado era exactamente el que `README.md` promete
+    que no se publica nunca: `us7000tdmp` enseñaba una tabla de ceros donde el
+    preliminar habia dicho "610 mil personas a 100 km".
+    """
+    if totales.pop_mmi6p > 0 or totales.pop_mmi7p > 0:
+        return ()
+    return tuple(
+        PoblacionEnRadio(radio_km=km, pop=pop)
+        for km, pop in sorted(poblacion_por_radio(con, state).items())
+    )

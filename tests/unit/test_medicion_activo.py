@@ -1,0 +1,139 @@
+"""La medicion que acompana al activo en el Release.
+
+Las cifras que fijan la tolerancia de cada manifest —`medido_ghs_pop`, el
+desvio frente a la referencia oficial— se copiaban del log a mano. Copiar a
+mano es como se desincronizan las cosas, y ademas obliga a bajar varios MB de
+log por pais para leer tres numeros.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+from pipelines.common.manifest import Manifest, Source
+from pipelines.p0_exposure.build import MEDICION_FICHERO, write_measurement
+
+RESUMEN: dict[str, Any] = {
+    "celdas": 23_711,
+    "pop_total": 7_015_516.586595267,
+    "bld_count": 1_204_331,
+    "health_count": 812,
+    "built_m2": 401_233_100.0,
+    "edu_count": 3_044,
+    "road_km": 92_144.2,
+    "municipios": 262,
+    "celdas_marcadas": 1_988,
+}
+RESCATE = {"pop_rescatada": 112, "pop_total": 7_015_517, "pop_rescatada_pct": 0.002}
+
+#: EL TIPO DE VERDAD, NO UN NAMESPACE CON LOS CAMPOS DE HOY.
+#
+# `manifest` era un `SimpleNamespace(manifest_id=...)`, asi que el dia que
+# `write_measurement` empezo a publicar el cubo y las licencias del activo
+# —procedencia que hasta entonces moria en dos logs— estas pruebas fallaron con
+# un `AttributeError` en vez de ejercitarlo. Es la segunda vez en esta auditoria
+# que un doble escrito a mano se separa del original en cuanto el original crece;
+# la primera fue `TriggerResult` en test_cli.py.
+MANIFEST = Manifest(
+    manifest_id="pry-v0.1",
+    iso3="PRY",
+    generated_utc="2026-08-23T00:00:00Z",
+    sources=(
+        Source(
+            id="overture_buildings",
+            layer="buildings",
+            url="s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building",
+            license="ODbL-1.0",
+            vintage="2026-08-19.0",
+        ),
+        Source(
+            id="ghs_pop_2025",
+            layer="pop_ghs",
+            url="https://jeodpp.jrc.ec.europa.eu/ftp/GHS_POP.zip",
+            license="EC-reuse-attribution",
+            vintage="R2023A-E2025-54009-100m",
+        ),
+    ),
+)
+
+
+def _plan(tmp_path: Path) -> Any:
+    salida = tmp_path / "iso3=PRY" / "layer=exposure"
+    salida.mkdir(parents=True)
+    return SimpleNamespace(iso3="PRY", salida=salida, manifest=MANIFEST)
+
+
+def _referencia() -> dict[str, Any]:
+    """Un dict, que es lo que trae el manifest.
+
+    La primera version de esta prueba usaba un SimpleNamespace y por eso paso
+    mientras el codigo leia por atributo. `medicion.json` salio publicado sin
+    bloque de referencia: sin error y sin aviso, solo una clave que faltaba.
+    """
+    return {
+        "poblacion_2025": 7_013_078,
+        "fuente": "ONU, World Population Prospects",
+        "tolerancia_pct": 7.5,
+    }
+
+
+def test_calcula_el_desvio_frente_a_la_referencia(tmp_path: Path) -> None:
+    """Es el numero que decide la tolerancia del manifest; no se estima a ojo."""
+    ruta = write_measurement(_plan(tmp_path), RESUMEN, rescate=RESCATE, referencia=_referencia())
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    assert ruta.name == MEDICION_FICHERO
+    assert datos["referencia"]["desvio_pct"] == 0.0348
+    assert datos["referencia"]["poblacion"] == 7_013_078
+
+
+def test_lleva_la_fraccion_rescatada(tmp_path: Path) -> None:
+    """Sin ella no se puede distinguir un rescate costero de una invasion.
+
+    Chile rescata el 31 % de su poblacion y su cifra es correcta; Paraguay
+    rescataba el 6,1 % y esa era toda su desviacion. El numero solo sirve si
+    viaja junto al total.
+    """
+    ruta = write_measurement(_plan(tmp_path), RESUMEN, rescate=RESCATE, referencia=_referencia())
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    assert datos["rescate"]["pop_rescatada_pct"] == 0.002
+    assert datos["resumen"]["pop_total"] == RESUMEN["pop_total"]
+
+
+def test_sin_referencia_oficial_no_inventa_un_desvio(tmp_path: Path) -> None:
+    """Un pais sin referencia declarada se mide igual, pero sin compararse."""
+    ruta = write_measurement(_plan(tmp_path), RESUMEN, rescate=RESCATE, referencia=None)
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    assert "referencia" not in datos
+    assert datos["iso3"] == "PRY"
+    assert datos["manifest_id"] == "pry-v0.1"
+
+
+def test_es_json_valido_y_legible(tmp_path: Path) -> None:
+    """Se publica en el Release: tiene que poder leerlo una persona y un script."""
+    ruta = write_measurement(_plan(tmp_path), RESUMEN, rescate=RESCATE, referencia=_referencia())
+    texto = ruta.read_text(encoding="utf-8")
+    assert texto.endswith("\n")
+    assert "\n  " in texto  # indentado, no una sola linea
+    assert json.loads(texto)["medido_utc"].endswith("Z")
+
+
+def test_lee_la_referencia_como_dict_no_como_objeto(tmp_path: Path) -> None:
+    """Guardia del fallo real: `referencia_oficial` es un dict del manifest.
+
+    Leerla por atributo no falla, no avisa, y deja `medicion.json` sin bloque de
+    referencia — o sea sin el desvio, que es justo el numero para el que existe
+    el fichero. Se publico asi para Uruguay antes de detectarlo.
+    """
+    from pipelines.common.manifest import Manifest
+
+    manifest = Manifest.load("URY")
+    assert isinstance(manifest.referencia_oficial, dict)
+    ruta = write_measurement(
+        _plan(tmp_path), RESUMEN, rescate=RESCATE, referencia=manifest.referencia_oficial
+    )
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    assert "referencia" in datos
+    assert datos["referencia"]["poblacion"] == manifest.referencia_oficial["poblacion_2025"]

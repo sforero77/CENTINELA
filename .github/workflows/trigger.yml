@@ -1,0 +1,497 @@
+name: P1 · Trigger USGS
+
+# Cron best-effort: GitHub Actions documenta demoras de 5-30 min y el intervalo
+# minimo es 5 min. El SLO (O1) se define sobre lo controlable, no sobre la
+# puntualidad del cron.
+#
+# MEDIDO EL 24-AGO-2026 sobre 22 corridas programadas en 16 horas seguidas:
+#
+#   declarado    cada 10 min
+#   real         min 25,0 · mediana 45,7 · p90 56,9 · max 73,3 min
+#
+# Es entre cuatro y siete veces el intervalo declarado, y peor que el rango que
+# documenta GitHub. Con el objetivo de p50 <= 60 min desde el origen hasta el
+# reporte publicado, **la deteccion sola puede comerse la mitad del presupuesto,
+# y en el peor caso todo**.
+#
+# MEDIDO OTRA VEZ EL 27-AGO-2026, y esta vez sobre el repositorio entero:
+#
+#   dia        turnos de cron concedidos   otras corridas
+#   24-ago              12                      82
+#   25-ago              35                      56
+#   26-ago              22                      21
+#   27-ago               5                      67
+#
+# GitHub no reparte un turno por workflow: reparte **unos pocos por
+# repositorio**, y aqui hay cinco programados compitiendo. Los huecos entre
+# corridas de cualquiera de ellos, ese dia: 63, 49, 82, 51, 133, 178, 161, 148,
+# 658, 5, 247 minutos.
+#
+# Este cron pedia 144 turnos al dia y conseguia unos 19. Los otros cuatro
+# workflows se repartian las sobras, y `incendios.yml` —que pide cuatro— no
+# llego a correr **ni una vez** en las siete horas siguientes a su creacion.
+#
+# Baja a cada 30 minutos, y no es una rendicion: 48 peticiones al dia siguen
+# siendo mas de las que este repositorio recibe. Lo que cambia es que deja de
+# acaparar una cola que no puede ganar. GitHub documenta ademas que los
+# intervalos cortos son los primeros en descartarse, asi que pedir menos puede
+# perfectamente conseguir mas.
+#
+# Lo que NO cambia: la demora la pone la cola, no el intervalo. Un cron externo
+# que dispare `repository_dispatch` sigue siendo la unica ruta que arregla la
+# latencia de verdad — pero conviene medir esto unos dias antes de montar
+# infraestructura externa sobre un dia malo.
+#
+# Mitigaciones activas:
+#   * feed de respaldo 4.5_day, que cubre la demora sin perder eventos
+#   * workflow_dispatch, para disparar a mano en cualquier momento
+#   * keepalive.yml, contra la desactivacion automatica a los 60 dias
+#   * monitor externo (healthchecks.io), que alerta si no hay latido en 30 min
+# EL CRON EXTERNO, YA CONECTADO — falta solo quien lo dispare.
+#
+# El parrafo de arriba pedia medir unos dias antes de montar infraestructura
+# externa "sobre un dia malo". Medido, y no era un dia malo: entre el 25 y el 30
+# de agosto, con 23 latidos, `status.json` publica p50 157 min, p90 462 y peor
+# 766 (12,8 h). El cron pide 48 turnos al dia y consigue entre dos y cuatro.
+#
+# Con el objetivo en 60 min p50 desde que hay ShakeMap, **la deteccion sola se
+# come el presupuesto entero**. Ya no es una sospecha.
+#
+# `repository_dispatch` queda declarado aqui para que un cron externo pueda
+# disparar el vigia sin depender de la cola de GitHub. El cron interno SE QUEDA:
+# si el servicio externo cae, esto sigue corriendo mal pero corriendo, y eso es
+# mejor que un unico punto de fallo fuera del repositorio.
+#
+# LO QUE FALTA, Y NO SE PUEDE HACER DESDE AQUI:
+#
+#   1. Un token con permiso de escritura sobre contenidos del repositorio.
+#   2. Un servicio de cron externo (cron-job.org, Cloudflare Workers, lo que
+#      sea) llamando cada 5-10 min a:
+#
+#      POST https://api.github.com/repos/sforero77/CENTINELA/dispatches
+#      Authorization: Bearer <token>
+#      Accept: application/vnd.github+json
+#      {"event_type": "vigilar"}
+#
+# Si el externo deja de llamar, el latido se para y el monitor de
+# healthchecks.io avisa a los 30 min — que es la alarma que ya existe para la
+# desactivacion silenciosa del cron, y cubre este caso sin nada nuevo.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  # Disparo externo. `repository_dispatch` solo corre sobre la rama por defecto,
+  # que es donde vive el vigia.
+  repository_dispatch:
+    types: [vigilar]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "No escribir event_state (simulacro)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trigger
+  cancel-in-progress: false
+
+jobs:
+  vigilar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # Para republicar el visor tras el push. Ver "Republicar el visor".
+      actions: write
+    # Los forks no deben disparar reportes: es el comportamiento por defecto de
+    # GitHub para schedules, y aqui es exactamente lo que queremos (RNF-07).
+    if: github.repository == 'sforero77/CENTINELA'
+    outputs:
+      eventos: ${{ steps.trigger.outputs.eventos }}
+      hay_trabajo: ${{ steps.trigger.outputs.hay_trabajo }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      # Solo el nucleo: el trigger esta en el camino critico de latencia y no
+      # debe pagar el costo de instalar duckdb/rasterio.
+      - name: Instalar nucleo
+        run: uv sync --python 3.12 --no-dev
+
+      # CUANTAS VECES SE REVISO DESDE EL ULTIMO LATIDO.
+      #
+      # El latido se commitea como mucho una vez por hora (ver mas abajo), asi
+      # que el hueco entre dos latidos NO es el ritmo del vigia: cubre todas
+      # las revisiones que hubo en medio. Mientras el cron era de media hora
+      # los dos numeros se parecian y nadie noto la diferencia; con el disparo
+      # externo a cinco minutos, /status llego a publicar "revisa cada 2,6 h"
+      # mientras el vigia revisaba cada cinco.
+      #
+      # Una llamada por corrida, y el presupuesto da de sobra: 12 a la hora de
+      # 5.000. Si falla, `1` deja la medida como estaba antes — conservador,
+      # nunca optimista.
+      - name: Contar las revisiones desde el ultimo latido
+        id: revisiones
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # EL ANCLA SALE DEL PROPIO LATIDO, NO DE GIT.
+          #
+          # `actions/checkout@v4` clona con profundidad 1: hay **un** commit en
+          # el historial, asi que `git log -1 -- site/status.json` no responde
+          # "cuando se publico el ultimo latido" sino, como mucho, "el unico
+          # commit que hay tocaba ese fichero". Verificado clonando este
+          # repositorio con `--depth 1`.
+          #
+          # El fichero que se acaba de sacar del checkout **ya lleva la fecha**:
+          # `latidos[-1].utc` es exactamente el sello que se busca, y no depende
+          # de cuanta historia se haya traido.
+          desde=$(jq -r '.latidos[-1].utc // empty' site/status.json 2>/dev/null || echo "")
+          n=1
+          if [ -n "$desde" ]; then
+            filtro="[.[] | select(.createdAt > \"$desde\")] | length"
+            n=$(gh run list --workflow trigger.yml --limit 300 --json createdAt --jq "$filtro" 2>/dev/null || echo 1)
+          fi
+          [ "${n:-0}" -ge 1 ] || n=1
+          echo "n=$n" >> "$GITHUB_OUTPUT"
+          echo "revisiones desde el ultimo latido: $n"
+
+      - name: Revisar el feed
+        id: trigger
+        run: |
+          seco="${{ inputs.dry_run && '--dry-run' || '' }}"
+          uv run centinela trigger --revisiones "${{ steps.revisiones.outputs.n }}" $seco
+
+      # EL VIGIA ES EL RELOJ DE LOS DEMAS.
+      #
+      # GitHub no concede un turno de cron por workflow: concede unos pocos por
+      # repositorio. Medido el 27-ago-2026: cinco turnos en veinticuatro horas
+      # repartidos entre cinco workflows programados. `incendios.yml` pedia
+      # cuatro al dia y no corrio **ninguno** en las siete horas siguientes a su
+      # creacion; `frescura.yml` pedia ocho y corrio dos, asi que su deteccion
+      # real fue de trece horas en vez de tres.
+      #
+      # Eso dejaba a los vigilantes dependiendo de la misma cola que vigilan,
+      # que es el punto debil estructural de todo el sistema.
+      #
+      # `workflow_dispatch` **no** pasa por esa cola: es la excepcion
+      # documentada, la misma con la que este workflow ya republica el visor y
+      # despacha P2. Asi que el repositorio pide **un** turno de cron —este— y
+      # desde aqui salen los demas cuando toca.
+      #
+      # Su propio `schedule` se queda como respaldo: si algun dia este paso deja
+      # de correr, siguen teniendo una via, aunque sea mala. Y por eso se
+      # comprueba cuanto hace que corrieron en vez de disparar a ciegas: sin la
+      # comprobacion, un turno concedido a los dos relojes duplicaria la corrida.
+      #
+      # VA ANTES DE PUBLICAR, Y ESO IMPORTA.
+      #
+      # La primera version despachaba al final y `frescura` fallo en su primera
+      # corrida: el vigia commiteo a las 21:45:19, republico el visor, y
+      # `frescura` arranco quince segundos despues. El despliegue de Pages tarda
+      # unos veintiseis, asi que la reviso **a medias** y reporto 7,4 h de
+      # desfase que eran ciertas en ese instante y falsas medio minuto despues.
+      #
+      # Despachar al vigilante justo tras publicar garantiza que lo pille en la
+      # ventana de despliegue. Aqui mira el estado anterior, que esta asentado —
+      # y lo que acaba de commitearse lo vera en la pasada siguiente, que es
+      # exactamente cuando ya es comprobable.
+      - name: Despachar los workflows que dependen del reloj
+        if: always() && !inputs.dry_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          despachar_si_toca() {
+            local workflow="$1" cada_horas="$2"
+            local ultima edad_h
+
+            ultima=$(gh run list --workflow="$workflow" --limit 1                        --json createdAt --jq '.[0].createdAt // ""' 2>/dev/null || echo "")
+
+            if [ -z "$ultima" ]; then
+              echo "$workflow: nunca ha corrido; se lanza"
+            else
+              edad_h=$(( ( $(date -u +%s) - $(date -u -d "$ultima" +%s) ) / 3600 ))
+              if [ "$edad_h" -lt "$cada_horas" ]; then
+                echo "$workflow: corrio hace ${edad_h}h (cada ${cada_horas}h); no toca"
+                return 0
+              fi
+              echo "$workflow: corrio hace ${edad_h}h (cada ${cada_horas}h); se lanza"
+            fi
+
+            # Un fallo aqui no puede tumbar al vigia: su trabajo ya esta hecho y
+            # commiteado. Se avisa y se sigue con el siguiente.
+            gh workflow run "$workflow" || echo "::warning::no se pudo despachar $workflow"
+          }
+
+          despachar_si_toca frescura.yml 3
+          despachar_si_toca incendios.yml 6
+          # RF-04 mas alla de las 24 h que cubre el feed. Diario basta: una
+          # revision de ShakeMap que llega el dia 40 no es mas urgente por
+          # mirarla cada hora, y la mediana de la ultima revision son 63 dias.
+          despachar_si_toca repaso.yml 24
+          # EL TRIMESTRAL NO PUEDE DEPENDER DE UN CRON TRIMESTRAL.
+          #
+          # Su cadencia declarada es mas larga que la vida de su insumo:
+          # Overture publica release mensual y conserva **dos** (~2 meses), asi
+          # que un pais que no se reconstruya en ese plazo ya no se puede
+          # reconstruir — la url del release fijado deja de existir. El propio
+          # encabezado de `exposure_quarterly.yml` lo documenta.
+          #
+          # Y encima competia por la misma cola de cron que este vigia gano: con
+          # cinco workflows programados y unos pocos turnos al dia por
+          # repositorio, un cron que pide cuatro turnos al ano puede
+          # perfectamente no conseguir ninguno.
+          #
+          # 720 h son 30 dias: dentro de la ventana de retencion de Overture,
+          # con un mes de margen para que alguien vea la alarma si falla.
+          despachar_si_toca exposure_quarterly.yml 720
+
+      # ESTE PASO NO LLEVA CONDICION DE `hay_trabajo`, Y ES DELIBERADO.
+      #
+      # La llevaba, y el latido de /status no llegaba nunca a publicarse. El
+      # trigger lo escribe en cada corrida a proposito —la ausencia de latidos
+      # es la senal de que el cron se desactivo, que es el modo de falla mas
+      # probable de todo el sistema (§4.2)— pero el commit solo ocurria cuando
+      # habia evento. O sea que **el unico caso que el latido vigila era justo
+      # el caso en que no se publicaba**: tras 20+ corridas verdes,
+      # `site/status.json` seguia con `"latidos": []` y la pagina publica decia
+      # "sin latidos registrados todavia".
+      #
+      # El estado del evento y el latido van en el mismo commit: son la misma
+      # escritura, y dos pushes con rebase compitiendo por la misma rama es el
+      # problema que este paso ya resuelve una vez.
+      # `!cancelled()`, NO EL `success()` IMPLICITO.
+      #
+      # Un paso sin `if` propio lleva `success()` puesto de fabrica, y eso
+      # dejaba el comentario de arriba diciendo una cosa y el workflow haciendo
+      # la contraria: `centinela trigger` **sale con 1 a proposito** cuando los
+      # dos feeds de USGS estan caidos, precisamente para que la corrida se vea
+      # roja. Con el `success()` implicito, ese codigo de salida saltaba este
+      # paso — asi que el unico latido que de verdad hacia falta publicar, el
+      # de la pasada ciega, era el unico que nunca se commiteaba.
+      #
+      # Lo mismo con un `status.json` ilegible: el comando ya no muere ahi, pero
+      # termina en rojo, y en rojo esto no corria.
+      #
+      # No hay riesgo en publicar de mas: si no hay nada que commitear, el
+      # `git diff --staged --quiet` de abajo sale solo.
+      - name: Publicar estado y latido
+        id: publicar
+        if: ${{ !cancelled() && !inputs.dry_run }}
+        env:
+          # Via env, no por interpolacion en el shell: los ids vienen de un
+          # tercero y no deben poder convertirse en comandos.
+          EVENTOS: ${{ steps.trigger.outputs.eventos }}
+          HAY_TRABAJO: ${{ steps.trigger.outputs.hay_trabajo }}
+          OBSERVADOS_CAMBIO: ${{ steps.trigger.outputs.observados_cambio }}
+        run: |
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+
+          # Un latido por corrida serian ~36 commits al dia, y `events/` es la
+          # base de datos del sistema: su historial tiene que seguir siendo
+          # legible. Con un evento se publica siempre; sin el, como mucho uno
+          # por hora. El latido saltado no se pierde para nada que importe:
+          # basta uno cada hora para responder "el cron sigue vivo".
+          #
+          # Un sismo pequeno nuevo tambien publica, aunque el latido sea
+          # reciente: quien acaba de sentirlo lo esta buscando ahora, no dentro
+          # de una hora. Son ~3 al dia, asi que no cambia el orden de magnitud.
+          # Misma correccion que arriba: con `--depth 1` el `git log` medi­a el
+          # ultimo commit de CUALQUIER tipo, asi que una PR humana reiniciaba el
+          # freno del latido. Los dos huecos de 85 y 105 min de la serie
+          # publicada coinciden con PRs.
+          ULTIMO_UTC=$(jq -r '.latidos[-1].utc // empty' site/status.json 2>/dev/null || echo "")
+          ULTIMO=0
+          if [ -n "$ULTIMO_UTC" ]; then
+            ULTIMO=$(date -u -d "$ULTIMO_UTC" +%s 2>/dev/null || echo 0)
+          fi
+          EDAD=$(( $(date -u +%s) - ${ULTIMO:-0} ))
+          if [ "$HAY_TRABAJO" != "true" ] && [ "$OBSERVADOS_CAMBIO" != "true" ] && [ "$EDAD" -lt 3600 ]; then
+            echo "latido reciente (hace ${EDAD}s) y sin sismos nuevos; no se publica"
+            exit 0
+          fi
+
+          git add events/ site/status.json site/observados.json
+          git diff --staged --quiet && exit 0
+          if [ "$HAY_TRABAJO" = "true" ]; then
+            git commit -m "P1: eventos detectados $EVENTOS"
+          else
+            git commit -m "P1: latido"
+          fi
+          # P2 empuja a la misma rama; sin rebase, dos jobs concurrentes se
+          # rechazan mutuamente y se pierde el estado del evento.
+          # P2 empuja a la misma rama y reescribe `site/status.json` entero,
+          # igual que este paso. Cuando coinciden, el rebase conflicta siempre:
+          # un derivado no se fusiona, se regenera. Es el mismo manejador que
+          # `impact.yml` ya tenia, y que aqui faltaba — con el agravante de que
+          # sin `--abort` el rebase se quedaba a medias y los tres reintentos
+          # siguientes morian con "rebase in progress" sin intentar nada.
+          #
+          # La colision es rara —P2 solo corre con un sismo M>=5.5— pero ocurre
+          # exactamente cuando mas importa: mientras se publica un reporte real.
+          DERIVADOS='site/status.json site/observados.json'
+
+          regenerar_derivados() {
+            local conflictos
+            conflictos=$(git diff --name-only --diff-filter=U)
+            [ -n "$conflictos" ] || return 1
+            # Un conflicto fuera de la lista es real y no se toca: regenerar a
+            # ciegas descartaria el trabajo del otro job.
+            if grep -qvE '^(site/status\.json|site/observados\.json)$' <<<"$conflictos"; then
+              return 1
+            fi
+            echo "::notice::derivados en conflicto; se regeneran en vez de fusionarse"
+            # SE REGENERAN LOS DOS, NO UNO.
+            #
+            # `centinela status` rehace `site/status.json` y nada mas;
+            # `site/observados.json` lo rehace otro comando. Con el `git add`
+            # de abajo cubriendo los dos, el que no se regeneraba entraba al
+            # commit **con los marcadores de conflicto dentro**. Paso el
+            # 2-sep-2026 a las 20:01: los dos derivados quedaron corruptos en
+            # `main`, `/status` sirvio JSON invalido, y el vigia se cayo en las
+            # dos corridas siguientes.
+            #
+            # Y fallar aqui tiene que abortar. Esta funcion se llama desde un
+            # `elif`, que **desactiva `set -e`**: sin comprobar el codigo de
+            # salida, un regenerado que falla seguia hasta `git add` y
+            # `rebase --continue` igual.
+            # EL FICHERO EN CONFLICTO NO ES JSON, Y `centinela status` LO LEE.
+            #
+            # `impact.yml` tiene esta linea desde el 2-sep con su comentario
+            # —«se pierde a lo sumo un latido en vez de todos»— y aqui faltaba.
+            # Regenerar sobre un `status.json` con marcadores hace que
+            # `write_status` no pueda parsearlo y reponga el historial vacio; y
+            # con la red de seguridad de abajo puesta, los cuatro reintentos
+            # fallan igual y el vigia muere justo cuando P2 esta corriendo.
+            git checkout --theirs site/status.json 2>/dev/null || true
+            git checkout --theirs site/observados.json 2>/dev/null || true
+
+            uv run centinela status || return 1
+            uv run centinela observados || return 1
+
+            # LA RED DE SEGURIDAD, QUE ES LO QUE DE VERDAD FALTABA.
+            #
+            # Cualquiera que sea el motivo, un fichero con marcadores no se
+            # publica. Es preferible reintentar y dejar el vigia en rojo —que
+            # es visible— a servir un JSON que el visor no puede leer.
+            for derivado in $DERIVADOS; do
+              if grep -q '^<<<<<<< \|^>>>>>>> ' "$derivado"; then
+                echo "::error::$derivado conserva marcadores de conflicto; no se publica"
+                return 1
+              fi
+            done
+
+            # shellcheck disable=SC2086
+            git add $DERIVADOS
+            GIT_EDITOR=true git rebase --continue
+          }
+
+          for intento in 1 2 3 4; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}"; then
+              git push && { echo "publicado=true" >> "$GITHUB_OUTPUT"; exit 0; }
+            elif regenerar_derivados; then
+              git push && { echo "publicado=true" >> "$GITHUB_OUTPUT"; exit 0; }
+            else
+              # Sin esto el rebase se queda a medias y el reintento siguiente
+              # falla antes de intentar nada.
+              git rebase --abort || true
+            fi
+            sleep $((2 ** intento))
+          done
+          exit 1
+
+      # UN PUSH HECHO CON `GITHUB_TOKEN` NO DISPARA OTROS WORKFLOWS.
+      #
+      # Es una regla de GitHub para evitar bucles infinitos, y aqui rompia la
+      # cadena entera sin que nada fallara: `site.yml` escucha `push` sobre
+      # `site/**`, el latido commitea `site/status.json` cada hora, y aun asi el
+      # visor llevaba desde las 04:03 del 26-ago sin republicar — diecisiete
+      # latidos commiteados que la pagina publica no enseñaba. `/status` en vivo
+      # se quedo en el latido de las 02:53.
+      #
+      # Todo verde en los dos workflows. El fallo estaba en el hueco entre
+      # ellos, que es donde esta auditoria lleva encontrandolos desde el primer
+      # dia: escrito no es conectado.
+      #
+      # `workflow_dispatch` es la excepcion documentada a esa regla, y es el
+      # mismo mecanismo con el que este workflow ya dispara P2 unas lineas mas
+      # abajo. No hace falta un PAT.
+      # Tambien sin `success()`: si el paso de arriba llego a publicar, la
+      # pagina tiene que enterarse aunque la corrida vaya a terminar en rojo.
+      # Con el `success()` implicito, un latido commiteado en una pasada ciega
+      # se quedaba sin republicar — que es exactamente el desfase de diecisiete
+      # horas que este paso existe para no repetir.
+      - name: Republicar el visor
+        if: ${{ !cancelled() && steps.publicar.outputs.publicado == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run site.yml
+
+      # Latido para el monitor externo. Si deja de llegar, el equipo recibe
+      # alerta en 30 min (§6.5) — la desactivacion silenciosa del cron es el
+      # modo de falla mas probable de todo el sistema.
+      # `success()`, NO `always()`. Lo tenia en `always()`, y eso convertia el
+      # monitor en un mentiroso: una corrida que fallaba le decia igualmente
+      # "estoy vivo", asi que solo detectaba "no corrio" y nunca "corrio y se
+      # rompio". Justo el caso que el manejador de arriba existe para cubrir.
+      #
+      # Con `success()`, un fallo se ve como silencio — y silencio es
+      # exactamente lo que el monitor sabe interpretar: alerta a los 30 min.
+      - name: Latido al monitor externo
+        if: success() && env.HEALTHCHECK_URL != ''
+        env:
+          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+        run: curl -fsS --retry 3 "$HEALTHCHECK_URL" || true
+
+  despachar:
+    needs: vigilar
+    # `!inputs.dry_run` TAMBIEN AQUI.
+    #
+    # Los otros dos pasos que escriben lo comprueban y este no, asi que un
+    # simulacro **en seco** lanzaba `impact.yml` de verdad: el evento se
+    # publicaba, se commiteaba y se empujaba. Un ensayo que produce el efecto que
+    # ensaya no es un ensayo.
+    #
+    # Y `!cancelled()`, porque `needs` trae `success()` de regalo.
+    #
+    # El sismo se detecta y se escribe en disco al principio del vigia; todo lo
+    # que viene despues —latido, commit, republicacion— es contabilidad. Con la
+    # condicion de antes, cualquier tropiezo en esa contabilidad se llevaba por
+    # delante el despacho de P2: el evento estaba identificado, `hay_trabajo`
+    # decia `true`, y este job se saltaba igual porque el anterior habia
+    # terminado en rojo. Un `status.json` con marcadores de conflicto bastaba
+    # para que un terremoto no se reportara nunca.
+    #
+    # `hay_trabajo` solo vale `true` si el paso del feed llego a escribirlo, asi
+    # que un fallo temprano sigue sin despachar nada: no se dispara a ciegas.
+    if: ${{ !cancelled() && needs.vigilar.outputs.hay_trabajo == 'true' && !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Disparar P2 por evento
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Este job no hace checkout, asi que `gh` no puede inferir el
+          # repositorio del remoto de git: hay que decirselo.
+          GH_REPO: ${{ github.repository }}
+          EVENTOS: ${{ needs.vigilar.outputs.eventos }}
+        run: |
+          echo "$EVENTOS" | python3 -c '
+          import json, os, subprocess, sys
+          for usgs_id in json.load(sys.stdin):
+              subprocess.run([
+                  "gh", "workflow", "run", "impact.yml",
+                  "-f", f"usgs_id={usgs_id}",
+              ], check=True)
+          '

@@ -1,0 +1,388 @@
+"""La reticula de ESA WorldCover y la agregacion categorica a H3.
+
+Dos piezas nuevas y una idea que no existia en el activo: hasta ahora todas las
+capas eran **sumas** de magnitudes continuas —personas, metros, kilometros—. La
+cobertura del suelo es categorica, y sumar codigos de clase produce numeros
+creibles y sin sentido: una celda mitad arbolado (10) y mitad cultivo (40)
+daria 25, que es el codigo de nada.
+
+Lo que estas pruebas protegen es justo eso: que nadie vuelva a tratarla como una
+suma, y que la rejilla no desplace medio pais a la tesela vecina.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+import pytest
+
+from pipelines.common.geo import BBox
+from pipelines.p0_exposure.sources import worldcover as wc
+
+# --- La rejilla -------------------------------------------------------------
+
+
+def test_el_nombre_de_la_tesela_es_el_del_bucket() -> None:
+    """Verificado contra el bucket real: `N03W075` responde 200."""
+    assert wc.Tile(lat=3, lon=-75).name == "N03W075"
+    assert wc.Tile(lat=-12, lon=-78).name == "S12W078"
+    assert wc.Tile(lat=0, lon=-60).name == "N00W060"
+
+
+def test_una_longitud_negativa_baja_a_la_tesela_que_la_contiene() -> None:
+    """El error que habria desplazado medio pais.
+
+    Truncar hacia cero mandaria `-76,7` a la tesela `W075`, que empieza en -75 y
+    no lo contiene. Colombia occidental se leeria del raster vecino y saldrian
+    clases de otro sitio — sin fallar, con numeros plausibles.
+    """
+    teselas = wc.tiles_for_bbox(BBox(lon_min=-76.7, lat_min=5.0, lon_max=-76.6, lat_max=5.1))
+
+    assert [t.name for t in teselas] == ["N03W078"]
+
+
+def test_la_tesela_contiene_el_punto_que_la_pidio() -> None:
+    """La comprobacion que de verdad importa, hecha sobre los limites."""
+    lon, lat = -76.7, 5.72
+    # `BBox` no admite cajas degeneradas, asi que se pide una minima alrededor.
+    caja = BBox(lon_min=lon, lat_min=lat, lon_max=lon + 0.01, lat_max=lat + 0.01)
+    tesela = wc.tiles_for_bbox(caja)[0]
+    x0, y0, x1, y1 = tesela.bounds
+
+    assert x0 <= lon < x1
+    assert y0 <= lat < y1
+
+
+def test_una_caja_grande_pide_la_malla_entera() -> None:
+    teselas = wc.tiles_for_bbox(BBox(lon_min=-76.0, lat_min=4.0, lon_max=-71.0, lat_max=8.0))
+
+    # Tres columnas: -76 cae en W078 y -71 en W072, asi que la de en medio
+    # tambien hace falta aunque la caja no empiece ni acabe en ella.
+    assert {t.name for t in teselas} == {
+        "N03W078",
+        "N03W075",
+        "N03W072",
+        "N06W078",
+        "N06W075",
+        "N06W072",
+    }
+
+
+def test_no_se_piden_teselas_fuera_de_la_cobertura_del_producto() -> None:
+    """El producto llega a 60°S. Chile y Argentina tienen bbox mas al sur.
+
+    Pedir una tesela inexistente no es gratis: es un 404 y varios segundos de
+    reintentos de GDAL, multiplicados por cada tesela fantasma de la fila.
+    """
+    teselas = wc.tiles_for_bbox(BBox(lon_min=-75.0, lat_min=-90.0, lon_max=-72.0, lat_max=-58.0))
+
+    assert all(t.lat >= wc.LAT_MIN for t in teselas)
+    assert teselas, "y aun asi debe devolver las que si existen"
+
+
+def test_la_url_apunta_al_fichero_que_existe() -> None:
+    url = wc.Tile(lat=3, lon=-75).url
+
+    assert url.endswith("/v200/2021/map/ESA_WorldCover_10m_2021_v200_N03W075_Map.tif")
+    assert url.startswith("https://"), "s3:// lo trataria download_manifest como Overture"
+
+
+def test_se_lee_en_remoto_y_no_se_descarga() -> None:
+    """858 teselas a 96 MB son 82 GB, y un runner de CI tiene ~14 libres."""
+    assert wc.Tile(lat=3, lon=-75).vsicurl.startswith("/vsicurl/https://")
+
+
+# --- Las clases que se publican ---------------------------------------------
+
+
+def test_humedal_y_manglar_van_a_la_misma_columna() -> None:
+    """Los dos son suelo organico y arden igual de mal y de largo.
+
+    Separarlos daria dos columnas casi vacias en dieciocho de los diecinueve
+    paises.
+    """
+    assert wc.AGRUPACION[90] == wc.AGRUPACION[95] == "humedal"
+
+
+def test_lo_que_no_arde_no_ocupa_una_columna() -> None:
+    """Agua, nieve, suelo desnudo y musgo se quedan fuera del CONTRATO.
+
+    Nombrarlas en el contrato publicado para que sean siempre cero es ensanchar
+    el parquet sin anadir informacion — y `exposure_h3` se hereda entero en
+    `impact_h3`, asi que cada columna se paga dos veces.
+    """
+    publicadas = {c.nombre for c in wc.CLASES}
+    for codigo in (60, 70, 80, 100):
+        assert wc.AGRUPACION.get(codigo) not in publicadas
+
+
+def test_el_suelo_excluido_cuenta_igual_en_el_denominador() -> None:
+    """NO TENER COLUMNA NO ES NO CONTAR, Y SE CONFUNDIAN.
+
+    El reparto se calcula sobre los pixeles clasificados, y "clasificados" eran
+    solo las seis clases publicadas: quedaban fuera del **denominador** el suelo
+    desnudo (60), la nieve (70) y el musgo (100), que son suelo.
+
+    Una celda del Altiplano con 130 de sus 140 pixeles de roca y 10 de pastizal
+    publicaba «100 % pastizal» con `lulc_px = 10`. Ese diez se lee como "poca
+    evidencia, celda de borde", no como "el 93 % de esto es roca".
+    """
+    for codigo in (60, 70, 100):
+        assert wc.AGRUPACION.get(codigo) == wc.OTRO_SUELO, (
+            f"el codigo {codigo} es suelo y tiene que entrar en el denominador"
+        )
+
+
+def test_el_agua_si_se_queda_fuera_del_denominador() -> None:
+    """Y esa exclusion si esta declarada: "el mar no cuenta".
+
+    Una celda medio marina no es media celda sin clasificar: es una celda de
+    costa perfectamente medida sobre la mitad que es tierra.
+    """
+    assert 80 not in wc.AGRUPACION
+
+
+def test_cada_clase_publicada_tiene_su_grupo() -> None:
+    """Que las dos estructuras no se separen: `CLASES` rotula, `AGRUPACION` suma.
+
+    Lo unico que `AGRUPACION` puede tener de mas es el cubo sin columna.
+    """
+    publicadas = {c.nombre for c in wc.CLASES}
+    agrupadas = set(wc.AGRUPACION.values())
+    assert publicadas <= agrupadas, f"clases sin grupo: {sorted(publicadas - agrupadas)}"
+    assert agrupadas - publicadas == {wc.OTRO_SUELO}, (
+        f"hay grupos sin columna que no son el cubo declarado: "
+        f"{sorted(agrupadas - publicadas - {wc.OTRO_SUELO})}"
+    )
+
+
+# --- La agregacion ----------------------------------------------------------
+
+
+@pytest.fixture
+def con() -> Any:
+    from pipelines.p2_impact.exposure_join import connect
+
+    return connect()
+
+
+@pytest.mark.geo
+def test_los_conteos_se_suman_entre_teselas_vecinas(con: Any) -> None:
+    """Una celda H3 de borde recibe pixeles de dos teselas.
+
+    Sin la consolidacion final aparecerian dos filas para el mismo par (celda,
+    clase), y el pivote posterior elegiria una de las dos en silencio.
+    """
+    import pyarrow as pa
+
+    from pipelines.p0_exposure.raster_categorico_h3 import fracciones_por_celda
+
+    con.execute("CREATE TABLE lulc (h3_08 UBIGINT, clase VARCHAR, pixeles BIGINT)")
+    con.register(
+        "_x",
+        pa.table(
+            {
+                "h3_08": pa.array([1, 1, 1], pa.uint64()),
+                "clase": pa.array(["arbolado", "arbolado", "cultivo"], pa.string()),
+                "pixeles": pa.array([60, 20, 20], pa.int64()),
+            }
+        ),
+    )
+    con.execute("INSERT INTO lulc SELECT h3_08, clase, sum(pixeles) FROM _x GROUP BY 1, 2")
+
+    filas = fracciones_por_celda(
+        con, origen="lulc", destino="lulc_pct", clases=("arbolado", "cultivo")
+    )
+    fila = con.execute(
+        "SELECT lulc_arbolado_pct, lulc_cultivo_pct, lulc_px FROM lulc_pct"
+    ).fetchone()
+
+    assert filas == 1
+    assert fila == (80.0, 20.0, 100)
+
+
+@pytest.mark.geo
+def test_el_denominador_es_lo_clasificado_y_no_lo_que_cabe(con: Any) -> None:
+    """En la costa media celda es mar, y el mar no cuenta.
+
+    Dividir por la capacidad teorica de la celda daria porcentajes que no suman
+    nada reconocible, y una celda costera perfectamente medida pareceria vacia.
+    """
+    import pyarrow as pa
+
+    from pipelines.p0_exposure.raster_categorico_h3 import fracciones_por_celda
+
+    con.execute("CREATE TABLE lulc (h3_08 UBIGINT, clase VARCHAR, pixeles BIGINT)")
+    con.register(
+        "_x",
+        pa.table(
+            {
+                "h3_08": pa.array([7], pa.uint64()),
+                "clase": pa.array(["arbolado"], pa.string()),
+                "pixeles": pa.array([9], pa.int64()),
+            }
+        ),
+    )
+    con.execute("INSERT INTO lulc SELECT * FROM _x")
+
+    fracciones_por_celda(con, origen="lulc", destino="lulc_pct", clases=("arbolado",))
+    fila = con.execute("SELECT lulc_arbolado_pct, lulc_px FROM lulc_pct").fetchone()
+
+    assert fila[0] == 100.0, "nueve pixeles de arbolado son el 100 % de lo medido"
+    assert fila[1] == 9, "y `lulc_px` es lo que avisa de que la evidencia es poca"
+
+
+@pytest.mark.geo
+def test_nadie_puede_sumar_codigos_de_clase() -> None:
+    """El error que esta funcion existe para evitar.
+
+    Si alguien enruta la cobertura del suelo por `aggregate_rasters_to_h3`,
+    obtendra `sum(valor)` sobre codigos: mitad arbolado (10) y mitad cultivo
+    (40) darian 25, que es el codigo de nada y un numero perfectamente creible.
+    """
+    import inspect
+
+    from pipelines.p0_exposure.raster_categorico_h3 import aggregate_categorical_to_h3
+
+    fuente = inspect.getsource(aggregate_categorical_to_h3)
+
+    assert "sum(pixeles)" in fuente
+    assert "GROUP BY 1, 2" in fuente, "la clase tiene que estar en el agrupamiento"
+
+
+def test_una_tesela_que_no_existe_no_tumba_el_build() -> None:
+    """Tumbo diez de diecinueve builds el 27-ago-2026.
+
+    El proveedor solo publica las teselas que contienen tierra, y
+    `tiles_for_bbox` genera la rejilla completa: la caja de Chile son 210
+    teselas y la mayoria es Pacifico abierto. GDAL responde 404 y rasterio lo
+    convierte en excepcion.
+
+    `download_ghsl` ya trataba este caso —"tesela ausente, probablemente solo
+    oceano"— y aqui falto: copie la forma del modulo sin copiar su leccion.
+    """
+    import inspect
+
+    from pipelines.p0_exposure.raster_categorico_h3 import aggregate_categorical_to_h3
+
+    fuente = inspect.getsource(aggregate_categorical_to_h3)
+
+    assert '"404" not in str(error)' in fuente, "un 404 de tesela sigue tumbando el build"
+    assert "raise" in fuente, "y cualquier otro error si tiene que propagarse"
+
+
+def test_saltarse_una_tesela_no_materializa_la_siguiente() -> None:
+    """El arreglo no puede costar la lectura por bloques.
+
+    Envolver `list(clases_por_celda(...))` en el try seria mas corto y traeria
+    la tesela entera a memoria — 20 M de pixeles— justo lo que el diseno evita.
+    El 404 salta al abrir el fichero, que es lo primero que hace el generador,
+    asi que el try puede envolver el bucle sin riesgo de inserciones a medias.
+    """
+    import inspect
+
+    from pipelines.p0_exposure.raster_categorico_h3 import aggregate_categorical_to_h3
+
+    fuente = inspect.getsource(aggregate_categorical_to_h3)
+
+    assert "list(clases_por_celda" not in fuente
+    assert "for bloque in clases_por_celda(" in fuente
+
+
+def test_todas_las_teselas_ausentes_si_tumban_el_build(monkeypatch: Any) -> None:
+    """La otra mitad de la leccion, que faltaba.
+
+    Una tesela ausente es oceano y se salta. **Todas** ausentes no es oceano:
+    es que la coleccion cambio de version o de bucket —las URL de este modulo
+    son constantes fijas—. Sin esta guardia, `lulc_h3` quedaba vacia, el LEFT
+    JOIN del ensamblaje ponia 0.0 en las siete columnas de cobertura de todas
+    las celdas del pais, y el activo se publicaba con "0 % arbolado" en la
+    Amazonia pasando todos los asserts. Esos ceros salen a la calle en los
+    reportes de incendio.
+    """
+    import duckdb
+
+    from pipelines.p0_exposure import raster_categorico_h3
+
+    def solo_404(*_args: Any, **_kwargs: Any) -> Any:
+        raise RuntimeError("HTTP response code: 404")
+
+    monkeypatch.setattr(raster_categorico_h3, "clases_por_celda", solo_404)
+    con = duckdb.connect()
+    con.execute("INSTALL h3 FROM community; LOAD h3")
+
+    with pytest.raises(ValueError, match="Ninguna de las 3 teselas"):
+        raster_categorico_h3.aggregate_categorical_to_h3(
+            con,
+            ["/vsicurl/a.tif", "/vsicurl/b.tif", "/vsicurl/c.tif"],
+            tabla="lulc_h3",
+        )
+
+
+def test_una_sola_tesela_ausente_de_varias_sigue_sin_tumbar_nada(monkeypatch: Any) -> None:
+    """Y la guardia nueva no puede comerse el caso que la anterior resolvio."""
+    import duckdb
+    import pyarrow as pa
+
+    from pipelines.p0_exposure import raster_categorico_h3
+
+    def una_falla(fuente: str, **_kwargs: Any) -> Any:
+        if fuente.endswith("b.tif"):
+            raise RuntimeError("HTTP response code: 404")
+        yield pa.table(
+            {
+                "lon": pa.array([-75.7], pa.float64()),
+                "lat": pa.array([4.8], pa.float64()),
+                "clase": pa.array(["arbolado"], pa.string()),
+            }
+        )
+
+    monkeypatch.setattr(raster_categorico_h3, "clases_por_celda", una_falla)
+    con = duckdb.connect()
+    con.execute("INSTALL h3 FROM community; LOAD h3")
+
+    resumen = raster_categorico_h3.aggregate_categorical_to_h3(
+        con, ["/vsicurl/a.tif", "/vsicurl/b.tif"], tabla="lulc_h3"
+    )
+
+    assert resumen.celdas == 1
+
+
+@pytest.mark.geo
+def test_una_celda_de_roca_no_publica_cien_por_cien_de_pastizal() -> None:
+    """EL CASO DEL ALTIPLANO, sobre el SQL que produce los porcentajes.
+
+    130 pixeles de roca y 10 de pastizal en la misma celda. Con la roca fuera
+    del denominador salia «100 % pastizal»; con ella dentro sale el 7,1 % que
+    es, y los seis porcentajes suman menos de 100 — la diferencia es la roca.
+    """
+    from pipelines.p0_exposure.raster_categorico_h3 import fracciones_por_celda
+    from pipelines.p2_impact.exposure_join import connect
+
+    con = connect()
+    con.execute(
+        "CREATE OR REPLACE TABLE clases_h3 AS SELECT * FROM (VALUES "
+        f"(1::UBIGINT, 'pastizal', 10), (1::UBIGINT, '{wc.OTRO_SUELO}', 130)"
+        ") AS t(h3_08, clase, pixeles)"
+    )
+    fracciones_por_celda(
+        con,
+        origen="clases_h3",
+        destino="lulc_pct_h3",
+        clases=tuple(c.nombre for c in wc.CLASES),
+    )
+    fila = con.execute(
+        "SELECT lulc_pastizal_pct, lulc_px FROM lulc_pct_h3 WHERE h3_08 = 1"
+    ).fetchone()
+
+    assert float(fila[0]) == pytest.approx(7.1, abs=0.05), (
+        "la roca vuelve a estar fuera del denominador"
+    )
+    assert int(fila[1]) == 140, "`lulc_px` cuenta ahora todo el suelo de la celda"
+
+    suma = con.execute(
+        "SELECT "
+        + " + ".join(f"lulc_{c.nombre}_pct" for c in wc.CLASES)
+        + " FROM lulc_pct_h3 WHERE h3_08 = 1"
+    ).fetchone()[0]
+    assert float(suma) < 100.0, "los seis porcentajes tienen que dejar sitio a la roca"

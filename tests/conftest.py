@@ -1,0 +1,130 @@
+"""Fixtures compartidas.
+
+Regla del proyecto: **ninguna prueba toca la red**. El unico test que consulta
+el feed vivo es el nocturno de drift de contrato (§6.2), marcado ``network`` y
+excluido de CI de PR.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from pipelines.common.constants import USGS_FEED_BACKFILL, USGS_FEED_PRIMARY
+from pipelines.common.geo import ensure_bundled_proj
+from pipelines.common.http import FixtureFetcher
+from pipelines.p1_trigger.feed import feed_url
+
+# Antes de que ningun modulo de prueba importe rasterio o pyproj. En produccion
+# lo hace cada funcion antes de su propio import, pero las pruebas fabrican sus
+# GeoTIFF con rasterio directamente y ese import va primero.
+#
+# Sin esto, en una maquina con PostgreSQL/PostGIS instalado las pruebas de
+# raster fallaban sueltas y pasaban en la suite completa —porque para entonces
+# ya habia corrido codigo de produccion que lo arreglaba—, que es la clase de
+# verde que no significa nada.
+ensure_bundled_proj()
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def load_fixture(*parts: str) -> Any:
+    """Carga un JSON de ``tests/fixtures``."""
+    return json.loads((FIXTURES.joinpath(*parts)).read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def feed_payload() -> dict[str, Any]:
+    payload: dict[str, Any] = load_fixture("usgs", "feed_4.5_hour.json")
+    return payload
+
+
+@pytest.fixture
+def detail_con_productos() -> dict[str, Any]:
+    payload: dict[str, Any] = load_fixture("usgs", "detail_with_products.json")
+    return payload
+
+
+@pytest.fixture
+def detail_sin_shakemap() -> dict[str, Any]:
+    payload: dict[str, Any] = load_fixture("usgs", "detail_no_shakemap.json")
+    return payload
+
+
+@pytest.fixture
+def fetcher(feed_payload: dict[str, Any]) -> FixtureFetcher:
+    """Fetcher con el feed de una hora lleno y el de 24 h **vacio**.
+
+    Es deliberado: las pruebas que usan esta fixture miran otra cosa y un
+    segundo feed con contenido les duplicaria los eventos.
+
+    Pero durante meses fue la unica forma en que la suite veia el feed de
+    respaldo, asi que **el rescate de 24 h no se ejercitaba en ninguna parte** —
+    y `docs/GARANTIAS.md` lo declaraba garantizado citando una prueba que no
+    toca el feed. El caso vive ahora en `tests/unit/test_feed_de_respaldo.py`,
+    que lo invierte: primario vacio y el sismo solo en el respaldo.
+    """
+    vacio = {"type": "FeatureCollection", "features": []}
+    return FixtureFetcher(
+        {
+            feed_url(USGS_FEED_PRIMARY): feed_payload,
+            feed_url(USGS_FEED_BACKFILL): vacio,
+        }
+    )
+
+
+@pytest.fixture
+def events_dir(tmp_path: Path) -> Path:
+    """Directorio temporal de ``event_state``, aislado por prueba."""
+    directory = tmp_path / "events"
+    directory.mkdir()
+    return directory
+
+
+# --- Saltos por dependencia ausente ---------------------------------------
+
+#: Modulo que delata cada extra opcional.
+_EXTRAS: dict[str, str] = {"geo": "h3", "render": "matplotlib"}
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Salta las pruebas cuyo extra no esta instalado, con razon explicita.
+
+    Un contribuidor que solo instala ``[dev]`` merece una corrida limpia con
+    saltos legibles, no seis errores de importacion. **CI si instala todos los
+    extras**, asi que alli no se salta nada: un salto silencioso en CI seria
+    peor que el error.
+    """
+    import importlib.util
+
+    faltan = {
+        extra for extra, modulo in _EXTRAS.items() if importlib.util.find_spec(modulo) is None
+    }
+    for extra in faltan:
+        marca = pytest.mark.skip(reason=f"requiere el extra [{extra}]: uv sync --extra {extra}")
+        for item in items:
+            if extra in item.keywords:
+                item.add_marker(marca)
+
+
+# --- Estado global entre pruebas -------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _cache_de_hdx_limpio() -> Iterator[None]:
+    """El cache de `package_show` no puede filtrarse de una prueba a la otra.
+
+    Vive lo que vive el proceso —un build es una corrida y un dataset no cambia
+    de licencia a mitad— pero en la suite el proceso son dos mil pruebas. Sin
+    esto, la primera que resuelve `cod-ab-col` decide lo que ven las demas, y un
+    doble de fetcher devolveria la respuesta del doble anterior.
+    """
+    from pipelines.common.hdx import limpiar_cache_hdx
+
+    limpiar_cache_hdx()
+    yield
+    limpiar_cache_hdx()

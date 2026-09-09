@@ -1,0 +1,224 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us2000ahv0",
+    "mag": 8.2,
+    "depth_km": 47.39,
+    "utc": "2017-09-08T04:49:19Z",
+    "lugar": "Terremoto de Tehuantepec, México (2017)",
+    "pager_alert": "red",
+    "lon": -93.8993,
+    "lat": 15.0222
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 1,
+    "exposure_manifest": "mex-v0.3",
+    "modelo_deslizamiento": "nowicki_2014_global_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 760856.2383539012,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "pop_65p_mmi6p": 71430.63139389244,
+    "bld_mmi6p": 442745.0,
+    "built_m2_mmi6p": 71886869.0,
+    "health_mmi6p": 224.0,
+    "edu_mmi6p": 321.0,
+    "road_km_mmi6p": 10453.91390980728,
+    "road_km_principal_mmi6p": 894.8074653095462,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 2061.6080413851887,
+    "pop_lq_alta": 360767.28644302784
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "MX20043",
+      "nombre": "Heroica Ciudad de Juchitán de Zaragoza",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 109669.97918312269
+    },
+    {
+      "adm2_id": "MX20079",
+      "nombre": "Salina Cruz",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 102644.90687105703
+    },
+    {
+      "adm2_id": "MX07097",
+      "nombre": "Tonalá",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 77304.43236512115
+    },
+    {
+      "adm2_id": "MX20515",
+      "nombre": "Santo Domingo Tehuantepec",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 71151.23822873516
+    },
+    {
+      "adm2_id": "MX07069",
+      "nombre": "Pijijiapan",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 64443.639377167914
+    },
+    {
+      "adm2_id": "MX07051",
+      "nombre": "Mapastepec",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 54492.09950208943
+    },
+    {
+      "adm2_id": "MX07009",
+      "nombre": "Arriaga",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 51136.6636810638
+    },
+    {
+      "adm2_id": "MX07003",
+      "nombre": "Acapetahua",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 37567.410551016685
+    },
+    {
+      "adm2_id": "MX20124",
+      "nombre": "San Blas Atempa",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 19976.17078799894
+    },
+    {
+      "adm2_id": "MX20248",
+      "nombre": "San Mateo del Mar",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 18218.377668433823
+    },
+    {
+      "adm2_id": "MX20557",
+      "nombre": "Unión Hidalgo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 17354.592344975856
+    },
+    {
+      "adm2_id": "MX20327",
+      "nombre": "San Pedro Tapanatepec",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 17121.510841130046
+    },
+    {
+      "adm2_id": "MX20413",
+      "nombre": "Santa María Huatulco",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 14375.726882462623
+    },
+    {
+      "adm2_id": "MX20025",
+      "nombre": "Chahuites",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 13942.13852614304
+    },
+    {
+      "adm2_id": "MX20525",
+      "nombre": "Santo Domingo Zanatepec",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 13577.815242281882
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 12.0,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "orange",
+    "ls_pop_usgs": "210",
+    "lq_alerta_usgs": "red",
+    "lq_pop_usgs": "150000"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-07T16:47:11Z",
+  "pipeline_version": "0.1.0"
+}
