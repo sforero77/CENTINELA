@@ -1,0 +1,160 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us6000hf75",
+    "mag": 6.6,
+    "depth_km": 27.0,
+    "utc": "2022-04-21T07:42:46Z",
+    "lugar": "55 km al OSO de Masachapa, Nicaragua",
+    "pager_alert": "green",
+    "lon": -86.9604,
+    "lat": 11.5537
+  },
+  "inputs": {
+    "shakemap_version": 6,
+    "groundfailure_version": 6,
+    "exposure_manifest": "nic-v0.3",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [
+    {
+      "radio_km": 25,
+      "pop": 0.0
+    },
+    {
+      "radio_km": 50,
+      "pop": 0.0
+    },
+    {
+      "radio_km": 100,
+      "pop": 1457084.9331211508
+    }
+  ],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 0.0,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "pop_65p_mmi6p": 0.0,
+    "bld_mmi6p": 0.0,
+    "built_m2_mmi6p": 0.0,
+    "health_mmi6p": 0.0,
+    "edu_mmi6p": 0.0,
+    "road_km_mmi6p": 0.0,
+    "road_km_principal_mmi6p": 0.0,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 0.0
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "NI7520",
+      "nombre": "Diriamba",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "NI5520",
+      "nombre": "Villa el Carmen",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "NI3550",
+      "nombre": "Nagarote",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "NI5535",
+      "nombre": "San Rafael del Sur",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": null,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "green",
+    "ls_pop_usgs": "0",
+    "lq_alerta_usgs": "green",
+    "lq_pop_usgs": "0"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/NIC.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-08T01:02:50Z",
+  "pipeline_version": "0.1.0"
+}

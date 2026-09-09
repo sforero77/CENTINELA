@@ -1,0 +1,501 @@
+name: P2/P3 · Impacto y reporte
+
+on:
+  workflow_dispatch:
+    inputs:
+      usgs_id:
+        description: "Identificador USGS del evento"
+        required: true
+        type: string
+      backtest:
+        description: "Historico que P1 nunca vio (no cuenta para la latencia)"
+        required: false
+        default: false
+        type: boolean
+      reprocesar:
+        description: "Reemitir aunque USGS no publique nada nuevo (cambio el pipeline)"
+        required: false
+        default: false
+        type: boolean
+  repository_dispatch:
+    types: [centinela-evento]
+
+permissions:
+  contents: write
+  # Para republicar el visor tras el push. Ver "Republicar el visor".
+  actions: write
+  # Sin esto el manejador de fallos no puede abrir el issue, que es toda su
+  # razon de ser. No estaba.
+  issues: write
+
+# Un job por evento a la vez: dos versiones de ShakeMap del mismo evento no
+# deben pisarse. Eventos distintos si corren en paralelo.
+concurrency:
+  group: impacto-${{ inputs.usgs_id || github.event.client_payload.usgs_id }}
+  cancel-in-progress: false
+
+jobs:
+  impacto:
+    runs-on: ubuntu-latest
+    env:
+      USGS_ID: ${{ inputs.usgs_id || github.event.client_payload.usgs_id }}
+      DETAIL_URL: >-
+        https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=${{
+        inputs.usgs_id || github.event.client_payload.usgs_id }}&format=geojson
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo + geo
+        run: uv sync --python 3.12 --extra geo --extra render
+
+      # El activo no vive en git: unos 19 MB por pais. Se publica como Release
+      # versionado y esa copia es la que sostiene RNF-04, porque Overture
+      # retira sus releases a los dos meses (ver docs/PUBLICAR_ACTIVO.md).
+      #
+      # EL ACTIVO ES POR PAIS Y P1 VIGILA TODA LATAM, ASI QUE HAY QUE ELEGIRLO —
+      # Y HAY QUE PODER EQUIVOCARSE AL ELEGIR.
+      #
+      # `countries_for_point` devuelve los paises cuya **caja envolvente**
+      # contiene el epicentro, ordenados por area. Las cajas se solapan y el
+      # area es un mal criterio: la de Chile mide 1.719 grados cuadrados porque
+      # llega a Rapa Nui, y la de Argentina 671. Medido: un M6,7 en Coquimbo
+      # sale como `[ARG, CHL, BRA]`.
+      #
+      # Este paso se quedaba con el primero que tuviera Release. O sea que un
+      # sismo chileno se calculaba contra el activo argentino, el join quedaba
+      # vacio y **Chile no habria tenido reporte nunca** — uno de los paises mas
+      # sismicos de la region.
+      #
+      # El desempate real lo da el join, como dicen desde el principio las
+      # docstrings de `countries_for_point` y de `paises-candidatos`. Aqui se
+      # implementa por fin: se prueban los candidatos en orden y el codigo de
+      # salida 3 significa "este activo no es de este sismo, sigue".
+      - name: Calcular impacto contra el activo del pais que corresponda
+        id: impacto
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Solo por despacho manual. Un evento que llega por `repository_dispatch`
+          # viene de P1, o sea que su estado existe y es en vivo por definicion.
+          BACKTEST: ${{ inputs.backtest && '--backtest' || '' }}
+          REPROCESAR: ${{ inputs.reprocesar && '--reprocesar' || '' }}
+        run: |
+          # MAR ABIERTO NO ES UN FALLO. El codigo 4 dice "el epicentro no cae en
+          # ninguna caja de pais": no hay activo contra el que calcular y un
+          # reporte es imposible. Se cierra por los dos lados —estado terminal y
+          # entrada en la capa de observados, que el visor si pinta— en vez de
+          # reintentarlo a diario durante noventa dias.
+          set +e
+          PAISES=$(uv run centinela paises-candidatos "$USGS_ID" --detail-url "$DETAIL_URL")
+          CODIGO=$?
+          set -e
+          if [ "$CODIGO" -eq 4 ]; then
+            echo "::notice::$USGS_ID cae fuera de todas las cajas de pais: mar abierto. Se cierra y queda visible en observados."
+            uv run centinela sin-pais "$USGS_ID" \
+              --razon "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos"
+            echo "sin_pais=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$CODIGO" -ne 0 ]; then exit "$CODIGO"; fi
+          echo "candidatos por epicentro: $PAISES"
+
+          SIN_ACTIVO=""
+          DESCARTADOS=""
+          for ISO3 in $PAISES; do
+            PREFIJO="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-"
+            TAG=$(gh release list --limit 100 --json tagName \
+                   --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
+                         | sort_by(.tagName) | last | .tagName")
+            if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+              echo "sin activo publicado para $ISO3"
+              SIN_ACTIVO="$SIN_ACTIVO $ISO3"
+              continue
+            fi
+
+            echo "::group::probando $ISO3 con $TAG"
+            rm -rf data/build && mkdir -p data/build
+            gh release download "$TAG" --dir data/build --clobber
+            MANIFEST=$(ISO3="$ISO3" uv run python -c "
+          import os
+          from pipelines.common.manifest import Manifest
+          print(Manifest.load(os.environ['ISO3']).manifest_id)")
+
+            set +e
+            uv run centinela impact "$USGS_ID" $BACKTEST $REPROCESAR \
+              --detail-url "$DETAIL_URL" \
+              --exposure "data/build/exposure_h3.parquet" \
+              --manifest "$MANIFEST"
+            CODIGO=$?
+            set -e
+            echo "::endgroup::"
+
+            if [ "$CODIGO" -eq 0 ]; then
+              echo "tag=$TAG"   >> "$GITHUB_OUTPUT"
+              echo "iso3=$ISO3" >> "$GITHUB_OUTPUT"
+              echo "::notice::$USGS_ID calculado con el activo de $ISO3 ($TAG)"
+              exit 0
+            fi
+            # Solo el 3 es "prueba el siguiente". Cualquier otro codigo es un
+            # fallo de verdad y tiene que abrir issue, no esconderse tras un
+            # reintento contra otro pais.
+            if [ "$CODIGO" -ne 3 ]; then
+              echo "::error::El impacto de $USGS_ID fallo con $ISO3 (codigo $CODIGO)."
+              exit "$CODIGO"
+            fi
+            echo "el activo de $ISO3 no alcanza ninguna celda; se prueba el siguiente"
+            DESCARTADOS="$DESCARTADOS $ISO3"
+          done
+
+          # AGOTAR LOS CANDIDATOS NO ES LO MISMO QUE FALLAR.
+          #
+          # Si todos se descartaron por **no alcanzar celdas** —y ninguno por
+          # faltar el activo— el enrutado acerto y lo que pasa es que la
+          # sacudida no llego a poblacion. Es el caso de un M5,6 a 71 km mar
+          # adentro, y hay que publicarlo: el ShakeMap se revisa, la version
+          # siguiente puede alcanzar tierra, y solo se seguira mirando si el
+          # evento esta en el catalogo. Descartarlo es dejar de mirar.
+          #
+          # Se reintenta con el primer candidato, el mejor por epicentro.
+          # El primero de la lista ES el preferido: `paises-candidatos` lo pone
+          # a la cabeza aplicando el desempate por toponimo. Antes esto cogia el
+          # primero por area de caja envolvente —la de Chile mide 1.719 grados
+          # cuadrados por Rapa Nui— y un sismo en Coquimbo se habria publicado
+          # contra el activo de Argentina.
+          PRIMERO=$(echo $PAISES | awk '{print $1}')
+          if [ -z "$SIN_ACTIVO" ] && [ -n "$PRIMERO" ]; then
+            echo "::notice::Ningun activo alcanza celdas para $USGS_ID: la sacudida no llego a poblacion. Se publica con ceros usando $PRIMERO."
+            PREFIJO="exposure-$(echo "$PRIMERO" | tr '[:upper:]' '[:lower:]')-"
+            TAG=$(gh release list --limit 100 --json tagName \
+                   --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
+                         | sort_by(.tagName) | last | .tagName")
+            rm -rf data/build && mkdir -p data/build
+            gh release download "$TAG" --dir data/build --clobber
+            MANIFEST=$(ISO3="$PRIMERO" uv run python -c "
+          import os
+          from pipelines.common.manifest import Manifest
+          print(Manifest.load(os.environ['ISO3']).manifest_id)")
+            # SIN `set +e` UN 3 RESIDUAL TUMBA EL PASO.
+            #
+            # El bucle de arriba envuelve cada intento porque el 3 significa
+            # "prueba el siguiente pais". Este reintento no lo hacia, asi que
+            # cualquier camino que siguiera devolviendo 3 —el preliminar lo
+            # hacia hasta hoy— salia como fallo pese a ser el caso previsto.
+            set +e
+            uv run centinela impact "$USGS_ID" $BACKTEST $REPROCESAR \
+              --detail-url "$DETAIL_URL" \
+              --exposure "data/build/exposure_h3.parquet" \
+              --manifest "$MANIFEST" \
+              --aunque-no-alcance
+            CODIGO=$?
+            set -e
+            if [ "$CODIGO" -ne 0 ]; then
+              echo "::error::El reintento con --aunque-no-alcance fallo (codigo $CODIGO)."
+              exit "$CODIGO"
+            fi
+            echo "tag=$TAG"      >> "$GITHUB_OUTPUT"
+            echo "iso3=$PRIMERO" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "::error::Ningun activo sirvio para $USGS_ID. Candidatos: [$PAISES].\
+          Descartados por no alcanzar celdas:[$DESCARTADOS]. Sin activo publicado:\
+          [$SIN_ACTIVO]. Si falta un pais, construyelo con: \
+          gh workflow run exposure_quarterly.yml -f iso3=<ISO3>"
+          exit 1
+
+      - name: Publicar artefactos
+        id: publicar
+        if: success()
+        run: |
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+
+          # La latencia se calcula sola a partir de los timestamps del
+          # `event_state`, pero hay que **recalcularla y publicarla**: este paso
+          # anadia `events/` y `reports/` y no `site/status.json`, asi que la
+          # pagina de estado se quedaba en la version anterior. Medido: tres
+          # reportes publicados el 25-ago y un status.json del 23-ago que
+          # listaba un solo evento.
+          #
+          # No es cosmetico. "Latencia medida y publicada" es uno de los dos
+          # requisitos que quedan para cerrar Fase 0, y no lo cerraba el primer
+          # sismo: lo bloqueaba este `git add`.
+          # EL GUARDIA DE DIFF IBA DESPUES DE REESCRIBIR UN DERIVADO.
+          #
+          # `centinela status` reescribe `site/status.json` con un
+          # `generado_utc` nuevo en cada corrida, asi que al llegar aqui el
+          # indice **siempre** tenia algo que commitear y el
+          # `git diff --staged --quiet` no podia dispararse nunca. Medido: 470
+          # de 552 commits «P3: reporte de X» no tocan ningun reporte, y cada
+          # uno despacha un despliegue de Pages y una corrida de CI — sobre la
+          # cola de Actions que este proyecto documenta como su cuello de
+          # botella.
+          #
+          # Primero lo que es dato, despues la comprobacion, y solo entonces el
+          # derivado. Asi el guardia vuelve a medir lo que dice medir.
+          git add events/ reports/
+          if git diff --staged --quiet; then
+            echo "::notice::Sin cambios en events/ ni reports/: no se publica commit."
+            exit 0
+          fi
+
+          # La latencia se recalcula **solo cuando hay algo que publicar**, que
+          # es cuando puede haber cambiado.
+          uv run centinela status
+          git add site/status.json
+
+          # LA PORTADA VIAJA EN EL MISMO COMMIT QUE EL REPORTE.
+          #
+          # El 8-sep-2026 el repaso empezo a incluir los backtests, re-emitio
+          # `us6000tjl2` de ShakeMap v8 a v9 —`pop_mmi7p` subio un 26,6 %— y
+          # `main` se quedo en rojo: el bot publica el reporte y la tabla de
+          # cifras del README seguia escrita a mano con las del v8.
+          #
+          # `test_cifras_del_readme.py` lo cazo, que para eso existe, pero
+          # avisar no basta cuando quien re-emite es un workflow. Se genera
+          # aqui, antes del commit, para que no exista el instante en que el
+          # reporte y la portada dicen cosas distintas.
+          #
+          # Solo toca cifras. Lo que cambia de argumento —que Cali entrara
+          # primera al top de municipios, o que el acotamiento con PAGER dejara
+          # de cumplirse en MMI≥6— lo escribe una persona, y lo siguen cazando
+          # las pruebas.
+          #
+          # `|| warning`: ESTE PASO NO PUEDE TUMBAR UNA PUBLICACION.
+          #
+          # Lee el `report.json` del Choco, que no tiene nada que ver con el
+          # evento que se esta publicando. Sin la guarda, un sismo en Chile se
+          # quedaria sin reporte porque un fichero de otro evento no se puede
+          # leer — y este job corre con `bash -e`. El reporte es el producto;
+          # la portada es un derivado suyo.
+          #
+          # Tragarselo no deja el fallo a oscuras: `test_cifras_del_readme.py`
+          # sigue comprobando que la portada este al dia, y el propio
+          # `impact.yml` despacha `ci.yml` al terminar. Se pierde la
+          # sincronizacion automatica de esa vez, no la alarma.
+          uv run centinela sincronizar-portada             || echo "::warning::no se pudo sincronizar la portada; el reporte se publica igual"
+          git add README.md
+
+          git commit -m "P3: reporte de $USGS_ID"
+
+          # Dos eventos simultaneos tienen concurrency groups distintos y
+          # empujan a la misma rama. Con rebase basta para `events/` y para el
+          # directorio del evento, que son disjuntos — pero NO para los ficheros
+          # **derivados**, que los dos jobs reescriben enteros y que por tanto
+          # conflictan siempre.
+          #
+          # Paso de verdad al reemitir los dos mainshocks de Venezuela, que es
+          # justo el caso para el que existe G2: el segundo murio con
+          # "CONFLICT (content): Merge conflict in reports/index.json" y su
+          # reporte, ya calculado, no llego a publicarse.
+          #
+          # Un derivado no se fusiona: se regenera. El indice sale de los
+          # `report.json` del directorio y la pagina de estado de los
+          # `event_state`, asi que ninguno de los dos tiene contenido propio que
+          # una fusion pudiera salvar.
+          #
+          # La lista esta aqui una sola vez. Cuando entro `site/status.json`
+          # este manejador solo conocia `reports/index.json`, y el segundo
+          # derivado habria tumbado la publicacion del segundo evento
+          # exactamente igual que el primero.
+          DERIVADOS='reports/index.json site/status.json'
+
+          regenerar_derivados() {
+            local conflictos
+            conflictos=$(git diff --name-only --diff-filter=U)
+            [ -n "$conflictos" ] || return 1
+            # Un conflicto fuera de la lista es real y no se toca: regenerar
+            # a ciegas descartaria el trabajo del otro job.
+            if grep -qvE '^(reports/index\.json|site/status\.json)$' <<<"$conflictos"; then
+              return 1
+            fi
+            echo "::notice::derivados en conflicto; se regeneran en vez de fusionarse"
+            # EL FICHERO EN CONFLICTO NO ES JSON, Y `centinela status` LO LEE.
+            #
+            # Regenerar sobre un `status.json` con marcadores de conflicto hacia
+            # que `write_status` no pudiera parsearlo y repusiera el historial de
+            # latidos vacio. Se resuelve antes: con `--theirs` se pierde a lo sumo
+            # un latido en vez de todos, y `centinela status` regenera el resto.
+            git checkout --theirs site/status.json 2>/dev/null || true
+            # Fallar aqui tiene que abortar. Esta funcion se llama desde un
+            # `elif`, que **desactiva `set -e`**: sin comprobar el codigo de
+            # salida, un regenerado que falla seguia hasta `git add` y
+            # `rebase --continue`, publicando el fichero en conflicto tal cual.
+            uv run centinela reindexar || return 1
+            uv run centinela status || return 1
+
+            # LA RED DE SEGURIDAD. Un fichero con marcadores no se publica,
+            # sea cual sea el motivo. El 2-sep-2026 el manejador gemelo de
+            # `trigger.yml` dejo los dos derivados corruptos en `main`:
+            # `/status` sirvio JSON invalido y el vigia se cayo detras.
+            # Es preferible reintentar y quedarse en rojo —que se ve— a servir
+            # un JSON que el visor no puede leer.
+            for derivado in $DERIVADOS; do
+              if grep -q '^<<<<<<< \|^>>>>>>> ' "$derivado"; then
+                echo "::error::$derivado conserva marcadores de conflicto; no se publica"
+                return 1
+              fi
+            done
+
+            # shellcheck disable=SC2086
+            git add $DERIVADOS
+            GIT_EDITOR=true git rebase --continue
+          }
+
+          # El push es la unica salida buena, y hay dos caminos que llegan a
+          # el. Que los dos avisen de lo mismo, en vez de que uno se olvide.
+          publicado() {
+            echo "publicado=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          for intento in 1 2 3 4; do
+            if git pull --rebase origin "${GITHUB_REF_NAME}"; then
+              git push && publicado
+            elif regenerar_derivados; then
+              git push && publicado
+            else
+              git rebase --abort || true
+            fi
+            sleep $((2 ** intento))
+          done
+          exit 1
+
+      # UN PUSH HECHO CON `GITHUB_TOKEN` NO DISPARA OTROS WORKFLOWS.
+      #
+      # Regla de GitHub contra los bucles infinitos, y aqui era el fallo mas
+      # caro del sistema: este paso commitea `reports/`, `site.yml` escucha
+      # `reports/**`, y el visor no se enteraba. **Un reporte de un sismo real
+      # se habria publicado en el repositorio y no habria aparecido nunca en la
+      # pagina.**
+      #
+      # Nada fallaba: los dos workflows en verde y el reporte correcto en su
+      # sitio. El fallo vivia en el hueco entre ellos.
+      #
+      # Se descubrio el 26-ago-2026 tirando del hilo de por que un M4,9 sentido
+      # en Colombia no se veia en el visor. `/status` en vivo llevaba diecisiete
+      # horas congelado y nadie lo habia notado, porque hasta hoy ningun sismo
+      # habia llegado a reporte por esta via.
+      #
+      # `workflow_dispatch` es la excepcion documentada a la regla, y es el
+      # mismo mecanismo con el que P1 dispara este workflow.
+      - name: Republicar el visor
+        if: steps.publicar.outputs.publicado == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run site.yml
+
+      # LA OTRA MITAD DEL MISMO HUECO: LAS PRUEBAS TAMPOCO SE ENTERABAN.
+      #
+      # `site.yml` ya se despacha a mano por la regla de arriba. `ci.yml`
+      # escucha `push` sobre `main` y no se habia mirado: el push de este
+      # workflow tampoco lo dispara, asi que **la suite no corre nunca sobre lo
+      # que el bot publica**. Medido el 4-sep-2026: el bot commiteo a las 09:54
+      # y no hubo una sola corrida de CI; las diez ultimas son todas de un PR
+      # humano.
+      #
+      # Importa porque parte de la suite vigila artefactos publicados y no
+      # codigo: `test_lo_publicado_se_ve.py` mide los PNG de `reports/` y
+      # `test_ningun_evento_se_queda_sin_reporte.py` mira el hueco entre lo
+      # detectado y lo publicado. Los dos son guardias sobre **lo que este paso
+      # acaba de escribir**, y solo corrian cuando alguien fusionaba un PR.
+      #
+      # VA DESPUES DE PUBLICAR, NO ANTES. Publicar es el camino critico de un
+      # sismo real y no puede depender de una suite: la regla de este modulo es
+      # que un fallo de derivado no tumba el reporte, que ya esta en disco. Esto
+      # no bloquea, delata — y delatar en rojo a los dos minutos es justo lo que
+      # faltaba.
+      - name: Comprobar lo que se acaba de publicar
+        if: steps.publicar.outputs.publicado == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run ci.yml
+
+      # Y LA COBERTURA QUE ABRE UN NAVEGADOR, POR EL MISMO MOTIVO.
+      #
+      # `visor.yml` escucha `push` sobre `reports/**`, pero un push hecho con
+      # `GITHUB_TOKEN` **no dispara otros workflows**: la unica cobertura que ve
+      # la pantalla no corria nunca sobre lo que publica el bot. Es exactamente
+      # la misma regla de GitHub que ya obliga a despachar `site.yml` a mano
+      # —y que dejo el visor diecisiete horas congelado con todo en verde—,
+      # aplicada a la comprobacion en vez de a la publicacion.
+      - name: Abrir el visor sobre el reporte recien publicado
+        if: steps.publicar.outputs.publicado == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run visor.yml
+
+
+      # RNF-03: si el contrato USGS se rompe, el pipeline degrada y deja
+      # rastro accionable. Nunca publica datos corruptos en silencio.
+
+      # LA OTRA MITAD: SABER DECIR "YA PASO".
+      #
+      # Sabia abrir incidencia y no cerrarla. Las veinte del 2-sep quedaron
+      # abiertas describiendo una condicion que ya no existia, y hubo que
+      # cerrarlas a mano. Una alarma que solo sabe encenderse deja de leerse, y
+      # entonces la siguiente que importe tampoco se ve. Es la mitad que
+      # `frescura.yml` y `rezago.yml` ya tenian.
+      - name: Cerrar la incidencia si el evento volvio a salir
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITULO="P2 fallo para $USGS_ID"
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          if [ -n "$ABIERTA" ]; then
+            gh issue close "$ABIERTA" --comment "P2 vuelve a salir bien para $USGS_ID. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "Cerrada la incidencia #$ABIERTA."
+          else
+            echo "Nada que cerrar: no habia incidencia abierta."
+          fi
+
+      - name: Abrir issue ante fallo
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Las etiquetas se crean si no existen. Sin esto el manejador de
+          # fallos **falla el mismo**: paso de verdad —"could not add label:
+          # 'pipeline' not found"— y el issue nunca se abrio, justo en la
+          # corrida que habia que investigar. Una red de seguridad que depende
+          # de configuracion previa del repo no es una red: es otro punto de
+          # fallo, y encima uno que solo se nota cuando ya hay un problema.
+          gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+          # UNA INCIDENCIA POR EVENTO, NO UNA POR FALLO.
+          #
+          # El vigia reintenta cada cinco minutos, asi que un evento que falla
+          # abre una incidencia nueva cada cinco minutos. El 2-sep-2026 fueron
+          # **seis en once minutos para dos eventos**, todas describiendo la
+          # misma causa. Una alarma que se repite se lee como ruido y se
+          # silencia entera, con lo que la siguiente que importe tampoco se ve.
+          #
+          # `frescura.yml` ya resolvio esto: buscar por titulo exacto, comentar
+          # si existe y crear solo si no. Se busca por titulo y no por etiqueta
+          # porque la creacion tiene un camino de respaldo **sin etiquetas**
+          # para cuando `gh label` falla, y filtrar por etiqueta dejaria
+          # escapar justo esas.
+          TITULO="P2 fallo para $USGS_ID"
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            echo "Ya hay una abierta (#$ABIERTA): se anota y no se duplica."
+            gh issue comment "$ABIERTA" --body "Vuelve a fallar. Corrida: $CORRIDA"
+            exit 0
+          fi
+
+          CUERPO="El pipeline de impacto fallo. Corrida: $CORRIDA"
+          gh issue create --title "$TITULO" \
+                          --label "pipeline,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"

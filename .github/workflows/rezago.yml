@@ -1,0 +1,236 @@
+name: Rezago de los reportes publicados
+
+# EL REPASO SALTA LOS BACKTEST Y LOS VEINTIUNO SON BACKTEST.
+#
+# `repaso.yml` cumple RF-04 para los eventos vivos. Los publicados quedan
+# fuera a proposito —re-emitir un historico cada vez que USGS retoca su Atlas
+# convertiria el catalogo en ruido— y esa decision sigue siendo buena. Su coste
+# no estaba medido: el 1-sep-2026 se descubrio que el Choco publicaba el
+# ShakeMap v7 con el v8 ya servido, y se supo porque alguien re-emitio a mano
+# por otro motivo.
+#
+# Esto no cambia la decision: **informa y no despacha**. Convierte "nadie sabe"
+# en "hay N reportes atrasados, decide tu".
+
+on:
+  schedule:
+    # Lunes a las 07:23 UTC. Semanal y no diario porque esto se mueve despacio:
+    # el activo de exposicion se reconstruye cada trimestre y la mediana desde
+    # un sismo hasta la ultima revision de su ShakeMap son 63 dias (medido
+    # sobre los veinte del catalogo, ver `repaso.py`). Un dia de retraso en
+    # enterarse no cambia ninguna decision; veintiuna peticiones diarias a USGS
+    # para eso, si.
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      reemitir:
+        description: "Re-emitir los rezagados que encuentre"
+        type: choice
+        default: "no"
+        options:
+          # `activo` re-emite los que solo van atras en la receta del activo:
+          # el salto de manifiesto anadio cobertura del suelo, que P2 no usa,
+          # asi que sus cifras apenas se mueven.
+          #
+          # `todos` incluye los que van atras en ShakeMap o Ground Failure.
+          # Esos SI mueven cifras publicadas —el Choco movio las nueve que el
+          # README cita a mano— y despues hay que revisar la portada. Se elige
+          # a proposito, no por defecto.
+          - "no"
+          - "activo"
+          - "todos"
+
+permissions:
+  contents: read
+  issues: write
+  # Solo para `gh workflow run impact.yml` cuando alguien pulsa el boton.
+  # La corrida programada nunca despacha: `reemitir` vale "no" por defecto.
+  actions: write
+
+concurrency:
+  group: rezago
+  cancel-in-progress: false
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Y va con el otro cierre del mismo hueco: **todas las acciones estan
+      # fijadas por SHA** desde el 6-sep-2026, con la version en el comentario
+      # de al lado. Una etiqueta de git se puede reapuntar a cualquier commit
+      # —el precedente es tj-actions/changed-files, CVE-2025-30066— y
+      # `astral-sh/setup-uv` ademas no es de GitHub. Lo vigila
+      # `tests/unit/test_las_acciones_van_fijadas.py`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo
+        run: uv sync --python 3.12 --no-dev
+
+      # Sale distinto de cero solo si no se pudo consultar NINGUNO. Que haya
+      # rezago no es un fallo: es trabajo pendiente para una persona, y pintarlo
+      # de rojo enseñaria a ignorar el rojo.
+      - name: Comparar cada reporte con lo que sus fuentes sirven hoy
+        id: comprobar
+        run: uv run centinela rezagados
+
+      # EL BOTON. Automatico el trabajo, humana la decision.
+      #
+      # Despachar solo seria automatizar el romper el build: re-emitir mueve
+      # cifras que viven en prosa escrita a mano —la tabla del README, el
+      # contraste con PAGER— y ningun workflow puede reescribir con verdad "un
+      # factor de 2,7". Lo que si se puede quitar de en medio es teclear seis
+      # comandos.
+      #
+      # SE COMPRUEBA EL EVENTO, NO SOLO EL INPUT.
+      #
+      # En un evento `schedule` el contexto `inputs` no existe: `inputs.reemitir`
+      # es nulo, y en las reglas de comparacion de Actions `null != 'no'` da
+      # **true**. Con solo esa condicion, la corrida de los lunes habria
+      # despachado re-emisiones sola — justo lo que este paso existe para evitar.
+      #
+      # `github.event_name` es lo unico que distingue "nadie pulso nada" de
+      # "alguien eligio no".
+      - name: Re-emitir los rezagados elegidos
+        id: reemitir
+        if: >-
+          github.event_name == 'workflow_dispatch'
+          && inputs.reemitir != 'no'
+          && steps.comprobar.outputs.hay_rezago == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTIVO: ${{ steps.comprobar.outputs.ids_exposicion }}
+          PRODUCTOS: ${{ steps.comprobar.outputs.ids_productos }}
+          # POR ENV, COMO LOS OTROS TRES DE ESTE MISMO PASO.
+          #
+          # Hoy `reemitir` es un `choice` de tres opciones y GitHub las valida,
+          # asi que el riesgo real es bajo. Pero `${{ inputs.x }}` dentro de un
+          # `run:` se sustituye antes de que bash vea el script —el valor deja de
+          # ser argumento y pasa a ser codigo— y el dia que alguien cambie el
+          # tipo a `string` para admitir una lista de ids, ese cambio no tendria
+          # por que acordarse de esta linea. La condicion `if:` de arriba si
+          # puede interpolarlo: ahi no hay shell.
+          REEMITIR: ${{ inputs.reemitir }}
+        run: |
+          if [ "$REEMITIR" = "todos" ]; then
+            OBJETIVO="$ACTIVO $PRODUCTOS"
+          else
+            OBJETIVO="$ACTIVO"
+            # Que se queda fuera se dice. Un tope silencioso se lee como
+            # "cubierto todo" cuando no lo esta.
+            if [ -n "$PRODUCTOS" ]; then
+              echo "::notice::No se re-emiten los que van atras en producto USGS:"                    "$PRODUCTOS. Mueven cifras publicadas; hace falta 'todos'."
+            fi
+          fi
+
+          if [ -z "$(echo "$OBJETIVO" | tr -d ' ')" ]; then
+            echo "Nada que re-emitir con la opcion elegida."
+            exit 0
+          fi
+
+          for ID in $OBJETIVO; do
+            gh workflow run impact.yml               -f usgs_id="$ID" -f backtest=true -f reprocesar=true
+            echo "despachado $ID"
+            # No por prudencia con el push —impact.yml rebasa— sino para no
+            # encolar veintiun runners a la vez.
+            sleep 20
+          done
+
+          # Lo sabe el paso de la incidencia, que corre despues y si no
+          # escribiria una lista que acaba de dejar de ser cierta.
+          echo "despachados=$(echo $OBJETIVO | wc -w)" >> "$GITHUB_OUTPUT"
+
+          echo "::notice::Re-emitidos. La comprobacion del proximo lunes dira"                "si la lista quedo vacia."
+
+      # UNA SOLA INCIDENCIA, REESCRITA — NO COMENTADA.
+      #
+      # `frescura.yml` comenta en la suya porque describe una averia que deberia
+      # durar minutos. Esta describe trabajo que puede seguir pendiente semanas
+      # con toda razon, hasta que alguien decida re-emitir. Comentar cada lunes
+      # convertiria la incidencia en un hilo que nadie lee; reescribir el cuerpo
+      # deja siempre a la vista la lista de hoy y solo la de hoy.
+      - name: Anotar que reportes van atras
+        if: steps.comprobar.outputs.hay_rezago == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: Hay reportes publicados atras de sus fuentes
+          CUANTOS: ${{ steps.comprobar.outputs.cuantos }}
+          RESUMEN: ${{ steps.comprobar.outputs.resumen }}
+          DESPACHADOS: ${{ steps.reemitir.outputs.despachados }}
+        run: |
+          gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          CUERPO="$CUANTOS reporte(s) publicados se calcularon con una version
+          de sus fuentes que ya no es la vigente:
+
+          $RESUMEN
+
+          **Esto no se arregla solo, y no deberia.** Re-emitir un historico es
+          una decision con consecuencias: cambia cifras ya publicadas y ya
+          citadas. Cuando se decida, la receta esta en
+          \`docs/OPERACION.md\` §3.bis:
+
+          \`\`\`
+          gh workflow run impact.yml -f usgs_id=<ID> -f backtest=true -f reprocesar=true
+          \`\`\`
+
+          Y despues, comprobar que la portada sigue diciendo la verdad: las
+          cifras del Choco que cita el README salen de \`us6000tjl2\`.
+
+          Esta incidencia se reescribe cada lunes con la lista del dia y se
+          cierra sola en cuanto no quede ninguno.
+
+          Corrida: $CORRIDA"
+
+          if [ -n "$DESPACHADOS" ] && [ "$DESPACHADOS" != "0" ]; then
+            CUERPO="$CUERPO
+
+          **Nota:** en esta misma corrida se despacharon $DESPACHADOS
+          re-emision(es). La lista de arriba es la de ANTES de despacharlas; la
+          comprobacion del proximo lunes dira cuales quedaron resueltas."
+          fi
+
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            gh issue edit "$ABIERTA" --body "$CUERPO"
+            echo "Actualizada la incidencia #$ABIERTA con la lista de hoy."
+          else
+            gh issue create --title "$TITULO" \
+              --label "pipeline,automatico" --body "$CUERPO" \
+              || gh issue create --title "$TITULO" --body "$CUERPO"
+          fi
+
+      # La otra mitad: saber decir "ya no queda ninguno". Sin esto la alarma
+      # solo sabe encenderse, y una que no se apaga deja de leerse.
+      - name: Cerrar la incidencia si ya no queda ninguno
+        if: steps.comprobar.outputs.hay_rezago == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: Hay reportes publicados atras de sus fuentes
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          if [ -n "$ABIERTA" ]; then
+            gh issue close "$ABIERTA" --comment "Los reportes publicados vuelven a estar en la version vigente de sus fuentes."
+            echo "Cerrada la incidencia #$ABIERTA."
+          else
+            echo "Nada que cerrar: no habia incidencia abierta."
+          fi

@@ -1,0 +1,164 @@
+name: Visor (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "reports/**"
+      # Construir un pais cambia la cobertura que el visor publica.
+      - "data/manifests/**"
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Y va con el otro cierre del mismo hueco: **todas las acciones estan
+      # fijadas por SHA** desde el 6-sep-2026, con la version en el comentario
+      # de al lado. Una etiqueta de git se puede reapuntar a cualquier commit
+      # —el precedente es tj-actions/changed-files, CVE-2025-30066— y
+      # `astral-sh/setup-uv` ademas no es de GitHub. Lo vigila
+      # `tests/unit/test_las_acciones_van_fijadas.py`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      # La cobertura regional es un derivado de los manifests: cuantos paises
+      # tienen activo construido y medido. Se recalcula aqui para que no pueda
+      # quedarse vieja — un tablero que promete mas paises de los que hay deja
+      # de ser un tablero.
+      - name: Recalcular la cobertura regional
+        run: |
+          uv sync --python 3.12 --no-dev
+          uv run centinela cobertura
+
+      - name: Preparar sitio
+        run: |
+          mkdir -p _site
+          cp -r site/* _site/
+
+          # LA VISTA PREVIA APUNTA AL ULTIMO EVENTO, NO A UNO CONGELADO.
+          #
+          # `og:image` iba clavada en el HTML a `us6000tjl2`. Funcionaba hoy y
+          # se rompia en silencio el dia que ese reporte se retirara — y ademas
+          # un tablero de crisis compartido por WhatsApp enseñaria siempre el
+          # sismo de agosto de 2026, tuviera lo que tuviera delante.
+          #
+          # Se reescribe aqui, en el unico sitio que sabe que se publica: el
+          # despliegue. El HTML del repositorio conserva un valor fijo como
+          # respaldo para quien sirva `site/` a secas.
+          python3 - <<'PY'
+          import json, html, io, sys
+          # ARRANQUE EN FRIO: `max()` SOBRE UNA LISTA VACIA REVIENTA.
+          #
+          # `reports/index.json` esta vacio el dia uno —y despues de cualquier
+          # reconstruccion que no encuentre reportes—, y este `max()` lanzaba
+          # `ValueError` bajo `set -e`: el despliegue moria **antes de publicar
+          # nada**. La pagina no se cae por no tener vista previa; se caia por
+          # intentar calcularla.
+          #
+          # El HTML lleva su `og:image` de respaldo, asi que sin reportes lo
+          # correcto es dejarlo tal cual y seguir.
+          eventos = json.load(io.open("reports/index.json", encoding="utf-8"))
+          if not eventos:
+              print("indice vacio: se conserva la vista previa de respaldo del HTML")
+              sys.exit(0)
+          # EL ULTIMO **CON POBLACION**, NO EL ULTIMO A SECAS.
+          #
+          # `max()` por fecha daba la vista previa al evento mas reciente, y la
+          # mitad de los sismos de esta region no alcanzan poblacion: son
+          # profundos o mar adentro. El 7-sep-2026 la tarjeta que veia quien
+          # compartia el enlace era la de `us7000tdms`, un M5,9 en la dorsal del
+          # Pacifico Oriental — circulos concentricos sobre fondo blanco, sin
+          # costa, sin ciudad y con cero personas dentro. Es una imagen correcta
+          # de un evento sin nadie expuesto, y la peor carta de presentacion
+          # posible para un sistema que mide cuanta gente queda dentro.
+          #
+          # La razon de que esto se reescriba en el despliegue sigue en pie: una
+          # `og:image` clavada a un evento se rompe el dia que ese reporte se
+          # retira, y un tablero compartido por WhatsApp no puede enseñar
+          # siempre el sismo de agosto de 2026. Lo que cambia es el criterio.
+          con_gente = [e for e in eventos if (e.get("pop_mmi6p") or 0) > 0]
+          ultimo = max(con_gente or eventos, key=lambda e: e.get("utc") or "")
+          usgs = ultimo["usgs_id"]
+          mag = str(ultimo.get("mag", "")).replace(".", ",")
+          lugar = ultimo.get("lugar", "")
+          base = "https://sforero77.github.io/CENTINELA"
+
+          p = "_site/index.html"
+          s = io.open(p, encoding="utf-8").read()
+          import re
+
+          # ESTE BLOQUE TENIA EL MISMO FALLO QUE VINO A ARREGLAR.
+          #
+          # Existe —lo dice su comentario— porque `og:image` estaba clavada a un
+          # evento y "se rompia en silencio el dia que ese reporte se retirara".
+          # Pero `re.sub` devuelve la cadena **sin cambios** cuando el patron no
+          # casa, y nadie miraba el resultado: el `print` de abajo se ejecutaba
+          # igual, asi que el log afirmaba haber actualizado la vista previa sin
+          # haber tocado un byte. El patron depende del orden literal de los
+          # atributos en `site/index.html`, que nadie protege.
+          #
+          # `subn` cuenta, y cero sustituciones es un error.
+          def reemplazar(patron, valor, texto):
+              # LA LAMBDA, Y NO UNA PLANTILLA.
+              #
+              # El segundo argumento de `re.sub` se **interpreta**. Y aqui el
+              # texto viene de USGS —`lugar` es el `place` del feed traducido—,
+              # asi que un toponimo con una barra invertida seguida de N daba
+              # `re.error: bad escape` y uno con una referencia a grupo daba
+              # `re.error: missing <`. `html.escape` no escapa la barra
+              # invertida. Con `repl` como funcion no hay plantilla que
+              # interpretar: el texto entra tal cual.
+              return re.subn(patron, lambda m: m.group(1) + valor + m.group(2),
+                             texto, count=1)
+
+          s, n1 = reemplazar(
+              r'(property="og:image" content=")[^"]*(")',
+              f"{base}/reports/{usgs}/mapa_prensa.png", s)
+          s, n2 = reemplazar(
+              r'(property="og:image:alt" content=")[^"]*(")',
+              html.escape(f"Mapa de exposición del M{mag} — {lugar}.", quote=True), s)
+          if n1 != 1 or n2 != 1:
+              raise SystemExit(
+                  f"og:image no se pudo reescribir (image={n1}, alt={n2}): "
+                  f"cambio el orden de los atributos en site/index.html")
+
+          io.open(p, "w", encoding="utf-8").write(s)
+          print(f"og:image -> {usgs} (M{mag}, {lugar})")
+          PY
+          # Los reportes publicados se sirven junto al visor: sin backend,
+          # sin llaves de API, cero SLA que sostener (D6).
+          cp -r reports _site/reports
+
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1

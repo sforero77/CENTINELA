@@ -1,0 +1,667 @@
+"""Render de ``report.md`` desde ``report.json``.
+
+Restriccion de diseno (RNF-05): el reporte debe ser legible en un movil con 3G
+en zona de desastre. Markdown plano, sin imagenes embebidas, md + png < 500 KB.
+"""
+
+from __future__ import annotations
+
+from typing import Final
+
+from ..common.constants import (
+    DISCLAIMERS,
+    GROUND_FAILURE_HIGH_PROB,
+    PROFUNDIDAD_INTERMEDIA_KM,
+    TOP_ADM2_COUNT,
+)
+from ..common.formatting import cifra_con_sustantivo, format_count_prose, format_number_es
+from .model import (
+    MunicipioTop,
+    Report,
+    banda_del_ranking,
+    municipios_del_ranking,
+    poblacion_del_ranking,
+)
+
+#: El nivel de PAGER en espanol.
+#:
+#: USGS lo publica en ingles —"orange"— y este documento se lee en espanol:
+#: dejarlo crudo obliga a traducir mentalmente la unica cifra ajena que el
+#: reporte cita. El visor ya lo traducia, asi que los dos artefactos del mismo
+#: evento decian "orange" y "naranja" — la clase de costura que hace dudar del
+#: resto.
+PAGER_ES: Final[dict[str, str]] = {
+    "green": "verde",
+    "yellow": "amarilla",
+    "orange": "naranja",
+    "red": "roja",
+}
+
+_ENCABEZADO_PRELIMINAR = (
+    "> **Reporte preliminar sin ShakeMap.** El corte es por radios alrededor "
+    "del epicentro, no por intensidad modelada. Se actualiza automáticamente "
+    "en cuanto USGS publique el ShakeMap del evento."
+)
+
+#: Aviso de reconstruccion retrospectiva. No es un matiz menor: cambia lo que
+#: las cifras significan. La poblacion puede ser de la epoca del sismo —GHS-POP
+#: publica de 1975 a 2030 en pasos de cinco anos— pero las edificaciones, las
+#: vias y el equipamiento son **los de hoy**, porque OpenStreetMap y Overture no
+#: guardan el pasado. Un lector que no lo sepa leeria "444.281 edificaciones
+#: expuestas" como si hubieran existido entonces.
+_ENCABEZADO_BACKTEST = (
+    "> **Reconstrucción retrospectiva.** Este reporte se calculó después del "
+    "evento, no en respuesta a él, y no cuenta para las métricas de latencia "
+    "del sistema.\n"
+    ">\n"
+    "> La **población** corresponde a la época indicada en el manifiesto de "
+    "exposición. Las **edificaciones, vías, sedes de salud y educativas son las "
+    "actuales**: OpenStreetMap y Overture publican el estado presente, no el "
+    'histórico. Léelas como "qué infraestructura de hoy caería en esa zona de '
+    'intensidad", no como lo que había entonces.'
+)
+
+
+def render_markdown(report: Report) -> str:
+    """Genera el markdown del reporte en espanol neutro (RF-06)."""
+    ev = report.event
+    tot = report.totales
+    partes: list[str] = []
+
+    # `M7,8` y no `M7.8`: el visor y el hilo ya escriben la magnitud con coma,
+    # y el mismo evento no puede salir de dos maneras segun donde se lea.
+    partes.append(f"# Exposición sísmica: M{format_number_es(ev.mag, 1)} · {ev.lugar}")
+    partes.append(
+        f"**Evento USGS:** `{ev.usgs_id}` · **Origen:** {ev.utc} UTC · "
+        f"**Profundidad:** {format_number_es(ev.depth_km, 1)} km"
+    )
+    if report.preliminar:
+        partes.append(_ENCABEZADO_PRELIMINAR)
+    if report.backtest:
+        partes.append(_ENCABEZADO_BACKTEST)
+
+    if report.preliminar:
+        # Un preliminar publica la tabla por radios **en lugar** de la de
+        # intensidad, no ademas. Sin ShakeMap todas las cifras por MMI valen
+        # cero, y una tabla de ceros con el titulo "Exposicion estimada" es una
+        # respuesta falsa y creible: el unico error que este sistema no puede
+        # permitirse. Mejor una cifra mas pobre y verdadera.
+        partes.append("## Población por distancia al epicentro")
+        partes.append(_tabla_radios(report))
+    else:
+        partes.append("## Exposición estimada")
+        partes.append(_tabla_totales(report))
+        # DE CUÁNTO SON ESTAS CIFRAS.
+        #
+        # La regla es de la espec —RF-06, dos cifras significativas en prosa— y
+        # es la correcta: nadie necesita el 107.904 de un modelo de exposición.
+        # Lo que faltaba era decirlo. El visor publica el mismo dato con
+        # redondeo de tabla ("108.000") y este documento con redondeo de prosa
+        # ("110 mil"): las dos cifras son ciertas y quien las compare sin saber
+        # la regla concluye que una de las dos está mal.
+        partes.append(
+            "Las cifras de esta tabla van redondeadas a dos cifras "
+            "significativas, que es la precisión que un modelo de exposición "
+            "sostiene. Las exactas están en el CSV municipal y en `report.json`."
+        )
+        # EL RADIO SOBREVIVE AL SHAKEMAP CUANDO NINGUNA BANDA ALCANZA POBLACION.
+        #
+        # Hasta el 3-sep-2026 no: el preliminar de `us7000tdmp` publico "610 mil
+        # personas a 100 km" a los 22 minutos del sismo, y el reporte completo la
+        # sustituyo dos horas despues por una tabla de ceros. El sistema calculo
+        # la respuesta buena y luego la borro. Para los eventos que no llegan a
+        # MMI≥6 —tres de los veintiun reconstruidos, y los dos primeros en vivo—
+        # el reporte final informaba **menos** que el preliminar.
+        if report.radios:
+            partes.append("### Población por distancia al epicentro")
+            partes.append(
+                "Ninguna banda de intensidad alcanza población, así que la única "
+                "cifra que dimensiona este evento es la distancia:"
+            )
+            partes.append(_tabla_radios(report))
+
+    banda_edad = banda_del_ranking(report)
+    p65 = tot.pop_65p_mmi6p if banda_edad == 6 else tot.pop_65p_mmi7p
+    if p65 and not report.preliminar:
+        partes.append(
+            f"De la población en intensidad MMI≥{banda_edad}, alrededor de "
+            f"**{format_count_prose(p65)}** personas tienen 65 años o más."
+        )
+
+    if report.top_municipios:
+        # El encabezado y la tabla, con la MISMA banda. Cada uno la calculaba por
+        # su cuenta, que es como se llega a un titulo que promete una columna y
+        # una columna que trae otra.
+        partes.append(
+            f"## Municipios más expuestos, por población en MMI≥{banda_del_ranking(report)}"
+        )
+        partes.append(_tabla_municipios(report))
+
+    partes.append(_seccion_ground_failure(report))
+
+    if ev.pager_alert:
+        partes.append(
+            f"## Referencia cruzada\n\n"
+            f"PAGER (USGS) estima para este evento una alerta "
+            f"**{PAGER_ES.get(ev.pager_alert, ev.pager_alert)}**. "
+            f"CENTINELA no estima víctimas; la cifra se incluye solo como contraste.\n\n"
+            + NOTA_BANDAS_PAGER
+        )
+
+    partes.append(_seccion_incertidumbre(report))
+
+    if report.changelog:
+        partes.append(
+            "## Cambios frente a la versión anterior\n\n"
+            + "\n".join(f"- {linea}" for linea in report.changelog)
+        )
+
+    partes.append(_seccion_descargas(report))
+    partes.append(_seccion_procedencia(report))
+    partes.append("## Advertencias\n\n" + "\n".join(f"- {d}" for d in DISCLAIMERS))
+
+    return "\n\n".join(p for p in partes if p) + "\n"
+
+
+def _tabla_radios(report: Report) -> str:
+    """Poblacion dentro de cada radio, con su advertencia (RF-03)."""
+    if not report.radios:
+        return (
+            "No se pudo calcular el corte por radios: no hay activo de exposición "
+            "para el país del epicentro."
+        )
+    lineas = ["| Radio desde el epicentro | Población |", "|---|---:|"]
+    for r in sorted(report.radios, key=lambda x: x.radio_km):
+        lineas.append(f"| {r.radio_km} km | {format_count_prose(r.pop)} |")
+    return "\n".join(lineas) + (
+        "\n\nLos radios **no son bandas de intensidad**. Aquí no hay modelo de "
+        "sacudida, solo distancia: un sismo superficial y uno profundo de la misma "
+        "magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve "
+        "para dimensionar, no para priorizar."
+    )
+
+
+#: Lo que va en una celda cuyo evento no llego a esa banda. **No es cero.**
+#:
+#: El propio codigo ya distingue "no medido" de "medido y da cero" para las
+#: columnas ausentes de un activo viejo, y omite la fila en vez de publicar un
+#: cero. Esa misma distincion faltaba un nivel mas arriba: en trece de los
+#: veintitres reportes, "Poblacion en MMI>=7 | 0" se lee como "no hay nadie"
+#: cuando lo cierto es "este sismo no llego a MMI 7 sobre poblacion".
+BANDA_NO_ALCANZADA = "el evento no llegó a esta banda"
+
+
+def _celda_poblacion(valor: float) -> str:
+    """La cifra, o por que no hay cifra."""
+    return format_count_prose(valor) if valor > 0 else BANDA_NO_ALCANZADA
+
+
+def _tabla_totales(report: Report) -> str:
+    tot = report.totales
+    # EL EQUIPAMIENTO SE PUBLICA EN LA BANDA QUE EL EVENTO ALCANZO.
+    #
+    # Estaba clavado en MMI>=7 y trece de veintitres reportes no llegan ahi:
+    # publicaban "0 hospitales, 0 escuelas, 0 km de via" con millones de
+    # personas dentro de MMI>=6. `us7000jl3s` es el caso: 4,75 millones, 3,1 de
+    # ellos en Guayaquil, y ni un solo hospital que nombrar.
+    #
+    # La escalera completa —ambas bandas— sigue en `report.json` y en el CSV
+    # municipal para quien integre. Aqui se publica la que responde la pregunta.
+    # Ver `MMI_BANDS_INFRAESTRUCTURA` en `common/constants.py` para las fuentes.
+    banda = banda_del_ranking(report)
+    seis = banda == 6
+    bld = tot.bld_mmi6p if seis else tot.bld_mmi7p
+    salud = tot.health_mmi6p if seis else tot.health_mmi7p
+    edu = tot.edu_mmi6p if seis else tot.edu_mmi7p
+    via_total = tot.road_km_mmi6p if seis else tot.road_km_mmi7p
+    via_principal = tot.road_km_principal_mmi6p if seis else tot.road_km_principal_mmi7p
+    superficie = tot.built_m2_mmi6p if seis else tot.built_m2_mmi7p
+
+    filas = [
+        ("Población en MMI≥6", _celda_poblacion(tot.pop_mmi6p)),
+        ("Población en MMI≥7", _celda_poblacion(tot.pop_mmi7p)),
+        ("Población en MMI≥8", _celda_poblacion(tot.pop_mmi8p)),
+        (f"Edificaciones en MMI≥{banda}", format_count_prose(bld)),
+        (f"Sedes de salud en MMI≥{banda}", format_number_es(salud)),
+        (f"Sedes educativas en MMI≥{banda}", format_number_es(edu)),
+    ]
+    # Se publican por separado a proposito: no es lo mismo que quede cortada
+    # una troncal que una calle de barrio, y la red principal es ademas la
+    # cifra comparable con las estadisticas viales oficiales. Un solo numero
+    # que las sume esconde las dos cosas.
+    if via_principal > 0:
+        local = max(via_total - via_principal, 0.0)
+        filas.append(
+            (
+                f"Vías primarias y secundarias en MMI≥{banda}",
+                format_count_prose(via_principal) + " km",
+            )
+        )
+        filas.append((f"Vías locales en MMI≥{banda}", format_count_prose(local) + " km"))
+    else:
+        filas.append((f"Kilómetros de vía en MMI≥{banda}", format_count_prose(via_total) + " km"))
+    if superficie > 0:
+        km2 = superficie / 1_000_000.0
+        filas.append((f"Superficie construida en MMI≥{banda}", f"{format_number_es(km2, 1)} km²"))
+    lineas = ["| Indicador | Estimado |", "|---|---:|"]
+    lineas += [f"| {nombre} | {valor} |" for nombre, valor in filas]
+    return "\n".join(lineas) + _nota_del_muro_de_ceros(report) + _nota_superficie(report)
+
+
+#: Superficie media de una edificacion, en m², para contrastar el conteo de
+#: Overture con la superficie que ve el satelite. Es un orden de magnitud
+#: deliberadamente conservador: sirve para detectar un hueco de mapeo grande,
+#: no para estimar edificaciones.
+M2_POR_EDIFICACION = 100.0
+
+#: A partir de que proporcion se considera que falta mapeo. 1,5 significa que el
+#: satelite ve un 50 % mas de lo que explicarian las edificaciones registradas.
+UMBRAL_HUECO_MAPEO = 1.5
+
+
+def _nota_superficie(report: Report) -> str:
+    """Advierte cuando el satelite ve mucho mas construido de lo mapeado.
+
+
+
+    Es la unica forma que tiene el reporte de decir "esta cifra se queda corta"
+
+    sin callarse ni inventar. El hueco de OSM se concentra en asentamientos
+
+    informales y zona rural dispersa, o sea en la población más expuesta: darlo
+
+    por bueno seria publicar una cobertura que no existe (§6.4).
+
+    """
+    # SE MIDE SOBRE LA BANDA QUE EL REPORTE PUBLICA, NO SIEMPRE SOBRE MMI≥7.
+    #
+    # Estaba clavado en `*_mmi7p`, asi que en los reportes que no alcanzan esa
+    # banda las dos cifras son cero y el aviso salia siempre vacio — justo en
+    # los reportes cuya tabla si tiene edificaciones que contar. Se callaba en
+    # us7000jl3s (razon 1,60), us2000ahv0 (1,62) y us7000455l (1,60), los tres
+    # por encima del umbral de 1,5 en la banda que su reporte publica.
+    tot = report.totales
+    banda = banda_del_ranking(report)
+    construido = tot.built_m2_mmi7p if banda == 7 else tot.built_m2_mmi6p
+    edificaciones = tot.bld_mmi7p if banda == 7 else tot.bld_mmi6p
+    if construido <= 0 or edificaciones <= 0:
+        return ""
+    esperado = edificaciones * M2_POR_EDIFICACION
+    if construido < esperado * UMBRAL_HUECO_MAPEO:
+        return ""
+    veces = construido / esperado
+    return (
+        f"\n\nEl satélite detecta **{format_number_es(veces, 1)} veces** más superficie "
+        f"construida de la que explicarían las "
+        f"{cifra_con_sustantivo(edificaciones, 'edificaciones')} registradas en "
+        f"MMI≥{banda}. La diferencia suele ser asentamiento informal o zona rural "
+        f"dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la "
+        f"superficie construida no**."
+    )
+
+
+def _nota_del_muro_de_ceros(report: Report) -> str:
+    """Por que la tabla entera vale cero, cuando vale cero.
+
+    SIETE CEROS SEGUIDOS NO INFORMAN: SE LEEN COMO "NO SE PUDO CALCULAR".
+
+    `us1000c2zy` es un M7,5 cuyo ShakeMap llega a MMI 8, y publicaba siete
+    filas en cero sin una palabra. Se pudo calcular perfectamente: la sacudida
+    fue mar adentro y la intensidad no alcanza banda sobre territorio habitado.
+    Es un resultado, y uno que le importa a quien decide si moviliza.
+
+    Es el mismo remedio que :func:`_linea_ground_failure` ya aplica a su propio
+    cero, aqui aplicado al que ocupa la tabla entera.
+    """
+    if report.preliminar or report.totales.banda_titular:
+        return ""
+
+    # LA CAUSA SE MIRA, NO SE SUPONE.
+    #
+    # Esta nota afirmaba siempre «la sacudida quedó mar adentro o sobre zona
+    # despoblada», que es una de las tres causas posibles y no siempre la
+    # cierta. `reports/us1000jg5z` la publica para un sismo **bajo Bolivia**,
+    # país sin mar, a 359 km de profundidad; y `usp000jd2q` la publicaba con el
+    # epicentro a 5 km de Baní, tierra adentro.
+    #
+    # Afirmar de menos cuesta una frase; afirmar de más cuesta la credibilidad
+    # de todo lo demás que el reporte dice.
+    cabecera = "\n\n> **Todas las cifras en cero es un resultado, no un fallo.** "
+
+    alcanzada = max((m.mmi_max for m in report.top_municipios), default=0.0)
+    if alcanzada > 0:
+        # Llegó a territorio habitado, por debajo de la banda que se publica.
+        return (
+            f"{cabecera}El ShakeMap sí alcanza territorio habitado del país, con "
+            f"intensidad máxima **MMI {format_number_es(alcanzada, 1)}** sobre "
+            f"municipio. Este sistema publica cifras desde MMI≥6, así que por debajo "
+            f"de ese umbral las tablas van en cero. El cálculo corrió entero."
+        )
+
+    if report.event.depth_km >= PROFUNDIDAD_INTERMEDIA_KM:
+        return (
+            f"{cabecera}El sismo ocurrió a "
+            f"**{format_number_es(report.event.depth_km, 0)} km de profundidad**: la "
+            f"energía llega repartida a la superficie y la intensidad no alcanza "
+            f"MMI≥6 sobre territorio habitado, que es el umbral desde el que este "
+            f"sistema publica cifras. El cálculo corrió entero."
+        )
+
+    return (
+        f"{cabecera}El ShakeMap de este evento sí dibuja intensidad, pero no alcanza "
+        f"MMI≥6 sobre territorio habitado del país: la sacudida quedó mar adentro o "
+        f"sobre zona despoblada. El cálculo corrió entero."
+    )
+
+
+def _tabla_municipios(report: Report) -> str:
+    """Ranking municipal, rotulado con la banda que este evento alcanzo.
+
+
+
+    Dos cosas que la tabla daba por supuestas y no son ciertas fuera de
+
+    Colombia:
+
+
+
+    **La banda.** La columna decia siempre "Población MMI≥7", y casi la mitad
+
+    de los sismos reales de LATAM no llegan ahi sobre población: para ellos eran
+
+    quince ceros bajo un rotulo que prometia cifras. Tehuantepec 2017, M8,2, se
+
+    publicaba asi.
+
+
+
+    **El codigo.** Decia "DIVIPOLA", que es el codigo municipal **de
+
+    Colombia**. En el reporte de Tehuantepec rotulaba `MX20043` como DIVIPOLA.
+
+    El sistema cubre diecinueve países y cada uno nombra el suyo: se rotula por
+
+    lo que es —un codigo de municipio— y el país lo pone el manifest.
+
+    """
+    # LA BANDA DEL RANKING ES LA DEL RESTO DEL REPORTE.
+    #
+    # `banda_titular` devuelve 8 en cuanto alguien queda dentro de MMI≥8, y
+    # entonces la tabla ordenaba por esa porcion: en Muisne salia Muisne con
+    # 8.800 y Quinindé, Esmeraldas, Chone y Portoviejo con **0** — teniendo
+    # 164.691, 297.596, 150.742 y 333.075 personas en MMI≥7. Nueve de las quince
+    # filas eran ceros, y el municipio mas expuesto del evento era uno de ellos.
+    #
+    # Se ordena por MMI≥7, que es donde estan todas las demas cifras del
+    # reporte, y solo se baja a 6 cuando el evento no llego a 7 sobre poblacion
+    # — el caso para el que `pop_banda` se invento, y ahi sigue sirviendo.
+    banda = banda_del_ranking(report)
+    ordenados = municipios_del_ranking(report)
+
+    # UNA CABECERA SIN FILAS NO ES UNA TABLA VACIA: ES UNA PREGUNTA SIN
+    # RESPONDER. `us1000c2zy` publicaba exactamente eso —dos lineas de cabecera
+    # y nada debajo— siendo un M7,5 cuyo ShakeMap llega a MMI 8 mar adentro. La
+    # respuesta existe y es interesante: la intensidad si alcanzo esa banda,
+    # pero no sobre poblacion de este pais.
+    if not ordenados:
+        return (
+            f"Ningún municipio del país alcanza población dentro de MMI≥{banda}. "
+            "No es que falte el dato: la intensidad que el ShakeMap dibuja para "
+            "este evento no llega a esa banda sobre territorio habitado."
+        )
+
+    def _cifra(m: MunicipioTop) -> float:
+        return poblacion_del_ranking(report, m)
+
+    lineas = [
+        f"| # | Municipio | Código | MMI max | Población MMI≥{banda} |",
+        "|---:|---|---|---:|---:|",
+    ]
+    for i, m in enumerate(ordenados[:TOP_ADM2_COUNT], start=1):
+        cifra = _cifra(m)
+        lineas.append(
+            f"| {i} | {m.nombre} | `{m.adm2_id}` | "
+            f"{format_number_es(m.mmi_max, 1)} | {format_count_prose(cifra)} |"
+        )
+    return "\n".join(lineas)
+
+
+#: Como se nombra cada modelo en prosa. La palabra importa: el modelo de
+#: licuefaccion de Zhu (2017) no entrega probabilidad sino **cobertura areal**
+#: —la fraccion de la celda que se espera cubierta—, y llamarla "probabilidad
+#: alta" afirma algo que el modelo no dice.
+GF_UNIDAD: dict[str, str] = {
+    "ls": "probabilidad de deslizamiento",
+    "lq": "cobertura areal por licuefacción",
+}
+
+#: Alertas de USGS, en el idioma del reporte. La unica cifra ajena que el
+#: reporte cita ya sale traducida para PAGER; esta sale por el mismo sitio.
+GF_ALERTA_ES: dict[str, str] = {
+    "green": "verde",
+    "yellow": "amarilla",
+    "orange": "naranja",
+    "red": "roja",
+}
+
+
+def _linea_ground_failure(report: Report, tipo: str, propia: float) -> str:
+    """Una linea de falla de terreno: la cifra propia y la de USGS al lado.
+
+    Las dos, siempre que USGS publique alerta. Publicar la nuestra sola invita
+    a leerla como la de USGS, y son dos cortes distintos del mismo raster: aqui
+    se cuenta la poblacion **entera** de toda celda por encima del umbral; USGS
+    pondera la poblacion de cada celda **por** el valor de esa celda.
+    """
+    gf = report.ground_failure_usgs
+    etiqueta = "deslizamiento" if tipo == "ls" else "licuefacción"
+    umbral = format_number_es(GROUND_FAILURE_HIGH_PROB, 2)
+    # LA BANDA VA EN LA FRASE. La cifra se cuenta sobre las celdas de MMI≥6
+    # —lo dice `SQL_TOTALES`— y la linea no lo decia, asi que se leia como si
+    # fuera de la banda que titula el reporte. El visor llego a dividirla entre
+    # `pop_mmi7p` por esa misma lectura y publicaba «1.119 % de los expuestos».
+    # Y QUE MODELO ES «EL MODELO».
+    #
+    # El fichero se descargaba con el nombre del preferido aunque la url viniera
+    # de las alternativas historicas, asi que un `jessee_2018_model.tif` podia
+    # ser un `nowicki_2014` o un `godt_2008`. La docstring de
+    # `GROUND_FAILURE_HIGH_PROB` dice que no son intercambiables: «las dos
+    # distribuciones son distintas, asi que el mismo 0,10 no marca lo mismo en
+    # cada una». Nombrarlo no arregla la incomparabilidad; hace que se vea.
+    modelo = getattr(
+        report.inputs, "modelo_deslizamiento" if tipo == "ls" else "modelo_licuefaccion", ""
+    )
+    quien = f" según `{modelo}`" if modelo else ""
+    linea = (
+        f"- **{etiqueta.capitalize()}.** Población en celdas de MMI≥6 donde el modelo "
+        f"espera ≥ {umbral} de {GF_UNIDAD[tipo]}{quien}: **{format_count_prose(propia)}**."
+    )
+    if not gf.alerta_viva(tipo):
+        return linea
+
+    alerta = getattr(gf, f"{tipo}_alerta_usgs").lower()
+    pop_usgs = getattr(gf, f"{tipo}_pop_usgs")
+    color = GF_ALERTA_ES.get(alerta, alerta)
+    cruzada = f" USGS declara para este evento alerta **{color}**"
+    if pop_usgs:
+        cruzada += f", con {format_count_prose(float(pop_usgs))} expuestas"
+    # El caso que esta linea existe para tapar: nuestro conteo da cero y USGS
+    # no dice verde. El cero es cierto —ninguna celda llega al umbral— y solo
+    # se lee como "aqui no hay exposicion a esto".
+    if propia <= 0:
+        cruzada += (
+            ". El cero de arriba no dice que no haya exposición: dice que ninguna celda "
+            "llega al umbral"
+        )
+    return linea + cruzada + "."
+
+
+#: LA OBJECION QUE HUNDE EL PROYECTO EN UNA REUNION, RESUELTA EN DOS LINEAS.
+#:
+#: PAGER tabula su exposicion por **MMI redondeado**: su fila "7" es todo lo que
+#: cae entre 6,5 y 7,49. CENTINELA publica **bandas literales**: MMI≥7 es MMI≥7.
+#: Puestas una al lado de la otra sin decirlo, las dos cifras del mismo evento
+#: parecen contradecirse por un factor de casi tres, y la lectura por defecto es
+#: que CENTINELA subcuenta.
+#:
+#: No se contradicen. Para el Choco, las cifras de CENTINELA caen exactamente
+#: dentro del intervalo que las filas de PAGER acotan por arriba y por abajo:
+#: PAGER da 10.487.959 en su fila 6 (o sea ≥5,5) y 6.514.486 en la 7 (≥6,5), y
+#: CENTINELA da 6.960.086 en ≥6,0 y 2.415.793 en ≥7,0.
+#:
+#: ESO ES EL RESULTADO DE UN EVENTO, Y ESTA NOTA SALE EN TODOS. La version
+#: anterior afirmaba, sin condicion, que "cada cifra de aqui cae dentro del
+#: intervalo que las filas de PAGER acotan", en los veinte reportes con alerta
+#: PAGER. Es falso en al menos uno: `us2000ahv0` publica 0 en MMI>=7 y 760.856
+#: en MMI>=6, y los intervalos de PAGER para Mexico son 494.298-1.614.941 y
+#: 1.614.941-5.047.657. La causa no es el calculo: los dos no leyeron el mismo
+#: ShakeMap —CENTINELA consumio el Atlas v1, maximo 7,398, y PAGER corrio sobre
+#: `us` v11, maximo 8,57—, que es justo lo que la nota tiene que advertir en vez
+#: de tapar con una afirmacion que no puede comprobar al renderizar.
+#:
+#: La diferencia de convencion es un hecho y se queda. El acotamiento es una
+#: comprobacion por evento: se hace donde hay con que hacerla
+#: (`test_contraste_con_pager.py`, sobre el Choco) y se cita, no se promete.
+NOTA_BANDAS_PAGER = (
+    "Las dos cifras **no se tabulan igual** y no se pueden leer una contra "
+    "otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae "
+    "entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. "
+    "Puede además que no hablen del mismo ShakeMap: este reporte declara en "
+    "«Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión "
+    "o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y "
+    "comprobado para el sismo de San José del Palmar, está en "
+    "`docs/PARA_INSTITUCIONES.md`."
+)
+
+
+def _seccion_ground_failure(report: Report) -> str:
+    """Seccion de falla de terreno; se omite con nota si no hay producto (G3)."""
+    if report.inputs.groundfailure_version == 0:
+        return (
+            "## Deslizamiento y licuefacción\n\n"
+            "USGS no ha publicado el producto *Ground Failure* para este evento. "
+            "La sección se omite; el reporte se re-emite automáticamente si aparece."
+        )
+    tot = report.totales
+    return (
+        "## Deslizamiento y licuefacción\n\n"
+        + _linea_ground_failure(report, "ls", tot.pop_ls_alta)
+        + "\n"
+        + _linea_ground_failure(report, "lq", tot.pop_lq_alta)
+        + "\n\n"
+        "Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). "
+        "**No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la "
+        "población entera de toda celda por encima del umbral, y USGS pondera la "
+        "población de cada celda por el valor de esa celda. Son dos preguntas "
+        "distintas sobre el mismo ráster.\n\n"
+        "**Y el umbral se evalúa en un solo punto por celda: su centroide.** El "
+        "píxel del ráster es más pequeño que la celda, así que ese punto decide "
+        "si entra la población entera de la celda o no entra ninguna. No es una "
+        "estadística areal, y el sesgo que introduce no está medido: puede "
+        "quedarse corto o pasarse.\n\n"
+        "Fuente: producto *Ground Failure* de USGS "
+        f"(v{report.inputs.groundfailure_version}), dominio público."
+    )
+
+
+def _linea_discrepancia(report: Report) -> str:
+    """La banda de discrepancia, o **por que** no la hay.
+
+    Habia dos frases y hacen falta tres. Un preliminar no corta por intensidad
+    —publica radios— asi que no calcula ni una celda, y aun asi salia con
+    «Ninguna celda dentro de las bandas publicadas tiene poblacion de WorldPop
+    con la que contrastar»: una frase que describe un contraste intentado y
+    vacio, cuando lo que pasa es que no se intento.
+
+    Es el mismo error de siempre en su forma mas barata: afirmar de mas sobre
+    algo que no se midio.
+    """
+    inc = report.incertidumbre
+    if inc.pop_discrepancia_pct is not None:
+        return (
+            "Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: "
+            f"**{format_number_es(inc.pop_discrepancia_pct, 1)} %**."
+        )
+    if report.preliminar:
+        return (
+            "Discrepancia entre GHS-POP y WorldPop: **no se calcula en un reporte "
+            "preliminar**. El contraste se hace celda a celda dentro de las bandas de "
+            "intensidad, y sin ShakeMap todavía no hay bandas que cortar. Aparecerá "
+            "en cuanto el reporte se re-emita con el ShakeMap."
+        )
+    return (
+        "Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. "
+        "Ninguna celda dentro de las bandas publicadas tiene población de "
+        "WorldPop con la que contrastar."
+    )
+
+
+def _seccion_incertidumbre(report: Report) -> str:
+    inc = report.incertidumbre
+    lineas = [
+        "## Incertidumbre y calidad",
+        "",
+        # "Área afectada" es vocabulario de dano, y es lo unico que el
+        # DISCLAIMER promete no decir que se colo en los veintiun reportes.
+        # Lo que se mide es la discrepancia dentro del corte publicado, que es
+        # donde hay celdas, no donde hay dano.
+        # "0,0 %" se lee como "los dos productos coinciden perfectamente", y
+        # cuando el valor es nulo significa lo contrario: no habia con que
+        # comparar. Tres reportes publicaban ese cero.
+        _linea_discrepancia(report),
+    ]
+    if inc.notas:
+        lineas += ["", *[f"- {nota}" for nota in inc.notas]]
+    return "\n".join(lineas)
+
+
+def _seccion_descargas(report: Report) -> str:
+    d = report.descargas
+    enlaces = [
+        ("GeoParquet (celdas H3 r8)", d.geoparquet),
+        ("PMTiles (visor)", d.pmtiles),
+        ("CSV por municipio", d.csv_adm2),
+        ("Mapa PNG", d.mapa_png),
+    ]
+    disponibles = [f"- [{nombre}]({url})" for nombre, url in enlaces if url]
+    if not disponibles:
+        return ""
+    return "## Descargas\n\n" + "\n".join(disponibles)
+
+
+def _version_consumida(version: int) -> str:
+    """`v0` no es una version: es "no se consumio ninguna".
+
+    Se imprimia como `**v0**` al lado de `**v11**`, con el mismo formato y el
+    mismo verbo. Quien lee "Ground Failure consumido: v0" entiende que se
+    consumio algo, y de ahi a leer los ceros de deslizamiento como una medida
+    hay un paso. Es la misma distincion que el resto del reporte ya hace en
+    prosa y que la seccion de procedencia no hacia.
+    """
+    return f"**v{version}**" if version > 0 else "**ninguno** (no publicado aún)"
+
+
+def _enlace_al_manifiesto(report: Report) -> str:
+    """El enlace que el cuarto disclaimer prometia y que nadie escribia.
+
+    El disclaimer remite a «el manifiesto enlazado» y esta linea publicaba la
+    cadena `col-v0.6` en texto plano, sin URL: no habia forma de llegar desde un
+    reporte a la lista de fuentes que lo produjo. La url sale del bloque de
+    licencia, asi que un reporte emitido antes de que ese bloque existiera
+    conserva el texto plano — un enlace vacio seria peor que ninguno.
+    """
+    manifiesto = report.inputs.exposure_manifest
+    if not report.licencia.manifiesto_url:
+        return f"`{manifiesto}`"
+    return f"[`{manifiesto}`]({report.licencia.manifiesto_url})"
+
+
+def _seccion_procedencia(report: Report) -> str:
+    return (
+        "## Procedencia\n\n"
+        f"- ShakeMap consumido: {_version_consumida(report.inputs.shakemap_version)}\n"
+        f"- Ground Failure consumido: "
+        f"{_version_consumida(report.inputs.groundfailure_version)}\n"
+        f"- Manifiesto de exposición: {_enlace_al_manifiesto(report)}\n"
+        f"- Pipeline: `{report.pipeline_version}` · Generado: {report.generado_utc}"
+    )

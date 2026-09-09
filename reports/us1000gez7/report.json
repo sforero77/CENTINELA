@@ -1,0 +1,224 @@
+{
+  "schema": "centinela/report/1.0",
+  "event": {
+    "usgs_id": "us1000gez7",
+    "mag": 7.3,
+    "depth_km": 146.82,
+    "utc": "2018-08-21T21:31:47Z",
+    "lugar": "40 km al ENE de Carúpano, Venezuela",
+    "pager_alert": "yellow",
+    "lon": -62.9019,
+    "lat": 10.7731
+  },
+  "inputs": {
+    "shakemap_version": 1,
+    "groundfailure_version": 1,
+    "exposure_manifest": "ven-v0.3",
+    "modelo_deslizamiento": "nowicki_2014_global_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+  },
+  "preliminar": false,
+  "radios": [],
+  "backtest": true,
+  "totales": {
+    "pop_mmi6p": 3416.044249188155,
+    "pop_mmi7p": 0.0,
+    "pop_mmi8p": 0.0,
+    "pop_65p_mmi7p": 0.0,
+    "pop_65p_mmi6p": 284.7141908804776,
+    "bld_mmi6p": 1117.0,
+    "built_m2_mmi6p": 117250.0,
+    "health_mmi6p": 0.0,
+    "edu_mmi6p": 0.0,
+    "road_km_mmi6p": 32.40478922258244,
+    "road_km_principal_mmi6p": 3.0513037859569945,
+    "bld_mmi7p": 0.0,
+    "built_m2_mmi7p": 0.0,
+    "health_mmi7p": 0.0,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 0.0,
+    "road_km_principal_mmi7p": 0.0,
+    "pop_ls_alta": 0.0,
+    "pop_lq_alta": 31.124547377228737
+  },
+  "top_municipios": [
+    {
+      "adm2_id": "VE1907",
+      "nombre": "Cajigal",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 2469.6878992654383
+    },
+    {
+      "adm2_id": "VE1909",
+      "nombre": "Libertador",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 946.3563499227166
+    },
+    {
+      "adm2_id": "VE1904",
+      "nombre": "Benítez",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1910",
+      "nombre": "Mariño",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1903",
+      "nombre": "Arismendi",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1913",
+      "nombre": "Ribero",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1905",
+      "nombre": "Bermúdez",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1915",
+      "nombre": "Valdez",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1608",
+      "nombre": "Maturín",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1610",
+      "nombre": "Punceres",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1901",
+      "nombre": "Andrés Eloy Blanco",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1902",
+      "nombre": "Andrés Mata",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE2501",
+      "nombre": "Dependencias Federales",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1603",
+      "nombre": "Bolívar",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1601",
+      "nombre": "Acosta",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
+  "incertidumbre": {
+    "pop_discrepancia_pct": 414.9,
+    "notas": []
+  },
+  "ground_failure_usgs": {
+    "ls_alerta_usgs": "green",
+    "ls_pop_usgs": "27",
+    "lq_alerta_usgs": "red",
+    "lq_pop_usgs": "28000"
+  },
+  "descargas": {
+    "geoparquet": "",
+    "pmtiles": "",
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
+  },
+  "changelog": [],
+  "licencia": {
+    "cubo": "odbl",
+    "spdx": "ODbL-1.0",
+    "texto": "Este derivado contiene datos bajo Open Database License (ODbL) 1.0 y se publica bajo esa misma licencia (ODbL §4.4). Al redistribuirlo hay que conservar este aviso y las atribuciones listadas arriba (ODbL §4.3).",
+    "manifiesto_url": "https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml",
+    "atribuciones": [
+      {
+        "titulo": "USGS Earthquake Hazards Program",
+        "licencia": "public-domain-usgov",
+        "url": "https://earthquake.usgs.gov/"
+      },
+      {
+        "titulo": "JRC / Comisión Europea — GHS-POP y GHS-BUILT-S (GHSL R2023A)",
+        "licencia": "EC-reuse-attribution",
+        "url": "https://ghsl.jrc.ec.europa.eu/"
+      },
+      {
+        "titulo": "WorldPop, University of Southampton",
+        "licencia": "CC-BY-4.0",
+        "url": "https://www.worldpop.org/"
+      },
+      {
+        "titulo": "Overture Maps Foundation",
+        "licencia": "ODbL-1.0",
+        "url": "https://overturemaps.org/"
+      },
+      {
+        "titulo": "© OpenStreetMap contributors",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "titulo": "OCHA — Common Operational Datasets (COD-AB), vía HDX",
+        "licencia": "CC-BY-IGO",
+        "url": "https://data.humdata.org/"
+      },
+      {
+        "titulo": "Humanitarian OpenStreetMap Team (HOT), vía HDX",
+        "licencia": "ODbL-1.0",
+        "url": "https://www.hotosm.org/"
+      },
+      {
+        "titulo": "ESA WorldCover 2021 v200 (Zanaga et al.)",
+        "licencia": "CC-BY-4.0",
+        "url": "https://esa-worldcover.org/"
+      }
+    ]
+  },
+  "disclaimers": [
+    "Exposición estimada, no daño observado.",
+    "Este sistema no es una alerta temprana ni una recomendación de evacuación.",
+    "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
+    "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
+  ],
+  "generado_utc": "2026-09-07T16:46:35Z",
+  "pipeline_version": "0.1.0"
+}

@@ -1,0 +1,197 @@
+"""`contornos.json`: el area de afectacion del sismo, no la de la exposicion.
+
+El visor dibujaba la malla H3, que llega **hasta donde hay algo expuesto**. Su
+propia nota lo admitia: «el hueco no es ausencia de sacudida, es ausencia de
+gente y de infraestructura». O sea que el tablero ensenaba la forma de la
+poblacion recortada por la sacudida, y quien preguntaba «¿hasta donde llego el
+terremoto?» no tenia donde mirarlo.
+
+Los contornos del ShakeMap si son eso: la isolinea de cada nivel de intensidad,
+sobre tierra y sobre mar, con gente o sin ella. El pipeline los descarga en cada
+evento —son la entrada del polyfill— y los tiraba al terminar.
+
+**Se publican desde MMI 4.** Por debajo, USGS dibuja niveles que casi nadie
+percibe y que multiplican el peso del fichero con lineas que no significan nada
+para quien responde. Desde 4 se cubre lo sentido; desde 6, lo que este sistema
+se atreve a cuantificar.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from ..common.logging import get_logger
+
+_log = get_logger(__name__)
+
+#: Nivel MMI mas bajo que se publica. Ver el modulo.
+MMI_MINIMO_CONTORNO = 4.0
+
+#: Lo unico que el visor necesita de cada isolinea. `color` y `weight` vienen
+#: del estilo de ShakeMap y **no se copian**: el visor tiene su propia rampa,
+#: decidida y argumentada, y arrastrar la de la fuente seria pintar el mismo
+#: evento de dos colores segun donde se mire — el error que ya se corrigio una
+#: vez entre el visor y el mapa estatico.
+PROPIEDAD_VALOR = "value"
+
+
+def build_contours(
+    payload: dict[str, Any], *, mmi_minimo: float = MMI_MINIMO_CONTORNO
+) -> dict[str, Any]:
+    """GeoJSON minimo con las isolineas de intensidad, de mayor a menor.
+
+    Se ordena descendente para que las lineas de intensidad alta queden encima
+    al dibujarse: son las que importan y las que menos espacio ocupan.
+    """
+    candidatas: list[tuple[float, dict[str, Any]]] = []
+    for feature in payload.get("features", []):
+        propiedades = feature.get("properties") or {}
+        # `cont_mmi.json` trae, segun version, isolineas de MMI **y de PGA y
+        # PGV en el mismo fichero**. `shakemap.parse_contours` filtra por
+        # `type` y lee `value` o `paramvalue`; esto no hacia ni lo uno ni lo
+        # otro, asi que con un fichero que trajera PGA habria dibujado
+        # aceleraciones rotuladas como intensidad. Los veintiun contornos
+        # publicados estan limpios —esto no es un dano, es un riesgo— pero dos
+        # lectores del mismo fichero en el mismo sistema no pueden discrepar
+        # sobre que es una isolinea de MMI.
+        if str(propiedades.get("type", "mmi")).lower() != "mmi":
+            continue
+        crudo = propiedades.get(PROPIEDAD_VALOR, propiedades.get("paramvalue"))
+        try:
+            valor = float(crudo)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            continue
+        candidatas.append(
+            (
+                valor,
+                {
+                    "type": "Feature",
+                    "geometry": feature["geometry"],
+                    "properties": {"mmi": valor},
+                },
+            )
+        )
+
+    # EL SUELO EXISTE PARA QUITAR RUIDO, NO PARA BORRAR EL EVENTO.
+    #
+    # Publicar desde MMI 4 es correcto en un sismo que llega a 7: las isolineas
+    # de 2 y 3 multiplican el peso del fichero con lineas que nadie usa. Pero en
+    # un sismo cuyo **maximo** es MMI 3 el mismo corte deja el fichero sin una
+    # sola linea, y entonces el visor no dibuja nada y el PNG sale en blanco:
+    # exactamente el fallo que este proyecto acaba de arreglar dos capas mas
+    # arriba, reaparecido en la capa que produce el dato.
+    #
+    # Visto el 4-sep-2026 al publicar `us1000jg5z` —Tarata, Bolivia, M6,3 a 559
+    # km de profundidad—, cuyo ShakeMap solo dibuja la isolinea de MMI 3,0. Su
+    # `contornos.json` salio con cero rasgos y su mapa con 45 pixeles de color.
+    #
+    # Cuando no sobrevive ninguna se publica **la mas alta que hay**, y solo
+    # esa: es la que dice hasta donde llego el sismo sin devolver el ruido que
+    # el suelo venia a quitar. El `mmi_minimo` del fichero declara el corte que
+    # de verdad se aplico, para que no haya que deducirlo de los datos.
+    aplicado = mmi_minimo
+    features = [f for valor, f in candidatas if valor >= mmi_minimo]
+    if not features and candidatas:
+        aplicado = max(valor for valor, _ in candidatas)
+        features = [f for valor, f in candidatas if valor == aplicado]
+
+    features.sort(key=lambda f: float(f["properties"]["mmi"]), reverse=True)
+    return {"type": "FeatureCollection", "mmi_minimo": aplicado, "features": features}
+
+
+def write_contours_json(
+    origen: Path, destino: Path, *, mmi_minimo: float = MMI_MINIMO_CONTORNO
+) -> Path:
+    """Escribe los contornos del evento junto al resto del paquete.
+
+    Args:
+        origen: el `cont_mmi.json` que P2 ya descargo para el polyfill.
+        destino: donde dejarlo, normalmente `reports/<id>/contornos.json`.
+
+    Raises:
+        FileNotFoundError: si el `cont_mmi.json` no esta. Sin el no hay area que
+            dibujar, y fingir una a partir de la malla seria dibujar la forma de
+            la poblacion y llamarla sacudida.
+    """
+    datos = build_contours(json.loads(origen.read_text(encoding="utf-8")), mmi_minimo=mmi_minimo)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    destino.write_text(json.dumps(datos, separators=(",", ":")), encoding="utf-8")
+
+    niveles = sorted({f["properties"]["mmi"] for f in datos["features"]})
+    _log.info(
+        "contornos del evento escritos",
+        extra={
+            "context": {
+                "destino": str(destino),
+                "niveles": niveles,
+                "kb": round(destino.stat().st_size / 1024),
+            }
+        },
+    )
+    return destino
+
+
+def backfill_contours(
+    usgs_id: str = "", *, fetcher: Any = None, reports_root: Path | None = None
+) -> dict[str, Path]:
+    """Baja de USGS el area de afectacion de un reporte ya publicado, o de todos.
+
+    Los reportes emitidos antes de que este fichero existiera no lo traen, y
+    recomputar su impacto entero para obtenerlo costaria bajar el activo de su
+    pais y rehacer el join — cuando lo unico que falta es un GeoJSON de 100 kB
+    que USGS sigue sirviendo.
+
+    Existe por la misma razon que `regenerar-mapas`: la vez anterior que hubo
+    que rehacer un derivado de todos los reportes publicados se hizo con un
+    script de usar y tirar, y la siguiente correccion dependia de que alguien
+    recordara como se hacia.
+
+    Returns:
+        ``usgs_id -> ruta`` de lo escrito. Un evento cuyo ShakeMap no publique
+        contornos se registra y se salta: no todos los tienen, y para los
+        profundos es lo normal.
+    """
+    from ..common.http import HttpFetcher
+    from ..common.paths import REPORTS_DIR, validate_usgs_id
+    from ..p2_impact.products import parse_products
+
+    cliente = fetcher or HttpFetcher(timeout_s=120.0)
+    raiz = reports_root or REPORTS_DIR
+    directorios = (
+        [raiz / validate_usgs_id(usgs_id)]
+        if usgs_id
+        else sorted(p.parent for p in raiz.glob("*/report.json"))
+    )
+
+    escritos: dict[str, Path] = {}
+    for directorio in directorios:
+        evento = directorio.name
+        try:
+            detalle = cliente.get_json(
+                f"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid={evento}&format=geojson"
+            )
+            url = parse_products(detalle).cont_mmi_url()
+            if not url:
+                _log.info(
+                    "el ShakeMap de este evento no publica contornos",
+                    extra={"context": {"usgs_id": evento}},
+                )
+                continue
+            datos = build_contours(json.loads(cliente.get_bytes(url).decode("utf-8")))
+            destino = directorio / "contornos.json"
+            destino.parent.mkdir(parents=True, exist_ok=True)
+            destino.write_text(json.dumps(datos, separators=(",", ":")), encoding="utf-8")
+            escritos[evento] = destino
+        except Exception as exc:  # una fuente caida no puede tumbar los demas
+            _log.warning(
+                "no se pudo traer el area de afectacion",
+                extra={"context": {"usgs_id": evento, "error": str(exc)}},
+            )
+
+    _log.info(
+        "areas de afectacion actualizadas",
+        extra={"context": {"eventos": len(escritos), "de": len(directorios)}},
+    )
+    return escritos

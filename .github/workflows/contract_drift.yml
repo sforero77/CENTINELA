@@ -1,0 +1,101 @@
+name: Deriva de contrato de fuentes (nocturno)
+
+# §6.2: este es el unico workflow que consulta las fuentes vivas. Solo
+# **alerta**; no bloquea. Si USGS cambia el esquema, queremos enterarnos por un
+# issue a las 3 a.m. y no por un reporte corrupto durante un terremoto.
+#
+# Cubre tambien Overture y WorldPop, que son los contratos que el activo de
+# exposicion necesita para reconstruirse: Overture publica release mensual y
+# solo conserva dos, asi que el release fijado en el manifest caduca solo.
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Y va con el otro cierre del mismo hueco: **todas las acciones estan
+      # fijadas por SHA** desde el 6-sep-2026, con la version en el comentario
+      # de al lado. Una etiqueta de git se puede reapuntar a cualquier commit
+      # —el precedente es tj-actions/changed-files, CVE-2025-30066— y
+      # `astral-sh/setup-uv` ademas no es de GitHub. Lo vigila
+      # `tests/unit/test_las_acciones_van_fijadas.py`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      # Con --extra dev a secas las pruebas de Overture se saltan por falta
+      # de h3/duckdb, y un salto silencioso en el unico guardia nocturno es
+      # peor que no tenerlo.
+      - run: uv sync --python 3.12 --extra dev --extra geo
+
+      - name: Contrastar las fuentes vivas contra el contrato
+        id: drift
+        run: uv run pytest -m network
+
+      - name: Abrir issue si el contrato cambio
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: Posible deriva del contrato de una fuente
+        run: |
+          # Las etiquetas tienen que existir antes de pedirlas: `gh issue
+          # create --label` con una etiqueta que no esta en el repositorio
+          # **aborta**, y la alarma nocturna se perdia entera por un nombre
+          # que nadie habia creado nunca.
+          gh label create contrato --color D93F0B --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # Este guardia corre cada noche: sin deduplicar, una deriva que tarda
+          # una semana en repararse deja siete issues identicos. Se busca por
+          # titulo exacto porque el camino de respaldo crea **sin etiquetas**.
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ -n "$ABIERTA" ]; then
+            echo "Ya hay una abierta (#$ABIERTA): se anota y no se duplica."
+            gh issue comment "$ABIERTA" --body "Sigue derivando en la revision de las $(date -u +%H:%M) UTC.
+
+          Corrida: $CORRIDA"
+            exit 0
+          fi
+
+          CUERPO=$(cat <<'TXT'
+          El test nocturno contra las fuentes vivas fallo.
+
+          Revisar antes del proximo evento:
+
+          - `schemas/usgs/` (feed y detalle de USGS)
+          - `data/manifests/` (release de Overture fijado; solo conserva dos)
+          - `pipelines/p0_exposure/sources/` (GHSL, WorldPop, WorldCover)
+          TXT
+          )
+          CUERPO="$CUERPO
+
+          Corrida: $CORRIDA"
+
+          # Si `gh label` no pudo crearlas (permisos, cuota), se abre igual sin
+          # etiquetas: mas vale un issue sin clasificar que ninguna alarma.
+          gh issue create --title "$TITULO" --label "contrato,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"

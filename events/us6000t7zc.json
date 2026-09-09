@@ -1,0 +1,34 @@
+{
+  "usgs_id": "us6000t7zc",
+  "estado": "publicado",
+  "mag": 7.2,
+  "lon": -68.5564,
+  "lat": 10.3713,
+  "depth_km": 10.0,
+  "lugar": "20 km al E de San Felipe, Venezuela",
+  "origen_utc": "2026-06-24T22:04:31Z",
+  "versiones_procesadas": {
+    "shakemap": 9,
+    "groundfailure": 7
+  },
+  "timestamps": {
+    "detectado": "2026-08-24T21:04:14Z",
+    "publicado": "2026-09-03T03:25:20Z",
+    "publicado_ultimo": "2026-09-07T16:30:44Z",
+    "usgs_origen": "2026-06-24T22:04:31Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": true,
+  "notas": [
+    "Backtest: reconstruccion retrospectiva de 2026-06-24, no una respuesta en vivo.",
+    "ShakeMap v0 -> v9",
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos"
+  ]
+}

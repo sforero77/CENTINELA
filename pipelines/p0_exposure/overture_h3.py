@@ -1,0 +1,305 @@
+"""Agregacion de Overture a celdas H3, leyendo los parquet en remoto.
+
+Overture no se descarga: el tema ``buildings`` del release vigente son 277 GB y
+Colombia usa once de sus 512 ficheros. DuckDB los lee por HTTPS y poda por la
+columna ``bbox``, que es la que tiene estadisticas por row-group; el resultado
+es que el pais entero se agrega sin dejar un solo byte de Overture en disco.
+
+**Dos contratos medidos** contra el release ``2026-08-19.0``, ambos contrarios
+a lo que dice la receta habitual de Overture:
+
+1. ``geometry`` llega tipada como ``GEOMETRY('OGC:CRS84')``, no como ``BLOB``.
+   Envolverla en ``ST_GeomFromWKB`` —que es lo que hacen los ejemplos
+   publicados— falla con "no function matches".
+2. Cada tema particiona sus ficheros por su cuenta. El fichero ``00013`` de
+   ``buildings`` y el ``00013`` de ``transportation`` cubren areas distintas,
+   asi que la seleccion se resuelve contra el catalogo de **cada** tema. Medido:
+   la caja de Quibdó cae en el ``00013`` de edificaciones y en ninguno de
+   transporte con ese indice.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ..common.constants import H3_RES_COMPUTE
+from ..common.geo import BBox, area_spheroid_m2
+from ..common.logging import get_logger
+from .sources.overture import bbox_predicate
+from .vector_h3 import (
+    NON_VEHICLE_CLASSES,
+    VectorSum,
+    aggregate_lines_to_h3,
+    road_class_expression,
+)
+
+_log = get_logger(__name__)
+
+#: Extension que DuckDB necesita para leer parquet por HTTPS. No entra en
+#: :data:`pipelines.p2_impact.exposure_join.DUCKDB_EXTENSIONS` a proposito: P2
+#: lee el activo desde disco y no debe pagar esta instalacion en el camino
+#: critico de un sismo.
+HTTPFS_EXTENSION = "httpfs"
+
+#: Ajustes de red para leer Overture en remoto.
+#:
+#: **El default de DuckDB no sirve aqui.** ``http_timeout`` viene en 30 s, y un
+#: fichero de Overture con la poda por `bbox` aplicada tarda **minutos** en una
+#: conexion domestica: medido, el primer fichero de Colombia tardo 3 min 47 s y
+#: el segundo murio con "Timeout was reached" a mitad del build, despues de una
+#: hora de descargas. En el runner de GitHub Actions no se nota; en la maquina
+#: de quien reconstruye el activo, si.
+#:
+#: Se sube tambien el numero de reintentos: una lectura remota de varios minutos
+#: tiene mas superficie para un corte transitorio que una de segundos.
+HTTPFS_SETTINGS: dict[str, object] = {
+    "http_timeout": 600_000,
+    "http_retries": 5,
+    "http_retry_backoff": 4,
+    "http_keep_alive": True,
+}
+
+#: Subtipo de ``transportation`` que cuenta como via. El tema tambien publica
+#: ``rail`` y ``water``, y sumarlos inflaria los kilometros de carretera.
+ROAD_SUBTYPE = "road"
+
+
+def ensure_httpfs(con: Any) -> None:
+    """Carga ``httpfs`` y le pone plazos que aguanten una conexion lenta."""
+    con.execute(f"INSTALL {HTTPFS_EXTENSION}")
+    con.execute(f"LOAD {HTTPFS_EXTENSION}")
+    for ajuste, valor in HTTPFS_SETTINGS.items():
+        con.execute(f"SET {ajuste} = ?", [valor])
+
+
+def _lista_sql(urls: list[str]) -> str:
+    """Lista de rutas para ``read_parquet``, entrecomillada."""
+    return "[" + ", ".join(f"'{u}'" for u in urls) + "]"
+
+
+def aggregate_buildings_to_h3(
+    con: Any,
+    urls: list[str],
+    *,
+    bbox: BBox,
+    tabla: str = "bld_h3",
+    resolution: int = H3_RES_COMPUTE,
+) -> VectorSum:
+    """Cuenta edificaciones y suma su area por celda del centroide.
+
+    Se procesa fichero a fichero y no en una sola consulta sobre los once: asi
+    un corte de red a mitad de camino cuesta un fichero y no el pais entero, y
+    el log deja ver cuanto aporto cada uno.
+    """
+    ensure_httpfs(con)
+    con.execute(f"DROP TABLE IF EXISTS {tabla}")
+    con.execute(f"CREATE TABLE {tabla} (h3_08 UBIGINT, bld_count BIGINT, bld_area_m2 DOUBLE)")
+
+    for url in urls:
+        con.execute(
+            f"""
+            INSERT INTO {tabla}
+            SELECT h3_latlng_to_cell(ST_Y(c), ST_X(c), {resolution}) AS h3_08,
+                   count(*)   AS bld_count,
+                   sum(area)  AS bld_area_m2
+            FROM (
+                SELECT ST_Centroid(geometry) AS c,
+                       {area_spheroid_m2()} AS area
+                FROM read_parquet('{url}')
+                WHERE {bbox_predicate(bbox)}
+            ) t
+            GROUP BY 1
+            """
+        )
+        _log.info("fichero de edificaciones agregado", extra={"context": {"url": url}})
+
+    # Una celda puede recibir edificaciones de dos ficheros vecinos: consolidar.
+    con.execute(
+        f"""
+        CREATE OR REPLACE TABLE {tabla} AS
+        SELECT h3_08, sum(bld_count) AS bld_count, sum(bld_area_m2) AS bld_area_m2
+        FROM {tabla} GROUP BY 1
+        """
+    )
+    celdas, total = con.execute(f"SELECT count(*), sum(bld_count) FROM {tabla}").fetchone()
+    _log.info(
+        "edificaciones agregadas",
+        extra={"context": {"tabla": tabla, "celdas": celdas, "edificaciones": total}},
+    )
+    return VectorSum(tabla=tabla, celdas=int(celdas or 0), total=float(total or 0))
+
+
+def roads_source_query(urls: list[str], bbox: BBox) -> str:
+    """Consulta ``(geometry, clase)`` que consume :func:`aggregate_lines_to_h3`.
+
+    Excluye las clases sin acceso rodado: Overture hereda de OSM que una
+    escalera o un sendero son ``subtype='road'``, y el reporte publica
+    "kilometros de via", no "kilometros de cosas por las que se puede pasar".
+    """
+    excluidas = ", ".join(f"'{c}'" for c in NON_VEHICLE_CLASSES)
+    return f"""
+        SELECT geometry, {road_class_expression("class")} AS clase
+        FROM read_parquet({_lista_sql(urls)})
+        WHERE subtype = '{ROAD_SUBTYPE}'
+          AND (class IS NULL OR class NOT IN ({excluidas}))
+          AND {bbox_predicate(bbox)}
+    """
+
+
+def aggregate_roads_to_h3(
+    con: Any,
+    urls: list[str],
+    *,
+    bbox: BBox,
+    tabla: str = "roads_h3",
+    resolution: int = H3_RES_COMPUTE,
+) -> VectorSum:
+    """Reparte kilometros de via entre las celdas que atraviesa.
+
+    Fichero a fichero, igual que las edificaciones. **Overture particiona filas,
+    no geometrias**: cada segmento vive entero en un solo fichero, asi que
+    trocear el trabajo da exactamente el mismo resultado que una consulta sobre
+    los once. Y evita que un corte de red a mitad de la densificacion —el paso
+    mas caro del build— tire el pais entero.
+
+    La consolidacion final suma por celda: una celda en el borde de dos ficheros
+    recibe kilometros de los dos.
+    """
+    ensure_httpfs(con)
+    partes: list[str] = []
+    for i, url in enumerate(urls):
+        parte = f"_{tabla}_p{i}"
+        resumen = aggregate_lines_to_h3(
+            con, roads_source_query([url], bbox), tabla=parte, resolution=resolution
+        )
+        partes.append(parte)
+        _log.info(
+            "fichero de vias agregado",
+            extra={"context": {"url": url, "celdas": resumen.celdas, "km": resumen.total}},
+        )
+
+    union = " UNION ALL ".join(f"SELECT * FROM {p}" for p in partes)
+    con.execute(
+        f"""
+        CREATE OR REPLACE TABLE {tabla} AS
+        SELECT h3_08,
+               sum(road_km_primary)   AS road_km_primary,
+               sum(road_km_secondary) AS road_km_secondary,
+               sum(road_km_other)     AS road_km_other
+        FROM ({union}) GROUP BY 1
+        """
+    )
+    for parte in partes:
+        con.execute(f"DROP TABLE IF EXISTS {parte}")
+
+    celdas, total = con.execute(
+        f"SELECT count(*), sum(road_km_primary+road_km_secondary+road_km_other) FROM {tabla}"
+    ).fetchone()
+    _log.info(
+        "vias agregadas",
+        extra={"context": {"tabla": tabla, "celdas": celdas, "km": total, "ficheros": len(urls)}},
+    )
+    return VectorSum(tabla=tabla, celdas=int(celdas or 0), total=float(total or 0))
+
+
+#: Subtipo de ``division_area`` que delimita un pais entero.
+COUNTRY_SUBTYPE = "country"
+
+
+#: Tolerancia con la que se simplifican los poligonos de pais, en grados.
+#:
+#: 0,001 grados son unos 110 m: veinte veces mas fino que la cota del rescate
+#: (0,02 grados, ~2,2 km), asi que no cambia ninguna decision, y baja el numero
+#: de vertices en ordenes de magnitud. Una frontera puede desplazarse hasta
+#: 110 m — menos de una septima parte de una celda r8.
+SIMPLIFICACION_GRADOS = 0.001
+
+
+def load_neighbours(
+    con: Any,
+    urls: list[str],
+    *,
+    bbox: BBox,
+    iso2_propio: str,
+    tabla: str = "vecinos",
+) -> int:
+    """Materializa los poligonos de los **otros** paises dentro de la caja.
+
+    Los usa el rescate de celdas fronterizas para no reclamar gente del vecino.
+    Sin esta tabla el rescate solo sabe "esta cerca de mi pais", y cerca de una
+    frontera terrestre eso incluye el otro lado: medido, Paraguay se llevaba
+    459.518 personas de Brasil, Argentina y Bolivia.
+
+    Se excluye el pais propio a proposito. Sus celdas ya las reparte el polyfill
+    por contencion, y meterlo aqui haria que el rescate se descartara a si mismo.
+
+    **Solo tierra.** Overture publica dos poligonos por pais: el terrestre
+    (``is_land``) y el de aguas territoriales (``is_territorial``). Cargar los
+    dos rompe justo el caso para el que existe el rescate: las aguas peruanas
+    llegan hasta la frontera de Arica, asi que una celda del Pacifico frente a
+    la costa chilena caeria "dentro de Peru" y se descartaria con su poblacion
+    dentro. El mar no es de nadie a estos efectos — lo que descalifica a una
+    celda es estar sobre **tierra** de otro pais.
+
+    **Recortados a la caja.** El poligono terrestre de Brasil o de Argentina
+    pesa decenas de MB, y de todo eso solo importa la franja que entra en la
+    caja del pais que se construye. Sin recortar, el rescate de Chile —59.179
+    celdas candidatas contra once multipoligonos continentales— agoto los 12,4
+    GB de memoria del runner.
+
+    **Y simplificados.** La tolerancia es 0,001 grados —unos 110 m— veinte veces
+    mas fina que la cota del rescate (0,02 grados, ~2,2 km), asi que no cambia
+    ninguna decision, y baja el numero de vertices en ordenes de magnitud. Una
+    frontera puede desplazarse hasta 110 m: menos de una septima parte de una
+    celda r8.
+    """
+    ensure_httpfs(con)
+    # SE MONTA APARTE Y SE CAMBIA AL FINAL.
+    #
+    # Antes esto hacia `DROP` + `CREATE` sobre la tabla buena y luego iba
+    # insertando URL por URL. Si fallaba la tercera de cinco, `vecinos` quedaba
+    # con dos paises, el rescate la usaba **tal cual** —descartando celdas de dos
+    # vecinos y reclamando las de los otros tres— y el log afirmaba «no se
+    # pudieron cargar los paises vecinos»: describia un estado que no era el que
+    # se habia usado. Ahora un fallo a medias no deja nada a medias.
+    en_curso = f"{tabla}_en_curso"
+    con.execute(f"DROP TABLE IF EXISTS {en_curso}")
+    con.execute(f"CREATE TABLE {en_curso} (iso2 VARCHAR, geom GEOMETRY)")
+    for url in urls:
+        con.execute(
+            f"""
+            INSERT INTO {en_curso}
+            SELECT country,
+                   ST_SimplifyPreserveTopology(
+                       ST_Intersection(
+                           geometry,
+                           ST_MakeEnvelope({bbox.lon_min}, {bbox.lat_min},
+                                           {bbox.lon_max}, {bbox.lat_max})
+                       ),
+                       {SIMPLIFICACION_GRADOS}
+                   )
+            FROM read_parquet('{url}')
+            WHERE subtype = '{COUNTRY_SUBTYPE}'
+              AND country IS NOT NULL
+              AND country <> '{iso2_propio}'
+              AND is_land
+              AND {bbox_predicate(bbox, intersecta=True)}
+            """
+        )
+    n: int = con.execute(f"SELECT count(*) FROM {en_curso}").fetchone()[0]
+    con.execute(f"DROP TABLE IF EXISTS {tabla}")
+    con.execute(f"ALTER TABLE {en_curso} RENAME TO {tabla}")
+    # Cero vecinos casi nunca es la verdad. En LATAM solo Cuba no toca a nadie
+    # por tierra, y hasta su caja alcanza a Haiti y Jamaica. Si sale cero, lo
+    # normal es que el filtro este mal, no que el pais este aislado — asi se
+    # descubrio que la poda por contencion descartaba a Brasil entero. Quien
+    # llama desde el build lo trata como error; aqui se deja el aviso porque
+    # esta funcion tambien se usa suelta.
+    registrar = _log.info if n else _log.warning
+    registrar(
+        "paises vecinos cargados para acotar el rescate"
+        if n
+        else "ningun pais vecino en la caja: el rescate seria tan generoso como antes",
+        extra={"context": {"tabla": tabla, "poligonos": n, "excluido": iso2_propio}},
+    )
+    return n

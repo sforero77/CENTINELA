@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      # `persist-credentials: false`: ESTE JOB NO EMPUJA NADA.
+      #
+      # `actions/checkout` deja el GITHUB_TOKEN escrito en `.git/config` por
+      # defecto, asi que cualquier paso posterior —o cualquier accion de tercero
+      # que corra despues— puede usarlo. Aqui no hace falta para nada: el trabajo
+      # de este workflow no incluye un `git push`.
+      #
+      # Y va con el otro cierre del mismo hueco: **todas las acciones estan
+      # fijadas por SHA** desde el 6-sep-2026, con la version en el comentario
+      # de al lado. Una etiqueta de git se puede reapuntar a cualquier commit
+      # —el precedente es tj-actions/changed-files, CVE-2025-30066— y
+      # `astral-sh/setup-uv` ademas no es de GitHub. Lo vigila
+      # `tests/unit/test_las_acciones_van_fijadas.py`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      # Con --extra dev a secas, mypy no encuentra numpy y las pruebas de geo
+      # revientan al importar. Un typecheck que no ve las librerias del codigo
+      # que revisa da confianza falsa, asi que CI instala lo mismo que usa el
+      # pipeline completo.
+      - name: Sincronizar dependencias
+        run: uv sync --python 3.12 --extra dev --extra geo --extra render
+
+      - name: Ruff (lint)
+        run: uv run ruff check .
+
+      - name: Ruff (formato)
+        run: uv run ruff format --check .
+
+      - name: mypy estricto
+        run: uv run mypy
+
+      - name: Pruebas (sin red)
+        # El `-m` explicito **reemplaza** al de `addopts`, no se suma: con
+        # `-m "not network"` a secas se recogen las pruebas de visor, que
+        # necesitan Chromium y aqui no esta. Fallan ruidosamente —que es lo que
+        # se les pidio— pero el job que no las quiere no deberia pedirlas.
+        run: uv run pytest -m "not network and not visor" --cov --cov-report=term-missing
+
+      # Guardia de licencias: la contaminacion entre cubos es un riesgo de
+      # impacto alto (§7). No basta documentarla; el build falla si ocurre.
+      - name: Lint de manifests (regla de los tres cubos)
+        run: uv run centinela lint-manifests
