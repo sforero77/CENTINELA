@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-10T07:00:27Z",
+  "generado_utc": "2026-09-10T08:45:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tg98",
+      "mag": 5.0,
+      "lon": -84.0624,
+      "lat": 9.0275,
+      "depth_km": 10.0,
+      "lugar": "45 km al SSE de Quepos, Costa Rica",
+      "origen_utc": "2026-09-10T08:26:53Z",
+      "razon": "M5.0 < umbral M5.5",
+      "iso3": "CRI"
+    },
     {
       "usgs_id": "us7000tg8v",
       "mag": 5.3,
