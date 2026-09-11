@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-11T10:35:21Z",
+  "generado_utc": "2026-09-11T10:40:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -133,28 +133,6 @@
       "depth_km": 10.0,
       "lugar": "southern East Pacific Rise",
       "origen_utc": "2026-09-06T12:00:16Z",
-      "razon": "M5.2 < umbral M5.5",
-      "iso3": ""
-    },
-    {
-      "usgs_id": "us7000tep0",
-      "mag": 4.8,
-      "lon": -68.7038,
-      "lat": -22.2344,
-      "depth_km": 115.5,
-      "lugar": "33 km al NE de Calama, Chile",
-      "origen_utc": "2026-09-06T10:39:32Z",
-      "razon": "M4.8 < umbral M5.5",
-      "iso3": "CHL"
-    },
-    {
-      "usgs_id": "us7000tepa",
-      "mag": 5.2,
-      "lon": -116.0305,
-      "lat": -24.5229,
-      "depth_km": 10.0,
-      "lugar": "southern East Pacific Rise",
-      "origen_utc": "2026-09-06T10:38:18Z",
       "razon": "M5.2 < umbral M5.5",
       "iso3": ""
     }
