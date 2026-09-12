@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-12T01:40:55Z",
+  "generado_utc": "2026-09-12T02:25:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tgw1",
+      "mag": 4.7,
+      "lon": -82.7898,
+      "lat": 8.3545,
+      "depth_km": 10.0,
+      "lugar": "2 km al NE de Manaca Norte, Panamá",
+      "origen_utc": "2026-09-12T01:59:50Z",
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": "PAN"
+    },
     {
       "usgs_id": "us7000tgvk",
       "mag": 4.5,
