@@ -12,7 +12,7 @@
   },
   "inputs": {
     "shakemap_version": 9,
-    "groundfailure_version": 9,
+    "groundfailure_version": 10,
     "exposure_manifest": "col-v0.6",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif"
@@ -21,23 +21,23 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 6840603.205263513,
+    "pop_mmi6p": 6840603.205263512,
     "pop_mmi7p": 3069002.8690395486,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 373245.79219203,
-    "pop_65p_mmi6p": 807028.2845927299,
+    "pop_65p_mmi7p": 373245.7921920302,
+    "pop_65p_mmi6p": 807028.2845927305,
     "bld_mmi6p": 1193119.0,
     "built_m2_mmi6p": 182268076.0,
     "health_mmi6p": 1913.0,
     "edu_mmi6p": 2385.0,
-    "road_km_mmi6p": 40642.957008958554,
-    "road_km_principal_mmi6p": 4217.85122829437,
+    "road_km_mmi6p": 40642.95700895856,
+    "road_km_principal_mmi6p": 4217.851228294357,
     "bld_mmi7p": 519018.0,
     "built_m2_mmi7p": 85408288.0,
     "health_mmi7p": 971.0,
     "edu_mmi7p": 1068.0,
-    "road_km_mmi7p": 15748.986987636239,
-    "road_km_principal_mmi7p": 1897.2192546584308,
+    "road_km_mmi7p": 15748.98698763626,
+    "road_km_principal_mmi7p": 1897.2192546584333,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 1816973.1075647753
   },
@@ -165,15 +165,8 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
-    "ShakeMap: v8 → v9",
-    "Ground Failure: v8 → v9",
-    "Población en MMI≥6: 7,2 millones → 6,8 millones",
-    "Población en MMI≥7: 2,4 millones → 3,1 millones",
-    "Población de 65 años o más en MMI≥7: 300 mil → 370 mil",
-    "Edificaciones en MMI≥7: 450 mil → 520 mil",
-    "Sedes de salud en MMI≥7: 510 → 970",
-    "Sedes educativas en MMI≥7: 1.000 → 1.100",
-    "Población en cobertura areal alta por licuefacción: 1,6 millones → 1,8 millones"
+    "Ground Failure: v9 → v10",
+    "Ninguna cifra publicada cambia frente a la versión anterior."
   ],
   "licencia": {
     "cubo": "odbl",
@@ -244,6 +237,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-08T15:22:38Z",
+  "generado_utc": "2026-09-12T09:33:21Z",
   "pipeline_version": "0.1.0"
 }

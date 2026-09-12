@@ -55,7 +55,7 @@ Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No s
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v9), dominio público.
+Fuente: producto *Ground Failure* de USGS (v10), dominio público.
 
 ## Referencia cruzada
 
@@ -69,15 +69,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,7 %**.
 
 ## Cambios frente a la versión anterior
 
-- ShakeMap: v8 → v9
-- Ground Failure: v8 → v9
-- Población en MMI≥6: 7,2 millones → 6,8 millones
-- Población en MMI≥7: 2,4 millones → 3,1 millones
-- Población de 65 años o más en MMI≥7: 300 mil → 370 mil
-- Edificaciones en MMI≥7: 450 mil → 520 mil
-- Sedes de salud en MMI≥7: 510 → 970
-- Sedes educativas en MMI≥7: 1.000 → 1.100
-- Población en cobertura areal alta por licuefacción: 1,6 millones → 1,8 millones
+- Ground Failure: v9 → v10
+- Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
 
@@ -87,9 +80,9 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,7 %**.
 ## Procedencia
 
 - ShakeMap consumido: **v9**
-- Ground Failure consumido: **v9**
+- Ground Failure consumido: **v10**
 - Manifiesto de exposición: [`col-v0.6`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/COL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-08T15:22:38Z
+- Pipeline: `0.1.0` · Generado: 2026-09-12T09:33:21Z
 
 ## Advertencias
 

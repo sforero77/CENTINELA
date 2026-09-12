@@ -9,11 +9,11 @@
   "origen_utc": "2026-08-10T12:34:28Z",
   "versiones_procesadas": {
     "shakemap": 9,
-    "groundfailure": 9
+    "groundfailure": 10
   },
   "timestamps": {
     "publicado": "2026-09-03T03:25:32Z",
-    "publicado_ultimo": "2026-09-08T15:22:41Z",
+    "publicado_ultimo": "2026-09-12T09:33:23Z",
     "usgs_origen": "2026-08-10T12:34:28Z"
   },
   "hashes": {},
@@ -29,6 +29,7 @@
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
-    "ShakeMap v8 -> v9"
+    "ShakeMap v8 -> v9",
+    "Ground Failure v9 -> v10"
   ]
 }
