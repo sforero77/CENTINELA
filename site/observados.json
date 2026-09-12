@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-12T01:00:21Z",
+  "generado_utc": "2026-09-12T01:40:55Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -14,6 +14,17 @@
       "origen_utc": "2026-09-12T00:18:59Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "PER"
+    },
+    {
+      "usgs_id": "us7000tguq",
+      "mag": 4.9,
+      "lon": -75.8153,
+      "lat": -45.7183,
+      "depth_km": 10.0,
+      "lugar": "235 km al O de Puerto Chacabuco, Chile",
+      "origen_utc": "2026-09-11T22:32:23Z",
+      "razon": "M4.9 < umbral M5.5",
+      "iso3": "CHL"
     },
     {
       "usgs_id": "us7000tgpu",
