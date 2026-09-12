@@ -48,14 +48,14 @@ De la población en intensidad MMI≥7, alrededor de **320 mil** personas tienen
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **29 mil**. USGS declara para este evento alerta **roja**, con 13 mil expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **340 mil**. USGS declara para este evento alerta **roja**, con 190 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **29 mil**. USGS declara para este evento alerta **roja**, con 16 mil expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **350 mil**. USGS declara para este evento alerta **roja**, con 170 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v12), dominio público.
+Fuente: producto *Ground Failure* de USGS (v13), dominio público.
 
 ## Referencia cruzada
 
@@ -69,15 +69,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,8 %**.
 
 ## Cambios frente a la versión anterior
 
-- ShakeMap: v15 → v16
-- Población en MMI≥6: 9,2 millones → 7,5 millones
-- Población en MMI≥7: 2,3 millones → 2,6 millones
-- Población en MMI≥8: 740 mil → 700 mil
-- Población de 65 años o más en MMI≥7: 270 mil → 320 mil
-- Edificaciones en MMI≥7: 500 mil → 560 mil
-- Sedes de salud en MMI≥7: 580 → 770
-- Sedes educativas en MMI≥7: 820 → 1.000
-- Población en cobertura areal alta por licuefacción: 560 mil → 340 mil
+- Ground Failure: v12 → v13
+- Población en cobertura areal alta por licuefacción: 340 mil → 350 mil
 
 ## Descargas
 
@@ -87,9 +80,9 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,8 %**.
 ## Procedencia
 
 - ShakeMap consumido: **v16**
-- Ground Failure consumido: **v12**
+- Ground Failure consumido: **v13**
 - Manifiesto de exposición: [`ven-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-08T15:22:39Z
+- Pipeline: `0.1.0` · Generado: 2026-09-12T09:33:28Z
 
 ## Advertencias
 
