@@ -6,6 +6,7 @@ Utilidades que se corren a mano, no en el camino crítico.
 |---|---|
 | `freeze_event.py` | Congela los productos de un evento real como fixture golden (T0.2) |
 | `simulacro_sismo.py` | Ensaya P2→P3 con un ShakeMap real mudado sobre población |
+| `validar_diagramas.py` | Compila cada diagrama Mermaid de los `.md`; lo corre `ci.yml` en cada push y PR |
 
 Estos scripts si pueden tocar la red y pueden depender de herramientas que no
 están en CI (`libcomcat`). Nada de lo que hacen bloquea un reporte.
@@ -52,3 +53,24 @@ emergencia, y no se recoge.
 
 Lo que **no** ensaya: P1 (el evento no está en el feed de USGS) ni la física
 (trasladar un ShakeMap no es modelarlo).
+
+## `validar_diagramas.py`
+
+Compila con `mermaid-cli` cada bloque Mermaid de los `.md` versionados, y da
+`fichero:línea` de cada uno que no compile.
+
+```bash
+python3 scripts/validar_diagramas.py            # compila todos: red y Chromium
+python3 scripts/validar_diagramas.py --listar   # dice dónde está cada uno, sin red
+```
+
+Un diagrama roto no rompe nada que la suite vea: GitHub lo publica como un
+recuadro de error justo donde tenía que estar la explicación. Y leerlo no basta:
+el 12-sep-2026 el `timeline` de `docs/acciones/por-reloj.md` se leía bien y no
+compilaba, porque las horas `05:37` chocaban con los dos puntos que Mermaid usa
+como separador.
+
+Es el único de esta carpeta que corre en CI: el job `diagramas` de `ci.yml`, en
+cada push y en cada PR. No está en la suite porque necesita Node y Chromium, y
+la suite corre sin red. Sale con 2, y no con 0, si no encuentra ningún diagrama
+o no compila ninguno: no poder mirar no es estar en verde.

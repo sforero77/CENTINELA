@@ -169,9 +169,11 @@ un sismo.
 
 ```mermaid
 flowchart LR
-  PR(["push · pull request"]) --> CI["<b>ci.yml</b><br/>ruff format + check<br/>mypy --strict<br/>2.408 pruebas"]
+  PR(["push · pull request"]) --> CI["<b>ci.yml · check</b><br/>ruff format + check<br/>mypy --strict<br/>2.413 pruebas"]
+  PR --> DIAG["<b>ci.yml · diagramas</b><br/>mermaid-cli<br/>cada diagrama de los .md"]
   PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>157 pruebas de navegador"]
-  CI --> M{"ambas verdes"}
+  CI --> M{"todo verde"}
+  DIAG --> M
   VIS --> M
   M --> MERGE(["se puede fusionar"])
 
@@ -186,6 +188,14 @@ pantalla, que la leyenda promete lo que el mapa dibuja.
 Su instrumentación es `window.CENTINELA.pintado`, un registro público de qué
 capas se pintaron y con cuántos rasgos. Las pruebas leen de ahí, no de una
 captura de pantalla.
+
+El job `diagramas` compila con `mermaid-cli` cada bloque Mermaid de los `.md`
+versionados, los de esta página incluidos. Un diagrama roto no rompe nada que
+la suite vea: GitHub lo publica como un recuadro de error donde tenía que estar
+la explicación. El 12-sep-2026 el `timeline` de [`por-reloj.md`](por-reloj.md)
+se leía bien y no compilaba, y se vio sólo porque se compiló a mano. Va en
+`ci.yml` y no en `visor.yml`, que ya instala Chromium, porque aquel no se
+dispara con un cambio en `docs/`.
 
 ## `exposure_quarterly.yml`: la reconstrucción del activo
 

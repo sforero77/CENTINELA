@@ -66,3 +66,29 @@ jobs:
       # impacto alto (§7). No basta documentarla; el build falla si ocurre.
       - name: Lint de manifests (regla de los tres cubos)
         run: uv run centinela lint-manifests
+
+  # LOS DIAGRAMAS SE COMPILAN, NO SE LEEN.
+  #
+  # La documentacion explica el sistema con diagramas Mermaid y GitHub los
+  # dibuja al abrir el fichero. Uno con la sintaxis rota no rompe nada que
+  # `check` vea: se publica como un recuadro de error donde tenia que estar la
+  # explicacion. El 12-sep-2026 el `timeline` de `docs/acciones/por-reloj.md` se
+  # leia perfectamente y no compilaba, y se vio solo porque se compilo a mano.
+  #
+  # Va en su propio job porque pide Chromium y red, y `check` corre sin los dos.
+  # Y va aqui y no en `visor.yml`, que ya tiene Chromium, porque aquel solo se
+  # dispara con `site/`, `reports/` y `tests/visor/`: sobre un cambio en `docs/`
+  # no habria corrido nunca. Lo vigila `tests/unit/test_los_diagramas_compilan.py`.
+  #
+  # Node y npx vienen en la imagen de ubuntu-latest, y el script solo usa la
+  # biblioteca estandar de Python: no hace falta ni uv.
+  diagramas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Compilar cada diagrama Mermaid
+        run: python3 scripts/validar_diagramas.py

@@ -29,7 +29,7 @@ una cuenta a mano se desincroniza cada vez que entra un workflow.
 | `contract_drift.yml` | cron diario 08:00 UTC | ¿Cambiaron los contratos de las fuentes? |
 | `simulacro.yml` | cron mensual, día 5 | Ensayo en seco de la cadena (`simulacro`) y sismo mudado sobre población (`poblacion`) |
 | `keepalive.yml` | cron días 1 y 15 | Impide que GitHub desactive los crons por inactividad |
-| `ci.yml` | push y PR | ruff + mypy + suite de pruebas |
+| `ci.yml` | push y PR | ruff + mypy + suite de pruebas, y cada diagrama Mermaid compilado |
 | `visor.yml` | push y PR | Playwright: el visor abierto en un navegador de verdad |
 | `contraste.yml` | manual | Fase 2: contraste con evaluación de daño externa |
 

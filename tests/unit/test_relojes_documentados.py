@@ -16,9 +16,10 @@ Lo que se vigila aqui son dos cosas distintas:
    cuando el cron cambio a las 05:00 manda a mirar los logs de la hora
    equivocada. Aqui se comparan literalmente.
 
-No se comprueba la **sintaxis** de los diagramas: eso pide un navegador
-(mermaid-cli arrastra Chromium) y esta suite corre en 27 segundos sin red. Los
-veinticinco de `docs/acciones/` se compilaron a mano el 12-sep-2026.
+La **sintaxis** de los diagramas no se comprueba aqui: pide un navegador
+(mermaid-cli arrastra Chromium) y esta suite corre sin red. La compila el job
+`diagramas` de `ci.yml` con `scripts/validar_diagramas.py`, y que ese job siga
+existiendo y encuentre todos los bloques lo vigila `test_los_diagramas_compilan.py`.
 """
 
 from __future__ import annotations

@@ -519,13 +519,22 @@ No son relojes, son la puerta. Las dos tienen que estar verdes para fusionar, y
 ```mermaid
 flowchart TB
   PR(["push · pull_request"]) --> CI
+  PR --> DIAG
   PR --> VIS
 
-  subgraph CI["ci.yml"]
+  subgraph CI["ci.yml · job check"]
     C1["ruff check"] --> C2["ruff format --check"]
-    C2 --> C3["<b>mypy --strict</b><br/>204 ficheros"]
-    C3 --> C4["<b>pytest</b> -m 'not network and not visor'<br/>2.408 pruebas · con cobertura"]
+    C2 --> C3["<b>mypy --strict</b><br/>205 ficheros"]
+    C3 --> C4["<b>pytest</b> -m 'not network and not visor'<br/>2.413 pruebas · con cobertura"]
     C4 --> C5["<b>centinela lint-manifests</b><br/>regla de los tres cubos"]
+  end
+
+  subgraph DIAG["ci.yml · job diagramas"]
+    D1["<b>scripts/validar_diagramas.py</b><br/>cada bloque mermaid<br/>de los .md versionados"] --> D2{"¿encontró alguno?"}
+    D2 -->|no| D0["<b>código 2</b><br/>cero diagramas no es<br/>que compilen todos"]
+    D2 -->|sí| D3["<b>mermaid-cli</b><br/>todos juntos · un solo Chromium"]
+    D3 --> D4{"¿compilan?"}
+    D4 -->|no| D5["<b>código 1</b><br/>recompila uno por uno:<br/>fichero:línea de cada roto"]
   end
 
   subgraph VIS["visor.yml"]
@@ -533,18 +542,26 @@ flowchart TB
     W2 --> W3["lee window.CENTINELA.pintado<br/><i>qué capas se pintaron y con<br/>cuántos rasgos · no una captura</i>"]
   end
 
-  C5 --> M{"¿las dos verdes?"}
+  C5 --> M{"¿todo verde?"}
+  D4 -->|sí| M
   W3 --> M
   M -->|no| NO(["no se fusiona"])
   M -->|sí| SI(["se puede fusionar"])
 
   style M fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
   style NO fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style D0 fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style D5 fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
 `visor.yml` comprueba lo que ninguna prueba unitaria ve: que las pestañas
 reciben el clic, que ningún texto se pisa con otro en los tres tamaños de
 pantalla, que la leyenda promete lo que el mapa dibuja.
+
+El job `diagramas` comprueba lo que ninguna de las dos ve: que los diagramas de
+la documentación, este incluido, se dibujan. Uno roto se publica en GitHub como
+un recuadro de error. No va en `visor.yml`, aunque ya tenga Chromium, porque
+aquel no se dispara con un cambio en `docs/`.
 
 ---
 
