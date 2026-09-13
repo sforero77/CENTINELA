@@ -12,6 +12,7 @@ una cuenta a mano se desincroniza cada vez que entra un workflow.
 | [`el-vigia.md`](el-vigia.md) | `trigger.yml` en detalle, y el cron externo que lo acelera |
 | [`cadena-de-evento.md`](cadena-de-evento.md) | `impact.yml` y `site.yml`: de un `usgs_id` a la página publicada |
 | [`mantenimiento.md`](mantenimiento.md) | Frescura, keepalive, simulacro, deriva de contrato y CI |
+| [`por-reloj.md`](por-reloj.md) | **Un diagrama por disparador**: qué comprueba cada reloj, sus códigos de salida y quién recibe la alarma |
 
 ## Las catorce, de un vistazo
 
@@ -26,9 +27,9 @@ una cuenta a mano se desincroniza cada vez que entra un workflow.
 | `exposure_quarterly.yml` | cron trimestral | P0: reconstruye el activo de exposición |
 | `rezago.yml` | cron semanal (lunes) | ¿Algún reporte publicado se quedó atrás de sus fuentes? Informa, no despacha |
 | `contract_drift.yml` | cron diario 08:00 UTC | ¿Cambiaron los contratos de las fuentes? |
-| `simulacro.yml` | cron mensual, día 5 | Ensayo en seco de la cadena completa |
+| `simulacro.yml` | cron mensual, día 5 | Ensayo en seco de la cadena (`simulacro`) y sismo mudado sobre población (`poblacion`) |
 | `keepalive.yml` | cron días 1 y 15 | Impide que GitHub desactive los crons por inactividad |
-| `ci.yml` | push y PR | ruff + mypy + suite de pruebas |
+| `ci.yml` | push y PR | ruff + mypy + suite de pruebas, y cada diagrama Mermaid compilado |
 | `visor.yml` | push y PR | Playwright: el visor abierto en un navegador de verdad |
 | `contraste.yml` | manual | Fase 2: contraste con evaluación de daño externa |
 
@@ -62,6 +63,9 @@ flowchart TB
   style EXT fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
   style PAGES fill:#e8eef4,stroke:#3a5a78,color:#1c1b1a
 ```
+
+Este diagrama es el resumen. El de **cada** reloj, con sus validaciones y sus
+alarmas una por una, está en [`por-reloj.md`](por-reloj.md).
 
 **El vigía es el reloj de todo lo demás.** Es un patrón deliberado: en vez de
 confiar en que GitHub honre siete crons distintos (no lo hace), el vigía corre

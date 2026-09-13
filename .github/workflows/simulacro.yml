@@ -70,3 +70,99 @@ jobs:
           # Respaldo sin etiquetas por si `gh label` no pudo crearlas.
           gh issue create --title "$TITULO" --label "operacion,automatico" --body "$CUERPO" \
             || gh issue create --title "$TITULO" --body "$CUERPO"
+
+  # El simulacro de arriba ensaya P1 en seco: el vigia mira el feed y no escribe
+  # nada. Lo que ese ensayo NO toca es la mitad cara de la cadena — el join
+  # contra el activo, el ranking municipal, el CSV, los mapas, el esquema — y esa
+  # mitad solo se ejercita cuando un ShakeMap cae sobre gente.
+  #
+  # `docs/GARANTIAS.md` decia que eso "no se puede ensayar". Se puede: se coge el
+  # ShakeMap real del Choco y se muda sobre poblacion. La geometria es de USGS;
+  # lo unico sintetico es donde cae.
+  #
+  # Falla si no alcanza el minimo de poblacion. Un simulacro que sale en ceros no
+  # ensayo nada, y salir en ceros es justo lo que ya pasaba solo: los dos eventos
+  # reales que P1 despacho el 2-sep se quedaron mar adentro.
+  poblacion:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - run: uv sync --python 3.12 --extra dev --extra geo --extra render
+
+      # `persist-credentials: false` deja el checkout sin token, asi que `gh`
+      # necesita el suyo. Es de solo lectura: baja un Release, no empuja nada.
+      - name: Bajar el activo de COL
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=$(gh release list --limit 100 --json tagName \
+                 --jq '[.[] | select(.tagName | startswith("exposure-col-"))]
+                       | sort_by(.tagName) | last | .tagName')
+          test -n "$TAG" && test "$TAG" != "null" || {
+            echo "::error::no hay Release exposure-col-*; corre exposure_quarterly.yml -f iso3=COL"
+            exit 1
+          }
+          mkdir -p data/build
+          gh release download "$TAG" --dir data/build --clobber
+          echo "activo=$TAG" >> "$GITHUB_STEP_SUMMARY"
+
+      # Cali: el area metropolitana mas expuesta del corredor del Pacifico y el
+      # municipio que encabezaba el ranking del Choco de verdad. El minimo de un
+      # millon no es un numero redondo por gusto: el evento real dejo 6,8
+      # millones en MMI>=6, asi que un resultado por debajo del millon significa
+      # que algo del join o del polyfill se rompio, no que el simulacro es flojo.
+      - name: Simulacro sobre poblacion
+        run: |
+          inicio=$(date +%s)
+          uv run python scripts/simulacro_sismo.py \
+            --sobre 3.4516,-76.5320 \
+            --iso3 COL \
+            --activo data/build/exposure_h3.parquet \
+            --admin-lookup data/build/admin_lookup.parquet \
+            --lugar "SIMULACRO - Santiago de Cali, Colombia" \
+            --exigir-poblacion 1000000 | tee simulacro.log
+          echo "latencia_p2p3_s=$(( $(date +%s) - inicio ))" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo '```'
+            sed -n '/SIMULACRO/,$p' simulacro.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # El arbol tiene que quedar como estaba. Si el simulacro escribio en
+      # `events/`, en `reports/` o en `site/`, el guardarrail del script fallo y
+      # hay que enterarse aqui y no cuando alguien commitee eso.
+      - name: El simulacro no toco nada publicado
+        run: |
+          uv run pytest tests/unit/test_ningun_simulacro_publicado.py
+          SUCIO=$(git status --porcelain -- events reports site)
+          test -z "$SUCIO" || {
+            echo "::error::el simulacro modifico el arbol publicado:"
+            echo "$SUCIO"
+            exit 1
+          }
+
+      - name: Abrir issue si el simulacro de poblacion fallo
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: El simulacro sobre poblacion fallo
+        run: |
+          gh label create operacion --color 5319E7 --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CUERPO="El simulacro sobre poblacion fallo: la cadena P2->P3 no produjo un
+          reporte valido con cifras grandes, o toco el arbol publicado.
+
+          Corrida: $CORRIDA"
+
+          gh issue create --title "$TITULO" --label "operacion,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"

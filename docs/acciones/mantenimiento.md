@@ -1,7 +1,16 @@
 # Mantenimiento y verificación
 
-Cinco workflows que no producen reportes: existen para que el sistema no se
-rompa en silencio.
+Los workflows que no producen reportes: existen para que el sistema no se rompa
+en silencio. Aquí está **por qué** cada uno está escrito como está; el diagrama
+de lo que comprueba cada uno, paso a paso, está en
+[`por-reloj.md`](por-reloj.md).
+
+> Esta página abría con «Cinco workflows» y explicaba ocho, sin contar
+> `rezago.yml`, que no estaba documentado en toda la carpeta. Una cuenta a mano
+> vuelve a desincronizarse en cuanto entra un fichero, así que ya no hay cuenta
+> aquí: la que se vigila con prueba es la de
+> [`README.md`](README.md), y `tests/unit/test_relojes_documentados.py` exige
+> además que cada workflow tenga su diagrama.
 
 ## `frescura.yml`: ¿la página va al día?
 
@@ -92,11 +101,48 @@ Días 1 y 15, 07:00 UTC. GitHub **desactiva los workflows programados de repos
 sin actividad durante 60 días**. Este workflow existe solo para que ese
 contador no llegue nunca.
 
-## `simulacro.yml`: el ensayo mensual
+## `simulacro.yml`: los dos ensayos mensuales
 
-Día 5, 09:00 UTC. Corre la cadena completa **en seco** (`--dry-run`): el vigía
-revisa el feed de verdad pero no escribe `event_state` ni publica nada. Prueba
-que las piezas siguen encajando sin esperar a que haya un sismo.
+Día 5, 09:00 UTC. Dos jobs, porque son dos mitades distintas de la cadena.
+
+**`simulacro`** corre P1 **en seco** (`--dry-run`): el vigía revisa el feed de
+verdad pero no escribe `event_state`. Prueba que las piezas siguen encajando sin
+esperar a que haya un sismo.
+
+> «Ni publica nada» decía aquí, y sí publica: `trigger --dry-run` recalcula y
+> reescribe `site/status.json` —rota la ventana de latidos y recuenta
+> `revisiones`— porque el latido es parte del estado del vigía, no del evento.
+> En CI da igual (`persist-credentials: false`, nadie empuja), pero en local
+> ensucia el árbol y hay que revertirlo a mano.
+
+**`poblacion`** ensaya la otra mitad, la que el ensayo en seco no toca: el join
+contra el activo, el ranking municipal, el CSV, los mapas y la validación contra
+el esquema. Baja el activo de COL del Release, coge el ShakeMap real del Chocó,
+lo **muda sobre Cali** con
+[`scripts/simulacro_sismo.py`](../../scripts/simulacro_sismo.py) y exige que
+alcance un millón de personas en MMI≥6. Después comprueba que el árbol
+publicado quedó intacto.
+
+El mínimo de un millón no es decorativo: un simulacro que sale en ceros no
+ensayó nada, y salir en ceros es exactamente lo que ya pasaba solo — los dos
+eventos que P1 despachó el 2-sep cayeron mar adentro.
+
+## `rezago.yml`: ¿lo publicado sigue siendo cierto?
+
+Lunes, 07:23 UTC. Es el reverso de `repaso.yml`: aquel pregunta por los
+**eventos**, este por los **reportes que ya están publicados**. ¿Lo que la
+página sirve hoy sigue coincidiendo con lo que sus fuentes dicen hoy?
+
+Separa el rezago en dos listas porque no cuestan lo mismo. Si lo único que
+cambió es el manifiesto de exposición, las cifras casi no se mueven y el propio
+workflow re-emite. Si cambió el ShakeMap o el Ground Failure, se mueven las
+cifras que el README cita a mano, y eso lo mira una persona antes de tocar un
+artefacto ya publicado.
+
+**Que haya rezago no es un fallo y el comando sale con 0 a propósito.** Salir
+distinto de cero convertiría «hay trabajo pendiente» en «algo se rompió», y en
+dos semanas nadie miraría el aviso. Lo que sí sale con 1 es no haber podido
+consultar ninguno: eso no es «no hay rezago», es estar ciego.
 
 ## `contract_drift.yml`: ¿cambiaron las fuentes?
 
@@ -123,9 +169,11 @@ un sismo.
 
 ```mermaid
 flowchart LR
-  PR(["push · pull request"]) --> CI["<b>ci.yml</b><br/>ruff format + check<br/>mypy --strict<br/>1.065 pruebas"]
-  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>101 pruebas de navegador"]
-  CI --> M{"ambas verdes"}
+  PR(["push · pull request"]) --> CI["<b>ci.yml · check</b><br/>ruff format + check<br/>mypy --strict<br/>2.413 pruebas"]
+  PR --> DIAG["<b>ci.yml · diagramas</b><br/>mermaid-cli<br/>cada diagrama de los .md"]
+  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>157 pruebas de navegador"]
+  CI --> M{"todo verde"}
+  DIAG --> M
   VIS --> M
   M --> MERGE(["se puede fusionar"])
 
@@ -140,6 +188,14 @@ pantalla, que la leyenda promete lo que el mapa dibuja.
 Su instrumentación es `window.CENTINELA.pintado`, un registro público de qué
 capas se pintaron y con cuántos rasgos. Las pruebas leen de ahí, no de una
 captura de pantalla.
+
+El job `diagramas` compila con `mermaid-cli` cada bloque Mermaid de los `.md`
+versionados, los de esta página incluidos. Un diagrama roto no rompe nada que
+la suite vea: GitHub lo publica como un recuadro de error donde tenía que estar
+la explicación. El 12-sep-2026 el `timeline` de [`por-reloj.md`](por-reloj.md)
+se leía bien y no compilaba, y se vio sólo porque se compiló a mano. Va en
+`ci.yml` y no en `visor.yml`, que ya instala Chromium, porque aquel no se
+dispara con un cambio en `docs/`.
 
 ## `exposure_quarterly.yml`: la reconstrucción del activo
 

@@ -204,6 +204,7 @@ DOCUMENTOS: tuple[str, ...] = (
     "docs/acciones/el-vigia.md",
     "docs/acciones/mantenimiento.md",
     "docs/acciones/orquestacion.md",
+    "docs/acciones/por-reloj.md",
     "docs/arquitectura/README.md",
     "docs/arquitectura/contratos-de-datos.md",
     "docs/arquitectura/decisiones.md",
@@ -443,3 +444,16 @@ def test_los_interrogativos_de_titulos_y_cabeceras_llevan_tilde(documento: str) 
         f"{documento} abre un titulo o una cabecera con un interrogativo sin "
         f"tilde: {[(m, INTERROGATIVOS.get(m, 'Por qué')) for m in malas]}"
     )
+
+
+def test_ningun_documento_de_docs_se_queda_sin_vigilar() -> None:
+    """`DOCUMENTOS` es una lista a mano, y las listas a mano se quedan atras.
+
+    `docs/acciones/por-reloj.md` entro el 12-sep-2026 con catorce diagramas y
+    casi seiscientas lineas de prosa, y no se anadio aqui: ninguna prueba de
+    este fichero lo leia. Es el hueco que abrio esta lista —el guardia solo
+    miraba a los generadores— desplazado un fichero.
+    """
+    en_docs = {p.relative_to(RAIZ).as_posix() for p in (RAIZ / "docs").rglob("*.md")}
+    fuera = sorted(en_docs - set(DOCUMENTOS))
+    assert not fuera, f"documentos de docs/ que ninguna prueba de tildes lee: {fuera}"

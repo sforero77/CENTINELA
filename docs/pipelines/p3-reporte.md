@@ -5,6 +5,53 @@
 **Código:** `pipelines/p3_report/` (model, markdown, csv_out, static_map,
 contornos, celdas, changelog, run)
 
+## La puerta: qué se comprueba antes de escribir nada
+
+`report.json` es el **único artefacto público con esquema cerrado**, y la
+validación ocurre antes de tocar el disco. Un JSON fuera de contrato en
+`reports/` lo consumen el visor, el índice y los tres comandos de regeneración:
+para cuando se nota, ya se propagó.
+
+```mermaid
+flowchart TB
+  IN(["Report · modelo ya calculado por P2"]) --> ESQ{"<b>validar_contra_esquema</b><br/>report-1.0.schema.json<br/>Draft 2020-12"}
+
+  ESQ -->|"errores"| STOP(["<b>ReporteFueraDeContratoError</b><br/>no se escribe ni un fichero<br/><i>se listan todos los errores,<br/>no sólo el primero</i>"])
+  ESQ -->|"válido"| W1
+
+  W1[/"report.json"/] --> W2[/"report.md"/]
+  W2 --> W3[/"adm2.csv<br/>+ fila de etiquetas HXL"/]
+  W3 --> MAPA{"¿con_mapa?"}
+
+  MAPA -->|sí| REN["render_maps<br/>general 1200×900 · prensa 1600×900"]
+  REN --> RENOK{"¿falló el render?"}
+  RENOK -->|sí| AVISO["<b>aviso y se sigue</b><br/><i>el mapa es un derivado,<br/>no la verdad</i>"]
+  RENOK -->|no| W4
+  MAPA -->|no| W4
+  AVISO --> W4
+
+  W4[/"hilo.txt"/] --> LIC{"¿el reporte trae<br/>bloque de licencia?"}
+  LIC -->|sí| W5[/"LICENSE.txt<br/><i>ODbL §4.3: el aviso viaja<br/>con la obra producida</i>"/]
+  LIC -->|no| IDX
+  W5 --> IDX
+
+  IDX["<b>rebuild_index</b><br/>reconstruido desde el disco,<br/>no incrementado"] --> OUT[/"reports/index.json"/]
+
+  style ESQ fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style STOP fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style AVISO fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
+```
+
+Las dos asimetrías del diagrama son decisiones, no descuidos:
+
+- **El esquema detiene; el mapa no.** Si el PNG no se puede renderizar, el JSON
+  y el markdown ya están en disco y son lo que importa. Si el JSON no cumple su
+  contrato, no hay nada que salvar.
+- **El índice se reconstruye entero** leyendo el disco, en vez de añadirle una
+  entrada. Un índice incremental se desincroniza del directorio en cuanto un
+  reporte se borra o se re-emite, y el índice es lo primero que descarga el
+  visor.
+
 ## Lo que emite
 
 ```mermaid
