@@ -21,12 +21,12 @@ RAIZ = Path(__file__).parent.parent.parent
 WORKFLOWS = RAIZ / ".github" / "workflows"
 INDICE = RAIZ / "docs" / "acciones" / "README.md"
 
-#: Los numeros escritos en prosa, en los cuatro documentos que los citan.
+#: Los numeros escritos en prosa, en los tres documentos que los citan. El
+#: README los decia tambien hasta el 13-sep-2026, cuando dejo de publicar cifras.
 EN_PROSA = (
     ("docs/acciones/README.md", "**Catorce workflows.**"),
     ("docs/acciones/README.md", "## Las catorce, de un vistazo"),
     ("docs/README.md", "Las catorce GitHub Actions:"),
-    ("README.md", "Las catorce GitHub Actions:"),
     # Entro el 12-sep-2026 diciendo «catorce workflows, quince jobs»: eran
     # dieciocho jobs. La cifra de jobs se quito; la de workflows queda vigilada.
     ("docs/acciones/por-reloj.md", "Catorce workflows y nueve relojes."),

@@ -169,9 +169,9 @@ un sismo.
 
 ```mermaid
 flowchart LR
-  PR(["push · pull request"]) --> CI["<b>ci.yml · check</b><br/>ruff format + check<br/>mypy --strict<br/>2.413 pruebas"]
+  PR(["push · pull request"]) --> CI["<b>ci.yml · check</b><br/>ruff format + check<br/>mypy --strict<br/>suite sin red"]
   PR --> DIAG["<b>ci.yml · diagramas</b><br/>mermaid-cli<br/>cada diagrama de los .md"]
-  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>157 pruebas de navegador"]
+  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>pruebas de navegador"]
   CI --> M{"todo verde"}
   DIAG --> M
   VIS --> M

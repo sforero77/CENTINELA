@@ -158,7 +158,7 @@ flowchart TB
   ESQ -->|no| FALLA["no se escribe nada"]
   ESQ -->|sí| P3["<b>P3</b><br/>report.json · adm2.csv · celdas<br/>contornos · 2 PNG · hilo · md"]
 
-  P3 --> IDX["<b>centinela reindexar</b><br/>+ sincronizar-portada + status"]
+  P3 --> IDX["<b>centinela reindexar</b><br/>+ status"]
   IDX --> COMMIT{"¿commiteó algo?"}
   COMMIT -->|sí| POST
 
@@ -524,8 +524,8 @@ flowchart TB
 
   subgraph CI["ci.yml · job check"]
     C1["ruff check"] --> C2["ruff format --check"]
-    C2 --> C3["<b>mypy --strict</b><br/>205 ficheros"]
-    C3 --> C4["<b>pytest</b> -m 'not network and not visor'<br/>2.413 pruebas · con cobertura"]
+    C2 --> C3["<b>mypy --strict</b>"]
+    C3 --> C4["<b>pytest</b> -m 'not network and not visor'<br/>sin red · con cobertura"]
     C4 --> C5["<b>centinela lint-manifests</b><br/>regla de los tres cubos"]
   end
 
@@ -538,7 +538,7 @@ flowchart TB
   end
 
   subgraph VIS["visor.yml"]
-    W1["cache de Chromium<br/>por versión de Playwright"] --> W2["<b>pytest tests/visor -m visor</b><br/>157 pruebas de navegador"]
+    W1["cache de Chromium<br/>por versión de Playwright"] --> W2["<b>pytest tests/visor -m visor</b><br/>pruebas de navegador"]
     W2 --> W3["lee window.CENTINELA.pintado<br/><i>qué capas se pintaron y con<br/>cuántos rasgos · no una captura</i>"]
   end
 
