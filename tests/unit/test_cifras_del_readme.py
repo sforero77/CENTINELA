@@ -1,17 +1,19 @@
-"""Que la portada diga lo que dicen los artefactos publicados.
+"""Las cifras escritas en prosa, atadas a los artefactos de los que salen.
 
-El README publicaba nueve cifras del backtest del Choco y **cinco estaban
-desactualizadas**: el activo se reconstruyo (col-v0.4 → col-v0.5), los reportes
-se regeneraron, y la tabla se quedo con los numeros anteriores. Los kilometros
-de via estaban errados por un factor de seis — 1.400 donde el reporte publica
-8.503.
+Nacio para la portada. El README publicaba nueve cifras del backtest del Choco y
+**cinco estaban desactualizadas**: el activo se reconstruyo (col-v0.4 → col-v0.5),
+los reportes se regeneraron y la tabla se quedo con los numeros anteriores. Los
+kilometros de via estaban errados por un factor de seis.
 
-No fue descuido de nadie en particular: es lo que le pasa a toda cifra copiada
-a mano. Y en un repositorio publico cuyo argumento entero es que sus numeros
-son de fiar, la portada es justo donde menos puede pasar.
+No fue descuido de nadie en particular: es lo que le pasa a toda cifra copiada a
+mano. Para sostener las de la portada hicieron falta un generador que reescribia
+el README desde `impact.yml` y media docena de guardias.
 
-Asi que la tabla deja de sostenerse en disciplina. Estas pruebas leen el
-`report.json` publicado y fallan si la portada se separa de el.
+DESDE EL 13-SEP-2026 EL README NO PUBLICA CIFRAS. Dice que es CENTINELA y que
+hace; las cifras viven donde tienen su procedencia —cada `report.json`,
+`/status` y `docs/PARA_INSTITUCIONES.md`—. Este fichero sigue atando las que
+quedan escritas a mano en esos documentos, y del README vigila lo contrario: que
+ninguna vuelva a entrar.
 """
 
 from __future__ import annotations
@@ -24,11 +26,9 @@ import pytest
 import yaml
 
 from pipelines.common.formatting import format_number_es
-from pipelines.p3_report.portada import FILAS
 
 RAIZ = Path(__file__).parent.parent.parent
 README = RAIZ / "README.md"
-REPORTE_GOLDEN = RAIZ / "reports" / "us6000tjl2" / "report.json"
 
 
 @pytest.fixture(scope="module")
@@ -36,84 +36,41 @@ def readme() -> str:
     return README.read_text(encoding="utf-8")
 
 
-@pytest.fixture(scope="module")
-def totales() -> dict[str, float]:
-    datos: dict[str, float] = json.loads(REPORTE_GOLDEN.read_text(encoding="utf-8"))["totales"]
-    return datos
+# --- El README describe; no publica cifras ------------------------------------
+
+#: Las formas en que una cifra se cuela en prosa. Pensadas para no confundir un
+#: resultado con una regla o un nombre: «magnitud 5,5 o más», «MMI≥7»,
+#: «Python 3.12» o «CC BY 4.0» no son cifras del sistema.
+_CIFRAS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\b\d{1,3}(?:\.\d{3})+\b"), "un número con separador de miles"),
+    (re.compile(r"\d(?:,\d+)?\s?%"), "un porcentaje"),
+    (
+        re.compile(
+            r"\b\d[\d.,]*\s+(?:millones|personas|habitantes|pruebas|reportes|países|"
+            r"sismos|eventos|celdas|municipios|edificaciones|sedes|km|kilómetros|"
+            r"minutos|min|horas|días)\b",
+            flags=re.IGNORECASE,
+        ),
+        "un recuento",
+    ),
+)
 
 
-@pytest.mark.parametrize(("etiqueta", "campo"), FILAS, ids=[c for _, c in FILAS])
-def test_la_cifra_del_readme_es_la_publicada(
-    etiqueta: str, campo: str, readme: str, totales: dict[str, float]
-) -> None:
-    esperada = format_number_es(round(float(totales[campo])))
-    fila = f"| {etiqueta} | **{esperada}** |"
+def test_el_readme_no_publica_cifras(readme: str) -> None:
+    """Decision del 13-sep-2026: la portada explica, no publica resultados.
 
-    assert fila in readme, (
-        f"El README no trae {esperada!r} para {etiqueta!r}. "
-        f"El reporte publicado dice {totales[campo]}. Actualiza la tabla."
-    )
-
-
-def test_los_municipios_alcanzados_son_los_del_csv() -> None:
-    """La fila que no sale de `totales` sino de contar filas del CSV.
-
-    DECIA «MUNICIPIOS ALCANZADOS: 299» Y ERAN LAS FILAS DEL FICHERO.
-
-    `SQL_IMPACT_ADM2` agrega desde MMI 5,0 —el suelo del relleno de contornos—
-    mientras `SQL_TOTALES` corta en 6, asi que el CSV trae una fila por cada
-    municipio que el ShakeMap **toca**, tenga o no poblacion en la banda que el
-    reporte publica. De las 299 filas de us6000tjl2, **188 estan enteras en
-    cero**: 109 municipios tienen poblacion en MMI>=6 y 44 en MMI>=7.
-
-    El resto de la tabla del README dice "en MMI≥7" en cada fila, asi que "299"
-    se leia como parte del mismo conjunto. Se publican las dos cifras que si lo
-    son. Las filas por debajo de MMI 6 se conservan en el CSV —llevan su
-    `mmi_max`, que es la unica forma de saber a que municipios llego la sacudida
-    sin alcanzar la banda— y el propio fichero lo declara en su cabecera.
+    Cada cifra que la portada llego a publicar —la tabla del backtest del Choco,
+    el contraste con PAGER, el recuento de reportes, el de pruebas, la latencia—
+    se quedo atras al menos una vez, y el recuento de pruebas en cada PR. Una
+    cifra que vuelva a entrar aqui vuelve a necesitar quien la mantenga.
     """
-    import csv
-
-    with (RAIZ / "reports" / "us6000tjl2" / "adm2.csv").open(encoding="utf-8") as fh:
-        filas = [f for f in csv.DictReader(fh) if not str(f["usgs_id"]).startswith("#")]
-
-    def con_poblacion(columna: str) -> int:
-        return sum(1 for f in filas if float(f[columna] or 0) > 0)
-
-    readme = README.read_text(encoding="utf-8")
-    seis, siete = con_poblacion("pop_mmi6p"), con_poblacion("pop_mmi7p")
-
-    assert f"| Municipios con población en MMI≥6 | **{format_number_es(seis)}** |" in readme
-    assert f"| De ellos, con población en MMI≥7 | **{format_number_es(siete)}** |" in readme
-    assert "Municipios alcanzados" not in readme, (
-        "vuelve a publicarse un recuento cuyo universo no es el de la tabla"
+    # Los enlaces no son prosa: `?evento=us6000tjl2` no es un recuento.
+    prosa = re.sub(r"\]\([^)]*\)|https?://\S+", " ", readme)
+    halladas = [f"{que}: «{m.group(0)}»" for patron, que in _CIFRAS for m in patron.finditer(prosa)]
+    assert not halladas, (
+        f"el README vuelve a publicar cifras: {halladas}. Van en el reporte, en "
+        f"/status o en docs/PARA_INSTITUCIONES.md, con su procedencia."
     )
-    assert seis < len(filas), (
-        "si todas las filas tuvieran poblacion en la banda, esta prueba pierde su sujeto"
-    )
-
-
-def test_la_poblacion_del_activo_es_la_medida_en_el_manifest(readme: str) -> None:
-    """El README decia "52,9 millones" y el manifest mide 52.620.466.
-
-    Es la unica cifra del activo que vive en git —el resto viaja en el
-    `medicion.json` del Release— asi que es la unica que se puede vigilar aqui.
-    """
-    manifest = yaml.safe_load((RAIZ / "data" / "manifests" / "COL.yaml").read_text("utf-8"))
-    medido = int(manifest["referencia_oficial"]["medido_ghs_pop"])
-
-    assert format_number_es(medido) in readme, (
-        f"El README no cita la poblacion medida del activo ({format_number_es(medido)})."
-    )
-
-
-def test_el_readme_nombra_el_release_del_que_salen_las_cifras(readme: str) -> None:
-    """Sin el tag, las cifras del activo no son verificables por nadie.
-
-    El activo no esta en git —pesa 17 MB por pais— asi que la unica forma de
-    que un lector compruebe estas cifras es sabiendo **que** Release describen.
-    """
-    assert "exposure-col-2" in readme, "el README no dice de que Release salen las cifras"
 
 
 def test_las_garantias_siguen_enlazadas() -> None:
@@ -122,14 +79,47 @@ def test_las_garantias_siguen_enlazadas() -> None:
     Si no se llega a el desde ninguna parte, alguien dara por buena una garantia
     que este fichero marca como sin demostrar.
     """
-    raiz = Path(__file__).parent.parent.parent
-    garantias = raiz / "docs" / "GARANTIAS.md"
+    garantias = RAIZ / "docs" / "GARANTIAS.md"
 
     assert garantias.exists()
-    assert "GARANTIAS" in (raiz / "README.md").read_text(encoding="utf-8")
+    assert "GARANTIAS" in README.read_text(encoding="utf-8")
 
     texto = garantias.read_text(encoding="utf-8")
     assert "Lo que NO está garantizado" in texto, "un documento de garantias sin la mitad incomoda"
+
+
+def test_la_portada_define_mmi_antes_de_usarlo(readme: str) -> None:
+    """MMI aparecia veinte veces y no se definia nunca.
+
+    LA CONFUSION MAGNITUD-INTENSIDAD ES EL ERROR DE LECTURA MAS CARO QUE ESTE
+    SISTEMA PUEDE PROVOCAR. La magnitud es una cifra para el sismo entero; la
+    intensidad es un mapa. Quien las confunda reparte ayuda por la cifra
+    equivocada, y el documento que mas gente lee daba por sabida la diferencia.
+
+    Se comprueba que la definicion existe **y que llega antes** del primer uso
+    en una banda: una glosa al final no evita la mala lectura de arriba.
+    """
+    assert "Mercalli" in readme, "el README usa MMI sin decir nunca qué es"
+
+    definicion = readme.index("Mercalli")
+    primer_uso = readme.find("MMI≥")
+    assert primer_uso == -1 or definicion < primer_uso, (
+        "el README define MMI después de usarlo en una banda; quien lea de "
+        "arriba abajo se encuentra la banda antes que la explicación"
+    )
+
+
+def test_la_portada_enlaza_el_visor_antes_de_la_mitad(readme: str) -> None:
+    """El enlace vivia en la linea 255 de un documento de 3.150 palabras.
+
+    Un sistema que publica una pagina y no la enlaza hasta el ultimo tercio
+    obliga a leerse el argumento entero para llegar al producto.
+    """
+    enlace = readme.find("https://sforero77.github.io/CENTINELA/")
+    assert enlace > 0, "el README no enlaza el visor"
+    assert enlace < len(readme) // 3, (
+        "el enlace al visor queda pasado el primer tercio del documento"
+    )
 
 
 # --- La tabla de poblacion que va a instituciones --------------------------
@@ -154,8 +144,8 @@ def test_la_tabla_de_instituciones_no_se_despega_de_los_manifests(
 
     Eran 19, 21 y construido. Y una cifra de poblacion —la de Argentina— se
     habia movido en el manifest sin que la tabla se enterara. Es el mismo fallo
-    que el resto de este fichero vigila para el README: una tabla copiada a mano
-    se desincroniza, y esta va a instituciones.
+    que este fichero vigilaba para el README: una tabla copiada a mano se
+    desincroniza, y esta va a instituciones.
     """
     referencia = yaml.safe_load((MANIFESTS / f"{iso3}.yaml").read_text("utf-8"))[
         "referencia_oficial"
@@ -179,7 +169,7 @@ def test_el_desvio_publicado_es_el_que_sale_de_las_dos_cifras(
     medido, oficial = int(referencia["medido_ghs_pop"]), int(referencia["poblacion_2025"])
     desvio = 100.0 * (medido - oficial) / oficial
     # El menos del documento es U+2212, no un guion: es prosa, no codigo.
-    signo = "+" if desvio >= 0 else "\u2212"
+    signo = "+" if desvio >= 0 else "−"
     esperado = f"| {signo}{abs(desvio):.2f} %".replace(".", ",")
 
     assert esperado in instituciones, f"§4 no publica {esperado.strip()} para {iso3}"
@@ -205,8 +195,8 @@ def test_el_documento_dice_que_ningun_reporte_se_disparo_en_vivo(instituciones: 
     # trabajo el 2-sep-2026 —hizo saltar los dos parrafos rancios en cuanto
     # `eventos_publicados` paso a 1— y despues no podia volver a verde nunca.
     #
-    # Ahora comprueba lo que de verdad importa: que los dos documentos hablen
-    # del reporte en vivo en vez de seguir diciendo que no lo hay.
+    # Ahora comprueba lo que de verdad importa: que el documento hable del
+    # reporte en vivo en vez de seguir diciendo que no lo hay.
     assert "los 21 son reconstrucciones" not in instituciones.lower(), (
         "§3 de PARA_INSTITUCIONES sigue diciendo que ninguno se disparo en vivo, "
         "y `status.json` publica que si."
@@ -216,147 +206,13 @@ def test_el_documento_dice_que_ningun_reporte_se_disparo_en_vivo(instituciones: 
     )
 
 
-# --- El recuento de pruebas también es una cifra de la portada ---------------
-
-#: Marca que ya estamos dentro del subproceso que cuenta. Sin ella, la prueba se
-#: llamaría a sí misma sin fin.
-_CONTANDO = "CENTINELA_CONTANDO_PRUEBAS"
-
-
-def _pasadas(*argumentos: str) -> int:
-    """Cuántas pruebas **pasan** con esos argumentos.
-
-    Pasadas y no recolectadas: la portada dice «1.152 pruebas» y eso tiene que
-    significar las que verifican algo, no las que se recolectan incluyendo 27 que
-    se saltan por falta de datos locales. Contar recolectadas inflaría la cifra
-    en justo esas 27.
-    """
-    import os
-    import re
-    import subprocess
-    import sys
-
-    entorno = {**os.environ, _CONTANDO: "1"}
-    salida = subprocess.run(
-        [sys.executable, "-m", "pytest", "--tb=no", "-p", "no:cacheprovider", *argumentos],
-        cwd=RAIZ,
-        capture_output=True,
-        text=True,
-        check=False,
-        env=entorno,
-    ).stdout
-    hallado = re.search(r"(\d+) passed", salida)
-    assert hallado, f"pytest no dijo cuántas pasaron:\n{salida[-800:]}"
-    return int(hallado.group(1))
-
-
-def _recolectadas(*argumentos: str) -> int:
-    """Cuántas recolecta, para las suites que no se pueden correr aquí.
-
-    La de navegador arranca un Chromium y tarda ocho minutos: no cabe dentro de
-    otra prueba. Se recolecta, que es exacto mientras ninguna se salte — y si
-    alguna empezara a saltarse, esta misma cifra dejaría de cuadrar con la
-    portada y habría que mirarlo.
-    """
-    import re
-    import subprocess
-    import sys
-
-    salida = subprocess.run(
-        [sys.executable, "-m", "pytest", "--collect-only", *argumentos],
-        cwd=RAIZ,
-        capture_output=True,
-        text=True,
-        check=False,
-    ).stdout
-    hallado = re.search(r"(\d+)(?:/\d+)? tests collected", salida)
-    assert hallado, f"pytest no dijo cuántas recolectó:\n{salida[-800:]}"
-    return int(hallado.group(1))
-
-
-def test_el_readme_no_miente_sobre_cuantas_pruebas_hay(readme: str) -> None:
-    """La portada decía «953 pruebas … 43 de navegador». Eran 1.152 y 101.
-
-    Nadie lo notó porque **nadie lo vigilaba**: las nueve cifras del backtest del
-    Chocó tienen guardia desde que se descubrió que cinco estaban desfasadas, y
-    estas dos se quedaron fuera. Se separaron en cuanto la suite creció, que es
-    lo que le pasa a toda cifra copiada a mano — la misma lección que enuncia la
-    cabecera de este fichero, aplicada a la única cifra del README que habla del
-    propio repositorio.
-    """
-    import os
-    import re
-
-    if os.environ.get(_CONTANDO):
-        pytest.skip("ya estamos dentro del subproceso que cuenta")
-
-    hallado = re.search(
-        r"\*\*([\d.]+) pruebas\*\* sin red, más \*\*([\d.]+) de navegador\*\*", readme
-    )
-    assert hallado, "el README ya no dice cuántas pruebas hay en la forma esperada"
-
-    dice_pipeline = int(hallado.group(1).replace(".", ""))
-    dice_visor = int(hallado.group(2).replace(".", ""))
-
-    # `+ 1` por esta misma prueba: dentro del subproceso se salta —si no, se
-    # llamaria a si misma sin fin— asi que el recuento que devuelve le falta una.
-    # La portada dice lo que ve quien corre `make check`, que si la incluye.
-    pipeline = _pasadas() + 1
-    visor = _recolectadas("tests/visor", "-m", "visor")
-
-    assert dice_pipeline == pipeline, (
-        f"el README dice {dice_pipeline} pruebas sin red y pasan {pipeline}"
-    )
-    assert dice_visor == visor, f"el README dice {dice_visor} de navegador y hay {visor}"
-
-
-# --- La portada tiene que explicarse antes de usarse -------------------------
-
-
-def test_la_portada_define_mmi_antes_de_usarlo(readme: str) -> None:
-    """MMI aparecia veinte veces y no se definia nunca.
-
-    LA CONFUSION MAGNITUD-INTENSIDAD ES EL ERROR DE LECTURA MAS CARO QUE ESTE
-    SISTEMA PUEDE PROVOCAR. La magnitud es una cifra para el sismo entero; la
-    intensidad es un mapa. Quien las confunda reparte ayuda por la cifra
-    equivocada, y el documento que mas gente lee daba por sabida la diferencia.
-
-    Se comprueba que la definicion existe **y que llega antes** del primer uso
-    en una cifra: una glosa al final no evita la mala lectura de arriba.
-    """
-    assert "Mercalli" in readme, "el README usa MMI sin decir nunca qué es"
-
-    definicion = readme.index("Mercalli")
-    primer_uso = readme.index("MMI≥")
-    assert definicion < primer_uso, (
-        "el README define MMI después de usarlo en una banda; quien lea de "
-        "arriba abajo se encuentra la cifra antes que la explicación"
-    )
-
-
-def test_la_portada_enlaza_el_visor_antes_de_la_mitad(readme: str) -> None:
-    """El enlace vivia en la linea 255 de un documento de 3.150 palabras.
-
-    Un sistema que publica una pagina y no la enlaza hasta el ultimo tercio
-    obliga a leerse el argumento entero para llegar al producto.
-    """
-    enlace = readme.find("https://sforero77.github.io/CENTINELA/")
-    assert enlace > 0, "el README no enlaza el visor"
-    assert enlace < len(readme) // 3, (
-        "el enlace al visor queda pasado el primer tercio del documento"
-    )
-
-
 # --- La cuenta de eventos por banda, que ya se quedo vieja dos veces --------
 #
 # "Ocho de diecinueve" -> "once de veintiuno" -> "trece de veintitres". La cifra
 # se copiaba a mano en dos documentos y envejecia cada vez que entraba un
 # reporte, que es justo lo que este fichero existe para impedir.
 
-BANDAS_EN_PROSA = (
-    ("README.md", "diecisiete de los veintisiete"),
-    ("docs/datos/agregaciones.md", "diecisiete de los veintisiete"),
-)
+BANDAS_EN_PROSA = (("docs/datos/agregaciones.md", "diecisiete de los veintisiete"),)
 
 
 def _sin_banda(banda: str) -> int:
@@ -375,7 +231,7 @@ def test_la_cuenta_de_eventos_sin_mmi7_es_la_que_dicen_los_documentos() -> None:
 
     assert (sin7, total) == (17, 27), (
         f"la cuenta cambio: hoy son {sin7} de {total} sin población en MMI≥7. "
-        f"Actualiza README.md y docs/datos/agregaciones.md, y esta prueba."
+        f"Actualiza docs/datos/agregaciones.md y esta prueba."
     )
 
 
@@ -397,22 +253,13 @@ def test_los_documentos_dicen_esa_cuenta(documento: str, frase: str) -> None:
 #: Documentos que publican el recuento de reportes, y como lo escriben.
 #:
 #: Un documento de estado llego a llevar cinco cifras desfasadas a la vez, sin
-#: cambiado ninguna en seis ediciones posteriores; su encabezado decia «Estado al
-#: 28 de agosto» sobre un fichero que se seguia editando. Otro documento
-#: citaba 601 pruebas. El README decia 23 reportes en 15 paises treinta lineas
-#: por encima de donde ya decia «veintisiete».
-#:
-#: Es exactamente lo que este fichero existe para vigilar, aplicado a los tres
-#: documentos que se habian quedado fuera.
-DOCUMENTOS_CON_RECUENTO: tuple[str, ...] = (
-    "README.md",
-    "docs/PARA_INSTITUCIONES.md",
-)
+#: cambiar ninguna en seis ediciones posteriores. Otro citaba 601 pruebas. El
+#: README decia 23 reportes en 15 paises treinta lineas por encima de donde ya
+#: decia «veintisiete»; hoy ya no publica ninguno.
+DOCUMENTOS_CON_RECUENTO: tuple[str, ...] = ("docs/PARA_INSTITUCIONES.md",)
 
 
 def _indice_publicado() -> list[dict[str, object]]:
-    import json
-
     entradas: list[dict[str, object]] = json.loads(
         (RAIZ / "reports" / "index.json").read_text(encoding="utf-8")
     )
@@ -454,42 +301,3 @@ def test_ningun_documento_publica_un_recuento_de_reportes_desfasado(nombre: str)
         assert int(hallado.group(1)) == paises, (
             f"{nombre} dice {hallado.group(1)} países con reporte y hay {paises}"
         )
-
-
-def test_el_readme_nombra_exactamente_los_paises_sin_reporte() -> None:
-    """Titulaba «Los cuatro países sin reporte» con Bolivia ya publicada.
-
-    El commit que publico el reporte de Bolivia toco este README dos secciones
-    mas arriba y dejo esta intacta. La lista se copia a mano en la portada, que
-    es la definicion de lo que este fichero vigila.
-    """
-    con_reporte = {str(e["iso3"]) for e in _indice_publicado() if e.get("iso3")}
-    todos = {p.stem for p in (RAIZ / "data" / "manifests").glob("*.yaml")}
-    sin_reporte = sorted(todos - con_reporte)
-
-    nombres = {
-        "BRA": "Brasil",
-        "PRY": "Paraguay",
-        "URY": "Uruguay",
-        "BOL": "Bolivia",
-        "CUB": "Cuba",
-        "ARG": "Argentina",
-    }
-    cardinales = {1: "El país", 2: "Los dos países", 3: "Los tres países", 4: "Los cuatro países"}
-
-    readme = (RAIZ / "README.md").read_text(encoding="utf-8")
-    titulo = f"### {cardinales[len(sin_reporte)]} sin reporte"
-    assert titulo in readme, (
-        f"hay {len(sin_reporte)} países sin reporte ({sin_reporte}) y el README no "
-        f"titula «{titulo}»"
-    )
-
-    # Y que la enumeración no nombre a ninguno que sí tiene reporte.
-    seccion = readme.split(titulo, 1)[1].split("\n## ", 1)[0]
-    primer_parrafo = seccion.strip().split("\n\n", 1)[0]
-    for iso3 in sorted(con_reporte):
-        nombre = nombres.get(iso3)
-        if nombre:
-            assert nombre not in primer_parrafo, (
-                f"{nombre} tiene reporte publicado y el README lo enumera entre los que no"
-            )

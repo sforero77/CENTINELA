@@ -1,6 +1,6 @@
 """Que el contraste con PAGER se sostenga solo, y siga siendo cierto.
 
-LA OBJECION QUE HUNDE EL PROYECTO EN UNA REUNION. El README publica «2.415.793
+LA OBJECION QUE HUNDE EL PROYECTO EN UNA REUNION. El README publicaba «2.415.793
 en MMI≥7» y PAGER publica 6.514.486 para el mismo evento. Un factor de 2,7. Sin
 explicacion al lado, la lectura por defecto de cualquier evaluador es que
 CENTINELA subcuenta, y lo encuentra en cinco minutos.
@@ -134,8 +134,8 @@ def test_la_cifra_de_centinela_cae_dentro_del_intervalo_de_pager(
         falta = (piso - nuestra) / nuestra
         assert nuestra < piso, (
             f"{campo} volvio a acotar ({nuestra:,.0f} >= {piso:,}). Es una buena "
-            "noticia: quita el `if` de esta prueba y actualiza README.md y "
-            "docs/PARA_INSTITUCIONES.md, que hoy publican que no acota."
+            "noticia: quita el `if` de esta prueba y actualiza "
+            "docs/PARA_INSTITUCIONES.md, que hoy publica que no acota."
         )
         assert falta <= MARGEN_TOLERADO_BAJO_EL_PISO, (
             f"{campo} = {nuestra:,.0f} se queda {falta:.1%} por debajo del piso "
@@ -189,36 +189,6 @@ def test_el_reporte_publicado_lleva_la_misma_advertencia() -> None:
     assert "6,5 y 7,49" in md
 
 
-# --- La misma tabla vive en dos sitios, y solo uno estaba vigilado -----------
-
-PORTADA = RAIZ / "README.md"
-
-
-@pytest.mark.parametrize("campo", ["pop_mmi6p", "pop_mmi7p"])
-def test_la_portada_publica_la_misma_tabla_que_el_documento(
-    campo: str, centinela: dict[str, float]
-) -> None:
-    """El README repite la tabla de PAGER y afirma que esta prueba la vigila.
-
-    No era verdad: la prueba solo leia `PARA_INSTITUCIONES.md`, asi que la copia
-    de la portada podia envejecer sola. Se descubrio al re-emitir us6000tjl2 con
-    un activo de exposicion mas nuevo: las cifras del documento fallaron y las
-    de la portada, identicas y ahora desfasadas, pasaron.
-
-    Es la familia de fallo que este proyecto ya tiene nombrada —el mismo hecho
-    afirmado en dos sitios y comprobado en uno— aplicada a la tabla que existe
-    precisamente para resistir la primera objecion que recibe el proyecto.
-    """
-    esperado = format_number_es(centinela[campo])
-    portada = PORTADA.read_text(encoding="utf-8")
-
-    assert esperado in portada, (
-        f"la portada no publica {esperado} para {campo}. Si acabas de re-emitir "
-        "el evento, la tabla de §«El contraste con PAGER» hay que actualizarla "
-        "en README.md y en docs/PARA_INSTITUCIONES.md a la vez."
-    )
-
-
 # --- Acotar no es coincidir --------------------------------------------------
 
 
@@ -266,13 +236,13 @@ def test_la_cifra_cae_en_el_cuarto_inferior_del_intervalo(
         # Su margen lo vigila `test_la_cifra_de_centinela_cae_dentro_del_intervalo`.
         assert posicion < 0.0, (
             f"{campo} volvio a entrar en el intervalo (al {posicion:.0%}). Hay que "
-            "reescribir README.md y docs/PARA_INSTITUCIONES.md, que publican que no."
+            "reescribir docs/PARA_INSTITUCIONES.md, que publica que no."
         )
         return
 
     assert 0.0 <= posicion < 0.5, (
         f"{campo} cae al {posicion:.0%} del intervalo de PAGER, y los documentos "
         f"publican que queda por debajo del punto medio. Si el ShakeMap lo movio a "
-        f"la mitad alta, hay que reescribir esa frase en README.md y "
+        f"la mitad alta, hay que reescribir esa frase en "
         f"docs/PARA_INSTITUCIONES.md."
     )

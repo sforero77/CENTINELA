@@ -446,34 +446,6 @@ def _cmd_regenerar_mapas(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_sincronizar_portada(args: argparse.Namespace) -> int:
-    """Pone la tabla de cifras del README al dia con el reporte publicado.
-
-    Existe porque la portada se desincronizo tres veces y la tercera dejo
-    `main` en rojo: el bot re-emitio el reporte de ShakeMap v8 a v9 y la tabla
-    se quedo escrita a mano. `impact.yml` lo corre **antes** de commitear, asi
-    que la tabla viaja en el mismo commit que el reporte.
-
-    Con `--comprobar` no escribe: informa y devuelve 1 si algo se movio. Sirve
-    para preguntar en CI sin arreglar nada.
-    """
-    from .common.paths import REPO_ROOT
-    from .p3_report.portada import sincronizar_portada
-
-    cambios = sincronizar_portada(
-        REPO_ROOT / "README.md",
-        reports_root=Path(args.reports) if args.reports else None,
-        escribir=not args.comprobar,
-    )
-    if not cambios:
-        print("la portada ya dice lo que dice el reporte")
-        return 0
-    verbo = "habria que cambiar" if args.comprobar else "actualizado"
-    for c in cambios:
-        print(f"{verbo}: {c}")
-    return 1 if args.comprobar else 0
-
-
 def _cmd_regenerar_textos(args: argparse.Namespace) -> int:
     """Rehace `report.md` y `hilo.txt` de un reporte ya publicado, o de todos.
 
@@ -676,7 +648,9 @@ def _cmd_repasar(args: argparse.Namespace) -> int:
 def _cmd_rezagados(args: argparse.Namespace) -> int:
     """Reportes publicados que se quedaron atras de sus fuentes.
 
-    Informa; no despacha. Ver `pipelines/p1_trigger/rezago.py`.
+    Lista los rezagados y deja en las salidas del job cuales re-emitir y cuales
+    necesitan a una persona; `rezago.yml` despacha los primeros. Ver
+    `pipelines/p1_trigger/rezago.py`.
     """
     from .p1_trigger.rezago import comprobar
 
@@ -702,12 +676,15 @@ def _cmd_rezagados(args: argparse.Namespace) -> int:
     )
     _emit_github_output("hay_rezago", "true" if resultado.rezagados else "false")
     _emit_github_output("cuantos", str(len(resultado.rezagados)))
-    # Separados porque deciden quien puede re-emitirlos sin mirar: los de
-    # activo casi no mueven cifras; los de producto mueven las que el README
-    # cita a mano. Ver `solo_exposicion` en el modulo.
-    _emit_github_output("ids_exposicion", " ".join(r.usgs_id for r in resultado.solo_exposicion))
-    _emit_github_output("ids_productos", " ".join(r.usgs_id for r in resultado.por_productos))
+    # Lo que `rezago.yml` despacha solo, y lo que queda para una persona: un
+    # producto que USGS ya no sirve no se arregla re-emitiendo. Ver `a_reemitir`
+    # y `manuales` en el modulo.
+    _emit_github_output("ids_reemitir", " ".join(r.usgs_id for r in resultado.a_reemitir))
+    _emit_github_output("hay_manuales", "true" if resultado.manuales else "false")
     _emit_github_output("resumen", "\n".join(f"- {r.describir()}" for r in resultado.rezagados))
+    _emit_github_output(
+        "resumen_manuales", "\n".join(f"- {r.describir()}" for r in resultado.manuales)
+    )
 
     if resultado.ciego:
         print(
@@ -716,9 +693,9 @@ def _cmd_rezagados(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 1
-    # Que haya rezago NO es un fallo: es informacion para una persona. Salir
-    # distinto de cero convertiria "hay trabajo pendiente" en "algo se rompio",
-    # y en dos semanas nadie miraria el aviso.
+    # Que haya rezago NO es un fallo: es trabajo que `rezago.yml` despacha a
+    # continuacion. Salir distinto de cero pondria en rojo cada lunes que hubo
+    # algo que actualizar, y en dos semanas nadie miraria el rojo.
     return 0
 
 
@@ -1167,18 +1144,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_textos.add_argument("--reports", help="raiz de reports/")
     p_textos.set_defaults(func=_cmd_regenerar_textos)
 
-    p_portada = sub.add_parser(
-        "sincronizar-portada",
-        help="pone la tabla de cifras del README al dia con el reporte publicado",
-    )
-    p_portada.add_argument(
-        "--comprobar",
-        action="store_true",
-        help="no escribe: informa y sale con 1 si la portada se separo",
-    )
-    p_portada.add_argument("--reports", help="raiz de reports/")
-    p_portada.set_defaults(func=_cmd_sincronizar_portada)
-
     p_contornos = sub.add_parser(
         "contornos", help="trae de USGS el area de afectacion de reportes ya publicados"
     )
@@ -1285,8 +1250,8 @@ def main(argv: list[str] | None = None) -> int:
     # `sys.stdout` sale en cp1252 y `print` de un `≥` lanza
     # `UnicodeEncodeError` — el comando revienta **despues** de haber hecho su
     # trabajo, o sea que deja el fichero escrito y sale con traza y codigo 1.
-    # Paso con `sincronizar-portada` la primera vez que corrio en la maquina
-    # del autor.
+    # Paso con el comando que reescribia la tabla del README, la primera vez
+    # que corrio en la maquina del autor.
     #
     # `errors="replace"` y no `"strict"`: perder un simbolo en un mensaje de
     # consola es un defecto cosmetico; abortar una publicacion por el juego de

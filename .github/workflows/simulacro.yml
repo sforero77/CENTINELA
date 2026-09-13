@@ -50,6 +50,24 @@ jobs:
       - name: Golden tests
         run: uv run pytest -m golden
 
+      # Y SABER DECIR "YA PASO". Sin esto, la incidencia de un mes que fallo
+      # seguiria abierta despues de uno que salio bien, describiendo una
+      # oxidacion que ya no existe. Lo vigila `test_las_alarmas_saben_apagarse.py`.
+      - name: Cerrar la incidencia si el simulacro vuelve a salir
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: El simulacro mensual fallo
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          if [ -n "$ABIERTA" ]; then
+            gh issue close "$ABIERTA" --comment "El simulacro vuelve a salir bien. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "Cerrada la incidencia #$ABIERTA."
+          else
+            echo "Nada que cerrar: no habia incidencia abierta."
+          fi
+
       - name: Abrir issue si el simulacro fallo
         if: failure()
         env:
@@ -148,6 +166,24 @@ jobs:
             echo "$SUCIO"
             exit 1
           }
+
+      # Y SABER DECIR "YA PASO". Sin esto, la incidencia de un mes que fallo
+      # seguiria abierta despues de uno que salio bien, describiendo una
+      # oxidacion que ya no existe. Lo vigila `test_las_alarmas_saben_apagarse.py`.
+      - name: Cerrar la incidencia si el simulacro sobre poblacion vuelve a salir
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: El simulacro sobre poblacion fallo
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          if [ -n "$ABIERTA" ]; then
+            gh issue close "$ABIERTA" --comment "El simulacro sobre poblacion vuelve a salir bien. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "Cerrada la incidencia #$ABIERTA."
+          else
+            echo "Nada que cerrar: no habia incidencia abierta."
+          fi
 
       - name: Abrir issue si el simulacro de poblacion fallo
         if: failure()

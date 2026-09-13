@@ -247,38 +247,6 @@ jobs:
           uv run centinela status
           git add site/status.json
 
-          # LA PORTADA VIAJA EN EL MISMO COMMIT QUE EL REPORTE.
-          #
-          # El 8-sep-2026 el repaso empezo a incluir los backtests, re-emitio
-          # `us6000tjl2` de ShakeMap v8 a v9 —`pop_mmi7p` subio un 26,6 %— y
-          # `main` se quedo en rojo: el bot publica el reporte y la tabla de
-          # cifras del README seguia escrita a mano con las del v8.
-          #
-          # `test_cifras_del_readme.py` lo cazo, que para eso existe, pero
-          # avisar no basta cuando quien re-emite es un workflow. Se genera
-          # aqui, antes del commit, para que no exista el instante en que el
-          # reporte y la portada dicen cosas distintas.
-          #
-          # Solo toca cifras. Lo que cambia de argumento —que Cali entrara
-          # primera al top de municipios, o que el acotamiento con PAGER dejara
-          # de cumplirse en MMI≥6— lo escribe una persona, y lo siguen cazando
-          # las pruebas.
-          #
-          # `|| warning`: ESTE PASO NO PUEDE TUMBAR UNA PUBLICACION.
-          #
-          # Lee el `report.json` del Choco, que no tiene nada que ver con el
-          # evento que se esta publicando. Sin la guarda, un sismo en Chile se
-          # quedaria sin reporte porque un fichero de otro evento no se puede
-          # leer — y este job corre con `bash -e`. El reporte es el producto;
-          # la portada es un derivado suyo.
-          #
-          # Tragarselo no deja el fallo a oscuras: `test_cifras_del_readme.py`
-          # sigue comprobando que la portada este al dia, y el propio
-          # `impact.yml` despacha `ci.yml` al terminar. Se pierde la
-          # sincronizacion automatica de esa vez, no la alarma.
-          uv run centinela sincronizar-portada             || echo "::warning::no se pudo sincronizar la portada; el reporte se publica igual"
-          git add README.md
-
           git commit -m "P3: reporte de $USGS_ID"
 
           # Dos eventos simultaneos tienen concurrency groups distintos y

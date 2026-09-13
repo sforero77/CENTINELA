@@ -204,6 +204,12 @@ El tercero no: las cifras salen del join contra el activo de exposición del pa�
 que **no vive en git** (unos 19 MB por país) y se publica como Release. Por eso
 no hay un `regenerar-cifras`: rehacerlas es correr el pipeline, no re-renderizar.
 
+Cuando lo que cambia es **la fuente** —USGS revisa un ShakeMap o cambia la
+receta del activo de un país— nada de esto hace falta: `repaso.yml` re-emite
+a diario los sismos de menos de 90 días y `rezago.yml`, cada lunes, todo lo
+demás. Esta sección es para cuando cambia **el pipeline**, que ninguna fuente
+anuncia.
+
 ### Cómo se re-emite
 
 `impact.yml` ya hace todo lo que hace falta: elige el país por el epicentro

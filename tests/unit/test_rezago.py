@@ -1,14 +1,14 @@
 """Saber si un reporte publicado se quedo atras de sus propias fuentes.
 
-EL AGUJERO QUE CIERRA. `repaso.py` re-emite cuando USGS publica una version
-nueva, pero salta los backtest a proposito, y los veintiun reportes publicados
-son todos backtest: el repaso lleva dias saliendo en verde con
-`"revisados": 0`. Asi es como el Choco llego a publicar el ShakeMap v7 con el
-v8 ya servido, y a nadie le constaba.
+EL AGUJERO QUE CERRO. `repaso.py` re-emitia cuando USGS publicaba una version
+nueva, pero saltaba los backtest, y los veintiun reportes publicados lo eran: asi
+llego el Choco a publicar el ShakeMap v7 con el v8 ya servido, y a nadie le
+constaba. El repaso incluye los backtest desde el 8-sep-2026, pero sigue mirando
+solo los ultimos noventa dias y no pregunta por la receta del activo.
 
-La decision de no re-emitir historicos automaticamente no se toca —esta
-razonada y sigue siendo buena—. Lo que se cierra es la ceguera: esto **informa**
-y una persona decide.
+Desde el 13-sep-2026 lo que esto encuentra se re-emite solo (`rezago.yml`). Solo
+lo que re-emitir no arregla, un producto que USGS ya no sirve, queda para una
+persona.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from typing import Any
 import pytest
 
 from pipelines.p1_trigger.rezago import (
+    ResultadoRezago,
     Rezago,
     comprobar,
     iso3_del_manifiesto,
@@ -387,13 +388,12 @@ def test_sin_runner_no_escribe_nada(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 # --- Los dos rezagos no son el mismo, y por eso van separados ----------------
 
 
-def test_el_de_producto_y_el_de_activo_se_reparten_en_dos_listas(tmp_path: Path) -> None:
-    """Deciden quien puede pulsar el boton, asi que no pueden ir revueltos.
+def test_lo_atrasado_se_re_emite_sea_ciencia_o_receta(tmp_path: Path) -> None:
+    """Da igual si lo atrasado es el ShakeMap o el activo: el remedio es correr P2.
 
-    Re-emitir un rezago de activo actualiza la etiqueta y poco mas: el salto de
-    manifiesto anadio cobertura del suelo, que P2 no usa. Re-emitir uno de
-    producto mueve cifras publicadas — con el Choco movio las nueve que el
-    README cita a mano.
+    Hasta el 13-sep-2026 iban en dos listas, porque los de producto movian cifras
+    que el README citaba a mano y solo los de activo se re-emitian sin mirar. El
+    README ya no publica cifras.
     """
     _reporte(tmp_path / "reports", "us_activo", shakemap=8, manifiesto="chl-v0.1")
     _reporte(tmp_path / "reports", "us_producto", shakemap=7, manifiesto="col-v0.6")
@@ -408,24 +408,49 @@ def test_el_de_producto_y_el_de_activo_se_reparten_en_dos_listas(tmp_path: Path)
         manifests_dir=manifiestos,
     )
 
-    assert [r.usgs_id for r in resultado.solo_exposicion] == ["us_activo"]
-    assert sorted(r.usgs_id for r in resultado.por_productos) == ["us_ambos", "us_producto"]
+    assert sorted(r.usgs_id for r in resultado.a_reemitir) == [
+        "us_activo",
+        "us_ambos",
+        "us_producto",
+    ]
+    assert resultado.manuales == []
 
 
-def test_uno_que_va_atras_en_las_dos_cosas_no_cuenta_como_solo_activo(tmp_path: Path) -> None:
-    """`solo_exposicion` alimenta la opcion que re-emite sin revisar la portada.
+def test_un_producto_desaparecido_no_se_re_emite_solo() -> None:
+    """Re-emitir con un producto que USGS ya no sirve falla, o publica sin el.
 
-    Colar ahi uno que tambien cambio de ShakeMap moveria cifras citadas
-    creyendo que no se movia ninguna, que es peor que no tener el boton.
+    Es lo unico que queda para una persona, y tiene que llegar a la incidencia en
+    vez de colarse en el despacho automatico, aunque ademas vaya atras en algo que
+    re-emitir si arreglaria.
     """
-    _reporte(tmp_path / "reports", "us1", shakemap=7, manifiesto="chl-v0.1")
-    manifiestos = _manifiestos(tmp_path / "manifests", CHL="chl-v0.2")
-
-    resultado = comprobar(
-        _FetcherFalso({"us1": (9, 1)}),
-        reports_dir=tmp_path / "reports",
-        manifests_dir=manifiestos,
+    perdido = Rezago(
+        usgs_id="us_perdido",
+        shakemap_publicado=8,
+        shakemap_vigente=0,
+        groundfailure_publicado=1,
+        groundfailure_vigente=1,
+        manifiesto_publicado="col-v0.6",
+        manifiesto_vigente="col-v0.6",
     )
+    perdido_y_atrasado = Rezago(
+        usgs_id="us_mixto",
+        shakemap_publicado=7,
+        shakemap_vigente=8,
+        groundfailure_publicado=3,
+        groundfailure_vigente=0,
+        manifiesto_publicado="col-v0.5",
+        manifiesto_vigente="col-v0.6",
+    )
+    atrasado = Rezago(
+        usgs_id="us_nuevo",
+        shakemap_publicado=7,
+        shakemap_vigente=8,
+        groundfailure_publicado=1,
+        groundfailure_vigente=1,
+        manifiesto_publicado="col-v0.6",
+        manifiesto_vigente="col-v0.6",
+    )
+    resultado = ResultadoRezago(revisados=3, rezagados=[perdido, perdido_y_atrasado, atrasado])
 
-    assert resultado.solo_exposicion == []
-    assert [r.usgs_id for r in resultado.por_productos] == ["us1"]
+    assert [r.usgs_id for r in resultado.manuales] == ["us_perdido", "us_mixto"]
+    assert [r.usgs_id for r in resultado.a_reemitir] == ["us_nuevo"]

@@ -100,8 +100,12 @@ antes de quedarse rancia.*
 *Brasil entró en esta tabla el 28-ago-2026, cuando se cerró el fallo que lo
 declaraba con `poblacion_medida: 0` (219 millones de personas de menos en una
 cifra pública) con el activo en el Release desde el 26. Su casilla de reportes
-sigue vacía por otra razón, explicada en el README: sus doce sismos M≥5,5 desde
-2000 están todos entre 534 y 645 km de profundidad.*
+sigue vacía por otra razón: sus doce sismos M≥5,5 desde 2000 están todos entre
+534 y 645 km de profundidad, y el ShakeMap de USGS no modela intensidad de
+MMI 5 o más en superficie para ninguno. Paraguay y Uruguay no tienen reporte
+porque no registran un solo sismo M≥5,5 desde el año 2000;
+`tests/integration/test_silencio_de_paises_live.py` lo vuelve a comprobar
+contra USGS.*
 
 **Venezuela es el caso que conviene mirar de frente.** Su desvío de +4,94 % es
 el mayor de la región y tiene una causa conocida: GHS-POP desagrega la ronda

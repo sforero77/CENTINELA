@@ -57,7 +57,7 @@ P2 los que tengan una versión de producto más nueva.
 
 ```mermaid
 flowchart TB
-  R(["diario"]) --> LEE["Leer events/<br/>no descartados · no backtest<br/>origen dentro de 90 días"]
+  R(["diario"]) --> LEE["Leer events/<br/>no descartados · en vivo o backtest<br/>origen dentro de 90 días"]
   LEE --> PIDE["GET detail por eventid<br/><i>el mismo endpoint que ya usa P2</i>"]
   PIDE --> CMP{"¿shakemap o ground_failure<br/>más nuevos que<br/>versiones_procesadas?"}
   CMP -->|no| NADA(["sin cambios"])
@@ -80,20 +80,20 @@ y 2.024 días) no son revisiones del evento: son reprocesos del catálogo entero
 que USGS hace cada varios años, y perseguirlos a diario sería gastar peticiones
 en algo que no va a pasar hoy.
 
-**Qué queda fuera, a propósito:**
-
-- **`descartado`** es terminal.
-- **Los backtests.** Son reconstrucciones congeladas de históricos; re-emitirlos
-  cada vez que USGS retoca su Atlas convertiría el catálogo en ruido.
+**Qué queda fuera:** solo `descartado`, que es terminal. Los backtests entran
+desde el 8-sep-2026: se excluían por miedo a que re-emitirlos ensuciara el
+catálogo, y la medición contra USGS de ese día dijo lo contrario mientras el
+Chocó llevaba desde el 7-sep en ShakeMap v8 con USGS ya en v9. Lo que se sale de
+la ventana lo re-emite `rezago.yml`.
 
 **Y un fallo de red no es un «sin cambios»**, con la distinción que importa: si
 falla **alguno**, se avisa y la corrida sigue (los que sí se consultaron valen y
 sus despachos salen); si fallan **todos**, sale con código 1 y la corrida se pone
 roja, porque eso no es «sin cambios» sino no haber repasado.
 
-Y «no había nada que repasar» tampoco es «no se pudo repasar»: hoy los 25
-eventos son backtests y quedan fuera, así que cero revisados con cero fallidos
-sale en verde. Confundirlo pondría el workflow en rojo todos los días.
+Y «no había nada que repasar» tampoco es «no se pudo repasar»: sin eventos en
+los últimos noventa días, cero revisados con cero fallidos sale en verde.
+Confundirlo pondría el workflow en rojo sin motivo.
 
 ## `keepalive.yml`: que GitHub no apague los crons
 
@@ -127,21 +127,24 @@ El mínimo de un millón no es decorativo: un simulacro que sale en ceros no
 ensayó nada, y salir en ceros es exactamente lo que ya pasaba solo — los dos
 eventos que P1 despachó el 2-sep cayeron mar adentro.
 
+Cada job abre su incidencia si falla y la cierra solo el mes que vuelve a salir
+bien.
+
 ## `rezago.yml`: ¿lo publicado sigue siendo cierto?
 
 Lunes, 07:23 UTC. Es el reverso de `repaso.yml`: aquel pregunta por los
 **eventos**, este por los **reportes que ya están publicados**. ¿Lo que la
 página sirve hoy sigue coincidiendo con lo que sus fuentes dicen hoy?
 
-Separa el rezago en dos listas porque no cuestan lo mismo. Si lo único que
-cambió es el manifiesto de exposición, las cifras casi no se mueven y el propio
-workflow re-emite. Si cambió el ShakeMap o el Ground Failure, se mueven las
-cifras que el README cita a mano, y eso lo mira una persona antes de tocar un
-artefacto ya publicado.
+Cubre lo que el repaso no ve: un ShakeMap que USGS revisa pasados los noventa
+días y un cambio en la receta del activo de un país. **Todo lo que encuentra lo
+re-emite solo** desde el 13-sep-2026. Hasta entonces informaba y una persona
+decidía, porque re-emitir movía cifras que el README citaba a mano; ese día el
+README dejó de publicar cifras. Lo único que abre incidencia es un reporte cuyo
+producto ya no está en USGS, porque re-emitirlo no lo arregla.
 
-**Que haya rezago no es un fallo y el comando sale con 0 a propósito.** Salir
-distinto de cero convertiría «hay trabajo pendiente» en «algo se rompió», y en
-dos semanas nadie miraría el aviso. Lo que sí sale con 1 es no haber podido
+**Que haya rezago no es un fallo y el comando sale con 0 a propósito.** Es
+trabajo que el paso siguiente despacha. Lo que sí sale con 1 es no haber podido
 consultar ninguno: eso no es «no hay rezago», es estar ciego.
 
 ## `contract_drift.yml`: ¿cambiaron las fuentes?
@@ -150,7 +153,8 @@ Diario, 08:00 UTC. Las fuentes públicas cambian sus formatos sin avisar. Este
 workflow valida los contratos de USGS —el feed resumen y **desde el 6-sep-2026
 también los productos del detail**— contra
 [`schemas/usgs/`](../../schemas/usgs/), más el release de Overture y las cajas
-de los países, y falla si algo derivó.
+de los países, y falla si algo derivó. Abre una incidencia, comenta en ella
+mientras siga derivando y la cierra sola cuando las fuentes vuelven a cumplir.
 
 > Este párrafo decía que validaba «feed y productos de detalle» desde antes de
 > que existiera la prueba que lo hace: `grep -rn "detail-products"` sobre todo
@@ -169,9 +173,9 @@ un sismo.
 
 ```mermaid
 flowchart LR
-  PR(["push · pull request"]) --> CI["<b>ci.yml · check</b><br/>ruff format + check<br/>mypy --strict<br/>2.413 pruebas"]
+  PR(["push · pull request"]) --> CI["<b>ci.yml · check</b><br/>ruff format + check<br/>mypy --strict<br/>suite sin red"]
   PR --> DIAG["<b>ci.yml · diagramas</b><br/>mermaid-cli<br/>cada diagrama de los .md"]
-  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>157 pruebas de navegador"]
+  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>pruebas de navegador"]
   CI --> M{"todo verde"}
   DIAG --> M
   VIS --> M

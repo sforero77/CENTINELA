@@ -22,7 +22,7 @@ Las puertas rojas detienen o avisan; las verdes son el camino que publica.
 | `40 */6 * * *` | cada 6 h | `incendios.yml` | Focos VIIRS de las últimas 24 h | La corrida sale roja |
 | `37 5 * * *` | 05:37 diario | `repaso.yml` | ¿Hay versión de producto más nueva a 90 días? | Código 1 si fallaron **todos** |
 | `0 8 * * *` | 08:00 diario | `contract_drift.yml` | ¿Derivaron los contratos de las fuentes? | Incidencia automática |
-| `23 7 * * 1` | lunes 07:23 | `rezago.yml` | ¿Algún reporte publicado quedó atrás? | Informa; rezago **no** es fallo |
+| `23 7 * * 1` | lunes 07:23 | `rezago.yml` | ¿Algún reporte publicado quedó atrás? | Lo re-emite solo; incidencia solo si USGS retiró el producto |
 | `0 9 5 * *` | día 5, 09:00 | `simulacro.yml` | Que el pipeline no se oxide entre catástrofes | Incidencia automática |
 | `0 7 1,15 * *` | días 1 y 15 | `keepalive.yml` | Que GitHub no apague los crons | — |
 | `0 6 1 1,4,7,10 *` | trimestral | `exposure_quarterly.yml` | Reconstruye el activo de cada país | Incidencia **por país** |
@@ -158,7 +158,7 @@ flowchart TB
   ESQ -->|no| FALLA["no se escribe nada"]
   ESQ -->|sí| P3["<b>P3</b><br/>report.json · adm2.csv · celdas<br/>contornos · 2 PNG · hilo · md"]
 
-  P3 --> IDX["<b>centinela reindexar</b><br/>+ sincronizar-portada + status"]
+  P3 --> IDX["<b>centinela reindexar</b><br/>+ status"]
   IDX --> COMMIT{"¿commiteó algo?"}
   COMMIT -->|sí| POST
 
@@ -288,10 +288,8 @@ flowchart TB
 
   LEE --> F1{"¿descartado?"}
   F1 -->|sí| FUERA["queda fuera · es terminal"]
-  F1 -->|no| F2{"¿backtest?"}
-  F2 -->|sí| FUERA
-  F2 -->|no| F3{"¿origen dentro<br/>de 90 días?"}
-  F3 -->|no| FUERA
+  F1 -->|no| F3{"¿origen dentro<br/>de 90 días?<br/><i>en vivo o backtest</i>"}
+  F3 -->|no| REZ["fuera de la ventana<br/>lo re-emite rezago.yml"]
   F3 -->|sí| PIDE["GET detail por eventid<br/><i>el mismo endpoint que usa P2</i>"]
 
   PIDE --> RED{"¿respondió?"}
@@ -310,9 +308,13 @@ flowchart TB
   style FALLIDO fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
-Cero revisados con cero fallidos **sale en verde**: hoy los eventos publicados
-son casi todos backtests y quedan fuera por diseño. Confundir «no había nada que
-repasar» con «no se pudo repasar» pondría el workflow en rojo todos los días.
+Los backtests entran desde el 8-sep-2026: el Chocó llevaba desde el 7-sep en
+ShakeMap v8 con USGS ya en v9, y nada iba a moverlo. Lo que se sale de la
+ventana lo re-emite `rezago.yml`.
+
+Cero revisados con cero fallidos **sale en verde**: sin eventos en los últimos
+noventa días no hay nada que repasar, y confundir «no había nada que repasar»
+con «no se pudo repasar» pondría el workflow en rojo sin motivo.
 
 ---
 
@@ -339,6 +341,7 @@ flowchart TB
 
   V -->|no| OK(["los contratos aguantan"])
   V -->|sí| ISSUE["<b>incidencia automática</b><br/>con el contrato que cambió"]
+  OK --> CIERRA["si había incidencia abierta,<br/>se cierra sola"]
 
   style V fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
   style ISSUE fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
@@ -354,9 +357,10 @@ los países publicados y no uno.
 
 ## `rezago.yml` · lunes, 07:23
 
-Lo contrario de `repaso.yml`: en vez de preguntar por los eventos, pregunta por
-los **reportes ya publicados**. ¿Lo que se está sirviendo sigue siendo lo que
-las fuentes dicen hoy?
+Lo contrario de `repaso.yml`: en vez de preguntar por los eventos recientes,
+pregunta por **todos los reportes publicados**. ¿Lo que se está sirviendo sigue
+siendo lo que las fuentes dicen hoy? Cubre lo que el repaso no ve: un ShakeMap
+revisado pasados los noventa días y un cambio en la receta del activo de un país.
 
 ```mermaid
 flowchart TB
@@ -370,24 +374,31 @@ flowchart TB
   C2 --> SEP
   C3 --> SEP
 
-  SEP["<b>se separan en dos listas</b>"]
-  SEP --> SOLO["ids_exposicion<br/><i>sólo cambió el activo:<br/>casi no mueve cifras</i>"]
-  SEP --> PROD["ids_productos<br/><i>cambió ShakeMap o GF:<br/>mueve las cifras que el README cita</i>"]
+  SEP{"¿el producto que cita<br/>sigue en USGS?"}
+  SEP -->|sí| AUTO["<b>re-emitir solo</b><br/>gh workflow run impact.yml<br/>backtest · reprocesar"]
+  SEP -->|"no, desapareció"| MANO["<b>incidencia</b><br/>re-emitir no lo arregla"]
 
-  SOLO --> AUTO["re-emitir solo<br/>gh workflow run impact.yml<br/>--reprocesar"]
-  PROD --> MANO["<b>incidencia</b><br/>los mira una persona<br/>antes de re-emitir"]
+  AUTO --> FALLA{"¿falla la re-emisión?"}
+  FALLA -->|sí| P2INC["impact.yml abre<br/>su propia incidencia"]
+  MANO --> CIERRA["se cierra sola cuando<br/>no queda ninguno"]
 
   CMP --> CIEGO{"¿no se pudo consultar<br/><b>ninguno</b>?"}
   CIEGO -->|sí| EXIT1["<b>código 1</b>"]
   CIEGO -->|no| VERDE["hay rezago <b>no</b> es fallo:<br/>sale 0 a propósito"]
 
-  style SEP fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+  style AUTO fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
   style MANO fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
   style EXIT1 fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
-Que salga 0 cuando hay rezago es deliberado: convertir «hay trabajo pendiente»
-en «algo se rompió» hace que en dos semanas nadie mire el aviso.
+**Se re-emite solo desde el 13-sep-2026.** Hasta entonces informaba y una
+persona decidía, porque re-emitir movía cifras que el README citaba a mano; ese
+día el README dejó de publicar cifras. Lo único que sigue pidiendo a alguien es
+un reporte cuyo producto ya no está en USGS.
+
+Que salga 0 cuando hay rezago es deliberado: es trabajo que el paso siguiente
+despacha, y ponerlo en rojo cada lunes que hubo algo que actualizar enseñaría a
+ignorar el rojo.
 
 ---
 
@@ -419,6 +430,7 @@ flowchart TB
   B6 -->|sí| ISS
   ISS -->|sí| ISSUE["<b>incidencia automática</b><br/>el pipeline se oxidó<br/>entre catástrofes"]
   ISS -->|no| OK(["ensayo superado"])
+  OK --> CIERRA["si había incidencia<br/>abierta, se cierra sola"]
 
   style B3 fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
   style BF fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
@@ -524,8 +536,8 @@ flowchart TB
 
   subgraph CI["ci.yml · job check"]
     C1["ruff check"] --> C2["ruff format --check"]
-    C2 --> C3["<b>mypy --strict</b><br/>205 ficheros"]
-    C3 --> C4["<b>pytest</b> -m 'not network and not visor'<br/>2.413 pruebas · con cobertura"]
+    C2 --> C3["<b>mypy --strict</b>"]
+    C3 --> C4["<b>pytest</b> -m 'not network and not visor'<br/>sin red · con cobertura"]
     C4 --> C5["<b>centinela lint-manifests</b><br/>regla de los tres cubos"]
   end
 
@@ -538,7 +550,7 @@ flowchart TB
   end
 
   subgraph VIS["visor.yml"]
-    W1["cache de Chromium<br/>por versión de Playwright"] --> W2["<b>pytest tests/visor -m visor</b><br/>157 pruebas de navegador"]
+    W1["cache de Chromium<br/>por versión de Playwright"] --> W2["<b>pytest tests/visor -m visor</b><br/>pruebas de navegador"]
     W2 --> W3["lee window.CENTINELA.pintado<br/><i>qué capas se pintaron y con<br/>cuántos rasgos · no una captura</i>"]
   end
 

@@ -48,8 +48,8 @@ del trazado. Se piden 2n puntos en medios pasos y se conservan los impares.
 siendo `km`.
 
 > Esta cifra estuvo mal en el README por un factor de seis, porque se copió a
-> mano y el activo se reconstruyó después. Hoy `test_cifras_del_readme.py`
-> falla si la tabla del README se separa de `report.json`.
+> mano y el activo se reconstruyó después. Desde el 13-sep-2026 el README no
+> publica cifras: las de cada evento están en su `report.json`.
 
 ### Edificaciones: por centroide, y se asume
 
