@@ -42,7 +42,7 @@ flowchart TB
   CM --> SIM["simulacro.yml<br/>job seco + job población"]
   CK --> KEEP["keepalive.yml"]
   CS --> REZ["rezago.yml"]
-  REZ -->|"sólo los de activo;<br/>los de producto<br/>van a incidencia"| IMP
+  REZ -->|"lo que quedó atrás<br/>se re-emite solo"| IMP
 
   IMP -->|"sobre lo recién publicado"| CIW["ci.yml"]
   IMP -->|"sobre lo recién publicado"| VISW["visor.yml"]
@@ -107,9 +107,9 @@ gobernado por su propia cadencia.
 | `impact.yml` falla | Se abre una incidencia con el traceback | GitHub Issues |
 | Falta el activo de un país | Incidencia diciendo qué construir | GitHub Issues |
 | La página se queda atrás | `frescura.yml` republica y abre incidencia | GitHub Issues |
-| Un contrato de fuente deriva | `contract_drift.yml` falla | el propio workflow |
+| Un contrato de fuente deriva | `contract_drift.yml` abre incidencia y la cierra al volver a verde | GitHub Issues |
 | GitHub apaga los crons | `keepalive.yml` lo impide | — |
-| Un reporte publicado se queda atrás de sus fuentes | `rezago.yml` re-emite los baratos y abre incidencia con los que mueven cifras | GitHub Issues |
+| Un reporte publicado se queda atrás de sus fuentes | `repaso.yml` lo re-emite a diario si el sismo tiene menos de 90 días; `rezago.yml`, cada lunes, todo lo demás | GitHub Issues, si la re-emisión falla |
 | El pipeline se oxida entre catástrofes | `simulacro.yml`: P1 en seco, los golden y un sismo mudado sobre Cali | GitHub Issues |
 
 Ninguna de estas alarmas depende de que una persona mire la pantalla. Es la

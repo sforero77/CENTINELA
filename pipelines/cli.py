@@ -648,7 +648,9 @@ def _cmd_repasar(args: argparse.Namespace) -> int:
 def _cmd_rezagados(args: argparse.Namespace) -> int:
     """Reportes publicados que se quedaron atras de sus fuentes.
 
-    Informa; no despacha. Ver `pipelines/p1_trigger/rezago.py`.
+    Lista los rezagados y deja en las salidas del job cuales re-emitir y cuales
+    necesitan a una persona; `rezago.yml` despacha los primeros. Ver
+    `pipelines/p1_trigger/rezago.py`.
     """
     from .p1_trigger.rezago import comprobar
 
@@ -674,12 +676,15 @@ def _cmd_rezagados(args: argparse.Namespace) -> int:
     )
     _emit_github_output("hay_rezago", "true" if resultado.rezagados else "false")
     _emit_github_output("cuantos", str(len(resultado.rezagados)))
-    # Separados porque deciden quien puede re-emitirlos sin mirar: los de
-    # activo casi no mueven cifras; los de producto mueven las que el README
-    # cita a mano. Ver `solo_exposicion` en el modulo.
-    _emit_github_output("ids_exposicion", " ".join(r.usgs_id for r in resultado.solo_exposicion))
-    _emit_github_output("ids_productos", " ".join(r.usgs_id for r in resultado.por_productos))
+    # Lo que `rezago.yml` despacha solo, y lo que queda para una persona: un
+    # producto que USGS ya no sirve no se arregla re-emitiendo. Ver `a_reemitir`
+    # y `manuales` en el modulo.
+    _emit_github_output("ids_reemitir", " ".join(r.usgs_id for r in resultado.a_reemitir))
+    _emit_github_output("hay_manuales", "true" if resultado.manuales else "false")
     _emit_github_output("resumen", "\n".join(f"- {r.describir()}" for r in resultado.rezagados))
+    _emit_github_output(
+        "resumen_manuales", "\n".join(f"- {r.describir()}" for r in resultado.manuales)
+    )
 
     if resultado.ciego:
         print(
@@ -688,9 +693,9 @@ def _cmd_rezagados(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 1
-    # Que haya rezago NO es un fallo: es informacion para una persona. Salir
-    # distinto de cero convertiria "hay trabajo pendiente" en "algo se rompio",
-    # y en dos semanas nadie miraria el aviso.
+    # Que haya rezago NO es un fallo: es trabajo que `rezago.yml` despacha a
+    # continuacion. Salir distinto de cero pondria en rojo cada lunes que hubo
+    # algo que actualizar, y en dos semanas nadie miraria el rojo.
     return 0
 
 

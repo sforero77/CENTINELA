@@ -1,50 +1,39 @@
 name: Rezago de los reportes publicados
 
-# EL REPASO SALTA LOS BACKTEST Y LOS VEINTIUNO SON BACKTEST.
+# LO QUE EL REPASO NO VE, Y SE RE-EMITE SOLO.
 #
-# `repaso.yml` cumple RF-04 para los eventos vivos. Los publicados quedan
-# fuera a proposito —re-emitir un historico cada vez que USGS retoca su Atlas
-# convertiria el catalogo en ruido— y esa decision sigue siendo buena. Su coste
-# no estaba medido: el 1-sep-2026 se descubrio que el Choco publicaba el
-# ShakeMap v7 con el v8 ya servido, y se supo porque alguien re-emitio a mano
-# por otro motivo.
+# `repaso.yml` cumple RF-04 para los eventos de los ultimos noventa dias,
+# backtests incluidos desde el 8-sep-2026. Le quedan dos huecos: un ShakeMap que
+# USGS revise pasado ese plazo, y un cambio en la receta del activo de un pais,
+# que no es una version de USGS. El 1-sep-2026 el Choco publicaba el ShakeMap v7
+# con el v8 ya servido, y se supo porque alguien re-emitio a mano por otro
+# motivo.
 #
-# Esto no cambia la decision: **informa y no despacha**. Convierte "nadie sabe"
-# en "hay N reportes atrasados, decide tu".
+# HASTA EL 13-SEP-2026 ESTO INFORMABA Y UNA PERSONA DECIDIA, porque re-emitir
+# movia cifras que el README citaba a mano. Ese dia el README dejo de publicar
+# cifras, y un aviso que espera a que alguien lo lea es justo lo que este
+# proyecto intenta no tener: ahora re-emite solo. Lo unico que sigue pidiendo
+# una persona es un reporte cuyo producto ya no esta en USGS, porque
+# re-emitirlo no lo arregla. Lo vigila `tests/unit/test_lo_atrasado_se_reemite_solo.py`.
 
 on:
   schedule:
     # Lunes a las 07:23 UTC. Semanal y no diario porque esto se mueve despacio:
-    # el activo de exposicion se reconstruye cada trimestre y la mediana desde
-    # un sismo hasta la ultima revision de su ShakeMap son 63 dias (medido
-    # sobre los veinte del catalogo, ver `repaso.py`). Un dia de retraso en
-    # enterarse no cambia ninguna decision; veintiuna peticiones diarias a USGS
-    # para eso, si.
+    # el activo de exposicion se reconstruye cada trimestre y lo reciente ya lo
+    # cubre el repaso diario. Un dia de retraso en re-emitir un historico no
+    # cambia ninguna decision; veintisiete peticiones diarias a USGS para eso, si.
     - cron: "23 7 * * 1"
   workflow_dispatch:
     inputs:
       reemitir:
-        description: "Re-emitir los rezagados que encuentre"
-        type: choice
-        default: "no"
-        options:
-          # `activo` re-emite los que solo van atras en la receta del activo:
-          # el salto de manifiesto anadio cobertura del suelo, que P2 no usa,
-          # asi que sus cifras apenas se mueven.
-          #
-          # `todos` incluye los que van atras en ShakeMap o Ground Failure.
-          # Esos SI mueven cifras publicadas —el Choco movio las nueve que el
-          # README cita a mano— y despues hay que revisar la portada. Se elige
-          # a proposito, no por defecto.
-          - "no"
-          - "activo"
-          - "todos"
+        description: "Re-emitir los rezagados que encuentre (desmarcar para solo mirar)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
   issues: write
-  # Solo para `gh workflow run impact.yml` cuando alguien pulsa el boton.
-  # La corrida programada nunca despacha: `reemitir` vale "no" por defecto.
+  # Para `gh workflow run impact.yml` sobre cada rezagado.
   actions: write
 
 concurrency:
@@ -81,130 +70,85 @@ jobs:
         run: uv sync --python 3.12 --no-dev
 
       # Sale distinto de cero solo si no se pudo consultar NINGUNO. Que haya
-      # rezago no es un fallo: es trabajo pendiente para una persona, y pintarlo
-      # de rojo enseñaria a ignorar el rojo.
+      # rezago no es un fallo: es trabajo que el paso siguiente despacha, y
+      # pintarlo de rojo cada lunes que hubo algo que actualizar enseñaria a
+      # ignorar el rojo.
       - name: Comparar cada reporte con lo que sus fuentes sirven hoy
         id: comprobar
         run: uv run centinela rezagados
 
-      # EL BOTON. Automatico el trabajo, humana la decision.
-      #
-      # Despachar solo seria automatizar el romper el build: re-emitir mueve
-      # cifras que viven en prosa escrita a mano —la tabla del README, el
-      # contraste con PAGER— y ningun workflow puede reescribir con verdad "un
-      # factor de 2,7". Lo que si se puede quitar de en medio es teclear seis
-      # comandos.
-      #
       # SE COMPRUEBA EL EVENTO, NO SOLO EL INPUT.
       #
-      # En un evento `schedule` el contexto `inputs` no existe: `inputs.reemitir`
-      # es nulo, y en las reglas de comparacion de Actions `null != 'no'` da
-      # **true**. Con solo esa condicion, la corrida de los lunes habria
-      # despachado re-emisiones sola — justo lo que este paso existe para evitar.
-      #
-      # `github.event_name` es lo unico que distingue "nadie pulso nada" de
-      # "alguien eligio no".
-      - name: Re-emitir los rezagados elegidos
+      # En un evento `schedule` el contexto `inputs` no existe y
+      # `inputs.reemitir` es nulo. La corrida programada tiene que re-emitir, asi
+      # que se pregunta primero por el evento; el input solo cuenta cuando
+      # alguien lanza el workflow a mano y lo desmarca para mirar sin tocar nada.
+      - name: Re-emitir los rezagados
         id: reemitir
         if: >-
-          github.event_name == 'workflow_dispatch'
-          && inputs.reemitir != 'no'
-          && steps.comprobar.outputs.hay_rezago == 'true'
+          steps.comprobar.outputs.ids_reemitir != ''
+          && (github.event_name == 'schedule' || inputs.reemitir)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTIVO: ${{ steps.comprobar.outputs.ids_exposicion }}
-          PRODUCTOS: ${{ steps.comprobar.outputs.ids_productos }}
-          # POR ENV, COMO LOS OTROS TRES DE ESTE MISMO PASO.
-          #
-          # Hoy `reemitir` es un `choice` de tres opciones y GitHub las valida,
-          # asi que el riesgo real es bajo. Pero `${{ inputs.x }}` dentro de un
-          # `run:` se sustituye antes de que bash vea el script —el valor deja de
-          # ser argumento y pasa a ser codigo— y el dia que alguien cambie el
-          # tipo a `string` para admitir una lista de ids, ese cambio no tendria
-          # por que acordarse de esta linea. La condicion `if:` de arriba si
-          # puede interpolarlo: ahi no hay shell.
-          REEMITIR: ${{ inputs.reemitir }}
+          IDS: ${{ steps.comprobar.outputs.ids_reemitir }}
+          RESUMEN: ${{ steps.comprobar.outputs.resumen }}
         run: |
-          if [ "$REEMITIR" = "todos" ]; then
-            OBJETIVO="$ACTIVO $PRODUCTOS"
-          else
-            OBJETIVO="$ACTIVO"
-            # Que se queda fuera se dice. Un tope silencioso se lee como
-            # "cubierto todo" cuando no lo esta.
-            if [ -n "$PRODUCTOS" ]; then
-              echo "::notice::No se re-emiten los que van atras en producto USGS:"                    "$PRODUCTOS. Mueven cifras publicadas; hace falta 'todos'."
-            fi
-          fi
-
-          if [ -z "$(echo "$OBJETIVO" | tr -d ' ')" ]; then
-            echo "Nada que re-emitir con la opcion elegida."
-            exit 0
-          fi
-
-          for ID in $OBJETIVO; do
-            gh workflow run impact.yml               -f usgs_id="$ID" -f backtest=true -f reprocesar=true
+          N=0
+          for ID in $IDS; do
+            # `backtest=true` no marca como historico a un evento en vivo: el
+            # indicador solo se consulta cuando el evento no tiene estado, y todo
+            # reporte publicado lo tiene. `reprocesar=true` hace falta para los
+            # que van atras en el activo, porque USGS no publico nada nuevo y sin
+            # el P2 sale con «misma version».
+            gh workflow run impact.yml -f usgs_id="$ID" -f backtest=true -f reprocesar=true
             echo "despachado $ID"
+            N=$((N + 1))
             # No por prudencia con el push —impact.yml rebasa— sino para no
-            # encolar veintiun runners a la vez.
+            # encolar todos los runners a la vez.
             sleep 20
           done
+          echo "despachados=$N" >> "$GITHUB_OUTPUT"
 
-          # Lo sabe el paso de la incidencia, que corre despues y si no
-          # escribiria una lista que acaba de dejar de ser cierta.
-          echo "despachados=$(echo $OBJETIVO | wc -w)" >> "$GITHUB_OUTPUT"
+          # Si una re-emision falla, `impact.yml` abre su propia incidencia por
+          # evento y la cierra cuando vuelve a salir. Aqui solo queda el rastro.
+          {
+            echo "### Re-emitidos: $N"
+            echo
+            echo "$RESUMEN"
+          } >> "$GITHUB_STEP_SUMMARY"
 
-          echo "::notice::Re-emitidos. La comprobacion del proximo lunes dira"                "si la lista quedo vacia."
-
-      # UNA SOLA INCIDENCIA, REESCRITA — NO COMENTADA.
+      # UNA SOLA INCIDENCIA, REESCRITA — NO COMENTADA, Y SOLO CON LO QUE NO SE
+      # ARREGLA SOLO.
       #
-      # `frescura.yml` comenta en la suya porque describe una averia que deberia
-      # durar minutos. Esta describe trabajo que puede seguir pendiente semanas
-      # con toda razon, hasta que alguien decida re-emitir. Comentar cada lunes
-      # convertiria la incidencia en un hilo que nadie lee; reescribir el cuerpo
-      # deja siempre a la vista la lista de hoy y solo la de hoy.
-      - name: Anotar que reportes van atras
-        if: steps.comprobar.outputs.hay_rezago == 'true'
+      # Lo re-emitido no se anota aqui: si falla, lo dice `impact.yml`. Queda lo
+      # que re-emitir no arregla, que es un reporte cuyo producto ya no esta en
+      # USGS. Puede seguir pendiente semanas con toda razon; comentar cada lunes
+      # convertiria la incidencia en un hilo que nadie lee, y reescribir el
+      # cuerpo deja siempre a la vista la lista de hoy y solo la de hoy.
+      - name: Anotar lo que re-emitir no arregla
+        if: steps.comprobar.outputs.hay_manuales == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TITULO: Hay reportes publicados atras de sus fuentes
-          CUANTOS: ${{ steps.comprobar.outputs.cuantos }}
-          RESUMEN: ${{ steps.comprobar.outputs.resumen }}
-          DESPACHADOS: ${{ steps.reemitir.outputs.despachados }}
+          TITULO: Reportes que citan un producto que USGS ya no sirve
+          RESUMEN: ${{ steps.comprobar.outputs.resumen_manuales }}
         run: |
           gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
           gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
 
           CORRIDA="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-          CUERPO="$CUANTOS reporte(s) publicados se calcularon con una version
-          de sus fuentes que ya no es la vigente:
+          CUERPO="Estos reportes publicados citan una version de un producto que
+          USGS ya no sirve en el detail del evento, y re-emitirlos no lo arregla:
 
           $RESUMEN
 
-          **Esto no se arregla solo, y no deberia.** Re-emitir un historico es
-          una decision con consecuencias: cambia cifras ya publicadas y ya
-          citadas. Cuando se decida, la receta esta en
-          \`docs/OPERACION.md\` §3.bis:
-
-          \`\`\`
-          gh workflow run impact.yml -f usgs_id=<ID> -f backtest=true -f reprocesar=true
-          \`\`\`
-
-          Y despues, comprobar que la portada sigue diciendo la verdad: las
-          cifras del Choco que cita el README salen de \`us6000tjl2\`.
+          Puede ser un retiro de USGS o una respuesta a medias. Hay que mirar el
+          detail del evento antes de tocar el reporte publicado.
 
           Esta incidencia se reescribe cada lunes con la lista del dia y se
           cierra sola en cuanto no quede ninguno.
 
           Corrida: $CORRIDA"
-
-          if [ -n "$DESPACHADOS" ] && [ "$DESPACHADOS" != "0" ]; then
-            CUERPO="$CUERPO
-
-          **Nota:** en esta misma corrida se despacharon $DESPACHADOS
-          re-emision(es). La lista de arriba es la de ANTES de despacharlas; la
-          comprobacion del proximo lunes dira cuales quedaron resueltas."
-          fi
 
           ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
             --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
@@ -221,15 +165,15 @@ jobs:
       # La otra mitad: saber decir "ya no queda ninguno". Sin esto la alarma
       # solo sabe encenderse, y una que no se apaga deja de leerse.
       - name: Cerrar la incidencia si ya no queda ninguno
-        if: steps.comprobar.outputs.hay_rezago == 'false'
+        if: steps.comprobar.outputs.hay_manuales == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TITULO: Hay reportes publicados atras de sus fuentes
+          TITULO: Reportes que citan un producto que USGS ya no sirve
         run: |
           ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
             --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
           if [ -n "$ABIERTA" ]; then
-            gh issue close "$ABIERTA" --comment "Los reportes publicados vuelven a estar en la version vigente de sus fuentes."
+            gh issue close "$ABIERTA" --comment "Ningun reporte publicado cita ya un producto que USGS no sirva."
             echo "Cerrada la incidencia #$ABIERTA."
           else
             echo "Nada que cerrar: no habia incidencia abierta."

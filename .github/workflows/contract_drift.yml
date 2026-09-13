@@ -99,3 +99,26 @@ jobs:
           # etiquetas: mas vale un issue sin clasificar que ninguna alarma.
           gh issue create --title "$TITULO" --label "contrato,automatico" --body "$CUERPO" \
             || gh issue create --title "$TITULO" --body "$CUERPO"
+
+      # LA OTRA MITAD: SABER DECIR "YA PASO".
+      #
+      # Sabia abrir la incidencia y comentar «sigue derivando», y no sabia
+      # cerrarla. La del 7-sep-2026 siguio abierta dias despues de que las
+      # fuentes volvieran a cumplir su contrato, con la corrida en verde desde el
+      # 9, describiendo una deriva que ya no existia. Una alarma que solo sabe
+      # encenderse deja de leerse. Es la mitad que `frescura.yml`, `impact.yml` y
+      # `rezago.yml` ya tenian; lo vigila `test_las_alarmas_saben_apagarse.py`.
+      - name: Cerrar la incidencia si las fuentes vuelven a cumplir
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITULO: Posible deriva del contrato de una fuente
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          if [ -n "$ABIERTA" ]; then
+            gh issue close "$ABIERTA" --comment "Las fuentes vuelven a cumplir su contrato. Corrida: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "Cerrada la incidencia #$ABIERTA."
+          else
+            echo "Nada que cerrar: no habia incidencia abierta."
+          fi

@@ -3,37 +3,36 @@
 EL DIA QUE ESTO HIZO FALTA. El 1-sep-2026 se re-emitieron los veintiun eventos
 del catalogo para arreglar una columna del `adm2.csv`. La re-emision trajo algo
 que nadie buscaba: el Choco publicaba el **ShakeMap v7 cuando USGS ya servia el
-v8**, y con esa version se movieron las nueve cifras del backtest que cita la
+v8**, y con esa version se movieron las nueve cifras del backtest que citaba la
 portada. Nadie podia saberlo. Se supo porque alguien re-emitio a mano por otro
 motivo.
 
-POR QUE EL REPASO NO LO VE. `repaso.py` cumple RF-04 —al aparecer una version
-nueva, re-emitir— pero salta los backtest a proposito (`repaso.py:113`), y los
-veintiun publicados **son todos** backtest. La razon esta escrita alli y sigue
-siendo buena: re-emitir un historico cada vez que USGS retoca su Atlas
-convertiria el catalogo en ruido. El resultado, sin embargo, es que el repaso
-lleva dias saliendo en verde con `"revisados": 0`.
+LO QUE EL REPASO NO VE. `repaso.py` cumple RF-04 —al aparecer una version nueva,
+re-emitir— y desde el 8-sep-2026 incluye los backtest, pero solo mira los eventos
+de los ultimos noventa dias. Le quedan fuera dos cosas: un ShakeMap que USGS
+revise pasado ese plazo, y un cambio en la receta del activo de un pais, que no
+es una version de USGS y por la que el repaso no pregunta.
 
 QUE HACE ESTE MODULO, Y QUE NO HACE. Compara lo que cada reporte publicado dice
 haber usado contra lo que sus fuentes sirven hoy, y **devuelve una lista**. No
-despacha, no descarga productos, no recalcula. La decision de re-emitir un
-historico sigue siendo de una persona; lo que cambia es que deja de tomarse a
-ciegas.
+despacha, no descarga productos, no recalcula: eso lo hace `rezago.yml`, que
+re-emite solo lo que esta lista marca como re-emitible.
 
 Son dos preguntas distintas y se responden por caminos distintos:
 
 - **Productos de USGS** (ShakeMap, Ground Failure): hay que preguntar al detail
   del evento. Es la misma llamada que ya hace el repaso, contra el mismo
-  endpoint, sin el filtro de backtest.
+  endpoint, sin la ventana de noventa dias.
 - **Activo de exposicion**: no hace falta red. El manifiesto vigente de cada
   pais esta en `data/manifests/<ISO3>.yaml`, y el reporte registra con cual se
   calculo. Es una comparacion de cadenas contra el repositorio.
 
-Medido el 1-sep-2026 sobre los veintiuno: **uno** iba atrasado en productos —el
-Choco— y los veinte restantes ya estaban en su version vigente. El punto ciego
-era real; el dano acumulado, no. Por eso esto informa en vez de despachar: la
-frecuencia con la que encuentra trabajo no justifica automatizar la re-emision,
-y si justifica dejar de estar ciego.
+POR QUE SE RE-EMITE SOLO. Hasta el 13-sep-2026 esto informaba y una persona
+decidia, porque re-emitir movia cifras que el README citaba a mano. Ese dia el
+README dejo de publicar cifras, y un aviso que espera a que alguien lo lea es
+justo lo que este proyecto intenta no tener. Lo unico que sigue pidiendo una
+persona es el reporte cuyo producto **desaparecio** del detail: re-emitirlo no
+lo arregla.
 """
 
 from __future__ import annotations
@@ -113,7 +112,7 @@ class Rezago:
         return self.productos or self.exposicion or self.desaparecido
 
     def describir(self) -> str:
-        """Una linea legible. Es lo que acaba en el cuerpo del issue."""
+        """Una linea legible. Es lo que acaba en el resumen y en el issue."""
         partes = []
         if self.shakemap_vigente > self.shakemap_publicado:
             partes.append(f"ShakeMap v{self.shakemap_publicado} -> v{self.shakemap_vigente}")
@@ -154,27 +153,25 @@ class ResultadoRezago:
         return bool(self.fallidos) and self.revisados == 0
 
     @property
-    def por_productos(self) -> list[Rezago]:
-        """Los que van atras en ciencia: USGS revisó el ShakeMap o el Ground Failure.
+    def a_reemitir(self) -> list[Rezago]:
+        """Los que se arreglan corriendo P2 otra vez. `rezago.yml` los despacha solo.
 
-        Re-emitir uno de estos **mueve cifras publicadas**. El 1-sep-2026, con
-        el Choco, movio las nueve que el README cita a mano. Son los que piden
-        una persona detras.
+        Da igual si lo atrasado es la ciencia —USGS reviso el ShakeMap o el Ground
+        Failure— o la receta del activo: el remedio es el mismo. Hasta el
+        13-sep-2026 se separaban en dos listas porque los de producto movian
+        cifras que el README citaba a mano; el README ya no publica cifras.
         """
-        return [r for r in self.rezagados if r.productos]
+        return [r for r in self.rezagados if not r.desaparecido]
 
     @property
-    def solo_exposicion(self) -> list[Rezago]:
-        """Los que solo van atras en la receta del activo, no en la ciencia.
+    def manuales(self) -> list[Rezago]:
+        """Los que re-emitir no arregla: el producto que citan ya no esta en USGS.
 
-        El salto `v0.1` -> `v0.2` de los diecinueve manifiestos anadio ESA
-        WorldCover, que alimenta las columnas `lulc_*` — y P2 no las usa: son
-        del bloque de incendios. Las fuentes de poblacion, edificaciones y vias
-        no cambiaron. Re-emitir uno de estos actualiza la etiqueta y poco mas.
-
-        La distincion no es cosmetica: decide quien puede pulsar el boton.
+        Re-emitir con un producto que USGS ya no sirve falla, o publica el reporte
+        sin el. Es lo unico que queda para una persona, y lo unico que abre
+        incidencia.
         """
-        return [r for r in self.rezagados if r.exposicion and not r.productos]
+        return [r for r in self.rezagados if r.desaparecido]
 
 
 def _manifiesto_vigente(iso3: str, manifests_dir: Path | None) -> str | None:
@@ -246,7 +243,8 @@ def comprobar(
 ) -> ResultadoRezago:
     """Compara cada reporte publicado con lo que sus fuentes sirven hoy.
 
-    No despacha nada. Ver el docstring del modulo para por que.
+    No despacha nada: devuelve la lista y `rezago.yml` re-emite. Ver el
+    docstring del modulo.
     """
     resultado = ResultadoRezago()
 
