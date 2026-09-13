@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-12T21:55:20Z",
+  "generado_utc": "2026-09-13T06:50:20Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -157,17 +157,6 @@
       "origen_utc": "2026-09-08T13:42:08Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": "CHL"
-    },
-    {
-      "usgs_id": "us7000tfs1",
-      "mag": 4.7,
-      "lon": -69.1624,
-      "lat": 10.733,
-      "depth_km": 10.0,
-      "lugar": "43 km al NO de Aroa, Venezuela",
-      "origen_utc": "2026-09-08T06:49:48Z",
-      "razon": "M4.7 < umbral M5.5",
-      "iso3": "VEN"
     }
   ]
 }
