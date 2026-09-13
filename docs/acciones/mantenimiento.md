@@ -1,7 +1,16 @@
 # Mantenimiento y verificación
 
-Cinco workflows que no producen reportes: existen para que el sistema no se
-rompa en silencio.
+Los workflows que no producen reportes: existen para que el sistema no se rompa
+en silencio. Aquí está **por qué** cada uno está escrito como está; el diagrama
+de lo que comprueba cada uno, paso a paso, está en
+[`por-reloj.md`](por-reloj.md).
+
+> Esta página abría con «Cinco workflows» y explicaba ocho, sin contar
+> `rezago.yml`, que no estaba documentado en toda la carpeta. Una cuenta a mano
+> vuelve a desincronizarse en cuanto entra un fichero, así que ya no hay cuenta
+> aquí: la que se vigila con prueba es la de
+> [`README.md`](README.md), y `tests/unit/test_relojes_documentados.py` exige
+> además que cada workflow tenga su diagrama.
 
 ## `frescura.yml`: ¿la página va al día?
 
@@ -118,6 +127,23 @@ El mínimo de un millón no es decorativo: un simulacro que sale en ceros no
 ensayó nada, y salir en ceros es exactamente lo que ya pasaba solo — los dos
 eventos que P1 despachó el 2-sep cayeron mar adentro.
 
+## `rezago.yml`: ¿lo publicado sigue siendo cierto?
+
+Lunes, 07:23 UTC. Es el reverso de `repaso.yml`: aquel pregunta por los
+**eventos**, este por los **reportes que ya están publicados**. ¿Lo que la
+página sirve hoy sigue coincidiendo con lo que sus fuentes dicen hoy?
+
+Separa el rezago en dos listas porque no cuestan lo mismo. Si lo único que
+cambió es el manifiesto de exposición, las cifras casi no se mueven y el propio
+workflow re-emite. Si cambió el ShakeMap o el Ground Failure, se mueven las
+cifras que el README cita a mano, y eso lo mira una persona antes de tocar un
+artefacto ya publicado.
+
+**Que haya rezago no es un fallo y el comando sale con 0 a propósito.** Salir
+distinto de cero convertiría «hay trabajo pendiente» en «algo se rompió», y en
+dos semanas nadie miraría el aviso. Lo que sí sale con 1 es no haber podido
+consultar ninguno: eso no es «no hay rezago», es estar ciego.
+
 ## `contract_drift.yml`: ¿cambiaron las fuentes?
 
 Diario, 08:00 UTC. Las fuentes públicas cambian sus formatos sin avisar. Este
@@ -143,8 +169,8 @@ un sismo.
 
 ```mermaid
 flowchart LR
-  PR(["push · pull request"]) --> CI["<b>ci.yml</b><br/>ruff format + check<br/>mypy --strict<br/>1.065 pruebas"]
-  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>101 pruebas de navegador"]
+  PR(["push · pull request"]) --> CI["<b>ci.yml</b><br/>ruff format + check<br/>mypy --strict<br/>2.408 pruebas"]
+  PR --> VIS["<b>visor.yml</b><br/>Playwright<br/>157 pruebas de navegador"]
   CI --> M{"ambas verdes"}
   VIS --> M
   M --> MERGE(["se puede fusionar"])

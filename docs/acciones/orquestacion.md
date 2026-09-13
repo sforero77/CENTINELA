@@ -15,6 +15,7 @@ flowchart TB
     CD(["diario 08:00"])
     CM(["mensual día 5"])
     CK(["días 1 y 15"])
+    CS(["semanal · lunes"])
   end
 
   EXT ==>|repository_dispatch<br/>vigilar| TRIG
@@ -40,6 +41,11 @@ flowchart TB
   CD --> DRIFT["contract_drift.yml"]
   CM --> SIM["simulacro.yml<br/>job seco + job población"]
   CK --> KEEP["keepalive.yml"]
+  CS --> REZ["rezago.yml"]
+  REZ -->|"sólo los de activo;<br/>los de producto<br/>van a incidencia"| IMP
+
+  IMP -->|"sobre lo recién publicado"| CIW["ci.yml"]
+  IMP -->|"sobre lo recién publicado"| VISW["visor.yml"]
 
   TRIG -.->|"curl"| HC(["healthchecks.io"])
 
@@ -48,6 +54,9 @@ flowchart TB
   style PAGES fill:#e8eef4,stroke:#3a5a78,color:#1c1b1a
   style EXT fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
+
+El diagrama de **cada** uno de estos nodos, con sus validaciones y sus códigos
+de salida, está en [`por-reloj.md`](por-reloj.md).
 
 ## Los tres mecanismos de disparo
 
@@ -100,6 +109,7 @@ gobernado por su propia cadencia.
 | La página se queda atrás | `frescura.yml` republica y abre incidencia | GitHub Issues |
 | Un contrato de fuente deriva | `contract_drift.yml` falla | el propio workflow |
 | GitHub apaga los crons | `keepalive.yml` lo impide | — |
+| Un reporte publicado se queda atrás de sus fuentes | `rezago.yml` re-emite los baratos y abre incidencia con los que mueven cifras | GitHub Issues |
 | El pipeline se oxida entre catástrofes | `simulacro.yml`: P1 en seco, los golden y un sismo mudado sobre Cali | GitHub Issues |
 
 Ninguna de estas alarmas depende de que una persona mire la pantalla. Es la
