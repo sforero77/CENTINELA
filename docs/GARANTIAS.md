@@ -102,9 +102,35 @@ de detección — las cifras están cincuenta líneas más abajo, en esta misma 
 > actualizó con datos del 2 y el 3-sep y esta frase se quedó. Una latencia de
 > detección medida desde el feed **es** la cadena desde el feed ejercitada.
 
-Lo que sigue sin ejercitarse es un evento en vivo que **alcance población**: los
-dos que hubo se quedaron mar adentro y sus tablas por intensidad salieron en
-ceros. Eso necesita un M≥5,5 sobre tierra habitada, y no se puede ensayar.
+Lo que sigue sin ocurrir es un evento en vivo que **alcance población**: los dos
+que hubo se quedaron mar adentro y sus tablas por intensidad salieron en ceros.
+Eso necesita un M≥5,5 sobre tierra habitada, y esperarlo no depende de nosotros.
+
+**Ensayarlo, sí.** Desde el 12-sep-2026,
+[`scripts/simulacro_sismo.py`](../scripts/simulacro_sismo.py) coge el ShakeMap
+real del Chocó y lo **muda** al punto que se le indique. La geometría de las
+isolíneas es de USGS; lo único sintético es dónde cae. Con eso corre `run_impact`
+entero —descarga HTTP incluida— contra el activo real del país:
+
+```bash
+uv run --extra geo --extra render python scripts/simulacro_sismo.py \
+    --sobre 3.4516,-76.5320 --iso3 COL --exigir-poblacion 1000000
+```
+
+Sobre Cali, el 12-sep-2026: **4.836.557** personas en MMI≥6 y **341.332** en
+MMI≥7, en 2,7 s de cómputo, con los nueve artefactos del paquete escritos y
+validados contra el esquema. El job `poblacion` de `simulacro.yml` lo repite cada
+mes y falla si no llega al millón.
+
+> Aquí decía «y no se puede ensayar». Era falso, y de un modo que importa: el
+> único hueco declarado del sistema se estaba dando por incomprobable cuando lo
+> que faltaba era mover un GeoJSON. P2 no lee el ráster `grid.xml` — lee
+> `cont_mmi.json`, que son isolíneas, y trasladar isolíneas es aritmética.
+
+Lo que el simulacro **no** ensaya, y hay que decirlo cada vez: P1 no ve ese
+evento —no está en el feed—, y trasladar un ShakeMap no es modelarlo. Las cifras
+son las de *ese* campo de sacudida puesto en otro sitio, no las de un sismo que
+pudiera ocurrir ahí.
 
 ### Una cifra publicada tiene un reporte detrás
 

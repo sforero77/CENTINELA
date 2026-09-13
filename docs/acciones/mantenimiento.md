@@ -92,11 +92,31 @@ Días 1 y 15, 07:00 UTC. GitHub **desactiva los workflows programados de repos
 sin actividad durante 60 días**. Este workflow existe solo para que ese
 contador no llegue nunca.
 
-## `simulacro.yml`: el ensayo mensual
+## `simulacro.yml`: los dos ensayos mensuales
 
-Día 5, 09:00 UTC. Corre la cadena completa **en seco** (`--dry-run`): el vigía
-revisa el feed de verdad pero no escribe `event_state` ni publica nada. Prueba
-que las piezas siguen encajando sin esperar a que haya un sismo.
+Día 5, 09:00 UTC. Dos jobs, porque son dos mitades distintas de la cadena.
+
+**`simulacro`** corre P1 **en seco** (`--dry-run`): el vigía revisa el feed de
+verdad pero no escribe `event_state`. Prueba que las piezas siguen encajando sin
+esperar a que haya un sismo.
+
+> «Ni publica nada» decía aquí, y sí publica: `trigger --dry-run` recalcula y
+> reescribe `site/status.json` —rota la ventana de latidos y recuenta
+> `revisiones`— porque el latido es parte del estado del vigía, no del evento.
+> En CI da igual (`persist-credentials: false`, nadie empuja), pero en local
+> ensucia el árbol y hay que revertirlo a mano.
+
+**`poblacion`** ensaya la otra mitad, la que el ensayo en seco no toca: el join
+contra el activo, el ranking municipal, el CSV, los mapas y la validación contra
+el esquema. Baja el activo de COL del Release, coge el ShakeMap real del Chocó,
+lo **muda sobre Cali** con
+[`scripts/simulacro_sismo.py`](../../scripts/simulacro_sismo.py) y exige que
+alcance un millón de personas en MMI≥6. Después comprueba que el árbol
+publicado quedó intacto.
+
+El mínimo de un millón no es decorativo: un simulacro que sale en ceros no
+ensayó nada, y salir en ceros es exactamente lo que ya pasaba solo — los dos
+eventos que P1 despachó el 2-sep cayeron mar adentro.
 
 ## `contract_drift.yml`: ¿cambiaron las fuentes?
 

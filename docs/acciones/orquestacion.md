@@ -38,7 +38,7 @@ flowchart TB
   IMP -.->|"si falta el activo<br/>· sólo lo sugiere"| EXQ["exposure_quarterly.yml<br/>P0"]
   CQ --> EXQ
   CD --> DRIFT["contract_drift.yml"]
-  CM --> SIM["simulacro.yml"]
+  CM --> SIM["simulacro.yml<br/>job seco + job población"]
   CK --> KEEP["keepalive.yml"]
 
   TRIG -.->|"curl"| HC(["healthchecks.io"])
@@ -100,6 +100,7 @@ gobernado por su propia cadencia.
 | La página se queda atrás | `frescura.yml` republica y abre incidencia | GitHub Issues |
 | Un contrato de fuente deriva | `contract_drift.yml` falla | el propio workflow |
 | GitHub apaga los crons | `keepalive.yml` lo impide | — |
+| El pipeline se oxida entre catástrofes | `simulacro.yml`: P1 en seco, los golden y un sismo mudado sobre Cali | GitHub Issues |
 
 Ninguna de estas alarmas depende de que una persona mire la pantalla. Es la
 regla que ordena el proyecto: **nada se da por arreglado si depende de que

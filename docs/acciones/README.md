@@ -26,7 +26,7 @@ una cuenta a mano se desincroniza cada vez que entra un workflow.
 | `exposure_quarterly.yml` | cron trimestral | P0: reconstruye el activo de exposición |
 | `rezago.yml` | cron semanal (lunes) | ¿Algún reporte publicado se quedó atrás de sus fuentes? Informa, no despacha |
 | `contract_drift.yml` | cron diario 08:00 UTC | ¿Cambiaron los contratos de las fuentes? |
-| `simulacro.yml` | cron mensual, día 5 | Ensayo en seco de la cadena completa |
+| `simulacro.yml` | cron mensual, día 5 | Ensayo en seco de la cadena (`simulacro`) y sismo mudado sobre población (`poblacion`) |
 | `keepalive.yml` | cron días 1 y 15 | Impide que GitHub desactive los crons por inactividad |
 | `ci.yml` | push y PR | ruff + mypy + suite de pruebas |
 | `visor.yml` | push y PR | Playwright: el visor abierto en un navegador de verdad |
