@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-14T20:25:22Z",
+  "generado_utc": "2026-09-14T21:00:28Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000thgs",
+      "mag": 5.3,
+      "lon": -104.4352,
+      "lat": 15.0879,
+      "depth_km": 10.0,
+      "lugar": "Cerca de la costa de Michoacan, México",
+      "origen_utc": "2026-09-14T20:38:59Z",
+      "razon": "M5.3 < umbral M5.5",
+      "iso3": "MEX"
+    },
     {
       "usgs_id": "us7000thgj",
       "mag": 4.6,
@@ -36,6 +47,17 @@
       "origen_utc": "2026-09-14T19:16:49Z",
       "razon": "M4.8 < umbral M5.5",
       "iso3": "PER"
+    },
+    {
+      "usgs_id": "us7000thdw",
+      "mag": 4.5,
+      "lon": -76.7002,
+      "lat": 4.5649,
+      "depth_km": 76.1,
+      "lugar": "11 km al SSO de Sipí, Colombia",
+      "origen_utc": "2026-09-14T14:57:11Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "COL"
     },
     {
       "usgs_id": "us7000tha3",
