@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-15T13:30:24Z",
+  "generado_utc": "2026-09-15T18:25:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -179,17 +179,6 @@
       "origen_utc": "2026-09-11T16:42:30Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": "COL"
-    },
-    {
-      "usgs_id": "us7000tgey",
-      "mag": 5.4,
-      "lon": -109.1514,
-      "lat": -34.8341,
-      "depth_km": 10.0,
-      "lugar": "southern East Pacific Rise",
-      "origen_utc": "2026-09-10T18:21:18Z",
-      "razon": "M5.4 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
