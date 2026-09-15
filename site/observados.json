@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-15T10:40:18Z",
+  "generado_utc": "2026-09-15T12:10:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -201,17 +201,6 @@
       "origen_utc": "2026-09-10T13:29:03Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "MEX"
-    },
-    {
-      "usgs_id": "us7000tga8",
-      "mag": 4.8,
-      "lon": -65.8339,
-      "lat": -17.8933,
-      "depth_km": 372.6,
-      "lugar": "35 km al SSE de Cliza, Bolivia",
-      "origen_utc": "2026-09-10T12:05:53Z",
-      "razon": "M4.8 < umbral M5.5",
-      "iso3": "BOL"
     }
   ]
 }
