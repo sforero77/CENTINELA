@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-16T03:35:20Z",
+  "generado_utc": "2026-09-16T04:05:20Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000thrz",
+      "mag": 5.0,
+      "lon": -92.4543,
+      "lat": 14.0287,
+      "depth_km": 10.0,
+      "lugar": "60 km al SSO de Ocós, Guatemala",
+      "origen_utc": "2026-09-16T03:45:03Z",
+      "razon": "M5.0 < umbral M5.5",
+      "iso3": "GTM"
+    },
     {
       "usgs_id": "us7000thrm",
       "mag": 4.5,
