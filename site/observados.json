@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-15T19:05:24Z",
+  "generado_utc": "2026-09-16T02:25:17Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000thrm",
+      "mag": 4.5,
+      "lon": -69.2782,
+      "lat": 10.6842,
+      "depth_km": 10.0,
+      "lugar": "45 km al NNO de Duaca, Venezuela",
+      "origen_utc": "2026-09-16T01:37:17Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "VEN"
+    },
     {
       "usgs_id": "us7000thni",
       "mag": 4.5,
