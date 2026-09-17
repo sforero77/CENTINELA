@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-17T02:00:24Z",
+  "generado_utc": "2026-09-17T08:50:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -212,17 +212,6 @@
       "origen_utc": "2026-09-12T11:16:12Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": "COL"
-    },
-    {
-      "usgs_id": "us7000tgy2",
-      "mag": 4.5,
-      "lon": -76.2161,
-      "lat": -14.4855,
-      "depth_km": 24.1,
-      "lugar": "63 km al OSO de Santiago, Perú",
-      "origen_utc": "2026-09-12T08:46:38Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "PER"
     }
   ]
 }
