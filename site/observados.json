@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-18T14:05:23Z",
+  "generado_utc": "2026-09-18T15:00:25Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -69,6 +69,17 @@
       "origen_utc": "2026-09-17T19:19:06Z",
       "razon": "M4.9 < umbral M5.5",
       "iso3": ""
+    },
+    {
+      "usgs_id": "us7000ti3n",
+      "mag": 4.6,
+      "lon": -73.4257,
+      "lat": -40.5514,
+      "depth_km": 61.8,
+      "lugar": "24 km al O de Osorno, Chile",
+      "origen_utc": "2026-09-17T15:51:18Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "CHL"
     },
     {
       "usgs_id": "us7000thzd",
