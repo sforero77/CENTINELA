@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-18T13:40:24Z",
+  "generado_utc": "2026-09-18T14:05:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "pr2026261000",
+      "mag": 4.8,
+      "lon": -66.9455,
+      "lat": 17.9391,
+      "depth_km": 7.0,
+      "lugar": "5 km al SO de Guánica, Puerto Rico",
+      "origen_utc": "2026-09-18T13:19:35Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": ""
+    },
     {
       "usgs_id": "pt26261050",
       "mag": 4.6,
