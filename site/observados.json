@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-19T03:00:20Z",
+  "generado_utc": "2026-09-19T07:30:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tii3",
+      "mag": 4.9,
+      "lon": -77.349,
+      "lat": -4.0134,
+      "depth_km": 10.0,
+      "lugar": "117 km al NO de Barranca, Perú",
+      "origen_utc": "2026-09-19T07:12:27Z",
+      "razon": "M4.9 < umbral M5.5",
+      "iso3": "PER"
+    },
     {
       "usgs_id": "us7000tie4",
       "mag": 4.5,
