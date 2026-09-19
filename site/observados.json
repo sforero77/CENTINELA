@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-19T21:15:20Z",
+  "generado_utc": "2026-09-19T22:40:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -234,17 +234,6 @@
       "origen_utc": "2026-09-15T17:41:25Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "ARG"
-    },
-    {
-      "usgs_id": "us7000thht",
-      "mag": 4.6,
-      "lon": -76.8222,
-      "lat": 4.4893,
-      "depth_km": 67.1,
-      "lugar": "26 km al SO de Sipí, Colombia",
-      "origen_utc": "2026-09-14T22:39:03Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "COL"
     }
   ]
 }
