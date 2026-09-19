@@ -10,41 +10,39 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 6,8 millones |
-| Población en MMI≥7 | 3,1 millones |
+| Población en MMI≥6 | 7,1 millones |
+| Población en MMI≥7 | 2,4 millones |
 | Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥7 | 520 mil |
-| Sedes de salud en MMI≥7 | 971 |
-| Sedes educativas en MMI≥7 | 1.068 |
+| Edificaciones en MMI≥7 | 530 mil |
+| Sedes de salud en MMI≥7 | 503 |
+| Sedes educativas en MMI≥7 | 1.099 |
 | Vías primarias y secundarias en MMI≥7 | 1.900 km |
-| Vías locales en MMI≥7 | 14 mil km |
-| Superficie construida en MMI≥7 | 85,4 km² |
-
-El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 520 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+| Vías locales en MMI≥7 | 15 mil km |
+| Superficie construida en MMI≥7 | 75,5 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **370 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **290 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Santiago de Cali | `76001` | 7,0 | 770 mil |
-| 2 | Pereira | `66001` | 7,5 | 500 mil |
-| 3 | Buenaventura | `76109` | 7,0 | 410 mil |
-| 4 | Armenia | `63001` | 7,5 | 340 mil |
-| 5 | Dosquebradas | `66170` | 7,5 | 180 mil |
-| 6 | Cartago | `76147` | 7,5 | 130 mil |
-| 7 | Quibdó | `27001` | 7,0 | 110 mil |
-| 8 | Santa Rosa de Cabal | `66682` | 7,0 | 69 mil |
-| 9 | La Tebaida | `63401` | 7,5 | 54 mil |
-| 10 | Zarzal | `76895` | 7,5 | 40 mil |
-| 11 | Alcalá | `76020` | 7,0 | 37 mil |
-| 12 | La Unión | `76400` | 7,5 | 35 mil |
-| 13 | Montenegro | `63470` | 7,5 | 32 mil |
-| 14 | Quimbaya | `63594` | 7,5 | 32 mil |
-| 15 | Chinchiná | `17174` | 7,0 | 30 mil |
+| 1 | Pereira | `66001` | 7,5 | 510 mil |
+| 2 | Buenaventura | `76109` | 7,0 | 440 mil |
+| 3 | Armenia | `63001` | 7,0 | 330 mil |
+| 4 | Dosquebradas | `66170` | 7,5 | 180 mil |
+| 5 | Cartago | `76147` | 7,5 | 130 mil |
+| 6 | Quibdó | `27001` | 7,0 | 110 mil |
+| 7 | Santa Rosa de Cabal | `66682` | 7,5 | 73 mil |
+| 8 | La Tebaida | `63401` | 7,0 | 54 mil |
+| 9 | Zarzal | `76895` | 7,5 | 40 mil |
+| 10 | Alcalá | `76020` | 7,0 | 37 mil |
+| 11 | La Unión | `76400` | 7,5 | 35 mil |
+| 12 | Montenegro | `63470` | 7,0 | 32 mil |
+| 13 | Quimbaya | `63594` | 7,0 | 32 mil |
+| 14 | Chinchiná | `17174` | 7,0 | 30 mil |
+| 15 | Calarcá | `63130` | 7,0 | 26 mil |
 
 ## Deslizamiento y licuefacción
 
@@ -65,12 +63,16 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,7 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,6 %**.
 
 ## Cambios frente a la versión anterior
 
-- Ground Failure: v9 → v10
-- Ninguna cifra publicada cambia frente a la versión anterior.
+- ShakeMap: v9 → v10
+- Población en MMI≥6: 6,8 millones → 7,1 millones
+- Población en MMI≥7: 3,1 millones → 2,4 millones
+- Población de 65 años o más en MMI≥7: 370 mil → 290 mil
+- Edificaciones en MMI≥7: 520 mil → 530 mil
+- Sedes de salud en MMI≥7: 970 → 500
 
 ## Descargas
 
@@ -79,10 +81,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,7 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v9**
+- ShakeMap consumido: **v10**
 - Ground Failure consumido: **v10**
 - Manifiesto de exposición: [`col-v0.6`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/COL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-12T09:33:21Z
+- Pipeline: `0.1.0` · Generado: 2026-09-19T09:42:26Z
 
 ## Advertencias
 

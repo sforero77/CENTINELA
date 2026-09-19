@@ -11,7 +11,7 @@
     "lat": 4.8836
   },
   "inputs": {
-    "shakemap_version": 9,
+    "shakemap_version": 10,
     "groundfailure_version": 10,
     "exposure_manifest": "col-v0.6",
     "modelo_deslizamiento": "jessee_2018_model.tif",
@@ -21,61 +21,54 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 6840603.205263512,
-    "pop_mmi7p": 3069002.8690395486,
+    "pop_mmi6p": 7094549.802590343,
+    "pop_mmi7p": 2389895.6842751526,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 373245.7921920302,
-    "pop_65p_mmi6p": 807028.2845927305,
-    "bld_mmi6p": 1193119.0,
-    "built_m2_mmi6p": 182268076.0,
-    "health_mmi6p": 1913.0,
-    "edu_mmi6p": 2385.0,
-    "road_km_mmi6p": 40642.95700895856,
-    "road_km_principal_mmi6p": 4217.851228294357,
-    "bld_mmi7p": 519018.0,
-    "built_m2_mmi7p": 85408288.0,
-    "health_mmi7p": 971.0,
-    "edu_mmi7p": 1068.0,
-    "road_km_mmi7p": 15748.98698763626,
-    "road_km_principal_mmi7p": 1897.2192546584333,
+    "pop_65p_mmi7p": 293154.33121343644,
+    "pop_65p_mmi6p": 836937.1279490354,
+    "bld_mmi6p": 1288320.0,
+    "built_m2_mmi6p": 191951847.0,
+    "health_mmi6p": 1953.0,
+    "edu_mmi6p": 2465.0,
+    "road_km_mmi6p": 44197.660700827706,
+    "road_km_principal_mmi6p": 4610.913394873165,
+    "bld_mmi7p": 534172.0,
+    "built_m2_mmi7p": 75512297.0,
+    "health_mmi7p": 503.0,
+    "edu_mmi7p": 1099.0,
+    "road_km_mmi7p": 16685.434862724294,
+    "road_km_principal_mmi7p": 1851.6621033938352,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 1816973.1075647753
+    "pop_lq_alta": 1815826.9206681484
   },
   "top_municipios": [
-    {
-      "adm2_id": "76001",
-      "nombre": "Santiago de Cali",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 772110.1329042781,
-      "pop_banda": 772110.1329042781
-    },
     {
       "adm2_id": "66001",
       "nombre": "Pereira",
       "mmi_max": 7.5,
-      "pop_mmi7p": 500314.1681933543,
-      "pop_banda": 500314.1681933543
+      "pop_mmi7p": 509362.56861227565,
+      "pop_banda": 509362.56861227565
     },
     {
       "adm2_id": "76109",
       "nombre": "Buenaventura",
       "mmi_max": 7.0,
-      "pop_mmi7p": 413997.36102016456,
-      "pop_banda": 413997.36102016456
+      "pop_mmi7p": 443745.9724697368,
+      "pop_banda": 443745.9724697368
     },
     {
       "adm2_id": "63001",
       "nombre": "Armenia",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 338048.82900427,
-      "pop_banda": 338048.82900427
+      "mmi_max": 7.0,
+      "pop_mmi7p": 333333.3656698363,
+      "pop_banda": 333333.3656698363
     },
     {
       "adm2_id": "66170",
       "nombre": "Dosquebradas",
       "mmi_max": 7.5,
-      "pop_mmi7p": 180905.68603482842,
-      "pop_banda": 180905.68603482842
+      "pop_mmi7p": 181223.86692177504,
+      "pop_banda": 181223.86692177504
     },
     {
       "adm2_id": "76147",
@@ -88,20 +81,20 @@
       "adm2_id": "27001",
       "nombre": "Quibdó",
       "mmi_max": 7.0,
-      "pop_mmi7p": 111709.84636211488,
-      "pop_banda": 111709.84636211488
+      "pop_mmi7p": 110987.44111835212,
+      "pop_banda": 110987.44111835212
     },
     {
       "adm2_id": "66682",
       "nombre": "Santa Rosa de Cabal",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 68511.19666785747,
-      "pop_banda": 68511.19666785747
+      "mmi_max": 7.5,
+      "pop_mmi7p": 72564.2478192104,
+      "pop_banda": 72564.2478192104
     },
     {
       "adm2_id": "63401",
       "nombre": "La Tebaida",
-      "mmi_max": 7.5,
+      "mmi_max": 7.0,
       "pop_mmi7p": 54278.832213515416,
       "pop_banda": 54278.832213515416
     },
@@ -129,14 +122,14 @@
     {
       "adm2_id": "63470",
       "nombre": "Montenegro",
-      "mmi_max": 7.5,
+      "mmi_max": 7.0,
       "pop_mmi7p": 31681.55454718042,
       "pop_banda": 31681.55454718042
     },
     {
       "adm2_id": "63594",
       "nombre": "Quimbaya",
-      "mmi_max": 7.5,
+      "mmi_max": 7.0,
       "pop_mmi7p": 31506.350372412242,
       "pop_banda": 31506.350372412242
     },
@@ -146,10 +139,17 @@
       "mmi_max": 7.0,
       "pop_mmi7p": 30360.095054543577,
       "pop_banda": 30360.095054543577
+    },
+    {
+      "adm2_id": "63130",
+      "nombre": "Calarcá",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 25641.71717787534,
+      "pop_banda": 25641.71717787534
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 3.7,
+    "pop_discrepancia_pct": 2.6,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -165,8 +165,12 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
-    "Ground Failure: v9 → v10",
-    "Ninguna cifra publicada cambia frente a la versión anterior."
+    "ShakeMap: v9 → v10",
+    "Población en MMI≥6: 6,8 millones → 7,1 millones",
+    "Población en MMI≥7: 3,1 millones → 2,4 millones",
+    "Población de 65 años o más en MMI≥7: 370 mil → 290 mil",
+    "Edificaciones en MMI≥7: 520 mil → 530 mil",
+    "Sedes de salud en MMI≥7: 970 → 500"
   ],
   "licencia": {
     "cubo": "odbl",
@@ -237,6 +241,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-12T09:33:21Z",
+  "generado_utc": "2026-09-19T09:42:26Z",
   "pipeline_version": "0.1.0"
 }

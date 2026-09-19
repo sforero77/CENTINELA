@@ -8,12 +8,12 @@
   "lugar": "2 km al SE de San José del Palmar, Colombia",
   "origen_utc": "2026-08-10T12:34:28Z",
   "versiones_procesadas": {
-    "shakemap": 9,
+    "shakemap": 10,
     "groundfailure": 10
   },
   "timestamps": {
     "publicado": "2026-09-03T03:25:32Z",
-    "publicado_ultimo": "2026-09-12T09:33:23Z",
+    "publicado_ultimo": "2026-09-19T09:42:28Z",
     "usgs_origen": "2026-08-10T12:34:28Z"
   },
   "hashes": {},
@@ -30,6 +30,7 @@
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "ShakeMap v8 -> v9",
-    "Ground Failure v9 -> v10"
+    "Ground Failure v9 -> v10",
+    "ShakeMap v9 -> v10"
   ]
 }
