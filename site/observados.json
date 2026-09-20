@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-20T09:10:22Z",
+  "generado_utc": "2026-09-20T17:45:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -245,17 +245,6 @@
       "origen_utc": "2026-09-15T23:45:06Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "ECU"
-    },
-    {
-      "usgs_id": "us7000thni",
-      "mag": 4.5,
-      "lon": -66.4888,
-      "lat": -25.4555,
-      "depth_km": 185.6,
-      "lugar": "49 km al SO de Cachí, Argentina",
-      "origen_utc": "2026-09-15T17:41:25Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "ARG"
     }
   ]
 }
