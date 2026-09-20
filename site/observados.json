@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-20T17:45:22Z",
+  "generado_utc": "2026-09-20T23:45:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -234,17 +234,6 @@
       "origen_utc": "2026-09-16T01:37:17Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "VEN"
-    },
-    {
-      "usgs_id": "us7000thr4",
-      "mag": 4.5,
-      "lon": -78.094,
-      "lat": -1.6157,
-      "depth_km": 155.8,
-      "lugar": "17 km al ONO de Palora, Ecuador",
-      "origen_utc": "2026-09-15T23:45:06Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "ECU"
     }
   ]
 }
