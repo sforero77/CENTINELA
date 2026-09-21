@@ -159,7 +159,14 @@ a:hover { color: var(--verde-vivo); }
   display: flex;
   align-items: center;
   gap: 1.1rem;
-  padding: 0.75rem 1.75rem;
+  /* El `max()` de los lados es la contrapartida de `viewport-fit=cover`:
+     sin el, la marca cae debajo de la muesca en horizontal. Ver la nota de
+     «La pantalla fisica». */
+  padding:
+    max(0.75rem, env(safe-area-inset-top, 0px))
+    max(1.75rem, env(safe-area-inset-right, 0px))
+    0.75rem
+    max(1.75rem, env(safe-area-inset-left, 0px));
   border-bottom: 1px solid var(--borde);
   background: rgba(244, 242, 234, 0.85);
   backdrop-filter: blur(12px);
@@ -561,6 +568,205 @@ a:hover { color: var(--verde-vivo); }
 .leyenda-valor { font-family: var(--tipo-mono); font-size: 0.72rem; }
 .leyenda-nota { margin: 0; color: var(--tenue-mas); font-size: 0.72rem; line-height: 1.45; }
 
+/* --- El pie del mapa (21-sep-2026) ---------------------------------------- */
+/*
+ * UN TELEFONO NO TIENE CUATRO ESQUINAS LIBRES.
+ *
+ * En escritorio cada caja tenia la suya: el conmutador de amenaza arriba a la
+ * izquierda, las pestañas de capa debajo, la leyenda abajo a la derecha, los
+ * interruptores abajo a la izquierda, y la navegacion de MapLibre arriba a la
+ * derecha. En 390 px esas cinco esquinas son la misma, y cada arreglo anterior
+ * consistio en mover una caja al hueco que dejaba otra. Medido con un evento
+ * abierto, contando solo nuestras cajas: 50 % del lienzo tapado en 390x844 y
+ * 53 % en 360x780. Con el pie unico, 35 % y 37 %; plegado, 10 %. Lo vigila
+ * `test_las_cajas_del_mapa_no_se_comen_el_mapa`.
+ *
+ * La leyenda y los interruptores pasan a ser una sola caja anclada abajo —el
+ * patron de hoja inferior que usan los visores de mapa para movil—, y la caja
+ * se pliega. En escritorio el envoltorio es `display: contents`: no genera caja
+ * y cada hija conserva exactamente el anclaje que tenia, asi que lo de arriba
+ * de 48rem no cambia ni un pixel. El `<summary>` se esconde ahi porque sin
+ * hoja no hay nada que plegar.
+ */
+.pie-mapa { display: contents; }
+.pie-mapa > .pie-mapa-tirador { display: none; }
+
+@media (max-width: 48rem) {
+  .pie-mapa {
+    position: absolute;
+    left: 0.75rem;
+    /* MIDE LO QUE MIDA SU CONTENIDO, Y NO LA PANTALLA.
+       De borde a borde el pie empeoraba el caso mas comun: en panorama solo
+       lleva la caja de simbolos, que ya media 272 px, y estirarla a 361 subia
+       lo tapado del 18 % al 22 %. Un arreglo que mejora el peor caso y estropea
+       el habitual no es un arreglo. Con `right: auto` la caja se encoge a su
+       contenido, y el tope es el mismo `17rem` que ya tenia la caja de simbolos:
+       en panorama el pie mide ahora lo que media ella. */
+    right: auto;
+    max-width: min(17rem, calc(100% - 1.5rem));
+    /* Por encima de la atribucion, que la ODbL exige que se vea y que este
+       proyecto ya protege con una prueba. `env()` con respaldo a 0 para el
+       navegador sin muesca y para el Chromium de las pruebas.
+
+       3,4rem y no los 2,4 que usaba la pila anterior: «OpenFreeMap ©
+       OpenMapTiles Data from OpenStreetMap» mas su boton necesita unos 354 px y
+       en 360 se parte en dos lineas, o sea 44 px de banda en vez de 24. Con 2,4
+       el pie quedaba por debajo de la atribucion —que gana por `z-index`, asi
+       que el credito seguia legible, pero la esquina del pie no—. Subirlo no
+       cuesta mapa: la caja esta anclada abajo y sube entera. */
+    bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* Tope y no altura: la caja mide lo que mida su contenido, y solo cuando
+       se pasa —la rampa de potencia radiativa con su nota desplegada— se
+       desplaza ella en vez de comerse el mapa. */
+    max-height: min(40%, 15rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.45rem 0.75rem 0.65rem;
+    background: rgba(244, 242, 234, 0.96);
+    border: 1px solid var(--borde-fuerte);
+    border-radius: var(--radio-medio);
+    box-shadow: var(--sombra-corta);
+  }
+
+  /* Un pie vacio es un borde flotando sobre el mapa. Pasa en el primer segundo
+     de carga, antes de que el visor inyecte la leyenda de simbolos: `[hidden]`
+     tapa a la leyenda y `:empty` a los controles, y ninguno de los dos vacia
+     al padre. */
+  .pie-mapa:not(:has(> .leyenda:not([hidden]))):not(:has(> .controles-mapa:not(:empty))) {
+    display: none;
+  }
+
+  /* El tirador. Es el unico control nuevo de este cambio y hace una sola cosa:
+     quitar el pie de en medio. Va arriba de la caja —no abajo— para que
+     plegarla no mueva el sitio donde hay que volver a pulsar.
+
+     28 px de alto y no los 44 que pide la pauta AAA de tamaño tactil: el
+     objetivo es la fila entera —unos 270x28— y pasa de sobra el minimo de
+     24x24 que exige el nivel AA (WCAG 2.5.8). Los 44 se midieron: 16 px mas de
+     mapa tapado por el unico control cuyo trabajo es devolver mapa. */
+  .pie-mapa > .pie-mapa-tirador {
+    display: flex;
+    align-items: center;
+    min-height: 1.75rem;
+    margin: -0.25rem -0.75rem 0;
+    padding: 0 0.75rem;
+    font-family: var(--tipo-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--tenue);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .pie-mapa > .pie-mapa-tirador::-webkit-details-marker { display: none; }
+
+  .pie-mapa > .pie-mapa-tirador::after {
+    content: " ▾";
+    margin-left: auto;
+    font-size: 0.8rem;
+  }
+
+  .pie-mapa:not([open]) > .pie-mapa-tirador::after { content: " ▸"; }
+
+  .pie-mapa > .pie-mapa-tirador:focus-visible {
+    outline: 2px solid var(--verde);
+    outline-offset: -2px;
+    border-radius: var(--radio-chico);
+  }
+
+  /* Plegado, el pie es una pastilla y no una banda: se encoge al ancho de su
+     rotulo y devuelve el mapa entero menos esa esquina. */
+  .pie-mapa:not([open]) {
+    max-height: none;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .pie-mapa:not([open]) > .pie-mapa-tirador { margin: 0; }
+
+  /* SIN LEYENDA NO HAY NADA QUE PLEGAR, Y LA FILA SE COBRA IGUAL.
+     En panorama el pie lleva solo la caja de simbolos —que es un `<details>` y
+     ya se pliega sola—, asi que el tirador seria un segundo plegado encima del
+     primero a cambio de 28 px de mapa. Se quita ahi.
+
+     El `:not([open])` del selector no es adorno: sin el, plegar el pie con un
+     evento abierto y volver despues al panorama dejaba el pie cerrado y sin
+     tirador — o sea, contenido escondido y ninguna forma de recuperarlo. */
+  .pie-mapa[open]:not(:has(> .leyenda:not([hidden]))) > .pie-mapa-tirador {
+    display: none;
+  }
+
+  /* Dentro de una caja, tres bordes redondeados son ruido. Las hijas pierden su
+     posicion y su cromo; el pie los pone una vez. Por `>` con `#leyenda` para
+     ganarle por especificidad a sus propias reglas de id. */
+  .pie-mapa > #leyenda,
+  .pie-mapa > .controles-mapa {
+    position: static;
+    inset: auto;
+    width: auto;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Una linea entre las dos mitades: arriba lo que explica los colores que hay,
+     abajo lo que se puede encender.
+
+     Por hermano adyacente y no a secas: en panorama no hay leyenda —el pie
+     lleva solo los controles— y una linea de separacion sin nada arriba de lo
+     que separarse son 9 px de mapa a cambio de nada. Medido: con la regla
+     suelta, el pie en panorama volvia a ser mas alto que la caja que sustituye. */
+  .pie-mapa > .leyenda:not([hidden]) + .controles-mapa:not(:empty) {
+    border-top: 1px solid var(--borde);
+    padding-top: 0.5rem;
+  }
+
+  /* LA ESCALA, TUMBADA.
+   *
+   * Seis clases en columna con su rotulo al lado son 155 px de alto y el ancho
+   * entero: la propia leyenda tapaba mas mapa que ningun otro control. En fila
+   * —muestra arriba, cifra debajo— la misma escala ocupa una linea, que es como
+   * la dibuja cualquier visor de mapa en un telefono. Las clases no se
+   * recortan: si no caben, envuelven.
+   *
+   * `align-items: stretch` es lo que hace que cada muestra mida lo que mide su
+   * cifra, asi que la rampa sale continua sin fijar anchos a mano. */
+  .pie-mapa > #leyenda .leyenda-escala {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .pie-mapa > #leyenda .leyenda-escala li {
+    flex: 0 1 auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.18rem;
+    margin-bottom: 0;
+    min-width: 2.3rem;
+  }
+
+  .pie-mapa > #leyenda .leyenda-escala .muestra { width: auto; height: 0.5rem; }
+  /* La muestra de una isolinea sigue siendo una linea; ver la nota de
+     `.muestra-linea`. Se repite aqui porque la regla de arriba es mas
+     especifica y si no le ganaria. */
+  .pie-mapa > #leyenda .leyenda-escala .muestra-linea { height: 0.28rem; }
+  .pie-mapa > #leyenda .leyenda-valor { font-size: 0.68rem; line-height: 1.1; }
+
+  .pie-mapa > #leyenda .leyenda-titulo { margin-bottom: 0.35rem; }
+}
+
 /* LA ATRIBUCION DEL MAPA BASE VA POR ENCIMA DE TODO LO NUESTRO.
    No es estetica: OpenStreetMap es ODbL y exige que la atribucion se vea. En
    movil la pila de interruptores caia justo sobre ella —medido el 28-ago-2026:
@@ -574,38 +780,19 @@ a:hover { color: var(--verde-vivo); }
   z-index: 5;
 }
 
+/* SE FUE LA LEYENDA DEL BORDE DE ARRIBA, Y CON ELLA TRES REGLAS.
+ *
+ * Aqui vivia el reparto anterior: la leyenda de intensidad colgada del borde
+ * superior —`top: 1rem`, y `8.6rem` cuando habia pestañas de capa— porque abajo
+ * ya estaban los interruptores. Repartia el mismo mapa entre dos cajas en vez
+ * de dejar mapa: medido el 21-sep-2026 con un evento abierto, entre las dos se
+ * llevaban 42 de los 50 puntos tapados en 390x844 y 44 de los 53 en 360x780.
+ *
+ * Las dos son ahora el mismo pie plegable (`.pie-mapa`), asi que no hay nada
+ * que repartir y estas reglas se borran en vez de reajustarse. Lo que queda es
+ * lo unico que seguia siendo cierto: en un movil las pestañas de capa se
+ * desplazan en su propia fila. */
 @media (max-width: 34rem) {
-  /* EL PIE DEL MAPA NO CABE EN UN TELEFONO, Y SE APILABA SOBRE SI MISMO.
-     Medido el 28-ago-2026 en 390x844, con evento y focos: leyenda 553-708,
-     interruptores 599-728, atribucion 706-730. Las tres cajas sobre el mismo
-     rincon de 506 px de mapa: la leyenda de intensidad —la que explica los
-     colores— quedaba ilegible debajo de los interruptores.
-
-     La leyenda sube al hueco que queda bajo la barra de capas, que esta vacio.
-     Entre esa barra y la atribucion hay 349 px libres y las dos cajas suman
-     296: caben, solo estaban mal repartidas. */
-  .leyenda { width: auto; }
-
-  /* POR `#leyenda` Y NO POR `.leyenda`. La leyenda de simbolos declara
-     `class="leyenda leyenda-simbolos"`, asi que una regla de clase la movia a
-     ella tambien — y acababa exactamente encima de la de intensidad, que es lo
-     que este bloque venia a evitar. Lo caza `test_ningun_texto_se_pisa_con_otro`.
-     Solo se recoloca la de intensidad, que es la unica suelta sobre el mapa: la
-     de simbolos vive dentro de `.controles-mapa` y se apila con ellos. */
-  #leyenda {
-    left: 0.9rem;
-    right: 0.9rem;
-    top: 1rem;
-    bottom: auto;
-  }
-
-  /* `.capas` va antes que `#leyenda` en el DOM, asi que el hermano general
-     sirve para bajarla solo cuando hay barra de pestañas — en panorama no la
-     hay y la leyenda puede ocupar el borde superior. */
-  .capas:not([hidden]) ~ #leyenda {
-    top: 8.6rem;
-  }
-
   .capas { right: 4.2rem; max-width: none; width: auto; justify-content: flex-start; }
 }
 
@@ -937,7 +1124,11 @@ a:hover { color: var(--verde-vivo); }
 
 footer {
   border-top: 1px solid var(--borde);
-  padding: 1.75rem;
+  padding:
+    1.75rem
+    max(1.75rem, env(safe-area-inset-right, 0px))
+    calc(1.75rem + env(safe-area-inset-bottom, 0px))
+    max(1.75rem, env(safe-area-inset-left, 0px));
   color: var(--tenue-mas);
   font-size: 0.76rem;
   line-height: 1.7;
@@ -1131,13 +1322,27 @@ thead th {
   .tablero { grid-template-columns: 1fr; grid-template-rows: auto auto; min-height: 0; }
   .lienzo { min-height: 26rem; height: 60vh; }
   .lateral { border-left: none; border-top: 1px solid var(--borde); overflow: visible; }
-  .barra { flex-wrap: wrap; gap: 0.75rem 1rem; padding: 0.7rem 1.1rem; }
+  .barra {
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    padding:
+      max(0.7rem, env(safe-area-inset-top, 0px))
+      max(1.1rem, env(safe-area-inset-right, 0px))
+      0.7rem
+      max(1.1rem, env(safe-area-inset-left, 0px));
+  }
   .selector { order: 3; margin-left: 0; width: 100%; }
   .selector select { max-width: none; flex: 1; }
   .barra nav { gap: 0.9rem; }
   .aviso { padding: 0.65rem 1.1rem; }
   #eventos { padding: 2.25rem 1.1rem 2rem; }
-  footer { padding: 1.5rem 1.1rem; }
+  footer {
+    padding:
+      1.5rem
+      max(1.1rem, env(safe-area-inset-right, 0px))
+      calc(1.5rem + env(safe-area-inset-bottom, 0px))
+      max(1.1rem, env(safe-area-inset-left, 0px));
+  }
   .hoja { padding: 2rem 1.1rem 2.5rem; }
 }
 
@@ -1146,7 +1351,16 @@ thead th {
 @media (max-width: 30rem) {
   .endoso { display: none; }
   .marca-lema { display: none; }
-  .aviso { flex-direction: column; gap: 0.3rem; }
+
+  /* EN BLOQUE, NO EN COLUMNA.
+     En columna «Léase así» se llevaba una linea entera para si, y el aviso
+     medido en 390x844 subia a 110 px: junto con la cabecera, el selector y los
+     filtros, el 31 % de la primera pantalla antes de que empezara el mapa. En
+     bloque el rotulo entra en la primera linea del texto y el aviso dice lo
+     mismo en una linea menos. Se acorta lo que ocupa, no lo que advierte. */
+  .aviso { display: block; }
+  .aviso .mono { margin-right: 0.45rem; }
+
   .metricas { grid-template-columns: 1fr; }
 }
 
@@ -1799,7 +2013,6 @@ thead th {
   outline: 2px solid #1f6f4a;
   outline-offset: 2px;
 }
-}
 
 
 /* Una linea bajo cada titulo que dice de que va el bloque.
@@ -1970,11 +2183,6 @@ thead th {
   }
   .capas::-webkit-scrollbar { display: none; }
   .capas button { flex: 0 0 auto; }
-
-  /* Con las pestañas en una fila, la leyenda ya no necesita esconderse a
-     8,6rem: sube al hueco real — que empieza bajo la barra de escala, no bajo
-     las pestañas. A 5rem le pisaba la esquina a la escala (~12 px). */
-  .capas:not([hidden]) ~ #leyenda { top: 6.1rem; }
 }
 
 
@@ -2026,13 +2234,6 @@ thead th {
   /* La fila de pestañas se acorta para no cruzarse con la barra de escala, que
      vive a la derecha bajo el zoom. Sigue siendo desplazable. */
   .capas { max-width: calc(100% - 8.6rem); }
-
-  /* La leyenda vive bajo TODO lo de arriba: conmutador, pestañas cuando las
-     hay, y la barra de escala — que esta a la derecha bajo el zoom y fue la
-     que pisaba el titulo en modo fuego ("2000 km" sobre "Potencia radiativa",
-     cazado por la sonda de solapes). Un solo tope que libra a los tres. */
-  #leyenda { top: 6.15rem; }
-  .capas:not([hidden]) ~ #leyenda { top: 6.35rem; }
 }
 
 /* La trampa del [hidden], otra vez: el atributo es display:none con
@@ -2173,6 +2374,69 @@ thead th {
  * `test_ningun_elemento_oculto_se_sigue_viendo` es quien lo vigila. */
 [hidden] {
   display: none !important;
+}
+
+/* --- La pantalla fisica: muescas y dedos (21-sep-2026) -------------------- */
+/*
+ * `viewport-fit=cover` en el `<meta>` de `index.html` lleva el lienzo hasta el
+ * borde del cristal, que es lo que se quiere de un mapa. Lo que NO puede llegar
+ * hasta ahi es el texto: en un telefono con muesca o con barra de gestos, la
+ * marca de la cabecera y el credito del mapa caen debajo del recorte. Estas son
+ * las reglas que pagan ese `cover`; sin ellas habria que quitarlo.
+ *
+ * `env(..., 0px)` con respaldo explicito: en un navegador sin muescas —y en el
+ * Chromium con el que corren las pruebas— los cuatro valores son cero y el
+ * `max()` devuelve el relleno de siempre.
+ *
+ * Los de `.barra` y `footer` NO estan aqui: van escritos donde ya se declaraba
+ * su relleno. Reunidos en este bloque ganaban por orden a la regla movil de
+ * `@media (max-width: 64rem)` —que pide 1,1rem— y la cabecera volvia a los
+ * 1,75rem de escritorio en un telefono. Una media query no suma especificidad.
+ */
+
+/* La atribucion del mapa base vive pegada al borde inferior del lienzo, que con
+   `cover` es el borde del cristal. */
+.lienzo .maplibregl-ctrl-bottom-right,
+.lienzo .maplibregl-ctrl-bottom-left {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* EL BLANCO DE UN DEDO NO ES EL DE UN RATON.
+ *
+ * Las pastillas de este visor estan dimensionadas por su texto: las pestañas de
+ * capa salian a 27 px de alto y los desplegables de filtro a 30, contra los
+ * 44x44 que piden las WCAG 2.5.8 (AAA) y las guias de iOS, y los 24x24 del AA.
+ * En un raton eso no se nota y en un pulgar se falla el objetivo.
+ *
+ * Por `pointer: coarse` y no por ancho: lo que cambia el tamaño necesario es el
+ * dedo, no la pantalla —una tableta de 1024 px tambien se toca— y una ventana
+ * estrecha en un portatil no necesita botones mas grandes. */
+@media (pointer: coarse) {
+  /* Solo el alto: un `<button>` ya centra su contenido y `.solo-en-vista` ya es
+     `flex`. Redeclarar `display` aqui arriesgaria el `[hidden]` de esa clase y
+     la fila desplazable de pestañas, y no haria nada por el dedo. */
+  .capas button,
+  .amenazas button,
+  .filtros-limpiar,
+  .filtro select,
+  .selector select,
+  .solo-en-vista {
+    min-height: 2.75rem;
+  }
+
+  .solo-en-vista input { width: 1.15rem; height: 1.15rem; }
+
+  /* Los plegables y la casilla del mapa: la fila entera abre y cierra, asi que
+     basta con darle alto a la fila. Se quedan en 32 px —no en los 44 de la
+     barra de filtros— porque viven dentro del pie del mapa, y ahi cada pixel
+     de control es un pixel de mapa: el intercambio va al reves. Siguen por
+     encima del minimo de 24x24 que pide WCAG 2.5.8 en nivel AA, y su ancho es
+     el de la caja entera. */
+  .leyenda-simbolos > summary,
+  .leyenda-detalle > summary,
+  .interruptor-observados {
+    min-height: 2rem;
+  }
 }
 
 /* --- La barra de filtros (31-ago-2026) ----------------------------------- */

@@ -500,7 +500,8 @@ def test_los_controles_no_tapan_el_aviso_de_que_esto_no_es_dano(pagina: Any) -> 
 MOVIL = {"width": 390, "height": 844}
 
 
-def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any) -> None:
+@pytest.mark.parametrize(("ancho", "alto"), [(390, 844), (360, 780)])
+def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any, ancho: int, alto: int) -> None:
     """No es estetica: OpenStreetMap es ODbL y exige que su credito se vea.
 
     Medido el 28-ago-2026 en 390x844: la pila de interruptores caia justo sobre
@@ -510,8 +511,15 @@ def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any) -> None:
 
     `maplibre-gl.css` declara `z-index: 2` en esa regla y se carga despues, asi
     que la nuestra necesita dos clases para ganarle.
+
+    Y SE MIDE TAMBIEN EN 360, QUE ES DONDE LA BANDA CAMBIA DE ALTO.
+    «OpenFreeMap © OpenMapTiles Data from OpenStreetMap» con su boton pide unos
+    354 px: en 390 entra en una linea y en 360 se parte en dos, o sea 44 px de
+    banda en vez de 24. Cualquier caja anclada abajo que se calcule contra los
+    24 cae encima de la segunda linea, y esta prueba solo miraba el ancho donde
+    eso no pasa.
     """
-    pagina.set_viewport_size(MOVIL)
+    pagina.set_viewport_size({"width": ancho, "height": alto})
     _esperar_capa(pagina, "epicentros")
     _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
@@ -524,7 +532,7 @@ def test_la_atribucion_del_mapa_no_queda_debajo_de_nada(pagina: Any) -> None:
         return e && a.contains(e) ? null : (e ? (e.className || e.tagName).toString() : 'nada');
     }""")
 
-    assert encima is None, f"algo tapa la atribucion del mapa base: {encima}"
+    assert encima is None, f"algo tapa la atribucion del mapa base en {ancho}x{alto}: {encima}"
 
 
 def test_la_pagina_no_se_desplaza_en_horizontal_en_movil(pagina: Any) -> None:
@@ -613,43 +621,78 @@ def test_la_tabla_de_cobertura_sigue_siendo_una_tabla_en_movil(pagina: Any) -> N
 #: `content-visibility`, asi que su contenido conserva caja y no se pinta. Sin
 #: eso la sonda reportaba solapes que nadie ve — paso, y costo media hora
 #: perseguir un fallo inexistente entre la leyenda y la atribucion.
+#:
+#: SE COMPARAN CAJAS DE LINEA, Y RECORTADAS. Ni una cosa ni la otra son detalle:
+#: las dos son formas de que `getBoundingClientRect` diga que hay texto donde no
+#: lo hay, y las dos dieron rojo sobre pantallas correctas.
+#:
+#: 1. Un elemento en linea que ocupa varias lineas devuelve **una sola caja**,
+#:    la union de todas. Dos `<span>` hermanos que comparten la primera linea
+#:    —que es lo que hace cualquier parrafo con un rotulo delante— salen por
+#:    tanto solapados. El caso: «Lease asi» sobre «Exposicion no es dano», que
+#:    van uno detras del otro en la misma linea y no se tocan.
+#: 2. Un hijo a medio recortar se reporta entero. El tercer boton de la fila de
+#:    capas se sale de su propia caja desplazable en 390 px, y desde ahi
+#:    denunciaba «100 km» de la barra de escala con siete pixeles de aire entre
+#:    las dos cajas.
+#:
+#: Asi que se toma `getClientRects()` —una caja por fragmento de linea—, se
+#: recorta cada una contra los contenedores que recortan, y se comparan esas.
+#: Es lo unico que alguien puede llegar a ver pisado.
 SONDA_SOLAPES = """
 () => {
-  // `getBoundingClientRect` devuelve la posicion SIN recortar: un hijo dentro
-  // de un contenedor con scroll se reporta donde estaria si el contenedor no
-  // recortara, aunque no se pinte ahi. Sin esto la sonda daba por solapada la
-  // leyenda de simbolos con la de intensidad — y el texto estaba recortado.
-  const visibleTrasRecorte = e => {
-    let r = e.getBoundingClientRect();
+  const cajasDe = e => {
+    const recortes = [];
     for (let p = e.parentElement; p; p = p.parentElement) {
       const s = getComputedStyle(p);
       if (s.overflowY === 'visible' && s.overflowX === 'visible') continue;
-      const c = p.getBoundingClientRect();
-      if (r.bottom <= c.top + 1 || r.top >= c.bottom - 1) return false;
-      if (r.right <= c.left + 1 || r.left >= c.right - 1) return false;
+      recortes.push(p.getBoundingClientRect());
     }
-    return true;
+    const salida = [];
+    for (const r of e.getClientRects()) {
+      let top = r.top, bottom = r.bottom, left = r.left, right = r.right;
+      for (const c of recortes) {
+        top = Math.max(top, c.top);
+        bottom = Math.min(bottom, c.bottom);
+        left = Math.max(left, c.left);
+        right = Math.min(right, c.right);
+      }
+      if (right - left >= 2 && bottom - top >= 2) salida.push({ top, bottom, left, right });
+    }
+    return salida;
   };
 
-  const conTexto = [...document.querySelectorAll('body *')].filter(e => {
+  const conTexto = [];
+  for (const e of document.querySelectorAll('body *')) {
     if (!e.checkVisibility({ contentVisibilityAuto: true, opacityProperty: true,
-                             visibilityProperty: true })) return false;
+                             visibilityProperty: true })) continue;
     const r = e.getBoundingClientRect();
-    if (r.width < 2 || r.height < 2) return false;
-    if (r.bottom < 0 || r.top > innerHeight) return false;
-    if (!visibleTrasRecorte(e)) return false;
-    return [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 1);
-  });
+    if (r.width < 2 || r.height < 2) continue;
+    if (r.bottom < 0 || r.top > innerHeight) continue;
+    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 1)) continue;
+    const cajas = cajasDe(e);
+    if (!cajas.length) continue;
+    conTexto.push({ e, cajas });
+  }
+
+  const pisa = (a, b) => {
+    for (const ra of a) {
+      for (const rb of b) {
+        const ix = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+        const iy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+        if (ix > 3 && iy > 3) return true;
+      }
+    }
+    return false;
+  };
+
   const pares = [];
   for (let i = 0; i < conTexto.length; i++) {
     for (let j = i + 1; j < conTexto.length; j++) {
       const a = conTexto[i], b = conTexto[j];
-      if (a.contains(b) || b.contains(a)) continue;
-      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
-      const ix = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
-      const iy = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
-      if (ix > 3 && iy > 3) pares.push(
-        `«${a.textContent.trim().slice(0,24)}» sobre «${b.textContent.trim().slice(0,24)}»`);
+      if (a.e.contains(b.e) || b.e.contains(a.e)) continue;
+      if (pisa(a.cajas, b.cajas)) pares.push(
+        `«${a.e.textContent.trim().slice(0,24)}» sobre «${b.e.textContent.trim().slice(0,24)}»`);
     }
   }
   return pares;
@@ -693,6 +736,183 @@ def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, a
 
     solapes = pagina.evaluate(SONDA_SOLAPES)
     assert solapes == [], f"en {etiqueta} ({ancho}x{alto}), modo fuego: {solapes}"
+
+
+#: Cuanto del mapa pueden taparle a la vez las cajas que este visor pone encima.
+#:
+#: Solo las nuestras: el conmutador de amenaza, las pestañas de capa y el pie
+#: —leyenda e interruptores—. La navegacion, la escala y la atribucion de
+#: MapLibre se dejan fuera porque no las decide este repositorio y porque el
+#: credito del mapa base es obligatorio: contarlo aqui volveria el tope una
+#: cifra sobre la que no se puede actuar. Que la atribucion se vea ya lo guarda
+#: `test_la_atribucion_del_mapa_no_queda_debajo_de_nada`.
+#:
+#: Medido el 21-sep-2026 sobre el reparto anterior, con un evento abierto: 50 %
+#: en 390x844 y 53 % en 360x780, de los cuales la leyenda de intensidad sola se
+#: llevaba 27 y 30 puntos. Con el pie unico bajan a 35 y 37. El tope deja
+#: margen para que una leyenda crezca una clase, no para que vuelva el reparto
+#: viejo.
+TOPE_TAPADO_PCT = 40
+
+#: Cuanto mapa queda, preguntado punto por punto.
+#:
+#: Sumar las areas de las cajas mentiria por dos lados: cuenta dos veces lo que
+#: se solapa y cuenta como tapado lo que cae fuera del lienzo. Se muestrea una
+#: reticula y se pregunta quien recibiria el dedo en cada punto, que ademas es
+#: la pregunta que importa: no «hay una caja encima» sino «puedo ver y tocar el
+#: mapa aqui».
+SONDA_TAPADO = """
+() => {
+  const r = document.querySelector('.lienzo').getBoundingClientRect();
+  const N = 48;
+  let total = 0, nuestro = 0;
+  const culpables = {};
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const x = r.left + (i + 0.5) * r.width / N;
+      const y = r.top + (j + 0.5) * r.height / N;
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
+      total++;
+      const e = document.elementFromPoint(x, y);
+      if (!e) continue;
+      const caja = e.closest('#pie-mapa, #capas, #amenazas');
+      if (!caja) continue;
+      nuestro++;
+      culpables[caja.id] = (culpables[caja.id] || 0) + 1;
+    }
+  }
+  const pct = n => Math.round(100 * n / total);
+  return { pct: pct(nuestro), muestras: total,
+           por: Object.fromEntries(Object.entries(culpables).map(([k, v]) => [k, pct(v)])) };
+}
+"""
+
+
+@pytest.mark.parametrize(
+    ("etiqueta", "ancho", "alto"),
+    [("movil", 390, 844), ("movil-chico", 360, 780)],
+)
+def test_las_cajas_del_mapa_no_se_comen_el_mapa(
+    pagina: Any, etiqueta: str, ancho: int, alto: int
+) -> None:
+    """Un visor de mapa cuyo mapa no se ve no es un visor de mapa.
+
+    `test_ningun_texto_se_pisa_con_otro` garantiza que las cajas no se pisen
+    entre ellas, y eso se cumplia mientras el mapa desaparecia debajo: repartir
+    bien dos cajas que juntas ocupan la mitad de la pantalla sigue dejando media
+    pantalla de mapa. Esta prueba mide lo otro —cuanto mapa queda— porque es lo
+    que se estaba perdiendo sin que nada fallara.
+    """
+    pagina.set_viewport_size({"width": ancho, "height": alto})
+    _esperar_capa(pagina, "epicentros")
+
+    medida = pagina.evaluate(SONDA_TAPADO)
+    assert medida["muestras"] > 1000, "el lienzo no cabe en la ventana: la medida no vale"
+    assert medida["pct"] <= TOPE_TAPADO_PCT, (
+        f"en {etiqueta} ({ancho}x{alto}), panorama: {medida['pct']} % del mapa tapado "
+        f"por lo nuestro {medida['por']}"
+    )
+
+    # El peor estado del modo sismos: evento abierto, con su leyenda y sus
+    # pestañas de capa delante.
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(800)
+
+    medida = pagina.evaluate(SONDA_TAPADO)
+    assert medida["pct"] <= TOPE_TAPADO_PCT, (
+        f"en {etiqueta} ({ancho}x{alto}), con evento: {medida['pct']} % del mapa tapado "
+        f"por lo nuestro {medida['por']}"
+    )
+
+    # Y el modo fuego, que trae la leyenda mas grande que pinta este visor.
+    _con_fuego(pagina)
+    pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_timeout(800)
+
+    medida = pagina.evaluate(SONDA_TAPADO)
+    assert medida["pct"] <= TOPE_TAPADO_PCT, (
+        f"en {etiqueta} ({ancho}x{alto}), modo fuego: {medida['pct']} % del mapa tapado "
+        f"por lo nuestro {medida['por']}"
+    )
+
+
+def test_el_pie_del_mapa_se_pliega_y_devuelve_el_mapa(pagina: Any) -> None:
+    """La leyenda explica los colores, asi que no puede arrancar cerrada.
+
+    Lo que si puede es cerrarse: quien ya aprendio el codigo quiere el mapa
+    entero, y en un telefono esa es la diferencia entre mirar el mapa y mirar la
+    caja que lo explica. Se comprueban las dos mitades — que abre por defecto y
+    que plegarlo devuelve mapa de verdad.
+    """
+    pagina.set_viewport_size(MOVIL)
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(600)
+
+    pie = pagina.locator("#pie-mapa")
+    assert pie.get_attribute("open") is not None, (
+        "el pie arranca plegado: la leyenda que explica los colores no se ve"
+    )
+
+    abierto = pagina.evaluate(SONDA_TAPADO)["pct"]
+    pagina.locator("#pie-mapa > summary").click()
+    pagina.wait_for_timeout(400)
+
+    assert pie.get_attribute("open") is None, "el tirador no pliega el pie"
+    plegado = pagina.evaluate(SONDA_TAPADO)["pct"]
+
+    assert plegado <= abierto - 15, (
+        f"plegar el pie no devuelve mapa: {abierto} % tapado abierto, {plegado} % plegado"
+    )
+
+    # Y vuelve. Un control que esconde contenido sin forma de recuperarlo es
+    # peor que no tenerlo: el tirador tiene que seguir ahi y tiene que abrir.
+    pagina.locator("#pie-mapa > summary").click()
+    pagina.wait_for_timeout(400)
+    assert pie.get_attribute("open") is not None, "el pie plegado ya no se puede abrir"
+
+
+def test_en_escritorio_el_pie_no_es_una_caja(pagina: Any) -> None:
+    """`display: contents` es lo que deja intacto el reparto de escritorio.
+
+    El envoltorio existe para el telefono. Si en una pantalla ancha generara
+    caja, la leyenda y los interruptores dejarian de estar anclados a sus
+    esquinas —se resolverian contra el envoltorio— y el visor de escritorio
+    cambiaria de sitio sin que nadie lo pidiera. Se comprueban las dos mitades:
+    que el envoltorio no pinta y que sus hijas siguen en esquinas opuestas.
+    """
+    pagina.set_viewport_size({"width": 1400, "height": 900})
+    _esperar_capa(pagina, "epicentros")
+    marca = _ahora(pagina)
+    pagina.select_option("select", "us6000tjl2")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(600)
+
+    medida = pagina.evaluate("""() => {
+        const pie = document.querySelector('#pie-mapa');
+        const l = document.querySelector('#leyenda').getBoundingClientRect();
+        const c = document.querySelector('#controles-mapa').getBoundingClientRect();
+        return {
+          display: getComputedStyle(pie).display,
+          tirador: getComputedStyle(pie.querySelector('summary')).display,
+          leyendaIzquierda: l.left,
+          controlesIzquierda: c.left,
+        };
+    }""")
+
+    assert medida["display"] == "contents", (
+        f"el pie genera caja en escritorio (`display: {medida['display']}`)"
+    )
+    assert medida["tirador"] == "none", "el tirador de plegar se ve donde no hay nada que plegar"
+    assert medida["leyendaIzquierda"] > medida["controlesIzquierda"] + 200, (
+        "la leyenda y los interruptores dejaron de vivir en esquinas opuestas: "
+        f"leyenda en {medida['leyendaIzquierda']}, controles en {medida['controlesIzquierda']}"
+    )
 
 
 # --- Lo que un control promete tiene que ser lo que enciende -----------------
