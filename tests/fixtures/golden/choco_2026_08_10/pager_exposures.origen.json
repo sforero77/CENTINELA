@@ -3,7 +3,11 @@
   "update_time_ms": 1788821915886,
   "publicado_utc": "2026-09-08T15:38:35Z",
   "shakemap_version": 9,
-  "nota": "Refrescada el 8-sep-2026 contra la PAGER del ShakeMap v9. El repaso dejo de excluir los backtests ese dia, re-emitio este reporte de v8 a v9, y la fixture se quedo en la PAGER del v8: la misma desincronizacion que ya habia pasado el 6-sep con el v7 contra el v8. Esta PAGER se publico dos minutos y medio despues del ShakeMap v9 (updateTime 1788821766631), asi que las dos columnas de la tabla vuelven a salir de la misma version. Que esto haya pasado dos veces dice que la fixture tiene que refrescarse en el mismo commit que re-emite el reporte.",
+  "nota": "Refrescada el 8-sep-2026 contra la PAGER del ShakeMap v9. El repaso dejo de excluir los backtests ese dia, re-emitio este reporte de v8 a v9, y la fixture se quedo en la PAGER del v8: la misma desincronizacion que ya habia pasado el 6-sep con el v7 contra el v8. Esta PAGER se publico dos minutos y medio despues del ShakeMap v9 (updateTime 1788821766631).\n\nNO SE REFRESCA AL v10, Y NO ES UN DESCUIDO: NO EXISTE. El 18-sep-2026 el reporte se re-emitio con el ShakeMap v10 (updateTime 1789760983889) y USGS **no volvio a publicar PAGER**. Comprobado contra ComCat el 21-sep-2026: el producto losspager tiene diez entregas y la ultima sigue siendo esta, la del 7-sep 22:58 UTC. El fichero congelado es byte a byte identico al que sirve hoy esa URL (sha256 22b99b4df70b1e4dd059f3ac...), asi que traerlo de nuevo no cambiaria nada.\n\nConsecuencia: la tabla de docs/PARA_INSTITUCIONES.md §5 compara CENTINELA v10 contra PAGER v9, y sus encabezados tienen que decirlo. Lo vigila test_el_documento_dice_de_que_shakemap_es_cada_columna, que ademas exige la explicacion mientras las dos versiones no coincidan. Si algun dia USGS re-corre PAGER sobre el v10, hay que refrescar este fichero y subir shakemap_version: esa prueba lo pedira sola.",
   "url": "https://earthquake.usgs.gov/product/losspager/us6000tjl2/us/1788821915886/json/exposures.json",
-  "detail_url": "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000tjl2&format=geojson&includesuperseded=true"
+  "detail_url": "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000tjl2&format=geojson&includesuperseded=true",
+  "comprobado_utc": "2026-09-21T11:20:00Z",
+  "ultima_pager_disponible_update_time_ms": 1788821915886,
+  "shakemap_vigente_al_comprobar": 10,
+  "shakemap_vigente_update_time_ms": 1789760983889
 }

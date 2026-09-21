@@ -32,6 +32,8 @@ DOCUMENTO = RAIZ / "docs" / "PARA_INSTITUCIONES.md"
 REPORTE = RAIZ / "reports" / "us6000tjl2" / "report.json"
 #: `json/exposures.json` del producto `losspager` de us6000tjl2, congelado.
 PAGER = RAIZ / "tests" / "fixtures" / "golden" / "choco_2026_08_10" / "pager_exposures.json"
+#: Con que ShakeMap se emparejo esa PAGER, y de donde salio.
+PAGER_ORIGEN = PAGER.with_suffix(".origen.json")
 
 
 @pytest.fixture(scope="module")
@@ -64,26 +66,21 @@ def pager() -> dict[float, int]:
     return por_umbral
 
 
+#: AQUI VIVIA `MARGEN_TOLERADO_BAJO_EL_PISO`, Y SE VA CON SU CASO ESPECIAL.
+#: Era cuanto podia alejarse `pop_mmi6p` del piso de PAGER mientras fue la unica
+#: banda que no acotaba (0.06, con holgura sobre el 3,6 % medido el 8-sep-2026).
+#: Con el ShakeMap v10 vuelve a acotar, asi que la constante no acota nada: se
+#: borra en vez de quedarse "por si acaso", porque una constante sin uso es una
+#: que el proximo lector tiene que descartar a mano.
+#:
+#: El margen nuevo es estrecho y conviene decirlo: 4.936 personas por encima del
+#: piso, un 0,07 %. Si otro ShakeMap lo empuja abajo, las dos pruebas de este
+#: fichero se ponen en rojo y hay que reescribir §5 del documento. Que eso sea
+#: exactamente lo que debe pasar es la razon de no dejar el `if` puesto.
+
 #: (banda literal de CENTINELA, cota inferior de PAGER, cota superior de PAGER).
 #: La cota inferior es el umbral de PAGER inmediatamente **por encima** de la
 #: banda; la superior, el inmediatamente por debajo.
-#: Cuanto puede alejarse `pop_mmi6p` del piso de PAGER antes de que deje de ser
-#: "el desvio conocido" y pase a ser "algo se rompio".
-#:
-#: **NO ES LA BANDA DE DISCREPANCIA DEL REPORTE, Y LLEGO A ESTARLO.** Esta
-#: constante valia 0.037 "porque es lo que el reporte declara", y era un error de
-#: razonamiento: `pop_discrepancia_pct` mide GHS-POP contra WorldPop **sobre las
-#: mismas celdas** (`SUM(pop_total)` vs `SUM(pop_alt_worldpop)` en
-#: `p2_impact/pipeline.py`), no la distancia a una cifra de PAGER calculada con
-#: otro insumo y otra convencion de bandas. Que 3,6 fuera menor que 3,7 era una
-#: coincidencia numerica sin contenido, y estuvo publicada en el README.
-#:
-#: Ahora es lo que dice ser: un margen elegido a mano, con holgura sobre el
-#: 3,6 % medido el 8-sep-2026 para que un ShakeMap nuevo no lo haga saltar por
-#: decimas, y lo bastante estrecho para que un cambio de verdad no pase. No
-#: pretende explicar nada.
-MARGEN_TOLERADO_BAJO_EL_PISO = 0.06
-
 ACOTAMIENTOS: tuple[tuple[str, float, float], ...] = (
     ("pop_mmi6p", 6.5, 5.5),
     ("pop_mmi7p", 7.5, 6.5),
@@ -105,46 +102,29 @@ def test_la_cifra_de_centinela_cae_dentro_del_intervalo_de_pager(
 ) -> None:
     """El acuerdo, comprobado. Es lo unico que se puede afirmar de las dos a la vez.
 
-    **`pop_mmi6p` DEJO DE ACOTAR CON EL SHAKEMAP v9, Y SE FIJA ASI EN VEZ DE
-    AFLOJAR EL ASSERT.** Hasta el v8 las tres bandas caian dentro. El 8-sep-2026
-    el repaso dejo de excluir los backtests, USGS ya iba por el v9 y el reporte
-    se re-emitio solo: `pop_mmi6p` quedo 249.011 personas —un 3,6 %— por debajo
-    del piso que impone la fila ≥6,5 de PAGER.
+    **LAS TRES BANDAS VUELVEN A ACOTAR DESDE EL SHAKEMAP v10.** Entre el v9 y el
+    v10 esta prueba llevo un caso especial para `pop_mmi6p`, la unica que se
+    salia: quedaba 249.011 personas —un 3,6 %— por debajo del piso que impone la
+    fila ≥6,5 de PAGER, y se fijaba asi, con su margen medido, en vez de aflojar
+    el assert.
 
-    No se relaja la comprobacion a "casi acota". Se fija el estado real con su
-    margen medido: si mejora hasta acotar, o si empeora mas alla de la
-    discrepancia que el reporte declara, esta prueba tiene que enterarse. Bajar
-    el listado a un `<=` generoso seria justo lo que este proyecto no hace.
+    El v10 lo cerro sin que nadie tocara el calculo. Su contorno de MMI 6 se
+    ensancha hacia el oriente —Buga entra con 131.984 personas, Quinchia con
+    23.937, Ginebra con 14.320— y `pop_mmi6p` sube de 6.840.603 a 7.094.550, por
+    encima del piso. El caso especial se borra: las tres bandas pasan por el
+    mismo assert que siempre debieron pasar.
 
-    **La causa no se conoce, y las dos que se llegaron a escribir eran falsas.**
-    Ni el 3,6 % "cabe" en la banda de discrepancia del reporte —que mide GHS-POP
-    contra WorldPop sobre las mismas celdas, no la distancia a PAGER— ni el delta
-    contra `grid.xml` respalda el sesgo del centroide: `delta_contornos_vs_grid.py`
-    muestrea las dos ramas en el mismo centro de celda y la resta lo cancela. Lo
-    que el sistema sí afirma de su muestreo lo imprime cada reporte: «el sesgo que
-    introduce no está medido: puede quedarse corto o pasarse».
+    Lo que aquello dejo escrito sigue siendo verdad y conviene no perderlo: **la
+    causa del desvio nunca se supo, y las dos explicaciones que llegaron a
+    publicarse eran falsas.** Ni el 3,6 % "cabia" en la banda de discrepancia del
+    reporte —que mide GHS-POP contra WorldPop sobre las mismas celdas, no la
+    distancia a PAGER— ni el delta contra `grid.xml` respaldaba el sesgo del
+    centroide: `delta_contornos_vs_grid.py` muestrea las dos ramas en el mismo
+    centro de celda y la resta lo cancela. Que el desvio se haya ido solo con un
+    insumo nuevo no lo explica: lo retira.
     """
     nuestra = centinela[campo]
     piso, techo = pager[umbral_inferior], pager[umbral_superior]
-
-    if campo == "pop_mmi6p":
-        # El unico que no acota. Se exige que siga por debajo del piso **y**
-        # que el desvio no pase de la banda de discrepancia que el reporte
-        # publica: fuera de ahi ya no es el sesgo conocido, es otra cosa.
-        falta = (piso - nuestra) / nuestra
-        assert nuestra < piso, (
-            f"{campo} volvio a acotar ({nuestra:,.0f} >= {piso:,}). Es una buena "
-            "noticia: quita el `if` de esta prueba y actualiza "
-            "docs/PARA_INSTITUCIONES.md, que hoy publica que no acota."
-        )
-        assert falta <= MARGEN_TOLERADO_BAJO_EL_PISO, (
-            f"{campo} = {nuestra:,.0f} se queda {falta:.1%} por debajo del piso "
-            f"({piso:,} en ≥{umbral_inferior}), y el margen tolerado es "
-            f"{MARGEN_TOLERADO_BAJO_EL_PISO:.1%}. Era 3,6 % el 8-sep-2026: se movio "
-            "de mas. Mira si cambio el ShakeMap o si se rompio el corte por bandas."
-        )
-        assert nuestra <= techo, f"{campo} = {nuestra:,.0f} supera el techo {techo:,}"
-        return
 
     assert piso <= nuestra <= techo, (
         f"{campo} = {nuestra:,.0f} se sale del intervalo que PAGER acota "
@@ -172,6 +152,45 @@ def test_la_columna_de_centinela_del_documento_es_la_publicada(
     esperado = format_number_es(centinela[campo])
 
     assert esperado in documento, f"§5 no publica {esperado} para {campo}"
+
+
+def test_el_documento_dice_de_que_shakemap_es_cada_columna(documento: str) -> None:
+    """Las dos columnas dejaron de ser de la misma version, y hay que decirlo.
+
+    LA DESINCRONIZACION YA PASO TRES VECES, Y LA TERCERA NO SE PUEDE ARREGLAR.
+    El 6-sep-2026 la fixture era la PAGER del v7 contra un reporte en v8; el
+    8-sep, la del v8 contra un reporte en v9. Las dos veces se refresco la
+    fixture y las dos columnas volvieron a salir del mismo ShakeMap.
+
+    El 18-sep-2026 el reporte se re-emitio con el **v10** y esta vez refrescar no
+    sirve: **USGS no ha vuelto a publicar PAGER**. Comprobado contra ComCat el
+    21-sep: el producto `losspager` tiene diez entregas, la ultima con
+    `updateTime` 1788821915886 (7-sep-2026 22:58 UTC), la que acompano al v9; el
+    ShakeMap v10 es del 18-sep 19:49 UTC. La fixture congelada es byte a byte
+    identica a esa ultima PAGER viva, asi que no hay nada que traer.
+
+    O sea que la tabla de §5 compara **CENTINELA v10 contra PAGER v9**, y eso no
+    se puede esconder detras de un encabezado que diga solo «PAGER». Esta prueba
+    obliga a que el documento nombre las dos versiones mientras sean distintas —y
+    a que las nombre bien cuando vuelvan a coincidir—, para que la asimetria
+    viaje con la tabla en vez de quedarse en el commit que la introdujo.
+    """
+    version_pager = json.loads(PAGER_ORIGEN.read_text(encoding="utf-8"))["shakemap_version"]
+    version_nuestra = json.loads(REPORTE.read_text(encoding="utf-8"))["inputs"]["shakemap_version"]
+
+    assert f"PAGER (ShakeMap v{version_pager})" in documento, (
+        f"§5 no dice que su columna de PAGER es del ShakeMap v{version_pager}"
+    )
+    assert f"CENTINELA (ShakeMap v{version_nuestra})" in documento, (
+        f"§5 no dice que su columna de CENTINELA es del ShakeMap v{version_nuestra}"
+    )
+
+    if version_pager != version_nuestra:
+        assert "USGS no ha vuelto a publicar PAGER" in documento, (
+            f"las dos columnas van por ShakeMaps distintos (PAGER v{version_pager}, "
+            f"CENTINELA v{version_nuestra}) y §5 no explica por que. Sin esa frase la "
+            "tabla invita a leer las dos cifras como si fueran del mismo insumo."
+        )
 
 
 def test_el_documento_dice_por_que_las_dos_cifras_no_son_comparables(documento: str) -> None:
@@ -226,19 +245,14 @@ def test_la_cifra_cae_en_el_cuarto_inferior_del_intervalo(
     El principio es el que este mismo docstring ya declaraba: «si un ShakeMap
     nuevo moviera la cifra a la mitad alta del intervalo, la afirmacion publicada
     dejaria de ser cierta». Eso es lo que se comprueba.
+
+    Con el v10 las tres caen holgadamente en la mitad baja —`pop_mmi6p` al 0 %,
+    `pop_mmi7p` al 14 %, `pop_mmi8p` al 0 %— y por primera vez desde el v8 las
+    tres pasan por este mismo assert, sin caso especial.
     """
     nuestra = centinela[campo]
     piso, techo = pager[umbral_inferior], pager[umbral_superior]
     posicion = (nuestra - piso) / (techo - piso)
-
-    if campo == "pop_mmi6p":
-        # No acota desde el v9: cae por debajo del piso, o sea posicion negativa.
-        # Su margen lo vigila `test_la_cifra_de_centinela_cae_dentro_del_intervalo`.
-        assert posicion < 0.0, (
-            f"{campo} volvio a entrar en el intervalo (al {posicion:.0%}). Hay que "
-            "reescribir docs/PARA_INSTITUCIONES.md, que publica que no."
-        )
-        return
 
     assert 0.0 <= posicion < 0.5, (
         f"{campo} cae al {posicion:.0%} del intervalo de PAGER, y los documentos "

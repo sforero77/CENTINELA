@@ -121,81 +121,77 @@ con prisa, y es lo único que este proyecto no automatiza.
 
 Es la primera objeción que recibe este proyecto, y conviene resolverla antes de
 que la haga nadie: **para el sismo del Chocó, PAGER (USGS) publica 7.089.614
-personas en su fila «7» y CENTINELA publica 3.069.003 en MMI≥7.** Un factor de
-2,3. Leídas de frente, parece que CENTINELA subcuenta.
+personas en su fila «7» y CENTINELA publica 2.389.896 en MMI≥7.** Un factor de
+3,0. Leídas de frente, parece que CENTINELA subcuenta.
 
 **Las dos no tabulan igual.** PAGER agrupa por MMI *redondeado*: su fila «7» es
 todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas *literales*: MMI≥7 es
-MMI≥7. Puestas en el mismo eje, cada cifra de CENTINELA debería caer dentro del
+MMI≥7. Puestas en el mismo eje, cada cifra de CENTINELA tiene que caer dentro del
 intervalo que las filas de PAGER acotan por arriba y por abajo, que es la única
-comparación que las dos convenciones admiten. **Una lo hace y la otra dejó de
-hacerlo con el ShakeMap v9**, y eso se publica aquí en vez de esperar a que lo
-encuentre alguien:
+comparación que las dos convenciones admiten. **Las tres lo hacen.**
 
-> **Las dos columnas son de la misma versión, y ha habido que arreglarlo dos
-> veces.** El 6-sep-2026 la fixture era la PAGER del **ShakeMap v7** contra un
-> reporte en **v8**. El 8-sep volvió a pasar: el repaso dejó de excluir los
-> backtests, re-emitió este reporte a **v9** y la fixture se quedó en la del v8.
-> Las dos veces se refrescó contra la PAGER publicada dos minutos y medio
-> después del ShakeMap correspondiente (ahora updateTime 1788821915886). Que
-> haya pasado dos veces por el mismo motivo dice que la fixture tiene que viajar
-> en el mismo commit que re-emite el reporte. La procedencia, con la URL exacta
-> del producto, está en `pager_exposures.origen.json`.
+> **Las dos columnas ya no son del mismo ShakeMap, y esta vez no se puede
+> arreglar.** Dos veces hubo que refrescar la fixture de PAGER porque se había
+> quedado en una versión anterior a la del reporte: el 6-sep-2026 (v7 contra v8)
+> y el 8-sep (v8 contra v9). El 18-sep el reporte se re-emitió con el **v10** y
+> refrescar dejó de servir: **USGS no ha vuelto a publicar PAGER desde el v9.**
+> Comprobado contra ComCat el 21-sep-2026: el producto `losspager` tiene diez
+> entregas y la última es del 7-sep 22:58 UTC —la que acompañó al ShakeMap v9—,
+> mientras que el v10 es del 18-sep 19:49 UTC. La fixture congelada es byte a
+> byte idéntica a esa última PAGER viva, así que no hay nada que traer. La tabla
+> de abajo compara, por tanto, **CENTINELA v10 contra PAGER v9**, y los
+> encabezados lo dicen. La procedencia, con la URL exacta del producto, está en
+> `pager_exposures.origen.json`.
 
-| Umbral literal | PAGER (v9) | CENTINELA (v9) |
+| Umbral literal | PAGER (ShakeMap v9) | CENTINELA (ShakeMap v10) |
 |---|---:|---:|
 | MMI ≥ 5,5 | 9.329.268 | — |
-| MMI ≥ 6,0 | — | **6.840.603** |
+| MMI ≥ 6,0 | — | **7.094.550** |
 | MMI ≥ 6,5 | 7.089.614 | — |
-| MMI ≥ 7,0 | — | **3.069.003** |
+| MMI ≥ 7,0 | — | **2.389.896** |
 | MMI ≥ 7,5 | 1.647.927 | — |
 | MMI ≥ 8,0 | — | **0** |
 
-Léase por parejas. 3.069.003 (≥7,0) tiene que quedar **entre** 1.647.927 (≥7,5)
-y 7.089.614 (≥6,5), y queda, al 26 % contando desde abajo: por debajo del punto
-medio, que es donde siempre ha caído. 6.840.603 (≥6,0) tiene que quedar entre 7.089.614 (≥6,5) y
-9.329.268 (≥5,5), y **no queda**: se sale por debajo, 249.011 personas, un
-3,6 %.
+Léase por parejas. 2.389.896 (≥7,0) tiene que quedar **entre** 1.647.927 (≥7,5)
+y 7.089.614 (≥6,5), y queda, al 14 % contando desde abajo. 7.094.550 (≥6,0)
+tiene que quedar entre 7.089.614 (≥6,5) y 9.329.268 (≥5,5), y queda, al 0,2 %.
+Y 0 (≥8,0) queda entre 0 (≥8,5) y 1.647.927 (≥7,5). Las tres caen por debajo del
+punto medio de su intervalo, que es donde han caído siempre que acotaron.
 
-**Qué significa y qué no.** Se sabe el hecho y no la causa, y decir más sería
-inventarla. Este documento llegó a dar dos explicaciones y las dos se cayeron al
-comprobarlas. Que el 3,6 % «cabe» en la banda de discrepancia del 3,7 % junta
-dos magnitudes distintas: esa banda mide GHS-POP contra WorldPop sobre las
-mismas celdas, no la distancia a PAGER. Y el delta «de hasta el 34 % contra
-`grid.xml`» no respalda el sesgo del centroide, porque
-`scripts/delta_contornos_vs_grid.py` muestrea las dos ramas en el mismo centro
-de celda y la resta lo cancela.
+**El caso que no acotaba se cerró solo, y conviene contar cómo.** Entre el v9 y
+el v10, `pop_mmi6p` se salía por abajo: quedaba 249.011 personas —un 3,6 %— por
+debajo del piso de la fila ≥6,5. Este documento llegó a dar dos explicaciones y
+las dos se cayeron al comprobarlas. Que el 3,6 % «cabía» en la banda de
+discrepancia del 3,7 % junta dos magnitudes distintas: esa banda mide GHS-POP
+contra WorldPop sobre las mismas celdas, no la distancia a PAGER. Y el delta «de
+hasta el 34 % contra `grid.xml`» no respaldaba el sesgo del centroide, porque
+`scripts/delta_contornos_vs_grid.py` muestrea las dos ramas en el mismo centro de
+celda y la resta lo cancela.
 
-Lo medido es esto: 249.011 personas, un 3,6 %, por debajo del piso. Y lo que el
-sistema afirma de su propio muestreo lo imprime cada reporte: «el sesgo que
-introduce no está medido: puede quedarse corto o pasarse». Es el primer sitio
+Lo que lo cerró no fue una corrección nuestra: fue un insumo nuevo. El contorno
+de MMI 6 del v10 se ensancha hacia el oriente —entra Guadalajara de Buga con
+131.984 personas, Quinchía con 23.937, Ginebra con 14.320— y `pop_mmi6p` sube de
+6.840.603 a 7.094.550, por encima del piso. **Eso retira el desvío, no lo
+explica.** La causa nunca se supo, y el margen de hoy es estrecho: 4.936
+personas, un 0,07 %. Si otro ShakeMap lo empuja abajo, volverá a salirse y
+habrá que reescribir este apartado.
+
+**Y la cifra principal se movió un 22 %, por una sola razón.** El v10 retiró el
+contorno de MMI 7 de Santiago de Cali: el municipio baja de MMI 7,0 a 6,5 y con
+él se van sus 772.110 personas de la banda, más las 22.925 de Tuluá. El contorno
+gana terreno en el Chocó y el Eje Cafetero y devuelve unas 116.000. La resta son
+los 679.107 que separan los 3.069.003 del v9 de los 2.389.896 de hoy.
+Comprobado municipio a municipio y contra los contornos del propio v10.
+Las demás capas suben entre un 3 % y un 6 %, porque el área de MMI≥7 se
+redistribuye en vez de encogerse; la excepción son las sedes de salud, que caen
+de 971 a 503 porque 486 de ellas eran de Cali.
+
+Lo que el sistema afirma de su propio muestreo lo imprime cada reporte: «el sesgo
+que introduce no está medido: puede quedarse corto o pasarse». Es el primer sitio
 donde el método de contornos se ve desde fuera del proyecto.
-`tests/unit/test_contraste_con_pager.py` fija el estado exacto —MMI≥7 acotado,
-MMI≥6 fuera— para que un cambio en cualquiera de los dos lados salte.
-
-Hasta el v8 las dos bandas acotaban y este documento lo decía sin condición.
-Dejó de ser verdad cuando USGS publicó el v9 y el sistema se actualizó solo, que
-es lo que tiene que hacer.
-
-**Y conviene no vender esto como más de lo que es.** El intervalo de MMI≥7 va de
-1,6 a 7,1 millones: un factor de 4,3, dentro del cual cabría casi cualquier
-cifra. Que una cifra caiga dentro es una condición necesaria, no una validación.
-
-**CENTINELA queda por debajo del punto medio del intervalo** donde acota (al
-26 % contando desde abajo), y siempre en la misma dirección. Eso es lo que se puede afirmar sin elegir un método: cuánto por debajo
-depende de cómo se interpole entre las filas
-de PAGER, y la respuesta va del 9 % al 37 % según se haga lineal o logarítmica.
-Publicar una sola de esas cifras sería elegir la que conviene.
-
-Las cifras de PAGER salen de `json/exposures.json` del producto `losspager` del
-evento, congelado en `tests/fixtures/golden/choco_2026_08_10/pager_exposures.json`;
-las de CENTINELA, de `reports/us6000tjl2/report.json`.
-`tests/unit/test_contraste_con_pager.py` falla si esta tabla se despega de
-cualquiera de los dos, y si el acotamiento deja de cumplirse.
-
-**Un aviso de honestidad.** GDACS publica para este mismo evento «5.4 million
-(in MMI>=VII)», que es otra convención más. Ninguna de las tres cifras es la
-misma pregunta, y ninguna corrige a las otras.
+`tests/unit/test_contraste_con_pager.py` fija el estado exacto —las tres bandas
+acotadas, y de qué versión es cada columna— para que un cambio en cualquiera de
+los dos lados salte.
 
 ## 6. Exposición no es daño: la diferencia, y cómo se comprueba
 
