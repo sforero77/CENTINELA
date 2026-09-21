@@ -3445,65 +3445,151 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
     _esperar_capa(pagina, "celdas", desde=marca)
     pagina.wait_for_timeout(2000)
 
-    def _pop_de(h3: str) -> float | None:
-        # `celdas.json` es columnar —`columnas` + `celdas`— y publica el indice
-        # en minusculas mientras el globo lo imprime como venga: sin caso.
-        valor: float | None = pagina.evaluate(
-            """(h3) => fetch('reports/us6000tjl2/celdas.json')
-                 .then(r => r.json())
-                 .then(g => {
-                   const iH3 = g.columnas.indexOf('h3');
-                   const iPop = g.columnas.indexOf('pop');
-                   const fila = g.celdas.find(
-                     c => String(c[iH3]).toLowerCase() === h3.toLowerCase()
-                   );
-                   return fila ? Number(fila[iPop]) : null;
-                 })""",
-            h3,
+    # `celdas.json` entero, una sola vez y en un diccionario. Antes se hacia un
+    # `fetch` por cada clic —hasta cien por ejecucion—, y cada uno metia una
+    # latencia de red en mitad del muestreo.
+    #
+    # Es columnar —`columnas` + `celdas`— y publica el indice en minusculas
+    # mientras el globo lo imprime como venga: sin caso.
+    poblaciones: dict[str, float] = pagina.evaluate(
+        """() => fetch('reports/us6000tjl2/celdas.json')
+             .then(r => r.json())
+             .then(g => {
+               const iH3 = g.columnas.indexOf('h3');
+               const iPop = g.columnas.indexOf('pop');
+               return Object.fromEntries(
+                 g.celdas.map(c => [String(c[iH3]).toLowerCase(), Number(c[iPop])])
+               );
+             })"""
+    )
+    assert poblaciones, "no se pudo leer celdas.json"
+
+    def _celda_bajo(x: float, y: float) -> tuple[str, float] | None:
+        """Pulsa un punto y devuelve su celda, o `None` si ahi no habia malla.
+
+        SE ESPERA AL GLOBO, NO AL RELOJ — que es lo que el preambulo de este
+        fichero lleva pidiendo desde el 28-ago-2026 y lo que esta prueba no
+        hacia. Habia un `wait_for_timeout(260)` fijo y, si el globo no habia
+        abierto todavia, el punto se descartaba en silencio.
+
+        Eso ataba el tamaño de la muestra a la velocidad de la maquina: en un
+        runner lento los puntos se caian en silencio y la muestra encogia.
+        Arreglar eso solo no bastaba —ver la nota de `_barrido` sobre por que la
+        busqueda fallaba de verdad—, pero era una espera al reloj en un fichero
+        cuyo preambulo la prohibe.
+
+        AQUI NO HACE FALTA ESPERAR NADA, Y ESA ES LA CLAVE. El gancho de la capa
+        `celdas` (`engancharCeldas` en `app.js`) es **sincrono**: consulta la
+        entidad bajo el cursor y anade el globo dentro del mismo despacho del
+        evento `click`, sin `await` ni animacion de por medio. Y el clic de
+        Playwright no vuelve hasta que el renderer acusa el evento. Asi que en
+        cuanto `mouse.click` retorna, el globo **ya esta o no va a estar**: se
+        pregunta una vez por el DOM y la respuesta es definitiva.
+
+        Y eso no es el reloj. No se apuesta a que algo tarde menos de N
+        milisegundos: se lee el DOM despues de que el navegador haya acusado el
+        evento, que es justo lo que el preambulo pide. En una maquina diez veces mas
+        lenta se pulsan los mismos puntos y se lee el mismo resultado; solo tarda
+        mas en total. El tamaño de la muestra ya no depende de la maquina.
+
+        Y cuesta lo que tiene que costar. Esperar dos segundos a cada punto vacio
+        —que es lo que hacia la version anterior de este arreglo— son cinco
+        minutos de espera pura por barrido, y con eso la suite del visor pasaba
+        de catorce minutos a no terminar.
+
+        Se retiran los globos previos antes de pulsar, para que lo leido sea
+        siempre el de este clic y no lo que quedara del anterior. Y antes de
+        pulsar se pregunta que hay bajo el punto: si no es el lienzo del mapa
+        —la leyenda, las pestañas de capa, el pie— no se pulsa, porque ese clic
+        no abriria globo y ademas podria accionar un control nuestro.
+        """
+        listo: bool = pagina.evaluate(
+            """([x, y]) => {
+                 const e = document.elementFromPoint(x, y);
+                 if (!e || !e.classList.contains('maplibregl-canvas')) return false;
+                 document.querySelectorAll('.maplibregl-popup').forEach((p) => p.remove());
+                 return true;
+               }""",
+            [x, y],
         )
-        return valor
+        if not listo:
+            return None
+        pagina.mouse.click(x, y)
+        ficha: str | None = pagina.evaluate(
+            """() => {
+                 const g = document.querySelector('.maplibregl-popup .popup-celda');
+                 if (!g) return null;
+                 const h = g.parentElement.querySelector('.ficha-h3');
+                 return h ? h.textContent.trim() : null;
+               }"""
+        )
+        if not ficha:
+            return None
+        pop = poblaciones.get(ficha.lower())
+        return None if pop is None else (ficha, pop)
 
     caja = pagina.locator("#mapa").bounding_box()
     assert caja
     encontrada: tuple[str, float] | None = None
     ultima: tuple[str, float] | None = None
-    # A zoom de evento cada pixel cubre varias celdas y la que gana el clic suele
-    # ser rural. Se acerca la camara sobre el punto mas poblado que se vaya
-    # encontrando hasta dar con una celda de mas de mil personas.
-    for acercamiento in range(4):
-        mejor_punto = None
-        for fy in (0.30, 0.40, 0.50, 0.60, 0.70):
-            for fx in (0.30, 0.40, 0.50, 0.60, 0.70):
-                x = caja["x"] + caja["width"] * fx
-                y = caja["y"] + caja["height"] * fy
-                pagina.mouse.click(x, y)
-                pagina.wait_for_timeout(260)
-                if not pagina.locator(".maplibregl-popup .popup-celda").count():
+    alcanzadas = 0
+
+    def _barrido(pasos: int) -> None:
+        """Recorre el mapa en rejilla y para en cuanto da con la celda buscada.
+
+        UNA REJILLA ANCHA, Y SIN ESCALAR LA COLINA. Aqui habia cinco por cinco
+        puntos sobre el 30-70 % central y, si ninguno pasaba de mil personas, se
+        acercaba la camara **sobre la mejor celda encontrada** y se repetia.
+
+        Las dos cosas estaban mal, y la segunda es la que rompia. La malla de
+        este evento son 6.602 celdas con una **mediana de 7 personas**: solo el
+        6,65 % pasan de mil. Si la primera pasada no acierta ninguna —lo que con
+        veinticinco puntos ocurre alrededor de una de cada cinco veces—, la
+        mejor celda hallada es rural, la camara se acerca **hacia lo rural** y
+        todas las pulsaciones siguientes caen en ese mismo vecindario vacio. La
+        busqueda se atasca en el sitio equivocado por construccion.
+
+        Se midio: el 21-sep-2026 en CI se alcanzaron 44 celdas y la mayor tenia
+        **9 personas**. Con un muestreo uniforme sobre la malla eso es
+        practicamente imposible —el 52 % de las celdas ya pasan de diez—, y es
+        la firma de haberse quedado encerrado en un vecindario.
+
+        Ahora se barre el mapa entero en una rejilla densa y no se acerca la
+        camara a ningun sitio. Cada celda de la malla mide lo mismo —un hexagono
+        r7—, asi que muestrear pixeles muestrea celdas casi uniformemente: con
+        144 puntos la probabilidad de no tocar ninguna de las 439 celdas de mas
+        de mil personas es de cinco en cien mil. Y se corta en el primer acierto,
+        asi que lo normal son unas quince pulsaciones, no ciento cuarenta.
+        """
+        nonlocal encontrada, ultima, alcanzadas
+        for i in range(pasos):
+            for j in range(pasos):
+                # Del 6 % al 94 %: el borde exacto del lienzo no es mapa util y
+                # ahi viven los controles de MapLibre.
+                fx = 0.06 + 0.88 * j / (pasos - 1)
+                fy = 0.06 + 0.88 * i / (pasos - 1)
+                celda = _celda_bajo(caja["x"] + caja["width"] * fx, caja["y"] + caja["height"] * fy)
+                if celda is None:
                     continue
-                h3 = pagina.locator(".maplibregl-popup .ficha-h3").inner_text().strip()
-                pop = _pop_de(h3)
-                if pop is None:
-                    continue
-                ultima = (h3, pop)
-                if mejor_punto is None or pop > mejor_punto[0]:
-                    mejor_punto = (pop, x, y)
-                if pop >= 1000:
-                    encontrada = ultima
-                    break
-            if encontrada:
-                break
-        if encontrada or mejor_punto is None or acercamiento == 3:
-            break
-        pagina.mouse.move(mejor_punto[1], mejor_punto[2])
-        pagina.mouse.wheel(0, -600)
-        pagina.wait_for_timeout(900)
+                alcanzadas += 1
+                ultima = celda
+                if celda[1] >= 1000:
+                    encontrada = celda
+                    return
+
+    _barrido(12)
 
     assert ultima, "no se pudo abrir el globo de ninguna celda de la malla"
     h3, pop = encontrada or ultima
+    # El umbral NO se baja: por debajo de mil el redondeo de prosa y el valor
+    # exacto coinciden y esta prueba pasaria sin comprobar nada. Lo que se
+    # cuenta es cuantas celdas se llegaron a mirar, para que el dia que vuelva a
+    # fallar el mensaje distinga "la muestra se quedo corta" de "se miraron
+    # muchas y todas eran rurales", que piden arreglos distintos.
     assert pop >= 1000, (
-        f"solo se alcanzaron celdas de menos de mil personas (la ultima, {pop}): "
-        f"sobre esas el redondeo de prosa y el exacto coinciden y esta prueba no "
-        f"comprobaria nada"
+        f"se alcanzaron {alcanzadas} celdas y ninguna pasa de mil personas (la "
+        f"mayor, {pop}): sobre esas el redondeo de prosa y el exacto coinciden y "
+        f"esta prueba no comprobaria nada"
     )
 
     def _en_espanol(v: float) -> str:
