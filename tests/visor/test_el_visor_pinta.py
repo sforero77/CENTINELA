@@ -26,7 +26,6 @@ import json
 import re
 import shutil
 import threading
-import time
 from collections.abc import Iterator
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -43,14 +42,6 @@ RAIZ = Path(__file__).parent.parent.parent
 #: el fallo que esta prueba tiene que dar es "no se pinto", no "tarde mas de lo
 #: que yo supuse". Si de verdad tarda 25 s, eso es un hallazgo y no un flake.
 ESPERA_MS = 25_000
-
-#: Cuanto se espera a que abra el globo de una celda tras pulsarla.
-#:
-#: Mismo principio que `ESPERA_MS` y que el preambulo de este fichero: se espera
-#: a que la cosa aparezca, no un rato fijo. Es un tope, no una pausa — en cuanto
-#: el globo esta, se sigue—, y existe porque un clic fuera de la malla no abre
-#: ninguno y ahi hay que rendirse en algun momento.
-ESPERA_GLOBO_S = 2.0
 
 
 def _sitio(destino: Path) -> Path:
@@ -3481,62 +3472,112 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
         hacia. Habia un `wait_for_timeout(260)` fijo y, si el globo no habia
         abierto todavia, el punto se descartaba en silencio.
 
-        Eso ataba el **tamaño de la muestra** a la velocidad de la maquina: en
-        un runner lento la mayoria de los veinticinco puntos se caian y quedaban
-        cuatro o cinco, casi siempre rurales, con lo que la busqueda no
-        alcanzaba ninguna celda de mas de mil personas y la prueba fallaba por
-        su propia autocomprobacion. Asi se perdio el visor en rojo el
-        21-sep-2026 (`aa9eb9a`) con el mismo codigo que habia pasado en verde
-        en el PR.
+        Eso ataba el tamaño de la muestra a la velocidad de la maquina: en un
+        runner lento los puntos se caian en silencio y la muestra encogia.
+        Arreglar eso solo no bastaba —ver la nota de `_barrido` sobre por que la
+        busqueda fallaba de verdad—, pero era una espera al reloj en un fichero
+        cuyo preambulo la prohibe.
 
-        Ahora se espera a que el globo este, hasta `ESPERA_GLOBO_S`, y solo se
-        da el punto por vacio cuando de verdad no abre. Los globos previos se
-        retiran antes de pulsar para que lo que se lea sea siempre el de este
-        clic y no el que quedara del anterior.
+        AQUI NO HACE FALTA ESPERAR NADA, Y ESA ES LA CLAVE. El gancho de la capa
+        `celdas` (`engancharCeldas` en `app.js`) es **sincrono**: consulta la
+        entidad bajo el cursor y anade el globo dentro del mismo despacho del
+        evento `click`, sin `await` ni animacion de por medio. Y el clic de
+        Playwright no vuelve hasta que el renderer acusa el evento. Asi que en
+        cuanto `mouse.click` retorna, el globo **ya esta o no va a estar**: se
+        pregunta una vez por el DOM y la respuesta es definitiva.
+
+        Y eso no es el reloj. No se apuesta a que algo tarde menos de N
+        milisegundos: se lee el DOM despues de que el navegador haya acusado el
+        evento, que es justo lo que el preambulo pide. En una maquina diez veces mas
+        lenta se pulsan los mismos puntos y se lee el mismo resultado; solo tarda
+        mas en total. El tamaño de la muestra ya no depende de la maquina.
+
+        Y cuesta lo que tiene que costar. Esperar dos segundos a cada punto vacio
+        —que es lo que hacia la version anterior de este arreglo— son cinco
+        minutos de espera pura por barrido, y con eso la suite del visor pasaba
+        de catorce minutos a no terminar.
+
+        Se retiran los globos previos antes de pulsar, para que lo leido sea
+        siempre el de este clic y no lo que quedara del anterior. Y antes de
+        pulsar se pregunta que hay bajo el punto: si no es el lienzo del mapa
+        —la leyenda, las pestañas de capa, el pie— no se pulsa, porque ese clic
+        no abriria globo y ademas podria accionar un control nuestro.
         """
-        pagina.evaluate("document.querySelectorAll('.maplibregl-popup').forEach((e) => e.remove())")
+        listo: bool = pagina.evaluate(
+            """([x, y]) => {
+                 const e = document.elementFromPoint(x, y);
+                 if (!e || !e.classList.contains('maplibregl-canvas')) return false;
+                 document.querySelectorAll('.maplibregl-popup').forEach((p) => p.remove());
+                 return true;
+               }""",
+            [x, y],
+        )
+        if not listo:
+            return None
         pagina.mouse.click(x, y)
-        limite = time.monotonic() + ESPERA_GLOBO_S
-        while not pagina.locator(".maplibregl-popup .popup-celda").count():
-            if time.monotonic() >= limite:
-                return None
-            pagina.wait_for_timeout(50)
-        h3 = pagina.locator(".maplibregl-popup .ficha-h3").inner_text().strip()
-        pop = poblaciones.get(h3.lower())
-        return None if pop is None else (h3, pop)
+        ficha: str | None = pagina.evaluate(
+            """() => {
+                 const g = document.querySelector('.maplibregl-popup .popup-celda');
+                 if (!g) return null;
+                 const h = g.parentElement.querySelector('.ficha-h3');
+                 return h ? h.textContent.trim() : null;
+               }"""
+        )
+        if not ficha:
+            return None
+        pop = poblaciones.get(ficha.lower())
+        return None if pop is None else (ficha, pop)
 
     caja = pagina.locator("#mapa").bounding_box()
     assert caja
     encontrada: tuple[str, float] | None = None
     ultima: tuple[str, float] | None = None
     alcanzadas = 0
-    # A zoom de evento cada pixel cubre varias celdas y la que gana el clic suele
-    # ser rural. Se acerca la camara sobre el punto mas poblado que se vaya
-    # encontrando hasta dar con una celda de mas de mil personas.
-    for acercamiento in range(4):
-        mejor_punto = None
-        for fy in (0.30, 0.40, 0.50, 0.60, 0.70):
-            for fx in (0.30, 0.40, 0.50, 0.60, 0.70):
-                x = caja["x"] + caja["width"] * fx
-                y = caja["y"] + caja["height"] * fy
-                celda = _celda_bajo(x, y)
+
+    def _barrido(pasos: int) -> None:
+        """Recorre el mapa en rejilla y para en cuanto da con la celda buscada.
+
+        UNA REJILLA ANCHA, Y SIN ESCALAR LA COLINA. Aqui habia cinco por cinco
+        puntos sobre el 30-70 % central y, si ninguno pasaba de mil personas, se
+        acercaba la camara **sobre la mejor celda encontrada** y se repetia.
+
+        Las dos cosas estaban mal, y la segunda es la que rompia. La malla de
+        este evento son 6.602 celdas con una **mediana de 7 personas**: solo el
+        6,65 % pasan de mil. Si la primera pasada no acierta ninguna —lo que con
+        veinticinco puntos ocurre alrededor de una de cada cinco veces—, la
+        mejor celda hallada es rural, la camara se acerca **hacia lo rural** y
+        todas las pulsaciones siguientes caen en ese mismo vecindario vacio. La
+        busqueda se atasca en el sitio equivocado por construccion.
+
+        Se midio: el 21-sep-2026 en CI se alcanzaron 44 celdas y la mayor tenia
+        **9 personas**. Con un muestreo uniforme sobre la malla eso es
+        practicamente imposible —el 52 % de las celdas ya pasan de diez—, y es
+        la firma de haberse quedado encerrado en un vecindario.
+
+        Ahora se barre el mapa entero en una rejilla densa y no se acerca la
+        camara a ningun sitio. Cada celda de la malla mide lo mismo —un hexagono
+        r7—, asi que muestrear pixeles muestrea celdas casi uniformemente: con
+        144 puntos la probabilidad de no tocar ninguna de las 439 celdas de mas
+        de mil personas es de cinco en cien mil. Y se corta en el primer acierto,
+        asi que lo normal son unas quince pulsaciones, no ciento cuarenta.
+        """
+        nonlocal encontrada, ultima, alcanzadas
+        for i in range(pasos):
+            for j in range(pasos):
+                # Del 6 % al 94 %: el borde exacto del lienzo no es mapa util y
+                # ahi viven los controles de MapLibre.
+                fx = 0.06 + 0.88 * j / (pasos - 1)
+                fy = 0.06 + 0.88 * i / (pasos - 1)
+                celda = _celda_bajo(caja["x"] + caja["width"] * fx, caja["y"] + caja["height"] * fy)
                 if celda is None:
                     continue
                 alcanzadas += 1
                 ultima = celda
-                pop = celda[1]
-                if mejor_punto is None or pop > mejor_punto[0]:
-                    mejor_punto = (pop, x, y)
-                if pop >= 1000:
-                    encontrada = ultima
-                    break
-            if encontrada:
-                break
-        if encontrada or mejor_punto is None or acercamiento == 3:
-            break
-        pagina.mouse.move(mejor_punto[1], mejor_punto[2])
-        pagina.mouse.wheel(0, -600)
-        pagina.wait_for_timeout(900)
+                if celda[1] >= 1000:
+                    encontrada = celda
+                    return
+
+    _barrido(12)
 
     assert ultima, "no se pudo abrir el globo de ninguna celda de la malla"
     h3, pop = encontrada or ultima
