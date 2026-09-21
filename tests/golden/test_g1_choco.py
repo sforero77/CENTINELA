@@ -246,15 +246,41 @@ def _reporte_publicado() -> dict[str, Any]:
 #: esta tolerancia vigila— sino un insumo nuevo, y por eso `SHAKEMAP_DEL_ANCLA`
 #: existe: obliga a reanclar a mano y a decir por que, en vez de dejar que una
 #: revision de USGS pase por un cambio de calculo.
-POP_MMI7P_ESPERADO = 3_069_002.8690395486
-SHAKEMAP_DEL_ANCLA = 9
+#:
+#: REANCLADO AL v10 EL 21-SEP-2026, y esta vez el ancla hizo exactamente lo que
+#: se le pide: el reporte se re-emitio solo el 18-sep con el ShakeMap v10 y esta
+#: prueba se planto en rojo hasta que alguien mirara la cifra. `pop_mmi7p` paso
+#: de 3.069.003 a 2.389.896, un **-22,13 %**.
+#:
+#: La causa esta medida, municipio a municipio, y es una sola: **el contorno de
+#: MMI 7 del v10 se retiro de Santiago de Cali**. Cali baja de MMI 7,0 a 6,5 y
+#: con el se van sus 772.110 personas de la banda; Tulua (76834) hace lo mismo y
+#: se lleva 22.925. Enfrente, el contorno gana terreno en el Choco y el Eje
+#: Cafetero —Condoto +12.280, El Litoral del San Juan +9.149, Pereira +9.048,
+#: Santuario +7.433, El Aguila +7.616— y devuelve unas 116.000. La resta da los
+#: 679.107 que faltan. Comprobado contra `contornos.json` del propio v10 con un
+#: punto-en-poligono: Cali cae en MMI 6,5 y Pereira en 7,5, que es justo lo que
+#: declara `mmi_max` en `adm2.csv`.
+#:
+#: Las demas capas **suben** entre un 2,9 % y un 6 % —edificaciones, vias,
+#: sedes educativas— porque el area total de MMI≥7 se redistribuye, no se
+#: encoge. La unica que cae fuerte es sedes de salud (-48,2 %, de 971 a 503), y
+#: es la misma historia: 486 de esas 971 eran de Cali.
+POP_MMI7P_ESPERADO = 2_389_895.6842751526
+SHAKEMAP_DEL_ANCLA = 10
 TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
 
 #: El v9 metio a **Santiago de Cali** (76001) en el primer puesto con 772.110
 #: personas en MMI≥7; con el v8 no aparecia ni en los diez primeros. Tulua
-#: (76834) salio del top 5. La tesis del reporte no cambia —los mas expuestos
-#: siguen en el Valle y el Eje Cafetero, no en el Choco— pero los nombres si.
-TOP5_ESPERADO = ["76001", "66001", "76109", "63001", "66170"]
+#: (76834) salio del top 5.
+#:
+#: El v10 saca a Cali del todo —su `mmi_max` baja a 6,5, asi que su `pop_mmi7p`
+#: es cero— y el ranking vuelve a ser el del Eje Cafetero y el Pacifico, con
+#: Cartago (76147) entrando quinto. La tesis del reporte no ha cambiado en
+#: ninguna de las tres versiones: los mas expuestos estan en el Valle y el Eje
+#: Cafetero, no en el Choco. Lo que cambia son los nombres, y por eso esto se
+#: fija con una lista y no con una descripcion.
+TOP5_ESPERADO = ["66001", "76109", "63001", "66170", "76147"]
 
 
 def test_el_ancla_describe_la_version_publicada() -> None:
