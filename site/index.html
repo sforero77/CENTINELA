@@ -35,7 +35,12 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org; base-uri 'none'; form-action 'none'; object-src 'none'" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- `viewport-fit=cover` llega con su contrapartida: el `env(safe-area-inset-*)`
+       que el CSS aplica a la cabecera, al pie del mapa y al pie de la pagina.
+       Sin esa contrapartida esto seria peor que no ponerlo — el recorte de la
+       camara se comeria la marca, y la muesca inferior, la caja de la leyenda.
+       Con ella, el mapa llega al borde de la pantalla y el texto no. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>CENTINELA: exposición sísmica en América Latina</title>
   <meta name="description" content="Reportes automáticos de exposición sísmica por celda H3 y por municipio para América Latina. Datos abiertos, sin backend. Un proyecto de GeoAI LATAM." />
   <meta name="color-scheme" content="light" />
@@ -202,23 +207,44 @@
 
         <div class="capas" id="capas" hidden role="tablist" aria-label="Variable a dibujar en la malla"></div>
 
-        <div class="leyenda" id="leyenda" hidden>
-          <p class="leyenda-titulo mono" id="leyenda-titulo"></p>
-          <ul class="leyenda-escala" id="leyenda-escala"></ul>
-          <!-- Plegable: la nota explica por que hay huecos en la malla y por
-               que las lineas del ShakeMap si llegan al mar. Es informacion que
-               hay que tener disponible y que no hace falta tener delante todo
-               el rato: nueve lineas fijas se comen el mapa a zoom cercano. -->
-          <details class="leyenda-detalle">
-            <summary>Cómo leer esta capa</summary>
-            <p class="leyenda-nota" id="leyenda-nota"></p>
-          </details>
-        </div>
+        <!-- EL PIE DEL MAPA: UNA SOLA CAJA, Y QUE SE PUEDA CERRAR.
 
-        <!-- Los sismos menores que el vigia vio y no despacho. El interruptor
-             lo inyecta el visor solo si hay algo que enseñar: un control
-             siempre vacio enseña a ignorarlo. -->
-        <div class="controles-mapa" id="controles-mapa"></div>
+             Medido el 21-sep-2026 con un evento abierto: las cajas de este
+             visor tapaban el **50 %** del lienzo en 390x844 y el **53 %** en
+             360x780 — la leyenda de intensidad, 361x155 pegada arriba, y la de
+             "Que hay en el mapa", 272x104 abajo a la izquierda, con el mapa
+             reducido a la franja que quedaba entre las dos. Cada correccion
+             anterior movio una caja al hueco que dejaba la otra; el hueco no
+             existia. Ahora son el 35 % y el 37 %, y 10 % con el pie plegado.
+
+             Las dos viven ahora dentro de este envoltorio. En escritorio es
+             `display: contents` —no genera caja, asi que cada hija sigue
+             anclada a su esquina de siempre y no cambia nada—; en un telefono
+             se convierte en un pie unico anclado abajo, sobre la atribucion, y
+             su `<summary>` lo pliega. Que se pueda plegar es el punto: la
+             leyenda explica los colores y por eso no arranca cerrada, pero
+             quien quiera el mapa entero tiene un gesto para pedirlo. -->
+        <details class="pie-mapa" id="pie-mapa" open>
+          <summary class="pie-mapa-tirador">Leyenda</summary>
+
+          <div class="leyenda" id="leyenda" hidden>
+            <p class="leyenda-titulo mono" id="leyenda-titulo"></p>
+            <ul class="leyenda-escala" id="leyenda-escala"></ul>
+            <!-- Plegable: la nota explica por que hay huecos en la malla y por
+                 que las lineas del ShakeMap si llegan al mar. Es informacion que
+                 hay que tener disponible y que no hace falta tener delante todo
+                 el rato: nueve lineas fijas se comen el mapa a zoom cercano. -->
+            <details class="leyenda-detalle">
+              <summary>Cómo leer esta capa</summary>
+              <p class="leyenda-nota" id="leyenda-nota"></p>
+            </details>
+          </div>
+
+          <!-- Los sismos menores que el vigia vio y no despacho. El interruptor
+               lo inyecta el visor solo si hay algo que enseñar: un control
+               siempre vacio enseña a ignorarlo. -->
+          <div class="controles-mapa" id="controles-mapa"></div>
+        </details>
       </section>
 
       <!-- `tabindex="-1"` para que el enlace de salto pueda **poner el foco aqui** y

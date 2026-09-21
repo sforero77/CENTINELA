@@ -35,7 +35,10 @@
   -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org; base-uri 'none'; form-action 'none'; object-src 'none'" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Igual que la portada: el `cover` lo pagan los `env(safe-area-inset-*)`
+       que `styles.css` aplica a la cabecera y al pie, que son los mismos de
+       las dos paginas. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>CENTINELA — estado del sistema</title>
   <meta name="description" content="Latencia medida, eventos publicados y revisiones del vigía de CENTINELA. La transparencia sobre la demora es parte del producto." />
   <meta name="color-scheme" content="light" />

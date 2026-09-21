@@ -706,9 +706,17 @@ def test_los_controles_del_mapa_se_apilan_y_no_se_desbordan() -> None:
 
     "Focos activos (14.984 celdas en 24 h)" y "Sismos menores vistos (8 en 5
     dias, sin reporte)" una al lado de otra se salian del mapa.
+
+    LA REGLA SE BUSCA A PRINCIPIO DE LINEA, Y NO POR CUALQUIER SITIO.
+    `.controles-mapa {` a secas tambien casa dentro de `.pie-mapa >
+    .controles-mapa {`, que es una regla de otro sitio y de otro trabajo. El dia
+    que el pie del mapa aparecio en la hoja, esta prueba empezo a inspeccionar
+    esa otra regla y dio por perdido un apilado que seguia exactamente donde
+    estaba. Es la misma leccion que la de `sin_comentarios`, un paso mas alla:
+    no basta con mirar codigo, hay que mirar **la** regla.
     """
     css = sin_comentarios((RAIZ / "site" / "assets" / "styles.css").read_text(encoding="utf-8"))
-    bloque = css[css.index(".controles-mapa {") :][:500]
+    bloque = css[css.index("\n.controles-mapa {") :][:500]
 
     assert "flex-direction: column" in bloque
     assert "max-width: calc(100% - 24px)" in bloque
