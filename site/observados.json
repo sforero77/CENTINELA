@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-21T07:05:23Z",
+  "generado_utc": "2026-09-21T12:10:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tixc",
+      "mag": 5.2,
+      "lon": -71.8678,
+      "lat": -22.3643,
+      "depth_km": 10.0,
+      "lugar": "167 km al ONO de Mejillones, Chile",
+      "origen_utc": "2026-09-21T11:48:28Z",
+      "razon": "M5.2 < umbral M5.5",
+      "iso3": "CHL"
+    },
     {
       "usgs_id": "us7000tivb",
       "mag": 4.5,
