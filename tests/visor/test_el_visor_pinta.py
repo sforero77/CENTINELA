@@ -26,6 +26,7 @@ import json
 import re
 import shutil
 import threading
+import time
 from collections.abc import Iterator
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -42,6 +43,14 @@ RAIZ = Path(__file__).parent.parent.parent
 #: el fallo que esta prueba tiene que dar es "no se pinto", no "tarde mas de lo
 #: que yo supuse". Si de verdad tarda 25 s, eso es un hallazgo y no un flake.
 ESPERA_MS = 25_000
+
+#: Cuanto se espera a que abra el globo de una celda tras pulsarla.
+#:
+#: Mismo principio que `ESPERA_MS` y que el preambulo de este fichero: se espera
+#: a que la cosa aparezca, no un rato fijo. Es un tope, no una pausa — en cuanto
+#: el globo esta, se sigue—, y existe porque un clic fuera de la malla no abre
+#: ninguno y ahi hay que rendirse en algun momento.
+ESPERA_GLOBO_S = 2.0
 
 
 def _sitio(destino: Path) -> Path:
@@ -3445,28 +3454,62 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
     _esperar_capa(pagina, "celdas", desde=marca)
     pagina.wait_for_timeout(2000)
 
-    def _pop_de(h3: str) -> float | None:
-        # `celdas.json` es columnar —`columnas` + `celdas`— y publica el indice
-        # en minusculas mientras el globo lo imprime como venga: sin caso.
-        valor: float | None = pagina.evaluate(
-            """(h3) => fetch('reports/us6000tjl2/celdas.json')
-                 .then(r => r.json())
-                 .then(g => {
-                   const iH3 = g.columnas.indexOf('h3');
-                   const iPop = g.columnas.indexOf('pop');
-                   const fila = g.celdas.find(
-                     c => String(c[iH3]).toLowerCase() === h3.toLowerCase()
-                   );
-                   return fila ? Number(fila[iPop]) : null;
-                 })""",
-            h3,
-        )
-        return valor
+    # `celdas.json` entero, una sola vez y en un diccionario. Antes se hacia un
+    # `fetch` por cada clic —hasta cien por ejecucion—, y cada uno metia una
+    # latencia de red en mitad del muestreo.
+    #
+    # Es columnar —`columnas` + `celdas`— y publica el indice en minusculas
+    # mientras el globo lo imprime como venga: sin caso.
+    poblaciones: dict[str, float] = pagina.evaluate(
+        """() => fetch('reports/us6000tjl2/celdas.json')
+             .then(r => r.json())
+             .then(g => {
+               const iH3 = g.columnas.indexOf('h3');
+               const iPop = g.columnas.indexOf('pop');
+               return Object.fromEntries(
+                 g.celdas.map(c => [String(c[iH3]).toLowerCase(), Number(c[iPop])])
+               );
+             })"""
+    )
+    assert poblaciones, "no se pudo leer celdas.json"
+
+    def _celda_bajo(x: float, y: float) -> tuple[str, float] | None:
+        """Pulsa un punto y devuelve su celda, o `None` si ahi no habia malla.
+
+        SE ESPERA AL GLOBO, NO AL RELOJ — que es lo que el preambulo de este
+        fichero lleva pidiendo desde el 28-ago-2026 y lo que esta prueba no
+        hacia. Habia un `wait_for_timeout(260)` fijo y, si el globo no habia
+        abierto todavia, el punto se descartaba en silencio.
+
+        Eso ataba el **tamaño de la muestra** a la velocidad de la maquina: en
+        un runner lento la mayoria de los veinticinco puntos se caian y quedaban
+        cuatro o cinco, casi siempre rurales, con lo que la busqueda no
+        alcanzaba ninguna celda de mas de mil personas y la prueba fallaba por
+        su propia autocomprobacion. Asi se perdio el visor en rojo el
+        21-sep-2026 (`aa9eb9a`) con el mismo codigo que habia pasado en verde
+        en el PR.
+
+        Ahora se espera a que el globo este, hasta `ESPERA_GLOBO_S`, y solo se
+        da el punto por vacio cuando de verdad no abre. Los globos previos se
+        retiran antes de pulsar para que lo que se lea sea siempre el de este
+        clic y no el que quedara del anterior.
+        """
+        pagina.evaluate("document.querySelectorAll('.maplibregl-popup').forEach((e) => e.remove())")
+        pagina.mouse.click(x, y)
+        limite = time.monotonic() + ESPERA_GLOBO_S
+        while not pagina.locator(".maplibregl-popup .popup-celda").count():
+            if time.monotonic() >= limite:
+                return None
+            pagina.wait_for_timeout(50)
+        h3 = pagina.locator(".maplibregl-popup .ficha-h3").inner_text().strip()
+        pop = poblaciones.get(h3.lower())
+        return None if pop is None else (h3, pop)
 
     caja = pagina.locator("#mapa").bounding_box()
     assert caja
     encontrada: tuple[str, float] | None = None
     ultima: tuple[str, float] | None = None
+    alcanzadas = 0
     # A zoom de evento cada pixel cubre varias celdas y la que gana el clic suele
     # ser rural. Se acerca la camara sobre el punto mas poblado que se vaya
     # encontrando hasta dar con una celda de mas de mil personas.
@@ -3476,15 +3519,12 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
             for fx in (0.30, 0.40, 0.50, 0.60, 0.70):
                 x = caja["x"] + caja["width"] * fx
                 y = caja["y"] + caja["height"] * fy
-                pagina.mouse.click(x, y)
-                pagina.wait_for_timeout(260)
-                if not pagina.locator(".maplibregl-popup .popup-celda").count():
+                celda = _celda_bajo(x, y)
+                if celda is None:
                     continue
-                h3 = pagina.locator(".maplibregl-popup .ficha-h3").inner_text().strip()
-                pop = _pop_de(h3)
-                if pop is None:
-                    continue
-                ultima = (h3, pop)
+                alcanzadas += 1
+                ultima = celda
+                pop = celda[1]
                 if mejor_punto is None or pop > mejor_punto[0]:
                     mejor_punto = (pop, x, y)
                 if pop >= 1000:
@@ -3500,10 +3540,15 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
 
     assert ultima, "no se pudo abrir el globo de ninguna celda de la malla"
     h3, pop = encontrada or ultima
+    # El umbral NO se baja: por debajo de mil el redondeo de prosa y el valor
+    # exacto coinciden y esta prueba pasaria sin comprobar nada. Lo que se
+    # cuenta es cuantas celdas se llegaron a mirar, para que el dia que vuelva a
+    # fallar el mensaje distinga "la muestra se quedo corta" de "se miraron
+    # muchas y todas eran rurales", que piden arreglos distintos.
     assert pop >= 1000, (
-        f"solo se alcanzaron celdas de menos de mil personas (la ultima, {pop}): "
-        f"sobre esas el redondeo de prosa y el exacto coinciden y esta prueba no "
-        f"comprobaria nada"
+        f"se alcanzaron {alcanzadas} celdas y ninguna pasa de mil personas (la "
+        f"mayor, {pop}): sobre esas el redondeo de prosa y el exacto coinciden y "
+        f"esta prueba no comprobaria nada"
     )
 
     def _en_espanol(v: float) -> str:
