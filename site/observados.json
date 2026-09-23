@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-23T13:15:23Z",
+  "generado_utc": "2026-09-23T13:20:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -135,39 +135,6 @@
       "origen_utc": "2026-09-18T16:52:07Z",
       "razon": "M5.2 < umbral M5.5",
       "iso3": "CHL"
-    },
-    {
-      "usgs_id": "pr2026261000",
-      "mag": 4.8,
-      "lon": -66.9455,
-      "lat": 17.9391,
-      "depth_km": 7.0,
-      "lugar": "5 km al SO de Guánica, Puerto Rico",
-      "origen_utc": "2026-09-18T13:19:35Z",
-      "razon": "M4.8 < umbral M5.5",
-      "iso3": ""
-    },
-    {
-      "usgs_id": "pt26261050",
-      "mag": 4.6,
-      "lon": -66.937,
-      "lat": 17.949,
-      "depth_km": 10.0,
-      "lugar": "3 km al SO de Guánica, Puerto Rico",
-      "origen_utc": "2026-09-18T13:19:34Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": ""
-    },
-    {
-      "usgs_id": "us7000tiar",
-      "mag": 4.6,
-      "lon": -66.9822,
-      "lat": 17.8839,
-      "depth_km": 10.0,
-      "lugar": "12 km al SE de La Parguera, Puerto Rico",
-      "origen_utc": "2026-09-18T13:19:34Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
