@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-24T17:50:24Z",
+  "generado_utc": "2026-09-24T19:20:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000txdb",
+      "mag": 4.6,
+      "lon": -75.7529,
+      "lat": 3.6948,
+      "depth_km": 10.0,
+      "lugar": "21 km al NNO de Rioblanco, Colombia",
+      "origen_utc": "2026-09-24T16:46:31Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "COL"
+    },
     {
       "usgs_id": "us6000txc1",
       "mag": 4.5,
