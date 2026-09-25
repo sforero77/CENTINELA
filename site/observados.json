@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-25T08:50:19Z",
+  "generado_utc": "2026-09-25T15:50:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000txme",
+      "mag": 5.2,
+      "lon": -72.1079,
+      "lat": -33.9661,
+      "depth_km": 29.1,
+      "lugar": "62 km al SO de San Antonio, Chile",
+      "origen_utc": "2026-09-25T15:29:09Z",
+      "razon": "M5.2 < umbral M5.5",
+      "iso3": "CHL"
+    },
     {
       "usgs_id": "us6000txhs",
       "mag": 4.5,
