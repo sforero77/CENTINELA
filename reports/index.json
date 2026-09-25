@@ -17,17 +17,17 @@
   {
     "usgs_id": "us7000tdmp",
     "mag": 5.6,
-    "lugar": "71 km al OSO de Puerto Madero, México",
+    "lugar": "77 km al SO de Puerto Madero, México",
     "iso3": "MEX",
-    "lon": -92.9873,
-    "lat": 14.3909,
+    "lon": -93.0157,
+    "lat": 14.3228,
     "pop_mmi7p": 0.0,
     "pop_mmi6p": 0.0,
     "utc": "2026-09-02T12:28:31Z",
-    "shakemap_version": 4,
+    "shakemap_version": 6,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-09-08T18:32:45Z"
+    "generado_utc": "2026-09-25T10:30:58Z"
   },
   {
     "usgs_id": "us6000tjl2",

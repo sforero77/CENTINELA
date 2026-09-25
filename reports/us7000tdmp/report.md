@@ -1,6 +1,6 @@
-# Exposición sísmica: M5,6 · 71 km al OSO de Puerto Madero, México
+# Exposición sísmica: M5,6 · 77 km al SO de Puerto Madero, México
 
-**Evento USGS:** `us7000tdmp` · **Origen:** 2026-09-02T12:28:31Z UTC · **Profundidad:** 10,0 km
+**Evento USGS:** `us7000tdmp` · **Origen:** 2026-09-02T12:28:31Z UTC · **Profundidad:** 11,0 km
 
 ## Exposición estimada
 
@@ -26,7 +26,7 @@ Ninguna banda de intensidad alcanza población, así que la única cifra que dim
 |---|---:|
 | 25 km | 0 |
 | 50 km | 0 |
-| 100 km | 610 mil |
+| 100 km | 210 mil |
 
 Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
 
@@ -44,7 +44,14 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentro de las bandas publicadas tiene población de WorldPop con la que contrastar.
 
-- El epicentro está a 68 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
+- El epicentro está a 76 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
+
+## Cambios frente a la versión anterior
+
+- ShakeMap: v4 → v6
+- Profundidad: 10 → 11 km
+- Epicentro: reubicado 8 km
+- Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
 
@@ -53,10 +60,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v4**
+- ShakeMap consumido: **v6**
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`mex-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-08T18:32:45Z
+- Pipeline: `0.1.0` · Generado: 2026-09-25T10:30:58Z
 
 ## Advertencias
 
