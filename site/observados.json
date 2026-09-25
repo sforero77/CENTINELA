@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-25T03:40:23Z",
+  "generado_utc": "2026-09-25T08:50:19Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -124,17 +124,6 @@
       "origen_utc": "2026-09-21T03:58:24Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "PER"
-    },
-    {
-      "usgs_id": "us7000tiq2",
-      "mag": 5.3,
-      "lon": -66.6117,
-      "lat": -25.9869,
-      "depth_km": 10.0,
-      "lugar": "64 km al O de Cafayate, Argentina",
-      "origen_utc": "2026-09-20T08:47:54Z",
-      "razon": "M5.3 < umbral M5.5",
-      "iso3": "ARG"
     }
   ]
 }
