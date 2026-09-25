@@ -7,11 +7,11 @@
     "utc": "2026-09-02T12:35:56Z",
     "lugar": "southern East Pacific Rise",
     "pager_alert": "green",
-    "lon": -109.0259,
-    "lat": -34.9815
+    "lon": -109.0117,
+    "lat": -34.8796
   },
   "inputs": {
-    "shakemap_version": 3,
+    "shakemap_version": 4,
     "groundfailure_version": 0,
     "exposure_manifest": "chl-v0.3",
     "modelo_deslizamiento": "",
@@ -58,7 +58,7 @@
   "incertidumbre": {
     "pop_discrepancia_pct": null,
     "notas": [
-      "El epicentro está a 868 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
+      "El epicentro está a 856 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
     ]
   },
   "ground_failure_usgs": {
@@ -73,7 +73,11 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "ShakeMap: v3 → v4",
+    "Epicentro: reubicado 11 km",
+    "Ninguna cifra publicada cambia frente a la versión anterior."
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -128,6 +132,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-08T01:03:18Z",
+  "generado_utc": "2026-09-25T10:30:53Z",
   "pipeline_version": "0.1.0"
 }

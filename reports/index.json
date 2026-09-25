@@ -4,15 +4,15 @@
     "mag": 5.9,
     "lugar": "southern East Pacific Rise",
     "iso3": "CHL",
-    "lon": -109.0259,
-    "lat": -34.9815,
+    "lon": -109.0117,
+    "lat": -34.8796,
     "pop_mmi7p": 0.0,
     "pop_mmi6p": 0.0,
     "utc": "2026-09-02T12:35:56Z",
-    "shakemap_version": 3,
+    "shakemap_version": 4,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-09-08T01:03:18Z"
+    "generado_utc": "2026-09-25T10:30:53Z"
   },
   {
     "usgs_id": "us7000tdmp",
