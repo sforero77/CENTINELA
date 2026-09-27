@@ -1,9 +1,9 @@
 {
-  "generado_utc": "2026-09-27T15:41:18Z",
+  "generado_utc": "2026-09-27T16:06:58Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
-    "poblacion_en_la_malla": 649793406,
+    "poblacion_en_la_malla": 649793407,
     "peor_desvio_pct": 4.94
   },
   "paises": [
@@ -23,7 +23,7 @@
       "nombre": "Bolivia",
       "construido": true,
       "manifest_id": "bol-v0.4",
-      "poblacion_medida": 12804990,
+      "poblacion_medida": 12804991,
       "poblacion_referencia": 12581843,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
       "desvio_pct": 1.77,
