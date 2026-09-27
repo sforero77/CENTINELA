@@ -1,9 +1,9 @@
 {
-  "generado_utc": "2026-09-27T17:29:15Z",
+  "generado_utc": "2026-09-27T17:56:00Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
-    "poblacion_en_la_malla": 649793371,
+    "poblacion_en_la_malla": 649793401,
     "peor_desvio_pct": 4.94
   },
   "paises": [
@@ -34,7 +34,7 @@
       "nombre": "Brasil",
       "construido": true,
       "manifest_id": "bra-v0.4",
-      "poblacion_medida": 218881538,
+      "poblacion_medida": 218881568,
       "poblacion_referencia": 212812405,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
       "desvio_pct": 2.85,
