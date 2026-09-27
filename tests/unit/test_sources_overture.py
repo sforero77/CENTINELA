@@ -47,16 +47,47 @@ def _coleccion(bboxes: list[list[float]], n_items: int | None = None) -> dict[st
     }
 
 
+def _union(bboxes: list[list[float]]) -> list[float]:
+    return [
+        min(b[0] for b in bboxes),
+        min(b[1] for b in bboxes),
+        max(b[2] for b in bboxes),
+        max(b[3] for b in bboxes),
+    ]
+
+
 def test_empareja_bbox_con_fichero_sin_desfase() -> None:
-    """La trampa: el estandar STAC pondria la union en [0]; Overture no."""
+    """La forma antigua de Overture: una entrada por fichero, sin union."""
     ficheros = parse_collection(_coleccion(BBOXES_REALES))
     assert len(ficheros) == len(BBOXES_REALES)
     assert ficheros[0].bbox == (-180.00, -84.29, -86.85, 14.35)
     assert ficheros[4].bbox == (-81.33, -33.81, -77.20, -3.72)
 
 
+def test_la_lectura_estandar_salta_la_union() -> None:
+    """Desde el 23-sep-2026 Overture pone la union en [0], como manda STAC.
+
+    Leerla como 1:1 desplazaria todo un puesto: part-00004 recibiria la caja
+    de part-00003 y Colombia dejaria de tocar el fichero que si la cubre.
+    """
+    estandar = [_union(BBOXES_REALES), *BBOXES_REALES]
+    ficheros = parse_collection(_coleccion(estandar, n_items=len(BBOXES_REALES)))
+    assert len(ficheros) == len(BBOXES_REALES)
+    assert ficheros[0].bbox == (-180.00, -84.29, -86.85, 14.35)
+    assert ficheros[4].bbox == (-81.33, -33.81, -77.20, -3.72)
+
+
+def test_un_enlace_de_menos_no_pasa_por_estandar() -> None:
+    """Un catalogo 1:1 al que le falta un item tiene tambien N+1 bboxes.
+
+    Lo que lo delata es que su [0] es la caja del primer fichero, no la union.
+    """
+    with pytest.raises(OvertureCatalogError, match="union"):
+        parse_collection(_coleccion(BBOXES_REALES, n_items=len(BBOXES_REALES) - 1))
+
+
 def test_un_desajuste_de_conteo_es_error_no_aviso() -> None:
-    """Si el 1:1 se rompe, seguir significaria leer ficheros equivocados."""
+    """Si ninguna forma cuadra, seguir significaria leer ficheros equivocados."""
     with pytest.raises(OvertureCatalogError, match="1:1"):
         parse_collection(_coleccion(BBOXES_REALES, n_items=len(BBOXES_REALES) + 1))
 
