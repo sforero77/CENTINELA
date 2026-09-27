@@ -12,11 +12,16 @@ las edificaciones de Quibdó en un fichero remoto de 5 millones de filas toma
 
 **Trampa verificada.** El estandar STAC dice que ``extent.spatial.bbox[0]`` es
 la union de todas las sub-extensiones y que las reales empiezan en el indice 1.
-Overture **no** hace eso: publica 512 entradas para 512 ficheros, y la entrada
-``[0]`` es el bbox del primer fichero, no una union. Aplicar la lectura del
-estandar —saltarse la primera— desplaza todo un puesto y hace leer los ficheros
-equivocados, en silencio y con resultados plausibles. El emparejamiento 1:1 esta
-comprobado contra la extension real medida de varios ficheros.
+Hasta septiembre de 2026 Overture **no** hacia eso: publicaba 512 entradas para
+512 ficheros, y la entrada ``[0]`` era el bbox del primer fichero. El 23-sep
+regenero el catalogo —incluso el del release ya publicado 2026-08-19.0— con la
+lectura estandar: 513 entradas, ``[0]`` la union y el bbox de cada item en
+``[i + 1]`` (comprobado contra el ``bbox`` del propio item, en los tres temas).
+
+Aplicar la lectura equivocada desplaza todo un puesto y hace leer los ficheros
+equivocados, en silencio y con resultados plausibles. Por eso no se adivina: la
+forma se decide por el conteo, y la estandar solo se acepta si ``[0]`` es de
+verdad la union del resto. Cualquier otra cosa es error.
 """
 
 from __future__ import annotations
@@ -66,9 +71,9 @@ def parse_collection(payload: dict[str, Any]) -> list[ParquetFile]:
     """Extrae los ficheros y su bbox de un ``collection.json``.
 
     Raises:
-        OvertureCatalogError: si el numero de bboxes no coincide con el de
-            ficheros. Es la unica senal de que el emparejamiento 1:1 dejo de
-            valer, y seguir adelante significaria leer los ficheros equivocados.
+        OvertureCatalogError: si el numero de bboxes no es ni el de ficheros
+            (1:1) ni uno mas con la union delante (estandar STAC). Seguir
+            adelante significaria leer los ficheros equivocados.
     """
     try:
         bboxes = payload["extent"]["spatial"]["bbox"]
@@ -82,24 +87,48 @@ def parse_collection(payload: dict[str, Any]) -> list[ParquetFile]:
     ]
     if not items:
         raise OvertureCatalogError("collection.json sin enlaces 'item'")
-    if len(bboxes) != len(items):
+    cajas = [_caja(b) for b in bboxes]
+    if len(cajas) == len(items) + 1:
+        # Lectura estandar de STAC: [0] es la union y los ficheros van desde [1].
+        union, cajas = cajas[0], cajas[1:]
+        if not _es_la_union(union, cajas):
+            raise OvertureCatalogError(
+                f"El catalogo trae {len(bboxes)} bboxes para {len(items)} ficheros, "
+                f"pero bbox[0] {union} no es la union del resto: no es la lectura "
+                f"estandar de STAC y no hay forma segura de emparejar."
+            )
+    elif len(cajas) != len(items):
         raise OvertureCatalogError(
             f"El catalogo trae {len(bboxes)} bboxes para {len(items)} ficheros. "
-            f"El emparejamiento 1:1 dejo de valer y la seleccion seria incorrecta; "
-            f"revisar si Overture adopto la lectura estandar de STAC "
-            f"(bbox[0] = union) antes de tocar nada."
+            f"Ni el emparejamiento 1:1 ni la lectura estandar de STAC (bbox[0] = "
+            f"union) cuadran, y la seleccion seria incorrecta."
         )
 
-    ficheros: list[ParquetFile] = []
-    for href, bbox in zip(items, bboxes, strict=True):
-        if len(bbox) < 4:
-            raise OvertureCatalogError(f"bbox mal formado en el catalogo: {bbox!r}")
-        ficheros.append(
-            ParquetFile(
-                url=href, bbox=(float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3]))
-            )
-        )
-    return ficheros
+    return [ParquetFile(url=href, bbox=caja) for href, caja in zip(items, cajas, strict=True)]
+
+
+def _caja(bbox: Any) -> tuple[float, float, float, float]:
+    if not isinstance(bbox, list | tuple) or len(bbox) < 4:
+        raise OvertureCatalogError(f"bbox mal formado en el catalogo: {bbox!r}")
+    return (float(bbox[0]), float(bbox[1]), float(bbox[2]), float(bbox[3]))
+
+
+def _es_la_union(
+    union: tuple[float, float, float, float], cajas: list[tuple[float, float, float, float]]
+) -> bool:
+    """``union`` coincide con la envolvente de ``cajas``.
+
+    Igualdad y no mera contencion: es exactamente lo que publica Overture, y
+    cuanto mas estricta la prueba, menos probable que un catalogo 1:1 al que
+    le falte un enlace ``item`` pase por estandar y se desplace un puesto.
+    """
+    real = (
+        min(c[0] for c in cajas),
+        min(c[1] for c in cajas),
+        max(c[2] for c in cajas),
+        max(c[3] for c in cajas),
+    )
+    return all(abs(a - b) <= 1e-6 for a, b in zip(union, real, strict=True))
 
 
 def select_files(
