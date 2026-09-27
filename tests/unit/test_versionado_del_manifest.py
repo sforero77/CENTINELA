@@ -42,7 +42,11 @@ def huella(fuentes: list[dict[str, object]]) -> str:
     return hashlib.sha256("\n".join(partes).encode("utf-8")).hexdigest()[:16]
 
 
-#: `iso3 -> (manifest_id, huella de sus fuentes)`, al 6-sep-2026.
+#: `iso3 -> (manifest_id, huella de sus fuentes)`, al 27-sep-2026.
+#:
+#: La ultima subida, de los diecinueve a la vez, es el release de Overture:
+#: `2026-08-19.0` -> `2026-09-23.1`. Overture solo conserva dos y ya habia
+#: tres publicados; el fijado estaba a un release de desaparecer.
 #:
 #: La subida a `v0.3` de los dieciocho paises es la declaracion de
 #: `overture_divisions`: el build ya bajaba ese tema en todos ellos —de ahi
@@ -54,25 +58,25 @@ def huella(fuentes: list[dict[str, object]]) -> str:
 #: huella nueva que la prueba te imprime. Los dos pasos son el punto — si
 #: bastara con uno, el cerrojo no cerraria nada.
 ESPERADO: dict[str, tuple[str, str]] = {
-    "ARG": ("arg-v0.3", "70d3c95cfa496b03"),
-    "BOL": ("bol-v0.3", "c3a86f50fa8c5541"),
-    "BRA": ("bra-v0.3", "3168d7324958f004"),
-    "CHL": ("chl-v0.3", "b1bd667980fa40c8"),
-    "COL": ("col-v0.6", "e5985587c95049c9"),
-    "CRI": ("cri-v0.3", "6965170670117816"),
-    "CUB": ("cub-v0.3", "f62d7b7626cfa180"),
-    "DOM": ("dom-v0.3", "5ffca9e588d6f446"),
-    "ECU": ("ecu-v0.3", "38b7eeb8921d2e88"),
-    "GTM": ("gtm-v0.3", "1880d72b5163f4f8"),
-    "HND": ("hnd-v0.3", "dec27c59c77a2fca"),
-    "MEX": ("mex-v0.3", "6d8f39e811591002"),
-    "NIC": ("nic-v0.3", "dd9484042979329e"),
-    "PAN": ("pan-v0.3", "a28d6765b9b0a859"),
-    "PER": ("per-v0.3", "2994b46bc6915b70"),
-    "PRY": ("pry-v0.3", "1de4f1ed9b66417a"),
-    "SLV": ("slv-v0.3", "e000802279905565"),
-    "URY": ("ury-v0.3", "ee01282f94534849"),
-    "VEN": ("ven-v0.3", "69ea7f8df4e40b02"),
+    "ARG": ("arg-v0.4", "c7d3d1da952207b0"),
+    "BOL": ("bol-v0.4", "2df16060d43fadce"),
+    "BRA": ("bra-v0.4", "740795572499268a"),
+    "CHL": ("chl-v0.4", "d7b43fa67d0b3535"),
+    "COL": ("col-v0.7", "90f7bcab65a7a558"),
+    "CRI": ("cri-v0.4", "5953599a03b83b52"),
+    "CUB": ("cub-v0.4", "e3c97e841eb16ff8"),
+    "DOM": ("dom-v0.4", "ee4052e1cc0e81b1"),
+    "ECU": ("ecu-v0.4", "4fe475b244b72300"),
+    "GTM": ("gtm-v0.4", "9529300037fe57b8"),
+    "HND": ("hnd-v0.4", "d1a271c7f4769f92"),
+    "MEX": ("mex-v0.4", "4f8969d8c4b4c73c"),
+    "NIC": ("nic-v0.4", "2e078160c63193cc"),
+    "PAN": ("pan-v0.4", "b76dcdf56ecfe901"),
+    "PER": ("per-v0.4", "a862a34dd269959d"),
+    "PRY": ("pry-v0.4", "8f1942acf7c41ce6"),
+    "SLV": ("slv-v0.4", "268d2144bf2e0a4a"),
+    "URY": ("ury-v0.4", "9c6468b45b1d5e20"),
+    "VEN": ("ven-v0.4", "e19a484a7fc6f354"),
 }
 
 

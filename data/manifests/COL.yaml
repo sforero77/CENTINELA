@@ -9,7 +9,7 @@
 # publica en `medicion.json`; volcarlos aqui es un paso explicito,
 # `centinela fijar-insumos COL`, y el lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.6
+manifest_id: col-v0.7
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -125,13 +125,13 @@ sources:
 
   - id: overture_buildings
     layer: buildings
-    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=buildings/type=building
+    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=buildings/type=building
     license: ODbL-1.0
-    vintage: "2026-08-19.0"
+    vintage: "2026-09-23.1"
     insumos_sha256: ""
     notes: >-
-      512 ficheros, 277 GB, 2.529 millones de edificaciones en total; Colombia
-      toca once. La seleccion se hace con el bbox por fichero que publica el
+      512 ficheros, 277 GB, 2.529 millones de edificaciones en total (2026-08-19.0);
+      Colombia toca diez en 2026-09-23.1. La seleccion se hace con el bbox por fichero que publica el
       catalogo STAC de la coleccion (155 KB), no leyendo los datos — ver
       pipelines/p0_exposure/sources/overture.py, que documenta la trampa del
       emparejamiento. Medido: contar las edificaciones de Quibdó dentro de un
@@ -141,17 +141,17 @@ sources:
 
   - id: overture_transportation
     layer: roads
-    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=transportation/type=segment
+    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=transportation/type=segment
     license: ODbL-1.0
-    vintage: "2026-08-19.0"
+    vintage: "2026-09-23.1"
     insumos_sha256: ""
     notes: "`type=segment` es la geometria lineal; `type=connector` son nodos."
 
   - id: overture_divisions
     layer: divisions
-    url: s3://overturemaps-us-west-2/release/2026-08-19.0/theme=divisions/type=division_area
+    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=divisions/type=division_area
     license: ODbL-1.0
-    vintage: "2026-08-19.0"
+    vintage: "2026-09-23.1"
     insumos_sha256: ""
     notes: "`type=division_area` trae los poligonos; `division` son puntos."
 
