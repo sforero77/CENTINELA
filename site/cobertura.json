@@ -1,9 +1,9 @@
 {
-  "generado_utc": "2026-09-27T17:07:01Z",
+  "generado_utc": "2026-09-27T17:09:28Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
-    "poblacion_en_la_malla": 649793370,
+    "poblacion_en_la_malla": 649793371,
     "peor_desvio_pct": 4.94
   },
   "paises": [
@@ -210,7 +210,7 @@
       "nombre": "Venezuela",
       "construido": true,
       "manifest_id": "ven-v0.4",
-      "poblacion_medida": 29924657,
+      "poblacion_medida": 29924658,
       "poblacion_referencia": 28516896,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
       "desvio_pct": 4.94,
