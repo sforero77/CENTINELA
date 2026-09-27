@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-27T22:00:26Z",
+  "generado_utc": "2026-09-27T22:05:18Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000ty0q",
+      "mag": 4.8,
+      "lon": -69.0863,
+      "lat": 18.6067,
+      "depth_km": 107.4,
+      "lugar": "11 km al O de Guaymate, República Dominicana",
+      "origen_utc": "2026-09-27T21:49:47Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "DOM"
+    },
     {
       "usgs_id": "pt26270050",
       "mag": 5.2,
