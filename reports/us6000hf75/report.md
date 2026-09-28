@@ -69,7 +69,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 - ShakeMap consumido: **v6**
 - Ground Failure consumido: **v6**
 - Manifiesto de exposición: [`nic-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/NIC.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-08T01:02:50Z
+- Pipeline: `0.1.0` · Generado: 2026-09-28T15:42:29Z
 
 ## Advertencias
 
