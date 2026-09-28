@@ -13,7 +13,7 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 8,
-    "exposure_manifest": "per-v0.3",
+    "exposure_manifest": "per-v0.4",
     "modelo_deslizamiento": "nowicki_2014_global_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
@@ -24,19 +24,19 @@
     "pop_mmi6p": 1051686.814353569,
     "pop_mmi7p": 247720.08142531104,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 14581.082847708958,
-    "pop_65p_mmi6p": 68753.6016681789,
-    "bld_mmi6p": 563834.0,
+    "pop_65p_mmi7p": 14581.082847708942,
+    "pop_65p_mmi6p": 68753.601668179,
+    "bld_mmi6p": 563575.0,
     "built_m2_mmi6p": 37740751.0,
     "health_mmi6p": 458.0,
     "edu_mmi6p": 4312.0,
-    "road_km_mmi6p": 11155.991850444158,
-    "road_km_principal_mmi6p": 1358.4621013347535,
-    "bld_mmi7p": 130938.0,
+    "road_km_mmi6p": 11191.851664151827,
+    "road_km_principal_mmi6p": 1358.4613423575333,
+    "bld_mmi7p": 131581.0,
     "built_m2_mmi7p": 8296037.0,
     "health_mmi7p": 123.0,
     "edu_mmi7p": 1303.0,
-    "road_km_mmi7p": 2162.86314393694,
+    "road_km_mmi7p": 2194.7806337415554,
     "road_km_principal_mmi7p": 189.65866789967617,
     "pop_ls_alta": 35.836039489135146,
     "pop_lq_alta": 334307.7655900852
@@ -219,6 +219,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-07T16:42:00Z",
+  "generado_utc": "2026-09-28T15:42:31Z",
   "pipeline_version": "0.1.0"
 }
