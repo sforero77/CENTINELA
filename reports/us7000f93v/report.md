@@ -54,10 +54,6 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **9,9 %**.
 
-## Cambios frente a la versión anterior
-
-- Población de 65 años o más en MMI≥7: 81 mil → 89 mil
-
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -67,8 +63,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **9,9 %**.
 
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v3**
-- Manifiesto de exposición: [`mex-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:36:05Z
+- Manifiesto de exposición: [`mex-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-28T15:45:03Z
 
 ## Advertencias
 
