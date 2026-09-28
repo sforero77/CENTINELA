@@ -46,12 +46,6 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 - El epicentro está a 856 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
 
-## Cambios frente a la versión anterior
-
-- ShakeMap: v3 → v4
-- Epicentro: reubicado 11 km
-- Ninguna cifra publicada cambia frente a la versión anterior.
-
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -61,8 +55,8 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 - ShakeMap consumido: **v4**
 - Ground Failure consumido: **ninguno** (no publicado aún)
-- Manifiesto de exposición: [`chl-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-25T10:30:53Z
+- Manifiesto de exposición: [`chl-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-28T15:46:52Z
 
 ## Advertencias
 
