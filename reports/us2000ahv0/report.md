@@ -13,14 +13,14 @@
 | Población en MMI≥6 | 760 mil |
 | Población en MMI≥7 | el evento no llegó a esta banda |
 | Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥6 | 440 mil |
+| Edificaciones en MMI≥6 | 450 mil |
 | Sedes de salud en MMI≥6 | 224 |
 | Sedes educativas en MMI≥6 | 321 |
 | Vías primarias y secundarias en MMI≥6 | 890 km |
 | Vías locales en MMI≥6 | 9.600 km |
 | Superficie construida en MMI≥6 | 71,9 km² |
 
-El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 440 mil edificaciones registradas en MMI≥6. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 450 mil edificaciones registradas en MMI≥6. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
@@ -76,8 +76,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,0 %**.
 
 - ShakeMap consumido: **v1**
 - Ground Failure consumido: **v1**
-- Manifiesto de exposición: [`mex-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:47:11Z
+- Manifiesto de exposición: [`mex-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-28T15:40:52Z
 
 ## Advertencias
 
