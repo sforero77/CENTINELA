@@ -66,8 +66,8 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 - ShakeMap consumido: **v5**
 - Ground Failure consumido: **v3**
-- Manifiesto de exposición: [`bol-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/BOL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-08T00:58:39Z
+- Manifiesto de exposición: [`bol-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/BOL.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-28T15:39:45Z
 
 ## Advertencias
 
