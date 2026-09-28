@@ -13,7 +13,7 @@
   "inputs": {
     "shakemap_version": 9,
     "groundfailure_version": 9,
-    "exposure_manifest": "cub-v0.3",
+    "exposure_manifest": "cub-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
@@ -25,19 +25,19 @@
     "pop_mmi7p": 3291.1863567195833,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 520.7828947336083,
-    "pop_65p_mmi6p": 27391.581323633232,
-    "bld_mmi6p": 95776.0,
+    "pop_65p_mmi6p": 27391.581323633236,
+    "bld_mmi6p": 96169.0,
     "built_m2_mmi6p": 3579186.0,
     "health_mmi6p": 28.0,
     "edu_mmi6p": 99.0,
-    "road_km_mmi6p": 2926.6490569213884,
+    "road_km_mmi6p": 2926.6490569264606,
     "road_km_principal_mmi6p": 266.6462195630307,
-    "bld_mmi7p": 2049.0,
+    "bld_mmi7p": 2054.0,
     "built_m2_mmi7p": 149238.0,
     "health_mmi7p": 1.0,
     "edu_mmi7p": 7.0,
     "road_km_mmi7p": 77.56814516391333,
-    "road_km_principal_mmi7p": 35.493994150045395,
+    "road_km_principal_mmi7p": 35.49399415004539,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 36844.000733979046
   },
@@ -165,7 +165,7 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
-    "Población de 65 años o más en MMI≥7: 380 → 520"
+    "Edificaciones en MMI≥7: 2.000 → 2.100"
   ],
   "licencia": {
     "cubo": "odbl",
@@ -221,6 +221,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-07T16:35:32Z",
+  "generado_utc": "2026-09-28T15:46:11Z",
   "pipeline_version": "0.1.0"
 }
