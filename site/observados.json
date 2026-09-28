@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-28T07:40:23Z",
+  "generado_utc": "2026-09-28T09:25:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -112,17 +112,6 @@
       "lugar": "59 km al ONO de San Antonio de los Cobres, Argentina",
       "origen_utc": "2026-09-23T16:48:37Z",
       "razon": "M4.6 < umbral M5.5",
-      "iso3": "ARG"
-    },
-    {
-      "usgs_id": "us6000tx29",
-      "mag": 5.3,
-      "lon": -67.2912,
-      "lat": -28.7298,
-      "depth_km": 121.5,
-      "lugar": "51 km al OSO de Arauco, Argentina",
-      "origen_utc": "2026-09-23T09:21:14Z",
-      "razon": "M5.3 < umbral M5.5",
       "iso3": "ARG"
     }
   ]
