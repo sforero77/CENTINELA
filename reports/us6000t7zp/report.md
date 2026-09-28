@@ -16,8 +16,8 @@
 | Edificaciones en MMI≥7 | 560 mil |
 | Sedes de salud en MMI≥7 | 770 |
 | Sedes educativas en MMI≥7 | 1.034 |
-| Vías primarias y secundarias en MMI≥7 | 1.300 km |
-| Vías locales en MMI≥7 | 6.500 km |
+| Vías primarias y secundarias en MMI≥7 | 1.200 km |
+| Vías locales en MMI≥7 | 6.700 km |
 | Superficie construida en MMI≥7 | 85,4 km² |
 
 El satélite detecta **1,5 veces** más superficie construida de la que explicarían las 560 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
@@ -67,11 +67,6 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,8 %**.
 
-## Cambios frente a la versión anterior
-
-- Ground Failure: v12 → v13
-- Población en cobertura areal alta por licuefacción: 340 mil → 350 mil
-
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -81,8 +76,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,8 %**.
 
 - ShakeMap consumido: **v16**
 - Ground Failure consumido: **v13**
-- Manifiesto de exposición: [`ven-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-12T09:33:28Z
+- Manifiesto de exposición: [`ven-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-28T15:43:23Z
 
 ## Advertencias
 

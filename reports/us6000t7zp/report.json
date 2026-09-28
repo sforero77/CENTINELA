@@ -13,7 +13,7 @@
   "inputs": {
     "shakemap_version": 16,
     "groundfailure_version": 13,
-    "exposure_manifest": "ven-v0.3",
+    "exposure_manifest": "ven-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
@@ -21,23 +21,23 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 7471691.358112408,
-    "pop_mmi7p": 2575684.688750344,
+    "pop_mmi6p": 7471691.358112411,
+    "pop_mmi7p": 2575684.6887503443,
     "pop_mmi8p": 704244.7487885547,
-    "pop_65p_mmi7p": 315900.7078476149,
-    "pop_65p_mmi6p": 900379.1340067537,
-    "bld_mmi6p": 1820109.0,
+    "pop_65p_mmi7p": 315900.7078476153,
+    "pop_65p_mmi6p": 900379.1340067553,
+    "bld_mmi6p": 1826288.0,
     "built_m2_mmi6p": 282576434.0,
     "health_mmi6p": 1279.0,
     "edu_mmi6p": 2062.0,
-    "road_km_mmi6p": 25744.582957040024,
-    "road_km_principal_mmi6p": 3507.8339273882225,
-    "bld_mmi7p": 555469.0,
+    "road_km_mmi6p": 25886.42527349836,
+    "road_km_principal_mmi6p": 3482.5702252730393,
+    "bld_mmi7p": 564532.0,
     "built_m2_mmi7p": 85418853.0,
     "health_mmi7p": 770.0,
     "edu_mmi7p": 1034.0,
-    "road_km_mmi7p": 7769.158652964421,
-    "road_km_principal_mmi7p": 1264.38825171163,
+    "road_km_mmi7p": 7904.748673607046,
+    "road_km_principal_mmi7p": 1238.5011150727976,
     "pop_ls_alta": 29040.718691240996,
     "pop_lq_alta": 349395.96439122246
   },
@@ -164,10 +164,7 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [
-    "Ground Failure: v12 → v13",
-    "Población en cobertura areal alta por licuefacción: 340 mil → 350 mil"
-  ],
+  "changelog": [],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -222,6 +219,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-12T09:33:28Z",
+  "generado_utc": "2026-09-28T15:43:23Z",
   "pipeline_version": "0.1.0"
 }
