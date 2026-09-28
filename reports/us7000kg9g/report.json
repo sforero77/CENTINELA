@@ -13,7 +13,7 @@
   "inputs": {
     "shakemap_version": 11,
     "groundfailure_version": 11,
-    "exposure_manifest": "arg-v0.3",
+    "exposure_manifest": "arg-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif"
   },
@@ -128,6 +128,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-08T01:02:59Z",
+  "generado_utc": "2026-09-28T15:45:51Z",
   "pipeline_version": "0.1.0"
 }
