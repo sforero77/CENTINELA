@@ -17,7 +17,7 @@
 | Sedes de salud en MMI≥7 | 32 |
 | Sedes educativas en MMI≥7 | 92 |
 | Vías primarias y secundarias en MMI≥7 | 540 km |
-| Vías locales en MMI≥7 | 2.500 km |
+| Vías locales en MMI≥7 | 2.600 km |
 | Superficie construida en MMI≥7 | 23,6 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
@@ -63,11 +63,6 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **27,0 %**.
 
-## Cambios frente a la versión anterior
-
-- Población de 65 años o más en MMI≥7: 29 mil → 41 mil
-- Sedes de salud en MMI≥7: 31 → 32
-
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -77,8 +72,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **27,0 %**.
 
 - ShakeMap consumido: **v9**
 - Ground Failure consumido: **v7**
-- Manifiesto de exposición: [`ven-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:30:42Z
+- Manifiesto de exposición: [`ven-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-28T15:43:00Z
 
 ## Advertencias
 
