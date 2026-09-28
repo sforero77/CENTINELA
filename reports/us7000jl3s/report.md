@@ -14,8 +14,8 @@
 | Población en MMI≥7 | el evento no llegó a esta banda |
 | Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥6 | 1,1 millones |
-| Sedes de salud en MMI≥6 | 1.750 |
-| Sedes educativas en MMI≥6 | 1.626 |
+| Sedes de salud en MMI≥6 | 1.768 |
+| Sedes educativas en MMI≥6 | 1.634 |
 | Vías primarias y secundarias en MMI≥6 | 2.300 km |
 | Vías locales en MMI≥6 | 23 mil km |
 | Superficie construida en MMI≥6 | 177,5 km² |
@@ -76,8 +76,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,4 %**.
 
 - ShakeMap consumido: **v7**
 - Ground Failure consumido: **v9**
-- Manifiesto de exposición: [`ecu-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ECU.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-07T16:35:49Z
+- Manifiesto de exposición: [`ecu-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ECU.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-09-28T15:45:37Z
 
 ## Advertencias
 
