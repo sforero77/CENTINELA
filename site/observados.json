@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-27T22:45:18Z",
+  "generado_utc": "2026-09-28T07:40:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -18,11 +18,11 @@
     {
       "usgs_id": "us6000ty0q",
       "mag": 4.8,
-      "lon": -69.0863,
-      "lat": 18.6067,
-      "depth_km": 107.4,
-      "lugar": "11 km al O de Guaymate, República Dominicana",
-      "origen_utc": "2026-09-27T21:49:47Z",
+      "lon": -68.9986,
+      "lat": 18.5869,
+      "depth_km": 119.2,
+      "lugar": "2 km al O de Guaymate, República Dominicana",
+      "origen_utc": "2026-09-27T21:49:48Z",
       "razon": "M4.8 < umbral M5.5",
       "iso3": "DOM"
     },
@@ -124,17 +124,6 @@
       "origen_utc": "2026-09-23T09:21:14Z",
       "razon": "M5.3 < umbral M5.5",
       "iso3": "ARG"
-    },
-    {
-      "usgs_id": "us6000tx1w",
-      "mag": 4.9,
-      "lon": -107.0125,
-      "lat": -35.0606,
-      "depth_km": 10.0,
-      "lugar": "southern East Pacific Rise",
-      "origen_utc": "2026-09-23T07:36:24Z",
-      "razon": "M4.9 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
