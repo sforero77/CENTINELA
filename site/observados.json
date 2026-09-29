@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-09-28T16:50:25Z",
+  "generado_utc": "2026-09-29T10:50:25Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000tybk",
+      "mag": 4.5,
+      "lon": -75.6413,
+      "lat": -3.1213,
+      "depth_km": 134.8,
+      "lugar": "96 km al ENE de Alianza Cristiana, Perú",
+      "origen_utc": "2026-09-29T10:22:14Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "PER"
+    },
     {
       "usgs_id": "us6000ty0u",
       "mag": 4.6,
