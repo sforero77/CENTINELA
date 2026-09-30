@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us6000tymj",
+  "estado": "detectado",
+  "mag": 5.6,
+  "lon": -86.4364,
+  "lat": 9.8084,
+  "depth_km": 10.0,
+  "lugar": "84 km al SO de Tamarindo, Costa Rica",
+  "origen_utc": "2026-09-30T21:55:27Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-09-30T22:10:21Z",
+    "usgs_origen": "2026-09-30T21:55:27Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
