@@ -1,24 +1,33 @@
 {
-  "generado_utc": "2026-09-30T22:15:22Z",
+  "generado_utc": "2026-09-30T22:16:02Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
     "medido_contra": "desde_deteccion"
   },
   "medido": {
-    "eventos_publicados": 2,
+    "eventos_publicados": 3,
     "backtests_excluidos": 25,
-    "p50_min": 92.1,
-    "p95_min": 94.8,
+    "p50_min": 89.1,
+    "p95_min": 94.5,
     "peor_min": 95.1,
     "desde_deteccion": {
-      "eventos": 2,
-      "p50_min": 68.9,
-      "p95_min": 70.4,
+      "eventos": 3,
+      "p50_min": 67.2,
+      "p95_min": 70.3,
       "peor_min": 70.6
     }
   },
   "eventos": [
+    {
+      "usgs_id": "us6000tymj",
+      "origen_utc": "2026-09-30T21:55:27Z",
+      "publicado_utc": "2026-09-30T22:16:01Z",
+      "minutos": 20.6,
+      "backtest": false,
+      "shakemap": 1,
+      "actualizado_utc": ""
+    },
     {
       "usgs_id": "us7000tdms",
       "origen_utc": "2026-09-02T12:35:56Z",
@@ -268,8 +277,8 @@
     "p50_min": 4.9,
     "p90_min": 5.0,
     "peor_min": 24.9,
-    "revisiones": 7795,
-    "latidos": 201
+    "revisiones": 7782,
+    "latidos": 200
   },
   "latidos": [
     {

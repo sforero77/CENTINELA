@@ -6,18 +6,18 @@
     "depth_km": 10.0,
     "utc": "2026-09-30T21:55:27Z",
     "lugar": "84 km al SO de Tamarindo, Costa Rica",
-    "pager_alert": "",
+    "pager_alert": "green",
     "lon": -86.4364,
     "lat": 9.8084
   },
   "inputs": {
-    "shakemap_version": 0,
+    "shakemap_version": 1,
     "groundfailure_version": 0,
     "exposure_manifest": "cri-v0.4",
     "modelo_deslizamiento": "",
     "modelo_licuefaccion": ""
   },
-  "preliminar": true,
+  "preliminar": false,
   "radios": [
     {
       "radio_km": 25,
@@ -57,7 +57,9 @@
   "top_municipios": [],
   "incertidumbre": {
     "pop_discrepancia_pct": null,
-    "notas": []
+    "notas": [
+      "El epicentro está a 78 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
+    ]
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "",
@@ -68,10 +70,13 @@
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",
-    "csv_adm2": "",
-    "mapa_png": ""
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "ShakeMap: v0 → v1",
+    "Ninguna cifra publicada cambia frente a la versión anterior."
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -126,6 +131,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-30T22:10:50Z",
+  "generado_utc": "2026-09-30T22:15:59Z",
   "pipeline_version": "0.1.0"
 }
