@@ -1,6 +1,6 @@
 {
   "usgs_id": "us6000tymj",
-  "estado": "detectado",
+  "estado": "preliminar",
   "mag": 5.6,
   "lon": -86.4364,
   "lat": 9.8084,
@@ -13,10 +13,13 @@
   },
   "timestamps": {
     "detectado": "2026-09-30T22:10:21Z",
+    "preliminar": "2026-09-30T22:10:48Z",
     "usgs_origen": "2026-09-30T21:55:27Z"
   },
   "hashes": {},
-  "intentos_preliminar": 0,
+  "intentos_preliminar": 1,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "sin ShakeMap disponible aun"
+  ]
 }

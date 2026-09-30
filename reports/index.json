@@ -1,5 +1,20 @@
 [
   {
+    "usgs_id": "us6000tymj",
+    "mag": 5.6,
+    "lugar": "84 km al SO de Tamarindo, Costa Rica",
+    "iso3": "CRI",
+    "lon": -86.4364,
+    "lat": 9.8084,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2026-09-30T21:55:27Z",
+    "shakemap_version": 0,
+    "preliminar": true,
+    "backtest": false,
+    "generado_utc": "2026-09-30T22:10:50Z"
+  },
+  {
     "usgs_id": "us7000tdms",
     "mag": 5.9,
     "lugar": "southern East Pacific Rise",
