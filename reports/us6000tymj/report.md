@@ -1,6 +1,6 @@
-# Exposición sísmica: M5,6 · 84 km al SO de Tamarindo, Costa Rica
+# Exposición sísmica: M5,6 · 94 km al SO de Tamarindo, Costa Rica
 
-**Evento USGS:** `us6000tymj` · **Origen:** 2026-09-30T21:55:27Z UTC · **Profundidad:** 10,0 km
+**Evento USGS:** `us6000tymj` · **Origen:** 2026-09-30T21:55:27Z UTC · **Profundidad:** 8,0 km
 
 ## Exposición estimada
 
@@ -26,7 +26,7 @@ Ninguna banda de intensidad alcanza población, así que la única cifra que dim
 |---|---:|
 | 25 km | 0 |
 | 50 km | 0 |
-| 100 km | 41 mil |
+| 100 km | 22 mil |
 
 Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
 
@@ -44,11 +44,13 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentro de las bandas publicadas tiene población de WorldPop con la que contrastar.
 
-- El epicentro está a 78 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
+- El epicentro está a 87 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
 
 ## Cambios frente a la versión anterior
 
-- ShakeMap: v1 → v2
+- ShakeMap: v2 → v4
+- Profundidad: 10 → 8 km
+- Epicentro: reubicado 10 km
 - Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
@@ -58,10 +60,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v2**
+- ShakeMap consumido: **v4**
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`cri-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CRI.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-30T22:35:48Z
+- Pipeline: `0.1.0` · Generado: 2026-09-30T22:50:57Z
 
 ## Advertencias
 

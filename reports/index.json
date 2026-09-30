@@ -2,17 +2,17 @@
   {
     "usgs_id": "us6000tymj",
     "mag": 5.6,
-    "lugar": "84 km al SO de Tamarindo, Costa Rica",
+    "lugar": "94 km al SO de Tamarindo, Costa Rica",
     "iso3": "CRI",
-    "lon": -86.4364,
-    "lat": 9.8084,
+    "lon": -86.5063,
+    "lat": 9.7526,
     "pop_mmi7p": 0.0,
     "pop_mmi6p": 0.0,
     "utc": "2026-09-30T21:55:27Z",
-    "shakemap_version": 2,
+    "shakemap_version": 4,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-09-30T22:35:48Z"
+    "generado_utc": "2026-09-30T22:50:57Z"
   },
   {
     "usgs_id": "us7000tdms",
