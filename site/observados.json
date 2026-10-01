@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-01T08:40:24Z",
+  "generado_utc": "2026-10-01T08:45:20Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000tyqx",
+      "mag": 4.6,
+      "lon": -41.5851,
+      "lat": 31.2357,
+      "depth_km": 10.0,
+      "lugar": "northern Mid-Atlantic Ridge",
+      "origen_utc": "2026-10-01T07:40:06Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": ""
+    },
     {
       "usgs_id": "us6000tynp",
       "mag": 4.9,
