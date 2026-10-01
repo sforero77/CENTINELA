@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-01T06:20:22Z",
+  "generado_utc": "2026-10-01T06:40:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -102,17 +102,6 @@
       "origen_utc": "2026-09-27T04:14:44Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "CHL"
-    },
-    {
-      "usgs_id": "us6000txrj",
-      "mag": 4.6,
-      "lon": -75.8315,
-      "lat": 4.018,
-      "depth_km": 10.0,
-      "lugar": "25 km al O de Roncesvalles, Colombia",
-      "origen_utc": "2026-09-26T06:38:19Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "COL"
     }
   ]
 }
