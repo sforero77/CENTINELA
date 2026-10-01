@@ -9,10 +9,10 @@
     "pop_mmi7p": 0.0,
     "pop_mmi6p": 0.0,
     "utc": "2026-09-30T21:55:27Z",
-    "shakemap_version": 4,
+    "shakemap_version": 5,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-09-30T22:50:57Z"
+    "generado_utc": "2026-10-01T00:00:59Z"
   },
   {
     "usgs_id": "us7000tdms",

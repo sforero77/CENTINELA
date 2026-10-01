@@ -48,9 +48,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Cambios frente a la versión anterior
 
-- ShakeMap: v2 → v4
-- Profundidad: 10 → 8 km
-- Epicentro: reubicado 10 km
+- ShakeMap: v4 → v5
 - Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
@@ -60,10 +58,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v4**
+- ShakeMap consumido: **v5**
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`cri-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CRI.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-30T22:50:57Z
+- Pipeline: `0.1.0` · Generado: 2026-10-01T00:00:59Z
 
 ## Advertencias
 
