@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-01T20:20:26Z",
+  "generado_utc": "2026-10-01T20:40:24Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -277,16 +277,10 @@
     "p50_min": 5.0,
     "p90_min": 5.0,
     "peor_min": 5.2,
-    "revisiones": 5997,
+    "revisiones": 6000,
     "latidos": 201
   },
   "latidos": [
-    {
-      "utc": "2026-09-11T10:40:22Z",
-      "revisados": 7,
-      "relevantes": 0,
-      "revisiones": 1
-    },
     {
       "utc": "2026-09-11T12:00:21Z",
       "revisados": 8,
@@ -1478,6 +1472,12 @@
     {
       "utc": "2026-10-01T20:20:26Z",
       "revisados": 17,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-10-01T20:40:24Z",
+      "revisados": 18,
       "relevantes": 1,
       "revisiones": 4
     }
