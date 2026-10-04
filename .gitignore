@@ -28,3 +28,7 @@ data/build/
 site/dist/
 node_modules/
 site/status.ilegible-*.json
+
+# Copias de trabajo aisladas que crean los agentes de Claude Code: son
+# repositorios completos y un `git add -A` los incrusta como gitlinks.
+.claude/worktrees/

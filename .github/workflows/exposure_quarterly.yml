@@ -345,7 +345,19 @@ jobs:
             echo "::error::el build no dejo medicion.json; no hay nada que anotar"
             exit 1
           fi
+          # El 2 de `calibrar` es «hay una tolerancia que decidir», no un fallo,
+          # y aqui el activo ya esta publicado. Bajo `set -e` abortaba el paso:
+          # ni medicion anotada ni digests fijados, y una incidencia diciendo
+          # «no se pudo reconstruir» de un activo que si se publico.
+          set +e
           uv run centinela calibrar --escribir "$MEDICION"
+          CALIBRAR=$?
+          set -e
+          if [ "$CALIBRAR" -eq 2 ]; then
+            echo "::warning::$ISO3: el desvio medido pide decidir la tolerancia a mano; el activo se publico igual"
+          elif [ "$CALIBRAR" -ne 0 ]; then
+            exit "$CALIBRAR"
+          fi
           # Los digests de lo que entro, fijados en el manifest. Con
           # `--aceptar-cambiados` reemplaza tambien los republicados: a estas
           # alturas el activo construido con ellos ya paso la comparacion.
