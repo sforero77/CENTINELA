@@ -45,6 +45,7 @@ from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.manifest import Manifest
 from ..common.paths import MANIFESTS_DIR, REPORTS_DIR
+from ..common.state import identidad_de_version, version_cambio
 from ..p2_impact.products import ProductContractError, parse_products
 from .repaso import detail_url
 
@@ -76,14 +77,40 @@ class Rezago:
     #: Manifiesto con el que se calculo / el vigente en el repositorio.
     manifiesto_publicado: str
     manifiesto_vigente: str
+    #: Contribuidor de cada version, publicado / vigente. El publicado viene
+    #: vacio en los reportes emitidos antes de que `report.json` lo guardara.
+    shakemap_fuente_publicada: str = ""
+    shakemap_fuente_vigente: str = ""
+    groundfailure_fuente_publicada: str = ""
+    groundfailure_fuente_vigente: str = ""
+
+    @property
+    def _shakemap_cambio(self) -> bool:
+        return version_cambio(
+            self.shakemap_vigente,
+            self.shakemap_fuente_vigente,
+            self.shakemap_publicado,
+            self.shakemap_fuente_publicada,
+        )
+
+    @property
+    def _groundfailure_cambio(self) -> bool:
+        return version_cambio(
+            self.groundfailure_vigente,
+            self.groundfailure_fuente_vigente,
+            self.groundfailure_publicado,
+            self.groundfailure_fuente_publicada,
+        )
 
     @property
     def productos(self) -> bool:
-        """USGS sirve una version mas nueva de ShakeMap o de Ground Failure."""
-        return (
-            self.shakemap_vigente > self.shakemap_publicado
-            or self.groundfailure_vigente > self.groundfailure_publicado
-        )
+        """La version preferida de ShakeMap o de Ground Failure ya no es la publicada.
+
+        Era `vigente > publicado`, que entre contribuidores no significa nada: un
+        reporte sobre `us` v6 cuyo preferido pasa a `atlas` v1 salia al dia para
+        siempre (auditoria del 5-sep-2026, #81). Misma regla que el repaso.
+        """
+        return self._shakemap_cambio or self._groundfailure_cambio
 
     @property
     def desaparecido(self) -> bool:
@@ -114,12 +141,18 @@ class Rezago:
     def describir(self) -> str:
         """Una linea legible. Es lo que acaba en el resumen y en el issue."""
         partes = []
-        if self.shakemap_vigente > self.shakemap_publicado:
-            partes.append(f"ShakeMap v{self.shakemap_publicado} -> v{self.shakemap_vigente}")
-        if self.groundfailure_vigente > self.groundfailure_publicado:
-            partes.append(
-                f"Ground Failure v{self.groundfailure_publicado} -> v{self.groundfailure_vigente}"
+        if self._shakemap_cambio:
+            antes = identidad_de_version(self.shakemap_fuente_publicada, self.shakemap_publicado)
+            ahora = identidad_de_version(self.shakemap_fuente_vigente, self.shakemap_vigente)
+            partes.append(f"ShakeMap {antes} -> {ahora}")
+        if self._groundfailure_cambio:
+            antes = identidad_de_version(
+                self.groundfailure_fuente_publicada, self.groundfailure_publicado
             )
+            ahora = identidad_de_version(
+                self.groundfailure_fuente_vigente, self.groundfailure_vigente
+            )
+            partes.append(f"Ground Failure {antes} -> {ahora}")
         if self.exposicion:
             partes.append(f"exposicion {self.manifiesto_publicado} -> {self.manifiesto_vigente}")
         if self.desaparecido:
@@ -283,6 +316,10 @@ def comprobar(
             groundfailure_vigente=productos.groundfailure_version,
             manifiesto_publicado=manifiesto_publicado,
             manifiesto_vigente=manifiesto_vigente,
+            shakemap_fuente_publicada=str(entradas.get("shakemap_fuente") or ""),
+            shakemap_fuente_vigente=productos.shakemap_fuente,
+            groundfailure_fuente_publicada=str(entradas.get("groundfailure_fuente") or ""),
+            groundfailure_fuente_vigente=productos.groundfailure_fuente,
         )
         if rezago.hay:
             resultado.rezagados.append(rezago)

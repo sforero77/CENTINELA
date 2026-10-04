@@ -45,6 +45,13 @@ class ProductRef:
     estado: str = "UPDATE"
     #: Propiedades planas del producto, tal como las publica USGS.
     props: dict[str, str] = field(default_factory=dict)
+    #: Contribuidor (`source`: ``us``, ``atlas``, una red regional).
+    #:
+    #: `_preferred` lo usaba para elegir y luego lo tiraba, y sin el el numero de
+    #: version no identifica nada: «ShakeMap consumido: v1» en `us2000ahv0` es
+    #: el v1 de `atlas`, cuando `us` va por su v11 (auditoria del 5-sep-2026,
+    #: #95). Vacio si USGS no lo declara.
+    fuente: str = ""
 
     def content_url(self, *candidates: str) -> str | None:
         """Primera URL disponible entre varias rutas candidatas.
@@ -96,6 +103,7 @@ class ProductRef:
             contents=contents,
             estado=str(data.get("status", "UPDATE")).upper(),
             props={str(k): str(v) for k, v in props.items() if v is not None},
+            fuente=str(data.get("source") or ""),
         )
 
 
@@ -115,6 +123,15 @@ class ProductSet:
     @property
     def groundfailure_version(self) -> int:
         return self.ground_failure.version if self.ground_failure else 0
+
+    @property
+    def shakemap_fuente(self) -> str:
+        """Contribuidor del ShakeMap preferido: la otra mitad de su identidad."""
+        return self.shakemap.fuente if self.shakemap else ""
+
+    @property
+    def groundfailure_fuente(self) -> str:
+        return self.ground_failure.fuente if self.ground_failure else ""
 
     @property
     def has_shakemap(self) -> bool:

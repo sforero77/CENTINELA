@@ -43,7 +43,7 @@ from ..common.constants import USGS_FDSN_EVENT
 from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.paths import EVENTS_DIR
-from ..common.state import EventState, EventStatus
+from ..common.state import EventState, EventStatus, leer_sello_utc
 from ..p2_impact.products import ProductContractError, parse_products
 
 _log = get_logger(__name__)
@@ -137,7 +137,7 @@ def eventos_a_repasar(
             continue
         if estado.estado in _SIN_REPASO:
             continue
-        origen = _parse(estado.origen_utc)
+        origen = leer_sello_utc(estado.origen_utc)
         if origen is None or origen < corte:
             continue
         vivos.append((origen, estado))
@@ -173,7 +173,12 @@ def repasar(
             continue
 
         resultado.revisados += 1
-        if estado.needs_reprocessing(productos.shakemap_version, productos.groundfailure_version):
+        if estado.needs_reprocessing(
+            productos.shakemap_version,
+            productos.groundfailure_version,
+            shakemap_fuente=productos.shakemap_fuente,
+            groundfailure_fuente=productos.groundfailure_fuente,
+        ):
             resultado.a_despachar.append(estado.usgs_id)
             _log.info(
                 "version nueva fuera de la ventana del feed",
@@ -206,11 +211,3 @@ def _leer(ruta: Path) -> dict[str, object]:
     import json
 
     return dict(json.loads(ruta.read_text(encoding="utf-8")))
-
-
-def _parse(sello: str) -> datetime | None:
-    try:
-        momento = datetime.fromisoformat(sello.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return momento if momento.tzinfo else momento.replace(tzinfo=UTC)

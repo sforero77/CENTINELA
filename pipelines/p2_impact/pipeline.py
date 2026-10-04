@@ -707,6 +707,7 @@ def build_preliminary_report(
             shakemap_version=0,
             groundfailure_version=products.groundfailure_version,
             exposure_manifest=manifest_id,
+            groundfailure_fuente=products.groundfailure_fuente,
         ),
         totales=Totales(),
         radios=tuple(
@@ -847,6 +848,8 @@ def build_report(
             shakemap_version=products.shakemap_version,
             groundfailure_version=products.groundfailure_version,
             exposure_manifest=manifest_id,
+            shakemap_fuente=products.shakemap_fuente,
+            groundfailure_fuente=products.groundfailure_fuente,
             **modelos_de_terreno(products),
         ),
         totales=tot,

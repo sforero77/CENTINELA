@@ -23,7 +23,7 @@ from typing import Any
 
 from .logging import get_logger
 from .paths import EVENTS_DIR, REPORTS_DIR, SITE_DIR
-from .state import EventState, EventStatus, utcnow_iso
+from .state import EventState, EventStatus, leer_sello_utc, utcnow_iso
 
 _log = get_logger(__name__)
 
@@ -74,10 +74,9 @@ class EventLatency:
 
 
 def _parse(ts: str) -> datetime | None:
-    try:
-        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
-    except (ValueError, AttributeError):
-        return None
+    # El lector comun: uno propio devolvia sellos sin zona, y restarlos de uno
+    # con zona lanza `TypeError` en vez de dar una latencia (#168).
+    return leer_sello_utc(ts)
 
 
 def event_latencies(

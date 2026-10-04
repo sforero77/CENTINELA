@@ -30,7 +30,7 @@ from ..common.geo import LATAM_BBOX, BBox
 from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.paths import SITE_DIR
-from ..common.state import utcnow_iso
+from ..common.state import leer_sello_utc, utcnow_iso
 
 _log = get_logger(__name__)
 
@@ -76,9 +76,17 @@ class EventoObservado:
 
     @classmethod
     def desde_candidato(cls, candidate: Any, razon: str) -> EventoObservado:
+        # LA MAGNITUD VA TAL CUAL LA PUBLICA USGS.
+        #
+        # Se redondeaba a un decimal, y la razon se escribe con la magnitud sin
+        # redondear: un M5.49 salia en el visor como «M5,5» al lado de «M5.49 <
+        # umbral M5.5». Publicar un sismo con la magnitud del umbral diciendo
+        # que no lo alcanzo es justo la contradiccion que hace dudar de la capa
+        # entera (auditoria del 5-sep-2026, #169). El visor imprime el numero
+        # que recibe, asi que el dato y la razon tienen que ser el mismo.
         return cls(
             usgs_id=candidate.usgs_id,
-            mag=round(float(candidate.mag), 1),
+            mag=float(candidate.mag),
             lon=round(float(candidate.lon), 4),
             lat=round(float(candidate.lat), 4),
             depth_km=round(float(candidate.depth_km), 1),
@@ -125,13 +133,6 @@ def pais_del_toponimo(lugar: str) -> str:
     return _ISO_POR_NOMBRE.get(cola, "")
 
 
-def _parse(ts: str) -> datetime | None:
-    try:
-        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-
-
 def podar(
     eventos: list[EventoObservado],
     *,
@@ -147,7 +148,7 @@ def podar(
     vigentes = [
         (fecha, e)
         for e in eventos
-        if (fecha := _parse(e.origen_utc)) is not None
+        if (fecha := leer_sello_utc(e.origen_utc)) is not None
         if fecha >= limite
     ]
     return [e for _, e in sorted(vigentes, key=lambda par: par[0], reverse=True)]
