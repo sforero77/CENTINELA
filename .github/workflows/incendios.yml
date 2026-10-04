@@ -62,6 +62,24 @@ jobs:
         id: incendios
         run: uv run centinela incendios --exposure 'data/activos/*/exposure_h3.parquet'
 
+      # SI EL TOPE DE TAMANIO MORDIO, LA CORRIDA LO DICE.
+      #
+      # `MAX_CELDAS` prometia que un recorte "se dice a gritos", y el grito era
+      # un log que nadie abre (auditoria #177). El aviso ya viaja dentro de
+      # `incendios.json`; esto lo saca a la pagina de la corrida como anotacion
+      # de error y al resumen. Sin `exit 1`: publicar 60.000 celdas avisando
+      # vale mas que no publicar ninguna, asi que el paso sigue.
+      - name: Avisar si el tope recorto la capa
+        run: |
+          RECORTADAS=$(jq '.totales.celdas - .totales.celdas_publicadas' site/incendios.json)
+          if [ "${RECORTADAS:-0}" -gt 0 ]; then
+            TOTAL=$(jq '.totales.celdas' site/incendios.json)
+            MENSAJE="El tope de seguridad dejo fuera $RECORTADAS de $TOTAL celdas: el mapa publicado NO es todo lo que arde."
+            echo "::error title=Focos activos recortados::$MENSAJE"
+            echo "### Focos activos recortados" >> "$GITHUB_STEP_SUMMARY"
+            echo "$MENSAJE Los totales del fichero si son de todas las celdas." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Publicar
         id: publicar
         env:

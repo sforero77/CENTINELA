@@ -26,12 +26,17 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ..common.constants import H3_RES_VIEWER
 from ..common.logging import get_logger
 
 _log = get_logger(__name__)
 
 #: Resolucion a la que se publica la malla. Ver el modulo.
-RES_VISOR = 7
+#:
+#: Era un `7` escrito aqui mientras `common/constants.py` declaraba
+#: `H3_RES_VIEWER = (7, 6)` sin que nadie lo leyera: dos definiciones del mismo
+#: numero. Ahora hay una (auditoria #78, 3-oct-2026).
+RES_VISOR = H3_RES_VIEWER
 
 #: Umbral de intensidad por debajo del cual la celda no se publica.
 #:

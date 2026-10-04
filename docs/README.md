@@ -35,7 +35,7 @@ técnica (v0.10) y manda sobre todo lo demás.
 | **¿Cómo llega un sismo de USGS a la página?** | [`arquitectura/flujo-de-datos.md`](arquitectura/flujo-de-datos.md) sigue el camino entero, y [`acciones/cadena-de-evento.md`](acciones/cadena-de-evento.md) lo cuenta workflow a workflow |
 | **¿Qué dispara a qué, y con qué reloj?** | [`acciones/orquestacion.md`](acciones/orquestacion.md). La regla corta: el vigía es el reloj de todo lo demás |
 | **¿Qué comprueba cada cron, y qué pasa si la comprobación falla?** | [`acciones/por-reloj.md`](acciones/por-reloj.md): un diagrama por disparador, con sus puertas de decisión, sus códigos de salida y sus alarmas |
-| **¿En qué banda de intensidad se publica cada cifra, y por qué?** | [`datos/agregaciones.md`](datos/agregaciones.md), sección *En qué banda se publica cada cosa*. Las fuentes de cada umbral están en `MMI_BANDS_INFRAESTRUCTURA` (`pipelines/common/constants.py`) |
+| **¿En qué banda de intensidad se publica cada cifra, y por qué?** | [`datos/agregaciones.md`](datos/agregaciones.md), sección *En qué banda se publica cada cosa*. Las fuentes de cada umbral están en la sección «Bandas de intensidad publicadas» de `pipelines/common/constants.py` |
 
 ## El sistema en un vistazo
 

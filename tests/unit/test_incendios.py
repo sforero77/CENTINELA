@@ -292,6 +292,54 @@ def test_la_confianza_baja_se_cuenta_aparte_y_no_crea_celda(con: Any) -> None:
 
 
 @pytest.mark.geo
+def test_lo_que_tira_la_excepcion_de_la_baja_confianza_se_cuenta(con: Any) -> None:
+    """Auditoria #176. La celda solo de baja no entra, pero no puede desaparecer.
+
+    El 43 % de las detecciones de baja confianza caia por el `HAVING` sin dejar
+    rastro, y `detecciones_baja` —la baja de las celdas que si entran— se leia
+    como si fuera todo lo descartado.
+    """
+    from pipelines.p5_incendios.focos_h3 import descarte_de_baja, registrar_focos
+
+    registrar_focos(
+        con,
+        [
+            _foco(-70.0, 1.0, conf="low"),
+            _foco(-70.0, 1.0, conf="low"),
+            _foco(-65.0, 4.0, conf="low"),
+            _foco(-60.0, 2.0, conf="nominal"),
+            _foco(-60.0, 2.0, conf="low"),
+        ],
+    )
+
+    descarte = descarte_de_baja(con)
+    assert (descarte.celdas, descarte.detecciones) == (2, 3)
+
+
+def test_el_descarte_de_baja_se_publica_al_lado_de_detecciones_baja(tmp_path: Path) -> None:
+    from pipelines.p5_incendios.focos_h3 import DescarteDeBaja
+
+    write_incendios(
+        [_celda("88abc", pop=1.0)],
+        site_dir=tmp_path,
+        descarte_baja=DescarteDeBaja(celdas=7, detecciones=11),
+    )
+    totales = json.loads((tmp_path / "incendios.json").read_text(encoding="utf-8"))["totales"]
+
+    assert totales["celdas_solo_baja"] == 7
+    assert totales["detecciones_baja_sin_celda"] == 11
+    assert totales["detecciones_baja"] == 0, "la de las celdas publicadas sigue aparte"
+
+
+@pytest.mark.geo
+def test_sin_registrar_focos_el_descarte_es_cero(con: Any) -> None:
+    """Sin detecciones no hay descarte, y no revienta por falta de tabla."""
+    from pipelines.p5_incendios.focos_h3 import DescarteDeBaja, descarte_de_baja
+
+    assert descarte_de_baja(con) == DescarteDeBaja()
+
+
+@pytest.mark.geo
 def test_se_guarda_cuando_empezo_y_cuando_se_vio_por_ultima_vez(con: Any) -> None:
     """Es lo unico que insinua duracion sin fingir identidad de incendio."""
     from pipelines.p5_incendios.focos_h3 import registrar_focos
@@ -393,6 +441,48 @@ def test_si_el_tope_llegara_a_morder_se_dice_a_gritos(
         build_incendios(celdas, max_celdas=5)
 
     assert any("NO es todo lo que arde" in r.message for r in caplog.records)
+
+
+def test_el_grito_del_recorte_llega_al_fichero_publicado(tmp_path: Path) -> None:
+    """Auditoria #177. El log de arriba moria en el runner: ni JSON ni salida.
+
+    Ahora va en `avisos`, sumado a los demas —no pisado por ellos—, y la
+    publicacion sigue: el fichero existe y trae lo que cupo.
+    """
+    celdas = [_celda(f"88{i:013x}", pop=1.0) for i in range(20)]
+    write_incendios(celdas, site_dir=tmp_path, avisos=("columna ausente",), max_celdas=5)
+    datos = json.loads((tmp_path / "incendios.json").read_text(encoding="utf-8"))
+
+    assert len(datos["celdas"]) == 5
+    assert datos["totales"]["celdas"] == 20
+    recorte = [a for a in datos["avisos"] if "NO es todo lo que arde" in a]
+    assert recorte == [
+        "El tope de seguridad de 5 celdas dejo fuera 15 de 20: el mapa "
+        "NO es todo lo que arde. Los totales si son de todas las celdas."
+    ]
+    assert "columna ausente" in datos["avisos"], "el aviso del activo no puede pisar al del recorte"
+
+
+def test_si_no_muerde_no_hay_aviso_de_recorte() -> None:
+    assert "avisos" not in build_incendios([_celda("88abc", pop=1.0)])
+
+
+def test_el_workflow_saca_el_recorte_a_la_corrida() -> None:
+    """La otra mitad de #177: quien mira Actions no lee el JSON.
+
+    Se leen solo las lineas de codigo del workflow: el comentario que explica el
+    paso nombra las mismas palabras y aprobaria la prueba por si solo.
+    """
+    flujo = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "incendios.yml"
+    codigo = "\n".join(
+        linea
+        for linea in flujo.read_text(encoding="utf-8").splitlines()
+        if not linea.strip().startswith("#")
+    )
+
+    assert ".totales.celdas - .totales.celdas_publicadas" in codigo
+    assert "::error title=Focos activos recortados::" in codigo
+    assert "GITHUB_STEP_SUMMARY" in codigo
 
 
 def test_el_json_va_sin_sangria(tmp_path: Path) -> None:

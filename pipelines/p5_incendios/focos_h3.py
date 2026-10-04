@@ -101,9 +101,55 @@ GROUP BY 1
 -- anomalia termica debil (<15 K), y una anomalia debil tambien es un fuego
 -- pequeno, frio o bajo dosel. Asi que esto pierde fuegos reales: los debiles y
 -- aislados. Y los pierde de dia, porque `low` casi no existe de noche —requiere
--- sun glint—. Es un intercambio, no un filtro gratis.
+-- sun glint—. Es un intercambio, no un filtro gratis. Y lo que se tira aqui se
+-- cuenta y se publica: ver `SQL_SOLO_BAJA`.
 HAVING count(*) FILTER (WHERE confianza <> 'low') > 0
 """
+
+#: Lo que la excepcion de arriba deja fuera, CONTADO.
+#:
+#: EL COSTE ESTABA DICHO, PERO NO MEDIDO NI PUBLICADO. El `HAVING` tiraba las
+#: celdas solo de baja confianza sin dejar rastro, y `totales.detecciones_baja`
+#: —que solo suma la baja de las celdas que si entran— se leia como si fuera
+#: todo lo descartado. La auditoria del 5-sep-2026 (#176) midio que el **43 %**
+#: de las detecciones de baja confianza caia por aqui: casi la mitad de lo
+#: descartado no aparecia en ningun numero, en un proyecto cuya regla es
+#: publicar lo que se descarta.
+#:
+#: La celda sigue sin publicarse —el motivo de arriba vale—; lo que se publica
+#: ahora es cuantas son y cuantas detecciones llevaban.
+SQL_SOLO_BAJA = """
+CREATE OR REPLACE TABLE focos_solo_baja AS
+SELECT count(*)::BIGINT          AS celdas,
+       coalesce(sum(n), 0)::BIGINT AS detecciones
+FROM (
+    SELECT h3_latlng_to_cell(lat, lon, {resolucion}) AS h3_08, count(*) AS n
+    FROM focos_arrow
+    GROUP BY 1
+    HAVING count(*) FILTER (WHERE confianza <> 'low') = 0
+)
+"""
+
+
+@dataclass(frozen=True, slots=True)
+class DescarteDeBaja:
+    """Celdas que no entraron por tener **solo** detecciones de baja confianza."""
+
+    celdas: int = 0
+    detecciones: int = 0
+
+
+def descarte_de_baja(con: Any) -> DescarteDeBaja:
+    """Lo que `registrar_focos` dejo fuera por la excepcion de la baja confianza.
+
+    Cero y cero si no se registro nada: sin detecciones no hay descarte.
+    """
+    try:
+        fila = con.execute("SELECT celdas, detecciones FROM focos_solo_baja").fetchone()
+    except Exception:
+        return DescarteDeBaja()
+    return DescarteDeBaja(celdas=int(fila[0]), detecciones=int(fila[1]))
+
 
 #: Cruce con el activo. `LEFT JOIN`: una celda con fuego y sin exposicion sigue
 #: siendo informacion —un incendio en selva sin nadie importa— y perderla por
@@ -160,12 +206,21 @@ def registrar_focos(con: Any, focos: list[Foco], *, resolucion: int = H3_RES_COM
         ),
     )
     con.execute(SQL_CELDAS.format(resolucion=resolucion))
+    con.execute(SQL_SOLO_BAJA.format(resolucion=resolucion))
     con.unregister("focos_arrow")
 
     celdas = int(con.execute("SELECT count(*) FROM focos_h3").fetchone()[0])
+    descarte = descarte_de_baja(con)
     _log.info(
         "detecciones agrupadas por celda",
-        extra={"context": {"detecciones": len(focos), "celdas": celdas}},
+        extra={
+            "context": {
+                "detecciones": len(focos),
+                "celdas": celdas,
+                "celdas_solo_baja": descarte.celdas,
+                "detecciones_baja_sin_celda": descarte.detecciones,
+            }
+        },
     )
     return celdas
 

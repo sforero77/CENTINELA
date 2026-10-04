@@ -513,12 +513,36 @@ def _extraer_zip(contenido: bytes, destino: Path) -> list[Path]:
 
     Se extrae todo, no solo los ``.shp``: un shapefile sin su ``.dbf`` no tiene
     atributos y sin su ``.prj`` no tiene CRS, y GDAL los busca al lado.
+
+    SE EXTRAE A UN TEMPORAL Y SE RENOMBRA AL FINAL, como `write_atomic` y
+    `download_to`. `extractall` escribia directo en ``destino``, y las dos rutas
+    que llaman aqui —`download_hdx` y `download_zip_completo`— reanudan
+    preguntando si en esa carpeta hay **alguna** capa legible. Un corte a mitad
+    de la extraccion (disco lleno, Ctrl+C, runner cancelado) dejaba el `.shp`
+    escrito y el `.dbf` o el `.prj` sin escribir, y la corrida siguiente se
+    conformaba con eso: un shapefile sin `.prj` se abre igual y reproyecta mal,
+    que es justo el fallo que `ficheros_extraidos` describe. «Una descarga
+    cortada no se repite» era falso para estas dos rutas. Auditoria #165,
+    corregido el 3-oct-2026.
+
+    El rename de un directorio no pisa uno existente en Windows, asi que lo que
+    hubiera en ``destino`` —por fuerza incompleto: si estuviera entero el
+    llamador no habria llegado aqui— se borra antes.
     """
     import io
+    import shutil
 
-    destino.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(io.BytesIO(contenido)) as z:
-        z.extractall(destino)
+    temporal = destino.with_name(destino.name + PARTIAL_SUFFIX)
+    shutil.rmtree(temporal, ignore_errors=True)
+    temporal.mkdir(parents=True)
+    try:
+        with zipfile.ZipFile(io.BytesIO(contenido)) as z:
+            z.extractall(temporal)
+    except BaseException:
+        shutil.rmtree(temporal, ignore_errors=True)
+        raise
+    shutil.rmtree(destino, ignore_errors=True)
+    temporal.replace(destino)
     return _capas_legibles(destino)
 
 

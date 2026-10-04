@@ -3,6 +3,13 @@
 Todo valor aqui es una *decision de diseno citada*, no un parametro ajustable
 al vuelo: cambiarlo cambia el comportamiento publicado del sistema y debe pasar
 por PR con actualizacion de los golden tests.
+
+ESA PROMESA SOLO VALE SI ALGUIEN LEE LA CONSTANTE. La auditoria del 5-sep-2026
+encontro siete que no leia nadie —y al medirlo sin contar comentarios salio una
+octava, `MMI_BANDS_INFRAESTRUCTURA`, citada en cuatro comentarios y leida por
+cero lineas de codigo—. Cambiar cualquiera no cambiaba nada, en el modulo que
+dice lo contrario. Se borraron o se conectaron, y
+`test_constantes_vivas.py` falla si una vuelve a quedarse sin lector.
 """
 
 from __future__ import annotations
@@ -30,85 +37,76 @@ USGS_FDSN_EVENT: Final[str] = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 
 #: Resolucion H3 de computo.
 H3_RES_COMPUTE: Final[int] = 8
-#: Resoluciones agregadas que consume el visor.
-H3_RES_VIEWER: Final[tuple[int, ...]] = (7, 6)
 
-#: CRS de publicacion. **No hay ninguna reproyeccion en el repositorio.**
+#: Resolucion a la que se agrega la malla que dibuja el visor (`celdas.json`).
 #:
-#: Este comentario decia "el computo de areas usa proyeccion equiarea local", y
-#: eran dos cosas mal a la vez. Una: no existe tal reproyeccion; longitudes y
-#: areas se calculan con las funciones de esferoide de DuckDB, que son
-#: **geodesicas sobre el elipsoide**, no proyectadas. Dos: una equiarea conserva
-#: superficie a costa de la distancia, asi que seria la clase equivocada para
-#: medir longitud — y `road_km` es una cifra titular.
-#:
-#: Nadie calcula en grados y las columnas estan bien nombradas, pero **los
-#: numeros no estaban bien**, y esta nota decia que si. Las dos funciones
-#: geodesicas de DuckDB leen sus vertices en orden (latitud, longitud) y se las
-#: llamaba con la geometria en (longitud, latitud): areas y longitudes salian
-#: escaladas por cos(longitud), y NaN donde |longitud| > 90. La traduccion vive
-#: ahora en :func:`pipelines.common.geo.area_spheroid_m2` y
-#: :func:`~pipelines.common.geo.length_spheroid_m`, que son el unico sitio del
-#: repositorio donde se nombra a `ST_*_Spheroid`.
-CRS_PUBLICATION: Final[str] = "EPSG:4326"
+#: Era `(7, 6)` y no la leia nadie: `p3_report/celdas.py` tenia su propio
+#: `RES_VISOR = 7`, y la r6 no se publica en ningun sitio. Dos definiciones del
+#: mismo numero, una muerta y otra viva, en un modulo que promete que cambiar
+#: esta cambia el comportamiento. Ahora `RES_VISOR` sale de aqui.
+H3_RES_VIEWER: Final[int] = 7
 
 # --- Bandas de intensidad publicadas (RF-05) ------------------------------
-
-#: Bandas MMI reportadas como totales.
-MMI_BANDS: Final[tuple[int, ...]] = (6, 7, 8)
-
-#: Bandas en las que se publica **equipamiento e infraestructura**, no solo
-#: poblacion: edificaciones, superficie construida, salud, educacion y vias.
-#:
-#: POR QUE 6 Y NO SOLO 7. Hasta el 3-sep-2026 todo lo que no fuera poblacion se
-#: agregaba unicamente en MMI>=7, sin justificacion citada. El efecto medido:
-#: **trece de veintitres reportes no tienen poblacion en MMI>=7**, asi que
-#: publicaban "0 edificaciones, 0 hospitales, 0 escuelas, 0 km de via" con
-#: millones de personas dentro de MMI>=6. El peor caso, `us7000jl3s`: 4,75
-#: millones de personas —3,1 de ellas en Guayaquil— y ni un solo hospital que
-#: nombrar.
-#:
-#: No se encontro **ninguna** fuente autorizada que situe el inicio del dano en
-#: MMI VII. Lo que hay dice lo contrario, y converge en VI:
-#:
-#: * **USGS, Mercalli abreviada**, grado VI: *"Damage slight"*. El grado VII ya
-#:   describe *"considerable damage in poorly built structures"*.
-#: * **ShakeMap**, tabla de intensidad instrumental: el dano potencial deja de
-#:   ser *"None"* en **MMI 5** (*"Very light"*), y en MMI 6 es *"Light"*.
-#: * **EMS-98** (Grunthal): para la clase de vulnerabilidad A —mamposteria de
-#:   piedra, adobe— el dano de grado 1 aparece en muchas construcciones ya en
-#:   **intensidad VI**. El umbral se corre tres grados segun el tipo
-#:   constructivo, cosa que un corte fijo no puede representar.
-#: * **GDACS** (Comision Europea): la compuerta de alerta esta en **MMI VI**;
-#:   por debajo la alerta es verde.
-#: * **OPS/OMS**, sismos de Venezuela 2026: reporta *"91 emergency hospitals
-#:   located in areas affected by Intensity VI or above, including 20 hospitals
-#:   exposed to Intensity VII or higher"*. Es el precedente operativo exacto
-#:   —equipamiento de salud, en MMI>=VI, con el >=VII anidado— y es de LATAM.
-#:
-#: Y un argumento que va al reves de lo que parece: los hospitales tienen norma
-#: sismorresistente mas exigente (NSR-10 los pone en Grupo IV, "indispensables"),
-#: pero la OPS mide que *"nonstructural elements contribute more to vulnerability
-#: than structural factors"*. Que el hospital no se caiga a MMI 6,5 no significa
-#: que siga atendiendo — y significa que **se convierte en el destino de los
-#: heridos de la zona**. Es mas razon para inventariarlo en MMI>=6, no menos.
-#:
-#: SE ANADE, NO SE MUEVE. Las columnas `*_mmi7p` conservan su significado exacto
-#: para no romper la serie ni a quien integre el `report.json`. Las `*_mmi6p`
-#: son nuevas y no cambian una sola cifra ya publicada.
-MMI_BANDS_INFRAESTRUCTURA: Final[tuple[int, ...]] = (6, 7)
-
-#: Bandas del desglose etario.
-#:
-#: Estuvo en MMI>=7 y solo ahi, y `docs/datos/agregaciones.md` lo justificaba
-#: diciendo que "mas abajo la incertidumbre del modelo etario seria mayor que la
-#: senal". **Esa razon no es una razon**: la incertidumbre etaria viene de mezclar
-#: GHS-POP con WorldPop —el mismo documento lo explica dos secciones antes— y es
-#: la misma en MMI 6 que en MMI 7. No es funcion de la intensidad.
-#:
-#: El efecto: en los trece eventos sin MMI>=7, la cifra de mayores era cero por
-#: construccion, justo donde una poblacion mayor expuesta es lo mas accionable.
-MMI_BANDS_AGE_BREAKDOWN: Final[tuple[int, ...]] = (6, 7)
+#
+# NO SON CONSTANTES, SON COLUMNAS. Aqui vivian `MMI_BANDS = (6, 7, 8)`,
+# `MMI_BANDS_INFRAESTRUCTURA = (6, 7)` y `MMI_BANDS_AGE_BREAKDOWN = (6, 7)`, y
+# ninguna linea de codigo las leia: las bandas estan escritas en el nombre de
+# cada columna (`pop_mmi6p`, `bld_mmi7p`, ...) del SQL de
+# `p2_impact/pipeline.py`, del dataclass `Totales` y del esquema de
+# `report.json`. Cambiar la tupla no movia una cifra. Se borraron el 3-oct-2026
+# (auditoria #78); la justificacion se queda, porque es la que citan
+# `p3_report/model.py`, `markdown.py`, `csv_out.py` y `docs/datos/agregaciones.md`.
+#
+# EQUIPAMIENTO E INFRAESTRUCTURA SE PUBLICAN EN MMI>=6 Y >=7, no solo la
+# poblacion: edificaciones, superficie construida, salud, educacion y vias.
+#
+# POR QUE 6 Y NO SOLO 7. Hasta el 3-sep-2026 todo lo que no fuera poblacion se
+# agregaba unicamente en MMI>=7, sin justificacion citada. El efecto medido:
+# **trece de veintitres reportes no tienen poblacion en MMI>=7**, asi que
+# publicaban "0 edificaciones, 0 hospitales, 0 escuelas, 0 km de via" con
+# millones de personas dentro de MMI>=6. El peor caso, `us7000jl3s`: 4,75
+# millones de personas —3,1 de ellas en Guayaquil— y ni un solo hospital que
+# nombrar.
+#
+# No se encontro **ninguna** fuente autorizada que situe el inicio del dano en
+# MMI VII. Lo que hay dice lo contrario, y converge en VI:
+#
+# * **USGS, Mercalli abreviada**, grado VI: *"Damage slight"*. El grado VII ya
+#   describe *"considerable damage in poorly built structures"*.
+# * **ShakeMap**, tabla de intensidad instrumental: el dano potencial deja de
+#   ser *"None"* en **MMI 5** (*"Very light"*), y en MMI 6 es *"Light"*.
+# * **EMS-98** (Grunthal): para la clase de vulnerabilidad A —mamposteria de
+#   piedra, adobe— el dano de grado 1 aparece en muchas construcciones ya en
+#   **intensidad VI**. El umbral se corre tres grados segun el tipo
+#   constructivo, cosa que un corte fijo no puede representar.
+# * **GDACS** (Comision Europea): la compuerta de alerta esta en **MMI VI**;
+#   por debajo la alerta es verde.
+# * **OPS/OMS**, sismos de Venezuela 2026: reporta *"91 emergency hospitals
+#   located in areas affected by Intensity VI or above, including 20 hospitals
+#   exposed to Intensity VII or higher"*. Es el precedente operativo exacto
+#   —equipamiento de salud, en MMI>=VI, con el >=VII anidado— y es de LATAM.
+#
+# Y un argumento que va al reves de lo que parece: los hospitales tienen norma
+# sismorresistente mas exigente (NSR-10 los pone en Grupo IV, "indispensables"),
+# pero la OPS mide que *"nonstructural elements contribute more to vulnerability
+# than structural factors"*. Que el hospital no se caiga a MMI 6,5 no significa
+# que siga atendiendo — y significa que **se convierte en el destino de los
+# heridos de la zona**. Es mas razon para inventariarlo en MMI>=6, no menos.
+#
+# SE ANADE, NO SE MUEVE. Las columnas `*_mmi7p` conservan su significado exacto
+# para no romper la serie ni a quien integre el `report.json`. Las `*_mmi6p`
+# son nuevas y no cambian una sola cifra ya publicada.
+#
+# EL DESGLOSE ETARIO TAMBIEN SE PUBLICA EN MMI>=6 Y >=7.
+#
+# Estuvo en MMI>=7 y solo ahi, y `docs/datos/agregaciones.md` lo justificaba
+# diciendo que "mas abajo la incertidumbre del modelo etario seria mayor que la
+# senal". **Esa razon no es una razon**: la incertidumbre etaria viene de mezclar
+# GHS-POP con WorldPop —el mismo documento lo explica dos secciones antes— y es
+# la misma en MMI 6 que en MMI 7. No es funcion de la intensidad.
+#
+# El efecto: en los trece eventos sin MMI>=7, la cifra de mayores era cero por
+# construccion, justo donde una poblacion mayor expuesta es lo mas accionable.
 
 #: Se conserva por compatibilidad: es la banda cuyo campo `pop_65p_mmi7p` viaja
 #: en los veintitres `report.json` ya publicados.
@@ -147,15 +145,15 @@ GROUND_FAILURE_HIGH_PROB: Final[float] = 0.10
 
 # --- Reintentos del reporte preliminar (RF-03) ----------------------------
 
-#: Cadencia de reintento que declara RF-03 mientras no aparece ShakeMap.
+#: Horas durante las que se reintenta el preliminar mientras no aparece ShakeMap.
 #:
-#: Es un **suelo de la especificacion, no un freno del codigo**. Quien decide
-#: cada cuanto se vuelve a mirar es el vigia, y desde el cron externo pasa cada
-#: cinco minutos: comprobar mas a menudo detecta el ShakeMap antes, y el SLO se
-#: cuenta desde que ese ShakeMap existe. El coste es nulo —el commit del
-#: reporte esta guardado por `git diff --staged --quiet`, asi que un preliminar
-#: identico no publica nada— y la ganancia son hasta veinticinco minutos.
-PRELIMINARY_RETRY_MINUTES: Final[int] = 30
+#: Aqui vivia tambien `PRELIMINARY_RETRY_MINUTES = 30`, la cadencia de RF-03, y
+#: no la leia nadie: era un **suelo de la especificacion, no un freno del
+#: codigo**. Quien decide cada cuanto se vuelve a mirar es el vigia, y desde el
+#: cron externo pasa cada cinco minutos (`CADENCIA_MINIMA_MIN`): comprobar mas a
+#: menudo detecta el ShakeMap antes, y el SLO se cuenta desde que ese ShakeMap
+#: existe. Un valor que no cambia nada al cambiarlo no pinta en este modulo; se
+#: borro el 3-oct-2026 (auditoria #78).
 PRELIMINARY_MAX_HOURS: Final[int] = 6
 
 #: Cada cuanto puede pasar el vigia, en el caso mas rapido.
@@ -201,10 +199,15 @@ DISCLAIMERS: Final[tuple[str, ...]] = (
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado.",
 )
 
-# --- Cobertura por fase (O2) ----------------------------------------------
-
-PHASE_0_COUNTRIES: Final[tuple[str, ...]] = ("COL",)
-PHASE_1_COUNTRIES: Final[tuple[str, ...]] = ("COL", "MEX", "PER", "ECU", "CHL", "VEN", "GTM")
+# --- Publicacion ------------------------------------------------------------
+#
+# Aqui estaban `PHASE_0_COUNTRIES` y `PHASE_1_COUNTRIES`, las listas de paises
+# de cada fase. No las leia nadie: que paises atiende el sistema lo dicen los
+# manifests de `manifests/` y lo publica `site/cobertura.json`. Una tercera
+# lista a mano solo podia divergir de las dos de verdad. Tambien
+# `CRS_PUBLICATION = "EPSG:4326"`, igual de muerta: la nota de por que no hay
+# reproyeccion y como se miden areas y longitudes vive donde se miden, en
+# `common/geo.py` (`area_spheroid_m2`, `length_spheroid_m`).
 
 #: Raiz de la pagina publicada. Vivia en `frescura.py`, que era el unico que la
 #: usaba; el hilo tambien la necesita para poder enlazar el reporte que promete.
