@@ -171,8 +171,20 @@ jobs:
         if: steps.cache-navegador.outputs.cache-hit != 'true'
         run: uv run playwright install --with-deps chromium
 
+      # UNA VEZ MAS, SOLO LO QUE FALLO, ANTES DE LLAMAR A NADIE.
+      #
+      # Varias pruebas cambian de mapa base, y esos estilos los sirve un tercero.
+      # El 4-oct-2026 una se quedo esperando 25 s a un estilo que llego tarde,
+      # con el visor perfecto. Aqui un fallo abre incidencia, y una alarma que
+      # salta por la red de otro ensena a no creerse ninguna. `--lf` repite solo
+      # las que fallaron: lo que falla dos veces seguidas es un fallo.
       - name: Abrir el visor y comprobar que pinta
-        run: uv run pytest tests/visor -m visor
+        run: |
+          if uv run pytest tests/visor -m visor; then
+            exit 0
+          fi
+          echo "::warning::fallaron pruebas del visor; se repiten una vez solo esas"
+          uv run pytest tests/visor -m visor --lf
 
   # UNA CORRIDA EN ROJO QUE NADIE ABRE NO ES UN GUARDIA.
   #
