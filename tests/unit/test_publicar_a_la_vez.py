@@ -48,41 +48,80 @@ def test_los_derivados_se_regeneran_en_vez_de_fusionarse(workflow: str) -> None:
     versiones completas de un derivado produce un fichero que no corresponde a
     ningun estado real del sistema.
     """
+    cuerpo = _manejador(workflow)
+
+    assert "centinela resolver-derivados" in cuerpo, (
+        f"{workflow} no resuelve el conflicto con el manejador compartido"
+    )
+    assert "git rebase --continue" in cuerpo
+
+
+def _manejador(workflow: str) -> str:
+    """El cuerpo de `regenerar_derivados()`, sin comentarios ni sangria."""
     texto = _texto(workflow)
-
-    assert "regenerar_derivados" in texto, f"{workflow} no maneja el conflicto de derivados"
-    assert "centinela status" in texto, f"{workflow} no regenera site/status.json"
-
-
-@pytest.mark.parametrize("workflow", QUE_EMPUJAN)
-def test_solo_se_regenera_lo_que_esta_en_la_lista(workflow: str) -> None:
-    """Un conflicto fuera de la lista es real y no se toca.
-
-    Regenerar a ciegas descartaria el trabajo del otro job, que es peor que
-    fallar: fallar deja rastro, descartar no.
-    """
-    assert "grep -qvE" in _texto(workflow), (
-        f"{workflow} podria regenerar sobre un conflicto que no es de un derivado"
+    assert "regenerar_derivados() {" in texto, f"{workflow} no maneja el conflicto de derivados"
+    bloque = texto[texto.index("regenerar_derivados() {") :]
+    bloque = bloque[: bloque.index("\n          }")]
+    return "\n".join(
+        linea.strip()
+        for linea in bloque.splitlines()
+        if linea.strip() and not linea.strip().startswith("#")
     )
 
 
-@pytest.mark.parametrize("workflow", QUE_EMPUJAN)
-def test_cada_uno_declara_los_derivados_que_el_escribe(workflow: str) -> None:
-    """La lista tiene que cubrir lo que ese workflow commitea, ni mas ni menos.
+def test_el_manejador_es_el_mismo_en_los_dos_workflows() -> None:
+    """Hallazgo #68 de la auditoria de septiembre de 2026.
 
-    `observados.json` nacio el 26-ago y solo lo escribe P1; si algun dia lo
-    escribiera P2, su lista tendria que crecer. Esta prueba lo pilla.
+    Eran dos copias en bash del mismo manejador, cada una con su lista de
+    derivados, y ya habian divergido: `trigger.yml` no sabia del indice de
+    reportes, `impact.yml` no sabia de `observados.json`, y el `checkout
+    --theirs` que salva los latidos llego a una semanas despues que a la otra.
+    El 2-sep-2026 la copia atrasada dejo los dos derivados corruptos en `main`.
+
+    Ahora la logica vive en `pipelines/common/derivados.py` y lo que queda en
+    cada workflow es la llamada. Tiene que ser identica: si alguien vuelve a
+    meter logica en una sola copia, esto se pone rojo.
     """
-    texto = _texto(workflow)
-    lista = texto[texto.index("DERIVADOS=") : texto.index("DERIVADOS=") + 200].splitlines()[0]
+    trigger, impacto = (_manejador(w) for w in QUE_EMPUJAN)
 
-    for fichero in ("site/status.json", "site/observados.json", "reports/index.json"):
-        if f"git add {fichero}" in texto or f" {fichero}" in texto.split("DERIVADOS=")[0]:
-            if fichero == "reports/index.json":
-                continue  # se genera, no se anade a mano
-            assert fichero in lista, (
-                f"{workflow} commitea {fichero} pero no lo regenera ante conflicto: {lista}"
-            )
+    assert trigger == impacto, f"los manejadores divergieron:\n{trigger}\n---\n{impacto}"
+
+
+@pytest.mark.parametrize("workflow", QUE_EMPUJAN)
+def test_ningun_workflow_lleva_su_propia_lista_de_derivados(workflow: str) -> None:
+    """La lista vive en un solo sitio; una segunda copia es la que se queda atras."""
+    comandos = [
+        linea.strip()
+        for linea in _texto(workflow).splitlines()
+        if not linea.strip().startswith("#")
+    ]
+
+    assert not [x for x in comandos if x.startswith("DERIVADOS=")], workflow
+    assert not [x for x in comandos if "checkout --theirs" in x], workflow
+
+
+@pytest.mark.parametrize("workflow", QUE_EMPUJAN)
+def test_todo_derivado_que_se_commitea_esta_en_la_lista_compartida(workflow: str) -> None:
+    """La lista tiene que cubrir lo que cada workflow commitea.
+
+    Si un workflow empieza a commitear otro fichero que el otro tambien
+    reescribe y la lista no lo sabe, el manejador se niega a tocarlo —bien— y
+    la publicacion muere en el conflicto —mal—. Lo que se mira son los
+    ficheros sueltos de `site/` y el indice, que son los que se reescriben
+    enteros.
+    """
+    from pipelines.common.derivados import DERIVADOS
+
+    anadidos = {
+        argumento
+        for linea in _texto(workflow).splitlines()
+        if (comando := linea.strip()).startswith("git add ")
+        for argumento in comando.removeprefix("git add ").split()
+        if argumento.endswith(".json")
+    }
+
+    assert anadidos, f"{workflow}: no se encontro ningun `git add` de un JSON"
+    assert anadidos <= set(DERIVADOS), f"{workflow} commitea {anadidos - set(DERIVADOS)}"
 
 
 def test_el_monitor_externo_no_late_cuando_la_corrida_fallo() -> None:

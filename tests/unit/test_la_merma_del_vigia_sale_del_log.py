@@ -35,6 +35,19 @@ from pipelines.p1_trigger.run import TriggerResult, run_trigger
 VACIO: dict[str, Any] = {"type": "FeatureCollection", "features": []}
 
 
+def _sin_tocar_observados(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Para correr el vigia de verdad sin reescribir el `site/` del repositorio.
+
+    Estas pruebas usaban `--dry-run` para eso, y desde el 3-oct-2026 un
+    simulacro ya no escribe el latido (hallazgo #155): lo que miran es justo el
+    latido, asi que corren sin simulacro y con la ventana de observados desviada.
+    """
+    from pipelines import cli
+
+    monkeypatch.setattr(cli, "leer", lambda *_a, **_k: [])
+    monkeypatch.setattr(cli, "write_observados", lambda *_a, **_k: Path("x"))
+
+
 # --- Un estado ilegible -----------------------------------------------------
 
 
@@ -70,8 +83,9 @@ def test_el_estado_ilegible_viaja_al_stdout_y_al_latido(
     monkeypatch.setattr(cli, "HttpFetcher", lambda *_a, **_k: object())
     monkeypatch.setattr(cli, "write_status", lambda **kw: escrito.update(kw) or Path("x"))
     monkeypatch.setattr(cli, "_emit_github_output", lambda k, v: salidas.__setitem__(k, v))
+    _sin_tocar_observados(monkeypatch)
 
-    assert cli.main(["trigger", "--dry-run"]) == 0
+    assert cli.main(["trigger"]) == 0
     salida = capsys.readouterr()
 
     assert json.loads(salida.out)["estados_ilegibles"] == ["us0000roto"]
@@ -91,8 +105,9 @@ def test_un_latido_sano_no_lleva_el_campo(
     monkeypatch.setattr(cli, "HttpFetcher", lambda *_a, **_k: object())
     monkeypatch.setattr(cli, "write_status", lambda **kw: escrito.update(kw) or Path("x"))
     monkeypatch.setattr(cli, "_emit_github_output", lambda k, v: None)
+    _sin_tocar_observados(monkeypatch)
 
-    cli.main(["trigger", "--dry-run"])
+    cli.main(["trigger"])
     capsys.readouterr()
 
     assert "estados_ilegibles" not in escrito["latido"]
@@ -179,8 +194,9 @@ def test_el_latido_se_escribe_aunque_la_pasada_sea_ciega(
     monkeypatch.setattr(cli, "HttpFetcher", lambda *_a, **_k: object())
     monkeypatch.setattr(cli, "write_status", lambda **kw: escrito.update(kw) or Path("x"))
     monkeypatch.setattr(cli, "_emit_github_output", lambda k, v: None)
+    _sin_tocar_observados(monkeypatch)
 
-    cli.main(["trigger", "--dry-run"])
+    cli.main(["trigger"])
     capsys.readouterr()
 
     assert escrito["latido"]["feeds_fallidos"] == [USGS_FEED_PRIMARY, USGS_FEED_BACKFILL]

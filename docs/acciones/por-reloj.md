@@ -60,7 +60,7 @@ programados según carga. Ver [`el-vigia.md`](el-vigia.md).
 ## `trigger.yml` · el vigía
 
 Cada 5 minutos por `repository_dispatch`, cada 30 por el cron de GitHub. Es el
-único que corre siempre, y el reloj del que cuelgan otros tres.
+único que corre siempre, y el reloj del que cuelgan otros cinco.
 
 El filtro de relevancia son **tres condiciones**, y las tres son la defensa
 contra el riesgo número uno del proyecto: publicar una cifra alarmista por un
@@ -99,16 +99,21 @@ flowchart TB
   EDAD --> E1{"frescura.yml<br/>&gt; 3 h?"}
   EDAD --> E2{"incendios.yml<br/>&gt; 6 h?"}
   EDAD --> E3{"repaso.yml<br/>&gt; 24 h?"}
+  EDAD --> E4{"datos.yml<br/>&gt; 24 h?"}
   E1 -->|sí| DISP1["despachar"]
   E2 -->|sí| DISP2["despachar"]
   E3 -->|sí| DISP3["despachar"]
+  E4 -->|sí| DISP4["despachar"]
 
   OBS --> EST
   NADA --> EST
   EST["<b>centinela observados + status</b><br/>site/observados.json<br/>site/status.json"] --> FRENO{"¿hubo evento,<br/>o pasó 1 h<br/>desde el último latido?"}
   FRENO -->|no| SINCOMMIT["sin commit<br/><i>288 al día serían ilegibles</i>"]
   FRENO -->|sí| COMMIT["commit del latido"]
-  COMMIT --> SITE["gh workflow run site.yml"]
+  COMMIT --> PUSH{"¿push con rebase?"}
+  PUSH -->|"choca en un derivado"| RES["<b>centinela resolver-derivados</b><br/>el mismo que usa impact.yml"]
+  RES --> PUSH
+  PUSH -->|sí| SITE["gh workflow run site.yml"]
 
   EST --> HC["curl healthchecks.io<br/><i>se ejecuta pase lo que pase</i>"]
 
@@ -120,6 +125,17 @@ flowchart TB
 
 Un fallo al despachar **no tumba al vigía**: se avisa con `::warning::` y la
 corrida sigue, porque su trabajo —revisar el feed y commitear— ya está hecho.
+
+`datos.yml` entra en el despacho por edad desde el 3-oct-2026: es lo único que
+corre la guardia de «sismo detectado y sin reporte» cuando P2 no llegó a
+publicar, y con solo su cron `23 10 * * *` dependía de la misma cola
+estrangulada que el resto.
+
+Si el push choca con otro workflow en un fichero derivado —`status.json`,
+`observados.json`, el índice de reportes—, el conflicto lo resuelve
+`centinela resolver-derivados`, el mismo comando que usa `impact.yml`: hasta el
+3-oct-2026 eran dos copias en bash con listas distintas
+(`pipelines/common/derivados.py`).
 El porqué de cada una de esas decisiones está en [`el-vigia.md`](el-vigia.md).
 
 ---
@@ -140,7 +156,7 @@ flowchart TB
   SETUP --> CAND["<b>centinela paises-candidatos</b><br/>ISO3 ordenados por el epicentro"]
 
   CAND --> SALIDA4{"código 4:<br/>¿fuera de toda<br/>caja de país?"}
-  SALIDA4 -->|sí| MAR["<b>centinela sin-pais</b><br/>se cierra y queda en observados"]
+  SALIDA4 -->|sí| MAR["<b>centinela sin-pais</b><br/>se cierra como descartado<br/>y entra en observados si cabe<br/>en su ventana de 5 días"]
   SALIDA4 -->|no| LOOP
 
   LOOP["<b>por cada ISO3 candidato</b>"] --> REL{"¿hay Release<br/>exposure-iso3-*?"}
@@ -206,9 +222,22 @@ flowchart TB
   ART --> DEP["deploy-pages"]
   DEP --> PAGES(["sforero77.github.io/CENTINELA"])
 
+  COB & PREP & OG & ART & DEP --> AV{"<b>job: avisar</b><br/>¿publicar salió bien?"}
+  AV -->|sí| CIERRA["cerrar la incidencia<br/>si había una abierta"]
+  AV -->|no| DEDUP{"¿ya hay incidencia?"}
+  DEDUP -->|no| NUEVA["abrir incidencia<br/><b>El despliegue del visor fallo</b>"]
+  DEDUP -->|sí| COMENT["comentar en la existente"]
+
   style DEP fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
   style PAGES fill:#e8eef4,stroke:#3a5a78,color:#1c1b1a
+  style NUEVA fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
+
+Era el único workflow que publica algo al público y el único sin camino de
+fallo: lo despacha un bot tras su push, así que una corrida roja no la abría
+nadie. Desde el 3-oct-2026 el job `avisar` abre una incidencia, la comenta en
+cada fallo siguiente y la cierra en el primer despliegue que sale bien. Una
+corrida cancelada por la siguiente (`cancel-in-progress`) no cuenta.
 
 > **Un push hecho con `GITHUB_TOKEN` no dispara otros workflows.** Por eso todo
 > el que commitea termina llamando a este a mano. Es la causa del incidente de
@@ -235,6 +264,11 @@ flowchart TB
   CMP -->|no| OK(["todo al día"])
   CMP -->|sí| DESF["<b>desfase detectado</b>"]
 
+  R --> LOCAL{"en el repositorio:<br/>¿cada fichero del visor está,<br/>se lee y trae fecha?"}
+  LOCAL -->|no| DESF
+  LOCAL -->|sí| VEJEZ{"¿lleva más que su límite<br/>sin regenerarse?"}
+  VEJEZ -->|sí| DESF
+
   DESF --> REPUB["gh workflow run site.yml"]
   DESF --> DEDUP{"¿ya hay incidencia<br/>con este título?"}
   DEDUP -->|no| NUEVA["abrir incidencia"]
@@ -248,6 +282,11 @@ flowchart TB
 
 La deduplicación y el auto-cierre no son cortesía: una alarma que abre una
 incidencia cada 3 horas deja de leerse a la semana.
+
+Un fichero del visor que **falta** del repositorio, o que no se puede leer —un
+`status.json` con marcadores de conflicto—, es alarma desde el 3-oct-2026.
+Antes la comprobación de vejez lo saltaba con un `continue` y salía del informe:
+era la única que lo vigilaba.
 
 ---
 
@@ -604,7 +643,7 @@ había movido. Este workflow cierra las dos cosas.
 ```mermaid
 flowchart TB
   D(["gh workflow run desde<br/>impact · incendios · exposure_quarterly"]) --> CIF
-  R(["cron 23 10 · respaldo diario<br/><i>cubre el latido y lo que cambie fuera</i>"]) --> CIF
+  R(["cron 23 10 · o el vigía a las 24 h<br/><i>cubre el latido, lo que cambie fuera<br/>y el sismo que P2 no publicó</i>"]) --> CIF
 
   CIF["<b>centinela cifras</b><br/>reescribe lo marcado en los documentos<br/>desde manifests y catálogo"] --> CAMBIO{"¿cambió algo?"}
   CAMBIO -->|sí| PUSH["commit P6 y push a main"]
@@ -629,7 +668,15 @@ flowchart TB
 Quién lo despacha lo vigila `tests/unit/test_el_visor_se_republica.py`: todo
 workflow que empuja tiene que despacharlo o declarar en `EXENTOS` por qué no.
 El latido del vigía está exento —late varias veces al día y solo mueve el
-estado— y lo cubre el cron.
+estado— y lo cubre la corrida diaria, que el vigía despacha por edad además del
+cron.
+
+La corrida diaria es también la que ve **el sismo que no llegó a reporte**:
+`impact.yml` solo despacha este workflow cuando publica, así que si P2 muere
+antes —o su despacho no sale—, lo único que corre
+`test_ningun_evento_se_queda_sin_reporte.py` es esta pasada. Un evento
+`descartado` por `centinela sin-pais` (mar abierto) no cuenta como atasco: es
+un cierre decidido.
 
 ---
 

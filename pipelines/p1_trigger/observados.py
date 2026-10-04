@@ -179,7 +179,17 @@ def leer(site_dir: Path | None = None) -> list[EventoObservado]:
     except (json.JSONDecodeError, OSError):
         _log.warning("observados.json ilegible; se reconstruye", extra={"context": {}})
         return []
-    return [EventoObservado(**e) for e in datos.get("eventos", []) if isinstance(e, dict)]
+    return eventos_de(datos)
+
+
+def eventos_de(datos: Any) -> list[EventoObservado]:
+    """Los eventos de un `observados.json` ya parseado.
+
+    Aparte de `leer` porque la resolucion de conflictos lee las dos versiones
+    del fichero desde el indice de git, no desde disco.
+    """
+    filas = datos.get("eventos", []) if isinstance(datos, dict) else []
+    return [EventoObservado(**e) for e in filas if isinstance(e, dict)]
 
 
 def write_observados(

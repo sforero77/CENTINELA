@@ -76,6 +76,13 @@ def test_ningun_evento_en_vuelo_lleva_horas_sin_reporte() -> None:
         f"{eid} (M{d['mag']}, {_horas(d['origen_utc']):.0f} h, estado {d['estado']}): {d['lugar']}"
         for eid, d in _estados()
         if eid not in HUECOS_HISTORICOS
+        # `descartado` es un cierre decidido, no un atasco: solo lo escribe
+        # `centinela sin-pais`, para un epicentro en mar abierto donde un reporte
+        # es imposible. Sin esta excepcion el primer sismo en mar abierto ponia
+        # en rojo `datos.yml` a las seis horas y abria una incidencia que no se
+        # podia cerrar. Que solo lo escriba ese comando lo vigila la prueba de
+        # abajo.
+        and d["estado"] != "descartado"
         and not _tiene_reporte(eid)
         and _horas(d["origen_utc"]) > MAX_HORAS_SIN_REPORTE
     ]
@@ -83,6 +90,25 @@ def test_ningun_evento_en_vuelo_lleva_horas_sin_reporte() -> None:
     assert not atascados, "hay sismos detectados y sin reporte publicado:\n  " + "\n  ".join(
         atascados
     )
+
+
+def test_solo_sin_pais_descarta_un_evento() -> None:
+    """La excepcion de arriba solo vale mientras `descartado` signifique mar abierto.
+
+    Si otro camino empezara a descartar eventos —un filtro, un reintento que se
+    rinde—, esos sismos saldrian de esta guardia sin que nadie lo decidiera. Se
+    buscan las transiciones a `DESCARTADO` en el codigo, sin comentarios.
+    """
+    raiz = RAIZ / "pipelines"
+    escriben = sorted(
+        str(p.relative_to(RAIZ)).replace("\\", "/")
+        for p in raiz.rglob("*.py")
+        for linea in p.read_text(encoding="utf-8").splitlines()
+        if not linea.lstrip().startswith("#")
+        and "transition(EventStatus.DESCARTADO" in linea.replace(" ", "")
+    )
+
+    assert escriben == ["pipelines/cli.py"], escriben
 
 
 def test_todo_lo_publicado_tiene_su_reporte() -> None:

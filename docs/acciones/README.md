@@ -20,10 +20,10 @@ una cuenta a mano se desincroniza cada vez que entra un workflow.
 |---|---|---|
 | `trigger.yml` | `repository_dispatch` (5 min) + cron 30 min | **El vigía.** Revisa el feed de USGS, publica latido y observados |
 | `impact.yml` | `repository_dispatch: centinela-evento` + manual | P2 + P3: calcula el impacto y emite el reporte |
-| `site.yml` | push a `site/` o `reports/` + manual | Publica el visor en GitHub Pages |
+| `site.yml` | push a `site/` o `reports/` + manual | Publica el visor en GitHub Pages; si el despliegue muere abre una incidencia que se cierra sola |
 | `incendios.yml` | cron cada 6 h | P5: focos activos de FIRMS |
 | `frescura.yml` | cron cada 3 h | ¿La página publicada va al día con el repositorio? |
-| `datos.yml` | tras cada publicación + cron diario | **El guardia de los datos.** Regenera las cifras de los documentos, corre la suite y el visor sobre `main` y abre incidencia si algo no cuadra |
+| `datos.yml` | tras cada publicación + cron diario + el vigía a las 24 h | **El guardia de los datos.** Regenera las cifras de los documentos, corre la suite y el visor sobre `main` y abre incidencia si algo no cuadra |
 | `repaso.yml` | cron diario | RF-04 más allá del feed: eventos con versión de producto más nueva |
 | `exposure_quarterly.yml` | cron trimestral + semanal | P0: reconstruye el activo de exposición. Cada martes, solo los que van atrás de Overture o tienen la reconstrucción fallida; un insumo republicado se acepta si el activo nuevo se parece al publicado |
 | `rezago.yml` | cron semanal (lunes) | ¿Algún reporte publicado se quedó atrás de sus fuentes? Lo re-emite solo |
@@ -47,6 +47,7 @@ flowchart TB
   TRIG -->|"si lleva &gt;3 h"| FRE["frescura.yml"]
   TRIG -->|"si lleva &gt;6 h"| INC["incendios.yml"]
   TRIG -->|"si lleva &gt;24 h"| REP["repaso.yml"]
+  TRIG -->|"si lleva &gt;24 h"| DAT
   TRIG -->|"si commiteó"| SIT["site.yml"]
 
   IMP --> SIT

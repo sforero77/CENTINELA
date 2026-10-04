@@ -218,8 +218,8 @@ que hace el activo. Así la única diferencia entre las dos cifras es lo que cad
 uno metió en la celda, no cómo se recortó el mapa. Dos cosas salen de ahí:
 
 1. **Cuántas celdas evaluadas faltan del activo.** Cualquier valor mayor que
-   cero es un hueco de cobertura, y el comando sale con código 2 para que un
-   workflow pueda pararse. Es la verificación de cobertura más exigente que se
+   cero es un hueco de cobertura, y el comando sale con código 7 —uno propio,
+   que no se confunde con un error de uso— para que un workflow pueda pararse. Es la verificación de cobertura más exigente que se
    le puede hacer al activo, porque la lista de celdas la pone otro.
 2. **Qué fracción de lo expuesto resultó dañada**, en cada zona. Es la respuesta
    corta a por qué una cifra de exposición no se lee como una de daño.

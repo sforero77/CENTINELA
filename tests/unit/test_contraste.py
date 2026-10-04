@@ -115,3 +115,71 @@ def test_no_se_duplica_el_prefijo_ni_se_toca_una_ruta_local() -> None:
     assert ruta_gdal("/vsicurl/https://x/y.gpkg") == "/vsicurl/https://x/y.gpkg"
     assert ruta_gdal("/datos/local.gpkg") == "/datos/local.gpkg"
     assert ruta_gdal("C:/datos/local.gpkg") == "C:/datos/local.gpkg"
+
+
+# --- El codigo de salida del hallazgo tiene que ser suyo --------------------
+
+
+def test_el_codigo_de_las_celdas_sin_activo_no_es_el_de_argparse() -> None:
+    """Hallazgo #76 de la auditoria de septiembre de 2026.
+
+    `contraste` salia con 2 si habia celdas sin activo, y `contraste.yml`
+    traducia el 2 a un aviso en verde. Pero argparse sale con 2 ante cualquier
+    error de uso: una flag mal escrita al despachar se publicaba como «hay
+    celdas evaluadas que el activo no cubre» sin haber contrastado nada.
+    """
+    from pipelines import cli
+
+    with pytest.raises(SystemExit) as uso:
+        cli.main(["contraste", "dano.gpkg", "--flag-que-no-existe"])
+
+    assert uso.value.code == 2, "argparse cambio de codigo: revisa esta prueba"
+    assert uso.value.code != cli.EXIT_CELDAS_SIN_ACTIVO
+    assert cli.EXIT_CELDAS_SIN_ACTIVO not in {
+        cli.EXIT_ACTIVO_DE_OTRO_PAIS,
+        cli.EXIT_ORIGEN_CAIDO,
+        cli.EXIT_RELEASE_CADUCADO,
+        cli.EXIT_INSUMO_CAMBIADO,
+    }
+
+
+def test_el_comando_sale_con_su_codigo_cuando_faltan_celdas(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """El hallazgo se devuelve con el codigo propio, no con el 2."""
+    import argparse
+
+    from pipelines import cli
+
+    monkeypatch.setattr("pipelines.p2_impact.exposure_join.connect", lambda: object())
+    monkeypatch.setattr("pipelines.p0_exposure.overture_h3.ensure_httpfs", lambda con: None)
+    monkeypatch.setattr(
+        "pipelines.p2_impact.contraste.contrastar",
+        lambda con, **kw: _resultado(celdas_sin_activo=3),
+    )
+    args = argparse.Namespace(
+        fuente="dano.gpkg",
+        exposure="x.parquet",
+        etiqueta="prueba",
+        crs="EPSG:4326",
+        columna="damaged",
+        salida="",
+    )
+
+    assert cli._cmd_contraste(args) == cli.EXIT_CELDAS_SIN_ACTIVO
+
+
+def test_el_workflow_solo_perdona_el_codigo_del_hallazgo() -> None:
+    """`contraste.yml` tiene que perdonar el codigo del hallazgo y ningun otro."""
+    import re
+    from pathlib import Path
+
+    from pipelines import cli
+
+    wf = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "contraste.yml"
+    lineas = [
+        x for x in wf.read_text(encoding="utf-8").splitlines() if not x.lstrip().startswith("#")
+    ]
+    perdonados = re.findall(r'"\$CODIGO" = "(\d+)"', "\n".join(lineas))
+
+    assert perdonados == [str(cli.EXIT_CELDAS_SIN_ACTIVO)], perdonados

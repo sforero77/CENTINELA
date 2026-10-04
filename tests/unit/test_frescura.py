@@ -353,9 +353,11 @@ def test_un_fichero_congelado_no_desfasa_y_aun_asi_esta_mal(tmp_path: Path) -> N
 
     _escribir(tmp_path, "incendios.json", "2026-08-24T00:00:00Z")
     congelados = revisar_vejez(site_dir=tmp_path, ahora=datetime(2026, 8, 27, tzinfo=UTC))
+    incendios = next(c for c in congelados if c.fichero == "incendios.json")
 
-    assert congelados[0].preocupa
-    assert congelados[0].horas == pytest.approx(72.0)
+    assert isinstance(incendios, Congelado)
+    assert incendios.preocupa
+    assert incendios.horas == pytest.approx(72.0)
 
 
 def test_un_retraso_normal_no_dispara_la_alarma(tmp_path: Path) -> None:
@@ -368,11 +370,69 @@ def test_un_retraso_normal_no_dispara_la_alarma(tmp_path: Path) -> None:
     """
     from pipelines.common.frescura import raise_if_stale, revisar_vejez
 
-    _escribir(tmp_path, "status.json", "2026-08-27T00:00:00Z")
+    for fichero in FICHEROS_CON_FECHA:
+        _escribir(tmp_path, fichero, "2026-08-27T00:00:00Z")
     congelados = revisar_vejez(site_dir=tmp_path, ahora=datetime(2026, 8, 27, 7, tzinfo=UTC))
 
-    assert not congelados[0].preocupa
+    assert not any(c.preocupa for c in congelados)
     raise_if_stale(list(congelados))
+
+
+# --- Lo que callaba: un fichero que falta o no se puede leer ----------------
+
+
+def test_un_fichero_del_visor_que_desaparece_es_la_alarma(tmp_path: Path) -> None:
+    """Hallazgo #157 de la auditoria de septiembre de 2026.
+
+    `revisar_vejez` hacia `continue` si el fichero no estaba. Un
+    `observados.json` borrado por un commit dejaba la capa sin pintar en la
+    pagina publicada, y la unica alarma que miraba ese fichero lo sacaba del
+    informe: corrida en verde, una linea menos y nadie que la echara de menos.
+    """
+    from pipelines.common.frescura import Ilegible, revisar_vejez
+
+    _escribir(tmp_path, "status.json", "2026-08-27T00:00:00Z")
+    _escribir(tmp_path, "incendios.json", "2026-08-27T00:00:00Z")
+    hallazgos = revisar_vejez(site_dir=tmp_path, ahora=datetime(2026, 8, 27, 1, tzinfo=UTC))
+
+    perdidos = [h for h in hallazgos if isinstance(h, Ilegible)]
+    assert [p.fichero for p in perdidos] == ["observados.json"]
+    assert perdidos[0].preocupa
+    with pytest.raises(PaginaDesactualizadaError, match=r"observados\.json"):
+        raise_if_stale(list(hallazgos))
+
+
+@pytest.mark.parametrize(
+    "contenido",
+    [
+        # Lo que dejo un rebase mal resuelto en `main` el 2-sep-2026.
+        '<<<<<<< HEAD\n{"generado_utc": "2026-09-02T20:00:00Z"}\n=======\n{}\n>>>>>>> otro\n',
+        '{"latidos": []}',
+        "[]",
+    ],
+    ids=["marcadores-de-conflicto", "sin-fecha", "no-es-un-objeto"],
+)
+def test_un_status_ilegible_no_desaparece_del_informe(tmp_path: Path, contenido: str) -> None:
+    """Hallazgo #79 de la auditoria de septiembre de 2026.
+
+    El `except json.JSONDecodeError: continue` se tragaba el error sin log y
+    sin hallazgo. Un `status.json` corrupto es exactamente el que el visor no
+    puede leer, y salia del informe en vez de encabezarlo.
+    """
+    from pipelines.common.frescura import Ilegible, revisar_vejez
+
+    for fichero in FICHEROS_CON_FECHA:
+        _escribir(tmp_path, fichero, "2026-08-27T00:00:00Z")
+    (tmp_path / "status.json").write_text(contenido, encoding="utf-8")
+
+    hallazgos = revisar_vejez(site_dir=tmp_path, ahora=datetime(2026, 8, 27, 1, tzinfo=UTC))
+    status = next(h for h in hallazgos if h.fichero == "status.json")
+
+    assert isinstance(status, Ilegible)
+    assert status.preocupa
+    assert "ALERTA  status.json" in resumen(list(hallazgos))
+    with pytest.raises(PaginaDesactualizadaError):
+        raise_if_stale(list(hallazgos))
 
 
 def test_cada_fichero_publicado_tiene_su_limite() -> None:
