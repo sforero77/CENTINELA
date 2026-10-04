@@ -11,6 +11,25 @@ el sistema pueda afirmar «esto habría salido a las 08:3X del 10 de agosto».
 
 ## Cómo se obtuvieron
 
+Se sacaron a mano con `curl`. Desde el 3-oct-2026 lo hace un comando, y con los
+mismos nombres que leen las pruebas:
+
+```bash
+uv run --extra dev python scripts/freeze_event.py us6000tjl2 \
+    --out tests/fixtures/golden/choco_2026_08_10
+```
+
+Escribe `detail_superseded.json` recortado, `cont_mmi_v<N>.json` del ShakeMap
+vigente, `feed_reconstruido.json`, y dos manifiestos de procedencia
+(`congelado.json`, `hashes.json`). Antes escribía un `detail.json` que no leía
+nadie y bajaba todos los contenidos de todas las versiones; lo fija
+`tests/unit/test_congelar_evento.py`, que corre el script sin red y compara su
+salida byte a byte con lo versionado aquí. `exposure_recortado.parquet` sale
+del activo del país con `scripts/fixture_golden.py`, y `pager_exposures.json`
+se empareja a mano con su ShakeMap (lo cuenta su `.origen.json`).
+
+Los comandos originales, por si hay que comprobar algo contra FDSN a pelo:
+
 ```bash
 FD="https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson"
 

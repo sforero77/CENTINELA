@@ -193,6 +193,22 @@ infraestructura**: depende de cuándo publique USGS. Mientras no se decida
 medirlo contra el ShakeMap en vez de contra el origen, el objetivo se declara
 aquí como lo que es: no cumplido.
 
+### El peso del visor en 3G
+
+RNF-05 tiene dos mitades. La del reporte —markdown y mapa por debajo de 500 KB—
+se cumple y la fijan dos pruebas de `tests/integration/test_report_bundle.py`.
+**La del visor —menos de 3 MB de carga inicial— no se cumple.** Medido el
+3-oct-2026 en el navegador, al abrir la página en modo sismos: lo que sirve el
+propio sitio cabe holgado, pero las teselas del mapa base de OpenFreeMap a
+zoom 2 pesan por sí solas más que el presupuesto entero.
+
+Hasta esa fecha las únicas pruebas que nombraban RNF-05 eran las dos del
+reporte, y leídas juntas parecían decir que el requisito se cumplía entero (lo
+marcó la auditoría del 5-sep, hallazgo 136). Ahora la mitad del visor la mide
+`tests/visor/test_el_visor_pinta.py::test_la_carga_inicial_cabe_en_el_presupuesto_de_rnf05`,
+marcada `xfail` estricta: el día que quepa, se pone roja y obliga a quitar la
+marca y esta sección.
+
 ### La corrección de una cifra publicada
 
 Los asserts de §6.4 y el contraste con evaluación de daño externa cubren lo
