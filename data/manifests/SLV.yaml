@@ -179,7 +179,7 @@ sources:
     hdx_dataset: hotosm_slv_health_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    insumos_sha256: "b037c16a81c81abc32ec9104effec65862a4fcba3f9d70f7585e9d66646d29e7"
+    insumos_sha256: "a88ccac08d9560a7c14b8a741698af6ff152465b1723614b5df22e874f15718c"
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
       Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital
@@ -195,7 +195,7 @@ sources:
     hdx_dataset: hotosm_slv_education_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    insumos_sha256: "35df6b530a429ac7f1ff2d0987e04151c6673f971536e72f0966e510664b1f24"
+    insumos_sha256: "0e59b3597fab5172512c134102ec8fb290822a4cfb9f5323ea8c9364551db68f"
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover
