@@ -585,7 +585,9 @@ def digest_de_insumos(descargados: Iterable[Descargado]) -> str:
     return hashlib.sha256("\n".join(lineas).encode("utf-8")).hexdigest()
 
 
-def _verificar_insumos(source: Source, descargados: Sequence[Descargado]) -> None:
+def _verificar_insumos(
+    source: Source, descargados: Sequence[Descargado], *, aceptar_cambio: bool = False
+) -> None:
     """Compara lo que llego contra lo que el manifest fijo. Falla si difiere.
 
     Esta es la puerta que le faltaba al sistema. El caso real: un dataset de
@@ -593,6 +595,13 @@ def _verificar_insumos(source: Source, descargados: Sequence[Descargado]) -> Non
     a un pais entero fuera durante horas, y el fallo aparecio al final de la
     cadena disfrazado de error de geometria. Con el digest fijado aparece aqui,
     a los minutos de empezar, diciendo exactamente que fuente se movio.
+
+    ``aceptar_cambio`` es para la reconstruccion desatendida. El 1-oct-2026 HOT
+    y HDX republicaron sedes de salud y limites de seis paises y la puerta los
+    paro a todos esperando a una persona que no llego. Con la bandera el build
+    sigue y el cambio queda anotado en ``medicion.json`` (``fijado_antes``);
+    lo que decide si el activo se publica pasa a ser la comparacion con el
+    ultimo publicado (`comparar_mediciones`), no una espera.
     """
     if not descargados:
         if source.se_lee_en_remoto:
@@ -632,6 +641,20 @@ def _verificar_insumos(source: Source, descargados: Sequence[Descargado]) -> Non
                 "context": {
                     "source": source.id,
                     "insumos_sha256": medido,
+                    "ficheros": len(descargados),
+                }
+            },
+        )
+        return
+
+    if medido != source.insumos_sha256 and aceptar_cambio:
+        _log.warning(
+            "insumo republicado por el tercero; se construye con el nuevo y se anota",
+            extra={
+                "context": {
+                    "source": source.id,
+                    "fijado": source.insumos_sha256,
+                    "medido": medido,
                     "ficheros": len(descargados),
                 }
             },
@@ -861,12 +884,14 @@ def download_manifest(
     destino: Path,
     *,
     fetcher: HttpFetcher | None = None,
+    aceptar_insumos_nuevos: bool = False,
 ) -> list[Descargado]:
     """Descarga todo lo que el manifest declara y devuelve el inventario.
 
     Cada fuente se verifica contra su ``insumos_sha256`` en cuanto sus ficheros
     estan en disco, no al final: si un tercero republico algo, el build se
-    detiene ahi y no despues de dos horas de agregacion.
+    detiene ahi y no despues de dos horas de agregacion. Salvo con
+    ``aceptar_insumos_nuevos``, ver `_verificar_insumos`.
 
     Y antes de la primera descarga se pregunta a cada origen si esta vivo, que
     son unos segundos y ahorra las horas de descubrirlo bajando.
@@ -885,7 +910,7 @@ def download_manifest(
     inventario: list[Descargado] = []
     for source in manifest.sources:
         de_la_fuente = _descargar_fuente(source, destino, bbox=bbox, fetcher=cliente)
-        _verificar_insumos(source, de_la_fuente)
+        _verificar_insumos(source, de_la_fuente, aceptar_cambio=aceptar_insumos_nuevos)
         inventario.extend(de_la_fuente)
     return inventario
 
@@ -914,12 +939,18 @@ def resumen_de_insumos(manifest: Manifest, inventario: Sequence[Descargado]) -> 
             # Se declara igual: que no toque el disco no lo saca del activo.
             resumen[source.id] = {"remoto": True, "vintage": source.vintage}
             continue
+        digest = digest_de_insumos(de_la_fuente)
         resumen[source.id] = {
-            "insumos_sha256": digest_de_insumos(de_la_fuente),
+            "insumos_sha256": digest,
             "vintage": source.vintage,
             "bytes": sum(d.bytes for d in de_la_fuente),
             "ficheros": {
                 d.path.name: d.sha256 for d in sorted(de_la_fuente, key=lambda x: x.path.name)
             },
         }
+        # El rastro de un insumo republicado que se acepto: que digest fijaba el
+        # manifest. `fijar-insumos --aceptar-cambiados` solo reemplaza los que
+        # traen esta marca, y solo si coincide con lo que el manifest dice hoy.
+        if source.insumos_sha256 and source.insumos_sha256 != digest:
+            resumen[source.id]["fijado_antes"] = source.insumos_sha256
     return resumen

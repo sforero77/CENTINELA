@@ -955,6 +955,7 @@ def build_country(
     out_dir: Path,
     con: Any | None = None,
     liberar_rasters: bool = False,
+    aceptar_insumos_nuevos: bool = False,
 ) -> Path:
     """Construye el activo completo de un pais, de la descarga al parquet.
 
@@ -983,7 +984,9 @@ def build_country(
     trabajo = out_dir / "descargas" / plan.iso3
     fetcher = HttpFetcher(timeout_s=600.0)
 
-    inventario = download_manifest(plan.manifest, trabajo, fetcher=fetcher)
+    inventario = download_manifest(
+        plan.manifest, trabajo, fetcher=fetcher, aceptar_insumos_nuevos=aceptar_insumos_nuevos
+    )
     insumos = resumen_de_insumos(plan.manifest, inventario)
     por_capa: dict[str, list[Path]] = {}
     for item in inventario:

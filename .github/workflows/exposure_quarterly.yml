@@ -2,12 +2,16 @@ name: P0 · Activo de exposicion (trimestral)
 
 # El pais va en el nombre de la corrida: con varios paises en paralelo, la
 # lista de Actions es indistinguible sin esto.
-run-name: "Activo de exposicion — ${{ inputs.iso3 || 'todos los publicados' }}"
+run-name: "Activo de exposicion — ${{ inputs.iso3 || (github.event.schedule == '41 6 * * 2' && 'los atrasados') || 'todos los publicados' }}"
 
 on:
   schedule:
-    # Dia 1 de enero, abril, julio y octubre, 06:00 UTC.
+    # Dia 1 de enero, abril, julio y octubre, 06:00 UTC: todos los paises.
     - cron: "0 6 1 1,4,7,10 *"
+    # Martes, 06:41 UTC: solo los que van atras. Overture publica release
+    # mensual y conserva dos, asi que un trimestre es mas largo que la vida del
+    # insumo; y un pais que fallo no puede esperar tres meses a reintentarse.
+    - cron: "41 6 * * 2"
   workflow_dispatch:
     inputs:
       iso3:
@@ -37,6 +41,27 @@ jobs:
     outputs:
       paises: ${{ steps.lista.outputs.paises }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo
+        run: uv sync --python 3.12 --no-dev
+
+      # LA REVISION SEMANAL RECONSTRUYE SOLO LO QUE VA ATRAS.
+      #
+      # Dos motivos, y los dos se arreglaban a mano hasta el 3-oct-2026:
+      # - Overture saco un release nuevo y el manifest fija el anterior. El paso
+      #   al nuevo lo hace el job `construir` en el runner, y el manifest solo
+      #   se commitea si el activo nuevo se publico.
+      # - Un pais tiene abierta su incidencia «No se pudo reconstruir». Se
+      #   reintenta cada semana: si el tercero arreglo su dato, o si el fallo era
+      #   pasajero, la incidencia se cierra sola sin que nadie lo pida.
+      # Una lista vacia aqui es legitima —no habia nada atrasado— y no un fallo.
       - name: Decidir que paises se reconstruyen
         id: lista
         env:
@@ -45,7 +70,20 @@ jobs:
           # Via env y siempre citada: `inputs.iso3` es texto libre y no debe
           # poder convertirse en comando al interpolarse en un `run`.
           ISO3: ${{ inputs.iso3 }}
+          SEMANAL: ${{ github.event.schedule == '41 6 * * 2' }}
         run: |
+          if [ "$SEMANAL" = "true" ]; then
+            ATRASADOS=$(uv run centinela overture-al-dia --atrasados)
+            FALLIDOS=$(gh issue list --state open --limit 100 --json title \
+              --jq '[.[] | .title | select(startswith("No se pudo reconstruir el activo de ")) | split(" ") | last]')
+            export ATRASADOS FALLIDOS
+            PAISES=$(uv run python -c 'import json, os; print(json.dumps(sorted(set(json.loads(os.environ["ATRASADOS"])) | set(json.loads(os.environ["FALLIDOS"] or "[]")))))')
+            echo "atrasados respecto de Overture: $ATRASADOS"
+            echo "con la reconstruccion fallida: $FALLIDOS"
+            echo "paises=$PAISES" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           if [ -n "$ISO3" ]; then
             echo "$ISO3" | grep -Eq '^[A-Z]{3}$' || {
               echo "::error::ISO3 invalido: $ISO3"; exit 1;
@@ -80,6 +118,7 @@ jobs:
 
   construir:
     needs: elegir
+    if: needs.elegir.outputs.paises != '[]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -126,6 +165,15 @@ jobs:
       - name: Instalar nucleo + geo
         run: uv sync --python 3.12 --extra geo
 
+      # AL ULTIMO RELEASE DE OVERTURE, EN EL RUNNER.
+      #
+      # Mueve url, vintage y `manifest_id` y registra la receta nueva, pero solo
+      # en esta copia: el commit va en «Anotar la medicion», despues de publicar
+      # el activo. Subir la version en `main` antes de tener el activo hace que
+      # `rezago` re-emita los reportes contra el activo viejo.
+      - name: Pasar al ultimo release de Overture
+        run: uv run centinela overture-al-dia "$ISO3" --escribir
+
       - name: Validar manifest antes de descargar nada
         run: uv run centinela lint-manifests
 
@@ -159,18 +207,39 @@ jobs:
       # codigo 4 —origen caido—; un activo que no pasa los asserts de calidad no
       # se arregla volviendo a intentarlo, y repetirlo tres veces solo retrasaria
       # el diagnostico media hora.
+      #
+      # UN INSUMO REPUBLICADO NO ESPERA A NADIE.
+      #
+      # El codigo 6 es que un tercero republico una fuente que el manifest fija
+      # por digest. El 1-oct-2026 paro asi a seis paises, y la incidencia pedia
+      # a una persona comparar y decidir; nadie lo hizo. Ahora se reconstruye en
+      # el acto con `--aceptar-insumos-nuevos` —el cambio queda anotado en
+      # `medicion.json`— y quien decide es el paso siguiente, que compara el
+      # activo nuevo con el publicado capa por capa.
       - name: Construir exposure_h3
+        id: construir
         run: |
           ESPERAS="600 1800"
           INTENTO=0
+          ACEPTAR=""
           for ESPERA in $ESPERAS ""; do
             INTENTO=$((INTENTO + 1))
             set +e
-            uv run centinela country "$ISO3" --liberar-rasters
+            uv run centinela country "$ISO3" --liberar-rasters $ACEPTAR
             CODIGO=$?
             set -e
             if [ "$CODIGO" -eq 0 ]; then
               exit 0
+            fi
+            if [ "$CODIGO" -eq 6 ] && [ -z "$ACEPTAR" ]; then
+              echo "::warning::$ISO3: un tercero republico una fuente fijada. Se reconstruye con la nueva y se compara con el activo publicado."
+              echo "republicado=true" >> "$GITHUB_OUTPUT"
+              ACEPTAR="--aceptar-insumos-nuevos"
+              set +e
+              uv run centinela country "$ISO3" --liberar-rasters $ACEPTAR
+              CODIGO=$?
+              set -e
+              [ "$CODIGO" -eq 0 ] && exit 0
             fi
             if [ "$CODIGO" -eq 5 ]; then
               echo "::error::$ISO3: el release de Overture que fija su manifest ya no existe. Actualizalo en data/manifests/$ISO3.yaml y relanza este workflow."
@@ -187,6 +256,34 @@ jobs:
           done
           echo "::error::$ISO3: el origen sigue sin contestar tras $INTENTO intentos."
           exit 4
+
+      # EL ACTIVO NUEVO SE PARECE AL PUBLICADO, O NO SE PUBLICA.
+      #
+      # Corre en toda reconstruccion, no solo cuando hubo un insumo republicado:
+      # un release de Overture nuevo tambien cambia el activo, y desde que el
+      # trimestral es desatendido nadie mira el resultado antes de que salga.
+      # Si una capa se mueve mas de lo que dos versiones legitimas explican
+      # —ver `pipelines/p0_exposure/comparar.py`— el paso falla, no se publica
+      # nada, el activo anterior sigue sirviendo y la incidencia lo cuenta.
+      - name: Comparar con el activo publicado
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NUEVA=$(find data/build -name 'medicion.json' -type f | head -1)
+          PREFIJO="exposure-$(echo "$ISO3" | tr '[:upper:]' '[:lower:]')-"
+          ANTERIOR_TAG=$(gh release list --limit 200 --json tagName,createdAt \
+            --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))] | sort_by(.createdAt) | last | .tagName // empty")
+          if [ -z "$ANTERIOR_TAG" ]; then
+            echo "::notice::$ISO3 no tiene activo publicado: no hay con que comparar"
+            exit 0
+          fi
+          mkdir -p data/anterior
+          if ! gh release download "$ANTERIOR_TAG" -p medicion.json -D data/anterior --clobber; then
+            echo "::notice::$ANTERIOR_TAG no publica medicion.json: no hay con que comparar"
+            exit 0
+          fi
+          echo "comparando con $ANTERIOR_TAG"
+          uv run centinela comparar-medicion data/anterior/medicion.json "$NUEVA"
 
       - name: Publicar Release versionado
         env:
@@ -249,10 +346,14 @@ jobs:
             exit 1
           fi
           uv run centinela calibrar --escribir "$MEDICION"
+          # Los digests de lo que entro, fijados en el manifest. Con
+          # `--aceptar-cambiados` reemplaza tambien los republicados: a estas
+          # alturas el activo construido con ellos ya paso la comparacion.
+          uv run centinela fijar-insumos "$ISO3" --medicion "$MEDICION" --aceptar-cambiados
 
           git config user.name "centinela-bot"
           git config user.email "noreply@users.noreply.github.com"
-          git add "data/manifests/$ISO3.yaml"
+          git add "data/manifests/$ISO3.yaml" "data/manifests/recetas/$ISO3.json"
           if git diff --staged --quiet; then
             echo "el manifest de $ISO3 ya estaba al dia"
             exit 0
@@ -370,14 +471,18 @@ jobs:
 
           CUERPO=$(cat <<'TXT'
           El activo de exposicion de este pais no se pudo reconstruir. Busca en
-          el log de la corrida cual de estas dos es:
+          el log de la corrida cual de estas es:
 
-          **`InsumoCambiadoError`: un tercero republico una fuente.** La descarga
-          fue bien y lo que llego no tiene la huella que fija el manifest (paso
-          el 1-oct-2026 con las sedes de salud de HOT y HDX en cinco paises). Es
-          el guardia de reproducibilidad haciendo su trabajo: compara con el
-          bloque `insumos` de la `medicion.json` del Release anterior y, si el
-          cambio es legitimo, fija el digest nuevo con `centinela fijar-insumos`.
+          **«el activo nuevo se aleja demasiado del publicado».** Se construyo,
+          pero alguna capa se movio mas de lo que dos versiones legitimas de sus
+          fuentes explican (el paso «Comparar con el activo publicado» dice cual
+          y cuanto). No se publico nada. Si un tercero republico una fuente
+          —el log lo avisa—, lo mas probable es que el dato nuevo venga roto;
+          si el cambio es real, ajusta su margen en
+          `pipelines/p0_exposure/comparar.py`.
+
+          Un insumo republicado por si solo **ya no para la reconstruccion**: se
+          construye con el nuevo y, si la comparacion pasa, su digest se fija solo.
 
           **Codigo 5: caduco el release de Overture.** Overture publica release
           mensual y conserva dos, asi que el que fija el manifest deja de existir

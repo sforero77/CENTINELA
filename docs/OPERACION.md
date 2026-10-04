@@ -15,7 +15,7 @@ Cuatro cosas caducan solas, sin avisar. Están por orden de cercanía.
 
 | Cada | Qué caduca | Qué pasa si se pasa | Quién avisa |
 |---|---|---|---|
-| **~2 meses** | El release de Overture fijado en los manifests | `make country` deja de poder reconstruir: Overture solo conserva **dos** releases y la URL desaparece | La prueba nocturna de contrato abre un issue |
+| **~2 meses** | El release de Overture fijado en los manifests | `make country` deja de poder reconstruir: Overture solo conserva **dos** releases y la URL desaparece | Nadie hace falta: cada martes `exposure_quarterly.yml` pasa al último release los países que van atrás, y el manifest se commitea solo si el activo nuevo se publicó. La prueba nocturna de contrato abre un issue si aun así caduca |
 | **60 días** | Los workflows programados, si no hay actividad en el repo | El trigger **deja de mirar**, en silencio. Es el modo de falla más probable del proyecto | `keepalive.yml` late el día 1 y el 15; healthchecks.io avisa si aun así se cae |
 | **Trimestral** | El activo de exposición | Los datos envejecen; no falla nada | `exposure_quarterly.yml` lo reconstruye solo |
 | **Anual** | Las épocas de GHS-POP y WorldPop | Las cifras se alejan de la realidad | Nadie. Revisar a mano si sale un release nuevo |
@@ -52,10 +52,16 @@ quien opera, no del código:
 Mientras tanto el feed de respaldo `4.5_day` cubre la demora sin perder eventos:
 se detecta tarde, pero no se pierde nada.
 
-**El release de Overture es el más urgente y el menos obvio.** Cuando la prueba
-nocturna abra el issue, hay que actualizar el `vintage` en los manifests de los
-países construidos. No corre prisa para *operar* (el activo publicado sigue
-sirviendo) pero si para *reconstruir*.
+**El release de Overture era el más urgente y el menos obvio.** Desde el
+3-oct-2026 no se actualiza a mano: la revisión de los martes de
+`exposure_quarterly.yml` detecta el release nuevo en el catálogo STAC
+(`centinela overture-al-dia --atrasados`), reconstruye esos países con él,
+compara cada activo con el publicado y solo entonces commitea el manifest con la
+versión subida y su receta registrada en `data/manifests/recetas/`. Lo mismo
+cuando un tercero republica una fuente fijada por digest: se reconstruye con la
+nueva y, si el activo se parece al publicado, el digest se fija solo. Si la prueba
+nocturna abre el issue igualmente, es que esa reconstrucción está fallando:
+mira la incidencia «No se pudo reconstruir el activo de …» del país.
 
 ---
 
