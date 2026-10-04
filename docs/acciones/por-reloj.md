@@ -6,13 +6,13 @@ visor congelado, la trampa del `GITHUB_TOKEN`. Este explica otra cosa, y es la
 que hace falta a las tres de la mañana: **qué corre, qué comprueba, y qué pasa
 cuando la comprobación dice que no**.
 
-Un diagrama por disparador. Quince workflows y diez relojes.
+Un diagrama por disparador. Quince workflows y once relojes.
 Cada diagrama lleva sus puertas de decisión, sus códigos de salida y quién
 recibe la alarma.
 
 Las puertas rojas detienen o avisan; las verdes son el camino que publica.
 
-## Los diez relojes
+## Los once relojes
 
 | Reloj | UTC | Workflow | Qué comprueba | Si falla |
 |---|---|---|---|---|
@@ -27,6 +27,7 @@ Las puertas rojas detienen o avisan; las verdes son el camino que publica.
 | `0 9 5 * *` | día 5, 09:00 | `simulacro.yml` | Que el pipeline no se oxide entre catástrofes | Incidencia automática |
 | `0 7 1,15 * *` | días 1 y 15 | `keepalive.yml` | Que GitHub no apague los crons | — |
 | `0 6 1 1,4,7,10 *` | trimestral | `exposure_quarterly.yml` | Reconstruye el activo de cada país | Incidencia **por país** |
+| `41 6 * * 2` | martes 06:41 | `exposure_quarterly.yml` | ¿Algún país va atrás de Overture o tiene la reconstrucción fallida? Solo esos | Incidencia **por país**, que se cierra sola al reconstruirse |
 
 Y cinco disparadores que no son reloj: `impact.yml` y `site.yml` (los llama
 otro workflow), `ci.yml` y `visor.yml` (push y PR), `contraste.yml` (a mano).
@@ -37,6 +38,7 @@ timeline
   section Relojes fijos
     05h37 : repaso.yml — RF-04 a 90 días
     06h00 : exposure_quarterly.yml — sólo 1 ene/abr/jul/oct
+    06h41 : exposure_quarterly.yml — martes, solo los atrasados
     07h00 : keepalive.yml — sólo días 1 y 15
     07h23 : rezago.yml — sólo lunes
     08h00 : contract_drift.yml — contratos de fuentes
@@ -353,7 +355,9 @@ flowchart TB
 fijan un release de Overture y Overture conserva **dos** —unos dos meses—.
 Cuando ese release desaparece, el país no se puede reconstruir desde sus
 propias fuentes. Es también la razón de que el trimestral reconstruya **todos**
-los países publicados y no uno.
+los países publicados y no uno, y de que cada martes reconstruya además los que
+van atrás del último release: el paso al nuevo ya no espera a que esta prueba
+avise.
 
 ---
 

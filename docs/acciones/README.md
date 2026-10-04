@@ -25,7 +25,7 @@ una cuenta a mano se desincroniza cada vez que entra un workflow.
 | `frescura.yml` | cron cada 3 h | ¿La página publicada va al día con el repositorio? |
 | `datos.yml` | tras cada publicación + cron diario | **El guardia de los datos.** Regenera las cifras de los documentos, corre la suite y el visor sobre `main` y abre incidencia si algo no cuadra |
 | `repaso.yml` | cron diario | RF-04 más allá del feed: eventos con versión de producto más nueva |
-| `exposure_quarterly.yml` | cron trimestral | P0: reconstruye el activo de exposición |
+| `exposure_quarterly.yml` | cron trimestral + semanal | P0: reconstruye el activo de exposición. Cada martes, solo los que van atrás de Overture o tienen la reconstrucción fallida; un insumo republicado se acepta si el activo nuevo se parece al publicado |
 | `rezago.yml` | cron semanal (lunes) | ¿Algún reporte publicado se quedó atrás de sus fuentes? Lo re-emite solo |
 | `contract_drift.yml` | cron diario 08:00 UTC | ¿Cambiaron los contratos de las fuentes? |
 | `simulacro.yml` | cron mensual, día 5 | Ensayo en seco de la cadena (`simulacro`) y sismo mudado sobre población (`poblacion`) |

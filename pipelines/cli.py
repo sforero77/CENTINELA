@@ -184,6 +184,14 @@ EXIT_ORIGEN_CAIDO = 4
 #: release en el manifest, y eso lo decide una persona.
 EXIT_RELEASE_CADUCADO = 5
 
+#: Codigo de salida de "un tercero republico una fuente fijada en el manifest".
+#:
+#: Tampoco se reintenta igual: volver a descargar trae el mismo fichero nuevo.
+#: Lo que hace falta es construir con el y comparar el resultado con el activo
+#: publicado, que es lo que hace `exposure_quarterly.yml` al verlo
+#: (`--aceptar-insumos-nuevos` y despues `comparar-medicion`).
+EXIT_INSUMO_CAMBIADO = 6
+
 
 def _cmd_impact(args: argparse.Namespace) -> int:
     """P2/P3: procesa un evento ya detectado y publica su reporte."""
@@ -223,14 +231,26 @@ def _cmd_impact(args: argparse.Namespace) -> int:
 
 def _cmd_country(args: argparse.Namespace) -> int:
     """P0: reconstruye el activo de exposicion de un pais."""
-    from .p0_exposure.download import OrigenCaidoError, ReleaseCaducadoError
+    from .p0_exposure.download import (
+        InsumoCambiadoError,
+        OrigenCaidoError,
+        ReleaseCaducadoError,
+    )
 
     try:
         out = build_country(
             args.iso3,
             out_dir=Path(args.out or BUILD_DIR),
             liberar_rasters=args.liberar_rasters,
+            aceptar_insumos_nuevos=args.aceptar_insumos_nuevos,
         )
+    except InsumoCambiadoError as exc:
+        _log.error(
+            "un insumo fijado fue republicado, no se construyo nada",
+            extra={"context": {"iso3": args.iso3.upper(), "detalle": str(exc)}},
+        )
+        print(str(exc), file=sys.stderr)
+        return EXIT_INSUMO_CAMBIADO
     except ReleaseCaducadoError as exc:
         # Antes de `OrigenCaidoError` en el orden del `except`: no hereda de el,
         # pero dejarlo debajo invitaria a que alguien lo hiciera heredar y se
@@ -301,7 +321,15 @@ def _cmd_fijar_insumos(args: argparse.Namespace) -> int:
         print(f"No hay manifest para {iso3}: {manifest_path}", file=sys.stderr)
         return 1
 
-    parte = fijar_insumos_en_manifest(manifest_path, digests)
+    # Solo con la bandera, y solo los que el build anoto como republicados:
+    # quien la pasa es el workflow, despues de que `comparar-medicion` dejara
+    # pasar el activo construido con ellos.
+    reemplazar = (
+        {sid: d["fijado_antes"] for sid, d in insumos.items() if d.get("fijado_antes")}
+        if args.aceptar_cambiados
+        else None
+    )
+    parte = fijar_insumos_en_manifest(manifest_path, digests, reemplazar=reemplazar)
     print(f"{manifest_path.name}: {len(digests)} fuentes con digest, {len(remotas)} en remoto")
     for linea in parte:
         print(f"  {linea}")
@@ -310,6 +338,80 @@ def _cmd_fijar_insumos(args: argparse.Namespace) -> int:
     if remotas:
         print(f"  sin digest (se leen en remoto): {', '.join(remotas)}")
     return 1 if any("SIN TOCAR" in linea for linea in parte) else 0
+
+
+def _cmd_comparar_medicion(args: argparse.Namespace) -> int:
+    """Compara el activo recien construido con el publicado, capa por capa.
+
+    Sale con 1 si alguna capa se movio mas de lo que dos versiones legitimas de
+    sus fuentes explican. Ver `p0_exposure/comparar.py`.
+    """
+    from .p0_exposure.comparar import comparar_mediciones, insumos_cambiados
+
+    anterior = json.loads(Path(args.anterior).read_text(encoding="utf-8"))
+    nueva = json.loads(Path(args.nueva).read_text(encoding="utf-8"))
+
+    cambiados = insumos_cambiados(nueva)
+    if cambiados:
+        print(f"insumos republicados en este build: {', '.join(sorted(cambiados))}")
+    problemas = comparar_mediciones(anterior, nueva)
+    for capa, valor in sorted((nueva.get("resumen") or {}).items()):
+        previo = (anterior.get("resumen") or {}).get(capa)
+        print(f"  {capa}: {previo} -> {valor}")
+    if problemas:
+        print("el activo nuevo se aleja demasiado del publicado:", file=sys.stderr)
+        for problema in problemas:
+            print(f"  {problema}", file=sys.stderr)
+        return 1
+    print("el activo nuevo se parece al publicado: se puede publicar")
+    return 0
+
+
+def _cmd_registrar_receta(args: argparse.Namespace) -> int:
+    """Anota en el registro la receta que hoy declara el manifest de un pais."""
+    from .common.recetas import RecetaReescritaError, registrar
+
+    try:
+        print(registrar(args.iso3.upper()))
+    except RecetaReescritaError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    return 0
+
+
+def _cmd_overture_al_dia(args: argparse.Namespace) -> int:
+    """Pasa los manifests al ultimo release de Overture, o dice cuales van atras.
+
+    Con `--atrasados` imprime en JSON los paises cuyo manifest fija un release
+    anterior al ultimo, que es lo que `exposure_quarterly.yml` reconstruye cada
+    semana. Con paises y `--escribir` los mueve —url, vintage y `manifest_id`— y
+    registra la receta nueva. El workflow lo hace **en el runner** antes de
+    construir y solo commitea el manifest despues de publicar el activo: subir
+    la version antes haria que `rezago` re-emitiera contra el activo viejo.
+    """
+    from .common.http import HttpFetcher
+    from .common.recetas import pasar_a_release, release_fijado, ultimo_release_de_overture
+
+    ultimo = ultimo_release_de_overture(HttpFetcher(timeout_s=60.0))
+    paises = [i.upper() for i in args.iso3] or sorted(p.stem for p in MANIFESTS_DIR.glob("*.yaml"))
+
+    if args.atrasados:
+        atrasados = [i for i in paises if release_fijado(i) not in (None, ultimo)]
+        print(json.dumps(atrasados))
+        return 0
+
+    for iso3 in paises:
+        fijado = release_fijado(iso3)
+        if fijado in (None, ultimo):
+            print(f"{iso3}: al dia ({ultimo})")
+            continue
+        if not args.escribir:
+            print(f"{iso3}: fija {fijado}, el ultimo es {ultimo}")
+            continue
+        paso = pasar_a_release(iso3, ultimo)
+        if paso:
+            print(f"{iso3}: {paso.desde} -> {paso.hasta}, ahora {paso.manifest_id}")
+    return 0
 
 
 def _cmd_lint_manifests(args: argparse.Namespace) -> int:
@@ -1094,7 +1196,23 @@ def build_parser() -> argparse.ArgumentParser:
             "usarlo, porque conservarlos es lo que hace barato reanudar"
         ),
     )
+    p_country.add_argument(
+        "--aceptar-insumos-nuevos",
+        action="store_true",
+        help=(
+            "si un tercero republico una fuente fijada, construye con la nueva y "
+            "lo anota en medicion.json en vez de parar. Para la reconstruccion "
+            "desatendida, que despues compara con el activo publicado"
+        ),
+    )
     p_country.set_defaults(func=_cmd_country)
+
+    p_comparar = sub.add_parser(
+        "comparar-medicion", help="compara un activo construido con el publicado"
+    )
+    p_comparar.add_argument("anterior", help="medicion.json del activo publicado")
+    p_comparar.add_argument("nueva", help="medicion.json del recien construido")
+    p_comparar.set_defaults(func=_cmd_comparar_medicion)
 
     p_fijar = sub.add_parser(
         "fijar-insumos",
@@ -1104,7 +1222,28 @@ def build_parser() -> argparse.ArgumentParser:
     p_fijar.add_argument("--dir", help="directorio de manifests")
     p_fijar.add_argument("--out", help="directorio de salida del build")
     p_fijar.add_argument("--medicion", help="ruta explicita a medicion.json")
+    p_fijar.add_argument(
+        "--aceptar-cambiados",
+        action="store_true",
+        help="reemplaza los digests que el build anoto como republicados (fijado_antes)",
+    )
     p_fijar.set_defaults(func=_cmd_fijar_insumos)
+
+    p_receta = sub.add_parser(
+        "registrar-receta", help="anota la receta vigente del manifest en su registro"
+    )
+    p_receta.add_argument("iso3")
+    p_receta.set_defaults(func=_cmd_registrar_receta)
+
+    p_overture = sub.add_parser(
+        "overture-al-dia", help="pasa los manifests al ultimo release de Overture"
+    )
+    p_overture.add_argument("iso3", nargs="*", help="paises; vacio = todos")
+    p_overture.add_argument("--escribir", action="store_true", help="reescribe los manifests")
+    p_overture.add_argument(
+        "--atrasados", action="store_true", help="imprime en JSON los paises que van atras"
+    )
+    p_overture.set_defaults(func=_cmd_overture_al_dia)
 
     p_lint = sub.add_parser("lint-manifests", help="valida licencias y vintages")
     p_lint.add_argument("--dir", help="directorio de manifests")

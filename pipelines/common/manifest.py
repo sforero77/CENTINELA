@@ -266,12 +266,20 @@ _RE_DIGEST = re.compile(r"^(\s*insumos_sha256:\s*)(.*)$")
 _RE_VINTAGE = re.compile(r"^(\s*)vintage:\s*.*$")
 
 
-def fijar_insumos_en_manifest(path: Path, digests: dict[str, str]) -> list[str]:
+def fijar_insumos_en_manifest(
+    path: Path, digests: dict[str, str], *, reemplazar: dict[str, str] | None = None
+) -> list[str]:
     """Escribe los ``insumos_sha256`` medidos dentro del manifest, in situ.
 
     ``digests`` es ``{source_id: digest}``, tal como sale del bloque ``insumos``
     de ``medicion.json``. Devuelve el parte de lo que cambio, una linea por
     fuente tocada.
+
+    ``reemplazar`` es ``{source_id: digest_que_se_fijaba}`` de los insumos
+    republicados que el build acepto y que la comparacion con el activo
+    publicado dejo pasar. Solo esos se pisan, y solo si el manifest sigue
+    fijando exactamente el digest anterior: si alguien lo cambio entre medias,
+    no se adivina cual vale.
 
     EXISTE PARA QUE NADIE COPIE HASHES A MANO. Es la misma razon por la que
     `write_measurement` existe: las cifras del manifest se copiaban del log a
@@ -304,6 +312,9 @@ def fijar_insumos_en_manifest(path: Path, digests: dict[str, str]) -> list[str]:
                 parte.append(f"[{fuente}] fijado {nuevo}")
             elif actual == nuevo:
                 salida.append(linea)
+            elif (reemplazar or {}).get(fuente) == actual:
+                salida.append(f'{m.group(1)}"{nuevo}"')
+                parte.append(f"[{fuente}] reemplazado {actual} -> {nuevo} (republicado)")
             else:
                 salida.append(linea)
                 parte.append(

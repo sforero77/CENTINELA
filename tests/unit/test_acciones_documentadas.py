@@ -29,7 +29,7 @@ EN_PROSA = (
     ("docs/README.md", "Las quince GitHub Actions:"),
     # Entro el 12-sep-2026 diciendo «catorce workflows, quince jobs»: eran
     # dieciocho jobs. La cifra de jobs se quito; la de workflows queda vigilada.
-    ("docs/acciones/por-reloj.md", "Quince workflows y diez relojes."),
+    ("docs/acciones/por-reloj.md", "Quince workflows y once relojes."),
 )
 
 

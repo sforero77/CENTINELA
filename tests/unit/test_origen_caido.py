@@ -267,8 +267,32 @@ def test_un_origen_caido_sale_con_su_propio_codigo(monkeypatch: pytest.MonkeyPat
         raise OrigenCaidoError("Origenes que no contestan: jeodpp.jrc.ec.europa.eu")
 
     monkeypatch.setattr(cli, "build_country", _cae)
-    args = argparse.Namespace(iso3="PER", out=None, liberar_rasters=True)
+    args = argparse.Namespace(
+        iso3="PER", out=None, liberar_rasters=True, aceptar_insumos_nuevos=False
+    )
     assert cli._cmd_country(args) == cli.EXIT_ORIGEN_CAIDO
+
+
+def test_un_insumo_republicado_sale_con_su_propio_codigo(monkeypatch: pytest.MonkeyPatch) -> None:
+    """El 6 es lo que el workflow mira para reconstruir con el insumo nuevo."""
+    import argparse
+
+    from pipelines import cli
+    from pipelines.p0_exposure.download import InsumoCambiadoError
+
+    def _republicado(*_a: object, **_k: object) -> None:
+        raise InsumoCambiadoError("[hotosm_health] el insumo cambio desde que se fijo")
+
+    monkeypatch.setattr(cli, "build_country", _republicado)
+    args = argparse.Namespace(
+        iso3="PAN", out=None, liberar_rasters=True, aceptar_insumos_nuevos=False
+    )
+    assert cli._cmd_country(args) == cli.EXIT_INSUMO_CAMBIADO == 6
+
+    from pipelines.common.paths import REPO_ROOT
+
+    workflow = (REPO_ROOT / ".github" / "workflows" / "exposure_quarterly.yml").read_text("utf-8")
+    assert '[ "$CODIGO" -eq 6 ]' in workflow, "el workflow ya no reacciona al insumo republicado"
 
 
 def test_el_workflow_solo_reintenta_el_origen_caido() -> None:
