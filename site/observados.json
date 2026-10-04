@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-04T15:35:24Z",
+  "generado_utc": "2026-10-04T21:55:55Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -80,17 +80,6 @@
       "origen_utc": "2026-10-01T00:28:22Z",
       "razon": "M4.9 < umbral M5.5",
       "iso3": ""
-    },
-    {
-      "usgs_id": "us6000tyfk",
-      "mag": 4.5,
-      "lon": -75.5906,
-      "lat": 3.8311,
-      "depth_km": 10.0,
-      "lugar": "15 km al SO de San Antonio, Colombia",
-      "origen_utc": "2026-09-29T21:50:29Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "COL"
     }
   ]
 }
