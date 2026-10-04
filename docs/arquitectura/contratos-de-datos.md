@@ -107,14 +107,22 @@ Contrato formal: [`schemas/event-state.schema.json`](../../schemas/event-state.s
 
 `report.json` sigue [`schemas/report-1.0.schema.json`](../../schemas/report-1.0.schema.json)
 y sus claves raíz son: `schema`, `event`, `inputs`, `preliminar`, `radios`,
-`backtest`, `totales`, `top_municipios`, `incertidumbre`, `descargas`,
-`changelog`, `disclaimers`, `generado_utc`, `pipeline_version`.
+`backtest`, `totales`, `top_municipios`, `ground_failure_usgs`,
+`incertidumbre`, `descargas`, `changelog`, `licencia`, `disclaimers`,
+`generado_utc`, `pipeline_version`.
+
+`radios` no es solo de los preliminares: un reporte final la trae, además de
+`totales`, cuando ninguna banda alcanza población. En `top_municipios` la
+columna para ordenar y leer es `pop_banda` —la de la banda por la que el
+reporte ordena—, no `pop_mmi7p`, que vale cero en todo evento que no llega a
+MMI≥7.
 
 ### `reports/index.json`: el catálogo
 
-Una lista de 21 entradas, cada una con `usgs_id`, `mag`, `lugar`, `iso3`,
-`lon`, `lat`, `pop_mmi7p`, `pop_mmi6p`, `utc`, `shakemap_version`,
-`preliminar`, `backtest`, `generado_utc`. Es lo primero que descarga el visor.
+Una lista con una entrada por reporte publicado, cada una con `usgs_id`, `mag`,
+`lugar`, `iso3`, `lon`, `lat`, `pop_mmi7p`, `pop_mmi6p`, `utc`,
+`shakemap_version`, `preliminar`, `backtest`, `generado_utc`. Es lo primero que
+descarga el visor.
 
 ### `site/observados.json`: la prueba de que el vigía miró
 
@@ -164,8 +172,8 @@ oficial de referencia y la `tolerancia_pct` que se le exige.
 
 - `objetivo`: lo que el sistema promete (p50 60 min, p95 90 min).
 - `medido`: lo que ha cumplido de verdad. `p50_min` es `null` hasta el primer
-  evento en vivo; los 21 backtests se cuentan aparte en `backtests_excluidos`
-  y no se mezclan con la medición real.
+  evento en vivo; los backtests se cuentan aparte en `backtests_excluidos` y
+  no se mezclan con la medición real.
 - `cadencia`: cada cuánto revisa el vigía, medido, con `declarado_min`,
   `p50_min`, `p90_min` y `peor_min`.
 - `latidos`: la prueba de que el cron sigue vivo.

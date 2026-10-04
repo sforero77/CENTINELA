@@ -57,15 +57,46 @@ HXL_HEADERS: dict[str, str] = {
 }
 
 
+#: Lo que puede llegar en una fila y **a proposito** no se publica. Las filas
+#: que recibe el paquete del reporte las comparten el CSV y el mapa estatico, y
+#: `static_map._coordenada` aun sabe leer el centroide en WKT de las filas
+#: antiguas; el CSV lo publica descompuesto en `lon` y `lat`. Cualquier otra
+#: columna desconocida es una que alguien quiso publicar y no llego.
+NO_PUBLICADAS: frozenset[str] = frozenset({"centroide"})
+
+
 def write_adm2_csv(rows: Iterable[Mapping[str, Any]], path: Path) -> Path:
-    """Escribe el CSV municipal con cabecera HXL."""
+    """Escribe el CSV municipal con cabecera HXL.
+
+    Raises:
+        ValueError: si una fila trae una columna que `HXL_HEADERS` no publica.
+            Se comprueba antes de abrir el fichero, para no dejarlo a medias.
+
+    UNA COLUMNA QUE NO ESTA AQUI NO SE PUBLICA, Y ESO NO PUEDE PASAR CALLADO.
+    Hasta el 3-oct-2026 el escritor usaba `extrasaction="ignore"`: una
+    agregacion nueva en `SQL_IMPACT_ADM2`, o una renombrada, llegaba hasta aqui
+    y desaparecia del fichero sin una linea de log. La lista de columnas vivia
+    en cinco sitios y este era el unico que decidia, en silencio. Ahora decide
+    a gritos, y `test_las_dos_agregaciones_cuadran.py` ata el SQL a esta lista
+    para que el grito salga en la suite y no en un sismo.
+
+    Una columna que **falta** sigue saliendo vacia: es el caso de las pruebas y
+    de un respaldo sin centroide, y un hueco visible no esconde nada.
+    """
+    filas = list(rows)
+    desconocidas = sorted({col for row in filas for col in row} - set(HXL_HEADERS) - NO_PUBLICADAS)
+    if desconocidas:
+        raise ValueError(
+            f"columnas que el adm2.csv no publica: {desconocidas}. "
+            "Anadirlas a HXL_HEADERS con su etiqueta, o no entregarlas."
+        )
     path.parent.mkdir(parents=True, exist_ok=True)
     columnas = list(HXL_HEADERS)
     with path.open("w", encoding="utf-8", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=columnas, extrasaction="ignore")
+        writer = csv.DictWriter(fh, fieldnames=columnas)
         writer.writeheader()
         writer.writerow(HXL_HEADERS)
-        for row in rows:
+        for row in filas:
             writer.writerow({col: row.get(col, "") for col in columnas})
     return path
 

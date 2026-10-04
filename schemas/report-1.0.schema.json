@@ -14,6 +14,45 @@
     "licencia"
   ],
   "additionalProperties": false,
+  "allOf": [
+    {
+      "description": "Un reporte final solo trae radios cuando ninguna banda alcanza poblacion. Ver la descripcion de 'radios'.",
+      "if": {
+        "required": [
+          "radios"
+        ],
+        "properties": {
+          "radios": {
+            "minItems": 1
+          }
+        },
+        "not": {
+          "required": [
+            "preliminar"
+          ],
+          "properties": {
+            "preliminar": {
+              "const": true
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "totales": {
+            "properties": {
+              "pop_mmi6p": {
+                "maximum": 0
+              },
+              "pop_mmi7p": {
+                "maximum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "properties": {
     "schema": {
       "const": "centinela/report/1.0"
@@ -229,7 +268,8 @@
           "adm2_id",
           "nombre",
           "mmi_max",
-          "pop_mmi7p"
+          "pop_mmi7p",
+          "pop_banda"
         ],
         "additionalProperties": false,
         "properties": {
@@ -247,12 +287,13 @@
           },
           "pop_mmi7p": {
             "type": "number",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Poblacion del municipio en MMI>=7, con el mismo significado en todo reporte para que dos eventos se puedan comparar. Vale cero en toda fila de un evento que no alcanza MMI>=7: para ordenar o leer la tabla, la cifra es pop_banda."
           },
           "pop_banda": {
             "type": "number",
             "minimum": 0,
-            "description": "Poblacion en la banda por la que este reporte ordena (totales.banda_titular). Igual a pop_mmi7p cuando el evento alcanza MMI>=7."
+            "description": "Poblacion del municipio en la banda por la que este reporte ordena la tabla: MMI>=7 si totales.pop_mmi7p reune al menos el 1 % de totales.pop_mmi6p, y MMI>=6 si no. Igual a pop_mmi7p cuando la banda es 7. Es la cifra por la que se seleccionaron estas filas, y por eso es obligatoria: la emiten todos los reportes publicados."
           }
         }
       }
@@ -316,7 +357,7 @@
     },
     "radios": {
       "type": "array",
-      "description": "Poblacion por radio del epicentro. Solo en reportes preliminares (RF-03), donde sustituye a 'totales': sin ShakeMap las cifras por intensidad valen cero y publicarlas seria una respuesta falsa y creible.",
+      "description": "Poblacion por radio del epicentro, en dos casos. En un reporte preliminar (RF-03) sustituye a 'totales' como cifra publicada: sin ShakeMap las cifras por intensidad valen cero y publicarlas seria una respuesta falsa y creible. En un reporte final aparece ADEMAS de 'totales', y solo cuando ninguna banda alcanza poblacion (pop_mmi6p y pop_mmi7p en cero): ahi el radio es la unica cifra que dimensiona el evento. En cualquier otro reporte final va vacia; la regla de abajo (allOf) lo exige.",
       "items": {
         "type": "object",
         "required": [
@@ -339,6 +380,7 @@
     "ground_failure_usgs": {
       "type": "object",
       "description": "Alertas del producto Ground Failure del propio USGS, como referencia cruzada. No son cifras de CENTINELA: USGS pondera la poblacion de cada celda por el valor de esa celda, y CENTINELA cuenta la poblacion entera de toda celda por encima del umbral. Opcional: los reportes emitidos antes del 1-sep-2026 no lo traen.",
+      "additionalProperties": false,
       "properties": {
         "ls_alerta_usgs": {
           "type": "string"
@@ -363,6 +405,7 @@
         "texto",
         "atribuciones"
       ],
+      "additionalProperties": false,
       "properties": {
         "cubo": {
           "type": "string",
@@ -393,6 +436,7 @@
               "licencia",
               "url"
             ],
+            "additionalProperties": false,
             "properties": {
               "titulo": {
                 "type": "string",

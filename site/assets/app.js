@@ -1088,10 +1088,23 @@ function pintarPanorama(eventos) {
 // Se titula con la banda mas alta que si alcanzo poblacion, diciendo cual es.
 function bandaDeTotales(t) {
   if (!t) return 0;
-  if (t.pop_mmi8p > 0) return 8;
-  if (t.pop_mmi7p > 0) return 7;
+  if (alcanzaBanda(t.pop_mmi8p, t.pop_mmi6p)) return 8;
+  if (alcanzaBanda(t.pop_mmi7p, t.pop_mmi6p)) return 7;
   if (t.pop_mmi6p > 0) return 6;
   return 0;
+}
+
+// QUE PARTE DE MMI≥6 TIENE QUE ESTAR EN UNA BANDA MAS ALTA PARA TITULAR POR ELLA.
+// Espejo de `FRACCION_MINIMA_DE_BANDA` (`pipelines/common/constants.py`), donde
+// esta el porque entero; `test_banda_titular.py` vigila que digan lo mismo.
+//
+// Hasta el 3-oct-2026 las tres funciones de banda decidian con `> 0`: con 760
+// mil personas en MMI≥6 y 4,5 en el borde de MMI≥7, el panel titulaba «4
+// personas», la tabla se quedaba en una fila y el mapa rodeaba esa esquina.
+const FRACCION_MINIMA_DE_BANDA = 0.01;
+
+function alcanzaBanda(propia, mmi6) {
+  return propia > 0 && propia >= FRACCION_MINIMA_DE_BANDA * (mmi6 || 0);
 }
 
 // LA BANDA QUE EL PANEL ROTULA. Espejo exacto de `Totales.banda_publicada`
@@ -1104,11 +1117,11 @@ function bandaDeTotales(t) {
 // rodeaba 2.002 km², los de MMI≥8. Quien mira el mapa y lee la cifra de al lado
 // esta viendo dos sitios distintos.
 function bandaPublicada(t) {
-  return t && t.pop_mmi7p > 0 ? 7 : 6;
+  return t && alcanzaBanda(t.pop_mmi7p, t.pop_mmi6p) ? 7 : 6;
 }
 
 function bandaTitular(evento) {
-  if (Number.isFinite(evento.pop_mmi7p) && evento.pop_mmi7p > 0) {
+  if (Number.isFinite(evento.pop_mmi7p) && alcanzaBanda(evento.pop_mmi7p, evento.pop_mmi6p)) {
     return { pop: evento.pop_mmi7p, banda: 7 };
   }
   if (Number.isFinite(evento.pop_mmi6p) && evento.pop_mmi6p > 0) {

@@ -113,23 +113,37 @@ impact_h3:
 
 impact_adm2:
   descripcion: Agregado municipal. Es la tabla que consume el mundo.
+  # Las columnas son las del `adm2.csv`, en su orden: `HXL_HEADERS` en
+  # `pipelines/p3_report/csv_out.py`. Hasta el 3-oct-2026 esta lista no la
+  # comprobaba nada y se habia quedado en la del 3-sep: sin el centroide, sin
+  # las siete columnas de la banda 6, y con `ls_pop_expuesta` donde se publicaba
+  # `ls_pop_expuesta_mmi6p`. Lo vigila `test_las_dos_agregaciones_cuadran.py`.
   clave_primaria: [usgs_id, shakemap_version, adm2_id]
   columnas:
     - {nombre: usgs_id,          tipo: VARCHAR, nulo: false}
     - {nombre: shakemap_version, tipo: INTEGER, nulo: false}
     - {nombre: adm2_id,          tipo: VARCHAR, nulo: false}
     - {nombre: nombre,           tipo: VARCHAR, nulo: false}
+    - {nombre: lon,              tipo: DOUBLE,  nulo: false, nota: "Centroide del municipio. 0 si el diccionario no lo trae."}
+    - {nombre: lat,              tipo: DOUBLE,  nulo: false, nota: "Centroide del municipio. 0 si el diccionario no lo trae."}
     - {nombre: mmi_max,          tipo: DOUBLE,  nulo: false, nota: "Cota inferior: isolinea que contiene el centro de la celda. Nunca sobreestima."}
     - {nombre: pop_mmi6p,        tipo: DOUBLE,  nulo: false}
     - {nombre: pop_mmi7p,        tipo: DOUBLE,  nulo: false}
     - {nombre: pop_mmi8p,        tipo: DOUBLE,  nulo: false}
     - {nombre: pop_65p_mmi7p,    tipo: DOUBLE,  nulo: false}
+    - {nombre: pop_65p_mmi6p,    tipo: DOUBLE,  nulo: false}
+    - {nombre: bld_mmi6p,        tipo: DOUBLE,  nulo: false}
+    - {nombre: built_m2_mmi6p,   tipo: DOUBLE,  nulo: false}
+    - {nombre: health_mmi6p,     tipo: DOUBLE,  nulo: false}
+    - {nombre: edu_mmi6p,        tipo: DOUBLE,  nulo: false}
+    - {nombre: road_km_mmi6p,    tipo: DOUBLE,  nulo: false}
+    - {nombre: road_km_principal_mmi6p, tipo: DOUBLE, nulo: false}
     - {nombre: bld_mmi7p,        tipo: DOUBLE,  nulo: false}
     - {nombre: built_m2_mmi7p,   tipo: DOUBLE,  nulo: false}
     - {nombre: health_mmi7p,     tipo: DOUBLE,  nulo: false}
     - {nombre: edu_mmi7p,        tipo: DOUBLE,  nulo: false}
     - {nombre: road_km_mmi7p,    tipo: DOUBLE,  nulo: false}
     - {nombre: road_km_principal_mmi7p, tipo: DOUBLE, nulo: false}
-    - {nombre: ls_pop_expuesta,  tipo: DOUBLE,  nulo: false}
-    - {nombre: lq_pop_expuesta,  tipo: DOUBLE,  nulo: false}
+    - {nombre: ls_pop_expuesta_mmi6p, tipo: DOUBLE, nulo: false, nota: "Desde MMI 6, el mismo conjunto que totales.pop_ls_alta."}
+    - {nombre: lq_pop_expuesta_mmi6p, tipo: DOUBLE, nulo: false, nota: "Desde MMI 6, el mismo conjunto que totales.pop_lq_alta."}
     - {nombre: flags_calidad,    tipo: VARCHAR, nulo: true}

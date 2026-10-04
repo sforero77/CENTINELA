@@ -66,6 +66,12 @@ def test_cifras_exactas_no_redondeadas(tmp_path: Path) -> None:
     assert "118000.5" in path.read_text(encoding="utf-8")
 
 
-def test_columnas_desconocidas_se_ignoran(tmp_path: Path) -> None:
-    path = write_adm2_csv([{"adm2_id": "27001", "columna_rara": 1}], tmp_path / "a.csv")
-    assert "columna_rara" not in path.read_text(encoding="utf-8")
+def test_columnas_desconocidas_no_se_pierden_en_silencio(tmp_path: Path) -> None:
+    """Esta prueba fijaba lo contrario: que una columna desconocida se ignorase.
+
+    Era justo el fallo. Una agregacion nueva del SQL desaparecia del CSV sin
+    aviso, y la prueba lo celebraba.
+    """
+    with pytest.raises(ValueError, match="columna_rara"):
+        write_adm2_csv([{"adm2_id": "27001", "columna_rara": 1}], tmp_path / "a.csv")
+    assert not (tmp_path / "a.csv").exists(), "no puede quedar un fichero a medias"
