@@ -14,9 +14,14 @@ contrario de lo que pide el requisito.
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
 import pytest
 
-from pipelines.common.toponimos import RUMBOS, traducir_lugar, traducir_pais
+from pipelines.common import toponimos
+from pipelines.common.paths import EVENTS_DIR, REPORTS_DIR, SITE_DIR
+from pipelines.common.toponimos import RUMBOS, huellas_en_ingles, traducir_lugar, traducir_pais
 
 
 @pytest.mark.parametrize(
@@ -123,3 +128,94 @@ def test_los_lugares_se_traducen_al_entrar_al_sistema() -> None:
         assert "traducir_lugar" in inspect.getsource(funcion), (
             f"{funcion.__qualname__} guarda el lugar sin traducir"
         )
+
+
+@pytest.mark.parametrize(
+    ("ingles", "espanol"),
+    [
+        # Los tres que estaban publicados en ingles el 3-oct-2026.
+        ("southern East Pacific Rise", "Sur de la dorsal del Pacífico Oriental"),
+        ("northern Mid-Atlantic Ridge", "Norte de la dorsal mesoatlántica"),
+        ("West Chile Rise", "Dorsal de Chile"),
+        ("Central East Pacific Rise", "Centro de la dorsal del Pacífico Oriental"),
+        ("Drake Passage", "Pasaje de Drake"),
+        ("Easter Island region", "Región de la isla de Pascua"),
+        ("Galapagos Islands, Ecuador region", "Región de las islas Galápagos, Ecuador"),
+        ("south of Panama", "Al sur de Panamá"),
+        ("southern Peru", "Sur de Perú"),
+        ("off the coast of Central America", "Cerca de la costa de Centroamérica"),
+        ("Near the coast of northern Chile", "Cerca de la costa del norte de Chile"),
+    ],
+)
+def test_las_regiones_de_mar_abierto_tambien_se_traducen(ingles: str, espanol: str) -> None:
+    """Lejos de la costa USGS escribe la region de Flinn-Engdahl, no `X km W of`.
+
+    Ninguna forma las reconocia y salian en ingles: «southern East Pacific
+    Rise» llego al titulo de us7000tdms (auditoria del 5-sep-2026, #159).
+    """
+    assert traducir_lugar(ingles) == espanol
+
+
+def test_la_frontera_no_sale_mitad_en_cada_idioma() -> None:
+    """`_REGION` atrapaba la forma entera: «Región de Chile-Argentina border» (#160)."""
+    assert traducir_lugar("Chile-Argentina border region") == "Zona fronteriza Chile-Argentina"
+    assert traducir_lugar("Peru-Ecuador border region") == "Zona fronteriza Perú-Ecuador"
+
+
+def test_un_modificador_sobre_algo_desconocido_no_se_traduce_a_medias() -> None:
+    """`northern Algo` con `Algo` desconocido saldria «Norte de Algo» inventado."""
+    assert traducir_lugar("northern Atlantis Fracture") == "northern Atlantis Fracture"
+
+
+def test_lo_que_no_se_reconoce_deja_rastro(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Devolver el original esta bien; hacerlo en silencio era el fallo (#159).
+
+    El logger no propaga (salida JSON a stderr), asi que `caplog` no lo ve: se
+    intercepta el metodo.
+    """
+    avisos: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        toponimos._log, "warning", lambda msg, **kw: avisos.append(kw["extra"]["context"])
+    )
+
+    traducir_lugar("12 km WSW of Somewhere, Chile")  # se reconoce: sin aviso
+    assert avisos == []
+
+    traducir_lugar("Somewhere off the Atlantis Trench")
+    assert [a["place"] for a in avisos] == ["Somewhere off the Atlantis Trench"]
+    assert avisos[0]["huellas"] == ["off", "the", "Trench"]
+
+
+def _lugares(objeto: Any) -> list[str]:
+    if isinstance(objeto, dict):
+        propios = [v for k, v in objeto.items() if k == "lugar" and isinstance(v, str)]
+        return propios + [x for v in objeto.values() for x in _lugares(v)]
+    if isinstance(objeto, list):
+        return [x for v in objeto for x in _lugares(v)]
+    return []
+
+
+def test_ningun_lugar_publicado_queda_en_ingles_con_el_codigo_de_hoy() -> None:
+    """Todo `lugar` publicado, pasado por `traducir_lugar`, sale sin ingles.
+
+    Mide el codigo, no el dato del dia: lo publicado guarda el `place` de USGS
+    tal cual cuando no se reconocia, y volver a traducirlo es lo que hara la
+    reemision (`run._refrescar_lugar` traduce el `place` del detail). Asi el
+    corpus real de LATAM es la prueba de las formas, y un lugar nuevo que no
+    encaje la pone en rojo con la cadena exacta.
+    """
+    fuentes = [REPORTS_DIR / "index.json", SITE_DIR / "observados.json"]
+    fuentes += sorted(EVENTS_DIR.glob("*.json"))
+    lugares = {
+        lugar
+        for fuente in fuentes
+        for lugar in _lugares(json.loads(fuente.read_text(encoding="utf-8")))
+    }
+    # Sin esto, un cambio de clave dejaria la prueba recorriendo nada, en verde.
+    assert len(lugares) >= 10, f"solo {len(lugares)} lugares: ¿cambio la clave `lugar`?"
+
+    en_ingles = {
+        lugar: huellas for lugar in lugares if (huellas := huellas_en_ingles(traducir_lugar(lugar)))
+    }
+
+    assert en_ingles == {}
