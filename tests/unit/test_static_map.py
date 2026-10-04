@@ -9,18 +9,26 @@ lo que se prueba aqui es justamente el cableado.
 
 from __future__ import annotations
 
+import math
+import re
+import struct
 from itertools import pairwise
 from pathlib import Path
 
 import pytest
 
+from pipelines.common.paths import SITE_DIR
 from pipelines.p3_report.model import Evento, Inputs, Report, Totales
 from pipelines.p3_report.static_map import (
+    COLOR_CONTORNO_BAJO,
     MMI_COLORS,
+    SPECS,
     MapVariant,
+    _a_proporcion,
     _coordenada,
     _epicentro,
     _puntos_municipales,
+    _rotular_municipios,
     banda_de_mmi,
     color_for_mmi,
     render_map,
@@ -158,3 +166,126 @@ def test_el_mapa_dimensiona_por_la_banda_del_reporte_no_siempre_por_siete() -> N
     ]
     assert _puntos_municipales(filas, 6)[0][3] == 74000.0
     assert _puntos_municipales(filas, 7)[0][3] == 0.0
+
+
+# --- La rampa del PNG y la del visor (auditoria del 5-sep-2026, #175) --------
+
+
+def _sin_comentarios_js(js: str) -> str:
+    """El JS sin comentarios: un guardia de texto no puede aprobar por la prosa."""
+    limpio = re.sub(r"/\*.*?\*/", "", js, flags=re.S)
+    return "\n".join(ln for ln in limpio.splitlines() if not ln.lstrip().startswith("//"))
+
+
+def test_la_rampa_del_png_es_la_del_visor() -> None:
+    """`MMI_COLORS` dice ser «la misma rampa que usa el visor», y nada lo probaba.
+
+    Estan escritas dos veces, una en Python y otra en `CAPAS.mmi` de
+    `site/assets/app.js`. Si una cambia sola, el mismo evento sale de dos
+    colores segun se mire el PNG o la pagina, y ninguna otra prueba lo nota.
+    Se comparan cortes, colores y el gris de las isolineas bajas.
+    """
+    app = _sin_comentarios_js((SITE_DIR / "assets" / "app.js").read_text(encoding="utf-8"))
+    bloque = app[app.index("  mmi: {") :]
+    bloque = bloque[: bloque.index("\n  },")]
+    cortes = [float(v) for v in re.search(r"cortes:\s*\[([^\]]*)\]", bloque)[1].split(",")]  # type: ignore[index]
+    colores = re.findall(r"#[0-9a-fA-F]{6}", re.search(r"colores:\s*\[([^\]]*)\]", bloque)[1])  # type: ignore[index]
+    gris = re.search(r'const COLOR_CONTORNO_BAJO = "(#[0-9a-fA-F]{6})"', app)
+
+    # Sin esto, un cambio de formato dejaria dos listas vacias iguales, en verde.
+    assert len(cortes) == len(MMI_COLORS) >= 6, f"no se leyo la rampa del visor: {cortes}"
+    assert dict(zip(cortes, (c.lower() for c in colores), strict=True)) == {
+        k: v.lower() for k, v in MMI_COLORS.items()
+    }
+    assert gris is not None, "el visor ya no declara COLOR_CONTORNO_BAJO"
+    assert gris[1].lower() == COLOR_CONTORNO_BAJO.lower()
+
+
+# --- `prensa` es 16:9 (auditoria del 5-sep-2026, #174) ---------------------
+
+
+def _medidas_png(ruta: Path) -> tuple[int, int]:
+    ancho, alto = struct.unpack(">II", ruta.read_bytes()[16:24])
+    return ancho, alto
+
+
+@pytest.mark.render
+def test_prensa_mide_1920x1080_aunque_el_evento_sea_alto(reporte: Report, tmp_path: Path) -> None:
+    """El ancho salia de la forma del evento y 1920 era solo un tope.
+
+    De los 28 `mapa_prensa.png` publicados al 3-oct-2026, uno era 16:9; los
+    alargados en latitud —Chile— salian mas altos que anchos (0,80). Aqui un
+    evento de 3° de alto por 0,4° de ancho, el peor caso.
+    """
+    pytest.importorskip("matplotlib")
+    filas = [
+        {
+            "lon": -77.5 + (i % 2) * 0.4,
+            "lat": 4.5 + i * 0.1,
+            "mmi_max": 7.0,
+            "pop_mmi7p": 5000.0,
+            "nombre": f"M{i}",
+        }
+        for i in range(30)
+    ]
+    prensa = render_map(reporte, MapVariant.PRENSA, tmp_path / "p.png", municipios=filas)
+    general = render_map(reporte, MapVariant.GENERAL, tmp_path / "g.png", municipios=filas)
+
+    spec = SPECS[MapVariant.PRENSA]
+    assert _medidas_png(prensa) == (spec.width_px, spec.height_px) == (1920, 1080)
+    ancho_g, alto_g = _medidas_png(general)
+    assert ancho_g < alto_g, "general sigue la forma del evento; no es la misma imagen escalada"
+
+
+def test_ensanchar_a_la_proporcion_nunca_recorta() -> None:
+    """El encuadre crece en la dimension que falta, alrededor del mismo centro."""
+    alto = (-78.0, 0.0, -77.0, 4.0)  # mas alto que ancho
+    lon0, lat0, lon1, lat1 = _a_proporcion(alto, 16 / 9)
+    assert (lat0, lat1) == (0.0, 4.0)
+    assert lon0 < -78.0 and lon1 > -77.0
+    assert math.isclose((lon0 + lon1) / 2, -77.5)
+    coseno = math.cos(math.radians(2.0))
+    assert math.isclose((lon1 - lon0) * coseno / (lat1 - lat0), 16 / 9)
+
+    ancho = (-90.0, 10.0, -70.0, 11.0)  # mas ancho que 16:9
+    lon0, lat0, lon1, lat1 = _a_proporcion(ancho, 16 / 9)
+    assert (lon0, lon1) == (-90.0, -70.0)
+    assert lat0 < 10.0 and lat1 > 11.0
+
+
+# --- Rotulos que se pisan (auditoria del 5-sep-2026, #109) ------------------
+
+
+@pytest.mark.render
+def test_dos_nombres_largos_no_se_escriben_uno_encima_del_otro() -> None:
+    """La separacion se media en 0,25° fijos, sin mirar el ancho del texto.
+
+    En `us6000t7zp` «Ocumare de la Costa de Oro» salia sobre «Puerto Cabello»:
+    estaban a mas de 0,25° en longitud y el nombre, largo, cruzaba el hueco.
+    Aqui dos municipios a 0,3° en un mapa de 3° de ancho, con nombres largos:
+    la regla vieja los rotulaba a los dos.
+    """
+    pytest.importorskip("matplotlib")
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=110)
+    try:
+        ax.set_xlim(-69.0, -66.0)
+        ax.set_ylim(9.5, 11.5)
+        puntos = [
+            (-68.0, 10.47, 7.5, 200_000.0, "OCUMARE DE LA COSTA DE ORO"),
+            (-67.7, 10.47, 7.5, 150_000.0, "PUERTO CABELLO DEL NORTE"),
+            # Lejos de los dos: tiene que salir.
+            (-66.5, 9.8, 7.0, 50_000.0, "SAN FELIPE"),
+        ]
+        puestos = _rotular_municipios(fig, ax, puntos, n_max=6, fontsize=8)
+
+        assert puestos == ["Ocumare de la Costa de Oro", "San Felipe"]
+        cajas = [t.get_window_extent() for t in ax.texts]
+        assert len(cajas) == 2, "el rotulo descartado se quedo dibujado"
+        assert not cajas[0].overlaps(cajas[1])
+    finally:
+        plt.close(fig)

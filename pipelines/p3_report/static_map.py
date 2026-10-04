@@ -20,7 +20,7 @@ y para eso bastan los limites municipales, la coropleta y los contornos.
 Dos variantes obligatorias:
 
 * ``general`` — contexto amplio, contornos MMI, municipios etiquetados.
-* ``prensa`` — recorte cerrado, tipografia grande, pensado para captura.
+* ``prensa`` — 1920x1080 siempre, tipografia grande, pensado para captura.
 
 Restriccion dura: el PNG más el markdown deben sumar menos de 500 KB (RNF-05).
 """
@@ -61,6 +61,10 @@ class MapSpec:
     dpi: int
     #: Presupuesto de peso del archivo final.
     max_bytes: int = 400_000
+    #: El lienzo mide exactamente ``width_px`` x ``height_px`` y es el encuadre
+    #: geografico el que se ensancha hasta llenarlo. Sin esto el ancho sale de
+    #: la forma del evento y ``width_px`` es solo un tope.
+    llena_el_lienzo: bool = False
 
 
 #: Las dos variantes tenian el mismo alto, la misma tipografia y el mismo
@@ -71,9 +75,18 @@ class MapSpec:
 #: Ahora `general` es la del panel y el markdown —compacta, para leerse dentro de
 #: otra cosa— y `prensa` es 16:9 con tipografia grande, que es lo que se pega en
 #: una nota o se proyecta en una sala.
+#:
+#: Y NO LO ERA (auditoria del 5-sep-2026, #174). `_figsize` fijaba el alto y
+#: sacaba el ancho de la forma del evento, con 1920 solo como tope: de los 28
+#: `mapa_prensa.png` publicados al 3-oct-2026 uno era 16:9 y el resto iba de
+#: 0,80 a 1,42 —Chile salia mas alto que ancho—. Era `general` a 1,2x con
+#: otra tipografia, la duplicacion que este comentario dice haber quitado.
+#: Ahora `prensa` mide siempre 1920x1080 y es el encuadre el que se ensancha
+#: hasta llenarlo, con mas contexto alrededor del evento en vez de franjas
+#: blancas.
 SPECS: dict[MapVariant, MapSpec] = {
     MapVariant.GENERAL: MapSpec(MapVariant.GENERAL, 1100, 900, 110),
-    MapVariant.PRENSA: MapSpec(MapVariant.PRENSA, 1920, 1080, 140),
+    MapVariant.PRENSA: MapSpec(MapVariant.PRENSA, 1920, 1080, 140, llena_el_lienzo=True),
 }
 
 #: Fuentes cuyo dato llega a un PNG del reporte, y que por tanto tienen que
@@ -156,8 +169,9 @@ MMI_MIN_MAPPED = 6.0
 #: dice que la sacudida existio.
 COLOR_CONTORNO_BAJO = "#9a8f7d"
 
-#: Separacion minima entre etiquetas, en grados, para no apilarlas.
-LABEL_MIN_SEPARATION = 0.25
+#: Holgura alrededor de cada rotulo al decidir si pisa a otro, como factor
+#: sobre su caja de texto: dos nombres que se tocan tampoco se leen.
+HOLGURA_DE_ROTULO = 1.12
 
 
 def banda_de_mmi(valor: float) -> float:
@@ -289,18 +303,8 @@ def render_map(
             linewidths=0.9,
             zorder=3,
         )
-        for lon, lat, _mmi, _pob, nombre in _etiquetables(puntos, n_max=6):
-            ax.annotate(
-                titulo_es(nombre),
-                (lon, lat),
-                fontsize=9 if variant is MapVariant.PRENSA else 8,
-                color="#1c1b1a",
-                xytext=(7, 5),
-                textcoords="offset points",
-                zorder=4,
-                path_effects=_halo(),
-            )
 
+    rotulo_epicentro = None
     if epicentro is not None:
         ax.plot(
             epicentro[0],
@@ -313,7 +317,7 @@ def render_map(
             zorder=5,
             linestyle="none",
         )
-        ax.annotate(
+        rotulo_epicentro = ax.annotate(
             "epicentro",
             epicentro,
             fontsize=8,
@@ -368,22 +372,6 @@ def render_map(
     # hace falta —cuanto mide esto, y hacia donde esta el norte— lo pone
     # `_barra_de_escala`.
     ax.set_axis_off()
-    # Un marco fino en su lugar. Sin ejes ni marco, el recorte de las bandas
-    # queda como un corte al aire y el mapa parece una imagen rota.
-    from matplotlib.patches import Rectangle
-
-    ax.add_patch(
-        Rectangle(
-            (limites[0], limites[1]),
-            limites[2] - limites[0],
-            limites[3] - limites[1],
-            fill=False,
-            edgecolor="#dedad4",
-            linewidth=1.0,
-            zorder=7,
-        )
-    )
-    _barra_de_escala(ax, limites, fuente=escala_fuente)
 
     bandas, hay_bajas = _bandas_dibujadas(contornos, puntos)
     leyenda: list[Any] = [
@@ -455,6 +443,43 @@ def render_map(
         wrap=True,
     )
     fig.tight_layout(rect=(0, 0.035, 1, 0.905 if prensa else 0.9))
+
+    # LO QUE DEPENDE DEL TAMANO FINAL DEL MAPA, DESPUES DEL REPARTO.
+    #
+    # El encuadre de `prensa` se ensancha hasta llenar el hueco que deja
+    # `tight_layout`, y los rotulos se miden en pixeles: las dos cosas solo se
+    # saben una vez repartida la figura.
+    if spec.llena_el_lienzo:
+        caja = ax.get_position(original=True)
+        limites = _a_proporcion(
+            limites, (caja.width * fig.bbox.width) / (caja.height * fig.bbox.height)
+        )
+        _encuadrar(ax, limites)
+
+    # Un marco fino en lugar de los ejes. Sin ejes ni marco, el recorte de las
+    # bandas queda como un corte al aire y el mapa parece una imagen rota.
+    from matplotlib.patches import Rectangle
+
+    ax.add_patch(
+        Rectangle(
+            (limites[0], limites[1]),
+            limites[2] - limites[0],
+            limites[3] - limites[1],
+            fill=False,
+            edgecolor="#dedad4",
+            linewidth=1.0,
+            zorder=7,
+        )
+    )
+    _barra_de_escala(ax, limites, fuente=escala_fuente)
+    _rotular_municipios(
+        fig,
+        ax,
+        puntos,
+        n_max=6,
+        fontsize=9 if prensa else 8,
+        ocupado=[] if rotulo_epicentro is None else [rotulo_epicentro],
+    )
 
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=spec.dpi, facecolor="white")
@@ -831,18 +856,49 @@ def _limites(
 
 
 def _figsize(limites: tuple[float, float, float, float], spec: MapSpec) -> tuple[float, float]:
-    """Tamano de figura que respeta la proporcion geografica de los datos."""
+    """Tamano de figura que respeta la proporcion geografica de los datos.
+
+    Salvo en una variante que ``llena_el_lienzo``: ahi el lienzo es fijo y es
+    `_a_proporcion` la que adapta el encuadre.
+    """
     import math
 
     lon_min, lat_min, lon_max, lat_max = limites
     ancho_geo = (lon_max - lon_min) * math.cos(math.radians((lat_min + lat_max) / 2))
     alto_geo = lat_max - lat_min
     alto_pulg = spec.height_px / spec.dpi
-    if alto_geo <= 0 or ancho_geo <= 0:
+    if spec.llena_el_lienzo or alto_geo <= 0 or ancho_geo <= 0:
         return (spec.width_px / spec.dpi, alto_pulg)
     # +1,2" de holgura para el eje, la leyenda y la atribucion.
     ancho = min(max(alto_pulg * (ancho_geo / alto_geo) + 1.2, 4.0), spec.width_px / spec.dpi)
     return (ancho, alto_pulg)
+
+
+def _a_proporcion(
+    limites: tuple[float, float, float, float], proporcion: float
+) -> tuple[float, float, float, float]:
+    """El encuadre ensanchado —nunca recortado— hasta ``ancho / alto = proporcion``.
+
+    La proporcion es la del hueco del mapa en pixeles, y el ancho se mide en
+    distancia real (grados de longitud por ``cos(latitud)``), igual que en
+    `_encuadrar`. Solo crece la dimension que falta y alrededor del mismo
+    centro: el evento entero sigue dentro y queda en medio, con mas contexto a
+    los lados. Ensanchar en vez de dejar que `set_aspect` encoja la caja es lo
+    que evita las franjas blancas que justificaban no fijar el 16:9.
+    """
+    import math
+
+    lon_min, lat_min, lon_max, lat_max = limites
+    coseno = max(math.cos(math.radians((lat_min + lat_max) / 2)), 0.1)
+    ancho_geo = (lon_max - lon_min) * coseno
+    alto_geo = lat_max - lat_min
+    if proporcion <= 0 or ancho_geo <= 0 or alto_geo <= 0:
+        return limites
+    if ancho_geo / alto_geo < proporcion:
+        extra = (proporcion * alto_geo / coseno - (lon_max - lon_min)) / 2
+        return (lon_min - extra, lat_min, lon_max + extra, lat_max)
+    extra = (ancho_geo / proporcion - alto_geo) / 2
+    return (lon_min, lat_min - extra, lon_max, lat_max + extra)
 
 
 def _encoger_hasta_que_quepa(
@@ -892,27 +948,66 @@ def _encuadrar(ax: Any, limites: tuple[float, float, float, float]) -> None:
     ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
 
 
-def _etiquetables(
+def _rotular_municipios(
+    fig: Any,
+    ax: Any,
     puntos: list[tuple[float, float, float, float, str]],
     *,
     n_max: int,
-    separacion: float = LABEL_MIN_SEPARATION,
-) -> list[tuple[float, float, float, float, str]]:
-    """Los municipios mas expuestos, descartando los que se pisarian.
+    fontsize: int,
+    ocupado: Sequence[Any] = (),
+) -> list[str]:
+    """Rotula los municipios mas expuestos, saltando el que pisaria a otro.
 
     Etiquetar los quince del ranking produce una mancha ilegible justo en la
     zona más afectada, que es donde el lector mira. Se recorren de mayor a
-    menor población y se salta el que caiga demasiado cerca de otro ya puesto.
+    menor población y se salta el que caiga encima de otro ya puesto.
+
+    "ENCIMA" SE MIDE EN PIXELES, CON EL ANCHO DEL TEXTO (auditoria del
+    5-sep-2026, #109). Se medía en grados: dos municipios a mas de 0,25° en
+    cualquier eje se daban por separados, sin mirar ni el largo del nombre ni
+    la escala del mapa. En `us6000t7zp` «Ocumare de la Costa de Oro» salia
+    escrito sobre «Puerto Cabello» y sobre «Santiago Mariño», en los dos PNG
+    publicados. Ahora cada rotulo se coloca, se mide su caja ya dibujada y se
+    retira si toca otra —o el rotulo del epicentro, que va en ``ocupado``—.
+    Por eso se llama despues de `tight_layout`: antes el tamano del mapa aun
+    no es el final y la medida no vale.
+
+    Returns:
+        Los nombres rotulados, en orden.
     """
-    elegidos: list[tuple[float, float, float, float, str]] = []
-    for punto in sorted(puntos, key=lambda p: p[3], reverse=True):
-        if len(elegidos) >= n_max:
+    # Un dibujado previo aplica la proporcion geografica (`set_aspect` encoge la
+    # caja del eje solo al dibujar): sin el, las cajas se miden con una escala
+    # que no es la final y dos rotulos que se pisan pasan por separados.
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    cajas = [
+        t.get_window_extent(renderer=renderer).expanded(HOLGURA_DE_ROTULO, HOLGURA_DE_ROTULO)
+        for t in ocupado
+    ]
+    puestos: list[str] = []
+    for lon, lat, _mmi, _pob, nombre in sorted(puntos, key=lambda p: p[3], reverse=True):
+        if len(puestos) >= n_max:
             break
-        if all(
-            abs(punto[0] - e[0]) > separacion or abs(punto[1] - e[1]) > separacion for e in elegidos
-        ):
-            elegidos.append(punto)
-    return elegidos
+        rotulo = ax.annotate(
+            titulo_es(nombre),
+            (lon, lat),
+            fontsize=fontsize,
+            color="#1c1b1a",
+            xytext=(7, 5),
+            textcoords="offset points",
+            zorder=4,
+            path_effects=_halo(),
+        )
+        caja = rotulo.get_window_extent(renderer=renderer).expanded(
+            HOLGURA_DE_ROTULO, HOLGURA_DE_ROTULO
+        )
+        if any(caja.overlaps(otra) for otra in cajas):
+            rotulo.remove()
+            continue
+        cajas.append(caja)
+        puestos.append(rotulo.get_text())
+    return puestos
 
 
 def _epicentro(report: Report) -> tuple[float, float] | None:
