@@ -233,3 +233,15 @@ def test_la_cli_compara_dos_mediciones(tmp_path: Path) -> None:
 
     nueva.write_text(json.dumps(_con(health_count=200)), encoding="utf-8")
     assert main(["comparar-medicion", str(anterior), str(nueva)]) == 1
+
+
+def test_el_2_de_calibrar_no_aborta_el_paso_que_anota() -> None:
+    """Con el activo ya publicado, «hay que decidir la tolerancia» no puede tumbar el commit."""
+    texto = (
+        Path(__file__).parents[2] / ".github" / "workflows" / "exposure_quarterly.yml"
+    ).read_text(encoding="utf-8")
+    bloque = texto[texto.index("Anotar la medicion en el manifest") :]
+    bloque = bloque[: bloque.index("centinela fijar-insumos")]
+
+    assert 'uv run centinela calibrar --escribir "$MEDICION"' in bloque
+    assert "set +e" in bloque and '"$CALIBRAR" -eq 2' in bloque
