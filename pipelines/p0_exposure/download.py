@@ -473,7 +473,14 @@ def download_hdx(source: Source, destino: Path, *, fetcher: Fetcher) -> list[Pat
         )
         return rutas
 
-    raise RuntimeError(
+    # ES UN ORIGEN CAIDO, Y SE REINTENTA COMO TAL.
+    #
+    # El catalogo de HDX contesto —`resolve_attempts` encontro el dataset y sus
+    # recursos— y lo que fallo fue bajar los ficheros. El 4-oct-2026 Nicaragua
+    # cayo asi con un corte de HDX que a los veinte minutos ya no estaba, y como
+    # salia con exit 1 el workflow lo dio por definitivo y no reintento. Con su
+    # propio codigo espera 10 y 30 minutos y vuelve a probar.
+    raise OrigenCaidoError(
         f"Ningun recurso de {source.hdx_dataset!r} se pudo descargar. "
         f"Se probaron {len(intentos)} formas y todas fallaron: {fallos}"
     )

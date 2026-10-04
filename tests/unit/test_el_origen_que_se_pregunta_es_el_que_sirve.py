@@ -178,3 +178,24 @@ def test_con_la_licencia_correcta_el_atajo_por_cache_sigue_funcionando(
     assert rutas == [ya]
     # Se pregunto la licencia, y nada mas: no se resolvieron urls de descarga.
     assert fetcher.json_pedidos == [HDX_PACKAGE_SHOW.format(dataset="cod-ab-col")]
+
+
+class _BytesCaidos(_Fetcher):
+    """El catalogo contesta y los ficheros no: el corte de HDX del 4-oct-2026."""
+
+    def get_bytes(self, url: str) -> bytes:
+        raise RuntimeError(f"No se pudo descargar {url} tras 3 intentos")
+
+
+def test_si_el_catalogo_contesta_y_los_ficheros_no_es_un_origen_caido(tmp_path: Path) -> None:
+    """Nicaragua cayo asi y el workflow lo dio por definitivo.
+
+    Salia como `RuntimeError` a secas —exit 1, «no se reintenta»— cuando a los
+    veinte minutos los mismos enlaces ya respondian. Como origen caido el
+    workflow espera y vuelve a probar, que es lo que hacia falta.
+    """
+    limpiar_cache_hdx()
+    source = _manifest_hdx().sources[0]
+
+    with pytest.raises(download.OrigenCaidoError, match="Ningun recurso"):
+        download.download_hdx(source, tmp_path / "vacio", fetcher=_BytesCaidos())
