@@ -120,6 +120,14 @@ fuego pequeño, frío o bajo dosel. Así que esto pierde fuegos reales (los déb
 y aislados) y los pierde de día, porque `low` casi no existe de noche: requiere
 *sun glint*. Es un intercambio, no un filtro gratis.
 
+**Y lo que se tira se publica.** Hasta el 3-oct-2026 esas celdas desaparecían
+sin dejar rastro, y `detecciones_baja` —que solo suma la baja confianza de las
+celdas que **sí** entran— se leía como si fuera todo lo descartado. La auditoría
+del 5-sep midió que el 43 % de las detecciones de baja confianza caía por la
+excepción. Ahora `totales` trae al lado `celdas_solo_baja` y
+`detecciones_baja_sin_celda`: la celda sigue sin pintarse, pero se dice cuántas
+son.
+
 ## Lo que publica
 
 ```json
@@ -138,6 +146,12 @@ y aislados) y los pierde de día, porque `low` casi no existe de noche: requiere
 Un porcentaje sin denominador es una afirmación sin respaldo: decir "57,9 %
 arbolado" callando que la mitad de las celdas no tienen cobertura conocida
 sería exactamente el cero silencioso, en versión porcentaje.
+
+El ejemplo es de una corrida anterior al 3-oct-2026: desde entonces `totales`
+trae además `detecciones_baja_sin_celda` y `celdas_solo_baja` (lo que tira la
+excepción de la baja confianza, ver arriba), y si el tope de seguridad de 60.000
+celdas llegara a morder, `celdas_publicadas` < `celdas` y el fichero lo dice en
+`avisos`.
 
 ## Sobre qué arde
 

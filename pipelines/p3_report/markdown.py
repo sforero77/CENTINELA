@@ -207,7 +207,7 @@ def _tabla_totales(report: Report) -> str:
     #
     # La escalera completa —ambas bandas— sigue en `report.json` y en el CSV
     # municipal para quien integre. Aqui se publica la que responde la pregunta.
-    # Ver `MMI_BANDS_INFRAESTRUCTURA` en `common/constants.py` para las fuentes.
+    # Ver «Bandas de intensidad publicadas» en `common/constants.py` para las fuentes.
     banda = banda_del_ranking(report)
     seis = banda == 6
     bld = tot.bld_mmi6p if seis else tot.bld_mmi7p

@@ -124,6 +124,13 @@ LATAM_BBOX: Final[BBox] = BBox(lon_min=-119.0, lat_min=-57.5, lon_max=-32.0, lat
 #: Mexico publicaba 3,4 km de via en las 842.796 celdas donde viven 126,3
 #: millones de personas, y 39.140 km en las 45.533 celdas al este.
 #:
+#: Y **no hay ninguna reproyeccion en el repositorio**: todo se publica en
+#: EPSG:4326 y areas y longitudes son geodesicas sobre el elipsoide, no de una
+#: proyeccion. La nota vivia junto a una constante `CRS_PUBLICATION` de
+#: `common/constants.py` que no leia nadie y se borro el 3-oct-2026; antes aun
+#: decia "proyeccion equiarea local", que ademas de no existir seria la clase
+#: equivocada para medir longitud —y `road_km` es una cifra titular—.
+#:
 #: `ST_FlipCoordinates` es la traduccion, y estas dos funciones son el unico
 #: sitio donde se escribe. Llamar a las de DuckDB directamente es el fallo;
 #: `test_convencion_del_esferoide` lo fija contra la libreria real.

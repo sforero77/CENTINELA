@@ -113,7 +113,8 @@ flowchart TB
 
 Población en **MMI ≥ 6, ≥ 7 y ≥ 8**. Equipamiento (edificaciones, superficie
 construida, salud, educación, vías) y desglose etario en **MMI ≥ 6 y ≥ 7**
-(`MMI_BANDS_INFRAESTRUCTURA`, `MMI_BANDS_AGE_BREAKDOWN`).
+(sección «Bandas de intensidad publicadas» de `pipelines/common/constants.py`:
+no son una constante, van en el nombre de cada columna, `*_mmi6p` y `*_mmi7p`).
 
 Hasta el 3-sep-2026 el equipamiento se agregaba **solo** en MMI ≥ 7, y el
 desglose etario también, con esta justificación escrita: *"más abajo la
@@ -134,7 +135,8 @@ muchas construcciones de clase A ya en intensidad VI; GDACS deja de dar alerta
 verde en MMI VI; y la OPS, para los sismos de Venezuela de 2026, reportó *"91
 emergency hospitals located in areas affected by Intensity VI or above,
 including 20 hospitals exposed to Intensity VII or higher"*. Las citas
-completas están en `MMI_BANDS_INFRAESTRUCTURA` (`pipelines/common/constants.py`).
+completas están en la sección «Bandas de intensidad publicadas»
+de `pipelines/common/constants.py`.
 
 **Se añadió, no se movió.** Las columnas `*_mmi7p` conservan su significado
 exacto y ninguna cifra publicada cambió de valor; las `*_mmi6p` son nuevas.

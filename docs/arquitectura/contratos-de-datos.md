@@ -134,8 +134,10 @@ mirando. El campo `razon` dice por qué no pasó: `"M4.7 < umbral M5.5"`.
 { schema, generado_utc, ventana_horas: 24, nota, suelo, totales, celdas: [...] }
 ```
 
-`totales` trae `celdas`, `celdas_publicadas`, `detecciones`, `detecciones_baja`,
-`celdas_con_poblacion`, `pop_en_celdas_con_fuego`, `salud_…`, `edu_…`, `bld_…`,
+`totales` trae `celdas`, `celdas_publicadas`, `detecciones`, `detecciones_baja`
+(la baja confianza de las celdas publicadas), `detecciones_baja_sin_celda` y
+`celdas_solo_baja` (las celdas que no entran por tener solo baja confianza, y
+sus detecciones), `celdas_con_poblacion`, `pop_en_celdas_con_fuego`, `salud_…`, `edu_…`, `bld_…`,
 `frp_total_mw`. `suelo` trae el reparto por clase de cobertura **más
 `celdas_medidas` y `celdas_sin_medir`**, porque un porcentaje sin denominador
 es una afirmación sin respaldo.

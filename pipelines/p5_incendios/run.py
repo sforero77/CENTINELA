@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -81,7 +82,7 @@ def run_incendios(
     """
     from ..p2_impact.exposure_join import connect
     from ..p2_impact.pipeline import register_exposure_view
-    from .focos_h3 import cruzar_con_exposicion, registrar_focos
+    from .focos_h3 import cruzar_con_exposicion, descarte_de_baja, registrar_focos
     from .incendios import write_incendios
     from .viento import descargar as descargar_viento
 
@@ -163,5 +164,11 @@ def run_incendios(
             "ficheros_fallidos": list(lectura.fallidos),
             "paises_cruzados": list(result.paises),
         },
+        descarte_baja=descarte_de_baja(conexion),
     )
+    # `celdas_descartadas` estaba declarado y nadie lo rellenaba: salia cero el
+    # dia que el tope mordiera, que es el unico dia en que importa. Se lee del
+    # fichero recien escrito para que diga exactamente lo que se publico.
+    totales = json.loads(result.publicado.read_text(encoding="utf-8"))["totales"]
+    result.celdas_descartadas = int(totales["celdas"]) - int(totales["celdas_publicadas"])
     return result

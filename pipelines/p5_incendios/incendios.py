@@ -18,10 +18,11 @@ from pathlib import Path
 from typing import Any, Final
 
 from ..common.atribucion import INCENDIOS, bloque_de_licencia
+from ..common.formatting import format_number_es
 from ..common.logging import get_logger
 from ..common.paths import SITE_DIR
 from ..common.state import utcnow_iso
-from .focos_h3 import CeldaConFuego
+from .focos_h3 import CeldaConFuego, DescarteDeBaja
 from .viento import Lectura as LecturaViento
 
 _log = get_logger(__name__)
@@ -50,10 +51,31 @@ INCENDIOS_SCHEMA_ID: Final[str] = "centinela/incendios/1.0"
 #: en vez de contra una muestra, que era el motivo real del recorte y nadie
 #: habia notado que lo fuera.
 #:
+#: ESA TABLA SE QUEDO VIEJA EN UNA SEMANA, y era la unica que justificaba el
+#: tope (auditoria #111). Despues de medirla cada celda empezo a llevar la
+#: cobertura del suelo, y el fichero la reticula de viento: **el coste por celda
+#: se doblo**. Medido el 3-oct-2026
+#: sobre el `site/incendios.json` publicado (corrida de las 03:51Z):
+#:
+#:     celdas   sin comprimir   gzip -6   por celda (gzip)
+#:      8.173      3,26 MB      245 KB        30 B
+#:
+#: contra los 15,6 B por celda que daba la fila de 13.031. La auditoria lo habia
+#: visto el 6-sep con 7.987 celdas: los mismos 245 KB.
+#:
 #: Queda un tope solo porque una temporada catastrofica esta fuera de lo medido,
 #: y porque un fichero sin limite superior es una forma de caerse. 60.000 es mas
-#: del doble del peor dia visto. Si alguna vez muerde, se dice a gritos: un
-#: recorte silencioso convertiria "esto es todo lo que arde" en una mentira.
+#: del doble del peor dia visto (22.701), y **se mantiene sabiendo lo que
+#: cuesta**: extrapolando lo de arriba, unos 1,8 MB por la red y unos 24 MB de
+#: JSON que el navegador tiene que parsear. Eso no es un fichero comodo —en el
+#: navegador solo esta medido hasta 23.000 celdas— pero el tope no esta para
+#: que sea comodo: esta para que no se caiga. Bajarlo hasta lo medido lo dejaria
+#: a un paso del peor dia, y el dia que mordiera se perderian celdas de verdad,
+#: que es peor que un visor lento.
+#:
+#: Si alguna vez muerde, se dice a gritos: un recorte silencioso convertiria
+#: "esto es todo lo que arde" en una mentira. Ver `_prioridad` y
+#: `build_incendios`, que lo escriben en el propio fichero.
 MAX_CELDAS: Final[int] = 60_000
 
 NOTA: Final[str] = (
@@ -320,22 +342,47 @@ def _prioridad(celdas: list[CeldaConFuego], max_celdas: int) -> list[CeldaConFue
 VENTANA_HORAS: Final[int] = 24
 
 
+def aviso_de_recorte(celdas: int, publicadas: int, max_celdas: int) -> str | None:
+    """La frase que viaja en el fichero si el tope de tamanio mordio."""
+    if publicadas >= celdas:
+        return None
+    return (
+        f"El tope de seguridad de {format_number_es(max_celdas)} celdas dejo fuera "
+        f"{format_number_es(celdas - publicadas)} de {format_number_es(celdas)}: el mapa "
+        f"NO es todo lo que arde. Los totales si son de todas las celdas."
+    )
+
+
 def build_incendios(
     celdas: list[CeldaConFuego],
     *,
     ventana_horas: int = VENTANA_HORAS,
     max_celdas: int = MAX_CELDAS,
     viento: LecturaViento | None = None,
+    descarte_baja: DescarteDeBaja | None = None,
 ) -> dict[str, Any]:
     """Arma el JSON que consume el visor.
 
     Los totales se calculan sobre **todas** las celdas, no sobre las publicadas.
     Recortar la lista para que quepa es razonable; recortar la suma nacional
     para que cuadre con la lista seria publicar una cifra falsa por comodidad.
+
+    `descarte_baja` es lo que `registrar_focos` tiro por tener solo detecciones
+    de baja confianza. Ver `focos_h3.SQL_SOLO_BAJA`.
     """
     celdas = _en_la_ventana(celdas, ventana_horas)
     publicadas = _prioridad(celdas, max_celdas)
     rejilla = _rejilla_de_viento(publicadas, viento)
+    descarte = descarte_baja or DescarteDeBaja()
+    # EL GRITO DEL RECORTE VA AL FICHERO, NO SOLO AL LOG.
+    #
+    # `_prioridad` prometia que si el tope mordia "se dice a gritos", y el grito
+    # era un `_log.error` que moria en el runner: no llegaba al codigo de salida,
+    # ni al resumen de la corrida, ni a quien lee el JSON (auditoria #177). Va
+    # en `avisos`, que es donde ya viajan la merma de FIRMS y las columnas que
+    # el activo no trae, e `incendios.yml` lo saca como anotacion de la corrida.
+    # No tumba la publicacion: 60.000 celdas con aviso valen mas que ninguna.
+    recorte = aviso_de_recorte(len(celdas), len(publicadas), max_celdas)
     return {
         "schema": INCENDIOS_SCHEMA_ID,
         "generado_utc": utcnow_iso(),
@@ -359,7 +406,13 @@ def build_incendios(
             "celdas": len(celdas),
             "celdas_publicadas": len(publicadas),
             "detecciones": sum(c.detecciones for c in celdas),
+            # `detecciones_baja` es la baja confianza de las celdas QUE ENTRAN,
+            # y se leia como si fuera todo lo descartado. Las de las celdas que
+            # solo tenian baja —el 43 % medido por la auditoria #176— no
+            # aparecian en ningun numero. Ahora van al lado, con su nombre.
             "detecciones_baja": sum(c.detecciones_baja for c in celdas),
+            "detecciones_baja_sin_celda": descarte.detecciones,
+            "celdas_solo_baja": descarte.celdas,
             "celdas_con_poblacion": sum(1 for c in celdas if c.pop > 0),
             "pop_en_celdas_con_fuego": round(sum(c.pop for c in celdas)),
             # Lo que el popup de una celda ya decia y el indicador no.
@@ -378,6 +431,7 @@ def build_incendios(
         # esta en `_rejilla_de_viento`. Ausente —no vacia— cuando no se pudo
         # leer GFS: una reticula vacia se leeria como "no hay viento".
         **({"viento": rejilla} if rejilla else {}),
+        **({"avisos": [recorte]} if recorte else {}),
     }
 
 
@@ -389,6 +443,8 @@ def write_incendios(
     viento: LecturaViento | None = None,
     avisos: tuple[str, ...] = (),
     lectura: dict[str, Any] | None = None,
+    descarte_baja: DescarteDeBaja | None = None,
+    max_celdas: int = MAX_CELDAS,
 ) -> Path:
     """Publica `site/incendios.json`.
 
@@ -403,9 +459,18 @@ def write_incendios(
     """
     destino = (site_dir or SITE_DIR) / INCENDIOS_FILENAME
     destino.parent.mkdir(parents=True, exist_ok=True)
-    datos = build_incendios(celdas, ventana_horas=ventana_horas, viento=viento)
+    datos = build_incendios(
+        celdas,
+        ventana_horas=ventana_horas,
+        max_celdas=max_celdas,
+        viento=viento,
+        descarte_baja=descarte_baja,
+    )
     if avisos:
-        datos["avisos"] = list(avisos)
+        # Se SUMAN a los de `build_incendios`, no los pisan: con el `=` que
+        # habia aqui, el aviso del recorte se perderia justo el dia en que
+        # ademas el activo trajera columnas de menos.
+        datos["avisos"] = [*datos.get("avisos", []), *avisos]
     if lectura:
         datos["lectura"] = lectura
         fallidos = lectura.get("ficheros_fallidos") or []

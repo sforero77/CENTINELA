@@ -264,10 +264,14 @@ flowchart TB
   FIRMS --> AGG["agrupar por celda H3 r8<br/><i>confianza baja se cuenta aparte</i>"]
   AGG --> JOIN["LEFT JOIN contra exposure_h3"]
   JOIN --> PRIO["ordenar: primero las celdas con gente"]
-  PRIO --> CUT["recorte a 4.000 celdas"]
+  PRIO --> CUT["tope de seguridad: 60.000 celdas<br/><i>hoy caben todas</i>"]
   CUT --> OUT[/"site/incendios.json"/]
 
-  OUT --> PUB{"¿cambió el fichero?"}
+  OUT --> TOPE{"¿mordió el tope?"}
+  TOPE -->|sí| GRITO["aviso en el JSON<br/>+ anotación de error en la corrida"]
+  GRITO --> PUB
+  TOPE -->|no| PUB
+  PUB{"¿cambió el fichero?"}
   PUB -->|no| FIN(["nada que publicar"])
   PUB -->|sí| COMMIT["commit"]
   COMMIT --> SITE["gh workflow run site.yml"]
@@ -276,8 +280,14 @@ flowchart TB
   style PRIO fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
-El recorte a 4.000 es lo que hace que la capa quepa en el visor. El orden por
-población es lo que hace que el recorte no tire justo lo que importa.
+Desde el 31-ago-2026 se publican **todas** las celdas: el recorte a 4.000 se
+apoyaba en un peso que nadie había medido. Queda un tope de seguridad de 60.000
+—más del doble del peor día visto— para una temporada catastrófica. Si alguna
+vez muerde, la corrida no sale roja (publicar con aviso vale más que no
+publicar), pero lo dice: el aviso va dentro de `incendios.json` y el paso
+*Avisar si el tope recortó la capa* lo saca como anotación de error y al
+resumen de la corrida. El orden por población sigue valiendo: si el tope
+muerde, no tira justo lo que importa.
 
 ---
 

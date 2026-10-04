@@ -178,7 +178,7 @@ class Totales:
     #: LA BANDA 6, PARA TODO. Hasta el 3-sep-2026 el equipamiento solo se
     #: agregaba en MMI>=7, y trece de veintitres reportes no llegan ahi: salian
     #: "0 hospitales, 0 escuelas" con millones de personas dentro de MMI>=6.
-    #: La razon de publicar desde 6 esta citada en `MMI_BANDS_INFRAESTRUCTURA`
+    #: La razon de publicar desde 6 esta citada en «Bandas de intensidad publicadas»
     #: (`common/constants.py`); la corta: el USGS pone "Damage slight" en el
     #: grado VI, GDACS deja de dar verde en VI, y la OPS reporta hospitales
     #: desde VI. Las columnas `*_mmi7p` no cambian de significado.

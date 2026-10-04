@@ -8,6 +8,7 @@ columnas se llaman como en Colombia.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -319,6 +320,71 @@ def test_un_zip_extraido_sin_capas_no_cuenta(tmp_path: Path) -> None:
     carpeta.mkdir()
     (carpeta / "metadata.json").write_bytes(b"{}")
     assert _hdx_en_disco(_source(), tmp_path) == []  # type: ignore[arg-type]
+
+
+# --- Una extraccion cortada no se da por buena -----------------------------
+
+
+def _zip_shapefile() -> bytes:
+    """Un shapefile como lo entrega HDX: `.shp`, `.dbf` y `.prj` en un ZIP."""
+    import io
+    import zipfile
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as z:
+        z.writestr("adm2.shp", b"geometria")
+        z.writestr("adm2.dbf", b"codigos DIVIPOLA")
+        z.writestr("adm2.prj", b"GEOGCS[WGS84]")
+    return buffer.getvalue()
+
+
+def test_una_extraccion_cortada_no_se_conforma_con_lo_que_haya(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Auditoria #165. `extractall` escribia directo en la carpeta final.
+
+    Un corte a mitad dejaba el `.shp` sin su `.prj`, y la reanudacion de
+    `download_zip_completo` —"¿hay alguna capa legible?"— decia que si: la
+    corrida siguiente construia con un shapefile sin CRS, que se abre igual y
+    reproyecta mal.
+    """
+    import zipfile
+
+    from pipelines.common.http import FixtureFetcher
+    from pipelines.p0_exposure.download import download_zip_completo
+
+    url = "https://geoportal.example/mgn.zip"
+    fetcher = FixtureFetcher({url: _zip_shapefile()})
+    original = zipfile.ZipFile.extractall
+
+    def corta_tras_el_shp(self: zipfile.ZipFile, path: Any = None, *a: Any, **k: Any) -> None:
+        self.extract("adm2.shp", path)
+        raise OSError("No queda espacio en el dispositivo")
+
+    monkeypatch.setattr(zipfile.ZipFile, "extractall", corta_tras_el_shp)
+    with pytest.raises(OSError):
+        download_zip_completo(url, tmp_path, fetcher=fetcher)
+    assert not (tmp_path / "zip").exists(), "el .shp huerfano quedo donde se reanuda"
+
+    monkeypatch.setattr(zipfile.ZipFile, "extractall", original)
+    capas = download_zip_completo(url, tmp_path, fetcher=fetcher)
+
+    assert [p.name for p in capas] == ["adm2.shp"]
+    assert sorted(p.name for p in (tmp_path / "zip").iterdir()) == [
+        "adm2.dbf",
+        "adm2.prj",
+        "adm2.shp",
+    ]
+
+
+def test_una_extraccion_entera_no_deja_temporal(tmp_path: Path) -> None:
+    from pipelines.common.http import FixtureFetcher
+    from pipelines.p0_exposure.download import download_zip_completo
+
+    url = "https://geoportal.example/mgn.zip"
+    download_zip_completo(url, tmp_path, fetcher=FixtureFetcher({url: _zip_shapefile()}))
+
+    assert [p.name for p in tmp_path.iterdir()] == ["zip"]
 
 
 def test_todas_las_rutas_de_descarga_saltan_lo_que_ya_esta(tmp_path: Path) -> None:

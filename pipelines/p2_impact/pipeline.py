@@ -99,7 +99,7 @@ class ImpactTotals:
     pop_mmi8p: float = 0.0
     pop_65p_mmi7p: float = 0.0
     # LA BANDA 6, PARA TODO Y NO SOLO PARA POBLACION. Ver
-    # `MMI_BANDS_INFRAESTRUCTURA` en `common/constants.py`: trece de veintitres
+    # «Bandas de intensidad publicadas» en `common/constants.py`: trece de veintitres
     # reportes no alcanzan MMI>=7, y publicaban cero equipamiento con millones
     # de personas en MMI>=6.
     pop_65p_mmi6p: float = 0.0

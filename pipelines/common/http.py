@@ -105,6 +105,26 @@ class HttpFetcher:
         self._retries = retries
         self._sleep = sleep
 
+    def _espera(self, attempt: int) -> float | None:
+        """Cuanto dormir antes del siguiente intento; ``None`` si no hay siguiente.
+
+        LOS TRES BUCLES DORMIAN TAMBIEN DESPUES DEL ULTIMO INTENTO. Con los
+        valores por defecto —tres intentos, esperas de 2, 4 y 8 s— una descarga
+        condenada pasaba **ocho segundos** durmiendo antes de rendirse, sin nada
+        que esperar: el `raise` estaba justo debajo. Y el log decia "reintento
+        de descarga" de un reintento que no iba a ocurrir. Auditoria #158,
+        corregido el 3-oct-2026; `test_http_cliente.py` cuenta las siestas.
+        """
+        if attempt + 1 >= self._retries:
+            return None
+        return float(self._sleep * (2**attempt))
+
+    def _dormir(self, attempt: int) -> None:
+        """Espera antes del siguiente intento, si lo hay. Ver `_espera`."""
+        espera = self._espera(attempt)
+        if espera is not None:
+            time.sleep(espera)
+
     def _get(self, url: str) -> httpx.Response:
         last: Exception | None = None
         for attempt in range(self._retries):
@@ -123,15 +143,16 @@ class HttpFetcher:
                         f"{url} no existe (HTTP {exc.response.status_code})"
                     ) from exc
                 last = exc
-                time.sleep(self._sleep * (2**attempt))
-            except (httpx.HTTPError, httpx.StreamError) as exc:  # pragma: no cover - red
+                self._dormir(attempt)
+            except (httpx.HTTPError, httpx.StreamError) as exc:
                 last = exc
-                delay = self._sleep * (2**attempt)
-                _log.warning(
-                    "reintento de descarga",
-                    extra={"context": {"url": url, "intento": attempt + 1, "espera_s": delay}},
-                )
-                time.sleep(delay)
+                delay = self._espera(attempt)
+                if delay is not None:
+                    _log.warning(
+                        "reintento de descarga",
+                        extra={"context": {"url": url, "intento": attempt + 1, "espera_s": delay}},
+                    )
+                    time.sleep(delay)
         raise RuntimeError(f"No se pudo descargar {url} tras {self._retries} intentos") from last
 
     def get_json(self, url: str) -> dict[str, Any]:
@@ -187,8 +208,8 @@ class HttpFetcher:
                         f"archivo y busca una entrega mas liviana de la fuente."
                     )
                 return response.content
-            except (httpx.HTTPError, httpx.StreamError):  # pragma: no cover - red
-                time.sleep(self._sleep * (2**attempt))
+            except (httpx.HTTPError, httpx.StreamError):
+                self._dormir(attempt)
         raise RuntimeError(f"No se pudo leer el rango {start}-{end} de {url}")
 
     def responde(self, url: str) -> bool:
@@ -339,10 +360,12 @@ class HttpFetcher:
                         f"{url} no existe (HTTP {exc.response.status_code})"
                     ) from exc
                 last = exc
-                time.sleep(self._sleep * (2**attempt))
-            except (httpx.HTTPError, httpx.StreamError, RuntimeError) as exc:  # pragma: no cover
+                self._dormir(attempt)
+            except (httpx.HTTPError, httpx.StreamError, RuntimeError) as exc:
                 last = exc
-                delay = self._sleep * (2**attempt)
+                delay = self._espera(attempt)
+                if delay is None:
+                    continue
                 _log.warning(
                     "reintento de descarga",
                     extra={
