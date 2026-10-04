@@ -178,6 +178,15 @@ pop MMI≥7: 340k → 355k
 > piezas correctas, sin nadie que las una. Es el fallo que motivó
 > `test_funciones_conectadas.py`.
 
+El changelog es un **registro**: cada emisión pone sus líneas delante y
+conserva las ya publicadas detrás. Hasta el 3-oct-2026 cada emisión lo
+reemplazaba por su propio diff, y el diff de un reproceso sin cambios es vacío:
+en el Chocó (`us6000tjl2`) un reproceso por el activo, con el mismo ShakeMap
+v10, borró el «v9 → v10» que había bajado la población en MMI≥7 de 3,1 a 2,4
+millones. Un recálculo sin versión nueva de USGS lleva su propia cabecera
+(«Recálculo con el mismo ShakeMap vN…») para que sus cifras no se lean como de
+la versión anterior.
+
 ## Los mapas estáticos
 
 Dos variantes, y ahora distintas de verdad:

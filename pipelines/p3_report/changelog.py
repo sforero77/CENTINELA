@@ -53,18 +53,47 @@ def build_changelog(anterior: Report | None, nuevo: Report) -> tuple[str, ...]:
         nuevo: el que esta a punto de publicarse.
 
     Returns:
-        Las lineas del changelog, vacio si es la primera emision o si nada
-        cambio de forma publicable.
+        Las lineas del changelog, **lo nuevo delante y lo ya publicado
+        detras**. Vacio solo en la primera emision o si nunca cambio nada.
     """
     if anterior is None:
         return ()
 
+    # EL CHANGELOG ES UN REGISTRO, NO EL DIFF DEL ULTIMO PASO.
+    #
+    # Hasta el 3-oct-2026 cada emision lo reemplazaba por su propio diff, y el
+    # diff de un reproceso sin cambios es vacio. El Choco (`us6000tjl2`) lo
+    # vivio entero: el 19-sep publico "ShakeMap: v9 → v10" con la poblacion en
+    # MMI≥7 bajando de 3,1 a 2,4 millones y las sedes de salud de 970 a 500; el
+    # 28-sep un reproceso por el activo de exposicion —el mismo ShakeMap v10—
+    # lo sustituyo por una sola linea de edificaciones. El cambio que movia las
+    # cifras de una emergencia solo sobrevivia en el historial de git, y RF-04
+    # existe para que quien leyo la version anterior no tenga que ir a buscarlo.
+    return (*_cambios_del_paso(anterior, nuevo), *anterior.changelog)
+
+
+def _cambios_del_paso(anterior: Report, nuevo: Report) -> tuple[str, ...]:
+    """Las lineas de esta emision frente a la anterior, vacio si nada cambio."""
     versiones = _cambios_de_version(anterior, nuevo)
     solucion = _cambios_de_solucion(anterior, nuevo)
     cifras = _cambios_de_cifras(anterior, nuevo)
 
     if not versiones and not solucion and not cifras:
         return ()
+
+    # Un paso sin version nueva necesita su propia cabecera ahora que el
+    # registro se acumula: sin ella, las cifras de un reproceso quedarian
+    # pegadas debajo de las del ShakeMap anterior y se leerian como suyas. Si
+    # USGS reviso la solucion sin version nueva, esa linea ya dice quien cambio.
+    # La cabecera nombra la version con su contribuidor, igual que las lineas
+    # de `_cambios_de_version`: "el mismo v10" solo es el mismo grid si es del
+    # mismo contribuidor (#95).
+    if not versiones and not solucion:
+        mismo = identidad_de_version(nuevo.inputs.shakemap_fuente, nuevo.inputs.shakemap_version)
+        versiones = [
+            f"Recálculo con el mismo ShakeMap {mismo} "
+            f"(cambió el cálculo o el activo de exposición, no USGS)"
+        ]
 
     versiones = [*versiones, *solucion]
 

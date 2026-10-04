@@ -22,8 +22,10 @@ millones de personas dentro de la banda.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import fields
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -69,6 +71,92 @@ def test_el_esquema_declara_lo_mismo_que_el_modelo() -> None:
 def test_el_esquema_cierra_la_puerta_a_claves_inventadas() -> None:
     """`additionalProperties: false` es lo que hace que el contrato sea contrato."""
     assert ESQUEMA["properties"]["totales"]["additionalProperties"] is False
+
+
+def _objetos(nodo: Any, ruta: str = "") -> Iterator[tuple[str, dict[str, Any]]]:
+    """Todo objeto declarado del esquema, con su ruta, por profundo que este."""
+    if isinstance(nodo, dict):
+        if nodo.get("type") == "object" and "properties" in nodo:
+            yield ruta or "(raiz)", nodo
+        for clave, valor in nodo.items():
+            yield from _objetos(valor, f"{ruta}.{clave}" if ruta else clave)
+    elif isinstance(nodo, list):
+        for i, valor in enumerate(nodo):
+            yield from _objetos(valor, f"{ruta}[{i}]")
+
+
+def test_ningun_objeto_del_esquema_queda_abierto() -> None:
+    """`ground_failure_usgs`, `licencia` y sus atribuciones aceptaban cualquier clave.
+
+    Un contrato cerrado por todas partes menos tres sitios no es un contrato:
+    un `ls_alerta` mal escrito —sin `_usgs`— validaba, y el visor lo leia como
+    ausente. Se recorre el esquema entero en vez de enumerar objetos, para que
+    uno nuevo no pueda nacer abierto sin que esto lo diga.
+    """
+    objetos = list(_objetos(ESQUEMA))
+    assert len(objetos) >= 9, "el recorrido no encuentra los objetos del esquema"
+    abiertos = [ruta for ruta, nodo in objetos if nodo.get("additionalProperties") is not False]
+    assert not abiertos, f"objetos del esquema sin additionalProperties:false: {abiertos}"
+
+
+def test_top_municipios_exige_la_cifra_por_la_que_se_ordena() -> None:
+    """Exigia `pop_mmi7p` y dejaba `pop_banda` opcional, justo al reves.
+
+    En los reportes que no alcanzan MMI>=7 —ocho de veintisiete el 6-sep— la
+    obligatoria vale cero en todas las filas y la opcional lleva el dato. Un
+    consumidor que leyera el contrato para saber que columna usar elegia la de
+    los ceros. Se exige todo campo de `MunicipioTop`, que es lo que se emite.
+    """
+    fila = ESQUEMA["properties"]["top_municipios"]["items"]
+    assert set(fila["required"]) == {c.name for c in fields(MunicipioTop)}
+
+
+def test_todo_reporte_publicado_cumple_el_esquema() -> None:
+    """El esquema describe lo que se publica: cerrarlo no puede dejar fuera a nadie.
+
+    `write_report_bundle` valida cada reporte antes de escribirlo, pero contra
+    el esquema de ese dia. Un cambio del esquema que dejara fuera a los ya
+    publicados —los que el visor y quien integre siguen leyendo— solo lo ve
+    esta prueba.
+    """
+    from jsonschema import Draft202012Validator
+
+    validador = Draft202012Validator(ESQUEMA)
+    publicados = sorted((RAIZ / "reports").glob("*/report.json"))
+    assert publicados, "no se encontro ningun reporte publicado que validar"
+    fuera = {
+        p.parent.name: sorted(
+            e.message for e in validador.iter_errors(json.loads(p.read_text("utf-8")))
+        )
+        for p in publicados
+    }
+    assert not {k: v for k, v in fuera.items() if v}
+
+
+def test_un_final_con_poblacion_en_banda_no_trae_radios(reporte: Any) -> None:
+    """El esquema decia que `radios` era solo de preliminares; no lo es.
+
+    Nueve reportes finales lo traian el 6-sep-2026, y es correcto: cuando ninguna banda
+    alcanza poblacion el radio es lo unico que dimensiona el evento. La regla
+    real —final con radios implica bandas en cero— ahora la valida el esquema.
+    """
+    from jsonschema import Draft202012Validator
+
+    validador = Draft202012Validator(ESQUEMA)
+    base = reporte.to_dict()
+    radios = [{"radio_km": 100, "pop": 610_000.0}]
+    ceros = {**base["totales"], "pop_mmi6p": 0.0, "pop_mmi7p": 0.0, "pop_mmi8p": 0.0}
+
+    sin_banda = {**base, "preliminar": False, "radios": radios, "totales": ceros}
+    con_banda = {**base, "preliminar": False, "radios": radios}
+    preliminar = {**base, "preliminar": True, "radios": radios}
+
+    assert base["totales"]["pop_mmi6p"] > 0, "la fixture tiene que alcanzar MMI>=6"
+    assert list(validador.iter_errors(sin_banda)) == []
+    assert list(validador.iter_errors(preliminar)) == []
+    assert list(validador.iter_errors(con_banda)), (
+        "un reporte final con poblacion en banda no puede traer radios"
+    )
 
 
 def test_las_siete_columnas_de_la_banda_6_estan() -> None:

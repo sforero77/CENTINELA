@@ -157,6 +157,80 @@ def test_la_banda_del_ranking_nunca_es_ocho() -> None:
     assert con_ocho.banda_publicada == 7, "el ranking no puede ordenar por MMI>=8"
 
 
+#: El caso del 3-oct-2026: las cifras de Tehuantepec con 4,5 personas en el
+#: borde de MMI>=7 y 1,2 en el de MMI>=8. Con `> 0` titulaba por 8 y ordenaba
+#: por 7, y la tabla de un evento de 760 mil se quedaba en una fila.
+CUATRO_Y_MEDIA = Totales(pop_mmi6p=760_856.0, pop_mmi7p=4.5, pop_mmi8p=1.2)
+
+
+def test_cuatro_personas_y_media_no_deciden_la_banda() -> None:
+    """Un punado de personas en el borde del contorno no es la banda del evento."""
+    from pipelines.p2_impact.pipeline import ImpactTotals
+
+    assert CUATRO_Y_MEDIA.banda_publicada == 6
+    assert CUATRO_Y_MEDIA.banda_titular == 6
+    # La misma regla en el productor que recorta los quince en SQL.
+    desde_p2 = ImpactTotals(pop_mmi6p=760_856.0, pop_mmi7p=4.5, pop_mmi8p=1.2)
+    assert desde_p2.to_totales().banda_publicada == 6
+
+
+def test_la_banda_mas_delgada_del_catalogo_sigue_siendo_siete() -> None:
+    """El suelo no puede borrar un MMI>=7 real.
+
+    Las cifras son las de `us7000nr0v`, la banda real mas delgada que se ha
+    publicado: 3.291 personas en MMI>=7 de 173.018, el 1,9 %, con tres
+    municipios con cifra en la tabla.
+    """
+    assert Totales(pop_mmi6p=173_018.0, pop_mmi7p=3_291.19).banda_publicada == 7
+
+
+def test_la_tabla_no_se_queda_en_una_fila_por_cuatro_personas() -> None:
+    """Lo que ve el lector: la tabla de MMI>=6, con todos sus municipios."""
+    reporte = _reporte(
+        CUATRO_Y_MEDIA,
+        (
+            MunicipioTop("MX20043", "Arriaga", 7.0, pop_mmi7p=4.5, pop_banda=41_000.0),
+            MunicipioTop("MX20141", "Juchitán", 6.5, pop_mmi7p=0.0, pop_banda=109_670.0),
+        ),
+    )
+
+    texto = render_markdown(reporte)
+
+    assert "por población en MMI≥6" in texto
+    assert "Juchitán" in texto, "el municipio mas expuesto salia de la tabla por no estar en MMI≥7"
+
+
+def test_el_visor_aplica_el_mismo_suelo() -> None:
+    """La banda la deciden dos lenguajes; el suelo tiene que ser el mismo en los dos.
+
+    Se lee la declaracion de codigo, no un comentario que la mencione: una
+    linea que empieza por `//` no cuenta.
+    """
+    import re
+    from pathlib import Path
+
+    from pipelines.common.constants import FRACCION_MINIMA_DE_BANDA
+
+    app = (Path(__file__).parent.parent.parent / "site" / "assets" / "app.js").read_text("utf-8")
+    codigo = [linea for linea in app.splitlines() if not linea.lstrip().startswith("//")]
+    declaraciones = [
+        m.group(1)
+        for linea in codigo
+        if (m := re.match(r"\s*const FRACCION_MINIMA_DE_BANDA = ([0-9.]+);", linea))
+    ]
+
+    assert declaraciones, "el visor no declara FRACCION_MINIMA_DE_BANDA"
+    assert [float(v) for v in declaraciones] == [FRACCION_MINIMA_DE_BANDA]
+
+    texto = "\n".join(codigo)
+    for funcion in ("bandaDeTotales", "bandaPublicada", "bandaTitular"):
+        inicio = texto.index(f"function {funcion}(")
+        fin = texto.index("\nfunction ", inicio + 1)
+        assert "alcanzaBanda(" in texto[inicio:fin], (
+            f"{funcion} decide la banda sin el suelo: vuelve a bastar con una persona"
+        )
+
+
 @pytest.mark.parametrize("banda", [6, 7, 8])
 def test_toda_banda_publicada_sabe_ordenar(banda: int) -> None:
     """`impact_adm2` tiene que traer la columna de cualquier banda titular."""

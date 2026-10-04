@@ -108,6 +108,32 @@ H3_RES_VIEWER: Final[int] = 7
 # El efecto: en los trece eventos sin MMI>=7, la cifra de mayores era cero por
 # construccion, justo donde una poblacion mayor expuesta es lo mas accionable.
 
+#: Que parte de la poblacion de MMI>=6 tiene que estar en una banda mas alta
+#: para que el reporte titule y ordene por ella.
+#:
+#: SIN SUELO, CUATRO PERSONAS Y MEDIA DECIDIAN EL REPORTE ENTERO. Hasta el
+#: 3-oct-2026 `banda_publicada` y `banda_titular` decidian con `> 0`: un evento
+#: con 760 mil personas en MMI>=6 y 4,5 en una esquina de MMI>=7 —una celda
+#: cuyo centro cae justo dentro del contorno, o una fraccion de pixel de
+#: WorldPop— se titulaba "4 personas en MMI>=7", ordenaba la tabla por esa
+#: banda y descartaba a todo municipio sin nadie en ella, y bajaba a MMI>=7 el
+#: equipamiento, los mayores, el mapa y el visor. Del evento quedaba una fila.
+#:
+#: POR QUE RELATIVO Y POR QUE EL 1 %. Un suelo absoluto —mil personas, por
+#: ejemplo— borraria un MMI>=7 real en un pais poco poblado y no significaria
+#: nada en Lima; lo que hay que preguntar es si la banda **describe** el evento
+#: o es su borde. El borde es ruido conocido: `mmi_max` es la isolinea que
+#: contiene el centro de la celda, y el propio ShakeMap tiene incertidumbre de
+#: medio grado o mas lejos de las estaciones. El 1 % queda por debajo de la
+#: banda real mas delgada del catalogo publicado —`us7000nr0v`, 3.291 personas
+#: en MMI>=7 de 173.018 en MMI>=6, el 1,9 %, con tres municipios con cifra—, asi
+#: que ningun reporte publicado cambia de banda; solo deja de poder decidirla un
+#: punado de personas.
+#:
+#: El visor la repite como `FRACCION_MINIMA_DE_BANDA` en `site/assets/app.js`, y
+#: `test_banda_titular.py` vigila que las dos digan lo mismo.
+FRACCION_MINIMA_DE_BANDA: Final[float] = 0.01
+
 #: Se conserva por compatibilidad: es la banda cuyo campo `pop_65p_mmi7p` viaja
 #: en los veintitres `report.json` ya publicados.
 MMI_BAND_AGE_BREAKDOWN: Final[int] = 7

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Self
 
 from .. import PIPELINE_VERSION
-from ..common.constants import DISCLAIMERS, REPORT_SCHEMA_ID
+from ..common.constants import DISCLAIMERS, FRACCION_MINIMA_DE_BANDA, REPORT_SCHEMA_ID
 from ..common.state import utcnow_iso
 
 
@@ -228,15 +228,30 @@ class Totales:
         columna de ceros, o sea en orden alfabetico. Un cero es cierto y se lee
         como que el sistema fallo, o como que el sismo no fue nada.
 
-        Se titula con la banda mas alta que si alcanzo gente, diciendo cual es.
+        Se titula con la banda mas alta que si alcanzo gente, diciendo cual es
+        —y que alcanzo gente **de verdad**: ver :meth:`alcanza`—.
         """
-        if self.pop_mmi8p > 0:
+        if self.alcanza(8):
             return 8
-        if self.pop_mmi7p > 0:
+        if self.alcanza(7):
             return 7
         if self.pop_mmi6p > 0:
             return 6
         return 0
+
+    def alcanza(self, banda: int) -> bool:
+        """Si la banda reune gente suficiente para titular y ordenar por ella.
+
+        MMI>=6 alcanza en cuanto tiene a alguien: es la banda de entrada, y por
+        debajo solo queda el cero, que tiene su propia nota. Las de arriba
+        tienen que reunir al menos `FRACCION_MINIMA_DE_BANDA` de la poblacion de
+        MMI>=6; ver la constante para el caso que lo hizo necesario y por que
+        el suelo es relativo.
+        """
+        if banda <= 6:
+            return self.pop_mmi6p > 0
+        propia = self.poblacion_en(banda)
+        return propia > 0 and propia >= FRACCION_MINIMA_DE_BANDA * self.pop_mmi6p
 
     def poblacion_en(self, banda: int) -> float:
         """Poblacion de la banda pedida. Cero para una banda no publicada."""
@@ -266,8 +281,13 @@ class Totales:
         banda sobre poblacion, y entonces por MMI>=6. Nunca por MMI>=8: es una
         banda demasiado estrecha para ordenar, y ordenar por ella esconde a los
         municipios grandes del anillo de al lado.
+
+        "No alcance" quiere decir que MMI>=7 no reune ni el 1 % de la gente de
+        MMI>=6 (:meth:`alcanza`), no que tenga cero exacto: con `> 0`, cuatro
+        personas y media en el borde del contorno ordenaban la tabla de un
+        evento de 760 mil.
         """
-        return 7 if self.pop_mmi7p > 0 else 6
+        return 7 if self.alcanza(7) else 6
 
     def to_dict(self) -> dict[str, Any]:
         """Las cifras, **derivadas de los campos** y no enumeradas a mano.
@@ -309,7 +329,7 @@ class MunicipioTop:
     #: porque es lo que hace comparables dos eventos distintos.
     pop_mmi7p: float
     #: Poblacion en la banda por la que **este** reporte ordena
-    #: (:attr:`Totales.banda_titular`). Coincide con `pop_mmi7p` cuando el
+    #: (:attr:`Totales.banda_publicada`). Coincide con `pop_mmi7p` cuando el
     #: evento alcanza MMI≥7, y es la cifra util cuando no: sin ella la tabla
     #: sale ordenada por una columna de ceros.
     pop_banda: float = 0.0
@@ -440,10 +460,14 @@ class Report:
     descargas: Descargas = field(default_factory=Descargas)
     #: True cuando aun no hay ShakeMap y el corte es por radios (RF-03).
     preliminar: bool = False
-    #: Poblacion por radio. Solo se llena en un preliminar, y es lo que se
-    #: publica **en lugar** de la tabla por intensidad: enseniar `pop_mmi7p: 0`
-    #: en un reporte sin ShakeMap seria una cifra falsa y creible, que es el
-    #: unico error que este sistema no puede permitirse.
+    #: Poblacion por radio. En un preliminar es lo que se publica **en lugar**
+    #: de la tabla por intensidad: enseniar `pop_mmi7p: 0` en un reporte sin
+    #: ShakeMap seria una cifra falsa y creible, que es el unico error que este
+    #: sistema no puede permitirse. En un final va **ademas** de la tabla, y
+    #: solo cuando ninguna banda alcanza poblacion (ver
+    #: `_radios_si_ninguna_banda_alcanza` en P2). Este comentario y el esquema
+    #: decian "solo en un preliminar" con nueve finales publicados que lo
+    #: traian el 6-sep-2026 (diez el 3-oct).
     radios: tuple[PoblacionEnRadio, ...] = ()
     #: True cuando el evento se reconstruyo despues de ocurrir. Cambia lo que
     #: el reporte puede afirmar, asi que viaja hasta el visor: la poblacion
@@ -453,7 +477,8 @@ class Report:
     backtest: bool = False
     #: Alertas del propio USGS para Ground Failure. Referencia cruzada.
     ground_failure_usgs: GroundFailureUSGS = field(default_factory=GroundFailureUSGS)
-    #: Deltas frente a la version anterior del reporte (RF-04).
+    #: Registro de deltas entre versiones del reporte (RF-04), lo mas reciente
+    #: primero. Ver `changelog.build_changelog`.
     changelog: tuple[str, ...] = ()
     #: Bajo que se publica esto y a quien hay que citar. Ver `Licencia`.
     licencia: Licencia = field(default_factory=Licencia)

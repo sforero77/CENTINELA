@@ -111,3 +111,59 @@ def test_dos_reportes_identicos_no_producen_ruido(reporte: Report) -> None:
     productos: la seccion no debe aparecer.
     """
     assert build_changelog(reporte, reporte) == ()
+
+
+# --- El registro sobrevive a la emision siguiente ---------------------------
+
+
+def _publicado_con_v10(reporte: Report) -> Report:
+    """El Choco del 19-sep-2026: el ShakeMap v10 movio las cifras de verdad."""
+    v9 = _con(reporte, version=9, pop_mmi7p=3_100_000)
+    v10 = _con(reporte, version=10, pop_mmi7p=2_400_000)
+    publicado = replace(v10, changelog=build_changelog(v9, v10))
+    assert "Población en MMI≥7: 3,1 millones → 2,4 millones" in publicado.changelog
+    return publicado
+
+
+def test_un_reproceso_sin_cambios_no_borra_el_changelog(reporte: Report) -> None:
+    """El caso del Choco, `us6000tjl2`.
+
+    El 19-sep publico "ShakeMap: v9 → v10" con la poblacion en MMI≥7 bajando
+    de 3,1 a 2,4 millones. Cada emision reemplazaba el changelog por su propio
+    diff, y el de un reproceso sin cambios es vacio: el que venga despues lo
+    borra, y lo que movio las cifras de la emergencia deja de publicarse.
+    """
+    publicado = _publicado_con_v10(reporte)
+    assert "ShakeMap: v9 → v10" in publicado.changelog
+
+    assert build_changelog(publicado, publicado) == publicado.changelog
+
+
+def test_un_reproceso_que_mueve_cifras_se_suma_al_registro(reporte: Report) -> None:
+    """El 28-sep el Choco se reproceso por el activo, con el mismo v10.
+
+    Publico una sola linea de edificaciones y el v9 → v10 desaparecio. Lo nuevo
+    va delante, con una cabecera que dice que USGS no cambio, y lo anterior se
+    queda detras.
+    """
+    publicado = _publicado_con_v10(reporte)
+    reproceso = _con(publicado, bld_mmi7p=600_000)
+
+    lineas = build_changelog(publicado, reproceso)
+
+    assert lineas[0].startswith("Recálculo con el mismo ShakeMap v10")
+    assert any(linea.startswith("Edificaciones en MMI≥7") for linea in lineas)
+    assert lineas[-len(publicado.changelog) :] == publicado.changelog, (
+        "lo ya publicado tiene que seguir en el changelog, detras de lo nuevo"
+    )
+
+
+def test_una_version_nueva_no_borra_la_anterior(reporte: Report) -> None:
+    """Quien leyo la v9 y abre la v11 tiene que ver tambien que trajo la v10."""
+    publicado = _publicado_con_v10(reporte)
+    v11 = _con(publicado, version=11, pop_mmi7p=2_800_000)
+
+    lineas = build_changelog(publicado, v11)
+
+    assert lineas[0] == "ShakeMap: v10 → v11"
+    assert "ShakeMap: v9 → v10" in lineas
