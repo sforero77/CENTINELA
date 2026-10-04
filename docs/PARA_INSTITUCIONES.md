@@ -85,7 +85,7 @@ mantenedor de país puede sustituirla: Colombia ya usa las proyecciones del DANE
 | Colombia | 52.620.429 | 53.000.000 (DANE) | −0,72 % |
 | Guatemala | 18.622.441 | 18.687.881 | −0,35 % |
 | Perú | 34.475.278 | 34.576.665 | −0,29 % |
-| Paraguay | 7.019.481 | 7.013.078 | +0,09 % |
+| Paraguay | 7.019.484 | 7.013.078 | +0,09 % |
 | República Dominicana | 11.558.381 | 11.520.487 | +0,33 % |
 | Panamá | 4.590.423 | 4.571.189 | +0,42 % |
 | Argentina | 46.284.585 | 45.851.378 | +0,94 % |
