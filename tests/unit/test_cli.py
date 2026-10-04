@@ -169,10 +169,46 @@ def test_trigger_publica_el_latido_aunque_no_haya_eventos(
     monkeypatch.setattr(cli, "run_trigger", lambda *_a, **_k: resultado)
     monkeypatch.setattr(cli, "HttpFetcher", lambda *_a, **_k: object())
     monkeypatch.setattr(cli, "write_status", lambda **kw: escrito.update(kw) or Path("x"))
+    # Sin `--dry-run`: un simulacro ya no late (ver la prueba de abajo), asi que
+    # se corre de verdad con la ventana de observados desviada.
+    monkeypatch.setattr(cli, "leer", lambda *_a, **_k: [])
+    monkeypatch.setattr(cli, "write_observados", lambda *_a, **_k: Path("x"))
 
-    assert cli.main(["trigger", "--dry-run"]) == 0
+    assert cli.main(["trigger"]) == 0
     assert escrito["latido"]["revisados"] == 18
     assert json.loads(capsys.readouterr().out)["a_despachar"] == []
+
+
+def test_un_simulacro_no_escribe_el_latido(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Hallazgo #155 de la auditoria de septiembre de 2026.
+
+    `--dry-run` se saltaba `observados.json` y el estado del evento, pero no
+    `write_status`: `make trigger` y el simulacro mensual reescribian el
+    `site/status.json` que publica /status y le anadian un latido falso. Un
+    latido es la prueba de que el vigia de verdad sigue vivo.
+    """
+    escrito: list[str] = []
+    resultado = TriggerResult(revisados=18, relevantes=0, latido_utc="2026-08-25T15:00:00Z")
+
+    def _anotar(que: str) -> Any:
+        def _escribe(*_a: object, **_k: object) -> Path:
+            escrito.append(que)
+            return Path("x")
+
+        return _escribe
+
+    monkeypatch.setattr(cli, "run_trigger", lambda *_a, **_k: resultado)
+    monkeypatch.setattr(cli, "HttpFetcher", lambda *_a, **_k: object())
+    monkeypatch.setattr(cli, "write_status", _anotar("status.json"))
+    monkeypatch.setattr(cli, "write_observados", _anotar("observados.json"))
+
+    assert cli.main(["trigger", "--dry-run"]) == 0
+    assert escrito == [], "el simulacro escribio en site/"
+    salida = capsys.readouterr()
+    assert json.loads(salida.out)["latido_fallido"] is None
+    assert "el latido no se escribe" in salida.err
 
 
 def test_el_json_del_trigger_sale_limpio_por_stdout(
@@ -295,3 +331,80 @@ def test_regenerar_mapas_sin_reportes_avisa(tmp_path: Path) -> None:
 def test_regenerar_mapas_de_un_evento_inexistente_falla(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         cli.main(["regenerar-mapas", "us6000tjl2", "--reports", str(tmp_path)])
+
+
+# --- sin-pais -----------------------------------------------------------------
+
+
+def _mar_abierto(tmp_path: Path, origen_utc: str) -> Path:
+    from pipelines.common.state import EventState, EventStatus
+
+    eventos = tmp_path / "events"
+    EventState(
+        usgs_id="us7000mar0",
+        estado=EventStatus.DETECTADO,
+        mag=5.8,
+        lon=-100.0,
+        lat=-20.0,
+        depth_km=10.0,
+        lugar="southern East Pacific Rise",
+        origen_utc=origen_utc,
+    ).save(eventos)
+    return eventos
+
+
+@pytest.mark.parametrize(("dias", "visible"), [(1, True), (30, False)], ids=["reciente", "viejo"])
+def test_sin_pais_dice_si_el_evento_cabe_en_la_ventana(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    dias: int,
+    visible: bool,
+) -> None:
+    """Hallazgo #154 de la auditoria de septiembre de 2026.
+
+    El comando prometia «terminal y visible en observados», y `write_observados`
+    poda por fecha de origen a cinco dias: un historico despachado a mano
+    entraba y salia en la misma escritura. Ahora lo que se publica es lo que
+    hay, y la salida lo declara.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    from pipelines.common.state import EventState, EventStatus
+    from pipelines.p1_trigger import observados
+
+    origen = (datetime.now(UTC) - timedelta(days=dias)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    eventos = _mar_abierto(tmp_path, origen)
+    sitio = tmp_path / "site"
+    monkeypatch.setattr(observados, "SITE_DIR", sitio)
+
+    assert cli.main(["sin-pais", "us7000mar0", "--events-dir", str(eventos)]) == 0
+
+    salida = capsys.readouterr()
+    assert json.loads(salida.out)["en_observados"] is visible
+    publicados = {e.usgs_id for e in observados.leer(sitio)}
+    assert ("us7000mar0" in publicados) is visible
+    if not visible:
+        assert "fuera de la ventana" in salida.err
+    estado = EventState.load("us7000mar0", eventos)
+    assert estado is not None
+    assert estado.estado is EventStatus.DESCARTADO
+
+
+def test_impact_commitea_la_capa_donde_sin_pais_deja_el_evento() -> None:
+    """La otra mitad de #154: escrito en el runner no es publicado.
+
+    `impact.yml` hacia `git add site/status.json` y nada mas, asi que el evento
+    en mar abierto se cerraba como descartado y la capa que lo pintaba se
+    quedaba en el disco del runner.
+    """
+    raiz = Path(__file__).resolve().parents[2]
+    texto = (raiz / ".github" / "workflows" / "impact.yml").read_text(encoding="utf-8")
+    anadidos = {
+        argumento
+        for linea in texto.splitlines()
+        if (comando := linea.strip()).startswith("git add ")
+        for argumento in comando.removeprefix("git add ").split()
+    }
+
+    assert "site/observados.json" in anadidos

@@ -103,35 +103,47 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
     #
     # Se anota, se termina el resto del trabajo, y la corrida acaba en rojo de
     # todos modos: visible sin ser destructivo.
+    latido: dict[str, Any] = {
+        "utc": result.latido_utc,
+        "revisados": result.revisados,
+        "relevantes": result.relevantes,
+        # Cuantas corridas del vigia cubre este latido. El latido se commitea
+        # como mucho una vez por hora, asi que sin este numero el hueco entre
+        # dos latidos se lee como si fuera el ritmo del cron — y con el disparo
+        # externo a cinco minutos eso sobreestima el intervalo real por un
+        # factor de doce.
+        "revisiones": max(1, args.revisiones),
+        # Va al latido para que /status lo ensene: es la unica superficie
+        # publica donde "cero relevantes" se puede distinguir de "no pude
+        # leer". Solo cuando los hay, para no ensuciar los latidos sanos.
+        **(
+            {"estados_ilegibles": len(result.estados_ilegibles)} if result.estados_ilegibles else {}
+        ),
+        **({"feeds_fallidos": result.feeds_fallidos} if result.feeds_fallidos else {}),
+    }
     latido_fallido: str | None = None
-    try:
-        write_status(
-            latido={
-                "utc": result.latido_utc,
-                "revisados": result.revisados,
-                "relevantes": result.relevantes,
-                # Cuantas corridas del vigia cubre este latido. El latido se
-                # commitea como mucho una vez por hora, asi que sin este numero
-                # el hueco entre dos latidos se lee como si fuera el ritmo del
-                # cron — y con el disparo externo a cinco minutos eso
-                # sobreestima el intervalo real por un factor de doce.
-                "revisiones": max(1, args.revisiones),
-                # Va al latido para que /status lo ensene: es la unica
-                # superficie publica donde "cero relevantes" se puede
-                # distinguir de "no pude leer". Solo cuando los hay, para no
-                # ensuciar los latidos sanos.
-                **(
-                    {"estados_ilegibles": len(result.estados_ilegibles)}
-                    if result.estados_ilegibles
-                    else {}
-                ),
-                **({"feeds_fallidos": result.feeds_fallidos} if result.feeds_fallidos else {}),
-            }
+    # UN SIMULACRO NO LATE.
+    #
+    # `--dry-run` promete «no escribir» y se saltaba `observados.json` y el
+    # `event_state`, pero no esto: `make trigger` y el simulacro mensual
+    # reescribian `site/status.json` —el fichero que sirve /status— y le
+    # anadian un latido que ningun vigia de verdad habia dado. En local, el
+    # siguiente `git add site/` lo arrastraba a `main`. Un latido es la prueba
+    # de que el cron sigue vivo, y un ensayo no puede fabricarla. Hallazgo #155
+    # de la auditoria de septiembre de 2026.
+    if args.dry_run:
+        print(
+            "simulacro: el latido no se escribe en site/status.json "
+            f"({json.dumps(latido, ensure_ascii=False)})",
+            file=sys.stderr,
         )
-    except (OSError, ValueError) as error:
-        latido_fallido = str(error)
-        print(f"No se pudo publicar el latido: {error}", file=sys.stderr)
-        _emit_github_output("latido_fallido", "true")
+    else:
+        try:
+            write_status(latido=latido)
+        except (OSError, ValueError) as error:
+            latido_fallido = str(error)
+            print(f"No se pudo publicar el latido: {error}", file=sys.stderr)
+            _emit_github_output("latido_fallido", "true")
 
     # Y la ventana de cinco dias de lo que se vio y no se despacho. Se
     # reescribe en cada latido aunque no haya nada nuevo, porque la poda
@@ -163,8 +175,8 @@ def _cmd_trigger(args: argparse.Namespace) -> int:
 #: Tiene el suyo porque **no es un fallo, es un descarte**, y quien orquesta
 #: necesita distinguirlos: ante un fallo hay que abrir un issue, ante un
 #: descarte hay que reintentar con el siguiente candidato. Misma convencion que
-#: `contraste` y `calibrar`, que ya usan el 2 para "esto no es un error, es algo
-#: que mirar".
+#: `contraste` (su 7) y `calibrar` (su 2): "esto no es un error, es algo que
+#: mirar".
 EXIT_ACTIVO_DE_OTRO_PAIS = 3
 
 #: Codigo de salida de "el origen no estaba disponible; vuelve a intentarlo".
@@ -191,6 +203,17 @@ EXIT_RELEASE_CADUCADO = 5
 #: publicado, que es lo que hace `exposure_quarterly.yml` al verlo
 #: (`--aceptar-insumos-nuevos` y despues `comparar-medicion`).
 EXIT_INSUMO_CAMBIADO = 6
+
+#: Codigo de salida de `contraste` cuando hay celdas evaluadas que el activo no
+#: cubre: un hallazgo, no un fallo.
+#:
+#: Era el 2, y el 2 no es de nadie: es el que usa argparse para **cualquier**
+#: error de uso y el que devuelve `main` ante un `NotImplementedError`.
+#: `contraste.yml` traducia el 2 a «aviso, hay huecos de cobertura» y salia en
+#: verde, asi que una flag mal escrita al despachar —o un comando que no
+#: llegaba a arrancar— se leia como un contraste hecho con huecos. Hallazgo #76
+#: de la auditoria de septiembre de 2026.
+EXIT_CELDAS_SIN_ACTIVO = 7
 
 
 def _cmd_impact(args: argparse.Namespace) -> int:
@@ -510,8 +533,9 @@ def _cmd_contraste(args: argparse.Namespace) -> int:
         print(destino)
     print(volcado)
     # Una celda evaluada que el activo no tiene es un hueco de cobertura, no un
-    # matiz: se distingue con codigo 2 para que un workflow pueda pararse.
-    return 2 if resultado.celdas_sin_activo else 0
+    # matiz: se distingue con un codigo propio para que un workflow pueda
+    # pararse — propio, no el 2, que argparse usa para cualquier error de uso.
+    return EXIT_CELDAS_SIN_ACTIVO if resultado.celdas_sin_activo else 0
 
 
 def _cmd_reindexar(args: argparse.Namespace) -> int:
@@ -540,6 +564,24 @@ def _cmd_reindexar(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 1
+    return 0
+
+
+def _cmd_resolver_derivados(args: argparse.Namespace) -> int:
+    """Resuelve un rebase que choca solo en ficheros derivados.
+
+    Lo llaman `impact.yml` y `trigger.yml` desde su bucle de push. Antes cada
+    uno llevaba su copia en bash del mismo manejador, y ya habian divergido:
+    ver `pipelines/common/derivados.py`.
+    """
+    from .common.derivados import ConflictoNoResolubleError, resolver
+
+    try:
+        resueltos = resolver()
+    except (ConflictoNoResolubleError, OSError, ValueError) as error:
+        print(f"No se resuelve el conflicto: {error}", file=sys.stderr)
+        return 1
+    print(f"derivados regenerados en vez de fusionarse: {' '.join(resueltos)}")
     return 0
 
 
@@ -827,6 +869,7 @@ def _cmd_frescura(args: argparse.Namespace) -> int:
         Ausentes,
         Congelado,
         Desfase,
+        Ilegible,
         raise_if_stale,
         resumen,
         revisar,
@@ -856,11 +899,11 @@ def _cmd_frescura(args: argparse.Namespace) -> int:
     # El peor sitio posible para ese fallo: este modulo existe porque el visor
     # estuvo diecisiete horas congelado con todo en verde, y su propio vigilante
     # firmaba el verde estando ciego.
-    de_red: list[Desfase | Ausentes | Congelado] = [
+    de_red: list[Desfase | Ausentes | Congelado | Ilegible] = [
         *revisar(cliente, sitio=args.sitio),
         *revisar_colecciones(cliente, sitio=args.sitio),
     ]
-    locales: list[Desfase | Ausentes | Congelado] = list(revisar_vejez())
+    locales: list[Desfase | Ausentes | Congelado | Ilegible] = list(revisar_vejez())
     revisiones = [*de_red, *locales]
     print(resumen(revisiones))
 
@@ -958,6 +1001,15 @@ def _cmd_sin_pais(args: argparse.Namespace) -> int:
     visor ya pinta con los sismos vistos y no despachados. Ocurrio, se vio, y se
     puede señalar en el mapa; lo unico que no hay es una cifra de exposicion, y
     eso el propio fichero lo declara.
+
+    SOLO SI CABE EN LA VENTANA. `observados.json` es «lo que esta pasando
+    ahora», cinco dias, y `write_observados` poda por fecha de origen. Un evento
+    mas viejo —un historico despachado a mano, un backtest— entraba y la poda
+    lo tiraba en la misma escritura, mientras el comando y `impact.yml`
+    afirmaban «queda visible en observados». Hallazgo #154 de la auditoria de
+    septiembre de 2026. Meter un sismo de hace meses en la capa de «ahora»
+    seria mentir por el otro lado, asi que no se fuerza: se dice. El cierre y
+    su razon quedan en `events/<id>.json`, y la salida declara `en_observados`.
     """
     from .p1_trigger.observados import EventoObservado, fusionar, leer, podar, write_observados
 
@@ -982,8 +1034,26 @@ def _cmd_sin_pais(args: argparse.Namespace) -> int:
         razon=razon,
         iso3="",
     )
-    ruta = write_observados(podar(fusionar(leer(), [observado])))
-    print(json.dumps({"usgs_id": estado.usgs_id, "razon": razon, "observados": str(ruta)}))
+    vigentes = podar(fusionar(leer(), [observado]))
+    ruta = write_observados(vigentes)
+    en_observados = any(e.usgs_id == estado.usgs_id for e in vigentes)
+    if not en_observados:
+        print(
+            f"{estado.usgs_id} es de {estado.origen_utc}, fuera de la ventana de "
+            f"{DIAS_OBSERVADOS} dias de observados.json: no se pinta en el mapa. "
+            f"El cierre y su razon quedan en su event_state.",
+            file=sys.stderr,
+        )
+    print(
+        json.dumps(
+            {
+                "usgs_id": estado.usgs_id,
+                "razon": razon,
+                "observados": str(ruta),
+                "en_observados": en_observados,
+            }
+        )
+    )
     return 0
 
 
@@ -1291,6 +1361,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_reindexar.add_argument("--reports", help="raiz de reports/")
     p_reindexar.set_defaults(func=_cmd_reindexar)
+
+    p_resolver = sub.add_parser(
+        "resolver-derivados",
+        help="resuelve un rebase que choca solo en ficheros derivados (los regenera)",
+    )
+    p_resolver.set_defaults(func=_cmd_resolver_derivados)
 
     p_mapas = sub.add_parser(
         "regenerar-mapas", help="rehace los PNG de un reporte publicado, o de todos"

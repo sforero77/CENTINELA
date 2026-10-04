@@ -135,12 +135,16 @@ jobs:
           # `| tee` devuelve el codigo de tee y no el del comando: la primera
           # corrida salio "success" con un traceback dentro. De ahi PIPESTATUS.
           #
-          # Y el 2 no es un fallo: es "hay celdas evaluadas que el activo no
+          # Y el 7 no es un fallo: es "hay celdas evaluadas que el activo no
           # cubre", que es un hallazgo. Distinguirlo importa porque la version
           # anterior avisaba de un hueco de cobertura cada vez que fallaba
           # cualquier cosa — incluido no poder abrir el fichero, que es justo lo
           # que estaba pasando.
-          if [ "$CODIGO" = "2" ]; then
+          #
+          # Era el 2 hasta el 3-oct-2026, y el 2 es tambien el de argparse ante
+          # cualquier error de uso: una flag mal escrita salia en verde como
+          # «hay celdas sin activo». Es `EXIT_CELDAS_SIN_ACTIVO` en `cli.py`.
+          if [ "$CODIGO" = "7" ]; then
             echo "::warning::Hay celdas evaluadas que el activo no cubre. Ver contraste.json"
             exit 0
           fi

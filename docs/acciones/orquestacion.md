@@ -27,6 +27,8 @@ flowchart TB
   TRIG -->|"si edad &gt; 3 h"| FRE["frescura.yml"]
   TRIG -->|"si edad &gt; 6 h"| INC["incendios.yml<br/>P5"]
   TRIG -->|"si edad &gt; 24 h"| REP["repaso.yml<br/>RF-04 fuera del feed"]
+  TRIG -->|"si edad &gt; 24 h"| DAT["datos.yml<br/>el guardia de los datos"]
+  IMP -->|"si commiteó"| DAT
   REP -->|"versión nueva"| IMP
   TRIG -->|"si commiteó"| SIT
   IMP -->|"si commiteó"| SIT
@@ -91,7 +93,12 @@ El vigía no despierta a los demás en cada corrida: mira cuándo corrieron por
 despachar_si_toca frescura.yml  3   # cada 3 h
 despachar_si_toca incendios.yml 6   # cada 6 h
 despachar_si_toca repaso.yml   24   # diario
+despachar_si_toca datos.yml    24   # diario: la guardia de «sismo sin reporte»
 ```
+
+`datos.yml` entró el 3-oct-2026: `impact.yml` solo lo despacha cuando publica,
+así que un sismo cuyo P2 murió antes de publicar dependía de su cron diario
+—uno más en la cola estrangulada— para que alguien lo viera.
 
 Con el cron externo a 5 minutos, esta comprobación ocurre 288 veces al día pero
 solo dispara 8 veces `incendios.yml` y 8 veces `frescura.yml`. La consulta de

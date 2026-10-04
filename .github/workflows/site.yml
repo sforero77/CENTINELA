@@ -162,3 +162,70 @@ jobs:
           path: _site
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1
+
+  # EL UNICO WORKFLOW QUE PUBLICA ALGO AL PUBLICO ERA EL UNICO SIN CAMINO DE
+  # FALLO.
+  #
+  # Si el despliegue moria —un `og:image` que no casa, `centinela cobertura`
+  # que revienta, Pages que no responde— la corrida quedaba en rojo y nadie la
+  # abria: la despacha un bot tras su push, no una persona que este mirando.
+  # `frescura.yml` acabaria viendo el desfase, pero con tres horas de gracia y
+  # dependiendo de la cola de cron; y no sabe decir por que. Hallazgo #62 de la
+  # auditoria de septiembre de 2026.
+  #
+  # Misma forma que `frescura.yml` y `datos.yml`: una sola incidencia por
+  # titulo, comentada en cada fallo siguiente y cerrada por este mismo workflow
+  # en el primer despliegue que salga bien. Una corrida cancelada no cuenta:
+  # la cancela el despliegue siguiente (`cancel-in-progress`), que es el que
+  # decide.
+  avisar:
+    needs: publicar
+    if: ${{ always() && !cancelled() && github.repository == 'sforero77/CENTINELA' }}
+    runs-on: ubuntu-latest
+    # Solo este job toca incidencias; el que despliega no las necesita.
+    permissions:
+      issues: write
+    steps:
+      - name: Abrir o cerrar la incidencia
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TITULO: El despliegue del visor fallo
+          RESULTADO: ${{ needs.publicar.result }}
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ "$RESULTADO" = success ]; then
+            if [ -n "$ABIERTA" ]; then
+              gh issue close "$ABIERTA" --reason completed --comment "Recuperado: el visor se volvio a desplegar.
+
+          Corrida: $CORRIDA"
+            fi
+            exit 0
+          fi
+
+          if [ -n "$ABIERTA" ]; then
+            gh issue comment "$ABIERTA" --body "Vuelve a fallar ($(date -u +%Y-%m-%d\ %H:%M) UTC, resultado: $RESULTADO).
+
+          Corrida: $CORRIDA"
+            exit 1
+          fi
+
+          gh label create pipeline --color 0E8A16 --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CUERPO="El despliegue de la pagina publica fallo (resultado: $RESULTADO): lo
+          que se commiteo en \`site/\` o \`reports/\` no esta llegando a la gente.
+
+          Mira el paso en rojo de la corrida. Si fue un tropiezo de Pages, basta
+          con relanzarlo: \`gh workflow run site.yml\`.
+
+          Esta incidencia se cierra sola en el primer despliegue que salga bien.
+
+          Corrida: $CORRIDA"
+
+          gh issue create --title "$TITULO" --label "pipeline,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"
+          exit 1

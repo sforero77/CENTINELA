@@ -93,7 +93,10 @@ jobs:
           CODIGO=$?
           set -e
           if [ "$CODIGO" -eq 4 ]; then
-            echo "::notice::$USGS_ID cae fuera de todas las cajas de pais: mar abierto. Se cierra y queda visible en observados."
+            # Si queda en la capa de observados lo dice el propio comando: un
+            # evento de mas de cinco dias —un historico despachado a mano— no
+            # cabe en la ventana y no se pinta (hallazgo #154).
+            echo "::notice::$USGS_ID cae fuera de todas las cajas de pais: mar abierto. Se cierra como descartado."
             uv run centinela sin-pais "$USGS_ID" \
               --razon "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos"
             echo "sin_pais=true" >> "$GITHUB_OUTPUT"
@@ -245,7 +248,13 @@ jobs:
           # La latencia se recalcula **solo cuando hay algo que publicar**, que
           # es cuando puede haber cambiado.
           uv run centinela status
-          git add site/status.json
+          # `observados.json` tambien: es donde `centinela sin-pais` deja el
+          # sismo en mar abierto. Este `git add` no lo llevaba, asi que el
+          # evento se cerraba como descartado, la capa lo ganaba en el disco
+          # del runner y se perdia con el: el comando prometia «queda visible
+          # en observados» y no lo veia nadie (hallazgo #154). En una corrida
+          # normal no cambia y no anade nada.
+          git add site/status.json site/observados.json
 
           git commit -m "P3: reporte de $USGS_ID"
 
@@ -260,56 +269,19 @@ jobs:
           # "CONFLICT (content): Merge conflict in reports/index.json" y su
           # reporte, ya calculado, no llego a publicarse.
           #
-          # Un derivado no se fusiona: se regenera. El indice sale de los
-          # `report.json` del directorio y la pagina de estado de los
-          # `event_state`, asi que ninguno de los dos tiene contenido propio que
-          # una fusion pudiera salvar.
+          # Un derivado no se fusiona: se regenera. La lista de derivados, las
+          # reglas para rehacer cada uno y la red de seguridad contra los
+          # marcadores viven en `pipelines/common/derivados.py`, una sola vez:
+          # hasta el 3-oct-2026 este manejador y su gemelo de `trigger.yml`
+          # eran dos copias en bash con listas distintas, y ya habian divergido
+          # (hallazgo #68). La funcion de abajo tiene que ser identica en los
+          # dos workflows; lo vigila `test_publicar_a_la_vez.py`.
           #
-          # La lista esta aqui una sola vez. Cuando entro `site/status.json`
-          # este manejador solo conocia `reports/index.json`, y el segundo
-          # derivado habria tumbado la publicacion del segundo evento
-          # exactamente igual que el primero.
-          DERIVADOS='reports/index.json site/status.json'
-
+          # Fallar tiene que abortar. Se llama desde un `elif`, que
+          # **desactiva `set -e`**: de ahi el `|| return 1` explicito.
           regenerar_derivados() {
-            local conflictos
-            conflictos=$(git diff --name-only --diff-filter=U)
-            [ -n "$conflictos" ] || return 1
-            # Un conflicto fuera de la lista es real y no se toca: regenerar
-            # a ciegas descartaria el trabajo del otro job.
-            if grep -qvE '^(reports/index\.json|site/status\.json)$' <<<"$conflictos"; then
-              return 1
-            fi
-            echo "::notice::derivados en conflicto; se regeneran en vez de fusionarse"
-            # EL FICHERO EN CONFLICTO NO ES JSON, Y `centinela status` LO LEE.
-            #
-            # Regenerar sobre un `status.json` con marcadores de conflicto hacia
-            # que `write_status` no pudiera parsearlo y repusiera el historial de
-            # latidos vacio. Se resuelve antes: con `--theirs` se pierde a lo sumo
-            # un latido en vez de todos, y `centinela status` regenera el resto.
-            git checkout --theirs site/status.json 2>/dev/null || true
-            # Fallar aqui tiene que abortar. Esta funcion se llama desde un
-            # `elif`, que **desactiva `set -e`**: sin comprobar el codigo de
-            # salida, un regenerado que falla seguia hasta `git add` y
-            # `rebase --continue`, publicando el fichero en conflicto tal cual.
-            uv run centinela reindexar || return 1
-            uv run centinela status || return 1
-
-            # LA RED DE SEGURIDAD. Un fichero con marcadores no se publica,
-            # sea cual sea el motivo. El 2-sep-2026 el manejador gemelo de
-            # `trigger.yml` dejo los dos derivados corruptos en `main`:
-            # `/status` sirvio JSON invalido y el vigia se cayo detras.
-            # Es preferible reintentar y quedarse en rojo —que se ve— a servir
-            # un JSON que el visor no puede leer.
-            for derivado in $DERIVADOS; do
-              if grep -q '^<<<<<<< \|^>>>>>>> ' "$derivado"; then
-                echo "::error::$derivado conserva marcadores de conflicto; no se publica"
-                return 1
-              fi
-            done
-
-            # shellcheck disable=SC2086
-            git add $DERIVADOS
+            echo "::notice::conflicto al rebasar; se intenta regenerar los derivados"
+            uv run centinela resolver-derivados || return 1
             GIT_EDITOR=true git rebase --continue
           }
 

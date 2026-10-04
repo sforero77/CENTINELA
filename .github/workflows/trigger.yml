@@ -236,6 +236,19 @@ jobs:
           # revision de ShakeMap que llega el dia 40 no es mas urgente por
           # mirarla cada hora, y la mediana de la ultima revision son 63 dias.
           despachar_si_toca repaso.yml 24
+          # EL UNICO GUARDIA DE «HAY UN SISMO Y NO HAY REPORTE» NO PUEDE
+          # DEPENDER DE LA COLA QUE NO GANA.
+          #
+          # `impact.yml` despacha `datos.yml` solo cuando publica. Si P2 muere
+          # antes, o el despacho de P2 no llega a salir, el evento queda en
+          # `events/` sin reporte y lo unico que corre
+          # `test_ningun_evento_se_queda_sin_reporte.py` es el cron diario de
+          # `datos.yml` — uno mas compitiendo por los cinco turnos al dia que
+          # GitHub concede al repositorio. Hallazgo #61 de la auditoria de
+          # septiembre de 2026. Diario, como su cron: la guardia da seis horas
+          # de gracia, y correr la suite y el navegador cada pocas horas no
+          # cambia ninguna decision.
+          despachar_si_toca datos.yml 24
           # EL TRIMESTRAL NO PUEDE DEPENDER DE UN CRON TRIMESTRAL.
           #
           # Su cadencia declarada es mas larga que la vida de su insumo:
@@ -337,60 +350,25 @@ jobs:
           #
           # La colision es rara —P2 solo corre con un sismo M>=5.5— pero ocurre
           # exactamente cuando mas importa: mientras se publica un reporte real.
-          DERIVADOS='site/status.json site/observados.json'
-
+          #
+          # EL MANEJADOR ES EL MISMO QUE EL DE `impact.yml`, LETRA POR LETRA.
+          #
+          # Eran dos copias en bash y ya habian divergido: esta no sabia del
+          # indice de reportes, aquella no sabia de `observados.json`, y el
+          # `checkout --theirs` que salva los latidos llego aqui semanas tarde.
+          # El 2-sep-2026 a las 20:01 la copia atrasada dejo los dos derivados
+          # con marcadores en `main`, `/status` sirvio JSON invalido y el vigia
+          # se cayo en las dos corridas siguientes. Desde el 3-oct-2026 la
+          # lista, las reglas y la red de seguridad viven en
+          # `pipelines/common/derivados.py` (hallazgo #68), y la funcion de
+          # abajo tiene que ser identica en los dos workflows; lo vigila
+          # `test_publicar_a_la_vez.py`.
+          #
+          # Fallar tiene que abortar. Se llama desde un `elif`, que
+          # **desactiva `set -e`**: de ahi el `|| return 1` explicito.
           regenerar_derivados() {
-            local conflictos
-            conflictos=$(git diff --name-only --diff-filter=U)
-            [ -n "$conflictos" ] || return 1
-            # Un conflicto fuera de la lista es real y no se toca: regenerar a
-            # ciegas descartaria el trabajo del otro job.
-            if grep -qvE '^(site/status\.json|site/observados\.json)$' <<<"$conflictos"; then
-              return 1
-            fi
-            echo "::notice::derivados en conflicto; se regeneran en vez de fusionarse"
-            # SE REGENERAN LOS DOS, NO UNO.
-            #
-            # `centinela status` rehace `site/status.json` y nada mas;
-            # `site/observados.json` lo rehace otro comando. Con el `git add`
-            # de abajo cubriendo los dos, el que no se regeneraba entraba al
-            # commit **con los marcadores de conflicto dentro**. Paso el
-            # 2-sep-2026 a las 20:01: los dos derivados quedaron corruptos en
-            # `main`, `/status` sirvio JSON invalido, y el vigia se cayo en las
-            # dos corridas siguientes.
-            #
-            # Y fallar aqui tiene que abortar. Esta funcion se llama desde un
-            # `elif`, que **desactiva `set -e`**: sin comprobar el codigo de
-            # salida, un regenerado que falla seguia hasta `git add` y
-            # `rebase --continue` igual.
-            # EL FICHERO EN CONFLICTO NO ES JSON, Y `centinela status` LO LEE.
-            #
-            # `impact.yml` tiene esta linea desde el 2-sep con su comentario
-            # —«se pierde a lo sumo un latido en vez de todos»— y aqui faltaba.
-            # Regenerar sobre un `status.json` con marcadores hace que
-            # `write_status` no pueda parsearlo y reponga el historial vacio; y
-            # con la red de seguridad de abajo puesta, los cuatro reintentos
-            # fallan igual y el vigia muere justo cuando P2 esta corriendo.
-            git checkout --theirs site/status.json 2>/dev/null || true
-            git checkout --theirs site/observados.json 2>/dev/null || true
-
-            uv run centinela status || return 1
-            uv run centinela observados || return 1
-
-            # LA RED DE SEGURIDAD, QUE ES LO QUE DE VERDAD FALTABA.
-            #
-            # Cualquiera que sea el motivo, un fichero con marcadores no se
-            # publica. Es preferible reintentar y dejar el vigia en rojo —que
-            # es visible— a servir un JSON que el visor no puede leer.
-            for derivado in $DERIVADOS; do
-              if grep -q '^<<<<<<< \|^>>>>>>> ' "$derivado"; then
-                echo "::error::$derivado conserva marcadores de conflicto; no se publica"
-                return 1
-              fi
-            done
-
-            # shellcheck disable=SC2086
-            git add $DERIVADOS
+            echo "::notice::conflicto al rebasar; se intenta regenerar los derivados"
+            uv run centinela resolver-derivados || return 1
             GIT_EDITOR=true git rebase --continue
           }
 

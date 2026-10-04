@@ -28,10 +28,14 @@ WORKFLOWS = Path(__file__).parent.parent.parent / ".github" / "workflows"
 TRIGGER = (WORKFLOWS / "trigger.yml").read_text(encoding="utf-8")
 
 #: `workflow -> cada cuantas horas debe despacharse`, leido del propio paso.
-DEPENDIENTES = ("frescura.yml", "incendios.yml", "repaso.yml")
+#:
+#: `datos.yml` desde el 3-oct-2026 (hallazgo #61): es el unico que corre la
+#: guardia de «sismo detectado y sin reporte» cuando P2 no llego a publicar, y
+#: con solo su cron dependia de la cola estrangulada.
+DEPENDIENTES = ("frescura.yml", "incendios.yml", "repaso.yml", "datos.yml")
 
 #: Cadencia que cada uno declara, en horas.
-CADENCIAS = {"frescura.yml": 3, "incendios.yml": 6, "repaso.yml": 24}
+CADENCIAS = {"frescura.yml": 3, "incendios.yml": 6, "repaso.yml": 24, "datos.yml": 24}
 
 
 def _horas_del_cron(expresion: str) -> int | None:

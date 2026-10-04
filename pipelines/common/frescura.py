@@ -144,6 +144,29 @@ class Congelado:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class Ilegible:
+    """Un fichero del visor que no esta, no se puede leer o no dice cuando nacio.
+
+    Siempre preocupa. `revisar_vejez` es la unica pregunta que no depende de la
+    red, y hasta el 3-oct-2026 se saltaba estos tres casos con un `continue`:
+    un fichero que desaparecia del repositorio, o un `status.json` que quedaba
+    con marcadores de conflicto —paso el 2-sep—, salia del informe en vez de
+    ser la alarma. Callar ahi es peor que un fichero viejo: uno viejo al menos
+    sigue sirviendo algo.
+    """
+
+    fichero: str
+    motivo: str
+
+    @property
+    def preocupa(self) -> bool:
+        return True
+
+    def __str__(self) -> str:
+        return f"{self.fichero}: {self.motivo}"
+
+
 class PaginaDesactualizadaError(Exception):
     """La pagina publicada quedo detras del repositorio."""
 
@@ -290,29 +313,43 @@ def revisar_vejez(
     *,
     site_dir: Path | None = None,
     ahora: datetime | None = None,
-) -> list[Congelado]:
+) -> list[Congelado | Ilegible]:
     """Cuanto lleva cada fichero sin regenerarse, contra su propio limite.
 
     Mira **solo el repositorio**: si un fichero esta congelado ahi, la pagina
     tampoco tiene nada mejor que servir. Y no necesita red, asi que responde
     aunque el sitio publicado no conteste.
+
+    Un fichero que no esta, que no es JSON o que no trae fecha no se salta: es
+    un hallazgo `Ilegible`, que siempre preocupa. Cada uno de los ficheros de
+    `MAX_HORAS_SIN_REGENERAR` lo lee el visor; si falta, la pagina publicada
+    deja de pintarlo, y esta funcion era la unica alarma que lo vigilaba.
     """
     raiz = site_dir or SITE_DIR
     referencia = ahora or datetime.now(UTC)
-    congelados = []
+    congelados: list[Congelado | Ilegible] = []
 
     for fichero, limite in MAX_HORAS_SIN_REGENERAR.items():
         local = raiz / fichero
         if not local.exists():
+            congelados.append(Ilegible(fichero, "no esta en el repositorio y el visor lo lee"))
             continue
         try:
             datos = json.loads(local.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, OSError) as error:
+            # Con log y con hallazgo: tragarselo dejaba el fichero fuera del
+            # informe, y el informe es lo unico que alguien lee.
+            _log.warning(
+                "fichero del visor ilegible",
+                extra={"context": {"fichero": fichero, "error": str(error)}},
+            )
+            congelados.append(Ilegible(fichero, f"ilegible ({type(error).__name__}: {error})"))
             continue
 
-        generado = _fecha(datos)
+        generado = _fecha(datos) if isinstance(datos, dict) else ""
         cuando = _parse(generado)
         if cuando is None:
+            congelados.append(Ilegible(fichero, f"sin `generado_utc` legible ({generado!r})"))
             continue
         congelados.append(
             Congelado(
@@ -326,7 +363,7 @@ def revisar_vejez(
     return congelados
 
 
-def raise_if_stale(desfases: list[Desfase | Ausentes | Congelado]) -> None:
+def raise_if_stale(desfases: list[Desfase | Ausentes | Congelado | Ilegible]) -> None:
     """Levanta si alguna copia publicada quedo demasiado atras.
 
     Es lo que convierte la medicion en una alarma. Medir y no levantar seria el
@@ -346,11 +383,14 @@ def raise_if_stale(desfases: list[Desfase | Ausentes | Congelado]) -> None:
         "site.yml, hace falta `gh workflow run site.yml` tras el push. "
         "Si un fichero lleva horas sin regenerarse: su workflow no se esta "
         "disparando. Comprueba `gh run list --workflow=<el suyo>` y lanzalo a "
-        "mano con `gh workflow run` mientras se investiga."
+        "mano con `gh workflow run` mientras se investiga. "
+        "Si un fichero falta o es ilegible: el visor no puede pintarlo; "
+        "regeneralo con su comando (`centinela status`, `centinela observados`, "
+        "`centinela incendios`) y busca que commit lo borro o lo dejo corrupto."
     )
 
 
-def resumen(desfases: list[Desfase | Ausentes | Congelado]) -> str:
+def resumen(desfases: list[Desfase | Ausentes | Congelado | Ilegible]) -> str:
     """Linea por fichero, tambien cuando todo esta bien.
 
     Publicar el resultado del caso bueno es lo que permite distinguir "esta
