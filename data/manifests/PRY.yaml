@@ -36,7 +36,7 @@ referencia_oficial:
   poblacion_2025: 7013078
   fuente: "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL"
   tolerancia_pct: 0.59
-  medido_ghs_pop: 7019481
+  medido_ghs_pop: 7019484
   nota: >-
     La cifra medida vive en `medido_ghs_pop` y la fija cada build; la
     tolerancia sale de `centinela calibrar`, que la estrecha con lo medido y
@@ -163,7 +163,7 @@ sources:
     hdx_dataset: cod-ab-pry
     license: CC-BY-IGO
     vintage: COD-AB-2026-08
-    insumos_sha256: "1439b75226cf79d5d1a954e12ee9a2e6722d3eda1fbc71337740ef7d9271a148"
+    insumos_sha256: "775c830cebefac91f8e2f816bb335ef772cd95245fda32f22608c461cb880bc4"
     notes: >-
       Common Operational Dataset de OCHA, fuente de verdad de adm1/adm2. Es la
       unica geometria administrativa de este manifest, asi que si el recurso
@@ -179,7 +179,7 @@ sources:
     hdx_dataset: hotosm_pry_health_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    insumos_sha256: "bdd0172c4e9533a6d694006069f2a439545568590017ce87deedc8f4a814a2d8"
+    insumos_sha256: "dfc881e4700c20c4b8e3d82c255d66a852ab911bf0982d198ef8bbddc1116d70"
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
       Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital
@@ -195,7 +195,7 @@ sources:
     hdx_dataset: hotosm_pry_education_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    insumos_sha256: "9d4a92e8059e4a749dee7d8bb193f8a9c66bb0aa5fffb05427ed9224c1dc2e5b"
+    insumos_sha256: "446dd7651ec66aa4f1f168a751da1b57d0a8a7bdd087b3434e08418a563995af"
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover
