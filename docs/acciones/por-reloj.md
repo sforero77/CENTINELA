@@ -6,13 +6,13 @@ visor congelado, la trampa del `GITHUB_TOKEN`. Este explica otra cosa, y es la
 que hace falta a las tres de la mañana: **qué corre, qué comprueba, y qué pasa
 cuando la comprobación dice que no**.
 
-Un diagrama por disparador. Catorce workflows y nueve relojes.
+Un diagrama por disparador. Quince workflows y diez relojes.
 Cada diagrama lleva sus puertas de decisión, sus códigos de salida y quién
 recibe la alarma.
 
 Las puertas rojas detienen o avisan; las verdes son el camino que publica.
 
-## Los nueve relojes
+## Los diez relojes
 
 | Reloj | UTC | Workflow | Qué comprueba | Si falla |
 |---|---|---|---|---|
@@ -21,6 +21,7 @@ Las puertas rojas detienen o avisan; las verdes son el camino que publica.
 | `17 */3 * * *` | cada 3 h | `frescura.yml` | ¿La página sirve lo que hay en el repo? | Republica e informa en una incidencia |
 | `40 */6 * * *` | cada 6 h | `incendios.yml` | Focos VIIRS de las últimas 24 h | La corrida sale roja |
 | `37 5 * * *` | 05:37 diario | `repaso.yml` | ¿Hay versión de producto más nueva a 90 días? | Código 1 si fallaron **todos** |
+| `23 10 * * *` | 10:23 diario | `datos.yml` | ¿Lo publicado pasa la suite y el visor? ¿Las cifras de los documentos siguen al dato? | Incidencia que se cierra sola |
 | `0 8 * * *` | 08:00 diario | `contract_drift.yml` | ¿Derivaron los contratos de las fuentes? | Incidencia automática |
 | `23 7 * * 1` | lunes 07:23 | `rezago.yml` | ¿Algún reporte publicado quedó atrás? | Lo re-emite solo; incidencia solo si USGS retiró el producto |
 | `0 9 5 * *` | día 5, 09:00 | `simulacro.yml` | Que el pipeline no se oxide entre catástrofes | Incidencia automática |
@@ -40,6 +41,7 @@ timeline
     07h23 : rezago.yml — sólo lunes
     08h00 : contract_drift.yml — contratos de fuentes
     09h00 : simulacro.yml — sólo día 5
+    10h23 : datos.yml — respaldo diario del guardia de los datos
   section Relojes continuos
     cada 5 min : trigger.yml por repository_dispatch
     cada 30 min : trigger.yml por cron de GitHub, de respaldo
@@ -525,8 +527,9 @@ en [`../pipelines/p0-exposicion.md`](../pipelines/p0-exposicion.md).
 
 ## `ci.yml` y `visor.yml` · push y pull request
 
-No son relojes, son la puerta. Las dos tienen que estar verdes para fusionar, y
-`impact.yml` las llama además **después de publicar**.
+No son relojes, son la puerta. Las dos tienen que estar verdes para fusionar.
+Sobre lo que el bot publica no corren ellas sino `datos.yml`, que hace lo mismo
+y además avisa.
 
 ```mermaid
 flowchart TB
@@ -574,6 +577,45 @@ El job `diagramas` comprueba lo que ninguna de las dos ve: que los diagramas de
 la documentación, este incluido, se dibujan. Uno roto se publica en GitHub como
 un recuadro de error. No va en `visor.yml`, aunque ya tenga Chromium, porque
 aquel no se dispara con un cambio en `docs/`.
+
+---
+
+## `datos.yml` · tras cada publicación, y diario a las 10:23
+
+El guardia de los datos. Del 28-sep al 3-oct-2026 la suite y el visor
+estuvieron en rojo sobre `main` en cada reporte publicado y nadie se enteró:
+corrían, pero no avisaban. Y fallaban por cifras copiadas a mano que el dato ya
+había movido. Este workflow cierra las dos cosas.
+
+```mermaid
+flowchart TB
+  D(["gh workflow run desde<br/>impact · incendios · exposure_quarterly"]) --> CIF
+  R(["cron 23 10 · respaldo diario<br/><i>cubre el latido y lo que cambie fuera</i>"]) --> CIF
+
+  CIF["<b>centinela cifras</b><br/>reescribe lo marcado en los documentos<br/>desde manifests y catálogo"] --> CAMBIO{"¿cambió algo?"}
+  CAMBIO -->|sí| PUSH["commit P6 y push a main"]
+  CAMBIO -->|no| SUITE
+  PUSH --> SUITE
+
+  SUITE["<b>pytest</b> -m 'not network and not visor'<br/>+ lint-manifests"]
+  PUSH --> VIS["<b>pytest tests/visor -m visor</b><br/>Chromium sobre lo publicado"]
+  CAMBIO -->|no| VIS
+
+  SUITE --> M{"¿todo verde?"}
+  VIS --> M
+  M -->|sí| CIERRA["cerrar la incidencia<br/>si había una abierta"]
+  M -->|no| DEDUP{"¿ya hay incidencia?"}
+  DEDUP -->|no| NUEVA["abrir incidencia<br/><b>Los datos publicados<br/>rompieron una comprobacion</b>"]
+  DEDUP -->|sí| COMENT["comentar en la existente"]
+
+  style NUEVA fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
+  style CIERRA fill:#e8f0ea,stroke:#0f5636,color:#1c1b1a
+```
+
+Quién lo despacha lo vigila `tests/unit/test_el_visor_se_republica.py`: todo
+workflow que empuja tiene que despacharlo o declarar en `EXENTOS` por qué no.
+El latido del vigía está exento —late varias veces al día y solo mueve el
+estado— y lo cubre el cron.
 
 ---
 

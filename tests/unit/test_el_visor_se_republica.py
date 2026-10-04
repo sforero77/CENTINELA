@@ -197,8 +197,13 @@ def test_la_vista_previa_apunta_al_ultimo_evento() -> None:
 # `test_ningun_evento_se_queda_sin_reporte.py` mira el hueco entre lo detectado
 # y lo publicado. Los dos son guardias sobre lo que este camino escribe.
 
-#: El comando que dispara la suite sobre lo recien publicado.
-COMPROBAR = "gh workflow run ci.yml"
+#: El comando que dispara las comprobaciones sobre lo recien publicado.
+#:
+#: Era `gh workflow run ci.yml` (y `visor.yml` aparte). Los dos corrian y los
+#: dos estuvieron en rojo del 28-sep al 3-oct-2026 sin que nadie se enterara:
+#: no avisaban. `datos.yml` corre lo mismo y abre incidencia.
+GUARDIA = "datos.yml"
+COMPROBAR = f"gh workflow run {GUARDIA}"
 
 #: Lo que ningun otro guardia mira: los reportes. Es el artefacto que la suite
 #: mide por su contenido y no por el codigo que lo produjo.
@@ -309,26 +314,26 @@ def test_quien_publica_un_reporte_dispara_la_suite() -> None:
 
     assert comprueba(impacto), (
         "impact.yml commitea reports/ y empuja con GITHUB_TOKEN, que **no** "
-        "dispara ci.yml. La suite no correra sobre el reporte publicado, y "
-        "parte de ella —los PNG, el hueco entre detectado y publicado— solo "
-        "sabe mirar lo publicado. Anade `gh workflow run ci.yml` tras el push."
+        "dispara otros workflows. La suite no correra sobre el reporte publicado, "
+        "y parte de ella —los PNG, el hueco entre detectado y publicado— solo "
+        f"sabe mirar lo publicado. Anade `{COMPROBAR}` tras el push."
     )
 
 
 def test_la_suite_se_deja_disparar() -> None:
-    """`gh workflow run ci.yml` sobre un workflow sin `workflow_dispatch` falla.
+    """`gh workflow run` sobre un workflow sin `workflow_dispatch` falla.
 
     Y falla en el paso de despues de publicar, con el reporte ya en su sitio:
     rojo donde el trabajo salio bien.
     """
     import yaml as _yaml
 
-    ci = _yaml.safe_load(_texto(WORKFLOWS / "ci.yml"))
+    guardia = _yaml.safe_load(_texto(WORKFLOWS / GUARDIA))
     # `on` en YAML 1.1 se interpreta como el booleano True.
-    disparadores = ci.get("on", ci.get(True, {}))
+    disparadores = guardia.get("on", guardia.get(True, {}))
 
     assert "workflow_dispatch" in disparadores, (
-        "ci.yml perdio `workflow_dispatch` e impact.yml no puede dispararlo"
+        f"{GUARDIA} perdio `workflow_dispatch` y quien publica no puede dispararlo"
     )
 
 
@@ -338,5 +343,68 @@ def test_no_se_comprueba_si_no_hubo_push() -> None:
     bloque = texto[texto.index("Comprobar lo que se acaba de publicar") :]
 
     assert "steps.publicar.outputs.publicado == 'true'" in bloque[:400], (
-        "el disparo de ci.yml no esta condicionado a haber publicado"
+        f"el disparo de {GUARDIA} no esta condicionado a haber publicado"
     )
+
+
+# --- Todo el que publica datos, no solo quien publica reportes ---------------
+#
+# La regla de arriba solo miraba `impact.yml`. Pero `incendios.yml` reescribe la
+# capa de fuego que el visor cuenta celda a celda, y `exposure_quarterly.yml`
+# mueve la poblacion medida que citan los documentos: los dos rompian
+# comprobaciones que nadie corria sobre lo que acababan de publicar.
+
+#: Los que empujan y NO despachan el guardia, cada uno con su porque.
+EXENTOS: dict[str, str] = {
+    # Late varias veces al dia y solo mueve el estado (`status.json`,
+    # `observados.json`). Lo cubre la corrida diaria de `datos.yml`; cuando
+    # detecta un sismo despacha `impact.yml`, que si despacha el guardia.
+    "trigger.yml": "latido; cubierto por el cron diario del guardia",
+    # Commit vacio para que GitHub no apague los cron por inactividad.
+    "keepalive.yml": "no publica datos",
+    # El propio guardia: empuja las cifras regeneradas, no datos nuevos.
+    GUARDIA: "es el guardia",
+}
+
+
+def _empuja(ruta: Path) -> bool:
+    """¿Hay un `git push` en una linea de comando, y no en un comentario?
+
+    Casi todos los workflows explican en un comentario que **no** empujan
+    («este workflow no incluye un `git push`»): un emparejamiento de texto los
+    tomaria a todos por publicadores.
+    """
+    return any(
+        "git push" in linea
+        for linea in (raw.strip() for raw in _texto(ruta).splitlines())
+        if not linea.startswith("#")
+    )
+
+
+@pytest.mark.parametrize("workflow", _workflows(), ids=lambda p: p.name)
+def test_quien_publica_datos_despacha_el_guardia(workflow: Path) -> None:
+    if not _empuja(workflow) or workflow.name in EXENTOS:
+        pytest.skip("no publica datos, o esta exento con su motivo")
+
+    assert comprueba(workflow), (
+        f"{workflow.name} empuja con GITHUB_TOKEN y no despacha {GUARDIA}: lo que "
+        f"publique no lo comprobara nadie. Anade un paso con `{COMPROBAR}` tras el "
+        "push, condicionado a que el push ocurriera, o declara el motivo en EXENTOS."
+    )
+
+
+def test_los_exentos_siguen_existiendo() -> None:
+    """Una exencion de un workflow que ya no existe es una puerta abierta."""
+    faltan = [n for n in EXENTOS if not (WORKFLOWS / n).is_file()]
+    assert not faltan, f"EXENTOS nombra workflows que ya no existen: {faltan}"
+
+
+def test_el_guardia_tiene_respaldo_y_alarma() -> None:
+    """Sin cron, lo exento no lo comprueba nadie; sin alarma, se repite lo de octubre."""
+    texto = _texto(WORKFLOWS / GUARDIA)
+    disparadores = yaml.safe_load(texto)[True]
+
+    assert "schedule" in disparadores, f"{GUARDIA} perdio su corrida diaria de respaldo"
+    assert "gh issue create" in texto, f"{GUARDIA} ya no abre incidencia al fallar"
+    assert "gh issue close" in texto, f"{GUARDIA} ya no sabe decir que se recupero"
+    assert "issues: write" in texto, f"{GUARDIA} abre incidencias sin permiso para hacerlo"

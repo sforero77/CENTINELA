@@ -359,45 +359,28 @@ jobs:
 
       # LA OTRA MITAD DEL MISMO HUECO: LAS PRUEBAS TAMPOCO SE ENTERABAN.
       #
-      # `site.yml` ya se despacha a mano por la regla de arriba. `ci.yml`
-      # escucha `push` sobre `main` y no se habia mirado: el push de este
-      # workflow tampoco lo dispara, asi que **la suite no corre nunca sobre lo
-      # que el bot publica**. Medido el 4-sep-2026: el bot commiteo a las 09:54
-      # y no hubo una sola corrida de CI; las diez ultimas son todas de un PR
-      # humano.
+      # El push de este workflow tampoco dispara `ci.yml` ni `visor.yml`, asi
+      # que **la suite no corria nunca sobre lo que el bot publica**. Parte de
+      # ella vigila artefactos y no codigo: `test_lo_publicado_se_ve.py` mide los
+      # PNG de los reportes, `test_ningun_evento_se_queda_sin_reporte.py` mira el
+      # hueco entre lo detectado y lo publicado, y las pruebas de navegador
+      # abren el reporte recien escrito.
       #
-      # Importa porque parte de la suite vigila artefactos publicados y no
-      # codigo: `test_lo_publicado_se_ve.py` mide los PNG de `reports/` y
-      # `test_ningun_evento_se_queda_sin_reporte.py` mira el hueco entre lo
-      # detectado y lo publicado. Los dos son guardias sobre **lo que este paso
-      # acaba de escribir**, y solo corrian cuando alguien fusionaba un PR.
+      # Hasta el 3-oct-2026 aqui se despachaban `ci.yml` y `visor.yml`, y los dos
+      # estuvieron seis dias en rojo sin que nadie se enterara: corrian, pero no
+      # avisaban. `datos.yml` corre lo mismo, regenera las cifras de los
+      # documentos y abre incidencia si algo no cuadra.
       #
       # VA DESPUES DE PUBLICAR, NO ANTES. Publicar es el camino critico de un
       # sismo real y no puede depender de una suite: la regla de este modulo es
       # que un fallo de derivado no tumba el reporte, que ya esta en disco. Esto
-      # no bloquea, delata — y delatar en rojo a los dos minutos es justo lo que
-      # faltaba.
+      # no bloquea, delata.
       - name: Comprobar lo que se acaba de publicar
         if: steps.publicar.outputs.publicado == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        run: gh workflow run ci.yml
-
-      # Y LA COBERTURA QUE ABRE UN NAVEGADOR, POR EL MISMO MOTIVO.
-      #
-      # `visor.yml` escucha `push` sobre `reports/**`, pero un push hecho con
-      # `GITHUB_TOKEN` **no dispara otros workflows**: la unica cobertura que ve
-      # la pantalla no corria nunca sobre lo que publica el bot. Es exactamente
-      # la misma regla de GitHub que ya obliga a despachar `site.yml` a mano
-      # —y que dejo el visor diecisiete horas congelado con todo en verde—,
-      # aplicada a la comprobacion en vez de a la publicacion.
-      - name: Abrir el visor sobre el reporte recien publicado
-        if: steps.publicar.outputs.publicado == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-        run: gh workflow run visor.yml
+        run: gh workflow run datos.yml
 
 
       # RNF-03: si el contrato USGS se rompe, el pipeline degrada y deja

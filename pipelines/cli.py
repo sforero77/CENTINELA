@@ -356,6 +356,22 @@ def _cmd_cobertura(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_cifras(args: argparse.Namespace) -> int:
+    """Reescribe las cifras marcadas de los documentos desde los datos.
+
+    Con `--comprobar` no escribe nada y sale con 1 si algun documento quedo
+    atras: es la forma de preguntarlo desde la suite y desde CI.
+    """
+    from .common.cifras import actualizar
+
+    cambiados = actualizar(escribir=not args.comprobar)
+    for nombre in cambiados:
+        print(("desfasado: " if args.comprobar else "actualizado: ") + nombre)
+    if not cambiados:
+        print("las cifras de los documentos estan al dia")
+    return 1 if (args.comprobar and cambiados) else 0
+
+
 def _cmd_contraste(args: argparse.Namespace) -> int:
     """Compara el activo contra una evaluacion de dano externa (Fase 2).
 
@@ -1109,6 +1125,14 @@ def build_parser() -> argparse.ArgumentParser:
         "cobertura", help="recalcula site/cobertura.json desde los manifests"
     )
     p_cobertura.set_defaults(func=_cmd_cobertura)
+
+    p_cifras = sub.add_parser(
+        "cifras", help="reescribe las cifras marcadas de los documentos desde los datos"
+    )
+    p_cifras.add_argument(
+        "--comprobar", action="store_true", help="no escribe; sale con 1 si hay desfase"
+    )
+    p_cifras.set_defaults(func=_cmd_cifras)
 
     p_contraste = sub.add_parser(
         "contraste", help="compara el activo con una evaluacion de dano externa"

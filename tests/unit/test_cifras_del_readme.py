@@ -206,45 +206,115 @@ def test_el_documento_dice_que_ningun_reporte_se_disparo_en_vivo(instituciones: 
     )
 
 
-# --- La cuenta de eventos por banda, que ya se quedo vieja dos veces --------
+# --- Las cifras que se regeneran solas ----------------------------------------
 #
-# "Ocho de diecinueve" -> "once de veintiuno" -> "trece de veintitres". La cifra
-# se copiaba a mano en dos documentos y envejecia cada vez que entraba un
-# reporte, que es justo lo que este fichero existe para impedir.
+# "Ocho de diecinueve" -> "once de veintiuno" -> "trece de veintitres" ->
+# "diecisiete de veintisiete". La cuenta se copiaba a mano y envejecia con cada
+# reporte; la prueba que la vigilaba llevaba la cifra clavada y se puso roja sola
+# el dia que entro el reporte numero veintiocho. Como los commits del bot no
+# corren CI, estuvo roja seis dias sin que nadie lo viera.
+#
+# Desde el 3-oct-2026 esas cifras van marcadas y las reescribe
+# `centinela cifras` (ver `pipelines/common/cifras.py`). Lo que se vigila ya no es
+# el numero, que cambia, sino que lo publicado sea lo que sale del dato.
 
-BANDAS_EN_PROSA = (("docs/datos/agregaciones.md", "diecisiete de los veintisiete"),)
+#: Las cifras que cada documento tiene que conservar marcadas. Sin esto, borrar
+#: una marca dejaria la cifra copiada a mano y la comprobacion pasaria en vacio.
+MARCAS_OBLIGATORIAS: dict[str, set[str]] = {
+    "docs/PARA_INSTITUCIONES.md": {
+        "tabla_estado",
+        "tabla_poblacion",
+        "reconstrucciones_en_letras",
+        "en_vivo_veces",
+    },
+    "docs/datos/agregaciones.md": {"sin_mmi7_de_total", "sin_mmi7_de_total_titulo", "sin_mmi6"},
+}
 
 
-def _sin_banda(banda: str) -> int:
-    """Cuantos reportes publicados no tienen poblacion en esa banda."""
-    return sum(
-        1
-        for p in sorted((RAIZ / "reports").glob("*/report.json"))
-        if json.loads(p.read_text(encoding="utf-8"))["totales"][banda] == 0
+def test_las_cifras_marcadas_estan_al_dia() -> None:
+    """Lo que dicen los documentos es lo que sale hoy de los datos."""
+    from pipelines.common.cifras import actualizar
+
+    desfasados = actualizar(escribir=False)
+    assert desfasados == [], (
+        f"estos documentos citan cifras que los datos ya movieron: {desfasados}. "
+        "Corre `uv run centinela cifras` (en main lo hace solo `datos.yml`)."
     )
 
 
-def test_la_cuenta_de_eventos_sin_mmi7_es_la_que_dicen_los_documentos() -> None:
-    """Diecisiete de veintisiete, y que lo siga diciendo el disco y no la memoria."""
-    total = len(list((RAIZ / "reports").glob("*/report.json")))
-    sin7 = _sin_banda("pop_mmi7p")
+@pytest.mark.parametrize("documento", sorted(MARCAS_OBLIGATORIAS))
+def test_los_documentos_conservan_sus_marcas(documento: str) -> None:
+    from pipelines.common.cifras import MARCA
 
-    assert (sin7, total) == (17, 27), (
-        f"la cuenta cambio: hoy son {sin7} de {total} sin población en MMI≥7. "
-        f"Actualiza docs/datos/agregaciones.md y esta prueba."
-    )
-
-
-def test_la_cuenta_de_eventos_sin_mmi6_tambien() -> None:
-    """Los que ni siquiera llegan a 6: solo el corte por radios los dimensiona."""
-    assert _sin_banda("pop_mmi6p") == 9
-
-
-@pytest.mark.parametrize(("documento", "frase"), BANDAS_EN_PROSA)
-def test_los_documentos_dicen_esa_cuenta(documento: str, frase: str) -> None:
-    """La prosa y el disco, atados."""
     texto = (RAIZ / documento).read_text(encoding="utf-8")
-    assert frase in texto, f"{documento} ya no dice «{frase}»"
+    presentes = {m["nombre"] for m in MARCA.finditer(texto)}
+    faltan = MARCAS_OBLIGATORIAS[documento] - presentes
+    assert not faltan, f"{documento} perdio las marcas de {sorted(faltan)}: volverian a envejecer"
+
+
+def test_ningun_documento_marca_cifras_que_no_se_regeneran() -> None:
+    """Un documento con marcas fuera de la lista no lo reescribe nadie."""
+    from pipelines.common.cifras import DOCUMENTOS, MARCA
+
+    con_marcas = sorted(
+        str(p.relative_to(RAIZ)).replace("\\", "/")
+        for p in [README, *RAIZ.glob("docs/**/*.md")]
+        if MARCA.search(p.read_text(encoding="utf-8"))
+    )
+    assert set(con_marcas) <= set(DOCUMENTOS), (
+        f"marcan cifras y `cifras.DOCUMENTOS` no los lista: {set(con_marcas) - set(DOCUMENTOS)}"
+    )
+
+
+def test_una_marca_desconocida_es_un_error_y_no_un_silencio() -> None:
+    from pipelines.common.cifras import CifraDesconocidaError, Datos, regenerar
+
+    datos = Datos(manifests={}, indice=[], totales_por_reporte=[])
+    with pytest.raises(CifraDesconocidaError):
+        regenerar("<!-- cifra:no_existe -->7<!-- /cifra -->", datos)
+
+
+@pytest.mark.parametrize(
+    ("n", "femenino", "apocope", "esperado"),
+    [
+        (9, False, True, "nueve"),
+        (16, False, True, "dieciséis"),
+        (21, False, True, "veintiún"),
+        (21, False, False, "veintiuno"),
+        (21, True, True, "veintiuna"),
+        (28, False, True, "veintiocho"),
+        (31, False, True, "treinta y un"),
+        (100, False, True, "cien"),
+        (121, False, True, "ciento veintiún"),
+        (123, False, True, "ciento veintitrés"),
+    ],
+)
+def test_los_numeros_en_letras(n: int, femenino: bool, apocope: bool, esperado: str) -> None:
+    from pipelines.common.cifras import en_letras
+
+    assert en_letras(n, femenino=femenino, apocope=apocope) == esperado
+
+
+def test_la_regeneracion_sigue_al_dato() -> None:
+    """Que un reporte mas mueva la cifra: es exactamente lo que fallaba."""
+    from pipelines.common.cifras import Datos, regenerar
+
+    sin7 = {"pop_mmi7p": 0.0, "pop_mmi6p": 5.0}
+    con7 = {"pop_mmi7p": 9.0, "pop_mmi6p": 9.0}
+    texto = "<!-- cifra:sin_mmi7_de_total -->X<!-- /cifra -->"
+    antes = regenerar(texto, Datos({}, [], [sin7, con7]))
+    despues = regenerar(texto, Datos({}, [], [sin7, con7, sin7]))
+    # El primero es pronombre y no se apocopa: «uno de los dos», no «un de».
+    assert "uno de los dos" in antes
+    assert "dos de los tres" in despues
+
+
+def test_delante_de_sustantivo_si_se_apocopa() -> None:
+    from pipelines.common.cifras import Datos, regenerar
+
+    indice = [{"backtest": True}] * 21
+    texto = "Los otros <!-- cifra:reconstrucciones_en_letras -->X<!-- /cifra --> reportes"
+    assert "veintiún<!-- /cifra --> reportes" in regenerar(texto, Datos({}, indice, []))
 
 
 # --- La misma familia, en los otros documentos que copian cifras ------------

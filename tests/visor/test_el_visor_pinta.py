@@ -2380,9 +2380,22 @@ def test_un_evento_sin_banda_ensena_radios_y_no_una_pared_de_ceros(pagina: Any) 
         f"un evento sin banda deberia titular por radios y dice {titulo!r}"
     )
 
+    # La cifra sale del reporte y no del dia en que se escribio la prueba: USGS
+    # relocalizo este epicentro 7 km mar adentro el 25-sep, el reporte se
+    # re-emitio con 206.583 a 100 km, y un "614" fijo dejo `visor.yml` en rojo
+    # seis dias con el panel ensenando exactamente lo que el dato dice.
+    radios = json.loads(
+        (RAIZ / "reports" / "us7000tdmp" / "report.json").read_text(encoding="utf-8")
+    )["radios"]
+    esperado = next(r["pop"] for r in radios if r["radio_km"] == 100)
+    assert esperado > 0, "el reporte ya no trae gente a 100 km: este caso dejo de servir"
+
     detalle = pagina.locator("#detalle-metricas").inner_text()
-    assert "614" in detalle.replace(".", "").replace(",", "") or "614" in detalle, (
-        f"no aparece la poblacion dentro de los 100 km: {detalle!r}"
+    encaje = re.search(r"([\d.,]+)\s*\n?\s*A 100 KM", detalle, re.IGNORECASE)
+    assert encaje, f"no aparece la poblacion dentro de los 100 km: {detalle!r}"
+    mostrado = int(re.sub(r"[.,]", "", encaje.group(1)))
+    assert abs(mostrado - esperado) <= max(1000, 0.01 * esperado), (
+        f"el panel dice {mostrado} a 100 km y el reporte {esperado:.0f}"
     )
     assert "sedes de salud" not in detalle, (
         "sigue pintando las cifras de MMI>=7, que aqui son ceros inventados"

@@ -73,9 +73,13 @@ jobs:
 
       # El navegador se cachea por version de Playwright: son ~115 MB y bajarlos
       # en cada corrida es la mitad del tiempo de este job.
+      #
+      # Por los metadatos del paquete: `playwright.__version__` no existe, y el
+      # `echo` se tragaba el AttributeError y dejaba la clave sin version — la
+      # misma cache para cualquier Playwright.
       - name: Version de Playwright
         id: pw
-        run: echo "v=$(uv run python -c 'import playwright; print(playwright.__version__)')" >> "$GITHUB_OUTPUT"
+        run: echo "v=$(uv run python -c 'import importlib.metadata as m; print(m.version("playwright"))')" >> "$GITHUB_OUTPUT"
 
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         id: cache-navegador

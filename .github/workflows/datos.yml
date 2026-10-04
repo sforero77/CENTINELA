@@ -1,0 +1,241 @@
+name: Guardia de los datos
+
+# LOS DATOS CAMBIAN SOLOS Y NADIE LOS COMPROBABA.
+#
+# Entre el 28-sep y el 3-oct-2026 `main` tuvo la suite en rojo y las pruebas de
+# navegador en rojo, en cada reporte publicado, y no se entero nadie. No faltaba
+# la comprobacion: `impact.yml` despachaba `ci.yml` y `visor.yml` tras cada
+# push. Faltaban dos cosas:
+#
+# 1. La alarma. Una corrida en rojo que nadie abre no es un guardia. Las dos
+#    pruebas que fallaban tenian una cifra clavada —«614.310 personas a 100
+#    km», «diecisiete de veintisiete»— y el dato la habia movido con todo
+#    funcionando bien. Se habria arreglado en cinco minutos si alguien lo ve.
+# 2. Que lo derivado se regenere solo. Los documentos copiaban cifras a mano,
+#    asi que cada reporte nuevo los dejaba mintiendo. Ahora van marcadas y las
+#    reescribe `centinela cifras` (ver `pipelines/common/cifras.py`).
+#
+# Este workflow es las dos cosas juntas: regenera las cifras y las commitea,
+# corre la suite entera y la del navegador sobre lo que quedo en `main`, y abre
+# **una** incidencia si algo no cuadra — que se cierra sola al volver el verde.
+#
+# CUANDO CORRE. Un push con `GITHUB_TOKEN` no dispara otros workflows, asi que
+# los que publican datos lo despachan a mano tras su push (`impact.yml`,
+# `incendios.yml`, `exposure_quarterly.yml`; lo vigila
+# `tests/unit/test_el_visor_se_republica.py`). El latido del vigia no lo despacha
+# —late varias veces al dia y solo mueve el estado—: lo cubre la corrida diaria,
+# que ademas atrapa lo que cambie fuera del repositorio.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 10 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "reports/**"
+      - "data/manifests/**"
+      - "pipelines/common/cifras.py"
+      - ".github/workflows/datos.yml"
+
+permissions:
+  contents: write
+  issues: write
+
+# Sin cancelar: cortar a mitad del push de las cifras deja la rama a medias. Las
+# corridas que lleguen mientras tanto se funden en una sola pendiente, que es lo
+# que hace falta — comprobar el ultimo estado, no cada uno.
+concurrency:
+  group: datos
+  cancel-in-progress: false
+
+jobs:
+  cifras:
+    runs-on: ubuntu-latest
+    if: github.repository == 'sforero77/CENTINELA'
+    timeout-minutes: 10
+    outputs:
+      sha: ${{ steps.publicar.outputs.sha }}
+    steps:
+      # Este job SI empuja (las cifras regeneradas), asi que conserva el token.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - name: Instalar nucleo
+        run: uv sync --python 3.12 --no-dev
+
+      # Fuera de `main` no se commitea nada —`--ref` no aisla: un despacho
+      # sobre otra rama empujaria a esa rama de verdad—, solo se comprueba.
+      - name: Regenerar las cifras de los documentos
+        run: |
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            uv run centinela cifras
+          else
+            uv run centinela cifras --comprobar
+          fi
+
+      - name: Publicar las cifras regeneradas
+        id: publicar
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "centinela-bot"
+          git config user.email "noreply@users.noreply.github.com"
+
+          git add docs/
+          if git diff --staged --quiet; then
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "P6: cifras de los documentos al dia con los datos"
+
+          # Las cifras son un derivado entero: ante un conflicto no se fusionan,
+          # se toman las de la rama y se recalculan sobre ella.
+          for intento in 1 2 3 4; do
+            if git pull --rebase origin main; then
+              if git push; then
+                echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            else
+              git checkout --theirs docs/ 2>/dev/null || true
+              uv run centinela cifras || true
+              git add docs/
+              GIT_EDITOR=true git rebase --continue || git rebase --abort || true
+            fi
+            sleep $((2 ** intento))
+          done
+          echo "::error::no se pudieron publicar las cifras regeneradas"
+          exit 1
+
+  suite:
+    needs: cifras
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Sobre el commit que acaba de dejar `cifras`, no sobre el que disparo la
+      # corrida: si no, se comprobarian las cifras viejas que se acaban de tapar.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.cifras.outputs.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - name: Sincronizar dependencias
+        run: uv sync --python 3.12 --extra dev --extra geo --extra render
+
+      # La misma seleccion que `ci.yml`: todo lo que no necesita red ni
+      # navegador. Ahi viven las pruebas que miran lo publicado —los PNG de los
+      # reportes, el hueco entre detectado y publicado, las cifras—.
+      - name: Pruebas (sin red)
+        run: uv run pytest -m "not network and not visor"
+
+      - name: Lint de manifests (regla de los tres cubos)
+        run: uv run centinela lint-manifests
+
+  visor:
+    needs: cifras
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.cifras.outputs.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86  # v5.4.2
+        with:
+          enable-cache: true
+
+      - run: uv sync --python 3.12 --extra dev --extra visor
+
+      # Por los metadatos del paquete: `playwright.__version__` no existe, y
+      # el `echo` se tragaba el error y dejaba la clave de cache sin version.
+      - name: Version de Playwright
+        id: pw
+        run: echo "v=$(uv run python -c 'import importlib.metadata as m; print(m.version("playwright"))')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+        id: cache-navegador
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.v }}
+
+      - name: Instalar Chromium
+        if: steps.cache-navegador.outputs.cache-hit != 'true'
+        run: uv run playwright install --with-deps chromium
+
+      - name: Abrir el visor y comprobar que pinta
+        run: uv run pytest tests/visor -m visor
+
+  # UNA CORRIDA EN ROJO QUE NADIE ABRE NO ES UN GUARDIA.
+  #
+  # Una sola incidencia, comentada en cada fallo siguiente y cerrada por este
+  # mismo workflow cuando todo vuelve a verde: la misma forma que
+  # `frescura.yml`, por el mismo motivo — un aviso que no sabe decir "ya paso"
+  # ensena a no creerselo.
+  avisar:
+    needs: [cifras, suite, visor]
+    if: ${{ always() && !cancelled() && github.repository == 'sforero77/CENTINELA' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Abrir o cerrar la incidencia
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TITULO: Los datos publicados rompieron una comprobacion
+          CIFRAS: ${{ needs.cifras.result }}
+          SUITE: ${{ needs.suite.result }}
+          VISOR: ${{ needs.visor.result }}
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+
+          if [ "$CIFRAS" = success ] && [ "$SUITE" = success ] && [ "$VISOR" = success ]; then
+            if [ -n "$ABIERTA" ]; then
+              gh issue close "$ABIERTA" --reason completed --comment "Recuperado: cifras, suite y visor en verde sobre los datos de \`main\`.
+
+          Corrida: $CORRIDA"
+            fi
+            exit 0
+          fi
+
+          ESTADO="- Cifras de los documentos: $CIFRAS
+          - Suite (sin red): $SUITE
+          - Visor en navegador: $VISOR"
+
+          if [ -n "$ABIERTA" ]; then
+            gh issue comment "$ABIERTA" --body "Sigue en rojo ($(date -u +%Y-%m-%d\ %H:%M) UTC).
+
+          $ESTADO
+
+          Corrida: $CORRIDA"
+            exit 1
+          fi
+
+          gh label create datos --color D93F0B --force >/dev/null 2>&1 || true
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+
+          CUERPO="Lo que esta publicado en \`main\` ya no pasa sus comprobaciones.
+
+          $ESTADO
+
+          Lo mas probable es que un dato nuevo —un reporte, una reconstruccion,
+          una version de ShakeMap— haya movido algo que una prueba tenia escrito
+          a mano. Si la prueba compara contra una cifra fija, hay que hacer que la
+          lea del dato; si el dato esta mal, es un fallo del pipeline.
+
+          Esta incidencia se cierra sola cuando la siguiente corrida salga en verde.
+
+          Corrida: $CORRIDA"
+
+          gh issue create --title "$TITULO" --label "datos,automatico" --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"
+          exit 1
