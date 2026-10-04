@@ -4,7 +4,7 @@ Utilidades que se corren a mano, no en el camino crítico.
 
 | Script | Qué hace |
 |---|---|
-| `freeze_event.py` | Congela los productos de un evento real como fixture golden (T0.2) |
+| `freeze_event.py` | Congela un evento real con los ficheros que leen las pruebas golden (T0.2) |
 | `simulacro_sismo.py` | Ensaya P2→P3 con un ShakeMap real mudado sobre población |
 | `validar_diagramas.py` | Compila cada diagrama Mermaid de los `.md`; lo corre `ci.yml` en cada push y PR |
 

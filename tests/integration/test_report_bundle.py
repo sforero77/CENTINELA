@@ -63,7 +63,15 @@ def test_escribe_el_paquete_completo(tmp_path: Path) -> None:
 
 
 def test_el_reporte_cabe_en_un_movil_3g(tmp_path: Path) -> None:
-    """RNF-05: md + png < 500 KB. Aqui verificamos la parte de texto."""
+    """RNF-05, mitad del reporte (md + png < 500 KB): aqui solo el texto.
+
+    RNF-05 tiene dos mitades y esta prueba y la del mapa cubren solo la del
+    reporte, que se cumple. La del visor —«< 3 MB carga inicial»— no se cumple
+    y la mide `tests/visor/test_el_visor_pinta.py::
+    test_la_carga_inicial_cabe_en_el_presupuesto_de_rnf05`, marcada `xfail`
+    estricta. Hasta el 3-oct-2026 estas dos eran los unicos verdes con el
+    nombre del requisito, y leidas de corrido decian que se cumplia entero.
+    """
     escritos = write_report_bundle(_reporte(), [], reports_root=tmp_path, con_mapa=False)
     assert escritos["report_md"].stat().st_size < 100_000
 
@@ -96,7 +104,10 @@ def test_un_reporte_corrupto_no_tumba_el_indice(tmp_path: Path) -> None:
 
 @pytest.mark.render
 def test_el_mapa_entra_en_el_paquete(tmp_path: Path) -> None:
-    """RNF-05: md + png por debajo de 500 KB entre los dos."""
+    """RNF-05, mitad del reporte: md + png por debajo de 500 KB entre los dos.
+
+    La mitad del visor no es esta; ver `test_el_reporte_cabe_en_un_movil_3g`.
+    """
     filas = [
         {
             "adm2_id": "27001",

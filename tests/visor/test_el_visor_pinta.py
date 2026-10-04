@@ -22,6 +22,7 @@ malla dibujada de una malla vacia, que es el cero silencioso de siempre.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import shutil
@@ -1700,6 +1701,81 @@ def test_el_fuego_no_se_baja_hasta_que_se_mira(navegador: Any, servidor: str) ->
         pg.wait_for_timeout(900)
         veces = len([u for u in pedidos if "incendios.json" in u])
         assert veces == 1, f"el fichero de fuego se pidio {veces} veces"
+    finally:
+        ctx.close()
+
+
+#: RNF-05 de ESPECIFICACION.md: «visor con presupuesto < 3 MB carga inicial».
+PRESUPUESTO_CARGA_INICIAL = 3_000_000
+
+
+# NO SE CUMPLE, Y LA PRUEBA LO DICE EN VEZ DE CALLARLO.
+#
+# Medido al escribirla, el 3-oct-2026, en 1400x900: lo propio cabe de sobra,
+# pero las teselas del mapa base de OpenFreeMap a zoom 2 pesan por si solas mas
+# que el presupuesto entero. `strict=True` para que el dia que quepa —otro
+# estilo, otro encuadre inicial, teselas mas ligeras— la prueba se ponga roja y
+# obligue a quitar la marca. `raises=AssertionError` para que solo el
+# presupuesto cuente como fallo esperado: si no se midio nada (sin red, sin
+# visor), eso sale con `pytest.fail` y es un rojo de verdad, no un «ya se sabia».
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason=(
+        "RNF-05 incumplido: las teselas del mapa base de OpenFreeMap superan solas "
+        "los 3 MB de carga inicial. Declarado en docs/GARANTIAS.md."
+    ),
+)
+def test_la_carga_inicial_cabe_en_el_presupuesto_de_rnf05(navegador: Any, servidor: str) -> None:
+    """RNF-05, la mitad del visor: lo que baja al abrir la pagina, < 3 MB.
+
+    LA MITAD QUE NO MIRABA NADIE. Las dos pruebas que citaban RNF-05 en
+    `tests/integration/test_report_bundle.py` miden el markdown y el PNG del
+    reporte, que es la mitad que se cumple. La auditoria del 5-sep-2026
+    (hallazgo 136) lo marco: dos verdes con el nombre del requisito y la parte
+    incumplida sin guardia. Entonces `incendios.json` —3,2 MB por si solo— se
+    pedia al arrancar; desde que se difiere al modo fuego (la prueba de arriba)
+    la cuenta cambia, pero que cambie no lo sabia ninguna prueba.
+
+    Se mide en el cable y no sumando ficheros: la lista de lo que el visor pide
+    al arrancar vive en `app.js` y en el estilo del mapa base, y una lista
+    copiada aqui se quedaria atras sin avisar. Se suma `responseBodySize`, que
+    es lo que viajo: el servidor local no comprime, asi que lo propio cuenta
+    entero y la cifra es una cota por arriba de lo que sirve Pages con gzip. Lo
+    de terceros —teselas y glifos de OpenFreeMap, fuentes de Google— cuenta
+    tambien: el lector en 3G lo paga igual.
+    """
+    ctx = navegador.new_context(viewport={"width": 1400, "height": 900})
+    pg = ctx.new_page()
+    pesos: dict[str, int] = {}
+
+    def _anotar(peticion: Any) -> None:
+        # Una peticion cerrada al salir no tiene tamanos que leer.
+        with contextlib.suppress(Exception):
+            pesos[peticion.url] = pesos.get(peticion.url, 0) + int(
+                peticion.sizes()["responseBodySize"]
+            )
+
+    pg.on("requestfinished", _anotar)
+    try:
+        pg.goto(f"{servidor}/index.html")
+        _esperar_capa(pg, "epicentros")
+        pg.wait_for_load_state("networkidle")
+
+        propios = sum(v for u, v in pesos.items() if u.startswith(servidor))
+        total = sum(pesos.values())
+        # Sin esto, un `requestfinished` que no llegara daria 0 bytes y verde,
+        # y sin red el mapa base no se mediria y la cifra saldria corta.
+        if propios <= 0 or not any("app.js" in u for u in pesos):
+            pytest.fail(f"no se midio la carga del propio visor: {sorted(pesos)}")
+        if total == propios:
+            pytest.fail("no llego nada del mapa base: la medida sin el no vale para RNF-05")
+        mayores = sorted(pesos.items(), key=lambda kv: -kv[1])[:8]
+        assert total < PRESUPUESTO_CARGA_INICIAL, (
+            f"la carga inicial pesa {total:,} bytes ({propios:,} propios, "
+            f"{total - propios:,} de terceros) y RNF-05 pide menos de "
+            f"{PRESUPUESTO_CARGA_INICIAL:,}. Lo mas pesado: {mayores}"
+        )
     finally:
         ctx.close()
 
