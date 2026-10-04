@@ -234,7 +234,7 @@ sources:
     hdx_resource: "colombia-healthsites-geojson"
     license: ODbL-1.0
     vintage: "2026-08-28"
-    insumos_sha256: "c5a9a9fa382dd0f6f3f05e3f72e6fd8d14f945f2329a498fcfb3b8827baf6b47"
+    insumos_sha256: "07e918d2a1b42648b4a336332c9c250c265d30b0b98178c35c57c21d2a5c0919"
     notes: >-
       healthsites.io publicado en HDX como GeoJSON. Se usa esta via y no la API
       de healthsites.io porque esa exige API key, y O4 pide reconstruir el
@@ -283,7 +283,7 @@ sources:
     # `columnas=()` y `requerida=False`, y `build.py` no la nombra ni una vez.
     # Un cambio silencioso aguas arriba no puede mover ninguna cifra publicada
     # porque ninguna cifra publicada sale de aqui.
-    insumos_sha256: ""
+    insumos_sha256: "d518086324ed4a527c36c28853b593937174d6a3ca031707570c4a7b8a901715"
     # ESTE DIGEST CADUCA SOLO, Y NO COMPRA NADA. `airports.csv` es el CSV global
     # de OurAirports y se reescribe **a diario** con las ediciones de cualquier
     # aeropuerto del mundo, asi que fijarlo significa que Colombia no puede
