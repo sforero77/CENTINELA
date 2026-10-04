@@ -322,6 +322,20 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: gh workflow run site.yml
 
+      # Un activo reconstruido mueve la poblacion medida del manifest, y con ella
+      # las tablas de los documentos y lo que la suite compara. Diecinueve
+      # paises despachan diecinueve veces; `datos.yml` las funde en una corrida
+      # pendiente, que comprueba el ultimo estado. Ver datos.yml.
+      - name: Comprobar lo que se acaba de publicar
+        if: >-
+          ${{ !cancelled()
+          && (steps.publicar.outputs.publicado == 'true'
+              || steps.anotar.outputs.publicado == 'true') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run datos.yml
+
       # UNA MATRIZ DE DIECIOCHO PAISES EN ROJO NO AVISABA A NADIE.
       #
       # Con `fail-fast: false` —que es lo correcto: un pais roto no puede
@@ -355,16 +369,22 @@ jobs:
           fi
 
           CUERPO=$(cat <<'TXT'
-          El activo de exposicion de este pais no se pudo reconstruir.
+          El activo de exposicion de este pais no se pudo reconstruir. Busca en
+          el log de la corrida cual de estas dos es:
 
-          **Lo primero que hay que mirar es el release de Overture.** Es el unico
-          insumo con caducidad: Overture publica release mensual y conserva dos,
-          asi que el que fija el manifest deja de existir en unos dos meses. El
-          chequeo previo lo detecta en segundos y sale con codigo 5.
+          **`InsumoCambiadoError`: un tercero republico una fuente.** La descarga
+          fue bien y lo que llego no tiene la huella que fija el manifest (paso
+          el 1-oct-2026 con las sedes de salud de HOT y HDX en cinco paises). Es
+          el guardia de reproducibilidad haciendo su trabajo: compara con el
+          bloque `insumos` de la `medicion.json` del Release anterior y, si el
+          cambio es legitimo, fija el digest nuevo con `centinela fijar-insumos`.
 
-          Reparacion: actualizar el release en `data/manifests/<ISO3>.yaml` —las
-          tres fuentes `s3://` van al mismo— y relanzar este workflow con el ISO3
-          del pais.
+          **Codigo 5: caduco el release de Overture.** Overture publica release
+          mensual y conserva dos, asi que el que fija el manifest deja de existir
+          en unos dos meses. Reparacion: actualizar el release en
+          `data/manifests/<ISO3>.yaml` —las tres fuentes `s3://` van al mismo—.
+
+          En los dos casos, despues hay que relanzar este workflow con el ISO3.
 
           Mientras tanto **el activo publicado sigue sirviendo**: los reportes se
           calculan contra el Release, no contra las fuentes. Lo que se pierde es

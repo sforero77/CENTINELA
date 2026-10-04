@@ -95,3 +95,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: gh workflow run site.yml
+
+      # Y por la misma regla, las comprobaciones sobre la capa nueva: el visor
+      # cuenta que pinte tantas celdas como trae `incendios.json`. Ver datos.yml.
+      - name: Comprobar lo que se acaba de publicar
+        if: steps.publicar.outputs.publicado == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run datos.yml

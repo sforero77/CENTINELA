@@ -10,7 +10,7 @@ qué garantiza y cómo se rompe.
 | Carpeta | Qué explica |
 |---|---|
 | [`arquitectura/`](arquitectura/) | La vista de conjunto, el viaje del dato de punta a punta y el contrato de cada fichero |
-| [`acciones/`](acciones/) | Las catorce GitHub Actions: quién dispara a quién, con qué reloj, qué valida cada una y por qué |
+| [`acciones/`](acciones/) | Las quince GitHub Actions: quién dispara a quién, con qué reloj, qué valida cada una y por qué |
 | [`pipelines/`](pipelines/) | Los seis pipelines de Python: qué extrae, qué calcula y qué escribe cada uno |
 | [`datos/`](datos/) | Las fuentes, sus licencias, las agregaciones y **en qué banda de intensidad se publica cada indicador** |
 | [`visor/`](visor/) | El visor estático: qué consume, cómo pinta y cómo se validan sus capas |

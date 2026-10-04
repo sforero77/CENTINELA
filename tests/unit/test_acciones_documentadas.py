@@ -24,12 +24,12 @@ INDICE = RAIZ / "docs" / "acciones" / "README.md"
 #: Los numeros escritos en prosa, en los tres documentos que los citan. El
 #: README los decia tambien hasta el 13-sep-2026, cuando dejo de publicar cifras.
 EN_PROSA = (
-    ("docs/acciones/README.md", "**Catorce workflows.**"),
-    ("docs/acciones/README.md", "## Las catorce, de un vistazo"),
-    ("docs/README.md", "Las catorce GitHub Actions:"),
+    ("docs/acciones/README.md", "**Quince workflows.**"),
+    ("docs/acciones/README.md", "## Las quince, de un vistazo"),
+    ("docs/README.md", "Las quince GitHub Actions:"),
     # Entro el 12-sep-2026 diciendo «catorce workflows, quince jobs»: eran
     # dieciocho jobs. La cifra de jobs se quito; la de workflows queda vigilada.
-    ("docs/acciones/por-reloj.md", "Catorce workflows y nueve relojes."),
+    ("docs/acciones/por-reloj.md", "Quince workflows y diez relojes."),
 )
 
 
@@ -37,11 +37,11 @@ def _workflows() -> list[str]:
     return sorted(p.name for p in WORKFLOWS.glob("*.yml"))
 
 
-def test_son_catorce() -> None:
+def test_son_quince() -> None:
     """Si entra o sale un workflow, esta prueba lo dice antes que un lector."""
     encontrados = _workflows()
-    assert len(encontrados) == 14, (
-        f"hay {len(encontrados)} workflows y la documentacion dice catorce: "
+    assert len(encontrados) == 15, (
+        f"hay {len(encontrados)} workflows y la documentacion dice quince: "
         f"{encontrados}. Actualiza los cuatro sitios de EN_PROSA y esta prueba."
     )
 

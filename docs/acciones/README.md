@@ -1,6 +1,6 @@
 # GitHub Actions
 
-**Catorce workflows.** Tres son el camino crítico de un sismo, siete son
+**Quince workflows.** Tres son el camino crítico de un sismo, siete son
 mantenimiento periódico, dos son verificación de código y dos se disparan a
 mano. Esa cuenta la vigila `tests/unit/test_acciones_documentadas.py`: se quedó
 vieja dos veces (decía trece arriba y doce en la tabla del mismo documento) y
@@ -14,7 +14,7 @@ una cuenta a mano se desincroniza cada vez que entra un workflow.
 | [`mantenimiento.md`](mantenimiento.md) | Frescura, keepalive, simulacro, deriva de contrato y CI |
 | [`por-reloj.md`](por-reloj.md) | **Un diagrama por disparador**: qué comprueba cada reloj, sus códigos de salida y quién recibe la alarma |
 
-## Las catorce, de un vistazo
+## Las quince, de un vistazo
 
 | Workflow | Disparo | Qué hace |
 |---|---|---|
@@ -23,6 +23,7 @@ una cuenta a mano se desincroniza cada vez que entra un workflow.
 | `site.yml` | push a `site/` o `reports/` + manual | Publica el visor en GitHub Pages |
 | `incendios.yml` | cron cada 6 h | P5: focos activos de FIRMS |
 | `frescura.yml` | cron cada 3 h | ¿La página publicada va al día con el repositorio? |
+| `datos.yml` | tras cada publicación + cron diario | **El guardia de los datos.** Regenera las cifras de los documentos, corre la suite y el visor sobre `main` y abre incidencia si algo no cuadra |
 | `repaso.yml` | cron diario | RF-04 más allá del feed: eventos con versión de producto más nueva |
 | `exposure_quarterly.yml` | cron trimestral | P0: reconstruye el activo de exposición |
 | `rezago.yml` | cron semanal (lunes) | ¿Algún reporte publicado se quedó atrás de sus fuentes? Lo re-emite solo |
@@ -51,6 +52,8 @@ flowchart TB
   IMP --> SIT
   FRE -->|"si detecta desfase"| SIT
   INC --> SIT
+  IMP --> DAT["datos.yml"]
+  INC --> DAT
 
   SIT --> PAGES(["GitHub Pages"])
 

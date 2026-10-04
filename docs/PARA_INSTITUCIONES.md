@@ -38,13 +38,17 @@ para todos. Ningún país tiene un camino especial salvo Colombia, que usa el
 Marco Geoestadístico Nacional del DANE en vez del COD-AB de OCHA porque el MGN
 es la fuente de verdad del código DIVIPOLA.
 
+<!-- cifra:tabla_estado -->
+
 | | |
 |---|---|
 | Activos de exposición publicados | **19 de 19** |
-| Reportes emitidos de punta a punta | **27**, en 16 países |
-| De ellos, disparados en vivo | **2**; los otros 25 son reconstrucciones |
+| Reportes emitidos de punta a punta | **28**, en 16 países |
+| De ellos, disparados en vivo | **3**; los otros 25 son reconstrucciones |
 | Personas ya en la malla hexagonal | **649,8 millones** |
 | Latencia objetivo, sismo → reporte | p50 ≤ 60 min · lo medido, en `/status` |
+
+<!-- /cifra -->
 
 **El primero en vivo llegó el 2-sep-2026, y no salió como debía.** Un M5,6 a 71 km
 al OSO de Puerto Madero, México. El vigía lo detectó y despachó en minutos (esa
@@ -60,9 +64,9 @@ día) y ahora mismo está **por encima del objetivo**, porque lo que cronometró
 fue la cadena en régimen sino lo que tardó en arreglarse un fallo que sólo podía
 aparecer con un sismo real. La primera medida limpia la dará el siguiente evento.
 
-Los otros veinticinco reportes siguen siendo reconstrucciones históricas: prueban
+Los otros <!-- cifra:reconstrucciones_en_letras -->veinticinco<!-- /cifra --> reportes siguen siendo reconstrucciones históricas: prueban
 que el cálculo funciona sobre eventos reales de USGS, no que la cadena en vivo
-esté ejercitada. Ahora está ejercitada dos veces, y enseñó algo.
+esté ejercitada. Ahora está ejercitada <!-- cifra:en_vivo_veces -->tres veces<!-- /cifra -->, y enseñó algo.
 
 ## 4. Qué tan buena es la cifra de población
 
@@ -71,31 +75,35 @@ serie de World Population Prospects de Naciones Unidas por uniformidad regional;
 un instituto nacional con censo reciente es mejor referencia para su país, y el
 mantenedor de país puede sustituirla: Colombia ya usa las proyecciones del DANE.
 
+<!-- cifra:tabla_poblacion -->
+
 | País | Medido | Referencia | Desvío |
 |---|---:|---:|---:|
 | México | 130.288.322 | 131.946.900 | −1,26 % |
 | Chile | 19.690.592 | 19.859.921 | −0,85 % |
 | Honduras | 10.915.014 | 11.005.850 | −0,83 % |
-| Colombia | 52.620.466 | 53.000.000 (DANE) | −0,72 % |
+| Colombia | 52.620.429 | 53.000.000 (DANE) | −0,72 % |
 | Guatemala | 18.622.441 | 18.687.881 | −0,35 % |
 | Perú | 34.475.278 | 34.576.665 | −0,29 % |
 | Paraguay | 7.019.481 | 7.013.078 | +0,09 % |
-| Rep. Dominicana | 11.558.381 | 11.520.487 | +0,33 % |
+| República Dominicana | 11.558.381 | 11.520.487 | +0,33 % |
 | Panamá | 4.590.423 | 4.571.189 | +0,42 % |
 | Argentina | 46.284.585 | 45.851.378 | +0,94 % |
 | El Salvador | 6.442.983 | 6.365.503 | +1,22 % |
 | Uruguay | 3.429.034 | 3.384.688 | +1,31 % |
 | Ecuador | 18.571.110 | 18.289.896 | +1,54 % |
-| Bolivia | 12.804.990 | 12.581.843 | +1,77 % |
+| Bolivia | 12.804.991 | 12.581.843 | +1,77 % |
 | Cuba | 11.152.627 | 10.937.203 | +1,97 % |
 | Costa Rica | 5.280.695 | 5.152.950 | +2,48 % |
-| Brasil | 218.881.538 | 212.812.405 | +2,85 % |
+| Brasil | 218.881.568 | 212.812.405 | +2,85 % |
 | Nicaragua | 7.240.789 | 7.007.502 | +3,33 % |
-| Venezuela | 29.924.657 | 28.516.896 | +4,94 % |
+| Venezuela | 29.924.658 | 28.516.896 | +4,94 % |
 
-*`tests/unit/test_cifras_del_readme.py` compara esta tabla contra los
-diecinueve manifests: si un `centinela calibrar` mueve una cifra, la tabla falla
-antes de quedarse rancia.*
+<!-- /cifra -->
+
+*Esta tabla y las cifras de §3 no se copian a mano: las reescribe
+`centinela cifras` desde los manifests y el catálogo de reportes, y el workflow
+`datos.yml` lo hace solo después de cada publicación.*
 
 *Brasil entró en esta tabla el 28-ago-2026, cuando se cerró el fallo que lo
 declaraba con `poblacion_medida: 0` (219 millones de personas de menos en una
