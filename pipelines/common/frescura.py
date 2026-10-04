@@ -27,6 +27,7 @@ from typing import Any, Final
 from .constants import SITIO_PUBLICADO
 from .logging import get_logger
 from .paths import SITE_DIR
+from .state import leer_sello_utc
 
 _log = get_logger(__name__)
 
@@ -179,10 +180,9 @@ def _fecha(datos: dict[str, Any]) -> str:
 
 
 def _parse(ts: str) -> datetime | None:
-    try:
-        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
-    except ValueError:
-        return None
+    # El lector comun: uno propio devolvia sellos sin zona, y compararlos con
+    # uno con zona lanza `TypeError` en vez de dar un desfase (#168).
+    return leer_sello_utc(ts)
 
 
 def comparar(

@@ -72,8 +72,19 @@ class MmiContour:
 def parse_contours(payload: dict[str, Any]) -> list[MmiContour]:
     """Extrae los contornos MMI del GeoJSON ``cont_mmi``.
 
-    USGS publica en el mismo archivo contornos de MMI y, segun version, de PGA
-    y PGV. Filtramos por la propiedad ``paramvalue`` bajo el tipo ``mmi``.
+    EL FILTRO LEIA UNA PROPIEDAD QUE USGS NO PUBLICA.
+
+    Era `props.get("type", "mmi") != "mmi"`, y ninguna feature del ShakeMap v4
+    trae `type`: las del Choco (`cont_mmi_v7.json`, la fixture golden) traen
+    `value`, `units`, `color` y `weight`, y nada mas. El valor por defecto hacia
+    pasar todo, asi que la frase «filtramos los de PGA/PGV» no era cierta: si un
+    contorno en `%g` llegara a este fichero —o si `cont_mmi_url` cayera en la
+    alternativa generica `contours.json`— sus valores de aceleracion se pintarian
+    como grados de intensidad (auditoria del 5-sep-2026, #98).
+
+    Se filtra por `units`, que es lo que USGS si publica. `type` se conserva
+    como respaldo para un producto antiguo que lo trajera; una feature sin
+    ninguno de los dos se acepta, porque el fichero se llama `cont_mmi`.
     """
     features = payload.get("features")
     if not isinstance(features, list):
@@ -82,7 +93,8 @@ def parse_contours(payload: dict[str, Any]) -> list[MmiContour]:
     contours: list[MmiContour] = []
     for feature in features:
         props = feature.get("properties") or {}
-        if str(props.get("type", "mmi")).lower() != "mmi":
+        unidad = props.get("units", props.get("type", "mmi"))
+        if str(unidad).strip().lower() != "mmi":
             continue
         value = props.get("value", props.get("paramvalue"))
         geometry = feature.get("geometry")

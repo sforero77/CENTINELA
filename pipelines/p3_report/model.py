@@ -69,6 +69,15 @@ class Inputs:
     #: ausencia honesta y no un modelo equivocado.
     modelo_deslizamiento: str = ""
     modelo_licuefaccion: str = ""
+    #: CONTRIBUIDOR DE CADA VERSION, SIN EL CUAL EL NUMERO NO IDENTIFICA NADA.
+    #:
+    #: Los numeros de version de USGS son por contribuidor. «ShakeMap v1» en
+    #: `us2000ahv0` es el v1 de `atlas`, cuando `us` va por su v11: sin el
+    #: `source` nadie puede ir a buscar el grid que sostiene las cifras
+    #: (auditoria del 5-sep-2026, #95). Vacio en los reportes emitidos antes de
+    #: que se registrara.
+    shakemap_fuente: str = ""
+    groundfailure_fuente: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -77,6 +86,8 @@ class Inputs:
             "exposure_manifest": self.exposure_manifest,
             "modelo_deslizamiento": self.modelo_deslizamiento,
             "modelo_licuefaccion": self.modelo_licuefaccion,
+            "shakemap_fuente": self.shakemap_fuente,
+            "groundfailure_fuente": self.groundfailure_fuente,
         }
 
 

@@ -22,6 +22,7 @@ from ..common.formatting import (
     format_delta_prose,
     format_number_es,
 )
+from ..common.state import identidad_de_version
 from .model import Report
 
 #: Cifras que se comparan, con su etiqueta. Es un subconjunto deliberado de
@@ -79,17 +80,27 @@ def build_changelog(anterior: Report | None, nuevo: Report) -> tuple[str, ...]:
 
 def _cambios_de_version(anterior: Report, nuevo: Report) -> list[str]:
     """Las versiones de producto que motivaron la re-emision."""
+    # Se compara la identidad entera, contribuidor incluido: `us` v6 -> `atlas`
+    # v6 es otro grid aunque el numero coincida (#95). Un reporte anterior sin
+    # contribuidor registrado no cuenta como cambio de contribuidor: es una
+    # ausencia, no un `source` distinto.
+    a, n = anterior.inputs, nuevo.inputs
     cambios: list[str] = []
-    for etiqueta, antes, ahora in (
-        ("ShakeMap", anterior.inputs.shakemap_version, nuevo.inputs.shakemap_version),
+    for etiqueta, v_antes, f_antes, v_ahora, f_ahora in (
+        ("ShakeMap", a.shakemap_version, a.shakemap_fuente, n.shakemap_version, n.shakemap_fuente),
         (
             "Ground Failure",
-            anterior.inputs.groundfailure_version,
-            nuevo.inputs.groundfailure_version,
+            a.groundfailure_version,
+            a.groundfailure_fuente,
+            n.groundfailure_version,
+            n.groundfailure_fuente,
         ),
     ):
-        if antes != ahora:
-            cambios.append(f"{etiqueta}: v{antes} → v{ahora}")
+        otra_fuente = bool(f_antes and f_ahora and f_antes != f_ahora)
+        if v_antes != v_ahora or otra_fuente:
+            antes = identidad_de_version(f_antes, v_antes)
+            ahora = identidad_de_version(f_ahora, v_ahora)
+            cambios.append(f"{etiqueta}: {antes} → {ahora}")
     return cambios
 
 

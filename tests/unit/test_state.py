@@ -11,6 +11,7 @@ from pipelines.common.state import (
     EventStatus,
     InvalidTransitionError,
     ProcessedVersions,
+    leer_sello_utc,
 )
 
 
@@ -69,17 +70,98 @@ def test_descartado_es_terminal() -> None:
         descartado.transition(EventStatus.PUBLICADO)
 
 
+_US = {"shakemap_fuente": "us", "groundfailure_fuente": "us"}
+
+
+def _consumido_de_us(shakemap: int, groundfailure: int) -> ProcessedVersions:
+    return ProcessedVersions(
+        shakemap=shakemap,
+        groundfailure=groundfailure,
+        shakemap_fuente="us",
+        groundfailure_fuente="us",
+    )
+
+
 def test_needs_reprocessing_detecta_version_nueva() -> None:
-    estado = _estado(versiones_procesadas=ProcessedVersions(shakemap=2, groundfailure=1))
-    assert estado.needs_reprocessing(3, 1)
-    assert estado.needs_reprocessing(2, 2)
-    assert not estado.needs_reprocessing(2, 1)
+    estado = _estado(versiones_procesadas=_consumido_de_us(2, 1))
+    assert estado.needs_reprocessing(3, 1, **_US)
+    assert estado.needs_reprocessing(2, 2, **_US)
+    assert not estado.needs_reprocessing(2, 1, **_US)
 
 
 def test_no_reprocesa_version_anterior() -> None:
-    """Un producto que llega retrasado no debe hacer retroceder el reporte."""
+    """Un producto del mismo contribuidor que llega retrasado no hace retroceder el reporte."""
+    estado = _estado(versiones_procesadas=_consumido_de_us(3, 2))
+    assert not estado.needs_reprocessing(1, 1, **_US)
+
+
+def test_cambiar_de_contribuidor_cuenta_como_cambio_aunque_el_numero_baje() -> None:
+    """#81: `us` v6 -> `atlas` v1. Con `1 > 6` el reporte se quedaba congelado."""
+    estado = _estado(versiones_procesadas=_consumido_de_us(6, 2))
+    assert estado.needs_reprocessing(1, 2, shakemap_fuente="atlas", groundfailure_fuente="us")
+
+
+def test_cambiar_de_contribuidor_con_el_mismo_numero_tambien_cuenta() -> None:
+    estado = _estado(versiones_procesadas=_consumido_de_us(3, 2))
+    assert estado.needs_reprocessing(3, 2, shakemap_fuente="atlas", groundfailure_fuente="us")
+
+
+def test_un_estado_sin_contribuidor_no_dispara_si_el_numero_coincide() -> None:
+    """Los 28 estados publicados no traen contribuidor: no pueden re-emitirse todos.
+
+    Trece de ellos consumieron `atlas` v1 mientras `us` va por su v6-v14. Suponer
+    `us` para lo no registrado los dispararia de golpe; leer el vacio como
+    desconocido y comparar el numero, no.
+    """
+    estado = _estado(versiones_procesadas=ProcessedVersions(shakemap=1, groundfailure=1))
+    assert not estado.needs_reprocessing(1, 1, shakemap_fuente="atlas", groundfailure_fuente="us")
+
+
+def test_un_estado_sin_contribuidor_no_lee_un_retroceso_como_cambio() -> None:
+    """Sin el dato, un retroceso es indistinguible de una revision que USGS retiro.
+
+    Y re-emitir hacia atras es lo que el rezago prohibe. El hueco lo cierra el
+    siguiente reproceso, que deja el contribuidor registrado.
+    """
+    estado = _estado(versiones_procesadas=ProcessedVersions(shakemap=6, groundfailure=1))
+    assert not estado.needs_reprocessing(1, 1, shakemap_fuente="atlas", groundfailure_fuente="us")
+
+
+def test_sin_producto_vigente_no_hay_nada_que_reprocesar() -> None:
+    """Un Ground Failure que desaparece no es una version nueva: eso lo mira el rezago."""
     estado = _estado(versiones_procesadas=ProcessedVersions(shakemap=3, groundfailure=2))
-    assert not estado.needs_reprocessing(1, 1)
+    assert not estado.needs_reprocessing(3, 0, shakemap_fuente="us", groundfailure_fuente="")
+
+
+def test_el_contribuidor_viaja_al_json_y_vuelve(events_dir: Path) -> None:
+    original = _estado(versiones_procesadas=_consumido_de_us(3, 2))
+    original.save(events_dir)
+    recuperado = EventState.load("us7000sint", events_dir)
+    assert recuperado is not None
+    assert recuperado.versiones_procesadas == original.versiones_procesadas
+
+
+def test_un_estado_sin_contribuidor_conserva_su_forma_al_guardarse() -> None:
+    """Los estados publicados no cambian de forma hasta que un reproceso sepa la fuente."""
+    datos = _estado(versiones_procesadas=ProcessedVersions(shakemap=3, groundfailure=2)).to_dict()
+    assert datos["versiones_procesadas"] == {"shakemap": 3, "groundfailure": 2}
+
+
+@pytest.mark.parametrize(
+    "sello", ["2026-08-19T05:00:00Z", "2026-08-19T05:00:00+00:00", "2026-08-19T05:00:00"]
+)
+def test_un_sello_sin_zona_se_lee_como_utc(sello: str) -> None:
+    """#168: un sello sin `Z` salia naive y compararlo con uno con zona lanzaba TypeError."""
+    from datetime import UTC, datetime
+
+    momento = leer_sello_utc(sello)
+    assert momento == datetime(2026, 8, 19, 5, tzinfo=UTC)
+    assert momento is not None and momento.tzinfo is not None
+
+
+@pytest.mark.parametrize("malo", ["", "ayer", None, 17])
+def test_un_sello_ilegible_es_none(malo: object) -> None:
+    assert leer_sello_utc(malo) is None
 
 
 @pytest.mark.parametrize("malo", ["../../etc/passwd", "us/7000", "", "a", "us 7000"])

@@ -19,7 +19,8 @@ from ..common.constants import (
 from ..common.geo import LATAM_BBOX, BBox
 from ..common.http import Fetcher
 from ..common.logging import get_logger
-from ..common.state import EventState, EventStatus, utcnow_iso
+from ..common.paths import USGS_ID_RE
+from ..common.state import EventState, EventStatus, leer_sello_utc, utcnow_iso
 from .feed import EventCandidate, fetch_feed
 from .filters import evaluate
 from .observados import EventoObservado
@@ -49,6 +50,9 @@ class TriggerResult:
     #: Feeds que no se pudieron leer. Con los dos caidos la corrida es ciega y
     #: "cero eventos" significa "no mire", no "no habia".
     feeds_fallidos: list[str] = field(default_factory=list)
+    #: Eventos conocidos que USGS marco `deleted` en esta pasada y que se
+    #: cerraron. No se despachan ni se publican como observados.
+    retirados: list[str] = field(default_factory=list)
     latido_utc: str = field(default_factory=utcnow_iso)
 
     @property
@@ -114,10 +118,16 @@ def run_trigger(
             continue
 
         for candidate in candidatos:
-            if candidate.usgs_id in vistos:
+            # Por todos sus ids y no solo por el preferido: entre la lectura de
+            # un feed y la del otro USGS puede haber renumerado el evento.
+            if vistos.intersection(candidate.identificadores):
                 continue  # el mismo evento aparece en ambos feeds
-            vistos.add(candidate.usgs_id)
+            vistos.update(candidate.identificadores)
             result.revisados += 1
+
+            if candidate.retirado:
+                _retirar(candidate, result, events_dir=events_dir, dry_run=dry_run)
+                continue
 
             decision = evaluate(candidate, bbox=bbox)
             if not decision:
@@ -144,6 +154,7 @@ def run_trigger(
                 "observados": len(result.observados),
                 "nuevos": result.nuevos,
                 "revisitados": result.revisitados,
+                "retirados": result.retirados,
             }
         },
     )
@@ -156,17 +167,11 @@ def _despachado_hace_poco(estado: EventState) -> bool:
     Sin sello previo devuelve `False`: los eventos que ya estaban vivos cuando
     esto se anadio se despachan una vez mas y a partir de ahi cuentan.
     """
-    sello = estado.timestamps.get("despachado")
-    if not sello:
-        return False
-    try:
-        desde = datetime.fromisoformat(sello.replace("Z", "+00:00"))
-    except ValueError:
-        # Un sello ilegible no puede frenar el despacho: ante la duda, se
+    desde = leer_sello_utc(estado.timestamps.get("despachado"))
+    if desde is None:
+        # Sin sello, o ilegible: no puede frenar el despacho. Ante la duda, se
         # despacha. Perder una revision es peor que gastar una corrida.
         return False
-    if desde.tzinfo is None:
-        desde = desde.replace(tzinfo=UTC)
     return datetime.now(UTC) - desde < timedelta(minutes=MINUTOS_ENTRE_REDESPACHOS)
 
 
@@ -209,7 +214,7 @@ def _classify(
     ninguno", que es la confusion que este proyecto persigue en todas partes.
     """
     try:
-        existing = EventState.load(candidate.usgs_id, events_dir)
+        existing = _estado_conocido(candidate, events_dir)
     except (ValueError, KeyError, OSError) as error:
         result.estados_ilegibles.append(candidate.usgs_id)
         _log.warning(
@@ -269,7 +274,92 @@ def _classify(
 
     # Ya conocido: P2 decide si la version de ShakeMap avanzo (RF-04). El
     # trigger no descarga productos — eso lo hace P2 con el feed detail.
-    result.revisitados.append(candidate.usgs_id)
+    #
+    # Se despacha con el id **del estado**, no con el preferido de hoy: el
+    # reporte vive en `reports/<id del estado>/`, y el detail de USGS responde
+    # igual por cualquiera de los ids del evento.
+    result.revisitados.append(existing.usgs_id)
     if not dry_run:
         existing.timestamps["despachado"] = utcnow_iso()
         existing.save(events_dir)
+
+
+def _estado_conocido(candidate: EventCandidate, events_dir: Path | None) -> EventState | None:
+    """El `event_state` del evento, buscado por **todos** sus identificadores.
+
+    EL MISMO SISMO PODIA PUBLICARSE DOS VECES.
+
+    El dedupe era `EventState.load(candidate.usgs_id)`: una comparacion de
+    cadenas contra el id preferido de hoy. USGS cambia el preferido cuando otra
+    red asume el evento y deja el viejo en `ids`. No es hipotetico: el 3-oct-2026
+    el detail de `pr2025056002` declaraba
+    `,pt25056000,us6000pvad,pr2025056002,usauto6000pvad,`. Si el feed pasara a
+    servirlo como `us6000pvad`, el vigia no encontraba `events/us6000pvad.json`,
+    lo daba por nuevo y P2 publicaba un segundo reporte del mismo sismo
+    (auditoria del 5-sep-2026, #87).
+
+    El preferido va primero: si existe, es el. Los demas se prueban despues, y
+    uno con forma de id invalida se salta en vez de contarse como estado
+    ilegible: es un alias de otra red, no un fichero roto nuestro.
+
+    Raises:
+        ValueError, KeyError, OSError: si el fichero que existe no se puede leer.
+    """
+    for usgs_id in candidate.identificadores:
+        if usgs_id != candidate.usgs_id and not USGS_ID_RE.match(usgs_id):
+            continue
+        estado = EventState.load(usgs_id, events_dir)
+        if estado is not None:
+            if usgs_id != candidate.usgs_id:
+                _log.info(
+                    "evento conocido con otro id: USGS cambio el preferido",
+                    extra={"context": {"preferido": candidate.usgs_id, "conocido_como": usgs_id}},
+                )
+            return estado
+    return None
+
+
+def _retirar(
+    candidate: EventCandidate,
+    result: TriggerResult,
+    *,
+    events_dir: Path | None,
+    dry_run: bool,
+) -> None:
+    """Un evento que USGS marco `deleted` no se despacha, y si se conocia, se cierra.
+
+    `status: deleted` NO SE MIRABA.
+
+    El feed lo trae en `status` y aqui solo se leia el tipo, la magnitud y la
+    caja, asi que un evento retirado —un fantasma del procesado automatico, o el
+    duplicado de otro— que pasara el filtro se despachaba como nuevo y se
+    seguia re-despachando como vivo. Un sismo que no ocurrio con un reporte de
+    exposicion es la cifra alarmista del registro de riesgos (#87).
+
+    Se cierra con `DESCARTADO`, que es el estado que `state.py` reserva para lo
+    retirado. Es terminal pero no irreversible: `impact --reprocesar` lo revive
+    si USGS lo restituye. El reporte que ya estuviera publicado **no se borra
+    desde aqui**: retirarlo de la pagina es una decision sobre un artefacto
+    publico, y queda la nota en el estado para quien la tome.
+    """
+    try:
+        existente = _estado_conocido(candidate, events_dir)
+    except (ValueError, KeyError, OSError) as error:
+        result.estados_ilegibles.append(candidate.usgs_id)
+        _log.warning(
+            "event_state ilegible al retirar un evento borrado por USGS",
+            extra={"context": {"usgs_id": candidate.usgs_id, "error": str(error)}},
+        )
+        return
+    if existente is None or existente.estado in _TERMINAL:
+        return
+    result.retirados.append(existente.usgs_id)
+    _log.warning(
+        "USGS retiro un evento conocido; se cierra",
+        extra={"context": {"usgs_id": existente.usgs_id, "estado": existente.estado.value}},
+    )
+    if not dry_run:
+        existente.transition(
+            EventStatus.DESCARTADO,
+            nota=f"USGS lo marco deleted ({candidate.usgs_id}); no se vuelve a despachar.",
+        ).save(events_dir)

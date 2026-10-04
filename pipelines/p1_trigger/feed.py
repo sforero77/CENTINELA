@@ -43,6 +43,19 @@ class EventCandidate:
     estado_revision: str
     #: Instante en que USGS actualizo el evento por ultima vez.
     actualizado_utc: str
+    #: Todos los identificadores con que USGS conoce el evento (`ids`), tal
+    #: como los publica. Ver `_estado_conocido` en `run.py`.
+    ids: tuple[str, ...] = ()
+
+    @property
+    def identificadores(self) -> tuple[str, ...]:
+        """El preferido primero y despues los demas, sin repetir."""
+        return tuple(dict.fromkeys([self.usgs_id, *self.ids]))
+
+    @property
+    def retirado(self) -> bool:
+        """USGS lo marco `deleted`: no existio, o era el duplicado de otro."""
+        return self.estado_revision.lower() == "deleted"
 
     @classmethod
     def from_feature(cls, feature: dict[str, Any]) -> Self:
@@ -58,8 +71,12 @@ class EventCandidate:
             mag = props["mag"]
             if mag is None:
                 raise FeedContractError(f"Evento sin magnitud: {feature.get('id')}")
+            usgs_id = str(feature["id"])
+            # USGS los publica como ",us6000pvad,pr2025056002,": comas a los dos
+            # lados, para que buscar ",id," no tenga casos de borde.
+            otros = [i.strip() for i in str(props.get("ids") or "").split(",") if i.strip()]
             return cls(
-                usgs_id=str(feature["id"]),
+                usgs_id=usgs_id,
                 mag=float(mag),
                 lon=lon,
                 lat=lat,
@@ -70,6 +87,7 @@ class EventCandidate:
                 tipo=str(props.get("type", "earthquake")),
                 estado_revision=str(props.get("status", "automatic")),
                 actualizado_utc=epoch_ms_to_iso(props.get("updated", props["time"])),
+                ids=tuple(otros),
             )
         except FeedContractError:
             raise

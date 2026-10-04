@@ -18,7 +18,15 @@ from ..common.constants import CADENCIA_MINIMA_MIN, PRELIMINARY_MAX_HOURS
 from ..common.http import Fetcher
 from ..common.logging import get_logger
 from ..common.paths import REPORTS_DIR, validate_usgs_id
-from ..common.state import EventState, EventStatus, ProcessedVersions, utcnow_iso
+from ..common.state import (
+    EventState,
+    EventStatus,
+    ProcessedVersions,
+    identidad_de_version,
+    leer_sello_utc,
+    utcnow_iso,
+    version_cambio,
+)
 from ..common.toponimos import traducir_lugar
 from ..p1_trigger.feed import FeedContractError, epoch_ms_to_iso
 from ..p3_report.changelog import build_changelog
@@ -56,15 +64,9 @@ def _ventana_preliminar_agotada(state: EventState) -> bool:
     proposito: rendirse antes de tiempo es el fallo que esto arregla.
     """
     desde = state.timestamps.get("detectado") or state.timestamps.get("preliminar")
-    if desde:
-        try:
-            inicio = datetime.fromisoformat(desde.replace("Z", "+00:00"))
-        except ValueError:
-            inicio = None
-        if inicio is not None:
-            if inicio.tzinfo is None:
-                inicio = inicio.replace(tzinfo=UTC)
-            return datetime.now(UTC) - inicio >= timedelta(hours=PRELIMINARY_MAX_HOURS)
+    inicio = leer_sello_utc(desde)
+    if inicio is not None:
+        return datetime.now(UTC) - inicio >= timedelta(hours=PRELIMINARY_MAX_HOURS)
     return state.intentos_preliminar >= MAX_PRELIMINARY_ATTEMPTS
 
 
@@ -133,13 +135,23 @@ def decide(state: EventState, products: ProductSet, *, forzar: bool = False) -> 
     sm_version = products.shakemap_version
     gf_version = products.groundfailure_version
 
-    if state.needs_reprocessing(sm_version, gf_version):
+    if state.needs_reprocessing(
+        sm_version,
+        gf_version,
+        shakemap_fuente=products.shakemap_fuente,
+        groundfailure_fuente=products.groundfailure_fuente,
+    ):
         previa = state.versiones_procesadas
-        razon = (
-            f"ShakeMap v{previa.shakemap} -> v{sm_version}"
-            if sm_version > previa.shakemap
-            else f"Ground Failure v{previa.groundfailure} -> v{gf_version}"
-        )
+        if version_cambio(
+            sm_version, products.shakemap_fuente, previa.shakemap, previa.shakemap_fuente
+        ):
+            antes = identidad_de_version(previa.shakemap_fuente, previa.shakemap)
+            ahora = identidad_de_version(products.shakemap_fuente, sm_version)
+            razon = f"ShakeMap {antes} -> {ahora}"
+        else:
+            antes = identidad_de_version(previa.groundfailure_fuente, previa.groundfailure)
+            ahora = identidad_de_version(products.groundfailure_fuente, gf_version)
+            razon = f"Ground Failure {antes} -> {ahora}"
         return Decision(Action.COMPLETO, razon, sm_version, gf_version)
 
     return Decision(
@@ -525,7 +537,10 @@ def run_impact(
     escritos.update(write_report_bundle(reporte, filas, reports_root=reports_root))
 
     versiones = ProcessedVersions(
-        shakemap=products.shakemap_version, groundfailure=products.groundfailure_version
+        shakemap=products.shakemap_version,
+        groundfailure=products.groundfailure_version,
+        shakemap_fuente=products.shakemap_fuente,
+        groundfailure_fuente=products.groundfailure_fuente,
     )
     replace(state, versiones_procesadas=versiones).transition(
         EventStatus.PUBLICADO, nota=decision.razon

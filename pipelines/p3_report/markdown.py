@@ -629,7 +629,7 @@ def _seccion_descargas(report: Report) -> str:
     return "## Descargas\n\n" + "\n".join(disponibles)
 
 
-def _version_consumida(version: int) -> str:
+def _version_consumida(version: int, fuente: str = "") -> str:
     """`v0` no es una version: es "no se consumio ninguna".
 
     Se imprimia como `**v0**` al lado de `**v11**`, con el mismo formato y el
@@ -637,8 +637,13 @@ def _version_consumida(version: int) -> str:
     consumio algo, y de ahi a leer los ceros de deslizamiento como una medida
     hay un paso. Es la misma distincion que el resto del reporte ya hace en
     prosa y que la seccion de procedencia no hacia.
+
+    Y con el contribuidor al lado cuando se conoce: «v1» a secas no identifica
+    ningun grid, porque `us` y `atlas` numeran cada uno lo suyo (#95).
     """
-    return f"**v{version}**" if version > 0 else "**ninguno** (no publicado aún)"
+    if version <= 0:
+        return "**ninguno** (no publicado aún)"
+    return f"**v{version}** de `{fuente}`" if fuente else f"**v{version}**"
 
 
 def _enlace_al_manifiesto(report: Report) -> str:
@@ -657,11 +662,13 @@ def _enlace_al_manifiesto(report: Report) -> str:
 
 
 def _seccion_procedencia(report: Report) -> str:
+    entradas = report.inputs
+    shakemap = _version_consumida(entradas.shakemap_version, entradas.shakemap_fuente)
+    terreno = _version_consumida(entradas.groundfailure_version, entradas.groundfailure_fuente)
     return (
         "## Procedencia\n\n"
-        f"- ShakeMap consumido: {_version_consumida(report.inputs.shakemap_version)}\n"
-        f"- Ground Failure consumido: "
-        f"{_version_consumida(report.inputs.groundfailure_version)}\n"
+        f"- ShakeMap consumido: {shakemap}\n"
+        f"- Ground Failure consumido: {terreno}\n"
         f"- Manifiesto de exposición: {_enlace_al_manifiesto(report)}\n"
         f"- Pipeline: `{report.pipeline_version}` · Generado: {report.generado_utc}"
     )

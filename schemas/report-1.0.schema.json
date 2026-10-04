@@ -100,6 +100,14 @@
         "modelo_licuefaccion": {
           "type": "string",
           "description": "Fichero del modelo de licuefaccion que se consumio."
+        },
+        "shakemap_fuente": {
+          "type": "string",
+          "description": "Contribuidor USGS (source: us, atlas, una red regional) del ShakeMap consumido. Los numeros de version son por contribuidor: sin este campo, shakemap_version no identifica ningun grid. Vacio en los reportes emitidos antes de que se registrara."
+        },
+        "groundfailure_fuente": {
+          "type": "string",
+          "description": "Contribuidor USGS del Ground Failure consumido. Vacio si no se consumio o si el reporte es anterior a que se registrara."
         }
       }
     },
