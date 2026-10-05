@@ -9,12 +9,14 @@
   "origen_utc": "2022-04-21T07:42:46Z",
   "versiones_procesadas": {
     "shakemap": 6,
-    "groundfailure": 6
+    "groundfailure": 6,
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
   "timestamps": {
     "detectado": "2026-08-25T17:02:20Z",
     "publicado": "2026-09-03T03:25:11Z",
-    "publicado_ultimo": "2026-09-28T15:42:31Z",
+    "publicado_ultimo": "2026-10-05T16:11:03Z",
     "usgs_origen": "2022-04-21T07:42:46Z"
   },
   "hashes": {},
@@ -23,6 +25,7 @@
   "notas": [
     "Backtest: reconstruccion retrospectiva de 2022-04-21, no una respuesta en vivo.",
     "ShakeMap v0 -> v6",
+    "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
