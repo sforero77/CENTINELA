@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000tdmp",
-  "estado": "publicado",
+  "estado": "descartado",
   "mag": 5.6,
   "lon": -93.0157,
   "lat": 14.3228,
@@ -12,6 +12,7 @@
     "groundfailure": 0
   },
   "timestamps": {
+    "descartado": "2026-10-05T16:11:59Z",
     "detectado": "2026-09-02T12:50:23Z",
     "preliminar": "2026-09-02T12:50:54Z",
     "publicado": "2026-09-02T13:57:37Z",
@@ -30,6 +31,7 @@
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
-    "ShakeMap v4 -> v6"
+    "ShakeMap v4 -> v6",
+    "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos"
   ]
 }
