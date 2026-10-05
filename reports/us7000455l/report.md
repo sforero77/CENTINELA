@@ -63,10 +63,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **1,0 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v1**
-- Ground Failure consumido: **v8**
-- Manifiesto de exposición: [`pan-v0.3`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-28T15:44:18Z
+- ShakeMap consumido: **v1** de `atlas`
+- Ground Failure consumido: **v8** de `us`
+- Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-10-05T16:11:42Z
 
 ## Advertencias
 
