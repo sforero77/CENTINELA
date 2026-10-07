@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-07T08:05:20Z",
+  "generado_utc": "2026-10-07T16:35:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -58,17 +58,6 @@
       "origen_utc": "2026-10-03T20:33:45Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "MEX"
-    },
-    {
-      "usgs_id": "us6000tz5h",
-      "mag": 5.0,
-      "lon": -62.4223,
-      "lat": 10.3698,
-      "depth_km": 9.8,
-      "lugar": "26 km al SSO de Güiria, Venezuela",
-      "origen_utc": "2026-10-02T16:31:25Z",
-      "razon": "M5.0 < umbral M5.5",
-      "iso3": "VEN"
     }
   ]
 }
