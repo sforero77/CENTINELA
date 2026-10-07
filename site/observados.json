@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-06T10:05:21Z",
+  "generado_utc": "2026-10-07T06:55:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -58,17 +58,6 @@
       "origen_utc": "2026-10-02T16:31:25Z",
       "razon": "M5.0 < umbral M5.5",
       "iso3": "VEN"
-    },
-    {
-      "usgs_id": "us6000tyzx",
-      "mag": 4.8,
-      "lon": -104.3753,
-      "lat": 18.7561,
-      "depth_km": 24.0,
-      "lugar": "35 km al SSO de El Colomo, México",
-      "origen_utc": "2026-10-02T06:53:35Z",
-      "razon": "M4.8 < umbral M5.5",
-      "iso3": "MEX"
     }
   ]
 }
