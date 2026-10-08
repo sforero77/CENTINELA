@@ -1,4 +1,4 @@
-1/4 Sismo M5,6 · 94 km al SO de Tamarindo, Costa Rica (2026-09-30 21:55 UTC, 8 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+1/4 Sismo M5,6 · 91 km al SO de Tamarindo, Costa Rica (2026-09-30 21:55 UTC, 8 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
 2/4 Ninguna persona del país queda dentro de MMI≥6. No es que falte el dato: la intensidad que el ShakeMap dibuja para este evento no alcanza esa banda sobre territorio habitado.
 
