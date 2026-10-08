@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-08T05:55:23Z",
+  "generado_utc": "2026-10-08T15:00:26Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -14,6 +14,17 @@
       "origen_utc": "2026-10-08T05:35:56Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "CHL"
+    },
+    {
+      "usgs_id": "us6000u0uq",
+      "mag": 4.6,
+      "lon": -86.9041,
+      "lat": 12.6946,
+      "depth_km": 206.3,
+      "lugar": "18 km al NNE de Posoltega, Nicaragua",
+      "origen_utc": "2026-10-07T20:56:51Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "NIC"
     },
     {
       "usgs_id": "us6000u0rx",
