@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-08T20:35:28Z",
+  "generado_utc": "2026-10-09T10:40:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u153",
+      "mag": 5.1,
+      "lon": -68.7905,
+      "lat": -19.9128,
+      "depth_km": 123.8,
+      "lugar": "72 km al SSO de Colchane, Chile",
+      "origen_utc": "2026-10-09T10:22:14Z",
+      "razon": "M5.1 < umbral M5.5",
+      "iso3": "CHL"
+    },
     {
       "usgs_id": "us6000u0wh",
       "mag": 4.5,
