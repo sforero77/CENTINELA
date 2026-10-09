@@ -9,14 +9,16 @@
   "origen_utc": "2026-10-09T18:37:46Z",
   "versiones_procesadas": {
     "shakemap": 1,
-    "groundfailure": 0,
-    "shakemap_fuente": "us"
+    "groundfailure": 1,
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
   "timestamps": {
     "despachado": "2026-10-09T19:15:20Z",
     "detectado": "2026-10-09T18:50:22Z",
     "preliminar": "2026-10-09T18:50:55Z",
     "publicado": "2026-10-09T18:55:55Z",
+    "publicado_ultimo": "2026-10-09T19:15:57Z",
     "usgs_origen": "2026-10-09T18:37:46Z"
   },
   "hashes": {},
@@ -24,6 +26,7 @@
   "backtest": false,
   "notas": [
     "sin ShakeMap disponible aun",
-    "ShakeMap v0 -> v1 (us)"
+    "ShakeMap v0 -> v1 (us)",
+    "Ground Failure v0 -> v1 (us)"
   ]
 }
