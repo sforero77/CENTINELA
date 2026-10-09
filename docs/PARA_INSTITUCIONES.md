@@ -43,8 +43,8 @@ es la fuente de verdad del código DIVIPOLA.
 | | |
 |---|---|
 | Activos de exposición publicados | **19 de 19** |
-| Reportes emitidos de punta a punta | **29**, en 16 países |
-| De ellos, disparados en vivo | **4**; los otros 25 son reconstrucciones |
+| Reportes emitidos de punta a punta | **30**, en 16 países |
+| De ellos, disparados en vivo | **5**; los otros 25 son reconstrucciones |
 | Personas ya en la malla hexagonal | **649,8 millones** |
 | Latencia objetivo, sismo → reporte | p50 ≤ 60 min · lo medido, en `/status` |
 
@@ -66,7 +66,7 @@ aparecer con un sismo real. La primera medida limpia la dará el siguiente event
 
 Los otros <!-- cifra:reconstrucciones_en_letras -->veinticinco<!-- /cifra --> reportes siguen siendo reconstrucciones históricas: prueban
 que el cálculo funciona sobre eventos reales de USGS, no que la cadena en vivo
-esté ejercitada. Ahora está ejercitada <!-- cifra:en_vivo_veces -->cuatro veces<!-- /cifra -->, y enseñó algo.
+esté ejercitada. Ahora está ejercitada <!-- cifra:en_vivo_veces -->cinco veces<!-- /cifra -->, y enseñó algo.
 
 ## 4. Qué tan buena es la cifra de población
 
