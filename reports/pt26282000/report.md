@@ -6,46 +6,46 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 630 mil |
-| Población en MMI≥7 | 150 mil |
-| Población en MMI≥8 | 14 mil |
-| Edificaciones en MMI≥7 | 110 mil |
-| Sedes de salud en MMI≥7 | 44 |
-| Sedes educativas en MMI≥7 | 178 |
-| Vías primarias y secundarias en MMI≥7 | 410 km |
-| Vías locales en MMI≥7 | 4.500 km |
-| Superficie construida en MMI≥7 | 17,9 km² |
+| Población en MMI≥6 | 620 mil |
+| Población en MMI≥7 | 240 mil |
+| Población en MMI≥8 | 21 mil |
+| Edificaciones en MMI≥7 | 180 mil |
+| Sedes de salud en MMI≥7 | 160 |
+| Sedes educativas en MMI≥7 | 532 |
+| Vías primarias y secundarias en MMI≥7 | 640 km |
+| Vías locales en MMI≥7 | 6.100 km |
+| Superficie construida en MMI≥7 | 32,3 km² |
 
-El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 110 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,8 veces** más superficie construida de la que explicarían las 180 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **25 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **36 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Las Tablas | `PA0902` | 8,0 | 28 mil |
-| 2 | Soná | `PA1312` | 8,0 | 24 mil |
-| 3 | Ocú | `PA0704` | 7,5 | 13 mil |
-| 4 | Pesé | `PA0706` | 7,0 | 10 mil |
-| 5 | Tonosí | `PA0907` | 8,5 | 10 mil |
-| 6 | Macaracas | `PA0904` | 8,0 | 9.500 |
-| 7 | Los Pozos | `PA0703` | 8,0 | 8.000 |
-| 8 | Las Minas | `PA0702` | 8,0 | 7.900 |
-| 9 | Guararé | `PA0901` | 7,0 | 7.400 |
-| 10 | Río de Jesús | `PA1308` | 7,5 | 5.400 |
-| 11 | Mariato | `PA1306` | 8,5 | 5.200 |
-| 12 | Montijo | `PA1307` | 8,0 | 5.200 |
-| 13 | Los Santos | `PA0903` | 7,0 | 5.100 |
-| 14 | Pedasí | `PA0905` | 7,5 | 4.300 |
-| 15 | Santiago | `PA1311` | 8,0 | 3.300 |
+| 1 | Santiago | `PA1311` | 8,5 | 77 mil |
+| 2 | Las Tablas | `PA0902` | 8,5 | 28 mil |
+| 3 | Ocú | `PA0704` | 8,0 | 16 mil |
+| 4 | Los Santos | `PA0903` | 7,0 | 14 mil |
+| 5 | Pesé | `PA0706` | 7,0 | 13 mil |
+| 6 | Atalaya | `PA1301` | 7,0 | 11 mil |
+| 7 | Guararé | `PA0901` | 7,5 | 11 mil |
+| 8 | Tonosí | `PA0907` | 9,0 | 10 mil |
+| 9 | Macaracas | `PA0904` | 8,5 | 9.500 |
+| 10 | Los Pozos | `PA0703` | 8,5 | 8.000 |
+| 11 | Las Minas | `PA0702` | 8,5 | 7.900 |
+| 12 | Soná | `PA1312` | 7,5 | 7.400 |
+| 13 | Montijo | `PA1307` | 8,0 | 6.500 |
+| 14 | Río de Jesús | `PA1308` | 7,5 | 5.800 |
+| 15 | Mariato | `PA1306` | 8,5 | 5.300 |
 
 ## Deslizamiento y licuefacción
 
 - **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **150**. USGS declara para este evento alerta **naranja**, con 470 expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **90 mil**. USGS declara para este evento alerta **naranja**, con 29 mil expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **86 mil**. USGS declara para este evento alerta **naranja**, con 29 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -61,10 +61,19 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,6 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **13,0 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v6 (us) → v7 (us)
+- Población en MMI≥6: 630 mil → 620 mil
+- Población en MMI≥7: 150 mil → 240 mil
+- Población en MMI≥8: 14 mil → 21 mil
+- Población de 65 años o más en MMI≥7: 25 mil → 36 mil
+- Edificaciones en MMI≥7: 110 mil → 180 mil
+- Sedes de salud en MMI≥7: 44 → 160
+- Sedes educativas en MMI≥7: 180 → 530
+- Población en cobertura areal alta por licuefacción: 90 mil → 86 mil
 - ShakeMap: v5 (us) → v6 (us)
 - Ground Failure: v5 (us) → v6 (us)
 - Población en MMI≥6: 560 mil → 630 mil
@@ -113,10 +122,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,6 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v6** de `us`
+- ShakeMap consumido: **v7** de `us`
 - Ground Failure consumido: **v6** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-09T20:16:06Z
+- Pipeline: `0.1.0` · Generado: 2026-10-09T22:11:10Z
 
 ## Advertencias
 
