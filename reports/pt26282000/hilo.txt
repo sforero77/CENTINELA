@@ -1,7 +1,7 @@
 1/4 Sismo M7,7 · 12 km al OSO de Pitaloza Arriba, Panamá (2026-10-09 17:56 UTC, 13 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
-2/4 Personas dentro de intensidad MMI≥6: 620 mil. Dentro de MMI≥7: 240 mil. Edificaciones en MMI≥7: 180 mil.
+2/4 Personas dentro de intensidad MMI≥6: 710 mil. Dentro de MMI≥7: 370 mil. Edificaciones en MMI≥7: 250 mil.
 
-3/4 Municipios más expuestos (MMI≥7): Santiago, Las Tablas, Ocú.
+3/4 Municipios más expuestos (MMI≥7): Santiago, Chitré, Las Tablas.
 
 4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=pt26282000

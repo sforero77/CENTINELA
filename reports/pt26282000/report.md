@@ -6,41 +6,41 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 620 mil |
-| Población en MMI≥7 | 240 mil |
-| Población en MMI≥8 | 21 mil |
-| Edificaciones en MMI≥7 | 180 mil |
-| Sedes de salud en MMI≥7 | 160 |
-| Sedes educativas en MMI≥7 | 532 |
-| Vías primarias y secundarias en MMI≥7 | 640 km |
-| Vías locales en MMI≥7 | 6.100 km |
-| Superficie construida en MMI≥7 | 32,3 km² |
+| Población en MMI≥6 | 710 mil |
+| Población en MMI≥7 | 370 mil |
+| Población en MMI≥8 | 34 mil |
+| Edificaciones en MMI≥7 | 250 mil |
+| Sedes de salud en MMI≥7 | 184 |
+| Sedes educativas en MMI≥7 | 611 |
+| Vías primarias y secundarias en MMI≥7 | 890 km |
+| Vías locales en MMI≥7 | 8.000 km |
+| Superficie construida en MMI≥7 | 47,4 km² |
 
-El satélite detecta **1,8 veces** más superficie construida de la que explicarían las 180 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,9 veces** más superficie construida de la que explicarían las 250 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **36 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **54 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Santiago | `PA1311` | 8,5 | 77 mil |
-| 2 | Las Tablas | `PA0902` | 8,5 | 28 mil |
-| 3 | Ocú | `PA0704` | 8,0 | 16 mil |
-| 4 | Los Santos | `PA0903` | 7,0 | 14 mil |
-| 5 | Pesé | `PA0706` | 7,0 | 13 mil |
-| 6 | Atalaya | `PA1301` | 7,0 | 11 mil |
-| 7 | Guararé | `PA0901` | 7,5 | 11 mil |
-| 8 | Tonosí | `PA0907` | 9,0 | 10 mil |
-| 9 | Macaracas | `PA0904` | 8,5 | 9.500 |
-| 10 | Los Pozos | `PA0703` | 8,5 | 8.000 |
-| 11 | Las Minas | `PA0702` | 8,5 | 7.900 |
-| 12 | Soná | `PA1312` | 7,5 | 7.400 |
-| 13 | Montijo | `PA1307` | 8,0 | 6.500 |
-| 14 | Río de Jesús | `PA1308` | 7,5 | 5.800 |
-| 15 | Mariato | `PA1306` | 8,5 | 5.300 |
+| 1 | Santiago | `PA1311` | 8,5 | 95 mil |
+| 2 | Chitré | `PA0701` | 7,0 | 53 mil |
+| 3 | Las Tablas | `PA0902` | 8,5 | 28 mil |
+| 4 | Los Santos | `PA0903` | 7,5 | 27 mil |
+| 5 | Soná | `PA1312` | 8,0 | 23 mil |
+| 6 | Ocú | `PA0704` | 8,0 | 16 mil |
+| 7 | Pesé | `PA0706` | 7,5 | 13 mil |
+| 8 | Atalaya | `PA1301` | 7,5 | 11 mil |
+| 9 | Guararé | `PA0901` | 7,5 | 11 mil |
+| 10 | Tonosí | `PA0907` | 9,0 | 10 mil |
+| 11 | Macaracas | `PA0904` | 8,5 | 9.500 |
+| 12 | Parita | `PA0705` | 7,0 | 9.400 |
+| 13 | Aguadulce | `PA0301` | 7,0 | 9.100 |
+| 14 | Los Pozos | `PA0703` | 8,5 | 8.000 |
+| 15 | Las Minas | `PA0702` | 8,5 | 7.900 |
 
 ## Deslizamiento y licuefacción
 
@@ -61,10 +61,18 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **13,0 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,6 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v7 (us) → v8 (us)
+- Población en MMI≥6: 620 mil → 710 mil
+- Población en MMI≥7: 240 mil → 370 mil
+- Población en MMI≥8: 21 mil → 34 mil
+- Población de 65 años o más en MMI≥7: 36 mil → 54 mil
+- Edificaciones en MMI≥7: 180 mil → 250 mil
+- Sedes de salud en MMI≥7: 160 → 180
+- Sedes educativas en MMI≥7: 530 → 610
 - Ground Failure: v6 (us) → v7 (us)
 - Población en probabilidad alta de deslizamiento: 150 → 720
 - Población en cobertura areal alta por licuefacción: 86 mil → 89 mil
@@ -125,10 +133,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **13,0 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v7** de `us`
+- ShakeMap consumido: **v8** de `us`
 - Ground Failure consumido: **v7** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-09T22:26:11Z
+- Pipeline: `0.1.0` · Generado: 2026-10-09T23:51:13Z
 
 ## Advertencias
 

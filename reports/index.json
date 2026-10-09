@@ -51,13 +51,13 @@
     "iso3": "PAN",
     "lon": -80.769,
     "lat": 7.5868,
-    "pop_mmi7p": 244838.0537451501,
-    "pop_mmi6p": 623150.3521203303,
+    "pop_mmi7p": 371894.50930030807,
+    "pop_mmi6p": 709219.1809075926,
     "utc": "2026-10-09T17:56:08Z",
-    "shakemap_version": 7,
+    "shakemap_version": 8,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-09T22:26:11Z"
+    "generado_utc": "2026-10-09T23:51:13Z"
   },
   {
     "usgs_id": "us6000tymj",

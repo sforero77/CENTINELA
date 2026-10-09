@@ -11,7 +11,7 @@
     "lat": 7.5868
   },
   "inputs": {
-    "shakemap_version": 7,
+    "shakemap_version": 8,
     "groundfailure_version": 7,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
@@ -23,40 +23,61 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 623150.3521203303,
-    "pop_mmi7p": 244838.0537451501,
-    "pop_mmi8p": 20686.189733637497,
-    "pop_65p_mmi7p": 36305.98355717683,
-    "pop_65p_mmi6p": 84695.10089196285,
-    "bld_mmi6p": 404217.0,
-    "built_m2_mmi6p": 79680320.0,
-    "health_mmi6p": 276.0,
-    "edu_mmi6p": 824.0,
-    "road_km_mmi6p": 14438.283001397956,
-    "road_km_principal_mmi6p": 1472.0632049933329,
-    "bld_mmi7p": 183332.0,
-    "built_m2_mmi7p": 32259099.0,
-    "health_mmi7p": 160.0,
-    "edu_mmi7p": 532.0,
-    "road_km_mmi7p": 6699.445562587003,
-    "road_km_principal_mmi7p": 641.358606718724,
+    "pop_mmi6p": 709219.1809075926,
+    "pop_mmi7p": 371894.50930030807,
+    "pop_mmi8p": 34166.75166707393,
+    "pop_65p_mmi7p": 53717.035114738836,
+    "pop_65p_mmi6p": 94539.60517634568,
+    "bld_mmi6p": 465693.0,
+    "built_m2_mmi6p": 89902790.0,
+    "health_mmi6p": 295.0,
+    "edu_mmi6p": 878.0,
+    "road_km_mmi6p": 16319.054347330477,
+    "road_km_principal_mmi6p": 1799.4277893952378,
+    "bld_mmi7p": 254011.0,
+    "built_m2_mmi7p": 47404188.0,
+    "health_mmi7p": 184.0,
+    "edu_mmi7p": 611.0,
+    "road_km_mmi7p": 8930.479026602576,
+    "road_km_principal_mmi7p": 886.825717907577,
     "pop_ls_alta": 715.7710379175842,
-    "pop_lq_alta": 88946.63695050427
+    "pop_lq_alta": 89255.57628342905
   },
   "top_municipios": [
     {
       "adm2_id": "PA1311",
       "nombre": "Santiago",
       "mmi_max": 8.5,
-      "pop_mmi7p": 77050.28371955385,
-      "pop_banda": 77050.28371955385
+      "pop_mmi7p": 94729.46330240485,
+      "pop_banda": 94729.46330240485
+    },
+    {
+      "adm2_id": "PA0701",
+      "nombre": "Chitré",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 53270.021844489034,
+      "pop_banda": 53270.021844489034
     },
     {
       "adm2_id": "PA0902",
       "nombre": "Las Tablas",
       "mmi_max": 8.5,
-      "pop_mmi7p": 28319.55152399093,
-      "pop_banda": 28319.55152399093
+      "pop_mmi7p": 28394.539819236845,
+      "pop_banda": 28394.539819236845
+    },
+    {
+      "adm2_id": "PA0903",
+      "nombre": "Los Santos",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 26968.18919623457,
+      "pop_banda": 26968.18919623457
+    },
+    {
+      "adm2_id": "PA1312",
+      "nombre": "Soná",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 22899.27769829007,
+      "pop_banda": 22899.27769829007
     },
     {
       "adm2_id": "PA0704",
@@ -66,23 +87,16 @@
       "pop_banda": 16227.052088975906
     },
     {
-      "adm2_id": "PA0903",
-      "nombre": "Los Santos",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 13845.525372611592,
-      "pop_banda": 13845.525372611592
-    },
-    {
       "adm2_id": "PA0706",
       "nombre": "Pesé",
-      "mmi_max": 7.0,
+      "mmi_max": 7.5,
       "pop_mmi7p": 12991.338400594424,
       "pop_banda": 12991.338400594424
     },
     {
       "adm2_id": "PA1301",
       "nombre": "Atalaya",
-      "mmi_max": 7.0,
+      "mmi_max": 7.5,
       "pop_mmi7p": 11191.257402949966,
       "pop_banda": 11191.257402949966
     },
@@ -90,15 +104,15 @@
       "adm2_id": "PA0901",
       "nombre": "Guararé",
       "mmi_max": 7.5,
-      "pop_mmi7p": 10895.459645961411,
-      "pop_banda": 10895.459645961411
+      "pop_mmi7p": 11012.490954444744,
+      "pop_banda": 11012.490954444744
     },
     {
       "adm2_id": "PA0907",
       "nombre": "Tonosí",
       "mmi_max": 9.0,
-      "pop_mmi7p": 10306.557260639034,
-      "pop_banda": 10306.557260639034
+      "pop_mmi7p": 10325.941346710548,
+      "pop_banda": 10325.941346710548
     },
     {
       "adm2_id": "PA0904",
@@ -106,6 +120,20 @@
       "mmi_max": 8.5,
       "pop_mmi7p": 9478.353691877797,
       "pop_banda": 9478.353691877797
+    },
+    {
+      "adm2_id": "PA0705",
+      "nombre": "Parita",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 9358.70194351906,
+      "pop_banda": 9358.70194351906
+    },
+    {
+      "adm2_id": "PA0301",
+      "nombre": "Aguadulce",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 9144.428041691892,
+      "pop_banda": 9144.428041691892
     },
     {
       "adm2_id": "PA0703",
@@ -120,38 +148,10 @@
       "mmi_max": 8.5,
       "pop_mmi7p": 7945.687624005601,
       "pop_banda": 7945.687624005601
-    },
-    {
-      "adm2_id": "PA1312",
-      "nombre": "Soná",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 7405.968899825588,
-      "pop_banda": 7405.968899825588
-    },
-    {
-      "adm2_id": "PA1307",
-      "nombre": "Montijo",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 6541.8477030927315,
-      "pop_banda": 6541.8477030927315
-    },
-    {
-      "adm2_id": "PA1308",
-      "nombre": "Río de Jesús",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 5809.880640914664,
-      "pop_banda": 5809.880640914664
-    },
-    {
-      "adm2_id": "PA1306",
-      "nombre": "Mariato",
-      "mmi_max": 8.5,
-      "pop_mmi7p": 5281.500121129677,
-      "pop_banda": 5281.500121129677
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 13.0,
+    "pop_discrepancia_pct": 12.6,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -167,6 +167,14 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v7 (us) → v8 (us)",
+    "Población en MMI≥6: 620 mil → 710 mil",
+    "Población en MMI≥7: 240 mil → 370 mil",
+    "Población en MMI≥8: 21 mil → 34 mil",
+    "Población de 65 años o más en MMI≥7: 36 mil → 54 mil",
+    "Edificaciones en MMI≥7: 180 mil → 250 mil",
+    "Sedes de salud en MMI≥7: 160 → 180",
+    "Sedes educativas en MMI≥7: 530 → 610",
     "Ground Failure: v6 (us) → v7 (us)",
     "Población en probabilidad alta de deslizamiento: 150 → 720",
     "Población en cobertura areal alta por licuefacción: 86 mil → 89 mil",
@@ -274,6 +282,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T22:26:11Z",
+  "generado_utc": "2026-10-09T23:51:13Z",
   "pipeline_version": "0.1.0"
 }
