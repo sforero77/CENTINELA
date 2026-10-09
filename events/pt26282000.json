@@ -1,0 +1,22 @@
+{
+  "usgs_id": "pt26282000",
+  "estado": "detectado",
+  "mag": 8.0,
+  "lon": -80.75,
+  "lat": 7.54,
+  "depth_km": 33.0,
+  "lugar": "14 km al SO de Pitaloza Arriba, Panamá",
+  "origen_utc": "2026-10-09T17:56:08Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-10-09T18:05:25Z",
+    "usgs_origen": "2026-10-09T17:56:08Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
