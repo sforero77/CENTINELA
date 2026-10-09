@@ -123,7 +123,7 @@ una razón**: la incertidumbre etaria viene de mezclar GHS-POP con WorldPop (lo
 explica la sección de arriba) y es la misma en MMI 6 que en MMI 7. No es
 función de la intensidad.
 
-El efecto medido: **<!-- cifra:sin_mmi7_de_total -->diecinueve de los treinta<!-- /cifra --> reportes no tienen población en
+El efecto medido: **<!-- cifra:sin_mmi7_de_total -->diecinueve de los treinta y un<!-- /cifra --> reportes no tienen población en
 MMI ≥ 7**, así que publicaban "0 edificaciones, 0 hospitales, 0 escuelas, 0 km
 de vía" con millones de personas dentro de MMI ≥ 6. `us7000jl3s`: 4,75 millones
 de personas (3,1 de ellas en Guayaquil) y ni un solo hospital que nombrar.
@@ -173,10 +173,10 @@ Es el reconocimiento explícito de que la cifra tiene un intervalo, en un
 producto cuyo riesgo principal es que alguien lea un número redondo como si
 fuera un censo.
 
-## <!-- cifra:sin_mmi7_de_total_titulo -->Diecinueve de treinta<!-- /cifra --> eventos no llegan a MMI ≥ 7
+## <!-- cifra:sin_mmi7_de_total_titulo -->Diecinueve de treinta y un<!-- /cifra --> eventos no llegan a MMI ≥ 7
 
 Correr el catálogo regional entero enseñó algo que ninguna prueba sintética
-habría encontrado: **<!-- cifra:sin_mmi7_de_total -->diecinueve de los treinta<!-- /cifra --> eventos no alcanzan MMI ≥ 7
+habría encontrado: **<!-- cifra:sin_mmi7_de_total -->diecinueve de los treinta y un<!-- /cifra --> eventos no alcanzan MMI ≥ 7
 sobre población** (eran ocho de diecinueve cuando se midió por primera vez, y la
 proporción se ha mantenido al crecer el catálogo). De ellos, **<!-- cifra:sin_mmi6 -->diez<!-- /cifra --> tampoco
 alcanzan MMI ≥ 6**: para esos, la única cifra que dimensiona el evento es el
