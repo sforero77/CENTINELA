@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us6000u18x",
+  "estado": "detectado",
+  "mag": 5.8,
+  "lon": -80.4012,
+  "lat": 7.4362,
+  "depth_km": 10.0,
+  "lugar": "1 km al S de El Cacao, Panamá",
+  "origen_utc": "2026-10-09T18:37:46Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-10-09T18:50:22Z",
+    "usgs_origen": "2026-10-09T18:37:46Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
