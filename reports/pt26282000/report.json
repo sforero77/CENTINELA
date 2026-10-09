@@ -2,78 +2,186 @@
   "schema": "centinela/report/1.0",
   "event": {
     "usgs_id": "pt26282000",
-    "mag": 8.0,
-    "depth_km": 33.0,
+    "mag": 7.7,
+    "depth_km": 12.647,
     "utc": "2026-10-09T17:56:08Z",
-    "lugar": "14 km al SO de Pitaloza Arriba, Panamá",
+    "lugar": "12 km al OSO de Pitaloza Arriba, Panamá",
     "pager_alert": "",
-    "lon": -80.75,
-    "lat": 7.54
+    "lon": -80.769,
+    "lat": 7.5868
   },
   "inputs": {
-    "shakemap_version": 0,
-    "groundfailure_version": 0,
+    "shakemap_version": 2,
+    "groundfailure_version": 2,
     "exposure_manifest": "pan-v0.4",
-    "modelo_deslizamiento": "",
-    "modelo_licuefaccion": "",
-    "shakemap_fuente": "",
-    "groundfailure_fuente": ""
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
-  "preliminar": true,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 16180.2859996045
-    },
-    {
-      "radio_km": 50,
-      "pop": 83385.23124137125
-    },
-    {
-      "radio_km": 100,
-      "pop": 476012.4880975981
-    }
-  ],
+  "preliminar": false,
+  "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 0.0,
-    "pop_mmi7p": 0.0,
-    "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 0.0,
-    "bld_mmi6p": 0.0,
-    "built_m2_mmi6p": 0.0,
-    "health_mmi6p": 0.0,
-    "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 0.0,
-    "road_km_principal_mmi6p": 0.0,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
-    "health_mmi7p": 0.0,
-    "edu_mmi7p": 0.0,
-    "road_km_mmi7p": 0.0,
-    "road_km_principal_mmi7p": 0.0,
-    "pop_ls_alta": 0.0,
-    "pop_lq_alta": 0.0
+    "pop_mmi6p": 601230.6663836224,
+    "pop_mmi7p": 255608.718476285,
+    "pop_mmi8p": 712.3427131641656,
+    "pop_65p_mmi7p": 38960.39009205202,
+    "pop_65p_mmi6p": 82295.21882319642,
+    "bld_mmi6p": 393580.0,
+    "built_m2_mmi6p": 77275504.0,
+    "health_mmi6p": 268.0,
+    "edu_mmi6p": 815.0,
+    "road_km_mmi6p": 14389.461074643588,
+    "road_km_principal_mmi6p": 1441.1617199581374,
+    "bld_mmi7p": 179055.0,
+    "built_m2_mmi7p": 33903144.0,
+    "health_mmi7p": 75.0,
+    "edu_mmi7p": 350.0,
+    "road_km_mmi7p": 6437.22694277235,
+    "road_km_principal_mmi7p": 583.5726557280075,
+    "pop_ls_alta": 15.593746662139893,
+    "pop_lq_alta": 94263.21225809795
   },
-  "top_municipios": [],
+  "top_municipios": [
+    {
+      "adm2_id": "PA0701",
+      "nombre": "Chitré",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 53258.43214958394,
+      "pop_banda": 53258.43214958394
+    },
+    {
+      "adm2_id": "PA1311",
+      "nombre": "Santiago",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 32351.493255831767,
+      "pop_banda": 32351.493255831767
+    },
+    {
+      "adm2_id": "PA0903",
+      "nombre": "Los Santos",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 26968.18919623457,
+      "pop_banda": 26968.18919623457
+    },
+    {
+      "adm2_id": "PA0902",
+      "nombre": "Las Tablas",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 25929.979999643052,
+      "pop_banda": 25929.979999643052
+    },
+    {
+      "adm2_id": "PA0704",
+      "nombre": "Ocú",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 16227.052088975906,
+      "pop_banda": 16227.052088975906
+    },
+    {
+      "adm2_id": "PA0706",
+      "nombre": "Pesé",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 12991.338400594424,
+      "pop_banda": 12991.338400594424
+    },
+    {
+      "adm2_id": "PA1301",
+      "nombre": "Atalaya",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 11191.257402949966,
+      "pop_banda": 11191.257402949966
+    },
+    {
+      "adm2_id": "PA0901",
+      "nombre": "Guararé",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 10923.284215182997,
+      "pop_banda": 10923.284215182997
+    },
+    {
+      "adm2_id": "PA0904",
+      "nombre": "Macaracas",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 9478.353691877797,
+      "pop_banda": 9478.353691877797
+    },
+    {
+      "adm2_id": "PA0705",
+      "nombre": "Parita",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 9355.680163044948,
+      "pop_banda": 9355.680163044948
+    },
+    {
+      "adm2_id": "PA0703",
+      "nombre": "Los Pozos",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 7997.202820727602,
+      "pop_banda": 7997.202820727602
+    },
+    {
+      "adm2_id": "PA0907",
+      "nombre": "Tonosí",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 7967.3653274178505,
+      "pop_banda": 7967.3653274178505
+    },
+    {
+      "adm2_id": "PA0702",
+      "nombre": "Las Minas",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 7945.687624005601,
+      "pop_banda": 7945.687624005601
+    },
+    {
+      "adm2_id": "PA0707",
+      "nombre": "Santa María",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 7474.832167972345,
+      "pop_banda": 7474.832167972345
+    },
+    {
+      "adm2_id": "PA1307",
+      "nombre": "Montijo",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 5750.505351725966,
+      "pop_banda": 5750.505351725966
+    }
+  ],
   "incertidumbre": {
-    "pop_discrepancia_pct": null,
+    "pop_discrepancia_pct": 13.4,
     "notas": []
   },
   "ground_failure_usgs": {
-    "ls_alerta_usgs": "",
-    "ls_pop_usgs": "",
-    "lq_alerta_usgs": "",
-    "lq_pop_usgs": ""
+    "ls_alerta_usgs": "orange",
+    "ls_pop_usgs": "350",
+    "lq_alerta_usgs": "orange",
+    "lq_pop_usgs": "33000"
   },
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",
-    "csv_adm2": "",
-    "mapa_png": ""
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "ShakeMap: v0 → v2 (us)",
+    "Ground Failure: v0 → v2 (us)",
+    "Magnitud: M8,0 → M7,7",
+    "Profundidad: 33 → 13 km",
+    "Epicentro: reubicado 6 km",
+    "Población en MMI≥6: 0 → 600 mil",
+    "Población en MMI≥7: 0 → 260 mil",
+    "Población en MMI≥8: 0 → 710",
+    "Población de 65 años o más en MMI≥7: 0 → 39 mil",
+    "Edificaciones en MMI≥7: 0 → 180 mil",
+    "Sedes de salud en MMI≥7: 0 → 75",
+    "Sedes educativas en MMI≥7: 0 → 350",
+    "Población en probabilidad alta de deslizamiento: 0 → 16",
+    "Población en cobertura areal alta por licuefacción: 0 → 94 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -128,6 +236,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T18:10:50Z",
+  "generado_utc": "2026-10-09T18:31:17Z",
   "pipeline_version": "0.1.0"
 }

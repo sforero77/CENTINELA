@@ -1,21 +1,24 @@
 {
   "usgs_id": "pt26282000",
-  "estado": "preliminar",
-  "mag": 8.0,
-  "lon": -80.75,
-  "lat": 7.54,
-  "depth_km": 33.0,
-  "lugar": "14 km al SO de Pitaloza Arriba, Panamá",
+  "estado": "publicado",
+  "mag": 7.7,
+  "lon": -80.769,
+  "lat": 7.5868,
+  "depth_km": 12.647,
+  "lugar": "12 km al OSO de Pitaloza Arriba, Panamá",
   "origen_utc": "2026-10-09T17:56:08Z",
   "versiones_procesadas": {
-    "shakemap": 0,
-    "groundfailure": 0
+    "shakemap": 2,
+    "groundfailure": 2,
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
   "timestamps": {
     "despachado": "2026-10-09T18:30:25Z",
     "detectado": "2026-10-09T18:05:25Z",
     "preliminar": "2026-10-09T18:06:01Z",
     "preliminar_ultimo": "2026-10-09T18:10:48Z",
+    "publicado": "2026-10-09T18:31:20Z",
     "usgs_origen": "2026-10-09T17:56:08Z"
   },
   "hashes": {},
@@ -23,6 +26,7 @@
   "backtest": false,
   "notas": [
     "sin ShakeMap disponible aun",
-    "sin ShakeMap disponible aun"
+    "sin ShakeMap disponible aun",
+    "ShakeMap v0 -> v2 (us)"
   ]
 }
