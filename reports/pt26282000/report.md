@@ -27,7 +27,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se calcula en un reporte preliminar*
 - ShakeMap consumido: **ninguno** (no publicado aún)
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-09T18:06:02Z
+- Pipeline: `0.1.0` · Generado: 2026-10-09T18:10:50Z
 
 ## Advertencias
 
