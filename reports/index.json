@@ -39,10 +39,10 @@
     "pop_mmi7p": 0.0,
     "pop_mmi6p": 2495.5526316384785,
     "utc": "2026-10-09T18:22:15Z",
-    "shakemap_version": 1,
+    "shakemap_version": 2,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-09T18:45:57Z"
+    "generado_utc": "2026-10-09T20:41:04Z"
   },
   {
     "usgs_id": "pt26282000",
