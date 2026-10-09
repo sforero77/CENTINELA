@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-09T18:51:00Z",
+  "generado_utc": "2026-10-09T18:51:13Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -34,8 +34,8 @@
       "publicado_utc": "2026-10-09T18:31:20Z",
       "minutos": 35.2,
       "backtest": false,
-      "shakemap": 2,
-      "actualizado_utc": ""
+      "shakemap": 4,
+      "actualizado_utc": "2026-10-09T18:51:12Z"
     },
     {
       "usgs_id": "us6000tymj",

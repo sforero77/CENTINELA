@@ -6,13 +6,13 @@
     "depth_km": 12.647,
     "utc": "2026-10-09T17:56:08Z",
     "lugar": "12 km al OSO de Pitaloza Arriba, Panamá",
-    "pager_alert": "",
+    "pager_alert": "red",
     "lon": -80.769,
     "lat": 7.5868
   },
   "inputs": {
-    "shakemap_version": 2,
-    "groundfailure_version": 2,
+    "shakemap_version": 4,
+    "groundfailure_version": 4,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -23,54 +23,54 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 601230.6663836224,
-    "pop_mmi7p": 255608.718476285,
-    "pop_mmi8p": 712.3427131641656,
-    "pop_65p_mmi7p": 38960.39009205202,
-    "pop_65p_mmi6p": 82295.21882319642,
-    "bld_mmi6p": 393580.0,
-    "built_m2_mmi6p": 77275504.0,
-    "health_mmi6p": 268.0,
-    "edu_mmi6p": 815.0,
-    "road_km_mmi6p": 14389.461074643588,
-    "road_km_principal_mmi6p": 1441.1617199581374,
-    "bld_mmi7p": 179055.0,
-    "built_m2_mmi7p": 33903144.0,
-    "health_mmi7p": 75.0,
-    "edu_mmi7p": 350.0,
-    "road_km_mmi7p": 6437.22694277235,
-    "road_km_principal_mmi7p": 583.5726557280075,
+    "pop_mmi6p": 635556.5412498128,
+    "pop_mmi7p": 347264.967211663,
+    "pop_mmi8p": 1802.6004971377552,
+    "pop_65p_mmi7p": 50189.77086003431,
+    "pop_65p_mmi6p": 86138.0638877902,
+    "bld_mmi6p": 415472.0,
+    "built_m2_mmi6p": 81102992.0,
+    "health_mmi6p": 273.0,
+    "edu_mmi6p": 829.0,
+    "road_km_mmi6p": 15061.88782505966,
+    "road_km_principal_mmi6p": 1504.5737628453671,
+    "bld_mmi7p": 235020.0,
+    "built_m2_mmi7p": 44873823.0,
+    "health_mmi7p": 176.0,
+    "edu_mmi7p": 602.0,
+    "road_km_mmi7p": 8253.891750814464,
+    "road_km_principal_mmi7p": 778.5059434174929,
     "pop_ls_alta": 15.593746662139893,
-    "pop_lq_alta": 94263.21225809795
+    "pop_lq_alta": 105195.94043512293
   },
   "top_municipios": [
-    {
-      "adm2_id": "PA0701",
-      "nombre": "Chitré",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 53258.43214958394,
-      "pop_banda": 53258.43214958394
-    },
     {
       "adm2_id": "PA1311",
       "nombre": "Santiago",
       "mmi_max": 7.5,
-      "pop_mmi7p": 32351.493255831767,
-      "pop_banda": 32351.493255831767
+      "pop_mmi7p": 91737.29190369998,
+      "pop_banda": 91737.29190369998
     },
     {
-      "adm2_id": "PA0903",
-      "nombre": "Los Santos",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 26968.18919623457,
-      "pop_banda": 26968.18919623457
+      "adm2_id": "PA0701",
+      "nombre": "Chitré",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 53313.950140732806,
+      "pop_banda": 53313.950140732806
     },
     {
       "adm2_id": "PA0902",
       "nombre": "Las Tablas",
       "mmi_max": 7.0,
-      "pop_mmi7p": 25929.979999643052,
-      "pop_banda": 25929.979999643052
+      "pop_mmi7p": 28157.95130059123,
+      "pop_banda": 28157.95130059123
+    },
+    {
+      "adm2_id": "PA0903",
+      "nombre": "Los Santos",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 27048.670474860817,
+      "pop_banda": 27048.670474860817
     },
     {
       "adm2_id": "PA0704",
@@ -78,6 +78,13 @@
       "mmi_max": 7.5,
       "pop_mmi7p": 16227.052088975906,
       "pop_banda": 16227.052088975906
+    },
+    {
+      "adm2_id": "PA0301",
+      "nombre": "Aguadulce",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 13911.72313975636,
+      "pop_banda": 13911.72313975636
     },
     {
       "adm2_id": "PA0706",
@@ -97,8 +104,8 @@
       "adm2_id": "PA0901",
       "nombre": "Guararé",
       "mmi_max": 7.0,
-      "pop_mmi7p": 10923.284215182997,
-      "pop_banda": 10923.284215182997
+      "pop_mmi7p": 11012.490954444744,
+      "pop_banda": 11012.490954444744
     },
     {
       "adm2_id": "PA0904",
@@ -110,9 +117,16 @@
     {
       "adm2_id": "PA0705",
       "nombre": "Parita",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 9355.680163044948,
-      "pop_banda": 9355.680163044948
+      "mmi_max": 7.5,
+      "pop_mmi7p": 9358.70194351906,
+      "pop_banda": 9358.70194351906
+    },
+    {
+      "adm2_id": "PA0907",
+      "nombre": "Tonosí",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 9239.777728641406,
+      "pop_banda": 9239.777728641406
     },
     {
       "adm2_id": "PA0703",
@@ -120,13 +134,6 @@
       "mmi_max": 8.0,
       "pop_mmi7p": 7997.202820727602,
       "pop_banda": 7997.202820727602
-    },
-    {
-      "adm2_id": "PA0907",
-      "nombre": "Tonosí",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 7967.3653274178505,
-      "pop_banda": 7967.3653274178505
     },
     {
       "adm2_id": "PA0702",
@@ -141,24 +148,17 @@
       "mmi_max": 7.0,
       "pop_mmi7p": 7474.832167972345,
       "pop_banda": 7474.832167972345
-    },
-    {
-      "adm2_id": "PA1307",
-      "nombre": "Montijo",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 5750.505351725966,
-      "pop_banda": 5750.505351725966
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 13.4,
+    "pop_discrepancia_pct": 13.3,
     "notas": []
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "orange",
-    "ls_pop_usgs": "350",
+    "ls_pop_usgs": "470",
     "lq_alerta_usgs": "orange",
-    "lq_pop_usgs": "33000"
+    "lq_pop_usgs": "36000"
   },
   "descargas": {
     "geoparquet": "",
@@ -167,6 +167,16 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v2 (us) → v4 (us)",
+    "Ground Failure: v2 (us) → v4 (us)",
+    "Población en MMI≥6: 600 mil → 640 mil",
+    "Población en MMI≥7: 260 mil → 350 mil",
+    "Población en MMI≥8: 710 → 1.800",
+    "Población de 65 años o más en MMI≥7: 39 mil → 50 mil",
+    "Edificaciones en MMI≥7: 180 mil → 240 mil",
+    "Sedes de salud en MMI≥7: 75 → 180",
+    "Sedes educativas en MMI≥7: 350 → 600",
+    "Población en cobertura areal alta por licuefacción: 94 mil → 110 mil",
     "ShakeMap: v0 → v2 (us)",
     "Ground Failure: v0 → v2 (us)",
     "Magnitud: M8,0 → M7,7",
@@ -236,6 +246,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T18:31:17Z",
+  "generado_utc": "2026-10-09T18:51:10Z",
   "pipeline_version": "0.1.0"
 }
