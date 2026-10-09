@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us6000u18t",
+  "estado": "detectado",
+  "mag": 5.5,
+  "lon": -80.2885,
+  "lat": 7.586,
+  "depth_km": 10.0,
+  "lugar": "3 km al SO de Bajo Corral, Panamá",
+  "origen_utc": "2026-10-09T18:22:15Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-10-09T18:40:24Z",
+    "usgs_origen": "2026-10-09T18:22:15Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
