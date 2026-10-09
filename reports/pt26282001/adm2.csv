@@ -1,2 +1,23 @@
 usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,pop_65p_mmi6p,bld_mmi6p,built_m2_mmi6p,health_mmi6p,edu_mmi6p,road_km_mmi6p,road_km_principal_mmi6p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
 #meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#population+age65+mmi6,#infra+buildings+mmi6,#infra+built+area+mmi6,#infra+health+mmi6,#infra+education+mmi6,#infra+roads+km+mmi6,#infra+roads+km+primary+mmi6,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
+us6000u19w,2,PA1312,Soná,-81.336206,7.871664,7.5,24497.759488973767,2940.257268846035,0.0,325.9946789692314,3203.050992040786,14883.0,1994538.0,5,9,422.206940349755,67.43146474809583,2132.0,158620.0,0,1,47.0426358597738,2.9671575979102722,0.0,12275.226571667474,"discrepancia_poblacional,construido_no_mapeado"
+us6000u19w,2,PA1305,Las Palmas,-81.506998,8.080304,6.5,2923.299162313342,0.0,0.0,0.0,453.12588616069934,2115.0,172104.0,0,0,76.73941824498435,23.85731345387148,0.0,0.0,0,0,0.0,0.0,0.0,82.24300064891577,discrepancia_poblacional
+us6000u19w,2,PA0213,Tolé,-81.645588,8.199788,6.0,2.3249631449580193,0.0,0.0,0.0,0.2876464862212451,0.0,195.0,0,0,0.38431073666670323,0.0,0.0,0.0,0,0,0.0,0.0,0.0,2.3249631449580193,"discrepancia_poblacional,construido_no_mapeado"
+us6000u19w,2,PA1308,Río de Jesús,-81.138525,7.963573,6.0,908.2742202337831,0.0,0.0,0.0,154.4947593593285,813.0,79213.0,0,8,29.605853487417708,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u19w,2,PA1307,Montijo,-81.535951,7.581268,6.0,67.5791941434145,0.0,0.0,0.0,9.593513400915342,57.0,4838.0,0,0,3.2716235155763367,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us6000u19w,2,PA1311,Santiago,-80.95058,8.038953,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us6000u19w,2,PA0209,Remedios,-81.790149,8.221901,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u19w,2,PA1304,La Mesa,-81.209457,8.187331,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u19w,2,PA1306,Mariato,-80.839865,7.439872,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u19w,2,PA0212,San Lorenzo,-82.114535,8.306959,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u19w,2,PA0707,Santa María,-80.673319,8.083615,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u19w,2,PA1303,Cañazas,-81.274559,8.372052,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u19w,2,PA0704,Ocú,-80.806631,7.911881,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u19w,2,PA1309,San Francisco,-80.980261,8.31937,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u19w,2,PA1003,Müna,-81.624898,8.442589,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u19w,2,PA1302,Calobre,-80.807334,8.355769,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u19w,2,PA0702,Las Minas,-80.801985,7.712025,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u19w,2,PA1005,Ñürüm,-81.412642,8.466831,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u19w,2,PA1301,Atalaya,-80.885079,8.022165,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u19w,2,PA0211,San Félix,-81.896065,8.25211,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u19w,2,PA0705,Parita,-80.572612,8.018305,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,

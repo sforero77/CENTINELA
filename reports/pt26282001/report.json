@@ -6,74 +6,176 @@
     "depth_km": 10.0,
     "utc": "2026-10-09T20:25:40Z",
     "lugar": "14 km al O de Río Grande, Panamá",
-    "pager_alert": "",
+    "pager_alert": "yellow",
     "lon": -81.4687,
     "lat": 7.7176
   },
   "inputs": {
-    "shakemap_version": 0,
-    "groundfailure_version": 0,
+    "shakemap_version": 2,
+    "groundfailure_version": 1,
     "exposure_manifest": "pan-v0.4",
-    "modelo_deslizamiento": "",
-    "modelo_licuefaccion": "",
-    "shakemap_fuente": "",
-    "groundfailure_fuente": ""
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
-  "preliminar": true,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 7932.377290427685
-    },
-    {
-      "radio_km": 50,
-      "pop": 47392.60226588091
-    },
-    {
-      "radio_km": 100,
-      "pop": 453980.90730537334
-    }
-  ],
+  "preliminar": false,
+  "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 0.0,
-    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 28399.237028809264,
+    "pop_mmi7p": 2940.257268846035,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 0.0,
-    "bld_mmi6p": 0.0,
-    "built_m2_mmi6p": 0.0,
-    "health_mmi6p": 0.0,
-    "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 0.0,
-    "road_km_principal_mmi6p": 0.0,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
+    "pop_65p_mmi7p": 325.9946789692314,
+    "pop_65p_mmi6p": 3820.55279744795,
+    "bld_mmi6p": 17868.0,
+    "built_m2_mmi6p": 2250888.0,
+    "health_mmi6p": 5.0,
+    "edu_mmi6p": 17.0,
+    "road_km_mmi6p": 532.2081463344002,
+    "road_km_principal_mmi6p": 91.28877820196735,
+    "bld_mmi7p": 2132.0,
+    "built_m2_mmi7p": 158620.0,
     "health_mmi7p": 0.0,
-    "edu_mmi7p": 0.0,
-    "road_km_mmi7p": 0.0,
-    "road_km_principal_mmi7p": 0.0,
+    "edu_mmi7p": 1.0,
+    "road_km_mmi7p": 47.0426358597738,
+    "road_km_principal_mmi7p": 2.9671575979102722,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 0.0
+    "pop_lq_alta": 12359.794535461348
   },
-  "top_municipios": [],
+  "top_municipios": [
+    {
+      "adm2_id": "PA1312",
+      "nombre": "Soná",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 2940.257268846035,
+      "pop_banda": 2940.257268846035
+    },
+    {
+      "adm2_id": "PA1305",
+      "nombre": "Las Palmas",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1308",
+      "nombre": "Río de Jesús",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0213",
+      "nombre": "Tolé",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1307",
+      "nombre": "Montijo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1304",
+      "nombre": "La Mesa",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1306",
+      "nombre": "Mariato",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1311",
+      "nombre": "Santiago",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0209",
+      "nombre": "Remedios",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1005",
+      "nombre": "Ñürüm",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0705",
+      "nombre": "Parita",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1301",
+      "nombre": "Atalaya",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0212",
+      "nombre": "San Lorenzo",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0707",
+      "nombre": "Santa María",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0702",
+      "nombre": "Las Minas",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
   "incertidumbre": {
-    "pop_discrepancia_pct": null,
+    "pop_discrepancia_pct": 7.1,
     "notas": []
   },
   "ground_failure_usgs": {
-    "ls_alerta_usgs": "",
-    "ls_pop_usgs": "",
-    "lq_alerta_usgs": "",
-    "lq_pop_usgs": ""
+    "ls_alerta_usgs": "yellow",
+    "ls_pop_usgs": "16",
+    "lq_alerta_usgs": "orange",
+    "lq_pop_usgs": "3200"
   },
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",
-    "csv_adm2": "",
-    "mapa_png": ""
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "ShakeMap: v0 → v2 (us)",
+    "Ground Failure: v0 → v1 (us)",
+    "Población en MMI≥6: 0 → 28 mil",
+    "Población en MMI≥7: 0 → 2.900",
+    "Población de 65 años o más en MMI≥7: 0 → 330",
+    "Edificaciones en MMI≥7: 0 → 2.100",
+    "Sedes educativas en MMI≥7: 0 → 1",
+    "Población en cobertura areal alta por licuefacción: 0 → 12 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -128,6 +230,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T20:40:59Z",
+  "generado_utc": "2026-10-09T20:55:57Z",
   "pipeline_version": "0.1.0"
 }
