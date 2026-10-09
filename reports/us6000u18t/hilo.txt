@@ -1,0 +1,7 @@
+1/4 Sismo M5,5 · 3 km al SO de Bajo Corral, Panamá (2026-10-09 18:22 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+
+2/4 Personas dentro de intensidad MMI≥6: 2.500. Edificaciones en MMI≥6: 2.800.
+
+3/4 Municipios más expuestos (MMI≥6): Las Tablas, Pocrí, Tonosí.
+
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=us6000u18t
