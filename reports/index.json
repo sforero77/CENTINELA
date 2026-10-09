@@ -24,10 +24,10 @@
     "pop_mmi7p": 2816.9774997588247,
     "pop_mmi6p": 6637.504815058783,
     "utc": "2026-10-09T18:37:46Z",
-    "shakemap_version": 1,
+    "shakemap_version": 2,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-09T19:15:55Z"
+    "generado_utc": "2026-10-09T20:55:56Z"
   },
   {
     "usgs_id": "us6000u18t",

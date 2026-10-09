@@ -8,8 +8,8 @@
   "lugar": "1 km al S de El Cacao, Panamá",
   "origen_utc": "2026-10-09T18:37:46Z",
   "versiones_procesadas": {
-    "shakemap": 1,
-    "groundfailure": 1,
+    "shakemap": 2,
+    "groundfailure": 2,
     "shakemap_fuente": "us",
     "groundfailure_fuente": "us"
   },
@@ -18,7 +18,7 @@
     "detectado": "2026-10-09T18:50:22Z",
     "preliminar": "2026-10-09T18:50:55Z",
     "publicado": "2026-10-09T18:55:55Z",
-    "publicado_ultimo": "2026-10-09T19:15:57Z",
+    "publicado_ultimo": "2026-10-09T20:55:58Z",
     "usgs_origen": "2026-10-09T18:37:46Z"
   },
   "hashes": {},
@@ -27,6 +27,7 @@
   "notas": [
     "sin ShakeMap disponible aun",
     "ShakeMap v0 -> v1 (us)",
-    "Ground Failure v0 -> v1 (us)"
+    "Ground Failure v0 -> v1 (us)",
+    "ShakeMap v1 (us) -> v2 (us)"
   ]
 }

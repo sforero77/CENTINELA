@@ -11,8 +11,8 @@
     "lat": 7.4362
   },
   "inputs": {
-    "shakemap_version": 1,
-    "groundfailure_version": 1,
+    "shakemap_version": 2,
+    "groundfailure_version": 2,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -104,6 +104,9 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v1 (us) → v2 (us)",
+    "Ground Failure: v1 (us) → v2 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "Ground Failure: v0 → v1 (us)",
     "Población en cobertura areal alta por licuefacción: 0 → 3.700",
     "ShakeMap: v0 → v1 (us)",
@@ -167,6 +170,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T19:15:55Z",
+  "generado_utc": "2026-10-09T20:55:56Z",
   "pipeline_version": "0.1.0"
 }
