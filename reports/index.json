@@ -1,5 +1,20 @@
 [
   {
+    "usgs_id": "pt26282000",
+    "mag": 8.0,
+    "lugar": "14 km al SO de Pitaloza Arriba, Panamá",
+    "iso3": "PAN",
+    "lon": -80.75,
+    "lat": 7.54,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2026-10-09T17:56:08Z",
+    "shakemap_version": 0,
+    "preliminar": true,
+    "backtest": false,
+    "generado_utc": "2026-10-09T18:06:02Z"
+  },
+  {
     "usgs_id": "us6000tymj",
     "mag": 5.6,
     "lugar": "91 km al SO de Tamarindo, Costa Rica",
