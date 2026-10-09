@@ -11,8 +11,8 @@
     "lat": 7.5868
   },
   "inputs": {
-    "shakemap_version": 4,
-    "groundfailure_version": 4,
+    "shakemap_version": 5,
+    "groundfailure_version": 5,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -23,110 +23,68 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 635556.5412498128,
-    "pop_mmi7p": 347264.967211663,
-    "pop_mmi8p": 1802.6004971377552,
-    "pop_65p_mmi7p": 50189.77086003431,
-    "pop_65p_mmi6p": 86138.0638877902,
-    "bld_mmi6p": 415472.0,
-    "built_m2_mmi6p": 81102992.0,
-    "health_mmi6p": 273.0,
-    "edu_mmi6p": 829.0,
-    "road_km_mmi6p": 15061.88782505966,
-    "road_km_principal_mmi6p": 1504.5737628453671,
-    "bld_mmi7p": 235020.0,
-    "built_m2_mmi7p": 44873823.0,
-    "health_mmi7p": 176.0,
-    "edu_mmi7p": 602.0,
-    "road_km_mmi7p": 8253.891750814464,
-    "road_km_principal_mmi7p": 778.5059434174929,
-    "pop_ls_alta": 15.593746662139893,
-    "pop_lq_alta": 105195.94043512293
+    "pop_mmi6p": 561982.8626274504,
+    "pop_mmi7p": 148138.98446568148,
+    "pop_mmi8p": 14466.047953905538,
+    "pop_65p_mmi7p": 24952.070646290398,
+    "pop_65p_mmi6p": 77387.56480379665,
+    "bld_mmi6p": 370069.0,
+    "built_m2_mmi6p": 69881703.0,
+    "health_mmi6p": 216.0,
+    "edu_mmi6p": 751.0,
+    "road_km_mmi6p": 13824.951274147676,
+    "road_km_principal_mmi6p": 1564.3236650428682,
+    "bld_mmi7p": 111297.0,
+    "built_m2_mmi7p": 17593911.0,
+    "health_mmi7p": 43.0,
+    "edu_mmi7p": 177.0,
+    "road_km_mmi7p": 4811.061488154715,
+    "road_km_principal_mmi7p": 402.1803790936748,
+    "pop_ls_alta": 145.4098355555907,
+    "pop_lq_alta": 84684.32869373518
   },
   "top_municipios": [
     {
-      "adm2_id": "PA1311",
-      "nombre": "Santiago",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 91737.29190369998,
-      "pop_banda": 91737.29190369998
-    },
-    {
-      "adm2_id": "PA0701",
-      "nombre": "Chitré",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 53313.950140732806,
-      "pop_banda": 53313.950140732806
-    },
-    {
       "adm2_id": "PA0902",
       "nombre": "Las Tablas",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 28157.95130059123,
-      "pop_banda": 28157.95130059123
+      "mmi_max": 8.0,
+      "pop_mmi7p": 28101.666590741836,
+      "pop_banda": 28101.666590741836
     },
     {
-      "adm2_id": "PA0903",
-      "nombre": "Los Santos",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 27048.670474860817,
-      "pop_banda": 27048.670474860817
+      "adm2_id": "PA1312",
+      "nombre": "Soná",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 23792.60962643707,
+      "pop_banda": 23792.60962643707
     },
     {
       "adm2_id": "PA0704",
       "nombre": "Ocú",
       "mmi_max": 7.5,
-      "pop_mmi7p": 16227.052088975906,
-      "pop_banda": 16227.052088975906
-    },
-    {
-      "adm2_id": "PA0301",
-      "nombre": "Aguadulce",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 13911.72313975636,
-      "pop_banda": 13911.72313975636
-    },
-    {
-      "adm2_id": "PA0706",
-      "nombre": "Pesé",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 12991.338400594424,
-      "pop_banda": 12991.338400594424
-    },
-    {
-      "adm2_id": "PA1301",
-      "nombre": "Atalaya",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 11191.257402949966,
-      "pop_banda": 11191.257402949966
-    },
-    {
-      "adm2_id": "PA0901",
-      "nombre": "Guararé",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 11012.490954444744,
-      "pop_banda": 11012.490954444744
-    },
-    {
-      "adm2_id": "PA0904",
-      "nombre": "Macaracas",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 9478.353691877797,
-      "pop_banda": 9478.353691877797
-    },
-    {
-      "adm2_id": "PA0705",
-      "nombre": "Parita",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 9358.70194351906,
-      "pop_banda": 9358.70194351906
+      "pop_mmi7p": 12342.695951394737,
+      "pop_banda": 12342.695951394737
     },
     {
       "adm2_id": "PA0907",
       "nombre": "Tonosí",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 9239.777728641406,
-      "pop_banda": 9239.777728641406
+      "mmi_max": 8.5,
+      "pop_mmi7p": 10099.320940310135,
+      "pop_banda": 10099.320940310135
+    },
+    {
+      "adm2_id": "PA0706",
+      "nombre": "Pesé",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 9907.151131527498,
+      "pop_banda": 9907.151131527498
+    },
+    {
+      "adm2_id": "PA0904",
+      "nombre": "Macaracas",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 9478.353691877797,
+      "pop_banda": 9478.353691877797
     },
     {
       "adm2_id": "PA0703",
@@ -143,22 +101,64 @@
       "pop_banda": 7945.687624005601
     },
     {
-      "adm2_id": "PA0707",
-      "nombre": "Santa María",
+      "adm2_id": "PA0901",
+      "nombre": "Guararé",
       "mmi_max": 7.0,
-      "pop_mmi7p": 7474.832167972345,
-      "pop_banda": 7474.832167972345
+      "pop_mmi7p": 6929.434585018083,
+      "pop_banda": 6929.434585018083
+    },
+    {
+      "adm2_id": "PA1306",
+      "nombre": "Mariato",
+      "mmi_max": 8.5,
+      "pop_mmi7p": 5247.222800446674,
+      "pop_banda": 5247.222800446674
+    },
+    {
+      "adm2_id": "PA1307",
+      "nombre": "Montijo",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 5237.007761144545,
+      "pop_banda": 5237.007761144545
+    },
+    {
+      "adm2_id": "PA1308",
+      "nombre": "Río de Jesús",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 5208.202756002545,
+      "pop_banda": 5208.202756002545
+    },
+    {
+      "adm2_id": "PA0903",
+      "nombre": "Los Santos",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 4788.579805402085,
+      "pop_banda": 4788.579805402085
+    },
+    {
+      "adm2_id": "PA0905",
+      "nombre": "Pedasí",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 4339.433164272923,
+      "pop_banda": 4339.433164272923
+    },
+    {
+      "adm2_id": "PA1311",
+      "nombre": "Santiago",
+      "mmi_max": 8.0,
+      "pop_mmi7p": 3256.053459201008,
+      "pop_banda": 3256.053459201008
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 13.3,
+    "pop_discrepancia_pct": 13.5,
     "notas": []
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "orange",
     "ls_pop_usgs": "470",
     "lq_alerta_usgs": "orange",
-    "lq_pop_usgs": "36000"
+    "lq_pop_usgs": "27000"
   },
   "descargas": {
     "geoparquet": "",
@@ -167,6 +167,17 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v4 (us) → v5 (us)",
+    "Ground Failure: v4 (us) → v5 (us)",
+    "Población en MMI≥6: 640 mil → 560 mil",
+    "Población en MMI≥7: 350 mil → 150 mil",
+    "Población en MMI≥8: 1.800 → 14 mil",
+    "Población de 65 años o más en MMI≥7: 50 mil → 25 mil",
+    "Edificaciones en MMI≥7: 240 mil → 110 mil",
+    "Sedes de salud en MMI≥7: 180 → 43",
+    "Sedes educativas en MMI≥7: 600 → 180",
+    "Población en probabilidad alta de deslizamiento: 16 → 150",
+    "Población en cobertura areal alta por licuefacción: 110 mil → 85 mil",
     "ShakeMap: v2 (us) → v4 (us)",
     "Ground Failure: v2 (us) → v4 (us)",
     "Población en MMI≥6: 600 mil → 640 mil",
@@ -246,6 +257,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T18:51:10Z",
+  "generado_utc": "2026-10-09T19:26:11Z",
   "pipeline_version": "0.1.0"
 }
