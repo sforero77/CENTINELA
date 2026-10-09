@@ -8,8 +8,8 @@
   "lugar": "12 km al OSO de Pitaloza Arriba, Panamá",
   "origen_utc": "2026-10-09T17:56:08Z",
   "versiones_procesadas": {
-    "shakemap": 5,
-    "groundfailure": 5,
+    "shakemap": 6,
+    "groundfailure": 6,
     "shakemap_fuente": "us",
     "groundfailure_fuente": "us"
   },
@@ -19,7 +19,7 @@
     "preliminar": "2026-10-09T18:06:01Z",
     "preliminar_ultimo": "2026-10-09T18:10:48Z",
     "publicado": "2026-10-09T18:31:20Z",
-    "publicado_ultimo": "2026-10-09T19:26:14Z",
+    "publicado_ultimo": "2026-10-09T20:16:09Z",
     "usgs_origen": "2026-10-09T17:56:08Z"
   },
   "hashes": {},
@@ -30,6 +30,7 @@
     "sin ShakeMap disponible aun",
     "ShakeMap v0 -> v2 (us)",
     "ShakeMap v2 (us) -> v4 (us)",
-    "ShakeMap v4 (us) -> v5 (us)"
+    "ShakeMap v4 (us) -> v5 (us)",
+    "ShakeMap v5 (us) -> v6 (us)"
   ]
 }

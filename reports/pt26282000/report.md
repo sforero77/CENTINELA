@@ -6,15 +6,15 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 560 mil |
+| Población en MMI≥6 | 630 mil |
 | Población en MMI≥7 | 150 mil |
 | Población en MMI≥8 | 14 mil |
 | Edificaciones en MMI≥7 | 110 mil |
-| Sedes de salud en MMI≥7 | 43 |
-| Sedes educativas en MMI≥7 | 177 |
-| Vías primarias y secundarias en MMI≥7 | 400 km |
-| Vías locales en MMI≥7 | 4.400 km |
-| Superficie construida en MMI≥7 | 17,6 km² |
+| Sedes de salud en MMI≥7 | 44 |
+| Sedes educativas en MMI≥7 | 178 |
+| Vías primarias y secundarias en MMI≥7 | 410 km |
+| Vías locales en MMI≥7 | 4.500 km |
+| Superficie construida en MMI≥7 | 17,9 km² |
 
 El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 110 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
@@ -28,30 +28,30 @@ De la población en intensidad MMI≥7, alrededor de **25 mil** personas tienen 
 |---:|---|---|---:|---:|
 | 1 | Las Tablas | `PA0902` | 8,0 | 28 mil |
 | 2 | Soná | `PA1312` | 8,0 | 24 mil |
-| 3 | Ocú | `PA0704` | 7,5 | 12 mil |
-| 4 | Tonosí | `PA0907` | 8,5 | 10 mil |
-| 5 | Pesé | `PA0706` | 7,0 | 9.900 |
+| 3 | Ocú | `PA0704` | 7,5 | 13 mil |
+| 4 | Pesé | `PA0706` | 7,0 | 10 mil |
+| 5 | Tonosí | `PA0907` | 8,5 | 10 mil |
 | 6 | Macaracas | `PA0904` | 8,0 | 9.500 |
 | 7 | Los Pozos | `PA0703` | 8,0 | 8.000 |
 | 8 | Las Minas | `PA0702` | 8,0 | 7.900 |
-| 9 | Guararé | `PA0901` | 7,0 | 6.900 |
-| 10 | Mariato | `PA1306` | 8,5 | 5.200 |
-| 11 | Montijo | `PA1307` | 8,0 | 5.200 |
-| 12 | Río de Jesús | `PA1308` | 7,5 | 5.200 |
-| 13 | Los Santos | `PA0903` | 7,0 | 4.800 |
+| 9 | Guararé | `PA0901` | 7,0 | 7.400 |
+| 10 | Río de Jesús | `PA1308` | 7,5 | 5.400 |
+| 11 | Mariato | `PA1306` | 8,5 | 5.200 |
+| 12 | Montijo | `PA1307` | 8,0 | 5.200 |
+| 13 | Los Santos | `PA0903` | 7,0 | 5.100 |
 | 14 | Pedasí | `PA0905` | 7,5 | 4.300 |
 | 15 | Santiago | `PA1311` | 8,0 | 3.300 |
 
 ## Deslizamiento y licuefacción
 
 - **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **150**. USGS declara para este evento alerta **naranja**, con 470 expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **85 mil**. USGS declara para este evento alerta **naranja**, con 27 mil expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **90 mil**. USGS declara para este evento alerta **naranja**, con 29 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v5), dominio público.
+Fuente: producto *Ground Failure* de USGS (v6), dominio público.
 
 ## Referencia cruzada
 
@@ -61,10 +61,15 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **13,5 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,6 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v5 (us) → v6 (us)
+- Ground Failure: v5 (us) → v6 (us)
+- Población en MMI≥6: 560 mil → 630 mil
+- Sedes de salud en MMI≥7: 43 → 44
+- Población en cobertura areal alta por licuefacción: 85 mil → 90 mil
 - ShakeMap: v4 (us) → v5 (us)
 - Ground Failure: v4 (us) → v5 (us)
 - Población en MMI≥6: 640 mil → 560 mil
@@ -108,10 +113,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **13,5 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v5** de `us`
-- Ground Failure consumido: **v5** de `us`
+- ShakeMap consumido: **v6** de `us`
+- Ground Failure consumido: **v6** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-09T19:26:11Z
+- Pipeline: `0.1.0` · Generado: 2026-10-09T20:16:06Z
 
 ## Advertencias
 
