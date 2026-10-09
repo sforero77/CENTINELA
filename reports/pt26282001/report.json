@@ -2,13 +2,13 @@
   "schema": "centinela/report/1.0",
   "event": {
     "usgs_id": "pt26282001",
-    "mag": 6.9,
+    "mag": 6.6,
     "depth_km": 10.0,
     "utc": "2026-10-09T20:25:40Z",
-    "lugar": "8 km al NO de Río Grande, Panamá",
+    "lugar": "14 km al O de Río Grande, Panamá",
     "pager_alert": "",
-    "lon": -81.378,
-    "lat": 7.782
+    "lon": -81.4687,
+    "lat": 7.7176
   },
   "inputs": {
     "shakemap_version": 0,
@@ -23,15 +23,15 @@
   "radios": [
     {
       "radio_km": 25,
-      "pop": 14602.674632183742
+      "pop": 7932.377290427685
     },
     {
       "radio_km": 50,
-      "pop": 74627.08744810545
+      "pop": 47392.60226588091
     },
     {
       "radio_km": 100,
-      "pop": 501902.7720084698
+      "pop": 453980.90730537334
     }
   ],
   "backtest": false,
@@ -128,6 +128,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T20:36:02Z",
+  "generado_utc": "2026-10-09T20:40:59Z",
   "pipeline_version": "0.1.0"
 }

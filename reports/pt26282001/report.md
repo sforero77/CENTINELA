@@ -1,4 +1,4 @@
-# Exposición sísmica: M6,9 · 8 km al NO de Río Grande, Panamá
+# Exposición sísmica: M6,6 · 14 km al O de Río Grande, Panamá
 
 **Evento USGS:** `pt26282001` · **Origen:** 2026-10-09T20:25:40Z UTC · **Profundidad:** 10,0 km
 
@@ -8,9 +8,9 @@
 
 | Radio desde el epicentro | Población |
 |---|---:|
-| 25 km | 15 mil |
-| 50 km | 75 mil |
-| 100 km | 500 mil |
+| 25 km | 7.900 |
+| 50 km | 47 mil |
+| 100 km | 450 mil |
 
 Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
 
@@ -27,7 +27,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se calcula en un reporte preliminar*
 - ShakeMap consumido: **ninguno** (no publicado aún)
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-09T20:36:02Z
+- Pipeline: `0.1.0` · Generado: 2026-10-09T20:40:59Z
 
 ## Advertencias
 

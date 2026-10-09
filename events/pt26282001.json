@@ -1,11 +1,11 @@
 {
   "usgs_id": "pt26282001",
   "estado": "preliminar",
-  "mag": 6.9,
-  "lon": -81.378,
-  "lat": 7.782,
+  "mag": 6.6,
+  "lon": -81.4687,
+  "lat": 7.7176,
   "depth_km": 10.0,
-  "lugar": "8 km al NO de Río Grande, Panamá",
+  "lugar": "14 km al O de Río Grande, Panamá",
   "origen_utc": "2026-10-09T20:25:40Z",
   "versiones_procesadas": {
     "shakemap": 0,
@@ -15,12 +15,14 @@
     "despachado": "2026-10-09T20:40:23Z",
     "detectado": "2026-10-09T20:35:23Z",
     "preliminar": "2026-10-09T20:36:01Z",
+    "preliminar_ultimo": "2026-10-09T20:40:57Z",
     "usgs_origen": "2026-10-09T20:25:40Z"
   },
   "hashes": {},
-  "intentos_preliminar": 1,
+  "intentos_preliminar": 2,
   "backtest": false,
   "notas": [
+    "sin ShakeMap disponible aun",
     "sin ShakeMap disponible aun"
   ]
 }
