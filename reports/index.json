@@ -1,5 +1,20 @@
 [
   {
+    "usgs_id": "pt26282001",
+    "mag": 6.9,
+    "lugar": "8 km al NO de Río Grande, Panamá",
+    "iso3": "PAN",
+    "lon": -81.378,
+    "lat": 7.782,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2026-10-09T20:25:40Z",
+    "shakemap_version": 0,
+    "preliminar": true,
+    "backtest": false,
+    "generado_utc": "2026-10-09T20:36:02Z"
+  },
+  {
     "usgs_id": "us6000u18x",
     "mag": 5.8,
     "lugar": "1 km al S de El Cacao, Panamá",
