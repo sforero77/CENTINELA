@@ -269,7 +269,15 @@ def render_map(
     # La figura se dimensiona a partir de la extension de los datos, no al
     # reves. Fijar 16:9 y luego imponer proporcion geografica deja el mapa
     # flotando entre dos franjas vacias que no dicen nada.
-    limites = _limites(puntos, epicentro, contornos)
+    # SIN SHAKEMAP, LOS RADIOS SON EL MAPA.
+    #
+    # El preliminar del M7,7 de Azuero (9-oct-2026) salio en blanco: una
+    # estrella sobre un lienzo vacio de 44 km, con los radios ya calculados en
+    # el mismo reporte. Fueron los 25 minutos en que mas se mira. Cuando no hay
+    # contornos que enseniar, los anillos de 25, 50 y 100 km con su poblacion
+    # son lo unico que el reporte afirma, y es lo que se dibuja.
+    anillos = _anillos_de_radio(report, epicentro) if not contornos else []
+    limites = _limites(puntos, epicentro, contornos, extra=[a[1] for a in anillos])
     fig, ax = plt.subplots(figsize=_figsize(limites, spec), dpi=spec.dpi)
 
     # LA FORMA DEL EVENTO, DEBAJO DE TODO.
@@ -280,6 +288,7 @@ def render_map(
     # el mar. Con los contornos rellenos, la mancha del ShakeMap da la silueta
     # que el ojo reconoce y cada municipio queda dentro de su franja.
     _dibujar_contornos(ax, contornos)
+    _dibujar_anillos(ax, anillos, fuente=10 if variant is MapVariant.PRENSA else 8)
 
     if puntos:
         # UNA VARIABLE POR CANAL.
@@ -351,12 +360,23 @@ def render_map(
         weight="bold",
     )
     _encoger_hasta_que_quepa(fig, titulo, x0=0.012)
+    if report.preliminar or not report.inputs.shakemap_version:
+        # "ShakeMap v0" nombraba una version que no existe, y "MMI≥6 por
+        # municipio" una tabla que el preliminar no publica.
+        subtitulo = (
+            "Población por distancia al epicentro · corte preliminar, aún sin ShakeMap"
+            " · exposición estimada, no daño"
+        )
+    else:
+        subtitulo = (
+            f"Población en MMI≥{banda} por municipio · "
+            f"ShakeMap v{report.inputs.shakemap_version}"
+            " · exposición estimada, no daño"
+        )
     fig.text(
         0.012,
         0.932 if prensa else 0.925,
-        f"Población en MMI≥{banda} por municipio · "
-        f"ShakeMap v{report.inputs.shakemap_version}"
-        " · exposición estimada, no daño",
+        subtitulo,
         fontsize=11 if prensa else 8,
         color="#55524e",
         va="top",
@@ -391,6 +411,17 @@ def render_map(
                 label="MMI < 6 · no se cuantifica",
             )
         )
+    if anillos:
+        leyenda.append(
+            Line2D(
+                [],
+                [],
+                color=COLOR_ANILLO,
+                linewidth=1.4,
+                linestyle=(0, (4, 2)),
+                label="distancia al epicentro",
+            )
+        )
     if epicentro is not None:
         leyenda.append(
             Line2D(
@@ -414,7 +445,7 @@ def render_map(
             edgecolor="#dedad4",
             # Ya no rotula el color de los circulos —que son neutros— sino el
             # del fondo: las franjas del ShakeMap.
-            title="Intensidad (ShakeMap)",
+            title="Corte preliminar" if anillos else "Intensidad (ShakeMap)",
             title_fontsize=escala_fuente,
         )
         ax.add_artist(primera)
@@ -825,8 +856,13 @@ def _limites(
     puntos: list[tuple[float, float, float, float, str]],
     epicentro: tuple[float, float] | None,
     contornos: Mapping[str, Any] | None = None,
+    *,
+    extra: Sequence[Sequence[tuple[float, float]]] = (),
 ) -> tuple[float, float, float, float]:
     """``(lon_min, lat_min, lon_max, lat_max)`` con margen.
+
+    ``extra`` son anillos ya trazados (los radios de un preliminar): entran en
+    el encuadre por la misma razon que el contorno.
 
     EL CONTORNO ENTRA EN EL ENCUADRE, y no entraba.
 
@@ -841,6 +877,9 @@ def _limites(
     es lo que este mapa viene a ensenar.
     """
     borde_lons, borde_lats = _extremos_de_contorno(contornos)
+    for anillo in extra:
+        borde_lons = [*borde_lons, *(x for x, _ in anillo)]
+        borde_lats = [*borde_lats, *(y for _, y in anillo)]
     lons = [p[0] for p in puntos] + ([epicentro[0]] if epicentro else []) + borde_lons
     lats = [p[1] for p in puntos] + ([epicentro[1]] if epicentro else []) + borde_lats
     if not lons:
@@ -1008,6 +1047,77 @@ def _rotular_municipios(
         cajas.append(caja)
         puestos.append(rotulo.get_text())
     return puestos
+
+
+#: Trazo de los anillos del preliminar: gris tinta, no un color de intensidad,
+#: porque no hay intensidad que codificar todavia.
+COLOR_ANILLO = "#55524e"
+#: Rellenos de dentro hacia fuera: el anillo de 25 km es el mas oscuro.
+_RELLENO_ANILLO = ("#d9d2c7", "#e6e0d6", "#f1ede6")
+_KM_POR_GRADO = 111.32
+
+
+def _anillos_de_radio(
+    report: Report, epicentro: tuple[float, float] | None
+) -> list[tuple[Any, list[tuple[float, float]]]]:
+    """``(radio, vertices)`` por cada radio del reporte, del mayor al menor.
+
+    Circulo en grados con la longitud corregida por la latitud: a 100 km el
+    error frente al geodesico es de metros, invisible a esta escala.
+    """
+    import math
+
+    if epicentro is None or not report.radios:
+        return []
+    lon0, lat0 = epicentro
+    coslat = max(math.cos(math.radians(lat0)), 0.05)
+    anillos = []
+    for radio in sorted(report.radios, key=lambda r: r.radio_km, reverse=True):
+        dlat = radio.radio_km / _KM_POR_GRADO
+        dlon = dlat / coslat
+        vertices = [
+            (lon0 + dlon * math.cos(t), lat0 + dlat * math.sin(t))
+            for t in (2 * math.pi * i / 180 for i in range(181))
+        ]
+        anillos.append((radio, vertices))
+    return anillos
+
+
+def _dibujar_anillos(
+    ax: Any, anillos: Sequence[tuple[Any, list[tuple[float, float]]]], *, fuente: int
+) -> None:
+    """Los anillos rellenos, de fuera hacia dentro, con su poblacion rotulada."""
+    from matplotlib.patches import Polygon
+
+    n = len(anillos)
+    for i, (radio, vertices) in enumerate(anillos):
+        relleno = _RELLENO_ANILLO[min(n - 1 - i, len(_RELLENO_ANILLO) - 1)]
+        ax.add_patch(
+            Polygon(
+                vertices,
+                closed=True,
+                facecolor=relleno,
+                edgecolor=COLOR_ANILLO,
+                linewidth=1.2,
+                linestyle=(0, (4, 2)),
+                zorder=1,
+            )
+        )
+        # Rotulo en el norte del anillo, por dentro: ahi no lo tapa el
+        # epicentro ni el anillo siguiente.
+        norte = max(vertices, key=lambda v: v[1])
+        ax.annotate(
+            f"hasta {radio.radio_km:g} km · {format_count_prose(radio.pop)} personas",
+            norte,
+            xytext=(0, -7),
+            textcoords="offset points",
+            ha="center",
+            va="top",
+            fontsize=fuente,
+            color="#1c1b1a",
+            zorder=4,
+            path_effects=_halo(),
+        )
 
 
 def _epicentro(report: Report) -> tuple[float, float] | None:

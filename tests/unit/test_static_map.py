@@ -18,13 +18,14 @@ from pathlib import Path
 import pytest
 
 from pipelines.common.paths import SITE_DIR
-from pipelines.p3_report.model import Evento, Inputs, Report, Totales
+from pipelines.p3_report.model import Evento, Inputs, PoblacionEnRadio, Report, Totales
 from pipelines.p3_report.static_map import (
     COLOR_CONTORNO_BAJO,
     MMI_COLORS,
     SPECS,
     MapVariant,
     _a_proporcion,
+    _anillos_de_radio,
     _coordenada,
     _epicentro,
     _puntos_municipales,
@@ -143,6 +144,42 @@ def test_render_dibuja_los_municipios(reporte: Report, tmp_path: Path) -> None:
     render_map(reporte, MapVariant.GENERAL, con, municipios=filas)
     render_map(reporte, MapVariant.GENERAL, sin, municipios=[])
     assert con.stat().st_size > sin.stat().st_size
+
+
+def _preliminar(reporte: Report) -> Report:
+    from dataclasses import replace
+
+    return replace(
+        reporte,
+        inputs=Inputs(shakemap_version=0, groundfailure_version=0, exposure_manifest="x"),
+        preliminar=True,
+        radios=(
+            PoblacionEnRadio(radio_km=25, pop=16_000.0),
+            PoblacionEnRadio(radio_km=50, pop=83_000.0),
+            PoblacionEnRadio(radio_km=100, pop=476_000.0),
+        ),
+    )
+
+
+def test_el_preliminar_dibuja_sus_radios(reporte: Report, tmp_path: Path) -> None:
+    """El preliminar del M7,7 de Azuero (9-oct-2026) salio en blanco.
+
+    Una estrella sobre un lienzo vacio, con los radios calculados en el mismo
+    reporte. Sin contornos, los anillos son el mapa.
+    """
+    pytest.importorskip("matplotlib")
+    pre = _preliminar(reporte)
+    anillos = _anillos_de_radio(pre, _epicentro(pre))
+    assert [a[0].radio_km for a in anillos] == [100, 50, 25]
+    # El de 100 km mide 100 km hacia el norte, no una caja de 44 km.
+    norte = max(y for _, y in anillos[0][1])
+    assert norte - 6.2 == pytest.approx(100 / 111.32, rel=1e-3)
+
+    con = tmp_path / "con.png"
+    sin = tmp_path / "sin.png"
+    render_map(pre, MapVariant.GENERAL, con, municipios=[])
+    render_map(reporte, MapVariant.GENERAL, sin, municipios=[])
+    assert con.stat().st_size > 2 * sin.stat().st_size
 
 
 def test_el_mapa_dimensiona_por_la_banda_del_reporte_no_siempre_por_siete() -> None:
