@@ -6,59 +6,89 @@
     "depth_km": 10.0,
     "utc": "2026-10-09T18:37:46Z",
     "lugar": "1 km al S de El Cacao, Panamá",
-    "pager_alert": "",
+    "pager_alert": "yellow",
     "lon": -80.4012,
     "lat": 7.4362
   },
   "inputs": {
-    "shakemap_version": 0,
+    "shakemap_version": 1,
     "groundfailure_version": 0,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "",
     "modelo_licuefaccion": "",
-    "shakemap_fuente": "",
+    "shakemap_fuente": "us",
     "groundfailure_fuente": ""
   },
-  "preliminar": true,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 12675.668877914082
-    },
-    {
-      "radio_km": 50,
-      "pop": 88625.34355325927
-    },
-    {
-      "radio_km": 100,
-      "pop": 368886.6137954958
-    }
-  ],
+  "preliminar": false,
+  "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 0.0,
-    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 6637.504815058783,
+    "pop_mmi7p": 2816.9774997588247,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 0.0,
-    "bld_mmi6p": 0.0,
-    "built_m2_mmi6p": 0.0,
+    "pop_65p_mmi7p": 410.01589865526745,
+    "pop_65p_mmi6p": 1101.783566404167,
+    "bld_mmi6p": 5421.0,
+    "built_m2_mmi6p": 997797.0,
     "health_mmi6p": 0.0,
-    "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 0.0,
-    "road_km_principal_mmi6p": 0.0,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
+    "edu_mmi6p": 1.0,
+    "road_km_mmi6p": 325.29933412595403,
+    "road_km_principal_mmi6p": 31.727754674180154,
+    "bld_mmi7p": 1731.0,
+    "built_m2_mmi7p": 440626.0,
     "health_mmi7p": 0.0,
-    "edu_mmi7p": 0.0,
-    "road_km_mmi7p": 0.0,
-    "road_km_principal_mmi7p": 0.0,
+    "edu_mmi7p": 1.0,
+    "road_km_mmi7p": 60.42333197947981,
+    "road_km_principal_mmi7p": 13.258088129883989,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 0.0
   },
-  "top_municipios": [],
+  "top_municipios": [
+    {
+      "adm2_id": "PA0907",
+      "nombre": "Tonosí",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 2816.9774997588247,
+      "pop_banda": 2816.9774997588247
+    },
+    {
+      "adm2_id": "PA0902",
+      "nombre": "Las Tablas",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0905",
+      "nombre": "Pedasí",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0904",
+      "nombre": "Macaracas",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0906",
+      "nombre": "Pocrí",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0901",
+      "nombre": "Guararé",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
   "incertidumbre": {
-    "pop_discrepancia_pct": null,
+    "pop_discrepancia_pct": 0.3,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -70,10 +100,17 @@
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",
-    "csv_adm2": "",
-    "mapa_png": ""
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "ShakeMap: v0 → v1 (us)",
+    "Población en MMI≥6: 0 → 6.600",
+    "Población en MMI≥7: 0 → 2.800",
+    "Población de 65 años o más en MMI≥7: 0 → 410",
+    "Edificaciones en MMI≥7: 0 → 1.700",
+    "Sedes educativas en MMI≥7: 0 → 1"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -128,6 +165,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T18:50:56Z",
+  "generado_utc": "2026-10-09T18:55:53Z",
   "pipeline_version": "0.1.0"
 }
