@@ -1,9 +1,31 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-09T21:50:23Z",
+  "generado_utc": "2026-10-09T21:55:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u1a9",
+      "mag": 4.9,
+      "lon": -81.452,
+      "lat": 7.7299,
+      "depth_km": 10.0,
+      "lugar": "13 km al O de Río Grande, Panamá",
+      "origen_utc": "2026-10-09T21:05:25Z",
+      "razon": "M4.9 < umbral M5.5",
+      "iso3": "PAN"
+    },
+    {
+      "usgs_id": "us6000u1aa",
+      "mag": 5.0,
+      "lon": -81.4589,
+      "lat": 7.7249,
+      "depth_km": 10.0,
+      "lugar": "13 km al O de Río Grande, Panamá",
+      "origen_utc": "2026-10-09T20:42:08Z",
+      "razon": "M5.0 < umbral M5.5",
+      "iso3": "PAN"
+    },
     {
       "usgs_id": "us6000u19s",
       "mag": 4.9,
