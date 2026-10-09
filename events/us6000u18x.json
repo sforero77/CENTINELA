@@ -1,6 +1,6 @@
 {
   "usgs_id": "us6000u18x",
-  "estado": "detectado",
+  "estado": "preliminar",
   "mag": 5.8,
   "lon": -80.4012,
   "lat": 7.4362,
@@ -13,10 +13,13 @@
   },
   "timestamps": {
     "detectado": "2026-10-09T18:50:22Z",
+    "preliminar": "2026-10-09T18:50:55Z",
     "usgs_origen": "2026-10-09T18:37:46Z"
   },
   "hashes": {},
-  "intentos_preliminar": 0,
+  "intentos_preliminar": 1,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "sin ShakeMap disponible aun"
+  ]
 }
