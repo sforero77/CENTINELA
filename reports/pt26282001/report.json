@@ -11,8 +11,8 @@
     "lat": 7.7176
   },
   "inputs": {
-    "shakemap_version": 2,
-    "groundfailure_version": 1,
+    "shakemap_version": 3,
+    "groundfailure_version": 2,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -167,6 +167,9 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v2 (us) → v3 (us)",
+    "Ground Failure: v1 (us) → v2 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v0 → v2 (us)",
     "Ground Failure: v0 → v1 (us)",
     "Población en MMI≥6: 0 → 28 mil",
@@ -230,6 +233,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T20:55:57Z",
+  "generado_utc": "2026-10-09T22:40:56Z",
   "pipeline_version": "0.1.0"
 }
