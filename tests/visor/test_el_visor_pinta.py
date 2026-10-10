@@ -4183,16 +4183,16 @@ def test_el_rotulo_de_la_tarjeta_de_fuego_sigue_a_la_ventana_elegida(pagina: Any
         texto: str = pagina.locator("#en-vivo").inner_text()
         return texto
 
-    assert "detecciones en 24" in apunte().replace("\u00a0", " ")
+    assert "satélite en 24" in apunte().replace("\u00a0", " ")
 
     pagina.select_option("#ventana-focos", "h6")
     pagina.wait_for_timeout(900)
 
     ahora = apunte().replace("\u00a0", " ")
-    assert "detecciones en 6 h" in ahora, (
+    assert "satélite en 6 h" in ahora, (
         f"la tarjeta recorta por 6 h y sigue rotulando otra ventana: {ahora!r}"
     )
-    assert "detecciones en 24 h" not in ahora
+    assert "satélite en 24 h" not in ahora
 
 
 def test_cerrar_el_detalle_borra_de_verdad_las_tres_capas(pagina: Any) -> None:

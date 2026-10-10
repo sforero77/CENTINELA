@@ -1379,11 +1379,12 @@ function pintarLateral(reporte, municipios, celdas) {
   $("detalle-eyebrow").textContent = `Reporte · ${ev.usgs_id}`;
   $("detalle-titulo").textContent =
     `M${String(ev.mag).replace(".", ",")} — ${ev.lugar}`;
+  // Sin el identificador del activo («pan-v0.4»): es dato de quien audita y
+  // viaja en el JSON y en las descargas (repaso de textos, 10-oct-2026).
   $("detalle-meta").textContent = [
     comoFecha(ev.utc),
     `${numero(ev.depth_km, 1)} km de profundidad`,
     `ShakeMap v${reporte.inputs.shakemap_version}`,
-    reporte.inputs.exposure_manifest,
   ].join(" · ");
 
   pintarDistintivos(reporte);
@@ -7149,7 +7150,6 @@ function pintarEnVivo() {
         // "En toda America Latina" pasaria de ser una aclaracion a ser una
         // mentira en cuanto alguien eligiera Brasil. Lo dice `alcanceDelFuego`.
         `<span class="apunte">${alcanceDelFuego()} · ` +
-        `${numero(v.incendios.celdas)} celdas · ` +
         // LA VENTANA DEL ROTULO, NO LA DEL FICHERO.
         //
         // `v.ventanaFuego` se fija una sola vez al cargar `incendios.json` y
@@ -7158,7 +7158,7 @@ function pintarEnVivo() {
         // corta por `estado.ventanaFuego`. O sea que el numerador obedecia al
         // control de 24/12/6 h y el rotulo se quedaba en el del fichero:
         // 8.143 detecciones de seis horas publicadas como «en 24 h».
-        `${numero(v.incendios.detecciones)} detecciones en ${horasDeLaVentana()}&nbsp;h` +
+        `${numero(v.incendios.detecciones)} detecciones de satélite en ${horasDeLaVentana()}&nbsp;h` +
         `${selloDeRevision(v.fuegoUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
@@ -7194,9 +7194,9 @@ function pintarEnVivo() {
     partes.push(
       `<div class="metrica metrica-suelo" data-amenaza="fuego"><span class="etiqueta">sobre qué está ardiendo</span>` +
         `<ul class="suelo-reparto">${barras}</ul>` +
-        `<span class="apunte">Reparto de la energía medida, no del número de focos. ` +
-        `${numero(suelo.celdas_medidas)} celdas con cobertura conocida` +
-        `${suelo.celdas_sin_medir ? `; ${numero(suelo.celdas_sin_medir)} sin medir` : ""}.</span></div>`
+        `<span class="apunte">Según la energía del fuego, no el número de focos.` +
+        `${suelo.celdas_sin_medir ? ` Sin dato de suelo en ${numero(suelo.celdas_sin_medir)} de ` +
+          `${numero(suelo.celdas_medidas + suelo.celdas_sin_medir)} celdas.` : ""}</span></div>`
     );
   }
   if (v.observados !== undefined) {
