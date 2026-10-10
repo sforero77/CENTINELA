@@ -587,7 +587,7 @@ const estado = {
   ventana: "todo",
   //: Y los de la lista de focos, que van por su cuenta: son otra amenaza.
   ventanaFuego: "h24",
-  ordenFocos: "reciente",
+  ordenFocos: "personas",
   paisFuego: "",
   //: ISO3 -> nombre, del unico sitio que lo publica: la cobertura.
   nombresPais: null,
@@ -2598,6 +2598,20 @@ window.CENTINELA = {
 function aplicarAmenaza() {
   const fuego = estado.amenaza === "fuego";
   const m = estado.mapa;
+
+  // En el telefono la leyenda de potencia del fuego tapaba media pantalla
+  // (revision del 10-oct-2026): arranca plegada, como con un sismo abierto. Lo
+  // que quien lee abrio o cerro a mano se respeta.
+  const pie = $("pie-mapa");
+  if (pie && fuego && !pie.dataset.tocado && window.matchMedia && window.matchMedia(ESTRECHA).matches) {
+    if (pie.open) {
+      pie.open = false;
+      pie.dataset.plegadoPorEvento = "1";
+    }
+  } else if (pie && !fuego && pie.dataset.plegadoPorEvento && !estado.seleccionado) {
+    delete pie.dataset.plegadoPorEvento;
+    if (!pie.dataset.tocado) pie.open = true;
+  }
 
   for (const boton of document.querySelectorAll("#amenazas button")) {
     boton.setAttribute("aria-pressed", String(boton.dataset.amenaza === estado.amenaza));
@@ -5490,12 +5504,14 @@ const VENTANAS_FUEGO = {
   h6: { texto: "6 h", horas: 6 },
 };
 
-//: Como se ordenan. "Reciente" primero y por defecto: la pregunta que trae a
-//: alguien a un mapa de fuego es que esta ardiendo AHORA, no que arde mas.
+//: Como se ordenan. Por PERSONAS por defecto desde el 10-oct-2026: antes era
+//: "Reciente" —«que esta ardiendo ahora»—, y la lista abria con focos de una
+//: celda y cinco personas. En la revision con el dueño se eligio abrir con lo
+//: que pide atencion: donde hay mas gente cerca. "Reciente" sigue a un toque.
 const ORDENES_FOCOS = {
+  personas: { texto: "Más personas", clave: (f) => f.pop },
   reciente: { texto: "Reciente", clave: (f) => Date.parse(f.ultimaUtc) || 0 },
   area: { texto: "Área", clave: (f) => f.areaKm2 },
-  personas: { texto: "Personas", clave: (f) => f.pop },
   energia: { texto: "Energía", clave: (f) => f.frpSuma },
 };
 
@@ -5593,25 +5609,25 @@ function filaFoco(foco) {
   const li = document.createElement("li");
   li.dataset.utc = foco.ultimaUtc || "";
   li.dataset.iso3 = foco.iso3 || "";
+  li.dataset.pop = String(foco.pop || 0);
 
   // Las mismas clases que la fila de un reporte: son dos indices gemelos y
   // verlos distintos sugeriria que se leen distinto.
+  // EN PALABRAS (revision del 10-oct-2026). La fila abria con «1 celda ·
+  // 0,7 km²» y «1 detección»: jerga de satelite. Ahora dice donde, cuanta gente
+  // y hace cuanto; las celdas y las detecciones viven en el detalle del foco.
   const cabecera = document.createElement("div");
   cabecera.className = "evento-cabecera";
   const titulo = document.createElement("span");
-  titulo.className = "evento-mag";
-  titulo.textContent = foco.nCeldas === 1 ? "1 celda" : numero(foco.nCeldas) + " celdas";
-  const area = document.createElement("span");
-  area.className = "enlace-reporte";
-  area.textContent = areaDeFoco(foco.areaKm2) + " km²";
-  cabecera.append(titulo, area);
+  titulo.className = "foco-lugar";
+  titulo.textContent = foco.iso3 ? `Foco en ${nombrePais(foco.iso3)}` : "Foco fuera de los países cubiertos";
+  cabecera.append(titulo);
 
   const meta = document.createElement("p");
   meta.className = "evento-meta";
   meta.textContent = [
-    comoFecha(foco.ultimaUtc),
-    foco.iso3 ? nombrePais(foco.iso3) : "fuera de los activos",
-    numero(foco.detecciones) + (foco.detecciones === 1 ? " detección" : " detecciones"),
+    haceCuanto(foco.ultimaUtc) ? `visto ${haceCuanto(foco.ultimaUtc)}` : comoFecha(foco.ultimaUtc),
+    areaDeFoco(foco.areaKm2) + " km²",
   ].join(" · ");
 
   const cifra = document.createElement("p");
@@ -5640,7 +5656,7 @@ function pintarListaFocos({ anunciando = true } = {}) {
   const lista = $("lista-focos");
   if (!lista || !estado.focos.length) return;
 
-  const orden = ORDENES_FOCOS[estado.ordenFocos] || ORDENES_FOCOS.reciente;
+  const orden = ORDENES_FOCOS[estado.ordenFocos] || ORDENES_FOCOS.personas;
   // Cada foco se re-resume sobre sus celdas dentro de la ventana: sumar las de
   // fuera hacia que la lista anunciara mas superficie de la que el mapa dibuja.
   const dentro = estado.focos
@@ -5675,6 +5691,9 @@ function pintarListaFocos({ anunciando = true } = {}) {
           : numero(dentro.length) + (dentro.length === 1 ? " foco" : " focos")) + apunte
       : "";
   }
+
+  // Recortada en el telefono como la de reportes: eran 40 tarjetas seguidas.
+  recortarLista(lista, "focos");
 
   const vacio = $("sin-focos");
   if (vacio) {

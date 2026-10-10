@@ -3112,3 +3112,7 @@ thead th {
 #menores { padding: 3rem 1.75rem 2.5rem; }
 #menores h2 { font-size: 1.55rem; margin-bottom: 0.3rem; }
 @media (max-width: 64rem) { #menores { padding: 2.25rem 1.1rem 2rem; } }
+
+/* --- Modo fuego (bloque D, 10-oct-2026) ----------------------------------- */
+.foco-lugar { font-family: var(--tipo-titulo); font-weight: 600; font-size: 0.98rem; color: var(--bosque); }
+#lista-focos .evento-cifra { font-size: 1.05rem; }
