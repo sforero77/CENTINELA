@@ -348,6 +348,7 @@ const CAPAS = {
 };
 
 const ORDEN_CAPAS = ["mmi", "pop", "bld", "built_m2", "vias_km", "salud", "edu"];
+const CAPAS_A_LA_VISTA = 3;
 
 //: Superficie nominal de una celda H3 r7, que es la resolucion **de la malla
 //: sismica**: `p3_report/celdas.py` agrega de r8 a r7 antes de publicar, y los
@@ -810,15 +811,28 @@ function pintarSelectorCapas() {
   // tabulacion, y dentro del grupo se navega con flechas. Es lo que ARIA exige
   // de un `tablist`, y no estaba: con siete capas, llegar al mapa con el
   // teclado costaba siete tabulaciones que ademas no cambiaban nada.
+  // TRES A LA VISTA Y EL RESTO DETRAS DE «MÁS» (revision del 10-oct-2026).
+  // Siete pestañas eran demasiadas para elegir y en el telefono se cortaban
+  // («Edifica…»). Intensidad, poblacion y edificaciones son las que se miran;
+  // las demas siguen ahi, a un toque. La activa se ve siempre.
   caja.innerHTML = ORDEN_CAPAS.map(
-    (id) =>
+    (id, i) =>
       `<button type="button" role="tab" data-capa="${id}" ` +
+      `class="${i >= CAPAS_A_LA_VISTA ? "capa-extra" : ""}" ` +
       `aria-selected="${id === estado.capa}" aria-controls="mapa" ` +
       `tabindex="${id === estado.capa ? 0 : -1}" ` +
       `title="${escapar(CAPAS[id].nota)}">${CAPAS[id].titulo}</button>`
-  ).join("");
+  ).join("") +
+    `<button type="button" class="capas-mas" aria-expanded="false">Más capas</button>`;
+  const mas = caja.querySelector(".capas-mas");
+  mas.addEventListener("click", () => {
+    const abierto = !caja.classList.contains("con-extras");
+    caja.classList.toggle("con-extras", abierto);
+    mas.setAttribute("aria-expanded", String(abierto));
+    mas.textContent = abierto ? "Menos" : "Más capas";
+  });
 
-  const botones = [...caja.querySelectorAll("button")];
+  const botones = [...caja.querySelectorAll("button[role=tab]")];
   for (const [i, boton] of botones.entries()) {
     boton.addEventListener("click", () => cambiarCapa(boton.dataset.capa));
     boton.addEventListener("keydown", (ev) => {
@@ -1056,7 +1070,7 @@ function pintarPanorama(eventos) {
     (mayor
       ? `<div class="metrica"><span class="cabeza">${iconoSvg("personas")}` +
         `<span class="valor">${comoConteo(mayor[clave])}</span></span>` +
-        `<span class="etiqueta">mayor exposición registrada en MMI≥${bandaMayor}</span>` +
+        `<span class="etiqueta">mayor exposición en ${NOMBRE_BANDA[bandaMayor]} (MMI≥${bandaMayor})</span>` +
         `<span class="apunte">M${String(mayor.mag).replace(".", ",")} · ${escapar(mayor.lugar)}</span></div>`
       : "") +
     (paises > 1
@@ -1113,6 +1127,10 @@ function alcanzaBanda(propia, mmi6) {
 function bandaPublicada(t) {
   return t && alcanzaBanda(t.pop_mmi7p, t.pop_mmi6p) ? 7 : 6;
 }
+
+//: La escala de Mercalli en palabras, para quien no sabe que es «MMI≥7».
+//: VI fuerte, VII muy fuerte, VIII severa (USGS: strong, very strong, severe).
+const NOMBRE_BANDA = { 6: "sacudida fuerte", 7: "sacudida muy fuerte", 8: "sacudida severa" };
 
 function bandaTitular(evento) {
   if (Number.isFinite(evento.pop_mmi7p) && alcanzaBanda(evento.pop_mmi7p, evento.pop_mmi6p)) {
@@ -1181,8 +1199,8 @@ function filaEvento(evento) {
   const cifra = document.createElement("span");
   cifra.className = "evento-cifra";
   cifra.innerHTML = titular.banda
-    ? `${comoConteo(titular.pop)}<small>personas en MMI≥${titular.banda}</small>`
-    : `<span class="sin-alcance">Sin población</span><small>en MMI≥6 o mayor</small>`;
+    ? `${comoConteo(titular.pop)}<small>personas en ${NOMBRE_BANDA[titular.banda]}</small>`
+    : `<span class="sin-alcance">Nadie</span><small>en sacudida fuerte</small>`;
   li.append(cifra);
   li.addEventListener("click", (ev) => {
     if (ev.target.closest("a")) return;
@@ -1797,11 +1815,11 @@ function pintarMetricas(reporte) {
   const soloSeis = banda === 6;
   $("titulo-metricas").textContent = banda
     ? soloSeis
-      ? "Expuesto en MMI≥6"
+      ? "En sacudida fuerte · MMI≥6"
       : banda === 8
-        ? "Expuesto en MMI≥8 y MMI≥7"
-        : "Expuesto en MMI≥7"
-    : "Expuesto en MMI≥7";
+        ? "En sacudida severa y muy fuerte · MMI≥8 y MMI≥7"
+        : "En sacudida muy fuerte · MMI≥7"
+    : "En sacudida muy fuerte · MMI≥7";
   // Y el subtitulo, que tambien hablaba siempre de MMI 7. En un evento que no
   // llego a 7 sobre poblacion, «esto es lo que quedó dentro de esa franja»
   // describe una franja vacia.
@@ -1822,20 +1840,20 @@ function pintarMetricas(reporte) {
       ? {
           clave: "personas",
           valor: t.pop_mmi6p,
-          etiqueta: "personas en MMI≥6",
+          etiqueta: "personas en sacudida fuerte (MMI≥6)",
           apunte:
             "La sacudida no alcanzó MMI 7 sobre población: ninguna de las cifras de abajo, " +
             "que se cuentan en MMI≥7, aplica a este evento.",
           ancha: true,
         }
-      : { clave: "personas", valor: t.pop_mmi7p, etiqueta: "personas en MMI≥7" },
+      : { clave: "personas", valor: t.pop_mmi7p, etiqueta: "personas en sacudida muy fuerte (MMI≥7)" },
     // La banda alta, cuando existe, va inmediatamente detras y rotulada. Antes
     // era la unica que se enseñaba, y el resto del bloque —mayores, salud,
     // edificaciones— se contaba en MMI≥7 sin que nada lo dijera: se leia
     // "108.000 personas" seguido de "174.000 de 65 años o más", que es un
     // subconjunto mas grande que su conjunto.
     ...(banda === 8
-      ? [{ clave: "personas", valor: t.pop_mmi8p, etiqueta: "de ellas, en MMI≥8" }]
+      ? [{ clave: "personas", valor: t.pop_mmi8p, etiqueta: "de ellas, en sacudida severa (MMI≥8)" }]
       : []),
     {
       clave: "mayores",
@@ -1872,7 +1890,6 @@ function pintarMetricas(reporte) {
       // el resto de cifras grandes del panel.
       texto: `${miles(t.road_km_mmi7p)} km`,
       etiqueta: "de vía",
-      ancha: true,
       apunte: Number.isFinite(principal)
         ? `De ellos ${numero(principal)} km son primarias y secundarias; el resto es red local.`
         : null,
@@ -1987,6 +2004,16 @@ function contrasteDeTerreno(reporte, tipo, propia) {
   const pop = Number(gf[`${tipo}_pop_usgs`]);
   let texto = `USGS declara para este evento alerta <strong>${color}</strong>`;
   if (Number.isFinite(pop) && pop > 0) texto += `, con ${numero(pop)} expuestas`;
+  // DOS CIFRAS DISTINTAS NO SON UNA CONTRADICCION, PERO LO PARECEN.
+  // USGS multiplica la poblacion por la fraccion del suelo que fallaria; aqui
+  // se cuenta a toda la gente de las celdas donde esa probabilidad es alta.
+  // En Azuero: 102.000 contra 36.000, una junto a la otra y sin explicar
+  // (revision del 10-oct-2026).
+  if (Number.isFinite(pop) && pop > 0 && propia > 0) {
+    texto +=
+      ". Mide otra cosa: USGS pondera a cada persona por la probabilidad; " +
+      "arriba se cuenta a toda la gente de las zonas con probabilidad alta, por eso es mayor";
+  }
   if (!(propia > 0)) {
     texto +=
       ". El cero de arriba no dice que no haya exposición: dice que ninguna " +

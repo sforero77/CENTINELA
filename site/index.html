@@ -388,27 +388,12 @@
                Va arriba, junto a la época y antes de las cifras, porque es
                justamente para quien ya leyó la versión anterior y no quiere
                releer el reporte entero. -->
-          <section class="bloque" id="bloque-cambios" hidden>
-            <h3 class="eyebrow">Cambios frente a la versión anterior</h3>
-            <p class="subtitulo-bloque">Un ShakeMap se revisa muchas veces —el de Venezuela llegó a v16—. Esto es lo que se movió al reprocesar.</p>
-            <ul class="cambios" id="detalle-cambios"></ul>
-          </section>
 
           <!-- Cuanto territorio, antes de cuanta gente. El visor contaba
                personas, edificaciones y vias y no decia nunca sobre que
                superficie: "2,4 M en MMI≥7" no distingue una ciudad sacudida de
                media cordillera. Sale de contar las celdas que ya se dibujan. -->
-          <section class="bloque" id="bloque-area" hidden>
-            <h3 class="eyebrow">Área de afectación</h3>
-            <p class="subtitulo-bloque">Superficie de la malla contada, no la del ShakeMap: llega hasta donde hay algo expuesto, y por eso no entra en el mar.</p>
-            <div id="detalle-area"></div>
-          </section>
 
-          <section class="bloque" id="bloque-franjas">
-            <h3 class="eyebrow">Población por franja de intensidad</h3>
-            <p class="subtitulo-bloque">Cuánta gente vivía dentro de cada nivel de sacudida. Las franjas se acumulan: quien está en MMI≥7 también cuenta en MMI≥6.</p>
-            <ul class="franjas" id="detalle-franjas"></ul>
-          </section>
 
           <section class="bloque" id="bloque-metricas">
             <h3 class="eyebrow" id="titulo-metricas">Expuesto en MMI≥7</h3>
@@ -417,11 +402,6 @@
             <p class="nota-niveles"><span class="nivel" aria-hidden="true" data-muestra><i></i><i></i><i></i></span> Las barritas comparan cada cifra con los demás reportes publicados: una, baja; tres, de las más altas.</p>
           </section>
 
-          <section class="bloque" id="bloque-terreno" hidden>
-            <h3 class="eyebrow">Terreno: peligros secundarios</h3>
-            <p class="subtitulo-bloque">Deslizamientos y licuefacción: dos formas en que el suelo falla después del sismo, a veces lejos del epicentro.</p>
-            <ul class="terreno" id="detalle-terreno"></ul>
-          </section>
 
           <section class="bloque" id="bloque-municipios">
             <h3 class="eyebrow" id="titulo-municipios">Municipios más expuestos</h3>
@@ -429,17 +409,44 @@
             <ol class="barras" id="detalle-barras"></ol>
           </section>
 
+          <!-- DETALLE TECNICO, PLEGADO (10-oct-2026). Cinco bloques seguidos, cada
+               uno con su parrafo, entre las cifras y las descargas: «mucho texto,
+               no se entiende». Estan enteros y a un toque. -->
+          <details class="detalle-tecnico" id="detalle-tecnico">
+            <summary>Detalle técnico <span class="detalle-tecnico-pista">franjas, área, terreno, cambios e incertidumbre</span></summary>
+          <section class="bloque" id="bloque-franjas">
+            <h3 class="eyebrow">Población por franja de intensidad</h3>
+            <p class="subtitulo-bloque">Cuánta gente vivía dentro de cada nivel de sacudida. Las franjas se acumulan: quien está en MMI≥7 también cuenta en MMI≥6.</p>
+            <ul class="franjas" id="detalle-franjas"></ul>
+          </section>
+          <section class="bloque" id="bloque-area" hidden>
+            <h3 class="eyebrow">Área de afectación</h3>
+            <p class="subtitulo-bloque">Superficie de la malla contada, no la del ShakeMap: llega hasta donde hay algo expuesto, y por eso no entra en el mar.</p>
+            <div id="detalle-area"></div>
+          </section>
+          <section class="bloque" id="bloque-terreno" hidden>
+            <h3 class="eyebrow">Terreno: peligros secundarios</h3>
+            <p class="subtitulo-bloque">Deslizamientos y licuefacción: dos formas en que el suelo falla después del sismo, a veces lejos del epicentro.</p>
+            <ul class="terreno" id="detalle-terreno"></ul>
+          </section>
+          <section class="bloque" id="bloque-cambios" hidden>
+            <h3 class="eyebrow">Cambios frente a la versión anterior</h3>
+            <p class="subtitulo-bloque">Un ShakeMap se revisa muchas veces —el de Venezuela llegó a v16—. Esto es lo que se movió al reprocesar.</p>
+            <ul class="cambios" id="detalle-cambios"></ul>
+          </section>
+          <section class="bloque" id="bloque-incertidumbre" hidden>
+            <h3 class="eyebrow">Incertidumbre</h3>
+            <p class="subtitulo-bloque">Dos productos de población abiertos no cuentan lo mismo en la misma zona. Ésta es la distancia entre ellos, publicada en vez de escondida.</p>
+            <p class="apostilla" id="detalle-incertidumbre"></p>
+          </section>
+          </details>
+
           <section class="bloque" id="bloque-contraste" hidden>
             <h3 class="eyebrow">Contraste con evaluación de daño</h3>
             <p class="subtitulo-bloque">Cuántas de las edificaciones expuestas resultaron dañadas según una evaluación independiente. Es la comprobación de que exposición no es daño.</p>
             <p class="contraste" id="detalle-contraste"></p>
           </section>
 
-          <section class="bloque" id="bloque-incertidumbre" hidden>
-            <h3 class="eyebrow">Incertidumbre</h3>
-            <p class="subtitulo-bloque">Dos productos de población abiertos no cuentan lo mismo en la misma zona. Ésta es la distancia entre ellos, publicada en vez de escondida.</p>
-            <p class="apostilla" id="detalle-incertidumbre"></p>
-          </section>
 
           <section class="bloque">
             <h3 class="eyebrow">Descargas</h3>
