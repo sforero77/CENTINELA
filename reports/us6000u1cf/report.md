@@ -31,7 +31,14 @@ De la población en intensidad MMI≥7, alrededor de **290** personas tienen 65 
 
 ## Deslizamiento y licuefacción
 
-USGS no ha publicado el producto *Ground Failure* para este evento. La sección se omite; el reporte se re-emite automáticamente si aparece.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**. USGS declara para este evento alerta **amarilla**, con 5 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **3.400**. USGS declara para este evento alerta **amarilla**, con 1.000 expuestas.
+
+Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
+
+**Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
+
+Fuente: producto *Ground Failure* de USGS (v1), dominio público.
 
 ## Referencia cruzada
 
@@ -45,6 +52,9 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,7 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v1 (us) → v2 (us)
+- Ground Failure: v0 → v1 (us)
+- Población en cobertura areal alta por licuefacción: 0 → 3.400
 - ShakeMap: v0 → v1 (us)
 - Población en MMI≥6: 0 → 12 mil
 - Población en MMI≥7: 0 → 1.500
@@ -59,10 +69,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,7 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v1** de `us`
-- Ground Failure consumido: **ninguno** (no publicado aún)
+- ShakeMap consumido: **v2** de `us`
+- Ground Failure consumido: **v1** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-10T04:35:55Z
+- Pipeline: `0.1.0` · Generado: 2026-10-10T04:50:53Z
 
 ## Advertencias
 

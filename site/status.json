@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-10T04:50:21Z",
+  "generado_utc": "2026-10-10T04:50:57Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -25,8 +25,8 @@
       "publicado_utc": "2026-10-10T04:35:58Z",
       "minutos": 21.9,
       "backtest": false,
-      "shakemap": 1,
-      "actualizado_utc": ""
+      "shakemap": 2,
+      "actualizado_utc": "2026-10-10T04:50:56Z"
     },
     {
       "usgs_id": "pt26282001",
@@ -313,8 +313,8 @@
     "p50_min": 5.0,
     "p90_min": 5.0,
     "peor_min": 5.4,
-    "revisiones": 3695,
-    "latidos": 201
+    "revisiones": 3569,
+    "latidos": 200
   },
   "latidos": [
     {
