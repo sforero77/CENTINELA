@@ -134,8 +134,22 @@ def test_los_focos_distinguen_ilegible_de_sin_fuego() -> None:
 def test_el_estilo_base_que_no_llega_deja_un_mensaje() -> None:
     """El `setTimeout` retiraba el aviso pasara lo que pasara."""
     assert "setTimeout(listoOSinEstilo, 8000)" in APP
-    assert "El mapa base no cargó" in APP
+    assert "El mapa base está tardando" in APP
     assert 'anotarFallo("mapa-base"' in APP
+
+
+def test_el_aviso_del_mapa_base_no_miente_con_el_mapa_cargado() -> None:
+    """`isStyleLoaded()` da false mientras carga cualquier fuente.
+
+    Con `load` ya ocurrido y la malla o los focos entrando a los 8 s, el panel
+    decia "no cargó" sobre un mapa visible y nada lo quitaba (auditoria movil
+    del 10-oct-2026). Se decide por si hubo `load` o hay estilo, y `idle` lo
+    retira si llega tarde.
+    """
+    cuerpo = APP[APP.index("const listoOSinEstilo") : APP.index("setTimeout(listoOSinEstilo")]
+    assert "isStyleLoaded" not in cuerpo.split("anotarFallo")[0]
+    assert "cargo ||" in cuerpo
+    assert 'mapa.once("idle", listo)' in cuerpo
 
 
 @pytest.mark.parametrize(
