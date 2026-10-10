@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-10T21:50:18Z",
+  "generado_utc": "2026-10-10T22:00:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u1gs",
+      "mag": 5.3,
+      "lon": -95.2667,
+      "lat": -37.1165,
+      "depth_km": 10.0,
+      "lugar": "southeast of Easter Island",
+      "origen_utc": "2026-10-10T21:34:02Z",
+      "razon": "M5.3 < umbral M5.5",
+      "iso3": ""
+    },
     {
       "usgs_id": "us6000u1fk",
       "mag": 4.7,
