@@ -12,7 +12,7 @@
   },
   "inputs": {
     "shakemap_version": 8,
-    "groundfailure_version": 7,
+    "groundfailure_version": 8,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -40,8 +40,8 @@
     "edu_mmi7p": 611.0,
     "road_km_mmi7p": 8930.479026602576,
     "road_km_principal_mmi7p": 886.825717907577,
-    "pop_ls_alta": 715.7710379175842,
-    "pop_lq_alta": 89255.57628342905
+    "pop_ls_alta": 969.0953339384869,
+    "pop_lq_alta": 102292.77232186566
   },
   "top_municipios": [
     {
@@ -156,9 +156,9 @@
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "red",
-    "ls_pop_usgs": "600",
+    "ls_pop_usgs": "860",
     "lq_alerta_usgs": "orange",
-    "lq_pop_usgs": "28000"
+    "lq_pop_usgs": "36000"
   },
   "descargas": {
     "geoparquet": "",
@@ -167,6 +167,9 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Ground Failure: v7 (us) → v8 (us)",
+    "Población en probabilidad alta de deslizamiento: 720 → 970",
+    "Población en cobertura areal alta por licuefacción: 89 mil → 100 mil",
     "ShakeMap: v7 (us) → v8 (us)",
     "Población en MMI≥6: 620 mil → 710 mil",
     "Población en MMI≥7: 240 mil → 370 mil",
@@ -282,6 +285,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-09T23:51:13Z",
+  "generado_utc": "2026-10-10T00:11:14Z",
   "pipeline_version": "0.1.0"
 }
