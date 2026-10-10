@@ -130,62 +130,6 @@
       </span>
     </p>
 
-    <!-- LOS FILTROS, ARRIBA Y SOBRE EL MAPA.
-         Vivian debajo, dentro de la lista, y solo recortaban filas: elegir
-         "Colombia" dejaba veintiun epicentros repartidos por el continente. Un
-         filtro que dice una cosa y un mapa que ensena otra.
-
-         Son desplegables y no pastillas. Diecinueve paises en una fila de
-         pastillas son dos lineas de ruido que empujan el mapa fuera de la
-         pantalla; un desplegable ocupa lo mismo con uno que con cincuenta, y en
-         un telefono abre el selector nativo del sistema. Se visten como el
-         selector de evento de la cabecera (mismo chevron, misma pastilla) porque
-         hacen lo mismo: elegir que se mira. -->
-    <div class="filtros" id="barra-filtros">
-      <p class="filtros-titulo mono" id="filtros-titulo">Filtrar</p>
-
-      <label class="filtro" id="campo-pais" hidden>
-        <span class="mono">País</span>
-        <select id="filtro-paises" aria-label="Filtrar por país"></select>
-      </label>
-
-      <label class="filtro" id="campo-pais-fuego" hidden>
-        <span class="mono">País</span>
-        <select id="filtro-paises-fuego" aria-label="Filtrar focos por país"></select>
-      </label>
-
-      <label class="filtro" id="campo-ventana">
-        <span class="mono">Período</span>
-        <select id="ventana-lista" aria-label="Filtrar reportes por fecha"></select>
-      </label>
-
-      <label class="filtro" id="campo-ventana-fuego" hidden>
-        <span class="mono">Período</span>
-        <select id="ventana-focos" aria-label="Filtrar focos por hora de detección"></select>
-      </label>
-
-      <label class="filtro" id="campo-orden">
-        <span class="mono">Ordenar</span>
-        <select id="orden-lista" aria-label="Ordenar los reportes"></select>
-      </label>
-
-      <label class="filtro" id="campo-orden-fuego" hidden>
-        <span class="mono">Ordenar</span>
-        <select id="orden-focos" aria-label="Ordenar los focos"></select>
-      </label>
-
-      <label class="solo-en-vista" id="etiqueta-en-vista" hidden>
-        <input type="checkbox" id="solo-en-vista" />
-        <span>Solo lo que se ve en el mapa</span>
-      </label>
-
-      <p class="filtros-cuenta mono" id="cuenta-lista" aria-live="polite"></p>
-      <p class="filtros-cuenta mono" id="cuenta-focos" hidden aria-live="polite"></p>
-
-      <button type="button" class="filtros-limpiar" id="limpiar-filtros" hidden>
-        Quitar filtros
-      </button>
-    </div>
 
     <main class="tablero">
       <section class="lienzo" id="lienzo" aria-label="Mapa de exposición">
@@ -275,17 +219,83 @@
           <div id="bloque-panorama">
             <p class="eyebrow">Panorama</p>
             <div id="panorama"></div>
-            <p class="pista">
-              <!-- Decía «la malla hexagonal de 5,2 km² con la que se calcula», y
-                   el cálculo no va en esa malla: va en H3 r8 (0,74 km², la
-                   constante `H3_RES_COMPUTE`) y se agrega a r7 para dibujarlo
-                   (`H3_RES_VIEWER`). La frase daba por medido a 5,2 km² un dato
-                   que se mide siete veces más fino. -->
-              Elige un evento arriba, pulsa un epicentro en el mapa o abre uno de
-              la lista. Cada evento se dibuja sobre una malla hexagonal de
-              5,2&nbsp;km²; el cálculo va una resolución más fina (celdas de
-              0,74&nbsp;km²) y se agrega para pintarlo.
+            <p class="pista">Abre un sismo de la lista o pulsa su estrella en el mapa.</p>
+          </div>
+
+
+          <!-- UNA SOLA LISTA, CON SUS FILTROS AL LADO (10-oct-2026).
+               Los reportes salian tres veces —el selector de la cabecera, una
+               lista en este panel y otra en «Reportes publicados» al final de
+               la pagina— y los filtros vivian encima del mapa filtrando la de
+               abajo, pantallas mas lejos. Revision con el dueño: «muchas listas,
+               filtros mezclados». Ahora hay una lista, en el panel, con sus
+               filtros en su cabecera. En el telefono los filtros se pliegan en
+               un boton «Filtrar» que dice cuales estan puestos. -->
+          <details class="plegable-filtros" id="plegable-filtros" open>
+            <summary class="plegable-filtros-tirador"><span>Filtrar</span><span class="resumen-filtros" id="resumen-filtros"></span></summary>
+          <div class="filtros" id="barra-filtros">
+            <p class="filtros-titulo mono" id="filtros-titulo">Filtrar</p>
+
+            <label class="filtro" id="campo-pais" hidden>
+              <span class="mono">País</span>
+              <select id="filtro-paises" aria-label="Filtrar por país"></select>
+            </label>
+
+            <label class="filtro" id="campo-pais-fuego" hidden>
+              <span class="mono">País</span>
+              <select id="filtro-paises-fuego" aria-label="Filtrar focos por país"></select>
+            </label>
+
+            <label class="filtro" id="campo-ventana">
+              <span class="mono">Período</span>
+              <select id="ventana-lista" aria-label="Filtrar reportes por fecha"></select>
+            </label>
+
+            <label class="filtro" id="campo-ventana-fuego" hidden>
+              <span class="mono">Período</span>
+              <select id="ventana-focos" aria-label="Filtrar focos por hora de detección"></select>
+            </label>
+
+            <label class="filtro" id="campo-orden">
+              <span class="mono">Ordenar</span>
+              <select id="orden-lista" aria-label="Ordenar los reportes"></select>
+            </label>
+
+            <label class="filtro" id="campo-orden-fuego" hidden>
+              <span class="mono">Ordenar</span>
+              <select id="orden-focos" aria-label="Ordenar los focos"></select>
+            </label>
+
+            <label class="solo-en-vista" id="etiqueta-en-vista" hidden>
+              <input type="checkbox" id="solo-en-vista" />
+              <span>Solo lo que se ve en el mapa</span>
+            </label>
+
+            <p class="filtros-cuenta mono" id="cuenta-lista" aria-live="polite"></p>
+            <p class="filtros-cuenta mono" id="cuenta-focos" hidden aria-live="polite"></p>
+
+            <button type="button" class="filtros-limpiar" id="limpiar-filtros" hidden>
+              Quitar filtros
+            </button>
+          </div>
+          </details>
+
+          <div id="eventos" class="lista-panel">
+            <h2 class="lista-titulo">Reportes publicados</h2>
+            <p class="seccion-lema" id="lema-reportes">Cada uno lo calculó el mismo pipeline, sin intervención manual.</p>
+            <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
+            <ul class="lista-eventos" id="lista-eventos"></ul>
+            <p class="pista" id="sin-resultados" hidden></p>
+          </div>
+
+          <div id="focos" class="lista-panel" hidden>
+            <h2 class="lista-titulo">Focos activos</h2>
+            <p class="seccion-lema" id="lema-focos">
+              Celdas contiguas con detección de satélite en las últimas 24&nbsp;horas.
             </p>
+            <p class="cargando" id="estado-focos">Cargando focos&hellip;</p>
+            <ul class="lista-eventos" id="lista-focos"></ul>
+            <p class="pista" id="sin-focos" hidden></p>
           </div>
 
           <!-- Su equivalente en modo fuego: que hacer con el mapa que se ve. -->
@@ -440,21 +450,6 @@
     </main>
   </div>
 
-  <section id="eventos" class="graticula">
-    <span class="paralelo" style="top: 4.5rem" aria-hidden="true">12°N</span>
-    <span class="paralelo" style="bottom: 4.5rem" aria-hidden="true">4°N</span>
-    <div class="contenedor">
-      <h2>Reportes publicados</h2>
-      <p class="seccion-lema" id="lema-reportes">Cada uno lo calculó el mismo pipeline, sin intervención manual.</p>
-
-      <!-- Ordenar y recortar al encuadre. La lista respondia solo "¿que ha
-           pasado ultimamente?"; ahora tambien "¿cual fue el mas fuerte?",
-           "¿cual afecto a mas gente?" y "¿cuales caen donde estoy mirando?". -->
-      <p class="cargando" id="estado-lista">Cargando eventos&hellip;</p>
-      <ul class="lista-eventos" id="lista-eventos"></ul>
-      <p class="pista" id="sin-resultados" hidden></p>
-    </div>
-  </section>
 
   <!-- LOS MENORES, EL TERCER INDICE.
        Tenian estrella en el mapa, globo al hacer clic y un interruptor que
@@ -476,26 +471,6 @@
     </div>
   </section>
 
-  <!-- LA LISTA DE FOCOS, gemela de la de reportes y del otro lado del selector
-       de amenaza.
-       El fuego tenia mapa y panel de detalle pero ningun indice: para saber
-       cuales son los focos mas recientes, o los de un pais, habia que buscar
-       hexagonos a ojo entre cuatro mil. La lista de sismos responde "¿que ha
-       pasado ultimamente?" desde el primer dia; esta no respondia nada.
-       Su ventana temporal es distinta a proposito: el fuego es una foto de 24
-       horas, no un archivo de catorce anos. -->
-  <section id="focos" class="graticula" hidden>
-    <div class="contenedor">
-      <h2>Focos activos</h2>
-      <p class="seccion-lema" id="lema-focos">
-        Celdas contiguas con detección de satélite en las últimas 24&nbsp;horas.
-      </p>
-
-      <p class="cargando" id="estado-focos">Cargando focos&hellip;</p>
-      <ul class="lista-eventos" id="lista-focos"></ul>
-      <p class="pista" id="sin-focos" hidden></p>
-    </div>
-  </section>
 
   <section id="cobertura" class="cobertura">
     <div class="contenedor">

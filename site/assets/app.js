@@ -89,8 +89,11 @@ const ENCUADRE_UTIL = [
 //: respeta fronteras y hay focos en Guyana y Surinam. Aun asi las capas de datos
 //: se dibujan **por encima** de la mascara, asi que nada del dato se pierde por
 //: caer fuera; lo unico que se atenua es el mapa base.
+//: El oeste llega a -180: al oeste de -122 solo hay Pacifico, y velarlo
+//: dibujaba en PC una franja blanca de borde recto a la izquierda del mapa que
+//: se leia como un mapa roto (revision del 10-oct-2026).
 const CAJA_MASCARA = [
-  [-122.0, -58.0],
+  [-180.0, -58.0],
   [-28.0, 35.0],
 ];
 
@@ -920,6 +923,10 @@ async function cargarEventos() {
 
     pintarFiltroPaises(eventos, nombres);
     pintarControlesLista();
+    // En el telefono los filtros arrancan plegados en su boton: la lista es lo
+    // que se viene a ver. En pantalla ancha quedan abiertos, que sobra sitio.
+    const plegable = $("plegable-filtros");
+    if (plegable && window.matchMedia && window.matchMedia(ESTRECHA).matches) plegable.open = false;
     refrescarLista({ anunciando: false });
 
     const url = leerUrl();
@@ -960,8 +967,8 @@ async function cargarEventos() {
     aviso.hidden = false;
     // Sin indice, los filtros son desplegables vacios: dos chevrones sin texto
     // que prometen algo que no hay.
-    const filtros = $("barra-filtros");
-    if (filtros) filtros.style.display = "none";
+    const filtros = $("plegable-filtros");
+    if (filtros) filtros.hidden = true;
     aviso.textContent =
       "No se pudo leer el índice de reportes. No significa que no haya ninguno: " +
       "significa que esta página no consiguió la lista. Recargar suele bastar; " +
@@ -1057,30 +1064,7 @@ function pintarPanorama(eventos) {
         `<span class="valor">${paises}</span></span>` +
         `<span class="etiqueta">países con reporte</span></div>`
       : "") +
-    `</div>` +
-    `<ul class="panorama-lista">` +
-    eventos
-      .map(
-        (e) =>
-          `<li><button type="button" data-usgs-id="${escapar(e.usgs_id)}">` +
-          `<span class="titulo">M${String(e.mag).replace(".", ",")} — ${escapar(e.lugar)}</span>` +
-          `<span class="pie">${comoFecha(e.utc, false)} · ${
-            bandaTitular(e).banda
-              ? `${comoConteo(bandaTitular(e).pop)} en MMI≥${bandaTitular(e).banda}`
-              : "sin población en MMI≥6"
-          }${e.backtest ? " · retrospectivo" : ""}</span></button></li>`
-      )
-      .join("") +
-    `</ul>` +
-    (enVivo === 0
-      ? `<p class="pista">Ninguno se emitió en vivo todavía: ` +
-        `${eventos.length === 1 ? "es una reconstrucción retrospectiva" :
-          `los ${nf.format(eventos.length)} son reconstrucciones retrospectivas`} ` +
-        `de sismos ya ocurridos, con los productos que USGS publicó entonces. ` +
-        `Son la prueba de qué habría informado el sistema, y de que funciona en ` +
-        `cada país donde se corrieron.</p>`
-      : `<p class="pista">${nf.format(enVivo)} de ${nf.format(eventos.length)} se ` +
-        `emitieron en vivo; el resto son reconstrucciones retrospectivas.</p>`);
+    `</div>`;
 
   for (const boton of caja.querySelectorAll("[data-usgs-id]")) {
     boton.addEventListener("click", () => seleccionar(boton.dataset.usgsId));
@@ -1154,6 +1138,7 @@ function filaEvento(evento) {
   li.dataset.mag = String(Number(evento.mag) || 0);
   li.dataset.pop = String(bandaTitular(evento).pop || 0);
   li.dataset.utc = evento.utc || "";
+  if (evento.backtest) li.dataset.backtest = "1";
 
   const cabecera = document.createElement("div");
   cabecera.className = "evento-cabecera";
@@ -1181,11 +1166,11 @@ function filaEvento(evento) {
 
   const meta = document.createElement("p");
   meta.className = "evento-meta";
+  // La version de ShakeMap salia en cada tarjeta y es dato de quien audita:
+  // vive en el panel del evento, donde ademas se dice que cambio.
   meta.textContent = [
     comoFecha(evento.utc, false),
-    `ShakeMap v${evento.shakemap_version}`,
     evento.preliminar ? "preliminar" : null,
-    evento.backtest ? "retrospectivo" : null,
   ].filter(Boolean).join(" · ");
 
   li.append(cabecera, meta);
@@ -2699,6 +2684,7 @@ function aplicarAmenaza() {
   const seccionFocos = $("focos");
   if (seccionEventos) seccionEventos.hidden = fuego;
   if (seccionFocos) seccionFocos.hidden = !fuego || !estado.focos.length;
+  pintarResumenFiltros();
   // La de menores sigue a la de reportes: es del lado sismico, y solo existe
   // si el vigia ya escribio algo.
   const seccionMenores = $("menores");
@@ -4584,6 +4570,16 @@ function refrescarLista({ anunciando = true } = {}) {
   filas
     .slice()
     .sort((a, b) => {
+      // EN VIVO PRIMERO. La lista mezclaba los reportes que el sistema emitio
+      // solo con las reconstrucciones de sismos de 2016 o 2019, y nada los
+      // distinguia salvo una palabra en la linea de metadatos.
+      // Solo al ordenar por fecha: por magnitud o por personas se pide un
+      // ranking, y partirlo en dos lo esconderia.
+      if (estado.orden === "fecha" || !ORDENES[estado.orden]) {
+        const ga = a.dataset.backtest === "1" ? 1 : 0;
+        const gb = b.dataset.backtest === "1" ? 1 : 0;
+        if (ga !== gb) return ga - gb;
+      }
       const va = orden.clave(a);
       const vb = orden.clave(b);
       // Descendente en las tres: lo mas reciente, lo mas fuerte y lo que mas
@@ -4597,6 +4593,8 @@ function refrescarLista({ anunciando = true } = {}) {
     li.hidden = !pasaFiltros(li);
     if (!li.hidden) visibles += 1;
   }
+  marcarGrupos(lista);
+  pintarResumenFiltros();
 
   for (const boton of document.querySelectorAll("#ventana-lista button")) {
     boton.setAttribute("aria-pressed", String(boton.dataset.ventana === estado.ventana));
@@ -4647,6 +4645,47 @@ function refrescarLista({ anunciando = true } = {}) {
   if (anunciando) {
     anunciar(`${visibles} ${visibles === 1 ? "reporte" : "reportes"} en la lista.`);
   }
+}
+
+//: El rotulo de cada grupo lo pone CSS sobre la primera fila visible del
+//: grupo (`.inicio-grupo` con `data-grupo`). Una fila de cabecera dentro del
+//: `<ul>` se colaria en cada `querySelectorAll("li")` que ordena, filtra y
+//: cuenta.
+function marcarGrupos(lista) {
+  const porFecha = estado.orden === "fecha" || !ORDENES[estado.orden];
+  const visibles = porFecha ? [...lista.children].filter((li) => !li.hidden) : [];
+  const hayVivo = visibles.some((li) => li.dataset.backtest !== "1");
+  const hayPasado = visibles.some((li) => li.dataset.backtest === "1");
+  let previo = null;
+  for (const li of visibles) {
+    const grupo = li.dataset.backtest === "1" ? "pasado" : "vivo";
+    const inicio = grupo !== previo && hayVivo && hayPasado;
+    li.classList.toggle("inicio-grupo", inicio);
+    if (inicio) li.dataset.grupo = grupo;
+    else delete li.dataset.grupo;
+    previo = grupo;
+  }
+  for (const li of lista.children) if (li.hidden) li.classList.remove("inicio-grupo");
+}
+
+//: Lo que dice el boton «Filtrar» plegado: los filtros puestos, en palabras.
+//: Sin esto, en el telefono no se sabria que la lista esta recortada.
+function pintarResumenFiltros() {
+  const caja = $("resumen-filtros");
+  if (!caja) return;
+  const fuego = estado.amenaza === "fuego";
+  const partes = [];
+  const pais = fuego ? estado.paisFuego : estado.paisFiltrado;
+  if (pais) partes.push(nombrePais(pais));
+  if (fuego) {
+    const v = VENTANAS_FUEGO[estado.ventanaFuego];
+    if (v && estado.ventanaFuego !== "h24") partes.push(v.texto);
+  } else {
+    const v = VENTANAS[estado.ventana];
+    if (v && estado.ventana !== "todo") partes.push(v.texto);
+  }
+  if (estado.soloEnVista) partes.push("lo que se ve");
+  caja.textContent = partes.length ? partes.join(" · ") : "";
 }
 
 //: Por que la lista se quedo vacia, nombrando el filtro culpable.
@@ -5569,6 +5608,7 @@ function filaFoco(foco) {
 }
 
 function pintarListaFocos({ anunciando = true } = {}) {
+  pintarResumenFiltros();
   const lista = $("lista-focos");
   if (!lista || !estado.focos.length) return;
 

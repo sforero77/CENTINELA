@@ -2710,10 +2710,7 @@ thead th {
   /* Sin evento abierto los filtros de la lista siguen encima del mapa: se
      descuenta su fila para que el pie del mapa y la atribucion no caigan
      debajo del pliegue. */
-  body:has(#lateral-detalle[hidden]) .lienzo {
-    height: calc(100vh - 10rem);
-    height: calc(100svh - 10rem);
-  }
+
 
   /* Los controles del mapa, mas chicos: 38 px de alto, por encima de los 24 de
      WCAG 2.5.8 AA. Cada pixel de control aqui es un pixel de mapa. */
@@ -2756,7 +2753,6 @@ thead th {
   /* Con un evento abierto, los filtros de la lista de abajo no van encima del
      mapa: eran 60 px de la primera pantalla para una lista que no se ve. Al
      volver al panorama reaparecen. */
-  body:has(#lateral-detalle:not([hidden])) #barra-filtros { display: none; }
 
   /* Lo que se salta con un enlace o un `scrollIntoView` no puede quedar
      debajo de la cabecera fija. */
@@ -2876,3 +2872,108 @@ thead th {
   box-shadow: var(--sombra-corta);
   pointer-events: none;
 }
+
+/* --- Una sola lista, en el panel, con sus filtros (10-oct-2026) ------------
+
+   La lista de reportes y la de focos viven ahora en el panel lateral, debajo
+   de las cifras del panorama, con los filtros en su cabecera. En PC el panel
+   es una columna que se desplaza sola junto al mapa; en el telefono va debajo
+   del mapa y los filtros se pliegan en un boton. */
+.plegable-filtros {
+  margin: 1.1rem 0 0.4rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-medio);
+  background: var(--crema-honda, rgba(28, 51, 40, 0.03));
+}
+.plegable-filtros-tirador {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--bosque);
+}
+.plegable-filtros-tirador::-webkit-details-marker { display: none; }
+.plegable-filtros-tirador::after { content: "▾"; margin-left: auto; color: var(--tenue); }
+.plegable-filtros:not([open]) > .plegable-filtros-tirador::after { content: "▸"; }
+.plegable-filtros-tirador:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+.resumen-filtros {
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--verde);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plegable-filtros > .filtros {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.6rem;
+  padding: 0.2rem 0.9rem 0.85rem;
+  margin: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.plegable-filtros > .filtros > .filtros-titulo { display: none; }
+.plegable-filtros .filtro { flex: 1 1 9rem; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+.plegable-filtros .filtro select { width: 100%; }
+.plegable-filtros .solo-en-vista { flex: 1 1 100%; }
+.plegable-filtros .filtros-cuenta { flex: 1 1 auto; margin: 0; align-self: center; }
+
+.lista-panel { margin-top: 1rem; }
+.lista-panel[hidden] { display: none; }
+.lista-titulo { font-size: 1.1rem; margin: 0 0 0.2rem; }
+.lista-panel .seccion-lema { margin: 0 0 0.8rem; font-size: 0.82rem; }
+
+/* Tarjetas compactas: una columna, magnitud, lugar, fecha y la cifra. */
+.lateral .lista-eventos { grid-template-columns: 1fr; gap: 0.5rem; }
+.lateral .lista-eventos li { padding: 0.7rem 0.85rem; border-radius: var(--radio-medio); }
+.lateral .lista-eventos li:hover { transform: none; box-shadow: none; }
+.lateral .lista-eventos a { font-size: 0.95rem; }
+.lateral .evento-mag { font-size: 0.85rem; padding: 0.05rem 0.5rem; }
+.lateral .evento-meta { margin-top: 0.25rem; }
+.lateral .evento-cifra { padding-top: 0.35rem; font-size: 1.05rem; }
+
+/* El rotulo de cada grupo, sobre su primera fila visible. */
+.lista-eventos li.inicio-grupo { position: relative; margin-top: 1.9rem; }
+.lista-eventos li.inicio-grupo:first-child { margin-top: 1.6rem; }
+.lista-eventos li.inicio-grupo::before {
+  position: absolute;
+  left: 0;
+  top: -1.55rem;
+  font-family: var(--tipo-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--verde);
+}
+.lista-eventos li.inicio-grupo[data-grupo="vivo"]::before { content: "En vivo"; }
+.lista-eventos li.inicio-grupo[data-grupo="pasado"]::before { content: "Reconstrucciones de sismos pasados"; }
+
+/* Las cifras del panorama, en una fila corta encima de la lista: las tres
+   juntas y sin la linea de apunte, que es el detalle del sismo mayor. */
+#panorama .metricas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#panorama .metrica { padding: 0.6rem 0.7rem; }
+#panorama .metrica .valor { font-size: 1.15rem; }
+#panorama .metrica .apunte { display: none; }
+#panorama .metrica .etiqueta { letter-spacing: 0.04em; }
+#panorama .metrica:last-child:nth-child(odd) { grid-column: auto; }
+
+.plegable-filtros .filtro { align-items: stretch; text-align: left; }
+.lateral #eventos, .lateral #focos { padding: 0; }
+#eventos.lista-panel h2, #focos.lista-panel h2 { font-size: 1.1rem; margin: 0 0 0.2rem; }
+
+/* EN SISMOS EL PANEL ABRE CON LA LISTA (decision del dueño, 10-oct-2026).
+   La tarjeta «ahora mismo» —los sismos vistos sin reporte y su «ver en el
+   mapa»— baja al final del panel. En fuego sigue arriba: alli es la cifra
+   principal. `#focos[hidden]` es el modo sismos. */
+#lateral-vacio { display: flex; flex-direction: column; }
+#lateral-vacio[hidden] { display: none; }
+#lateral-vacio:has(#focos[hidden]) > #en-vivo { order: 10; margin-top: 1.5rem; }

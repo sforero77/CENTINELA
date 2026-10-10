@@ -1190,7 +1190,9 @@ def test_la_lista_se_recorta_al_encuadre_del_mapa(pagina: Any) -> None:
     pagina.select_option("select", "us6000tjl2")
     _esperar_capa(pagina, "celdas", desde=marca)
 
-    pagina.locator("#solo-en-vista").check()
+    # Con un evento abierto la lista y sus filtros quedan detras del panel del
+    # evento; el filtro sigue vivo y se acciona por script.
+    pagina.locator("#solo-en-vista").evaluate("e => { if (!e.checked) e.click(); }")
     pagina.wait_for_function(
         "(n) => document.querySelectorAll('#lista-eventos li:not([hidden])').length < n",
         arg=todos,
@@ -1434,7 +1436,7 @@ def test_un_enlace_profundo_deja_la_camara_sobre_su_evento(navegador: Any, servi
         # no haga— lo suyo.
         pg.wait_for_timeout(5000)
 
-        pg.locator("#solo-en-vista").check()
+        pg.locator("#solo-en-vista").evaluate("e => { if (!e.checked) e.click(); }")
         pg.wait_for_timeout(600)
 
         en_vista = pg.evaluate(
@@ -2334,24 +2336,27 @@ def test_el_filtro_de_pais_tambien_recorta_la_tarjeta_y_la_lista_de_menores(
 
 
 def test_los_filtros_son_desplegables_y_estan_arriba(pagina: Any) -> None:
-    """Diecinueve países en una fila de pastillas son dos líneas de ruido que
-    empujan el mapa fuera de la pantalla.
+    """Desplegables, y en la cabecera de la lista que filtran.
 
-    Un desplegable ocupa lo mismo con uno que con cincuenta, y en un teléfono
-    abre el selector nativo. Y arriba, no debajo: un filtro que gobierna el mapa
-    tiene que verse junto al mapa.
+    Diecinueve países en una fila de pastillas son dos líneas de ruido; un
+    desplegable ocupa lo mismo con uno que con cincuenta. Hasta el 10-oct-2026
+    vivian encima del mapa y filtraban una lista que estaba pantallas mas
+    abajo; en la revision con el dueño («filtros mezclados») pasaron al panel,
+    justo encima de la unica lista.
     """
+    _esperar_capa(pagina, "epicentros")
     barra = pagina.locator("#barra-filtros")
     assert barra.is_visible()
 
     orden = pagina.evaluate(
         """() => {
           const b = document.getElementById('barra-filtros').getBoundingClientRect();
-          const m = document.getElementById('mapa').getBoundingClientRect();
-          return b.top < m.top;
+          const l = document.getElementById('lista-eventos').getBoundingClientRect();
+          const enPanel = !!document.getElementById('barra-filtros').closest('#lateral');
+          return b.bottom <= l.top && enPanel;
         }"""
     )
-    assert orden, "la barra de filtros está por debajo del mapa"
+    assert orden, "los filtros no estan en el panel, encima de la lista que filtran"
 
     for campo in ("#filtro-paises", "#ventana-lista", "#orden-lista"):
         assert pagina.locator(campo).evaluate("e => e.tagName") == "SELECT", (
@@ -3162,7 +3167,7 @@ def test_el_panorama_del_panel_obedece_al_filtro(pagina: Any) -> None:
     assert "Colombia" not in panorama, (
         f"con Venezuela elegido el panel sigue nombrando un evento de Colombia: {panorama[:200]!r}"
     )
-    filas = pagina.locator("#panorama .panorama-lista li").count()
+    filas = pagina.locator("#lista-eventos li:not([hidden])").count()
     assert filas == 3, f"el panel lista {filas} eventos con un filtro que deja 3"
 
 
