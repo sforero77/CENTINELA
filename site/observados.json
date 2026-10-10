@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-10T08:10:22Z",
+  "generado_utc": "2026-10-10T08:15:19Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u1dc",
+      "mag": 4.6,
+      "lon": -80.5348,
+      "lat": 7.6182,
+      "depth_km": 10.0,
+      "lugar": "6 km al SSE de Llano de Piedra, Panamá",
+      "origen_utc": "2026-10-10T07:13:30Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "PAN"
+    },
     {
       "usgs_id": "us6000u1db",
       "mag": 4.5,
