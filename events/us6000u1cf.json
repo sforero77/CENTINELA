@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us6000u1cf",
+  "estado": "detectado",
+  "mag": 6.0,
+  "lon": -80.5985,
+  "lat": 7.5068,
+  "depth_km": 10.0,
+  "lugar": "7 km al N de La Tronosa, Panamá",
+  "origen_utc": "2026-10-10T04:14:01Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-10-10T04:30:22Z",
+    "usgs_origen": "2026-10-10T04:14:01Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
