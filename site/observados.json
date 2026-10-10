@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-10T06:50:22Z",
+  "generado_utc": "2026-10-10T07:00:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -13,6 +13,17 @@
       "lugar": "26 km al SSE de Pedasí, Panamá",
       "origen_utc": "2026-10-10T06:30:03Z",
       "razon": "M4.9 < umbral M5.5",
+      "iso3": "PAN"
+    },
+    {
+      "usgs_id": "us6000u1d5",
+      "mag": 4.7,
+      "lon": -79.9827,
+      "lat": 7.2969,
+      "depth_km": 10.0,
+      "lugar": "26 km al S de Pedasí, Panamá",
+      "origen_utc": "2026-10-10T06:27:09Z",
+      "razon": "M4.7 < umbral M5.5",
       "iso3": "PAN"
     },
     {
