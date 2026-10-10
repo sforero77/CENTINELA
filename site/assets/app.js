@@ -4915,6 +4915,7 @@ function dibujarObservados(eventos) {
 function pintarAvisoDeLectura() {
   const texto = $("aviso-lectura-texto");
   if (!texto) return;
+  prepararAvisoPlegable();
   texto.innerHTML =
     estado.amenaza === "fuego"
       ? `<strong>Exposición no es daño.</strong> Un foco es lo que un satélite ` +
@@ -4924,6 +4925,33 @@ function pintarAvisoDeLectura() {
       : `<strong>Exposición no es daño.</strong> No es una alerta temprana, no ` +
         `estima víctimas y no dictamina habitabilidad. Informa cuánta población e ` +
         `infraestructura quedó <em>dentro</em> de cada franja de intensidad.`;
+}
+
+//: EL AVISO EN UNA LINEA, EN UN TELEFONO.
+//:
+//: Cinco lineas de aviso mas la cabecera eran 300 px antes del mapa en 390x844
+//: (captura del dueño, 10-oct-2026: «esta apretado, no es protagonista el
+//: mapa»). En pantalla estrecha el aviso se recorta a su primera linea —que
+//: empieza siempre por «Exposición no es daño.»— y un boton lo despliega. El
+//: recorte es CSS (`.aviso:not(.abierto)`), asi que en escritorio no cambia.
+function prepararAvisoPlegable() {
+  const aviso = $("aviso-lectura");
+  if (!aviso || $("aviso-mas")) return;
+  const boton = document.createElement("button");
+  boton.type = "button";
+  boton.id = "aviso-mas";
+  boton.className = "aviso-mas";
+  boton.setAttribute("aria-controls", "aviso-lectura-texto");
+  const fijar = (abierto) => {
+    aviso.classList.toggle("abierto", abierto);
+    boton.setAttribute("aria-expanded", String(abierto));
+    boton.textContent = abierto ? "Menos" : "Más";
+  };
+  boton.addEventListener("click", () => fijar(!aviso.classList.contains("abierto")));
+  fijar(false);
+  // Dentro del aviso y no detras: queda anclado a su esquina y el recorte de
+  // una linea no lo esconde, porque cae en el relleno derecho de la caja.
+  aviso.appendChild(boton);
 }
 
 //: Las entradas de la leyenda, para el estado en que esta el mapa AHORA.
