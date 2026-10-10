@@ -137,8 +137,16 @@ def test_todo_reporte_publicado_trae_su_area_de_afectacion() -> None:
 
     Los emitidos antes de que el fichero existiera se rellenan con
     `centinela contornos`, que los trae de USGS sin recomputar el impacto.
+
+    Un preliminar no los trae, y es legitimo: sale antes de que USGS publique
+    el ShakeMap del que se sacan las isolineas. El 9-oct-2026 el M7,7 de Panama
+    puso esta prueba en rojo durante los 25 minutos de su preliminar.
     """
-    reportes = sorted(p.parent.name for p in (RAIZ / "reports").glob("*/report.json"))
+    reportes = sorted(
+        p.parent.name
+        for p in (RAIZ / "reports").glob("*/report.json")
+        if not json.loads(p.read_text(encoding="utf-8")).get("preliminar")
+    )
     sin_contornos = [r for r in reportes if not (RAIZ / "reports" / r / "contornos.json").is_file()]
 
     assert sin_contornos == [], (
