@@ -742,6 +742,9 @@ def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, a
 
     # Y el modo fuego, que es un estado nuevo con su propia leyenda grande.
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    # En el telefono la leyenda del fuego arranca plegada (10-oct-2026); se abre
+    # a mano para medir el peor estado, que es el que alguien puede tener.
+    pagina.evaluate("() => { document.getElementById('pie-mapa').open = true; }")
     pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
     pagina.wait_for_timeout(800)
 
