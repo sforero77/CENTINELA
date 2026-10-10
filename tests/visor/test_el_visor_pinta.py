@@ -742,6 +742,9 @@ def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, a
 
     # Y el modo fuego, que es un estado nuevo con su propia leyenda grande.
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    # En el telefono la leyenda del fuego arranca plegada (10-oct-2026); se abre
+    # a mano para medir el peor estado, que es el que alguien puede tener.
+    pagina.evaluate("() => { document.getElementById('pie-mapa').open = true; }")
     pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
     pagina.wait_for_timeout(800)
 
@@ -838,9 +841,12 @@ def test_las_cajas_del_mapa_no_se_comen_el_mapa(
     )
 
     # Y el modo fuego, que trae la leyenda mas grande que pinta este visor.
+    # En el telefono arranca plegada desde el 10-oct-2026; se abre para medir
+    # el peor caso, que es lo que esta prueba defiende.
     _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_selector("#leyenda:not([hidden])", state="attached", timeout=ESPERA_MS)
+    pagina.evaluate("() => { document.getElementById('pie-mapa').open = true; }")
     pagina.wait_for_timeout(800)
 
     medida = pagina.evaluate(SONDA_TAPADO)
@@ -880,7 +886,10 @@ def test_el_pie_del_mapa_se_pliega_y_devuelve_el_mapa(pagina: Any) -> None:
     assert pagina.locator("#leyenda").is_visible(), "abierto el pie, la leyenda no se ve"
     abierto = pagina.evaluate(SONDA_TAPADO)["pct"]
 
-    assert plegado <= abierto - 15, (
+    # Proporcion y no puntos: con el mapa a pantalla completa (10-oct-2026) la
+    # leyenda abierta tapa el 15 % y no el 35 %, y una resta fija de 15 puntos
+    # ya no distingue «devuelve mapa» de «no hace nada».
+    assert plegado * 2 <= abierto, (
         f"plegar el pie no devuelve mapa: {abierto} % tapado abierto, {plegado} % plegado"
     )
 
@@ -2197,19 +2206,27 @@ def test_cada_amenaza_tiene_su_indice_y_solo_uno_a_la_vez(pagina: Any) -> None:
 
 
 def test_los_focos_se_listan_por_lo_mas_reciente(pagina: Any) -> None:
-    """La pregunta que trae a alguien a un mapa de fuego es qué arde AHORA.
+    """Abre por personas cerca; «Reciente» sigue a un toque y ordena de verdad.
 
-    Por eso «Reciente» es el orden por defecto y no la energía, que es lo que
-    ordena la capa del mapa.
+    Hasta el 10-oct-2026 «Reciente» era el orden por defecto («qué arde
+    AHORA»). En la revision con el dueño se eligio abrir con donde hay mas gente
+    cerca, que es lo que pide atencion; la pregunta de «ahora» se responde con
+    el mismo desplegable.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     _con_fuego(pagina, "focos")
     pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
 
-    assert pagina.locator("#orden-focos").input_value() == "reciente", (
-        "no ordena por reciente al abrir"
+    assert pagina.locator("#orden-focos").input_value() == "personas", (
+        "no ordena por personas al abrir"
     )
+    personas = pagina.eval_on_selector_all(
+        "#lista-focos li", "els => els.map(e => Number(e.dataset.pop) || 0)"
+    )
+    assert personas == sorted(personas, reverse=True), "las filas no van de más a menos gente"
 
+    pagina.select_option("#orden-focos", "reciente")
+    pagina.wait_for_timeout(500)
     sellos = pagina.eval_on_selector_all(
         "#lista-focos li", "els => els.map(e => e.dataset.utc).filter(Boolean)"
     )
@@ -2564,6 +2581,8 @@ def test_pinchar_un_menor_lo_enciende_en_el_mapa(pagina: Any) -> None:
     casilla = pagina.locator("#interruptor-observados input")
     assert not casilla.is_checked(), "la capa debería nacer apagada"
 
+    # La lista arranca plegada desde el 10-oct-2026.
+    pagina.locator("#menores-plegable > summary").click()
     pagina.locator("#lista-menores .menor-lugar").first.click()
     pagina.wait_for_timeout(800)
 
@@ -4167,16 +4186,16 @@ def test_el_rotulo_de_la_tarjeta_de_fuego_sigue_a_la_ventana_elegida(pagina: Any
         texto: str = pagina.locator("#en-vivo").inner_text()
         return texto
 
-    assert "detecciones en 24" in apunte().replace("\u00a0", " ")
+    assert "satélite en 24" in apunte().replace("\u00a0", " ")
 
     pagina.select_option("#ventana-focos", "h6")
     pagina.wait_for_timeout(900)
 
     ahora = apunte().replace("\u00a0", " ")
-    assert "detecciones en 6 h" in ahora, (
+    assert "satélite en 6 h" in ahora, (
         f"la tarjeta recorta por 6 h y sigue rotulando otra ventana: {ahora!r}"
     )
-    assert "detecciones en 24 h" not in ahora
+    assert "satélite en 24 h" not in ahora
 
 
 def test_cerrar_el_detalle_borra_de_verdad_las_tres_capas(pagina: Any) -> None:
