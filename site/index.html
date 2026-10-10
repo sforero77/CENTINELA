@@ -469,12 +469,20 @@
        que pasa es que nadie lo midio. -->
   <section id="menores" class="graticula" hidden>
     <div class="contenedor">
+      <!-- EN UNA LINEA, PLEGADA (10-oct-2026). Eran 45 tarjetas iguales —«Sin
+           medición, M5,0 < umbral M5,5»— que ocupaban casi tanto como los
+           reportes reales. Ahora una linea dice cuantos son; al abrirla, filas
+           compactas. La casilla que los dibuja en el mapa vivia en la caja del
+           mapa y nadie la entendia sin leer: vive aqui, junto a ellos. -->
       <h2>Sismos menores, vistos y no reportados</h2>
       <p class="seccion-lema" id="lema-menores">
         Por debajo del umbral de reporte. Se vieron; no se midió su impacto.
       </p>
-
-      <ul class="lista-eventos" id="lista-menores"></ul>
+      <div class="menores-controles" id="menores-controles"></div>
+      <details class="menores-plegable" id="menores-plegable">
+        <summary>Ver la lista</summary>
+        <ul class="lista-eventos lista-menores" id="lista-menores"></ul>
+      </details>
     </div>
   </section>
 
@@ -483,12 +491,20 @@
     <div class="contenedor">
       <h2 id="titulo-cobertura">Cobertura regional</h2>
       <p class="seccion-lema">
-        Un sismo no espera a que su país esté listo. El activo de exposición se
-        construye por adelantado, país por país, y se mide contra la cifra
-        oficial de su instituto de estadística o de la ONU antes de publicarse.
+        Los países se preparan antes de que ocurra un sismo, para publicar en minutos.
       </p>
 
       <div class="metricas" id="cobertura-resumen"></div>
+
+      <!-- LA TABLA POR PAIS, PLEGADA (10-oct-2026). «Desvío vs. oficial» y la
+           nota sobre la malla son de auditoria; quien llega desde una historia
+           se queda con las cifras de arriba. -->
+      <details class="cobertura-plegable" id="cobertura-plegable">
+        <summary>Ver por país</summary>
+        <p class="seccion-lema">
+          El activo de exposición de cada país se mide contra la cifra oficial de su
+          instituto de estadística o de la ONU antes de publicarse.
+        </p>
 
       <!-- El desplazamiento va en este contenedor y NO en la propia tabla.
            `display: block` sobre un <table> le quita su rol implicito: el
@@ -518,6 +534,7 @@
       <p class="tabla-pista" aria-hidden="true">Desliza la tabla para ver el desvío y los reportes &rarr;</p>
 
       <p class="apostilla" id="cobertura-nota"></p>
+      </details>
     </div>
   </section>
 

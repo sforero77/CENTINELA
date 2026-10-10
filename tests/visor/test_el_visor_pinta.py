@@ -2564,6 +2564,8 @@ def test_pinchar_un_menor_lo_enciende_en_el_mapa(pagina: Any) -> None:
     casilla = pagina.locator("#interruptor-observados input")
     assert not casilla.is_checked(), "la capa debería nacer apagada"
 
+    # La lista arranca plegada desde el 10-oct-2026.
+    pagina.locator("#menores-plegable > summary").click()
     pagina.locator("#lista-menores .menor-lugar").first.click()
     pagina.wait_for_timeout(800)
 
