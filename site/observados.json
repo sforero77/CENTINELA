@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-10T01:30:22Z",
+  "generado_utc": "2026-10-10T01:35:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -13,6 +13,17 @@
       "lugar": "10 km al N de La Tronosa, Panamá",
       "origen_utc": "2026-10-10T01:11:47Z",
       "razon": "M4.7 < umbral M5.5",
+      "iso3": "PAN"
+    },
+    {
+      "usgs_id": "us6000u1b5",
+      "mag": 4.8,
+      "lon": -80.2957,
+      "lat": 7.4053,
+      "depth_km": 10.0,
+      "lugar": "5 km al SO de Cañas, Panamá",
+      "origen_utc": "2026-10-10T00:03:04Z",
+      "razon": "M4.8 < umbral M5.5",
       "iso3": "PAN"
     },
     {
