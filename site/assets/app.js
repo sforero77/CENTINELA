@@ -5168,7 +5168,8 @@ function pintarLeyendaSimbolos() {
 }
 
 function pintarInterruptorObservados(eventos, ventanaDias) {
-  const anfitrion = $("controles-mapa") || $("leyenda") || $("mapa");
+  // En la cabecera de su lista y no en la caja del mapa (10-oct-2026).
+  const anfitrion = $("menores-controles") || $("controles-mapa") || $("mapa");
   if (!anfitrion) return;
 
   const rotulo =
@@ -5193,7 +5194,7 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
   caja.id = "interruptor-observados";
   caja.innerHTML =
     `<input type="checkbox"> ` +
-    `<span>Sismos menores vistos <span class="menor">${rotulo}</span></span>`;
+    `<span>Mostrarlos en el mapa <span class="menor">${rotulo}</span></span>`;
   // Nace obedeciendo al modo: las capas cargan en paralelo y este control puede
   // crearse despues de que el selector de amenaza ya se aplico.
   caja.hidden = estado.amenaza === "fuego";

@@ -14,6 +14,17 @@ const escapar = (s) =>
 
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
+//: «9 oct 20:25»: el año solo si no es el de hoy. En un telefono la fecha
+//: larga partia cada celda en dos lineas.
+function comoFechaCorta(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso || "—");
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  const ano = d.getUTCFullYear() === new Date().getUTCFullYear() ? "" : ` ${d.getUTCFullYear()}`;
+  return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]}${ano} ${hh}:${mm}`;
+}
+
 function comoFecha(iso) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso || "—");
@@ -128,16 +139,24 @@ function pintarResumen(datos) {
   // pregunta «¿cabe el objetivo dentro de la cadencia del vigia?» deja de ser
   // teorica. `avisoDeCadencia` devuelve cadena vacia si la cadencia cumple, asi
   // que ponerlo aqui no anade ruido cuando no hay nada que decir.
+  const frase = hayJuzgada
+    ? `<p class="frase">La mitad de los reportes en vivo salió en <strong>${comoDuracion(juzgada.p50_min)}</strong> ` +
+      `o menos desde que se detectó el sismo, y 9 de cada 10 en <strong>${comoDuracion(juzgada.p95_min)}</strong>. ` +
+      `Contando desde el sismo mismo, la mitad tardó <strong>${comoDuracion(medido.p50_min)}</strong>.</p>`
+    : "";
   nodo.innerHTML =
+    frase +
     `<div class="metricas">
-    ${metrica(comoDuracion(juzgada.p50_min), `p50 desde detección · objetivo ${objetivo.p50_min} min`,
+    ${metrica(comoDuracion(juzgada.p50_min), `la mitad, desde la detección (p50) · objetivo ${objetivo.p50_min} min`,
               hayJuzgada ? clase(juzgada.p50_min, objetivo.p50_min) : "")}
-    ${metrica(comoDuracion(juzgada.p95_min), `p95 desde detección · objetivo ${objetivo.p95_min} min`,
+    ${metrica(comoDuracion(juzgada.p95_min), `9 de cada 10, desde la detección (p95) · objetivo ${objetivo.p95_min} min`,
               hayJuzgada ? clase(juzgada.p95_min, objetivo.p95_min) : "")}
-    ${metrica(comoDuracion(medido.p50_min), "p50 total, desde el sismo")}
+    ${metrica(comoDuracion(medido.p50_min), "la mitad, desde el sismo (p50)")}
     ${metrica(nf.format(medido.eventos_publicados), "reportes en vivo")}
-  </div>
-  <p class="nota">${conNegritas(escapar(datos.nota))}</p>` + avisoDeCadencia(datos);
+  </div>` + avisoDeCadencia(datos);
+  // La explicacion de los dos relojes va plegada, en «Cómo se mide».
+  const relojes = $("nota-relojes");
+  if (relojes) relojes.innerHTML = conNegritas(escapar(datos.nota));
   nodo.classList.remove("cargando");
 }
 
@@ -154,16 +173,18 @@ function pintarEventos(datos) {
     if (e.backtest) backtests += 1;
     const fila = document.createElement("tr");
     fila.innerHTML =
-      `<td><a href="index.html?evento=${encodeURIComponent(e.usgs_id)}">${escapar(e.usgs_id)}</a>` +
+      // `data-rotulo`: en el telefono cada fila se apila y cada celda lleva
+      // su nombre delante, en vez de una tabla de seis columnas cortada.
+      `<td data-rotulo="Evento"><a href="index.html?evento=${encodeURIComponent(e.usgs_id)}">${escapar(e.usgs_id)}</a>` +
       `${e.backtest ? ' <span class="mono">retrospectivo</span>' : ""}</td>` +
-      `<td class="num">${comoFecha(e.origen_utc)}</td>` +
-      `<td class="num">${comoFecha(e.publicado_utc)}</td>` +
-      `<td class="num">${comoDuracion(e.minutos)}</td>` +
+      `<td class="num" data-rotulo="Sismo">${comoFechaCorta(e.origen_utc)}</td>` +
+      `<td class="num" data-rotulo="Publicado">${comoFechaCorta(e.publicado_utc)}</td>` +
+      `<td class="num" data-rotulo="Tardó">${comoDuracion(e.minutos)}</td>` +
       // `v0` es un preliminar sin ShakeMap, no una version cero.
-      `<td class="num">${e.shakemap ? "v" + e.shakemap : "—"}</td>` +
+      `<td class="num" data-rotulo="ShakeMap">${e.shakemap ? "v" + e.shakemap : "—"}</td>` +
       // Vacío cuando el reporte se publicó una sola vez, que es el caso normal
       // y no una carencia: no todos los ShakeMap se revisan.
-      `<td class="num">${e.actualizado_utc ? comoFecha(e.actualizado_utc) : "—"}</td>`;
+      `<td class="num" data-rotulo="Reprocesado">${e.actualizado_utc ? comoFechaCorta(e.actualizado_utc) : "—"}</td>`;
     cuerpo.appendChild(fila);
   }
   estado.hidden = true;

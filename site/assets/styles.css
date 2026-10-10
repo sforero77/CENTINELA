@@ -3030,3 +3030,85 @@ thead th {
   #detalle-metricas > .metrica:nth-child(-n + 3) { grid-column: 1 / -1; }
   #detalle-metricas > .metrica:nth-child(n + 4) .etiqueta { letter-spacing: 0.03em; }
 }
+
+/* --- Secciones de apoyo (bloque C, 10-oct-2026) ---------------------------- */
+
+.menores-controles { margin: 0 0 0.6rem; }
+.menores-controles .interruptor-observados { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.25rem; font-size: 0.9rem; cursor: pointer; }
+.menores-controles .interruptor-observados[hidden] { display: none; }
+.menores-controles .interruptor-observados input { width: 1.1rem; height: 1.1rem; }
+
+.menores-plegable > summary,
+.cobertura-plegable > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  font-size: 0.9rem;
+  color: var(--bosque);
+  cursor: pointer;
+  list-style: none;
+}
+.menores-plegable > summary::-webkit-details-marker,
+.cobertura-plegable > summary::-webkit-details-marker { display: none; }
+.menores-plegable > summary::after,
+.cobertura-plegable > summary::after { content: "▸"; color: var(--tenue); }
+.menores-plegable[open] > summary::after,
+.cobertura-plegable[open] > summary::after { content: "▾"; }
+.menores-plegable > summary:focus-visible,
+.cobertura-plegable > summary:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+.menores-plegable[open] > summary,
+.cobertura-plegable[open] > summary { margin-bottom: 0.8rem; }
+
+/* Filas compactas: magnitud, lugar, fecha y la ausencia de medicion. */
+.lista-menores { grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--borde); }
+.lista-menores > li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.6rem;
+  padding: 0.55rem 0.2rem;
+  border: 0;
+  border-bottom: 1px solid var(--borde);
+  border-radius: 0;
+  background: none;
+}
+.lista-menores > li:hover { transform: none; box-shadow: none; }
+.lista-menores > li .evento-cabecera { grid-column: 1 / -1; }
+.lista-menores > li .evento-meta { margin: 0; }
+.lista-menores > li .evento-cifra { margin: 0; padding: 0; font-size: 0.8rem; font-weight: 400; text-align: right; }
+.lista-menores > li .evento-cifra small { display: none; }
+.lista-menores .evento-mag { font-size: 0.8rem; }
+.lista-menores .menor-lugar { font-size: 0.92rem; }
+
+/* --- Pagina de estado (bloque C, 10-oct-2026) ------------------------------ */
+.hoja .frase { font-size: 1.05rem; line-height: 1.55; max-width: 40rem; margin: 0 0 1rem; }
+.como-se-mide { margin: 1rem 0 0.5rem; }
+.como-se-mide > summary {
+  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.5rem;
+  padding: 0.3rem 0.9rem; border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pastilla);
+  font-size: 0.9rem; color: var(--bosque); cursor: pointer; list-style: none;
+}
+.como-se-mide > summary::-webkit-details-marker { display: none; }
+.como-se-mide > summary::after { content: "▸"; color: var(--tenue); }
+.como-se-mide[open] > summary::after { content: "▾"; }
+.como-se-mide > summary:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+.como-se-mide h3 { margin: 1rem 0 0.5rem; font-size: 1rem; }
+
+/* En el telefono la tabla de sismos se apila: una ficha por sismo, cada dato
+   con su nombre delante. Seis columnas cortadas no se leen. */
+@media (max-width: 40rem) {
+  #tabla-eventos thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  #tabla-eventos, #tabla-eventos tbody, #tabla-eventos tr, #tabla-eventos td { display: block; }
+  #tabla-eventos tr { padding: 0.6rem 0; border-bottom: 1px solid var(--borde); }
+  #tabla-eventos td { display: flex; justify-content: space-between; gap: 1rem; padding: 0.15rem 0; border: 0; text-align: right; }
+  #tabla-eventos td::before { content: attr(data-rotulo); color: var(--tenue); font-size: 0.8rem; text-align: left; }
+  #tabla-eventos td:first-child { font-weight: 600; }
+}
+
+/* La seccion de menores tenia el aire de `#eventos`, que se mudo al panel. */
+#menores { padding: 3rem 1.75rem 2.5rem; }
+#menores h2 { font-size: 1.55rem; margin-bottom: 0.3rem; }
+@media (max-width: 64rem) { #menores { padding: 2.25rem 1.1rem 2rem; } }
