@@ -6,59 +6,110 @@
     "depth_km": 10.0,
     "utc": "2026-10-10T04:14:01Z",
     "lugar": "7 km al N de La Tronosa, Panamá",
-    "pager_alert": "",
+    "pager_alert": "yellow",
     "lon": -80.5985,
     "lat": 7.5068
   },
   "inputs": {
-    "shakemap_version": 0,
+    "shakemap_version": 1,
     "groundfailure_version": 0,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "",
     "modelo_licuefaccion": "",
-    "shakemap_fuente": "",
+    "shakemap_fuente": "us",
     "groundfailure_fuente": ""
   },
-  "preliminar": true,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 17412.1713038031
-    },
-    {
-      "radio_km": 50,
-      "pop": 111790.38638139656
-    },
-    {
-      "radio_km": 100,
-      "pop": 446329.80925674527
-    }
-  ],
+  "preliminar": false,
+  "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 0.0,
-    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 11906.015386450104,
+    "pop_mmi7p": 1452.6528875753284,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 0.0,
-    "bld_mmi6p": 0.0,
-    "built_m2_mmi6p": 0.0,
-    "health_mmi6p": 0.0,
-    "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 0.0,
-    "road_km_principal_mmi6p": 0.0,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
+    "pop_65p_mmi7p": 291.21859869030396,
+    "pop_65p_mmi6p": 2136.9267314732115,
+    "bld_mmi6p": 8089.0,
+    "built_m2_mmi6p": 1437850.0,
+    "health_mmi6p": 1.0,
+    "edu_mmi6p": 4.0,
+    "road_km_mmi6p": 502.8314607779067,
+    "road_km_principal_mmi6p": 60.80644445329563,
+    "bld_mmi7p": 1025.0,
+    "built_m2_mmi7p": 173097.0,
     "health_mmi7p": 0.0,
-    "edu_mmi7p": 0.0,
-    "road_km_mmi7p": 0.0,
-    "road_km_principal_mmi7p": 0.0,
+    "edu_mmi7p": 1.0,
+    "road_km_mmi7p": 64.60619579547115,
+    "road_km_principal_mmi7p": 16.218874735007294,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 0.0
   },
-  "top_municipios": [],
+  "top_municipios": [
+    {
+      "adm2_id": "PA0907",
+      "nombre": "Tonosí",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 1304.1506208116189,
+      "pop_banda": 1304.1506208116189
+    },
+    {
+      "adm2_id": "PA0904",
+      "nombre": "Macaracas",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 148.50226676370949,
+      "pop_banda": 148.50226676370949
+    },
+    {
+      "adm2_id": "PA0703",
+      "nombre": "Los Pozos",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0902",
+      "nombre": "Las Tablas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0901",
+      "nombre": "Guararé",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1306",
+      "nombre": "Mariato",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0702",
+      "nombre": "Las Minas",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0903",
+      "nombre": "Los Santos",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0706",
+      "nombre": "Pesé",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
   "incertidumbre": {
-    "pop_discrepancia_pct": null,
+    "pop_discrepancia_pct": 17.7,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -70,10 +121,17 @@
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",
-    "csv_adm2": "",
-    "mapa_png": ""
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "ShakeMap: v0 → v1 (us)",
+    "Población en MMI≥6: 0 → 12 mil",
+    "Población en MMI≥7: 0 → 1.500",
+    "Población de 65 años o más en MMI≥7: 0 → 290",
+    "Edificaciones en MMI≥7: 0 → 1.000",
+    "Sedes educativas en MMI≥7: 0 → 1"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -128,6 +186,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-10T04:30:53Z",
+  "generado_utc": "2026-10-10T04:35:55Z",
   "pipeline_version": "0.1.0"
 }

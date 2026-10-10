@@ -1,5 +1,7 @@
-1/3 Sismo M6,0 · 7 km al N de La Tronosa, Panamá (2026-10-10 04:14 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+1/4 Sismo M6,0 · 7 km al N de La Tronosa, Panamá (2026-10-10 04:14 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
-2/3 Aun no hay ShakeMap publicado. Estas cifras son un corte preliminar por radios alrededor del epicentro y se actualizan solas cuando USGS publique el ShakeMap.
+2/4 Personas dentro de intensidad MMI≥6: 12 mil. Dentro de MMI≥7: 1.500. Edificaciones en MMI≥7: 1.000.
 
-3/3 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=us6000u1cf
+3/4 Municipios más expuestos (MMI≥7): Tonosí, Macaracas.
+
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=us6000u1cf
