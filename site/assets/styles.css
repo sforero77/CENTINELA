@@ -2737,18 +2737,8 @@ thead th {
 
 @media (max-width: 48rem) {
 
-  /* El panel del evento, en el orden de quien lee en un telefono. */
-  #lateral-detalle:not([hidden]) { display: flex; flex-direction: column; }
-  #lateral-detalle > * { order: 0; }
-  #lateral-detalle > #bloque-metricas { order: 1; }
-  #lateral-detalle > #bloque-municipios { order: 2; }
-  #lateral-detalle > #bloque-franjas { order: 3; }
-  #lateral-detalle > #bloque-terreno { order: 4; }
-  #lateral-detalle > #bloque-area { order: 5; }
-  #lateral-detalle > #bloque-cambios { order: 6; }
-  #lateral-detalle > #bloque-contraste,
-  #lateral-detalle > #bloque-incertidumbre { order: 7; }
-  #lateral-detalle > .bloque:last-child { order: 8; }
+  /* El orden del panel del evento ya es el del HTML para todas las anchuras:
+     cifras, municipios y el detalle tecnico plegado (10-oct-2026). */
 
   /* Con un evento abierto, los filtros de la lista de abajo no van encima del
      mapa: eran 60 px de la primera pantalla para una lista que no se ve. Al
@@ -2977,3 +2967,66 @@ thead th {
 #lateral-vacio { display: flex; flex-direction: column; }
 #lateral-vacio[hidden] { display: none; }
 #lateral-vacio:has(#focos[hidden]) > #en-vivo { order: 10; margin-top: 1.5rem; }
+
+/* --- El sismo abierto (bloque B, 10-oct-2026) ----------------------------- */
+
+/* Capas: tres a la vista; el resto detras de «Más capas». La activa siempre. */
+.capas:not(.con-extras) > .capa-extra:not([aria-selected="true"]) { display: none; }
+.capas-mas {
+  font: inherit;
+  font-size: 0.79rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px dashed var(--borde-fuerte);
+  border-radius: var(--radio-pastilla);
+  background: transparent;
+  color: var(--bosque);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.capas-mas:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+@media (max-width: 48rem) {
+  .capas-mas { font-size: 0.78rem; padding: 0.25rem 0.7rem; }
+}
+@media (max-width: 48rem) and (pointer: coarse) {
+  .capas-mas { min-height: 2.35rem; }
+}
+
+/* Tres cifras grandes; el resto, en una rejilla mas chica debajo. */
+#detalle-metricas > .metrica:nth-child(n + 4) { padding: 0.55rem 0.75rem; }
+#detalle-metricas > .metrica:nth-child(n + 4) .valor { font-size: 1.1rem; }
+#detalle-metricas > .metrica:nth-child(n + 4) .icono { width: 0.95rem; height: 0.95rem; }
+
+/* Detalle tecnico, plegado. */
+.detalle-tecnico {
+  margin: 1.5rem 0 0.5rem;
+  border-top: 1px solid var(--borde);
+  border-bottom: 1px solid var(--borde);
+}
+.detalle-tecnico > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.6rem;
+  min-height: 2.75rem;
+  padding: 0.7rem 0;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--tipo-titulo);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--bosque);
+}
+.detalle-tecnico > summary::-webkit-details-marker { display: none; }
+.detalle-tecnico > summary::before { content: "▸"; color: var(--tenue); }
+.detalle-tecnico[open] > summary::before { content: "▾"; }
+.detalle-tecnico > summary:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+.detalle-tecnico-pista { font-family: var(--tipo-cuerpo, inherit); font-weight: 400; font-size: 0.82rem; color: var(--tenue); }
+.detalle-tecnico > .bloque:first-of-type { margin-top: 0.5rem; }
+
+/* En el telefono: las tres primeras a todo el ancho, el resto en dos columnas.
+   Ocho tarjetas en una sola columna eran dos pantallas de cifras iguales. */
+@media (max-width: 30rem) {
+  #detalle-metricas { grid-template-columns: 1fr 1fr; }
+  #detalle-metricas > .metrica:nth-child(-n + 3) { grid-column: 1 / -1; }
+  #detalle-metricas > .metrica:nth-child(n + 4) .etiqueta { letter-spacing: 0.03em; }
+}

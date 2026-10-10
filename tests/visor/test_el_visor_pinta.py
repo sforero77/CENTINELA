@@ -128,6 +128,13 @@ def _esperar_capa(pagina: Any, nombre: str, *, desde: str = "") -> dict[str, Any
         timeout=ESPERA_MS,
     )
     anotacion: dict[str, Any] = pagina.evaluate(f"window.CENTINELA.pintado[{nombre!r}]")
+    if nombre == "celdas":
+        # El detalle tecnico arranca plegado desde el 10-oct-2026 y las pruebas
+        # de sus bloques los miran por dentro. Que arranque plegado lo vigila
+        # `test_el_detalle_tecnico_arranca_plegado`.
+        pagina.evaluate(
+            "() => { const d = document.getElementById('detalle-tecnico'); if (d) d.open = true; }"
+        )
     return anotacion
 
 
@@ -461,6 +468,9 @@ def test_las_pestanas_de_capa_se_pueden_pulsar(pagina: Any) -> None:
     # focos" dejo de existir — entrar a fuego cierra el evento. El peor estado
     # del modo sismos es el evento con su leyenda y el conmutador delante.
 
+    # Las capas extra viven detras de «Más capas» desde el 10-oct-2026: se
+    # abren para medir todas.
+    pagina.locator("#capas .capas-mas").click()
     tapadas = pagina.evaluate("""() =>
         [...document.querySelectorAll('#capas button')].filter(b => {
           const r = b.getBoundingClientRect();
@@ -2503,6 +2513,7 @@ def test_sin_ground_failure_el_terreno_lo_dice_en_vez_de_poner_cero(pagina: Any)
     """
     pagina.select_option("select", "us7000tdmp")
     pagina.wait_for_timeout(1500)
+    pagina.evaluate("() => { document.getElementById('detalle-tecnico').open = true; }")
 
     terreno = pagina.locator("#detalle-terreno").inner_text()
     assert "no ha publicado" in terreno, f"el bloque no dice que falta el producto: {terreno!r}"
@@ -3359,7 +3370,8 @@ def test_un_evento_que_no_llega_a_mmi7_si_lo_dice(pagina: Any) -> None:
     pagina.wait_for_timeout(800)
 
     # El CSS pone el titulo en versalitas: se compara en mayusculas.
-    assert "EXPUESTO EN MMI≥6" in pagina.locator("#titulo-metricas").inner_text().upper()
+    titulo = pagina.locator("#titulo-metricas").inner_text().upper()
+    assert "MMI≥6" in titulo and "SACUDIDA FUERTE" in titulo, titulo
     assert "no alcanzó MMI 7" in pagina.locator("#detalle-metricas").inner_text()
 
 
@@ -4206,3 +4218,28 @@ def test_cerrar_el_detalle_borra_de_verdad_las_tres_capas(pagina: Any) -> None:
             f"el registro dice que {capa} está en cero y la capa sigue dibujada; "
             f"capas del estilo: {sorted(en_el_mapa)}"
         )
+
+
+def test_el_detalle_tecnico_arranca_plegado(pagina: Any) -> None:
+    """Revision con el dueño, 10-oct-2026: «mucho texto, no se entiende».
+
+    Franjas, area, terreno, cambios e incertidumbre iban seguidos, cada uno con
+    su parrafo, entre las cifras y las descargas. Arrancan plegados en un solo
+    «Detalle técnico», y las cifras y los municipios quedan delante.
+    """
+    marca = _ahora(pagina)
+    pagina.select_option("select", "pt26282000")
+    pagina.wait_for_function(
+        "(d) => { const p = window.CENTINELA && window.CENTINELA.pintado;"
+        " return !!(p && p.celdas && p.celdas.utc > d); }",
+        arg=marca,
+        timeout=ESPERA_MS,
+    )
+    assert pagina.locator("#detalle-tecnico").get_attribute("open") is None
+    assert pagina.locator("#bloque-metricas").is_visible()
+    assert pagina.locator("#bloque-municipios").is_visible()
+    orden = pagina.evaluate(
+        """() => ['bloque-metricas', 'bloque-municipios', 'detalle-tecnico']
+             .map(i => document.getElementById(i).getBoundingClientRect().top)"""
+    )
+    assert orden == sorted(orden), f"las cifras no van primero: {orden}"
