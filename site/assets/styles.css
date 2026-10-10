@@ -2642,6 +2642,102 @@ thead th {
     min-height: 24rem;
   }
 
+  /* EL MAPA ES EL PROTAGONISTA (10-oct-2026).
+     Con el arreglo anterior seguia apretado: cabecera en dos filas, aviso de
+     cinco lineas y pestañas de 44 px en dos filas se llevaban 300 px y media
+     pantalla de mapa. Ahora la cabecera es una fila —sello, nombre y selector;
+     su navegacion baja al pie—, el aviso una linea que se despliega, y el mapa
+     llena el resto de la pantalla: ~5,9rem de cabecera y aviso, y el resto
+     es mapa. La atribucion sigue entrando en la primera pantalla. */
+  .barra {
+    flex-wrap: nowrap;
+    gap: 0.6rem;
+    padding:
+      max(0.5rem, env(safe-area-inset-top, 0px))
+      max(0.75rem, env(safe-area-inset-right, 0px))
+      0.5rem
+      max(0.75rem, env(safe-area-inset-left, 0px));
+  }
+  .barra nav { display: none; }
+  .marca { gap: 0.4rem; flex: 0 0 auto; }
+  .marca-sello { width: 1.5rem; height: 1.5rem; }
+  .marca-nombre { font-size: 0.95rem; }
+  .selector { order: 0; flex: 1 1 auto; width: auto; margin-left: 0; }
+  .selector > .mono { display: none; }
+  .selector select { flex: 1 1 auto; width: 100%; font-size: 0.85rem; padding-left: 0.8rem; }
+
+  .aviso {
+    position: relative;
+    padding: 0.45rem 4.4rem 0.45rem max(0.75rem, env(safe-area-inset-left, 0px));
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+  /* Se recorta el texto y no la caja: con `overflow` en la caja, su relleno
+     inferior dejaba asomar media segunda linea. */
+  .aviso:not(.abierto) { display: flex; align-items: baseline; gap: 0.45rem; }
+  .aviso:not(.abierto) #aviso-lectura-texto {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .aviso-mas {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.3rem;
+    min-height: 1.6rem;
+    padding: 0.15rem 0.7rem;
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--ambar-texto);
+    background: rgba(244, 242, 234, 0.9);
+    border: 1px solid rgba(200, 148, 26, 0.45);
+    border-radius: var(--radio-pastilla);
+    cursor: pointer;
+    z-index: 4;
+  }
+  .aviso-mas:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+
+  .lienzo {
+    height: calc(100vh - 5.9rem);
+    height: calc(100svh - 5.9rem);
+    min-height: 24rem;
+  }
+  /* Sin evento abierto los filtros de la lista siguen encima del mapa: se
+     descuenta su fila para que el pie del mapa y la atribucion no caigan
+     debajo del pliegue. */
+  body:has(#lateral-detalle[hidden]) .lienzo {
+    height: calc(100vh - 10rem);
+    height: calc(100svh - 10rem);
+  }
+
+  /* Los controles del mapa, mas chicos: 38 px de alto, por encima de los 24 de
+     WCAG 2.5.8 AA. Cada pixel de control aqui es un pixel de mapa. */
+  .amenazas { top: 0.55rem; left: 0.55rem; padding: 0.15rem; }
+  .amenazas button { font-size: 0.8rem; padding: 0.25rem 0.8rem; }
+  .capas { top: 3.15rem; left: 0.55rem; padding: 0.15rem; }
+  .capas button { font-size: 0.78rem; padding: 0.25rem 0.7rem; }
+  .lienzo .maplibregl-ctrl-scale { font-size: 0.62rem; padding: 0 0.3rem; }
+}
+
+@media (max-width: 48rem) and (pointer: coarse) {
+  .capas button,
+  .amenazas button { min-height: 2.35rem; }
+}
+
+.aviso-mas { display: none; }
+@media (max-width: 48rem) {
+  .aviso-mas { display: inline-block; }
+  .pie-nav { display: block; }
+}
+@media (min-width: 48.0625rem) {
+  .pie-nav { display: none; }
+}
+
+@media (max-width: 48rem) {
+
   /* El panel del evento, en el orden de quien lee en un telefono. */
   #lateral-detalle:not([hidden]) { display: flex; flex-direction: column; }
   #lateral-detalle > * { order: 0; }
