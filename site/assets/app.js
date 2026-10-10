@@ -1275,6 +1275,12 @@ function volverAlEncuadre(m, duracion = 0) {
 
 function cerrarDetalle() {
   estado.seleccionado = null;
+  // El pie se plego para enseñar el evento; sin evento vuelve como estaba.
+  const pie = $("pie-mapa");
+  if (pie && pie.dataset.plegadoPorEvento) {
+    delete pie.dataset.plegadoPorEvento;
+    if (!pie.dataset.tocado) pie.open = true;
+  }
   $("lateral-vacio").hidden = false;
   $("lateral-detalle").hidden = true;
   $("leyenda").hidden = true;
@@ -2085,7 +2091,54 @@ function pintarCambios(reporte) {
   bloque.hidden = !lineas.length;
   if (!lineas.length) return;
 
-  $("detalle-cambios").innerHTML = lineas.map((l) => `<li>${escapar(l)}</li>`).join("");
+  // POR REVISION, Y SOLO LA ULTIMA A LA VISTA.
+  //
+  // El M7,7 de Azuero llego a v8 con 63 lineas: en un telefono eran tres
+  // pantallas de flechas entre el titulo y las cifras, que es lo primero que
+  // busca quien llega desde un enlace. Lo nuevo va delante (`changelog.py`), y
+  // una revision empieza en su cabecera de version: se ensena hasta la primera
+  // del ShakeMap inclusive y el resto queda plegado, entero y a un toque.
+  const grupos = agruparCambios(lineas);
+  let corte = grupos.findIndex((g) => /^ShakeMap:/.test(g[0]));
+  corte = corte < 0 ? 1 : corte + 1;
+  const fila = (l) => `<li>${escapar(l)}</li>`;
+  $("detalle-cambios").innerHTML = grupos.slice(0, corte).flat().map(fila).join("");
+
+  let anteriores = $("detalle-cambios-anteriores");
+  const resto = grupos.slice(corte);
+  if (!resto.length) {
+    if (anteriores) anteriores.remove();
+    return;
+  }
+  if (!anteriores) {
+    anteriores = document.createElement("details");
+    anteriores.id = "detalle-cambios-anteriores";
+    anteriores.className = "cambios-anteriores";
+    $("detalle-cambios").after(anteriores);
+  }
+  anteriores.open = false;
+  anteriores.innerHTML =
+    `<summary>${resto.length} ${resto.length === 1 ? "revisión anterior" : "revisiones anteriores"}</summary>` +
+    `<ul class="cambios">${resto.flat().map(fila).join("")}</ul>`;
+}
+
+//: Las lineas de cabecera de una revision: "ShakeMap: v7 (us) → v8 (us)",
+//: "Ground Failure: …", y los cambios de solucion que publica la primera.
+const CABECERA_DE_CAMBIO = /^(ShakeMap|Ground Failure|Magnitud|Profundidad|Epicentro):/;
+
+function agruparCambios(lineas) {
+  const grupos = [];
+  let previaEraCabecera = false;
+  for (const l of lineas) {
+    const cabecera = CABECERA_DE_CAMBIO.test(l);
+    // Cabeceras seguidas son la misma revision (v0 → v2 trae ShakeMap, Ground
+    // Failure, magnitud y profundidad juntas); una cabecera despues de cifras
+    // abre otra.
+    if (!grupos.length || (cabecera && !previaEraCabecera)) grupos.push([]);
+    grupos[grupos.length - 1].push(l);
+    previaEraCabecera = cabecera;
+  }
+  return grupos;
 }
 
 function pintarIncertidumbre(reporte) {
@@ -3008,6 +3061,54 @@ function extremosDeContorno(datos, minimo) {
 //: ojo que no habia mirado el evento: en Puerto Madero deja fuera media
 //: isolinea y en Barra Patuca encuadra una franja de mar dentro de una mancha
 //: de 400 km.
+//: EN UN TELEFONO, EL EPICENTRO NO PUEDE QUEDAR DEBAJO DE LA LEYENDA.
+//:
+//: Medido el 9-oct-2026 en 390x844 con el M7,7 de Azuero: el pie del mapa
+//: abierto tapaba el epicentro y las tres replicas, justo lo que viene a ver
+//: quien llega desde una historia de Instagram. Al abrir un evento en pantalla
+//: estrecha el pie se pliega a su tirador —una linea, la leyenda a un toque— y
+//: el encuadre descuenta lo que sigue encima: los chips de arriba y el tirador
+//: con la atribucion abajo. Si quien lee lo abrio o cerro a mano, se respeta.
+const ESTRECHA = "(max-width: 48rem)";
+
+function margenDeEncuadre(base) {
+  if (!window.matchMedia || !window.matchMedia(ESTRECHA).matches) return base;
+  const pie = $("pie-mapa");
+  if (pie && !pie.dataset.escucha) {
+    pie.dataset.escucha = "1";
+    const tirador = pie.querySelector("summary");
+    if (tirador) tirador.addEventListener("click", () => { pie.dataset.tocado = "1"; });
+  }
+  if (pie && pie.open && !pie.dataset.tocado) {
+    pie.open = false;
+    pie.dataset.plegadoPorEvento = "1";
+  }
+  const lienzo = $("lienzo");
+  if (!lienzo) return base;
+  const marco = lienzo.getBoundingClientRect();
+  let arriba = 16;
+  for (const id of ["amenazas", "capas"]) {
+    const el = $(id);
+    if (!el || el.hidden) continue;
+    const r = el.getBoundingClientRect();
+    if (r.height) arriba = Math.max(arriba, r.bottom - marco.top + 12);
+  }
+  let abajo = 16;
+  if (pie) {
+    const r = pie.getBoundingClientRect();
+    if (r.height) abajo = Math.max(abajo, marco.bottom - r.top + 12);
+  }
+  // Nunca mas de la mitad del lienzo en margenes: un margen que se come el
+  // mapa es el mismo fallo con otra forma.
+  const tope = marco.height * 0.5;
+  if (arriba + abajo > tope) {
+    const f = tope / (arriba + abajo);
+    arriba = Math.round(arriba * f);
+    abajo = Math.round(abajo * f);
+  }
+  return { top: arriba, bottom: abajo, left: 16, right: 16 };
+}
+
 function encuadrarSinMalla(m, reporte, contornos) {
   const lons = [];
   const lats = [];
@@ -3036,7 +3137,7 @@ function encuadrarSinMalla(m, reporte, contornos) {
 
   m.fitBounds(
     [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-    { padding: 48, maxZoom: 10, duration: VUELO }
+    { padding: margenDeEncuadre(48), maxZoom: 10, duration: VUELO }
   );
 }
 
@@ -3301,7 +3402,7 @@ function dibujarCeldas(m, datos, reporte, contornos) {
 
   m.fitBounds(
     [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-    { padding: 48, maxZoom: 10, duration: VUELO }
+    { padding: margenDeEncuadre(48), maxZoom: 10, duration: VUELO }
   );
 }
 
@@ -4469,6 +4570,8 @@ function refrescarLista({ anunciando = true } = {}) {
       : `${visibles} ${visibles === 1 ? "reporte publicado" : "reportes publicados"}`;
   }
 
+  recortarLista(lista, "reportes");
+
   const vacio = $("sin-resultados");
   vacio.hidden = visibles > 0;
   if (!visibles) vacio.textContent = motivoDeVacio();
@@ -4607,7 +4710,39 @@ function pintarListaMenores(eventos, ventanaDias) {
     .slice()
     .sort((a, b) => Number(b.mag) - Number(a.mag))
     .map(filaMenor));
+  recortarLista(lista, "sismos");
   seccion.hidden = estado.amenaza === "fuego";
+}
+
+//: LAS LISTAS LARGAS, RECORTADAS EN UN TELEFONO.
+//:
+//: 32 reportes y 32 sismos menores eran 14.000 px de tarjetas por debajo del
+//: mapa en 390 de ancho. En pantalla estrecha se ensenan las primeras
+//: `RECORTE_MOVIL` visibles y un boton con cuantas faltan; el recorte es solo
+//: CSS (`.fuera-de-recorte`), asi que en escritorio no cambia nada y el filtro
+//: de pais —que escribe `hidden`— sigue mandando sobre que cuenta.
+const RECORTE_MOVIL = 6;
+
+function recortarLista(lista, nombre) {
+  if (!lista) return;
+  const visibles = [...lista.children].filter((li) => !li.hidden);
+  const desplegada = lista.dataset.desplegada === "1";
+  visibles.forEach((li, i) => li.classList.toggle("fuera-de-recorte", !desplegada && i >= RECORTE_MOVIL));
+  const sobran = visibles.length - RECORTE_MOVIL;
+
+  let boton = lista.nextElementSibling;
+  if (!boton || !boton.classList.contains("ver-todos")) {
+    boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "ver-todos";
+    boton.addEventListener("click", () => {
+      lista.dataset.desplegada = "1";
+      recortarLista(lista, nombre);
+    });
+    lista.after(boton);
+  }
+  boton.hidden = desplegada || sobran <= 0;
+  boton.textContent = `Ver los ${sobran} ${nombre} restantes`;
 }
 
 function filaMenor(e) {

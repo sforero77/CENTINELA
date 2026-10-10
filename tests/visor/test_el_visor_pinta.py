@@ -841,12 +841,15 @@ def test_las_cajas_del_mapa_no_se_comen_el_mapa(
 
 
 def test_el_pie_del_mapa_se_pliega_y_devuelve_el_mapa(pagina: Any) -> None:
-    """La leyenda explica los colores, asi que no puede arrancar cerrada.
+    """En un telefono, el evento se ve antes que la caja que lo explica.
 
-    Lo que si puede es cerrarse: quien ya aprendio el codigo quiere el mapa
-    entero, y en un telefono esa es la diferencia entre mirar el mapa y mirar la
-    caja que lo explica. Se comprueban las dos mitades — que abre por defecto y
-    que plegarlo devuelve mapa de verdad.
+    Hasta el 9-oct-2026 el pie arrancaba abierto. Con el M7,7 de Azuero —el
+    primero que se compartio en historias— tapaba el epicentro y las tres
+    replicas en 390x844, que es justo lo que viene a ver quien llega desde un
+    enlace. Ahora, al abrir un evento en pantalla estrecha, el pie se pliega a
+    su tirador y la leyenda queda a un toque. Se comprueba: que arranca plegado,
+    que abrirlo enseña la leyenda, que plegarlo devuelve mapa de verdad, y que
+    al volver al panorama el pie vuelve como estaba.
     """
     pagina.set_viewport_size(MOVIL)
     _esperar_capa(pagina, "epicentros")
@@ -856,26 +859,28 @@ def test_el_pie_del_mapa_se_pliega_y_devuelve_el_mapa(pagina: Any) -> None:
     pagina.wait_for_timeout(600)
 
     pie = pagina.locator("#pie-mapa")
-    assert pie.get_attribute("open") is not None, (
-        "el pie arranca plegado: la leyenda que explica los colores no se ve"
+    assert pie.get_attribute("open") is None, (
+        "con un evento abierto en un telefono el pie sigue desplegado sobre el mapa"
     )
+    plegado = pagina.evaluate(SONDA_TAPADO)["pct"]
 
-    abierto = pagina.evaluate(SONDA_TAPADO)["pct"]
     pagina.locator("#pie-mapa > summary").click()
     pagina.wait_for_timeout(400)
-
-    assert pie.get_attribute("open") is None, "el tirador no pliega el pie"
-    plegado = pagina.evaluate(SONDA_TAPADO)["pct"]
+    assert pie.get_attribute("open") is not None, "el tirador no abre la leyenda"
+    assert pagina.locator("#leyenda").is_visible(), "abierto el pie, la leyenda no se ve"
+    abierto = pagina.evaluate(SONDA_TAPADO)["pct"]
 
     assert plegado <= abierto - 15, (
         f"plegar el pie no devuelve mapa: {abierto} % tapado abierto, {plegado} % plegado"
     )
 
-    # Y vuelve. Un control que esconde contenido sin forma de recuperarlo es
-    # peor que no tenerlo: el tirador tiene que seguir ahi y tiene que abrir.
-    pagina.locator("#pie-mapa > summary").click()
-    pagina.wait_for_timeout(400)
-    assert pie.get_attribute("open") is not None, "el pie plegado ya no se puede abrir"
+    # Lo que quien lee abrio a mano no se le vuelve a cerrar al cambiar de
+    # evento: un panel que se pliega solo cada vez es uno que hay que abrir dos.
+    marca = _ahora(pagina)
+    pagina.select_option("select", "pt26282000")
+    _esperar_capa(pagina, "celdas", desde=marca)
+    pagina.wait_for_timeout(600)
+    assert pie.get_attribute("open") is not None, "el pie abierto a mano se volvio a plegar"
 
 
 def test_en_escritorio_el_pie_no_es_una_caja(pagina: Any) -> None:
@@ -4010,10 +4015,19 @@ def test_el_panel_dice_que_cambio_al_reprocesar(pagina: Any, usgs_id: str) -> No
     publicadas = json.loads(
         (RAIZ / "reports" / usgs_id / "report.json").read_text(encoding="utf-8")
     )["changelog"]
-    pintadas = pagina.locator("#detalle-cambios li").all_inner_texts()
+    # Todas, en orden: las de la ultima revision a la vista y las anteriores
+    # dentro de su pliegue. Plegar no puede ser perder lineas.
+    pintadas = pagina.locator("#bloque-cambios .cambios li").all_text_contents()
 
     assert [t.strip() for t in pintadas] == [str(p).strip() for p in publicadas], (
         f"{usgs_id} publica {publicadas} y el panel pinta {pintadas}"
+    )
+
+    # Y a la vista, solo hasta la primera revision del ShakeMap inclusive.
+    a_la_vista = pagina.locator("#detalle-cambios li").all_inner_texts()
+    shakemap = [i for i, t in enumerate(a_la_vista) if t.strip().startswith("ShakeMap:")]
+    assert len(shakemap) <= 1, (
+        f"{usgs_id}: {len(shakemap)} revisiones del ShakeMap a la vista; las viejas van plegadas"
     )
 
 

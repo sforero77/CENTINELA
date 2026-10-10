@@ -968,6 +968,25 @@ a:hover { color: var(--verde-vivo); }
   font-variant-numeric: tabular-nums;
 }
 
+/* Las revisiones viejas, plegadas: enteras y a un toque, pero sin empujar las
+   cifras tres pantallas hacia abajo. */
+.cambios-anteriores { margin-top: 0.4rem; }
+.cambios-anteriores > summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--bosque);
+  padding: 0.5rem 0;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+.cambios-anteriores > summary:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+.cambios-anteriores[open] > summary { margin-bottom: 0.25rem; }
+.cambios-anteriores .cambios li { border-left-color: var(--borde-fuerte); }
+
+/* El boton de las listas recortadas: solo existe en pantalla estrecha. */
+.ver-todos { display: none; }
+
 /* Barras en CSS puro: una libreria de graficos para ocho barras horizontales
    es una dependencia que mantener y una peticion mas en una pagina que promete
    abrir con mala conexion. */
@@ -2601,4 +2620,65 @@ thead th {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--tenue-mas);
+}
+
+/* --- Telefono primero: lo que busca quien llega desde un enlace ------------
+
+   Medido el 9-oct-2026 en 390x844 con el M7,7 de Azuero, que se compartio en
+   historias: la pagina medía 18.000 px, el mapa ocupaba media pantalla con la
+   leyenda encima del epicentro, y las cifras clave quedaban debajo de 63 lineas
+   de cambios de version. Aqui se ordena para esa persona: mapa grande, cifras
+   y municipios primero, el detalle tecnico despues, y las listas recortadas. */
+@media (max-width: 48rem) {
+  /* EL MAPA ENTERO EN LA PRIMERA PANTALLA, Y TAN GRANDE COMO QUEPA.
+     Lo que hay encima —cabecera, aviso y filtros— mide unos 21rem en un
+     telefono; el mapa toma el resto, con tope en el 70 % para que asome el
+     panel. Si se pasara, la atribucion del mapa base —que la ODbL exige ver—
+     quedaria debajo del pliegue, y eso se mide en 360x780. `svh` para que la
+     barra del navegador movil no deje el pie fuera. */
+  .lienzo {
+    height: clamp(24rem, calc(100vh - 21rem), 70vh);
+    height: clamp(24rem, calc(100svh - 21rem), 70svh);
+    min-height: 24rem;
+  }
+
+  /* El panel del evento, en el orden de quien lee en un telefono. */
+  #lateral-detalle:not([hidden]) { display: flex; flex-direction: column; }
+  #lateral-detalle > * { order: 0; }
+  #lateral-detalle > #bloque-metricas { order: 1; }
+  #lateral-detalle > #bloque-municipios { order: 2; }
+  #lateral-detalle > #bloque-franjas { order: 3; }
+  #lateral-detalle > #bloque-terreno { order: 4; }
+  #lateral-detalle > #bloque-area { order: 5; }
+  #lateral-detalle > #bloque-cambios { order: 6; }
+  #lateral-detalle > #bloque-contraste,
+  #lateral-detalle > #bloque-incertidumbre { order: 7; }
+  #lateral-detalle > .bloque:last-child { order: 8; }
+
+  /* Con un evento abierto, los filtros de la lista de abajo no van encima del
+     mapa: eran 60 px de la primera pantalla para una lista que no se ve. Al
+     volver al panorama reaparecen. */
+  body:has(#lateral-detalle:not([hidden])) #barra-filtros { display: none; }
+
+  /* Lo que se salta con un enlace o un `scrollIntoView` no puede quedar
+     debajo de la cabecera fija. */
+  #lateral, #lateral-detalle, #eventos, #menores { scroll-margin-top: 7.5rem; }
+
+  /* Listas largas: las primeras y un boton con las que faltan. */
+  .lista-eventos > li.fuera-de-recorte { display: none; }
+  .ver-todos:not([hidden]) {
+    display: block;
+    width: 100%;
+    min-height: 2.75rem;
+    margin: 0.75rem 0 0;
+    padding: 0.7rem 1rem;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--bosque);
+    background: transparent;
+    border: 1px solid var(--borde-fuerte);
+    border-radius: var(--radio-medio);
+    cursor: pointer;
+  }
+  .ver-todos:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
 }
