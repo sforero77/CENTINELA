@@ -137,7 +137,7 @@ function pintarResumen(datos) {
     ${metrica(comoDuracion(medido.p50_min), "p50 total, desde el sismo")}
     ${metrica(nf.format(medido.eventos_publicados), "reportes en vivo")}
   </div>
-  <p class="nota">${escapar(datos.nota)}</p>` + avisoDeCadencia(datos);
+  <p class="nota">${conNegritas(escapar(datos.nota))}</p>` + avisoDeCadencia(datos);
   nodo.classList.remove("cargando");
 }
 
@@ -227,3 +227,9 @@ async function cargar() {
 }
 
 cargar();
+
+// La nota llega en markdown de `status.py` («**Total**») y se pintaba con los
+// asteriscos. Despues de escapar, solo se interpreta la negrita.
+function conNegritas(html) {
+  return String(html).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}

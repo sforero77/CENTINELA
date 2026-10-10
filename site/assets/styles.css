@@ -2664,7 +2664,9 @@ thead th {
   .marca-nombre { font-size: 0.95rem; }
   .selector { order: 0; flex: 1 1 auto; width: auto; margin-left: 0; }
   .selector > .mono { display: none; }
-  .selector select { flex: 1 1 auto; width: 100%; font-size: 0.85rem; padding-left: 0.8rem; }
+  /* 16 px y no menos: por debajo, iOS Safari amplia la pagina al tocar el
+     selector y no la devuelve. Es el control principal del visor. */
+  .selector select { flex: 1 1 auto; width: 100%; font-size: 16px; padding: 0.35rem 2rem 0.35rem 0.75rem; }
 
   .aviso {
     position: relative;
@@ -2777,4 +2779,100 @@ thead th {
     cursor: pointer;
   }
   .ver-todos:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+}
+
+/* --- Auditoria movil del 10-oct-2026 ---------------------------------------
+
+   Medido con Playwright en 390x844 y 360x780: rotulos funcionales a 10-11 px,
+   selectores a 13 px (zoom de iOS al tocarlos), explicaciones solo en `title`
+   y objetivos de 20 px. Lo que sigue lo corrige sin cambiar la jerarquia: las
+   cifras siguen siendo lo grande. */
+
+.nota-niveles {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: var(--tenue);
+}
+.nota-niveles .nivel { margin-left: 0; flex: 0 0 auto; cursor: default; }
+.nota-niveles .nivel i { background: #1f6f4a; }
+
+/* Distintivos que se explican con un toque. */
+.distintivo-plegable > summary { list-style: none; cursor: pointer; }
+.distintivo-plegable > summary::-webkit-details-marker { display: none; }
+.distintivo-plegable > summary::after { content: " ⓘ"; opacity: 0.7; }
+.distintivo-plegable[open] > summary::after { content: " ×"; }
+.distintivo-plegable > summary:focus-visible { outline: 2px solid var(--bosque); outline-offset: 2px; }
+.distintivo-nota {
+  margin: 0.4rem 0 0.2rem;
+  max-width: 34rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--tenue);
+}
+#detalle-distintivos:has(.distintivo-plegable[open]) { flex-wrap: wrap; }
+
+@media (max-width: 48rem) {
+  .filtro select { font-size: 16px; }
+
+  /* Ningun rotulo funcional por debajo de 12 px. */
+  .metrica .etiqueta,
+  .ficha-mmi,
+  .eyebrow,
+  .area-banda,
+  .evento-cifra small,
+  .evento-meta,
+  .pie-mapa > #leyenda .leyenda-valor,
+  .leyenda-valor,
+  .pie-mapa > .pie-mapa-tirador,
+  .aviso .mono,
+  .leyenda-titulo,
+  .leyenda-detalle > summary,
+  .leyenda-nota,
+  .leyenda-simbolos > summary,
+  .distintivo,
+  .area-cifra,
+  #detalle-area span,
+  .franja-nombre,
+  .metrica .apunte,
+  .barra-valor,
+  .tabla-cobertura thead th,
+  .tabla-pista {
+    font-size: 0.75rem;
+  }
+
+  /* Listas de enlaces —descargas y pie— con 24 px de alto por enlace. Los
+     enlaces dentro de una frase quedan fuera de 2.5.8 por la excepcion de
+     texto en linea; estos son una lista que se toca uno a uno. */
+  .descargas { line-height: 2; }
+  .descargas a,
+  .pie-nav a,
+  footer a { display: inline-block; padding: 0.2rem 0; }
+  .metrica .etiqueta,
+  .eyebrow,
+  .evento-cifra small { letter-spacing: 0.06em; }
+  .lienzo .maplibregl-ctrl-scale { font-size: 0.72rem; }
+
+  /* Objetivos de al menos 24 px (WCAG 2.5.8 AA). */
+  .menor-lugar { padding: 0.2rem 0; min-height: 1.75rem; }
+  .pie-mapa > .pie-mapa-tirador { min-height: 2rem; }
+  .aviso-mas { min-height: 1.75rem; }
+}
+
+.cargando-evento {
+  position: absolute;
+  left: 50%;
+  bottom: 4.2rem;
+  transform: translateX(-50%);
+  z-index: 6;
+  margin: 0;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  color: var(--crema);
+  background: var(--bosque);
+  border-radius: var(--radio-pastilla);
+  box-shadow: var(--sombra-corta);
+  pointer-events: none;
 }

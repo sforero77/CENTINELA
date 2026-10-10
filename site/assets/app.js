@@ -381,10 +381,10 @@ const AREA_CELDA_FUEGO_KM2 = 0.74;
 // nuestra y no mide lo mismo que este sistema, así que se enseña rotulada como
 // lo que es y con la fuente delante.
 const PAGER = {
-  green: { texto: "USGS PAGER: verde", clase: "" },
-  yellow: { texto: "USGS PAGER: amarilla", clase: "" },
-  orange: { texto: "USGS PAGER: naranja", clase: "alarma" },
-  red: { texto: "USGS PAGER: roja", clase: "alarma" },
+  green: { texto: "Alerta PAGER (USGS): verde", clase: "" },
+  yellow: { texto: "Alerta PAGER (USGS): amarilla", clase: "" },
+  orange: { texto: "Alerta PAGER (USGS): naranja", clase: "alarma" },
+  red: { texto: "Alerta PAGER (USGS): roja", clase: "alarma" },
 };
 
 const nf = new Intl.NumberFormat("es");
@@ -447,12 +447,18 @@ function selloDeRevision(iso) {
   return ` · <span class="revisado" title="${escapar(comoFecha(iso))}">revisado ${cuanto}</span>`;
 }
 
+//: «M5.4 < umbral M5.5» llega asi del vigia; el resto del visor escribe M5,4.
+const conComaDecimal = (t) => String(t ?? "").replace(/(\d)\.(\d)/g, "$1,$2");
+
 // Redondeo en prosa, igual que el markdown del reporte: publicar
 // "2.415.793 personas" sugiere una precisión que el método no tiene.
 function comoTexto(v) {
   if (!Number.isFinite(v) || v <= 0) return "0";
   if (v >= 1e6) return `${(v / 1e6).toFixed(1).replace(".", ",")} M`;
-  if (v >= 1e3) return numero(Math.round(v / 1e3) * 1e3);
+  // Agrupado siempre: las tarjetas de la lista decian «3000 personas» al lado
+  // de «372.000» y de «8.930 km» en el panel. En una columna de cifras la
+  // excepcion de la RAE para cuatro digitos se lee como errata (ver `miles`).
+  if (v >= 1e3) return miles(Math.round(v / 1e3) * 1e3);
   // Por debajo de 10 se conserva el decimal: el primer corte de vías es 0,5 km
   // y redondeado salía "1" en la leyenda, que además coincidía con el segundo
   // corte. Una leyenda con dos clases rotuladas igual no es una leyenda.
@@ -952,6 +958,10 @@ async function cargarEventos() {
     // El texto del vacio legitimo vive arriba, en la rama que comprueba que la
     // lista llego y esta vacia. Aqui solo cabe decir que no se pudo leer.
     aviso.hidden = false;
+    // Sin indice, los filtros son desplegables vacios: dos chevrones sin texto
+    // que prometen algo que no hay.
+    const filtros = $("barra-filtros");
+    if (filtros) filtros.style.display = "none";
     aviso.textContent =
       "No se pudo leer el índice de reportes. No significa que no haya ninguno: " +
       "significa que esta página no consiguió la lista. Recargar suele bastar; " +
@@ -1196,6 +1206,19 @@ function filaEvento(evento) {
   return li;
 }
 
+function mostrarCargaDeEvento() {
+  const previa = $("cargando-evento");
+  if (previa) previa.remove();
+  const p = document.createElement("p");
+  p.id = "cargando-evento";
+  p.className = "cargando-evento";
+  p.setAttribute("role", "status");
+  p.textContent = "Cargando el reporte…";
+  const lienzo = $("lienzo");
+  if (lienzo) lienzo.appendChild(p);
+  return p;
+}
+
 async function seleccionar(usgsId) {
   // Abrir un evento es contenido del modo sismos, llegue de donde llegue: la
   // lista, el mapa en modo fuego, o un enlace con ?evento= y ?amenaza=fuego a
@@ -1218,7 +1241,12 @@ async function seleccionar(usgsId) {
   pintarLeyendaSimbolos();
 
   try {
-    const [reporte, csv, celdas, contornos] = await Promise.all([
+    // SE DICE QUE ESTA CARGANDO, ENCIMA DEL MAPA. El «Cargando…» del titulo
+    // vive en el panel, que en un telefono esta debajo del pliegue: con red
+    // lenta el selector ya decia «M7,7» y el mapa seguia en el panorama sin
+    // una palabra (auditoria movil del 10-oct-2026).
+    const pildora = mostrarCargaDeEvento();
+    const pedido = Promise.all([
       json(`reports/${usgsId}/report.json`),
       fetch(`reports/${usgsId}/adm2.csv`).then((r) => (r.ok ? r.text() : "")),
       fetch(`reports/${usgsId}/celdas.json`).then((r) => (r.ok ? r.json() : null)),
@@ -1226,6 +1254,8 @@ async function seleccionar(usgsId) {
       // el tablero sigue igual, solo sin el área de afectación dibujada.
       fetch(`reports/${usgsId}/contornos.json`).then((r) => (r.ok ? r.json() : null)),
     ]);
+    pedido.finally(() => pildora.remove());
+    const [reporte, csv, celdas, contornos] = await pedido;
     pintarLateral(reporte, parsearCsv(csv), celdas);
     // El mapa va en su propio try: las cifras y las barras salen del reporte y
     // no dependen de que la malla se pueda dibujar. Antes un fallo aqui
@@ -1443,11 +1473,17 @@ function pintarDistintivos(reporte) {
         "solo se publica exposición.",
     });
   }
+  // UN TOQUE LO EXPLICA. La explicacion vivia solo en `title`, que en un
+  // telefono no existe: "PAGER" quedaba como una sigla sin abrir (auditoria
+  // movil del 10-oct-2026). Cada distintivo con explicacion es un `<details>`.
   $("detalle-distintivos").innerHTML = marcas
-    .map(
-      (m) =>
-        `<li><span class="distintivo ${m.clase || ""}" title="${escapar(m.titulo)}">` +
-        `${escapar(m.texto)}</span></li>`
+    .map((m) =>
+      m.titulo
+        ? `<li><details class="distintivo-plegable">` +
+          `<summary class="distintivo ${m.clase || ""}" title="${escapar(m.titulo)}">` +
+          `${escapar(m.texto)}</summary>` +
+          `<p class="distintivo-nota">${escapar(m.titulo)}</p></details></li>`
+        : `<li><span class="distintivo ${m.clase || ""}">${escapar(m.texto)}</span></li>`
     )
     .join("");
 
@@ -1696,7 +1732,8 @@ function tarjetaIndicador({ clave, valor, texto, etiqueta, apunte, ancha }) {
     `<div class="metrica${ancha ? " ancha" : ""}"${nivel ? ` data-nivel="${nivel}"` : ""}>` +
     `<span class="cabeza">${iconoSvg(d.icono)}<span class="valor">${formateado}</span>` +
     (nivel
-      ? `<span class="nivel" title="${NIVELES[nivel]}, comparado con los reportes publicados">` +
+      ? `<span class="nivel" role="img" aria-label="Nivel ${NIVELES[nivel]}, comparado con los reportes publicados" ` +
+        `title="${NIVELES[nivel]}, comparado con los reportes publicados">` +
         `<i></i><i></i><i></i></span>`
       : "") +
     `</span>` +
@@ -4200,11 +4237,15 @@ function iniciarMapa() {
   // todo: `idle` no llega mientras siguen entrando teselas, y dejarlo puesto
   // haría parecer roto un mapa que ya se ve. Con red de seguridad, porque un
   // "cargando" eterno es peor que un mapa gris.
+  let cargo = false;
   const listo = () => {
     const aviso = $("cargando");
     if (aviso) aviso.hidden = true;
   };
-  mapa.once("load", listo);
+  mapa.once("load", () => {
+    cargo = true;
+    listo();
+  });
 
   // Y SI A LOS OCHO SEGUNDOS EL ESTILO NO LLEGO, SE DICE.
   //
@@ -4215,11 +4256,20 @@ function iniciarMapa() {
   //
   // Un rectangulo gris y mudo se lee como "aqui no hay nada que ver", que es
   // justo lo contrario de lo que pasa.
+  //
+  // `isStyleLoaded()` NO ERA LA PREGUNTA. Da `false` mientras **cualquier**
+  // fuente esta cargando, asi que con `load` ya ocurrido y la malla de un evento
+  // o los focos de fuego entrando a los 8 s, el panel decia "no cargó" encima
+  // de un mapa que se veia —y nada lo volvia a quitar, porque `listo` iba con
+  // `once("load")`—. Auditoria movil del 10-oct-2026, con red de telefono. Lo
+  // que importa es si hay estilo: si `load` ya paso, o el estilo existe, el
+  // mapa base llego. Y si llega tarde, `idle` retira el aviso.
   const listoOSinEstilo = () => {
-    if (mapa.isStyleLoaded && mapa.isStyleLoaded()) {
+    if (cargo || (mapa.getStyle && mapa.getStyle())) {
       listo();
       return;
     }
+    mapa.once("idle", listo);
     anotarFallo("mapa-base", "el estilo base no llego en 8 s");
     // Misma presentacion que `avisarSinMapa`, que es el caso gemelo y ya tiene
     // su hueco y su estilo: dos avisos de la misma cosa no deben verse
@@ -4228,12 +4278,12 @@ function iniciarMapa() {
     if (aviso) {
       aviso.classList.add("panel-mapa-aviso");
       aviso.innerHTML =
-        `<span class="mono">El mapa base no cargó</span>` +
-        `<span class="panel-mapa-nota">El fondo cartográfico no llegó. Las ` +
+        `<span class="mono">El mapa base está tardando</span>` +
+        `<span class="panel-mapa-nota">El fondo cartográfico no ha llegado. Las ` +
         `cifras, las tablas y las descargas de cada reporte siguen completas.</span>`;
       aviso.hidden = false;
     }
-    anunciar("El mapa base no cargó. Las cifras y las descargas siguen completas.");
+    anunciar("El mapa base está tardando. Las cifras y las descargas siguen completas.");
   };
 
   // EL ENCUADRE, AHORA SI ADAPTADO A LA VENTANA.
@@ -4784,7 +4834,7 @@ function filaMenor(e) {
   sin.className = "evento-cifra";
   sin.innerHTML =
     `<span class="sin-medicion">Sin medición</span>` +
-    `<small>${escapar(e.razon || "bajo el umbral")}</small>`;
+    `<small>${escapar(conComaDecimal(e.razon || "bajo el umbral"))}</small>`;
 
   li.append(cabecera, meta, sin);
   return li;
@@ -4883,7 +4933,7 @@ function dibujarObservados(eventos) {
           `<div class="popup-observado">` +
             `<strong>M${String(p.mag).replace(".", ",")}</strong> · ${escapar(p.lugar)}<br>` +
             `<span class="menor">${comoFecha(p.origen_utc)} · ${numero(p.depth_km)} km de profundidad</span>` +
-            `<p class="nota-observado">No se midió su impacto. ${escapar(p.razon)}.</p>` +
+            `<p class="nota-observado">No se midió su impacto. ${escapar(conComaDecimal(p.razon))}.</p>` +
           `</div>`
         )
         .addTo(m);
