@@ -2352,7 +2352,8 @@ def test_los_filtros_son_desplegables_y_estan_arriba(pagina: Any) -> None:
         """() => {
           const b = document.getElementById('barra-filtros').getBoundingClientRect();
           const l = document.getElementById('lista-eventos').getBoundingClientRect();
-          return b.bottom <= l.top && !!document.getElementById('barra-filtros').closest('#lateral');
+          const enPanel = !!document.getElementById('barra-filtros').closest('#lateral');
+          return b.bottom <= l.top && enPanel;
         }"""
     )
     assert orden, "los filtros no estan en el panel, encima de la lista que filtran"
