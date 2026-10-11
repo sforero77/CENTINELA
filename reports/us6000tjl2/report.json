@@ -3,63 +3,65 @@
   "event": {
     "usgs_id": "us6000tjl2",
     "mag": 7.4,
-    "depth_km": 108.174,
+    "depth_km": 116.13,
     "utc": "2026-08-10T12:34:28Z",
-    "lugar": "2 km al SE de San José del Palmar, Colombia",
+    "lugar": "4 km al SSO de San José del Palmar, Colombia",
     "pager_alert": "red",
-    "lon": -76.2182,
-    "lat": 4.8836
+    "lon": -76.2558,
+    "lat": 4.8601
   },
   "inputs": {
-    "shakemap_version": 10,
+    "shakemap_version": 11,
     "groundfailure_version": 10,
     "exposure_manifest": "col-v0.7",
     "modelo_deslizamiento": "jessee_2018_model.tif",
-    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 7094549.802590343,
-    "pop_mmi7p": 2389895.6842751526,
+    "pop_mmi6p": 7132881.885651891,
+    "pop_mmi7p": 2434710.057361298,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 293154.3312134345,
-    "pop_65p_mmi6p": 836937.127949031,
-    "bld_mmi6p": 1249528.0,
-    "built_m2_mmi6p": 191951847.0,
-    "health_mmi6p": 1953.0,
-    "edu_mmi6p": 2465.0,
-    "road_km_mmi6p": 44676.44152489518,
-    "road_km_principal_mmi6p": 4620.735956161504,
-    "bld_mmi7p": 604740.0,
-    "built_m2_mmi7p": 75512297.0,
-    "health_mmi7p": 503.0,
-    "edu_mmi7p": 1099.0,
-    "road_km_mmi7p": 16886.04853211075,
-    "road_km_principal_mmi7p": 1860.2998482048158,
+    "pop_65p_mmi7p": 297535.2836371791,
+    "pop_65p_mmi6p": 841100.4405862436,
+    "bld_mmi6p": 1268652.0,
+    "built_m2_mmi6p": 193996103.0,
+    "health_mmi6p": 1965.0,
+    "edu_mmi6p": 2497.0,
+    "road_km_mmi6p": 46005.62126226286,
+    "road_km_principal_mmi6p": 4658.391915475152,
+    "bld_mmi7p": 618471.0,
+    "built_m2_mmi7p": 76733321.0,
+    "health_mmi7p": 517.0,
+    "edu_mmi7p": 1123.0,
+    "road_km_mmi7p": 17206.818050856433,
+    "road_km_principal_mmi7p": 1909.2039018363766,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 1815826.9206681484
+    "pop_lq_alta": 1819146.2378107868
   },
   "top_municipios": [
     {
       "adm2_id": "66001",
       "nombre": "Pereira",
       "mmi_max": 7.5,
-      "pop_mmi7p": 509362.56861227565,
-      "pop_banda": 509362.56861227565
+      "pop_mmi7p": 509366.9467531424,
+      "pop_banda": 509366.9467531424
     },
     {
       "adm2_id": "76109",
       "nombre": "Buenaventura",
       "mmi_max": 7.0,
-      "pop_mmi7p": 443745.9724697368,
-      "pop_banda": 443745.9724697368
+      "pop_mmi7p": 443852.2384215249,
+      "pop_banda": 443852.2384215249
     },
     {
       "adm2_id": "63001",
       "nombre": "Armenia",
-      "mmi_max": 7.0,
+      "mmi_max": 7.5,
       "pop_mmi7p": 333333.3656698363,
       "pop_banda": 333333.3656698363
     },
@@ -81,15 +83,15 @@
       "adm2_id": "27001",
       "nombre": "Quibdó",
       "mmi_max": 7.0,
-      "pop_mmi7p": 110987.44111835212,
-      "pop_banda": 110987.44111835212
+      "pop_mmi7p": 111316.16220397316,
+      "pop_banda": 111316.16220397316
     },
     {
       "adm2_id": "66682",
       "nombre": "Santa Rosa de Cabal",
       "mmi_max": 7.5,
-      "pop_mmi7p": 72564.2478192104,
-      "pop_banda": 72564.2478192104
+      "pop_mmi7p": 72566.73802877497,
+      "pop_banda": 72566.73802877497
     },
     {
       "adm2_id": "63401",
@@ -144,12 +146,12 @@
       "adm2_id": "63130",
       "nombre": "Calarcá",
       "mmi_max": 7.0,
-      "pop_mmi7p": 25641.71717787534,
-      "pop_banda": 25641.71717787534
+      "pop_mmi7p": 26804.844380717725,
+      "pop_banda": 26804.844380717725
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 2.6,
+    "pop_discrepancia_pct": 2.5,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -165,6 +167,12 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v10 → v11 (us)",
+    "Profundidad: 108 → 116 km",
+    "Epicentro: reubicado 5 km",
+    "Población de 65 años o más en MMI≥7: 290 mil → 300 mil",
+    "Edificaciones en MMI≥7: 600 mil → 620 mil",
+    "Sedes de salud en MMI≥7: 500 → 520",
     "Edificaciones en MMI≥7: 530 mil → 600 mil"
   ],
   "licencia": {
@@ -236,6 +244,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-28T15:43:50Z",
+  "generado_utc": "2026-10-11T11:21:32Z",
   "pipeline_version": "0.1.0"
 }

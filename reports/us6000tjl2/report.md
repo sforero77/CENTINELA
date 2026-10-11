@@ -1,6 +1,6 @@
-# Exposición sísmica: M7,4 · 2 km al SE de San José del Palmar, Colombia
+# Exposición sísmica: M7,4 · 4 km al SSO de San José del Palmar, Colombia
 
-**Evento USGS:** `us6000tjl2` · **Origen:** 2026-08-10T12:34:28Z UTC · **Profundidad:** 108,2 km
+**Evento USGS:** `us6000tjl2` · **Origen:** 2026-08-10T12:34:28Z UTC · **Profundidad:** 116,1 km
 
 > **Reconstrucción retrospectiva.** Este reporte se calculó después del evento, no en respuesta a él, y no cuenta para las métricas de latencia del sistema.
 >
@@ -13,16 +13,16 @@
 | Población en MMI≥6 | 7,1 millones |
 | Población en MMI≥7 | 2,4 millones |
 | Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥7 | 600 mil |
-| Sedes de salud en MMI≥7 | 503 |
-| Sedes educativas en MMI≥7 | 1.099 |
+| Edificaciones en MMI≥7 | 620 mil |
+| Sedes de salud en MMI≥7 | 517 |
+| Sedes educativas en MMI≥7 | 1.123 |
 | Vías primarias y secundarias en MMI≥7 | 1.900 km |
 | Vías locales en MMI≥7 | 15 mil km |
-| Superficie construida en MMI≥7 | 75,5 km² |
+| Superficie construida en MMI≥7 | 76,7 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **290 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **300 mil** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
@@ -30,7 +30,7 @@ De la población en intensidad MMI≥7, alrededor de **290 mil** personas tienen
 |---:|---|---|---:|---:|
 | 1 | Pereira | `66001` | 7,5 | 510 mil |
 | 2 | Buenaventura | `76109` | 7,0 | 440 mil |
-| 3 | Armenia | `63001` | 7,0 | 330 mil |
+| 3 | Armenia | `63001` | 7,5 | 330 mil |
 | 4 | Dosquebradas | `66170` | 7,5 | 180 mil |
 | 5 | Cartago | `76147` | 7,5 | 130 mil |
 | 6 | Quibdó | `27001` | 7,0 | 110 mil |
@@ -42,7 +42,7 @@ De la población en intensidad MMI≥7, alrededor de **290 mil** personas tienen
 | 12 | Montenegro | `63470` | 7,0 | 32 mil |
 | 13 | Quimbaya | `63594` | 7,0 | 32 mil |
 | 14 | Chinchiná | `17174` | 7,0 | 30 mil |
-| 15 | Calarcá | `63130` | 7,0 | 26 mil |
+| 15 | Calarcá | `63130` | 7,0 | 27 mil |
 
 ## Deslizamiento y licuefacción
 
@@ -63,10 +63,16 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,6 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,5 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v10 → v11 (us)
+- Profundidad: 108 → 116 km
+- Epicentro: reubicado 5 km
+- Población de 65 años o más en MMI≥7: 290 mil → 300 mil
+- Edificaciones en MMI≥7: 600 mil → 620 mil
+- Sedes de salud en MMI≥7: 500 → 520
 - Edificaciones en MMI≥7: 530 mil → 600 mil
 
 ## Descargas
@@ -76,10 +82,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **2,6 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v10**
-- Ground Failure consumido: **v10**
+- ShakeMap consumido: **v11** de `us`
+- Ground Failure consumido: **v10** de `us`
 - Manifiesto de exposición: [`col-v0.7`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/COL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-28T15:43:50Z
+- Pipeline: `0.1.0` · Generado: 2026-10-11T11:21:32Z
 
 ## Advertencias
 

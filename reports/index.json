@@ -122,17 +122,17 @@
   {
     "usgs_id": "us6000tjl2",
     "mag": 7.4,
-    "lugar": "2 km al SE de San José del Palmar, Colombia",
+    "lugar": "4 km al SSO de San José del Palmar, Colombia",
     "iso3": "COL",
-    "lon": -76.2182,
-    "lat": 4.8836,
-    "pop_mmi7p": 2389895.6842751526,
-    "pop_mmi6p": 7094549.802590343,
+    "lon": -76.2558,
+    "lat": 4.8601,
+    "pop_mmi7p": 2434710.057361298,
+    "pop_mmi6p": 7132881.885651891,
     "utc": "2026-08-10T12:34:28Z",
-    "shakemap_version": 10,
+    "shakemap_version": 11,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-09-28T15:43:50Z"
+    "generado_utc": "2026-10-11T11:21:32Z"
   },
   {
     "usgs_id": "us6000t7zp",
