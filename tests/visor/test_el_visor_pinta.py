@@ -3663,8 +3663,10 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
     encontrada: tuple[str, float] | None = None
     ultima: tuple[str, float] | None = None
     alcanzadas = 0
+    #: Donde cayeron las pulsaciones que si dieron con malla, para la 2.a pasada.
+    aciertos: list[tuple[float, float]] = []
 
-    def _barrido(pasos: int) -> None:
+    def _barrido(pasos: int, x0: float, y0: float, ancho: float, alto: float) -> None:
         """Recorre el mapa en rejilla y para en cuanto da con la celda buscada.
 
         UNA REJILLA ANCHA, Y SIN ESCALAR LA COLINA. Aqui habia cinco por cinco
@@ -3694,20 +3696,38 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
         nonlocal encontrada, ultima, alcanzadas
         for i in range(pasos):
             for j in range(pasos):
-                # Del 6 % al 94 %: el borde exacto del lienzo no es mapa util y
-                # ahi viven los controles de MapLibre.
-                fx = 0.06 + 0.88 * j / (pasos - 1)
-                fy = 0.06 + 0.88 * i / (pasos - 1)
-                celda = _celda_bajo(caja["x"] + caja["width"] * fx, caja["y"] + caja["height"] * fy)
+                x = x0 + ancho * j / (pasos - 1)
+                y = y0 + alto * i / (pasos - 1)
+                celda = _celda_bajo(x, y)
                 if celda is None:
                     continue
                 alcanzadas += 1
+                aciertos.append((x, y))
                 ultima = celda
                 if celda[1] >= 1000:
                     encontrada = celda
                     return
 
-    _barrido(12)
+    # Del 6 % al 94 %: el borde exacto del lienzo no es mapa util y ahi viven
+    # los controles de MapLibre.
+    _barrido(
+        12,
+        caja["x"] + caja["width"] * 0.06,
+        caja["y"] + caja["height"] * 0.06,
+        caja["width"] * 0.88,
+        caja["height"] * 0.88,
+    )
+    # SEGUNDA PASADA, SOLO SOBRE LA MALLA (10-oct-2026). La malla ocupa una
+    # parte del lienzo y la rejilla ancha la toca con pocos puntos: en CI se
+    # alcanzaron 24 celdas de 144 pulsaciones dos veces seguidas, y con el
+    # 6,65 % de celdas por encima de mil eso falla una de cada cinco veces. No se
+    # acerca la camara —ver arriba por que eso encierra la busqueda en lo
+    # rural—: se barre mas denso el rectangulo donde la primera pasada SI
+    # encontro malla, que sigue siendo un muestreo uniforme de sus celdas.
+    if encontrada is None and aciertos:
+        xs = [a[0] for a in aciertos]
+        ys = [a[1] for a in aciertos]
+        _barrido(24, min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
 
     assert ultima, "no se pudo abrir el globo de ninguna celda de la malla"
     h3, pop = encontrada or ultima
