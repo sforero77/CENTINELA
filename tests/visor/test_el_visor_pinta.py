@@ -742,6 +742,9 @@ def test_ningun_texto_se_pisa_con_otro(pagina: Any, etiqueta: str, ancho: int, a
 
     # Y el modo fuego, que es un estado nuevo con su propia leyenda grande.
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
+    # En el telefono la leyenda del fuego arranca plegada (10-oct-2026); se abre
+    # a mano para medir el peor estado, que es el que alguien puede tener.
+    pagina.evaluate("() => { document.getElementById('pie-mapa').open = true; }")
     pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
     pagina.wait_for_timeout(800)
 
@@ -838,9 +841,12 @@ def test_las_cajas_del_mapa_no_se_comen_el_mapa(
     )
 
     # Y el modo fuego, que trae la leyenda mas grande que pinta este visor.
+    # En el telefono arranca plegada desde el 10-oct-2026; se abre para medir
+    # el peor caso, que es lo que esta prueba defiende.
     _con_fuego(pagina)
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
-    pagina.wait_for_selector("#leyenda:not([hidden])", timeout=ESPERA_MS)
+    pagina.wait_for_selector("#leyenda:not([hidden])", state="attached", timeout=ESPERA_MS)
+    pagina.evaluate("() => { document.getElementById('pie-mapa').open = true; }")
     pagina.wait_for_timeout(800)
 
     medida = pagina.evaluate(SONDA_TAPADO)
@@ -880,7 +886,10 @@ def test_el_pie_del_mapa_se_pliega_y_devuelve_el_mapa(pagina: Any) -> None:
     assert pagina.locator("#leyenda").is_visible(), "abierto el pie, la leyenda no se ve"
     abierto = pagina.evaluate(SONDA_TAPADO)["pct"]
 
-    assert plegado <= abierto - 15, (
+    # Proporcion y no puntos: con el mapa a pantalla completa (10-oct-2026) la
+    # leyenda abierta tapa el 15 % y no el 35 %, y una resta fija de 15 puntos
+    # ya no distingue «devuelve mapa» de «no hace nada».
+    assert plegado * 2 <= abierto, (
         f"plegar el pie no devuelve mapa: {abierto} % tapado abierto, {plegado} % plegado"
     )
 
@@ -2197,19 +2206,27 @@ def test_cada_amenaza_tiene_su_indice_y_solo_uno_a_la_vez(pagina: Any) -> None:
 
 
 def test_los_focos_se_listan_por_lo_mas_reciente(pagina: Any) -> None:
-    """La pregunta que trae a alguien a un mapa de fuego es qué arde AHORA.
+    """Abre por personas cerca; «Reciente» sigue a un toque y ordena de verdad.
 
-    Por eso «Reciente» es el orden por defecto y no la energía, que es lo que
-    ordena la capa del mapa.
+    Hasta el 10-oct-2026 «Reciente» era el orden por defecto («qué arde
+    AHORA»). En la revision con el dueño se eligio abrir con donde hay mas gente
+    cerca, que es lo que pide atencion; la pregunta de «ahora» se responde con
+    el mismo desplegable.
     """
     pagina.locator('#amenazas button[data-amenaza="fuego"]').click()
     _con_fuego(pagina, "focos")
     pagina.wait_for_selector("#lista-focos li", timeout=ESPERA_MS)
 
-    assert pagina.locator("#orden-focos").input_value() == "reciente", (
-        "no ordena por reciente al abrir"
+    assert pagina.locator("#orden-focos").input_value() == "personas", (
+        "no ordena por personas al abrir"
     )
+    personas = pagina.eval_on_selector_all(
+        "#lista-focos li", "els => els.map(e => Number(e.dataset.pop) || 0)"
+    )
+    assert personas == sorted(personas, reverse=True), "las filas no van de más a menos gente"
 
+    pagina.select_option("#orden-focos", "reciente")
+    pagina.wait_for_timeout(500)
     sellos = pagina.eval_on_selector_all(
         "#lista-focos li", "els => els.map(e => e.dataset.utc).filter(Boolean)"
     )
@@ -2564,6 +2581,8 @@ def test_pinchar_un_menor_lo_enciende_en_el_mapa(pagina: Any) -> None:
     casilla = pagina.locator("#interruptor-observados input")
     assert not casilla.is_checked(), "la capa debería nacer apagada"
 
+    # La lista arranca plegada desde el 10-oct-2026.
+    pagina.locator("#menores-plegable > summary").click()
     pagina.locator("#lista-menores .menor-lugar").first.click()
     pagina.wait_for_timeout(800)
 
@@ -3644,8 +3663,10 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
     encontrada: tuple[str, float] | None = None
     ultima: tuple[str, float] | None = None
     alcanzadas = 0
+    #: Donde cayeron las pulsaciones que si dieron con malla, para la 2.a pasada.
+    aciertos: list[tuple[float, float]] = []
 
-    def _barrido(pasos: int) -> None:
+    def _barrido(pasos: int, x0: float, y0: float, ancho: float, alto: float) -> None:
         """Recorre el mapa en rejilla y para en cuanto da con la celda buscada.
 
         UNA REJILLA ANCHA, Y SIN ESCALAR LA COLINA. Aqui habia cinco por cinco
@@ -3675,20 +3696,38 @@ def test_el_globo_de_la_celda_da_el_valor_exacto(pagina: Any) -> None:
         nonlocal encontrada, ultima, alcanzadas
         for i in range(pasos):
             for j in range(pasos):
-                # Del 6 % al 94 %: el borde exacto del lienzo no es mapa util y
-                # ahi viven los controles de MapLibre.
-                fx = 0.06 + 0.88 * j / (pasos - 1)
-                fy = 0.06 + 0.88 * i / (pasos - 1)
-                celda = _celda_bajo(caja["x"] + caja["width"] * fx, caja["y"] + caja["height"] * fy)
+                x = x0 + ancho * j / (pasos - 1)
+                y = y0 + alto * i / (pasos - 1)
+                celda = _celda_bajo(x, y)
                 if celda is None:
                     continue
                 alcanzadas += 1
+                aciertos.append((x, y))
                 ultima = celda
                 if celda[1] >= 1000:
                     encontrada = celda
                     return
 
-    _barrido(12)
+    # Del 6 % al 94 %: el borde exacto del lienzo no es mapa util y ahi viven
+    # los controles de MapLibre.
+    _barrido(
+        12,
+        caja["x"] + caja["width"] * 0.06,
+        caja["y"] + caja["height"] * 0.06,
+        caja["width"] * 0.88,
+        caja["height"] * 0.88,
+    )
+    # SEGUNDA PASADA, SOLO SOBRE LA MALLA (10-oct-2026). La malla ocupa una
+    # parte del lienzo y la rejilla ancha la toca con pocos puntos: en CI se
+    # alcanzaron 24 celdas de 144 pulsaciones dos veces seguidas, y con el
+    # 6,65 % de celdas por encima de mil eso falla una de cada cinco veces. No se
+    # acerca la camara —ver arriba por que eso encierra la busqueda en lo
+    # rural—: se barre mas denso el rectangulo donde la primera pasada SI
+    # encontro malla, que sigue siendo un muestreo uniforme de sus celdas.
+    if encontrada is None and aciertos:
+        xs = [a[0] for a in aciertos]
+        ys = [a[1] for a in aciertos]
+        _barrido(24, min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
 
     assert ultima, "no se pudo abrir el globo de ninguna celda de la malla"
     h3, pop = encontrada or ultima
@@ -4167,16 +4206,16 @@ def test_el_rotulo_de_la_tarjeta_de_fuego_sigue_a_la_ventana_elegida(pagina: Any
         texto: str = pagina.locator("#en-vivo").inner_text()
         return texto
 
-    assert "detecciones en 24" in apunte().replace("\u00a0", " ")
+    assert "satélite en 24" in apunte().replace("\u00a0", " ")
 
     pagina.select_option("#ventana-focos", "h6")
     pagina.wait_for_timeout(900)
 
     ahora = apunte().replace("\u00a0", " ")
-    assert "detecciones en 6 h" in ahora, (
+    assert "satélite en 6 h" in ahora, (
         f"la tarjeta recorta por 6 h y sigue rotulando otra ventana: {ahora!r}"
     )
-    assert "detecciones en 24 h" not in ahora
+    assert "satélite en 24 h" not in ahora
 
 
 def test_cerrar_el_detalle_borra_de_verdad_las_tres_capas(pagina: Any) -> None:

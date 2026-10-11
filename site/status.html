@@ -89,29 +89,35 @@
 
   <main class="hoja graticula" id="contenido" tabindex="-1">
     <h1>Estado del sistema</h1>
+    <!-- EN PALABRAS PRIMERO (revision del 10-oct-2026). La pagina abria con
+         «RNF-02», «p50» y «p95» y un parrafo sobre los turnos de GitHub Actions:
+         documentacion interna. Arriba va cuanto tarda, dicho como se diria; el
+         como se mide queda plegado debajo, entero. -->
     <p class="entradilla">
-      La transparencia sobre la latencia es parte del producto (RNF-02). Esta
-      página publica la distribución real de demoras, no la prometida.
+      Cuánto tarda CENTINELA en publicar un reporte después de un sismo. Se mide
+      en cada sismo real y se publica tal cual, cumpla o no el objetivo.
     </p>
-
-    <h2>Objetivo de latencia</h2>
-    <div class="objetivo">
-      <div><span class="valor">≤ 60 min</span> <span class="mono">p50</span></div>
-      <div><span class="valor">≤ 90 min</span> <span class="mono">p95</span></div>
-    </div>
-    <p class="nota">
-      Medido desde que el primer ShakeMap del evento está disponible hasta que
-      el reporte v1 queda publicado. GitHub Actions concede sus turnos
-      <em>según disponibilidad</em>: las demoras documentadas van de 5 a 30 minutos y no
-      dependen de nosotros. El objetivo se define sobre lo que sí controlamos, y la
-      demora real se publica aparte para que se pueda auditar la
-      diferencia.
-    </p>
-
-    <h2>Latencia medida</h2>
+    <h2>Lo que tarda</h2>
     <div id="resumen" class="cargando">Cargando…</div>
+    <details class="como-se-mide">
+      <summary>Cómo se mide</summary>
+      <h3>Objetivo</h3>
+      <div class="objetivo">
+        <div><span class="valor">≤ 60 min</span> <span class="mono">la mitad (p50)</span></div>
+        <div><span class="valor">≤ 90 min</span> <span class="mono">9 de cada 10 (p95)</span></div>
+      </div>
+      <p class="nota">
+        Medido desde que el primer ShakeMap del evento está disponible hasta que
+        el reporte v1 queda publicado. GitHub Actions concede sus turnos
+        <em>según disponibilidad</em>: las demoras documentadas van de 5 a 30 minutos y no
+        dependen de nosotros. El objetivo se define sobre lo que sí controlamos, y la
+        demora real se publica aparte para que se pueda auditar la
+        diferencia (requisito RNF-02).
+      </p>
+      <p class="nota" id="nota-relojes"></p>
+    </details>
 
-    <h2>Eventos publicados</h2>
+    <h2>Sismos publicados</h2>
     <p class="cargando" id="estado-eventos">Cargando…</p>
     <div class="tabla-scroll"><table id="tabla-eventos" hidden>
       <!-- LAS DOS ÚLTIMAS COLUMNAS SON EL TRABAJO QUE NO SE VEÍA.
@@ -129,9 +135,8 @@
 
     <h2>Últimas revisiones del vigía</h2>
     <p class="nota">
-      GitHub desactiva las tareas programadas tras 60 días sin actividad en
-      el repositorio. Que dejen de aparecer revisiones aquí es la señal de que eso
-      pasó — el modo de falla más probable de todo el sistema.
+      Cada pocos minutos el vigía mira el catálogo del USGS. Si dejan de aparecer
+      revisiones aquí, el vigía se detuvo.
     </p>
     <p class="cargando" id="estado-latidos">Cargando…</p>
     <ul class="latidos" id="lista-latidos"></ul>

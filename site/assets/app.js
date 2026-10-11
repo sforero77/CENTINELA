@@ -587,7 +587,7 @@ const estado = {
   ventana: "todo",
   //: Y los de la lista de focos, que van por su cuenta: son otra amenaza.
   ventanaFuego: "h24",
-  ordenFocos: "reciente",
+  ordenFocos: "personas",
   paisFuego: "",
   //: ISO3 -> nombre, del unico sitio que lo publica: la cobertura.
   nombresPais: null,
@@ -1379,11 +1379,12 @@ function pintarLateral(reporte, municipios, celdas) {
   $("detalle-eyebrow").textContent = `Reporte · ${ev.usgs_id}`;
   $("detalle-titulo").textContent =
     `M${String(ev.mag).replace(".", ",")} — ${ev.lugar}`;
+  // Sin el identificador del activo («pan-v0.4»): es dato de quien audita y
+  // viaja en el JSON y en las descargas (repaso de textos, 10-oct-2026).
   $("detalle-meta").textContent = [
     comoFecha(ev.utc),
     `${numero(ev.depth_km, 1)} km de profundidad`,
     `ShakeMap v${reporte.inputs.shakemap_version}`,
-    reporte.inputs.exposure_manifest,
   ].join(" · ");
 
   pintarDistintivos(reporte);
@@ -2598,6 +2599,20 @@ window.CENTINELA = {
 function aplicarAmenaza() {
   const fuego = estado.amenaza === "fuego";
   const m = estado.mapa;
+
+  // En el telefono la leyenda de potencia del fuego tapaba media pantalla
+  // (revision del 10-oct-2026): arranca plegada, como con un sismo abierto. Lo
+  // que quien lee abrio o cerro a mano se respeta.
+  const pie = $("pie-mapa");
+  if (pie && fuego && !pie.dataset.tocado && window.matchMedia && window.matchMedia(ESTRECHA).matches) {
+    if (pie.open) {
+      pie.open = false;
+      pie.dataset.plegadoPorEvento = "1";
+    }
+  } else if (pie && !fuego && pie.dataset.plegadoPorEvento && !estado.seleccionado) {
+    delete pie.dataset.plegadoPorEvento;
+    if (!pie.dataset.tocado) pie.open = true;
+  }
 
   for (const boton of document.querySelectorAll("#amenazas button")) {
     boton.setAttribute("aria-pressed", String(boton.dataset.amenaza === estado.amenaza));
@@ -5168,7 +5183,8 @@ function pintarLeyendaSimbolos() {
 }
 
 function pintarInterruptorObservados(eventos, ventanaDias) {
-  const anfitrion = $("controles-mapa") || $("leyenda") || $("mapa");
+  // En la cabecera de su lista y no en la caja del mapa (10-oct-2026).
+  const anfitrion = $("menores-controles") || $("controles-mapa") || $("mapa");
   if (!anfitrion) return;
 
   const rotulo =
@@ -5193,7 +5209,7 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
   caja.id = "interruptor-observados";
   caja.innerHTML =
     `<input type="checkbox"> ` +
-    `<span>Sismos menores vistos <span class="menor">${rotulo}</span></span>`;
+    `<span>Mostrarlos en el mapa <span class="menor">${rotulo}</span></span>`;
   // Nace obedeciendo al modo: las capas cargan en paralelo y este control puede
   // crearse despues de que el selector de amenaza ya se aplico.
   caja.hidden = estado.amenaza === "fuego";
@@ -5489,12 +5505,14 @@ const VENTANAS_FUEGO = {
   h6: { texto: "6 h", horas: 6 },
 };
 
-//: Como se ordenan. "Reciente" primero y por defecto: la pregunta que trae a
-//: alguien a un mapa de fuego es que esta ardiendo AHORA, no que arde mas.
+//: Como se ordenan. Por PERSONAS por defecto desde el 10-oct-2026: antes era
+//: "Reciente" —«que esta ardiendo ahora»—, y la lista abria con focos de una
+//: celda y cinco personas. En la revision con el dueño se eligio abrir con lo
+//: que pide atencion: donde hay mas gente cerca. "Reciente" sigue a un toque.
 const ORDENES_FOCOS = {
+  personas: { texto: "Más personas", clave: (f) => f.pop },
   reciente: { texto: "Reciente", clave: (f) => Date.parse(f.ultimaUtc) || 0 },
   area: { texto: "Área", clave: (f) => f.areaKm2 },
-  personas: { texto: "Personas", clave: (f) => f.pop },
   energia: { texto: "Energía", clave: (f) => f.frpSuma },
 };
 
@@ -5592,25 +5610,25 @@ function filaFoco(foco) {
   const li = document.createElement("li");
   li.dataset.utc = foco.ultimaUtc || "";
   li.dataset.iso3 = foco.iso3 || "";
+  li.dataset.pop = String(foco.pop || 0);
 
   // Las mismas clases que la fila de un reporte: son dos indices gemelos y
   // verlos distintos sugeriria que se leen distinto.
+  // EN PALABRAS (revision del 10-oct-2026). La fila abria con «1 celda ·
+  // 0,7 km²» y «1 detección»: jerga de satelite. Ahora dice donde, cuanta gente
+  // y hace cuanto; las celdas y las detecciones viven en el detalle del foco.
   const cabecera = document.createElement("div");
   cabecera.className = "evento-cabecera";
   const titulo = document.createElement("span");
-  titulo.className = "evento-mag";
-  titulo.textContent = foco.nCeldas === 1 ? "1 celda" : numero(foco.nCeldas) + " celdas";
-  const area = document.createElement("span");
-  area.className = "enlace-reporte";
-  area.textContent = areaDeFoco(foco.areaKm2) + " km²";
-  cabecera.append(titulo, area);
+  titulo.className = "foco-lugar";
+  titulo.textContent = foco.iso3 ? `Foco en ${nombrePais(foco.iso3)}` : "Foco fuera de los países cubiertos";
+  cabecera.append(titulo);
 
   const meta = document.createElement("p");
   meta.className = "evento-meta";
   meta.textContent = [
-    comoFecha(foco.ultimaUtc),
-    foco.iso3 ? nombrePais(foco.iso3) : "fuera de los activos",
-    numero(foco.detecciones) + (foco.detecciones === 1 ? " detección" : " detecciones"),
+    haceCuanto(foco.ultimaUtc) ? `visto ${haceCuanto(foco.ultimaUtc)}` : comoFecha(foco.ultimaUtc),
+    areaDeFoco(foco.areaKm2) + " km²",
   ].join(" · ");
 
   const cifra = document.createElement("p");
@@ -5639,7 +5657,7 @@ function pintarListaFocos({ anunciando = true } = {}) {
   const lista = $("lista-focos");
   if (!lista || !estado.focos.length) return;
 
-  const orden = ORDENES_FOCOS[estado.ordenFocos] || ORDENES_FOCOS.reciente;
+  const orden = ORDENES_FOCOS[estado.ordenFocos] || ORDENES_FOCOS.personas;
   // Cada foco se re-resume sobre sus celdas dentro de la ventana: sumar las de
   // fuera hacia que la lista anunciara mas superficie de la que el mapa dibuja.
   const dentro = estado.focos
@@ -5674,6 +5692,9 @@ function pintarListaFocos({ anunciando = true } = {}) {
           : numero(dentro.length) + (dentro.length === 1 ? " foco" : " focos")) + apunte
       : "";
   }
+
+  // Recortada en el telefono como la de reportes: eran 40 tarjetas seguidas.
+  recortarLista(lista, "focos");
 
   const vacio = $("sin-focos");
   if (vacio) {
@@ -7129,7 +7150,6 @@ function pintarEnVivo() {
         // "En toda America Latina" pasaria de ser una aclaracion a ser una
         // mentira en cuanto alguien eligiera Brasil. Lo dice `alcanceDelFuego`.
         `<span class="apunte">${alcanceDelFuego()} · ` +
-        `${numero(v.incendios.celdas)} celdas · ` +
         // LA VENTANA DEL ROTULO, NO LA DEL FICHERO.
         //
         // `v.ventanaFuego` se fija una sola vez al cargar `incendios.json` y
@@ -7138,7 +7158,7 @@ function pintarEnVivo() {
         // corta por `estado.ventanaFuego`. O sea que el numerador obedecia al
         // control de 24/12/6 h y el rotulo se quedaba en el del fichero:
         // 8.143 detecciones de seis horas publicadas como «en 24 h».
-        `${numero(v.incendios.detecciones)} detecciones en ${horasDeLaVentana()}&nbsp;h` +
+        `${numero(v.incendios.detecciones)} detecciones de satélite en ${horasDeLaVentana()}&nbsp;h` +
         `${selloDeRevision(v.fuegoUtc)}</span>` +
         `<span class="ver">Ver en el mapa</span></button>`
     );
@@ -7174,9 +7194,9 @@ function pintarEnVivo() {
     partes.push(
       `<div class="metrica metrica-suelo" data-amenaza="fuego"><span class="etiqueta">sobre qué está ardiendo</span>` +
         `<ul class="suelo-reparto">${barras}</ul>` +
-        `<span class="apunte">Reparto de la energía medida, no del número de focos. ` +
-        `${numero(suelo.celdas_medidas)} celdas con cobertura conocida` +
-        `${suelo.celdas_sin_medir ? `; ${numero(suelo.celdas_sin_medir)} sin medir` : ""}.</span></div>`
+        `<span class="apunte">Según la energía del fuego, no el número de focos.` +
+        `${suelo.celdas_sin_medir ? ` Sin dato de suelo en ${numero(suelo.celdas_sin_medir)} de ` +
+          `${numero(suelo.celdas_medidas + suelo.celdas_sin_medir)} celdas.` : ""}</span></div>`
     );
   }
   if (v.observados !== undefined) {

@@ -1078,7 +1078,7 @@ def test_el_reparto_dice_que_es_energia_y_no_focos() -> None:
     Sin decirlo, el porcentaje se lee como "de cada cien focos", que es otra
     cosa y suele apuntar al reves.
     """
-    assert "Reparto de la energía medida, no del número de focos" in APP
+    assert "Según la energía del fuego, no el número de focos" in APP
 
 
 def test_ningun_dibujo_sobre_el_mapa_falla_en_silencio() -> None:

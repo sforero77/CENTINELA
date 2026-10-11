@@ -151,7 +151,18 @@ _MODIFICADORES: dict[str, str] = {
 }
 
 #: ``south of Panama``: los cuatro puntos cardinales en palabras.
-_PUNTOS: dict[str, str] = {"north": "norte", "south": "sur", "east": "este", "west": "oeste"}
+#: Con los intermedios desde el 10-oct-2026: USGS publico «southeast of Easter
+#: Island» y salio en ingles.
+_PUNTOS: dict[str, str] = {
+    "north": "norte",
+    "south": "sur",
+    "east": "este",
+    "west": "oeste",
+    "northeast": "noreste",
+    "northwest": "noroeste",
+    "southeast": "sureste",
+    "southwest": "suroeste",
+}
 
 #: Palabras inglesas que no pueden aparecer en un lugar en espanol. Si alguna
 #: sobrevive a la traduccion, la forma no se reconocio. Sin ``central`` ni
@@ -203,7 +214,10 @@ _FRONTERA = re.compile(r"^(.+?)\s*-\s*(.+?)\s+border\s+region$", re.IGNORECASE)
 _REGION = re.compile(r"^(.+?)\s+region$", re.IGNORECASE)
 
 #: ``south of Panama``.
-_AL_PUNTO = re.compile(r"^(north|south|east|west)\s+of\s+(.+)$", re.IGNORECASE)
+_AL_PUNTO = re.compile(
+    r"^(north|south|east|west|northeast|northwest|southeast|southwest)\s+of\s+(.+)$",
+    re.IGNORECASE,
+)
 
 #: Una palabra: letras, con tilde o sin ella.
 _PALABRA = re.compile(r"[^\W\d_]+")
