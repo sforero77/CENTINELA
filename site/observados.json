@@ -1,9 +1,75 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-10T16:30:23Z",
+  "generado_utc": "2026-10-11T01:15:20Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u1hj",
+      "mag": 4.6,
+      "lon": -81.472,
+      "lat": 7.8093,
+      "depth_km": 10.0,
+      "lugar": "18 km al ONO de Río Grande, Panamá",
+      "origen_utc": "2026-10-11T00:06:09Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "PAN"
+    },
+    {
+      "usgs_id": "us6000u1gs",
+      "mag": 5.3,
+      "lon": -95.2667,
+      "lat": -37.1165,
+      "depth_km": 10.0,
+      "lugar": "southeast of Easter Island",
+      "origen_utc": "2026-10-10T21:34:02Z",
+      "razon": "M5.3 < umbral M5.5",
+      "iso3": ""
+    },
+    {
+      "usgs_id": "us6000u1fk",
+      "mag": 4.7,
+      "lon": -80.4282,
+      "lat": 7.4596,
+      "depth_km": 13.5,
+      "lugar": "2 km al ONO de El Cacao, Panamá",
+      "origen_utc": "2026-10-10T16:05:42Z",
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": "PAN"
+    },
+    {
+      "usgs_id": "us6000u1fj",
+      "mag": 4.8,
+      "lon": -81.0112,
+      "lat": 7.6231,
+      "depth_km": 10.0,
+      "lugar": "11 km al SSO de Tebario, Panamá",
+      "origen_utc": "2026-10-10T15:58:19Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "PAN"
+    },
+    {
+      "usgs_id": "us6000u1f6",
+      "mag": 4.5,
+      "lon": -81.3036,
+      "lat": 7.8256,
+      "depth_km": 10.0,
+      "lugar": "5 km al ONO de Guarumal, Panamá",
+      "origen_utc": "2026-10-10T14:59:23Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "PAN"
+    },
+    {
+      "usgs_id": "us6000u1f3",
+      "mag": 4.5,
+      "lon": -80.6744,
+      "lat": 7.5178,
+      "depth_km": 10.0,
+      "lugar": "10 km al NNO de El Cortezo, Panamá",
+      "origen_utc": "2026-10-10T14:51:45Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "PAN"
+    },
     {
       "usgs_id": "us6000u1ex",
       "mag": 4.8,
@@ -13,6 +79,17 @@
       "lugar": "12 km al NE de La Tronosa, Panamá",
       "origen_utc": "2026-10-10T13:46:56Z",
       "razon": "M4.8 < umbral M5.5",
+      "iso3": "PAN"
+    },
+    {
+      "usgs_id": "us6000u1ev",
+      "mag": 4.5,
+      "lon": -80.166,
+      "lat": 7.5481,
+      "depth_km": 10.0,
+      "lugar": "4 km al NO de Los Asientos, Panamá",
+      "origen_utc": "2026-10-10T13:22:13Z",
+      "razon": "M4.5 < umbral M5.5",
       "iso3": "PAN"
     },
     {
