@@ -219,3 +219,8 @@ def test_ningun_lugar_publicado_queda_en_ingles_con_el_codigo_de_hoy() -> None:
     }
 
     assert en_ingles == {}
+
+
+def test_los_rumbos_intermedios_se_traducen() -> None:
+    """USGS publico «southeast of Easter Island» el 10-oct-2026 y salio en ingles."""
+    assert traducir_lugar("southeast of Easter Island") == "Al sureste de la isla de Pascua"
