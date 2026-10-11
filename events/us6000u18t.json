@@ -8,8 +8,8 @@
   "lugar": "3 km al SO de Bajo Corral, Panamá",
   "origen_utc": "2026-10-09T18:22:15Z",
   "versiones_procesadas": {
-    "shakemap": 2,
-    "groundfailure": 2,
+    "shakemap": 3,
+    "groundfailure": 3,
     "shakemap_fuente": "us",
     "groundfailure_fuente": "us"
   },
@@ -17,7 +17,7 @@
     "despachado": "2026-10-10T18:15:18Z",
     "detectado": "2026-10-09T18:40:24Z",
     "publicado": "2026-10-09T18:41:09Z",
-    "publicado_ultimo": "2026-10-09T20:41:06Z",
+    "publicado_ultimo": "2026-10-11T11:21:07Z",
     "usgs_origen": "2026-10-09T18:22:15Z"
   },
   "hashes": {},
@@ -26,6 +26,7 @@
   "notas": [
     "ShakeMap v0 -> v1 (us)",
     "Ground Failure v0 -> v1 (us)",
-    "ShakeMap v1 (us) -> v2 (us)"
+    "ShakeMap v1 (us) -> v2 (us)",
+    "ShakeMap v2 (us) -> v3 (us)"
   ]
 }

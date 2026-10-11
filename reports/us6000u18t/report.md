@@ -36,7 +36,7 @@ Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No s
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v2), dominio público.
+Fuente: producto *Ground Failure* de USGS (v3), dominio público.
 
 ## Referencia cruzada
 
@@ -50,6 +50,9 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,5 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v2 (us) → v3 (us)
+- Ground Failure: v2 (us) → v3 (us)
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v1 (us) → v2 (us)
 - Ground Failure: v1 (us) → v2 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
@@ -63,10 +66,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **11,5 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v2** de `us`
-- Ground Failure consumido: **v2** de `us`
+- ShakeMap consumido: **v3** de `us`
+- Ground Failure consumido: **v3** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-09T20:41:04Z
+- Pipeline: `0.1.0` · Generado: 2026-10-11T11:21:05Z
 
 ## Advertencias
 
