@@ -48,6 +48,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,3 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v1 (us) → v2 (us)
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v0 → v1 (us)
 - Ground Failure: v0 → v1 (us)
 - Población en MMI≥6: 0 → 4.700
@@ -63,10 +65,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,3 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v1** de `us`
+- ShakeMap consumido: **v2** de `us`
 - Ground Failure consumido: **v1** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-12T23:40:49Z
+- Pipeline: `0.1.0` · Generado: 2026-10-12T23:55:46Z
 
 ## Advertencias
 

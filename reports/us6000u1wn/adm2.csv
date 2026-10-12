@@ -1,9 +1,9 @@
 usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,pop_65p_mmi6p,bld_mmi6p,built_m2_mmi6p,health_mmi6p,edu_mmi6p,road_km_mmi6p,road_km_principal_mmi6p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
 #meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#population+age65+mmi6,#infra+buildings+mmi6,#infra+built+area+mmi6,#infra+health+mmi6,#infra+education+mmi6,#infra+roads+km+mmi6,#infra+roads+km+primary+mmi6,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
-us6000u1wn,1,PA1312,Soná,-81.336206,7.871664,7.0,4132.42446224764,623.7729059457779,0.0,56.67944386419177,490.5837978289431,2928.0,251114.0,0,2,76.0487628327566,9.563732867962369,201.0,17057.0,0,0,0.0,0.0,0.0,804.4908245224506,"discrepancia_poblacional,construido_no_mapeado"
-us6000u1wn,1,PA1305,Las Palmas,-81.506998,8.080304,6.0,592.9016649276018,0.0,0.0,0.0,69.21512163411197,263.0,31819.0,0,0,4.88101807969173,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us6000u1wn,1,PA1307,Montijo,-81.535951,7.581268,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us6000u1wn,1,PA1308,Río de Jesús,-81.138525,7.963573,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us6000u1wn,1,PA1306,Mariato,-80.839865,7.439872,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us6000u1wn,1,PA0213,Tolé,-81.645588,8.199788,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us6000u1wn,1,PA1311,Santiago,-80.95058,8.038953,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u1wn,2,PA1312,Soná,-81.336206,7.871664,7.0,4132.42446224764,623.7729059457779,0.0,56.67944386419177,490.5837978289431,2928.0,251114.0,0,2,76.0487628327566,9.563732867962369,201.0,17057.0,0,0,0.0,0.0,0.0,804.4908245224506,"discrepancia_poblacional,construido_no_mapeado"
+us6000u1wn,2,PA1305,Las Palmas,-81.506998,8.080304,6.0,592.9016649276018,0.0,0.0,0.0,69.21512163411197,263.0,31819.0,0,0,4.88101807969173,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u1wn,2,PA1307,Montijo,-81.535951,7.581268,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u1wn,2,PA1308,Río de Jesús,-81.138525,7.963573,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u1wn,2,PA1306,Mariato,-80.839865,7.439872,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u1wn,2,PA1311,Santiago,-80.95058,8.038953,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u1wn,2,PA0213,Tolé,-81.645588,8.199788,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
