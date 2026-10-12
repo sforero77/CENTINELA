@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us6000u1wn",
+  "estado": "detectado",
+  "mag": 6.1,
+  "lon": -81.4989,
+  "lat": 7.7028,
+  "depth_km": 10.0,
+  "lugar": "18 km al O de Río Grande, Panamá",
+  "origen_utc": "2026-10-12T23:20:36Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-10-12T23:35:22Z",
+    "usgs_origen": "2026-10-12T23:20:36Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
