@@ -6,13 +6,13 @@
     "iso3": "PAN",
     "lon": -81.4989,
     "lat": 7.7028,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 0.0,
+    "pop_mmi7p": 623.7729059457779,
+    "pop_mmi6p": 4725.326127175242,
     "utc": "2026-10-12T23:20:36Z",
-    "shakemap_version": 0,
-    "preliminar": true,
+    "shakemap_version": 1,
+    "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-12T23:35:59Z"
+    "generado_utc": "2026-10-12T23:40:49Z"
   },
   {
     "usgs_id": "us6000u1cf",

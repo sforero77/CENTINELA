@@ -6,74 +6,119 @@
     "depth_km": 10.0,
     "utc": "2026-10-12T23:20:36Z",
     "lugar": "18 km al O de Río Grande, Panamá",
-    "pager_alert": "",
+    "pager_alert": "green",
     "lon": -81.4989,
     "lat": 7.7028
   },
   "inputs": {
-    "shakemap_version": 0,
-    "groundfailure_version": 0,
+    "shakemap_version": 1,
+    "groundfailure_version": 1,
     "exposure_manifest": "pan-v0.4",
-    "modelo_deslizamiento": "",
-    "modelo_licuefaccion": "",
-    "shakemap_fuente": "",
-    "groundfailure_fuente": ""
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
-  "preliminar": true,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 5777.910219270736
-    },
-    {
-      "radio_km": 50,
-      "pop": 43240.08525760053
-    },
-    {
-      "radio_km": 100,
-      "pop": 438103.190057728
-    }
-  ],
+  "preliminar": false,
+  "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 0.0,
-    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 4725.326127175242,
+    "pop_mmi7p": 623.7729059457779,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 0.0,
-    "bld_mmi6p": 0.0,
-    "built_m2_mmi6p": 0.0,
+    "pop_65p_mmi7p": 56.67944386419177,
+    "pop_65p_mmi6p": 559.798919463055,
+    "bld_mmi6p": 3191.0,
+    "built_m2_mmi6p": 282933.0,
     "health_mmi6p": 0.0,
-    "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 0.0,
-    "road_km_principal_mmi6p": 0.0,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
+    "edu_mmi6p": 2.0,
+    "road_km_mmi6p": 80.92978091244832,
+    "road_km_principal_mmi6p": 9.563732867962369,
+    "bld_mmi7p": 201.0,
+    "built_m2_mmi7p": 17057.0,
     "health_mmi7p": 0.0,
     "edu_mmi7p": 0.0,
     "road_km_mmi7p": 0.0,
     "road_km_principal_mmi7p": 0.0,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 0.0
+    "pop_lq_alta": 804.4908245224506
   },
-  "top_municipios": [],
+  "top_municipios": [
+    {
+      "adm2_id": "PA1312",
+      "nombre": "Soná",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 623.7729059457779,
+      "pop_banda": 623.7729059457779
+    },
+    {
+      "adm2_id": "PA1305",
+      "nombre": "Las Palmas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1307",
+      "nombre": "Montijo",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1306",
+      "nombre": "Mariato",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1308",
+      "nombre": "Río de Jesús",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1311",
+      "nombre": "Santiago",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0213",
+      "nombre": "Tolé",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
   "incertidumbre": {
-    "pop_discrepancia_pct": null,
+    "pop_discrepancia_pct": 17.3,
     "notas": []
   },
   "ground_failure_usgs": {
-    "ls_alerta_usgs": "",
-    "ls_pop_usgs": "",
-    "lq_alerta_usgs": "",
-    "lq_pop_usgs": ""
+    "ls_alerta_usgs": "green",
+    "ls_pop_usgs": "2",
+    "lq_alerta_usgs": "yellow",
+    "lq_pop_usgs": "1100"
   },
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",
-    "csv_adm2": "",
-    "mapa_png": ""
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "ShakeMap: v0 → v1 (us)",
+    "Ground Failure: v0 → v1 (us)",
+    "Población en MMI≥6: 0 → 4.700",
+    "Población en MMI≥7: 0 → 620",
+    "Población de 65 años o más en MMI≥7: 0 → 57",
+    "Edificaciones en MMI≥7: 0 → 200",
+    "Población en cobertura areal alta por licuefacción: 0 → 800"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -128,6 +173,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-12T23:35:59Z",
+  "generado_utc": "2026-10-12T23:40:49Z",
   "pipeline_version": "0.1.0"
 }
