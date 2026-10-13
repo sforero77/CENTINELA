@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-13T00:30:23Z",
+  "generado_utc": "2026-10-13T00:50:19Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -18,10 +18,10 @@
     {
       "usgs_id": "us6000u1w7",
       "mag": 4.5,
-      "lon": -81.445,
-      "lat": 7.9307,
+      "lon": -81.4309,
+      "lat": 7.9416,
       "depth_km": 10.0,
-      "lugar": "7 km al OSO de Calidonia, Panamá",
+      "lugar": "5 km al OSO de Calidonia, Panamá",
       "origen_utc": "2026-10-12T21:48:54Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "PAN"
@@ -29,10 +29,10 @@
     {
       "usgs_id": "us6000u1w6",
       "mag": 4.5,
-      "lon": -81.5024,
-      "lat": 7.8231,
+      "lon": -81.5113,
+      "lat": 7.8015,
       "depth_km": 10.0,
-      "lugar": "19 km al SO de Calidonia, Panamá",
+      "lugar": "21 km al ONO de Río Grande, Panamá",
       "origen_utc": "2026-10-12T21:43:30Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "PAN"
