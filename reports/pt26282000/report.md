@@ -6,65 +6,65 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 660 mil |
-| Población en MMI≥7 | 270 mil |
-| Población en MMI≥8 | 27 mil |
-| Edificaciones en MMI≥7 | 200 mil |
-| Sedes de salud en MMI≥7 | 73 |
-| Sedes educativas en MMI≥7 | 358 |
-| Vías primarias y secundarias en MMI≥7 | 730 km |
-| Vías locales en MMI≥7 | 6.700 km |
-| Superficie construida en MMI≥7 | 36,2 km² |
+| Población en MMI≥6 | 210 mil |
+| Población en MMI≥7 | 8.700 |
+| Población en MMI≥8 | el evento no llegó a esta banda |
+| Edificaciones en MMI≥7 | 8.000 |
+| Sedes de salud en MMI≥7 | 1 |
+| Sedes educativas en MMI≥7 | 8 |
+| Vías primarias y secundarias en MMI≥7 | 69 km |
+| Vías locales en MMI≥7 | 390 km |
+| Superficie construida en MMI≥7 | 1,3 km² |
 
-El satélite detecta **1,8 veces** más superficie construida de la que explicarían las 200 mil edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 8.000 edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **42 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **1.300** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Chitré | `PA0701` | 7,0 | 53 mil |
-| 2 | Las Tablas | `PA0902` | 8,5 | 28 mil |
-| 3 | Los Santos | `PA0903` | 7,5 | 27 mil |
-| 4 | Santiago | `PA1311` | 8,5 | 17 mil |
-| 5 | Ocú | `PA0704` | 8,0 | 16 mil |
-| 6 | Pesé | `PA0706` | 7,5 | 13 mil |
-| 7 | Atalaya | `PA1301` | 7,0 | 11 mil |
-| 8 | Guararé | `PA0901` | 7,5 | 11 mil |
-| 9 | Tonosí | `PA0907` | 8,5 | 10 mil |
-| 10 | Soná | `PA1312` | 8,0 | 10 mil |
-| 11 | Macaracas | `PA0904` | 8,5 | 9.500 |
-| 12 | Parita | `PA0705` | 7,0 | 9.300 |
-| 13 | Los Pozos | `PA0703` | 8,0 | 8.000 |
-| 14 | Las Minas | `PA0702` | 8,0 | 7.900 |
-| 15 | Santa María | `PA0707` | 7,0 | 7.500 |
+| 1 | Tonosí | `PA0907` | 7,5 | 6.100 |
+| 2 | Mariato | `PA1306` | 7,0 | 1.700 |
+| 3 | Pedasí | `PA0905` | 7,0 | 810 |
+| 4 | Las Tablas | `PA0902` | 7,0 | 97 |
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **600**. USGS declara para este evento alerta **roja**, con 720 expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **96 mil**. USGS declara para este evento alerta **naranja**, con 33 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**. USGS declara para este evento alerta **naranja**, con 180 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **29 mil**. USGS declara para este evento alerta **naranja**, con 29 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v9), dominio público.
+Fuente: producto *Ground Failure* de USGS (v10), dominio público.
 
 ## Referencia cruzada
 
-PAGER (USGS) estima para este evento una alerta **roja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
+PAGER (USGS) estima para este evento una alerta **naranja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
 Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,9 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **24,2 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v9 (us) → v10 (us)
+- Ground Failure: v9 (us) → v10 (us)
+- Población en MMI≥6: 660 mil → 210 mil
+- Población en MMI≥7: 270 mil → 8.700
+- Población en MMI≥8: 27 mil → 0
+- Población de 65 años o más en MMI≥7: 42 mil → 1.300
+- Edificaciones en MMI≥7: 200 mil → 8.000
+- Sedes de salud en MMI≥7: 73 → 1
+- Sedes educativas en MMI≥7: 360 → 8
+- Población en probabilidad alta de deslizamiento: 600 → 0
+- Población en cobertura areal alta por licuefacción: 96 mil → 29 mil
 - ShakeMap: v8 (us) → v9 (us)
 - Ground Failure: v8 (us) → v9 (us)
 - Población en MMI≥6: 710 mil → 660 mil
@@ -147,10 +147,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,9 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v9** de `us`
-- Ground Failure consumido: **v9** de `us`
+- ShakeMap consumido: **v10** de `us`
+- Ground Failure consumido: **v10** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-11T11:21:24Z
+- Pipeline: `0.1.0` · Generado: 2026-10-13T12:55:31Z
 
 ## Advertencias
 
