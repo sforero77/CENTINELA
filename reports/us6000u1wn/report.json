@@ -3,15 +3,15 @@
   "event": {
     "usgs_id": "us6000u1wn",
     "mag": 6.1,
-    "depth_km": 10.0,
+    "depth_km": 11.0,
     "utc": "2026-10-12T23:20:36Z",
-    "lugar": "18 km al O de Río Grande, Panamá",
+    "lugar": "17 km al O de Río Grande, Panamá",
     "pager_alert": "green",
-    "lon": -81.4989,
-    "lat": 7.7028
+    "lon": -81.4896,
+    "lat": 7.6896
   },
   "inputs": {
-    "shakemap_version": 2,
+    "shakemap_version": 3,
     "groundfailure_version": 1,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
@@ -111,6 +111,10 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v2 (us) → v3 (us)",
+    "Profundidad: 10 → 11 km",
+    "Epicentro: reubicado 2 km",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v1 (us) → v2 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v0 → v1 (us)",
@@ -175,6 +179,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-12T23:55:46Z",
+  "generado_utc": "2026-10-13T01:25:48Z",
   "pipeline_version": "0.1.0"
 }

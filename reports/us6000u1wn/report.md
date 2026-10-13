@@ -1,6 +1,6 @@
-# Exposición sísmica: M6,1 · 18 km al O de Río Grande, Panamá
+# Exposición sísmica: M6,1 · 17 km al O de Río Grande, Panamá
 
-**Evento USGS:** `us6000u1wn` · **Origen:** 2026-10-12T23:20:36Z UTC · **Profundidad:** 10,0 km
+**Evento USGS:** `us6000u1wn` · **Origen:** 2026-10-12T23:20:36Z UTC · **Profundidad:** 11,0 km
 
 ## Exposición estimada
 
@@ -48,6 +48,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,3 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v2 (us) → v3 (us)
+- Profundidad: 10 → 11 km
+- Epicentro: reubicado 2 km
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v1 (us) → v2 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v0 → v1 (us)
@@ -65,10 +69,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,3 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v2** de `us`
+- ShakeMap consumido: **v3** de `us`
 - Ground Failure consumido: **v1** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-12T23:55:46Z
+- Pipeline: `0.1.0` · Generado: 2026-10-13T01:25:48Z
 
 ## Advertencias
 
