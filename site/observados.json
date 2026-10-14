@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-14T03:35:22Z",
+  "generado_utc": "2026-10-14T06:30:49Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u27j",
+      "mag": 4.7,
+      "lon": -80.6021,
+      "lat": 7.5657,
+      "depth_km": 10.0,
+      "lugar": "10 km al S de La Mesa, Panamá",
+      "origen_utc": "2026-10-14T05:09:35Z",
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": "PAN"
+    },
     {
       "usgs_id": "us6000u272",
       "mag": 4.9,
@@ -18,10 +29,10 @@
     {
       "usgs_id": "us6000u26f",
       "mag": 5.0,
-      "lon": -71.8431,
-      "lat": -29.2178,
+      "lon": -71.9168,
+      "lat": -29.219,
       "depth_km": 10.0,
-      "lugar": "95 km al NNO de Coquimbo, Chile",
+      "lugar": "98 km al NO de Coquimbo, Chile",
       "origen_utc": "2026-10-14T00:36:45Z",
       "razon": "M5.0 < umbral M5.5",
       "iso3": "CHL"
@@ -29,10 +40,10 @@
     {
       "usgs_id": "us6000u26c",
       "mag": 5.1,
-      "lon": -71.7894,
-      "lat": -29.2135,
-      "depth_km": 19.2,
-      "lugar": "92 km al NO de La Serena, Chile",
+      "lon": -71.8024,
+      "lat": -29.2155,
+      "depth_km": 21.9,
+      "lugar": "93 km al NNO de Coquimbo, Chile",
       "origen_utc": "2026-10-14T00:30:47Z",
       "razon": "M5.1 < umbral M5.5",
       "iso3": "CHL"
