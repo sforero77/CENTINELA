@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-15T16:40:26Z",
+  "generado_utc": "2026-10-15T21:00:27Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u2kz",
+      "mag": 4.5,
+      "lon": -91.8178,
+      "lat": 13.9013,
+      "depth_km": 59.5,
+      "lugar": "44 km al SSE de Champerico, Guatemala",
+      "origen_utc": "2026-10-15T20:39:25Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "GTM"
+    },
     {
       "usgs_id": "us6000u2i9",
       "mag": 4.5,
