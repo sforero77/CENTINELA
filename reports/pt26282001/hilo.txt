@@ -1,7 +1,7 @@
-1/4 Sismo M6,6 · 14 km al O de Río Grande, Panamá (2026-10-09 20:25 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+1/4 Sismo M6,6 · 12 km al O de Río Grande, Panamá (2026-10-09 20:25 UTC, 24 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
-2/4 Personas dentro de intensidad MMI≥6: 28 mil. Dentro de MMI≥7: 2.900. Edificaciones en MMI≥7: 2.100.
+2/4 Personas dentro de intensidad MMI≥6: 12 mil. Edificaciones en MMI≥6: 8.200.
 
-3/4 Municipios más expuestos (MMI≥7): Soná.
+3/4 Municipios más expuestos (MMI≥6): Soná, Las Palmas.
 
 4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=pt26282001

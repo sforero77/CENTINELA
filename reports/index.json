@@ -32,17 +32,17 @@
   {
     "usgs_id": "pt26282001",
     "mag": 6.6,
-    "lugar": "14 km al O de Río Grande, Panamá",
+    "lugar": "12 km al O de Río Grande, Panamá",
     "iso3": "PAN",
-    "lon": -81.4687,
-    "lat": 7.7176,
-    "pop_mmi7p": 2940.257268846035,
-    "pop_mmi6p": 28399.237028809264,
+    "lon": -81.444,
+    "lat": 7.7013,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 11949.445356020704,
     "utc": "2026-10-09T20:25:40Z",
-    "shakemap_version": 4,
+    "shakemap_version": 5,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-11T11:21:02Z"
+    "generado_utc": "2026-10-15T10:16:05Z"
   },
   {
     "usgs_id": "us6000u18x",
