@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-15T16:00:27Z",
+  "generado_utc": "2026-10-15T16:10:25Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -322,17 +322,6 @@
       "origen_utc": "2026-10-10T21:34:02Z",
       "razon": "M5.3 < umbral M5.5",
       "iso3": ""
-    },
-    {
-      "usgs_id": "us6000u1fk",
-      "mag": 4.7,
-      "lon": -80.4282,
-      "lat": 7.4596,
-      "depth_km": 13.5,
-      "lugar": "2 km al ONO de El Cacao, Panamá",
-      "origen_utc": "2026-10-10T16:05:42Z",
-      "razon": "M4.7 < umbral M5.5",
-      "iso3": "PAN"
     }
   ]
 }
