@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-15T04:35:25Z",
+  "generado_utc": "2026-10-15T05:50:20Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -443,17 +443,6 @@
       "origen_utc": "2026-10-10T06:16:32Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u1cx",
-      "mag": 4.5,
-      "lon": -75.6127,
-      "lat": 5.267,
-      "depth_km": 115.1,
-      "lugar": "6 km al OSO de Filadelfia, Colombia",
-      "origen_utc": "2026-10-10T05:45:59Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "COL"
     }
   ]
 }
