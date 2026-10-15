@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-15T15:00:28Z",
+  "generado_utc": "2026-10-15T15:15:25Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u2ht",
+      "mag": 4.5,
+      "lon": -80.0893,
+      "lat": 7.4452,
+      "depth_km": 10.0,
+      "lugar": "9 km al SSE de Los Asientos, Panamá",
+      "origen_utc": "2026-10-15T13:31:37Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "PAN"
+    },
     {
       "usgs_id": "us6000u2gd",
       "mag": 4.8,
