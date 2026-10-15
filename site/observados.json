@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-15T21:00:27Z",
+  "generado_utc": "2026-10-15T21:35:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -333,17 +333,6 @@
       "origen_utc": "2026-10-11T00:06:09Z",
       "razon": "M4.6 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u1gs",
-      "mag": 5.3,
-      "lon": -95.2667,
-      "lat": -37.1165,
-      "depth_km": 10.0,
-      "lugar": "Al sureste de la isla de Pascua",
-      "origen_utc": "2026-10-10T21:34:02Z",
-      "razon": "M5.3 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
