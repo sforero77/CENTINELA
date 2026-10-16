@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-16T22:45:18Z",
+  "generado_utc": "2026-10-16T23:05:18Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u2wn",
+      "mag": 4.6,
+      "lon": -80.9354,
+      "lat": 7.6127,
+      "depth_km": 10.0,
+      "lugar": "12 km al SSE de Tebario, Panamá",
+      "origen_utc": "2026-10-16T22:41:03Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "PAN"
+    },
     {
       "usgs_id": "us6000u2v8",
       "mag": 5.2,
