@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-16T01:55:19Z",
+  "generado_utc": "2026-10-16T05:00:26Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u2n4",
+      "mag": 4.7,
+      "lon": -92.8623,
+      "lat": 13.934,
+      "depth_km": 10.0,
+      "lugar": "95 km al SO de Brisas Barra de Suchiate, México",
+      "origen_utc": "2026-10-16T04:42:40Z",
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": "MEX"
+    },
     {
       "usgs_id": "us6000u2kz",
       "mag": 4.5,
