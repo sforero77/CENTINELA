@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-16T05:00:26Z",
+  "generado_utc": "2026-10-16T11:55:19Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u2ph",
+      "mag": 4.8,
+      "lon": -92.7881,
+      "lat": 15.2777,
+      "depth_km": 108.9,
+      "lugar": "7 km al OSO de Soconusco, México",
+      "origen_utc": "2026-10-16T11:39:44Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "MEX"
+    },
     {
       "usgs_id": "us6000u2n4",
       "mag": 4.7,
