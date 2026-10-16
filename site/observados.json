@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-16T11:55:19Z",
+  "generado_utc": "2026-10-16T13:45:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -322,17 +322,6 @@
       "origen_utc": "2026-10-11T17:11:29Z",
       "razon": "M4.8 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u1kt",
-      "mag": 5.2,
-      "lon": -72.6601,
-      "lat": -16.7849,
-      "depth_km": 44.9,
-      "lugar": "18 km al SSE de Camaná, Perú",
-      "origen_utc": "2026-10-11T13:42:59Z",
-      "razon": "M5.2 < umbral M5.5",
-      "iso3": "PER"
     }
   ]
 }
