@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-15T21:35:22Z",
+  "generado_utc": "2026-10-16T00:10:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -321,17 +321,6 @@
       "lugar": "3 km al NO de Flores, Panamá",
       "origen_utc": "2026-10-11T01:50:52Z",
       "razon": "M5.0 < umbral M5.5",
-      "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u1hj",
-      "mag": 4.6,
-      "lon": -81.472,
-      "lat": 7.8093,
-      "depth_km": 10.0,
-      "lugar": "18 km al ONO de Río Grande, Panamá",
-      "origen_utc": "2026-10-11T00:06:09Z",
-      "razon": "M4.6 < umbral M5.5",
       "iso3": "PAN"
     }
   ]
