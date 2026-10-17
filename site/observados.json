@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-17T21:50:21Z",
+  "generado_utc": "2026-10-17T23:40:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -244,17 +244,6 @@
       "lugar": "24 km al SO de Zapotillo, Panamá",
       "origen_utc": "2026-10-12T23:45:13Z",
       "razon": "M4.5 < umbral M5.5",
-      "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u1ww",
-      "mag": 4.9,
-      "lon": -81.4934,
-      "lat": 7.7328,
-      "depth_km": 10.0,
-      "lugar": "17 km al O de Río Grande, Panamá",
-      "origen_utc": "2026-10-12T23:36:46Z",
-      "razon": "M4.9 < umbral M5.5",
       "iso3": "PAN"
     }
   ]
