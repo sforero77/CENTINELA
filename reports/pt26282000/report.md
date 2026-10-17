@@ -6,41 +6,43 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 210 mil |
-| Población en MMI≥7 | 8.700 |
+| Población en MMI≥6 | 420 mil |
+| Población en MMI≥7 | 18 mil |
 | Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥7 | 8.000 |
-| Sedes de salud en MMI≥7 | 1 |
-| Sedes educativas en MMI≥7 | 8 |
-| Vías primarias y secundarias en MMI≥7 | 69 km |
-| Vías locales en MMI≥7 | 390 km |
-| Superficie construida en MMI≥7 | 1,3 km² |
-
-El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 8.000 edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+| Edificaciones en MMI≥7 | 15 mil |
+| Sedes de salud en MMI≥7 | 5 |
+| Sedes educativas en MMI≥7 | 15 |
+| Vías primarias y secundarias en MMI≥7 | 120 km |
+| Vías locales en MMI≥7 | 810 km |
+| Superficie construida en MMI≥7 | 2,2 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **1.300** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **2.900** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Tonosí | `PA0907` | 7,5 | 6.100 |
-| 2 | Mariato | `PA1306` | 7,0 | 1.700 |
-| 3 | Pedasí | `PA0905` | 7,0 | 810 |
-| 4 | Las Tablas | `PA0902` | 7,0 | 97 |
+| 1 | Tonosí | `PA0907` | 7,5 | 7.900 |
+| 2 | Soná | `PA1312` | 7,0 | 3.900 |
+| 3 | Mariato | `PA1306` | 7,5 | 3.100 |
+| 4 | Pedasí | `PA0905` | 7,5 | 1.200 |
+| 5 | Montijo | `PA1307` | 7,0 | 630 |
+| 6 | Las Tablas | `PA0902` | 7,0 | 620 |
+| 7 | Santiago | `PA1311` | 7,0 | 490 |
+| 8 | Pocrí | `PA0906` | 7,0 | 260 |
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**. USGS declara para este evento alerta **naranja**, con 180 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **29 mil**. USGS declara para este evento alerta **naranja**, con 29 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**. USGS declara para este evento alerta **naranja**, con 200 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **57 mil**. USGS declara para este evento alerta **naranja**, con 49 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v10), dominio público.
+Fuente: producto *Ground Failure* de USGS (v11), dominio público.
 
 ## Referencia cruzada
 
@@ -50,10 +52,19 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **24,2 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **18,1 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v10 (us) → v11 (us)
+- Ground Failure: v10 (us) → v11 (us)
+- Población en MMI≥6: 210 mil → 420 mil
+- Población en MMI≥7: 8.700 → 18 mil
+- Población de 65 años o más en MMI≥7: 1.300 → 2.900
+- Edificaciones en MMI≥7: 8.000 → 15 mil
+- Sedes de salud en MMI≥7: 1 → 5
+- Sedes educativas en MMI≥7: 8 → 15
+- Población en cobertura areal alta por licuefacción: 29 mil → 57 mil
 - ShakeMap: v9 (us) → v10 (us)
 - Ground Failure: v9 (us) → v10 (us)
 - Población en MMI≥6: 660 mil → 210 mil
@@ -147,10 +158,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **24,2 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v10** de `us`
-- Ground Failure consumido: **v10** de `us`
+- ShakeMap consumido: **v11** de `us`
+- Ground Failure consumido: **v11** de `us`
 - Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-13T12:55:31Z
+- Pipeline: `0.1.0` · Generado: 2026-10-17T09:38:19Z
 
 ## Advertencias
 

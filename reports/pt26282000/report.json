@@ -11,8 +11,8 @@
     "lat": 7.5868
   },
   "inputs": {
-    "shakemap_version": 10,
-    "groundfailure_version": 10,
+    "shakemap_version": 11,
+    "groundfailure_version": 11,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -23,72 +23,93 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 209489.976160479,
-    "pop_mmi7p": 8721.086103736423,
+    "pop_mmi6p": 424241.0992596145,
+    "pop_mmi7p": 18119.0130414553,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 1340.8980129225783,
-    "pop_65p_mmi6p": 30776.538634045457,
-    "bld_mmi6p": 147319.0,
-    "built_m2_mmi6p": 29763494.0,
-    "health_mmi6p": 158.0,
-    "edu_mmi6p": 382.0,
-    "road_km_mmi6p": 4841.973871612244,
-    "road_km_principal_mmi6p": 473.5428342713827,
-    "bld_mmi7p": 8024.0,
-    "built_m2_mmi7p": 1303899.0,
-    "health_mmi7p": 1.0,
-    "edu_mmi7p": 8.0,
-    "road_km_mmi7p": 456.39316551423826,
-    "road_km_principal_mmi7p": 68.88302240556135,
+    "pop_65p_mmi7p": 2854.9768110495074,
+    "pop_65p_mmi6p": 58024.691791878766,
+    "bld_mmi6p": 284282.0,
+    "built_m2_mmi6p": 56164344.0,
+    "health_mmi6p": 248.0,
+    "edu_mmi6p": 624.0,
+    "road_km_mmi6p": 9621.356335208202,
+    "road_km_principal_mmi6p": 942.8711226737138,
+    "bld_mmi7p": 15377.0,
+    "built_m2_mmi7p": 2235806.0,
+    "health_mmi7p": 5.0,
+    "edu_mmi7p": 15.0,
+    "road_km_mmi7p": 926.9570608931531,
+    "road_km_principal_mmi7p": 118.128961868228,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 29118.332879984286
+    "pop_lq_alta": 57297.633145513944
   },
   "top_municipios": [
     {
       "adm2_id": "PA0907",
       "nombre": "Tonosí",
       "mmi_max": 7.5,
-      "pop_mmi7p": 6132.016770441085,
-      "pop_banda": 6132.016770441085
+      "pop_mmi7p": 7930.7524038832635,
+      "pop_banda": 7930.7524038832635
+    },
+    {
+      "adm2_id": "PA1312",
+      "nombre": "Soná",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 3944.631598521024,
+      "pop_banda": 3944.631598521024
     },
     {
       "adm2_id": "PA1306",
       "nombre": "Mariato",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 1677.743850310333,
-      "pop_banda": 1677.743850310333
+      "mmi_max": 7.5,
+      "pop_mmi7p": 3053.2357419617474,
+      "pop_banda": 3053.2357419617474
     },
     {
       "adm2_id": "PA0905",
       "nombre": "Pedasí",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 1193.032314132899,
+      "pop_banda": 1193.032314132899
+    },
+    {
+      "adm2_id": "PA1307",
+      "nombre": "Montijo",
       "mmi_max": 7.0,
-      "pop_mmi7p": 814.5911630354822,
-      "pop_banda": 814.5911630354822
+      "pop_mmi7p": 629.356488339603,
+      "pop_banda": 629.356488339603
     },
     {
       "adm2_id": "PA0902",
       "nombre": "Las Tablas",
       "mmi_max": 7.0,
-      "pop_mmi7p": 96.73431994952261,
-      "pop_banda": 96.73431994952261
+      "pop_mmi7p": 621.1660035634413,
+      "pop_banda": 621.1660035634413
+    },
+    {
+      "adm2_id": "PA1311",
+      "nombre": "Santiago",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 491.2533574765548,
+      "pop_banda": 491.2533574765548
     },
     {
       "adm2_id": "PA0906",
       "nombre": "Pocrí",
       "mmi_max": 7.0,
+      "pop_mmi7p": 255.58513357676566,
+      "pop_banda": 255.58513357676566
+    },
+    {
+      "adm2_id": "PA1308",
+      "nombre": "Río de Jesús",
+      "mmi_max": 7.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA1307",
-      "nombre": "Montijo",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA1311",
-      "nombre": "Santiago",
+      "adm2_id": "PA0701",
+      "nombre": "Chitré",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -108,6 +129,13 @@
       "pop_banda": 0.0
     },
     {
+      "adm2_id": "PA0703",
+      "nombre": "Los Pozos",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
       "adm2_id": "PA0704",
       "nombre": "Ocú",
       "mmi_max": 6.5,
@@ -117,48 +145,20 @@
     {
       "adm2_id": "PA0302",
       "nombre": "Antón",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA0306",
-      "nombre": "Penonomé",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA1312",
-      "nombre": "Soná",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA1308",
-      "nombre": "Río de Jesús",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA0701",
-      "nombre": "Chitré",
-      "mmi_max": 6.0,
+      "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 24.2,
+    "pop_discrepancia_pct": 18.1,
     "notas": []
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "orange",
-    "ls_pop_usgs": "180",
+    "ls_pop_usgs": "200",
     "lq_alerta_usgs": "orange",
-    "lq_pop_usgs": "29000"
+    "lq_pop_usgs": "49000"
   },
   "descargas": {
     "geoparquet": "",
@@ -167,6 +167,15 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v10 (us) → v11 (us)",
+    "Ground Failure: v10 (us) → v11 (us)",
+    "Población en MMI≥6: 210 mil → 420 mil",
+    "Población en MMI≥7: 8.700 → 18 mil",
+    "Población de 65 años o más en MMI≥7: 1.300 → 2.900",
+    "Edificaciones en MMI≥7: 8.000 → 15 mil",
+    "Sedes de salud en MMI≥7: 1 → 5",
+    "Sedes educativas en MMI≥7: 8 → 15",
+    "Población en cobertura areal alta por licuefacción: 29 mil → 57 mil",
     "ShakeMap: v9 (us) → v10 (us)",
     "Ground Failure: v9 (us) → v10 (us)",
     "Población en MMI≥6: 660 mil → 210 mil",
@@ -307,6 +316,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-13T12:55:31Z",
+  "generado_utc": "2026-10-17T09:38:19Z",
   "pipeline_version": "0.1.0"
 }
