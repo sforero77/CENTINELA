@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-17T23:45:19Z",
+  "generado_utc": "2026-10-18T00:05:20Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -222,17 +222,6 @@
       "lugar": "9 km al SSE de La Mesa, Panamá",
       "origen_utc": "2026-10-13T02:48:02Z",
       "razon": "M4.7 < umbral M5.5",
-      "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u1x2",
-      "mag": 4.6,
-      "lon": -81.5285,
-      "lat": 7.7956,
-      "depth_km": 10.0,
-      "lugar": "23 km al ONO de Río Grande, Panamá",
-      "origen_utc": "2026-10-13T00:02:01Z",
-      "razon": "M4.6 < umbral M5.5",
       "iso3": "PAN"
     }
   ]
