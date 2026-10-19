@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-19T00:40:23Z",
+  "generado_utc": "2026-10-19T03:15:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -168,17 +168,6 @@
       "origen_utc": "2026-10-14T05:09:35Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u272",
-      "mag": 4.9,
-      "lon": -70.2699,
-      "lat": -20.3552,
-      "depth_km": 44.9,
-      "lugar": "16 km al OSO de La Tirana, Chile",
-      "origen_utc": "2026-10-14T03:11:09Z",
-      "razon": "M4.9 < umbral M5.5",
-      "iso3": "CHL"
     }
   ]
 }
