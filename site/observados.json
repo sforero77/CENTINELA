@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-20T13:35:21Z",
+  "generado_utc": "2026-10-20T15:45:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -157,17 +157,6 @@
       "origen_utc": "2026-10-15T20:39:25Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "GTM"
-    },
-    {
-      "usgs_id": "us6000u2i9",
-      "mag": 4.5,
-      "lon": -86.049,
-      "lat": 10.3031,
-      "depth_km": 22.8,
-      "lugar": "22 km al O de Tamarindo, Costa Rica",
-      "origen_utc": "2026-10-15T15:40:38Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "CRI"
     }
   ]
 }
