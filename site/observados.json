@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-21T13:05:21Z",
+  "generado_utc": "2026-10-21T19:35:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -135,17 +135,6 @@
       "origen_utc": "2026-10-16T22:41:03Z",
       "razon": "M4.6 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u2v8",
-      "mag": 5.2,
-      "lon": -85.2725,
-      "lat": 1.2955,
-      "depth_km": 10.0,
-      "lugar": "Cerca de la costa de Ecuador",
-      "origen_utc": "2026-10-16T19:34:10Z",
-      "razon": "M5.2 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
