@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-21T11:40:23Z",
+  "generado_utc": "2026-10-21T13:05:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -146,17 +146,6 @@
       "origen_utc": "2026-10-16T19:34:10Z",
       "razon": "M5.2 < umbral M5.5",
       "iso3": ""
-    },
-    {
-      "usgs_id": "us6000u2pw",
-      "mag": 4.5,
-      "lon": -77.3681,
-      "lat": 6.853,
-      "depth_km": 25.9,
-      "lugar": "51 km al ESE de Juradó, Colombia",
-      "origen_utc": "2026-10-16T13:02:41Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "COL"
     }
   ]
 }
