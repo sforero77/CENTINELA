@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-22T14:00:27Z",
+  "generado_utc": "2026-10-22T16:55:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -102,17 +102,6 @@
       "origen_utc": "2026-10-18T15:35:47Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": ""
-    },
-    {
-      "usgs_id": "us6000u30x",
-      "mag": 4.6,
-      "lon": -67.2144,
-      "lat": -21.1752,
-      "depth_km": 189.5,
-      "lugar": "88 km al SSO de Uyuni, Bolivia",
-      "origen_utc": "2026-10-17T16:52:45Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "BOL"
     }
   ]
 }
