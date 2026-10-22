@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-22T01:05:21Z",
+  "generado_utc": "2026-10-22T03:55:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000u40r",
+      "mag": 4.6,
+      "lon": -93.8388,
+      "lat": 14.8614,
+      "depth_km": 49.1,
+      "lugar": "97 km al SO de El Palmarcito, México",
+      "origen_utc": "2026-10-22T03:35:17Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "MEX"
+    },
     {
       "usgs_id": "us6000u3rr",
       "mag": 5.0,
