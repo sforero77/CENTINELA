@@ -5,14 +5,14 @@
     "mag": 6.1,
     "depth_km": 11.0,
     "utc": "2026-10-12T23:20:36Z",
-    "lugar": "17 km al O de Río Grande, Panamá",
-    "pager_alert": "green",
-    "lon": -81.4896,
-    "lat": 7.6896
+    "lugar": "15 km al O de Río Grande, Panamá",
+    "pager_alert": "yellow",
+    "lon": -81.4715,
+    "lat": 7.7098
   },
   "inputs": {
-    "shakemap_version": 4,
-    "groundfailure_version": 2,
+    "shakemap_version": 5,
+    "groundfailure_version": 3,
     "exposure_manifest": "pan-v0.4",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -23,19 +23,19 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 4219.902057923377,
-    "pop_mmi7p": 37.15751776099205,
+    "pop_mmi6p": 5460.2867960855365,
+    "pop_mmi7p": 658.9951356649399,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 3.3763475370175593,
-    "pop_65p_mmi6p": 499.7325547347014,
-    "bld_mmi6p": 3052.0,
-    "built_m2_mmi6p": 258704.0,
-    "health_mmi6p": 0.0,
+    "pop_65p_mmi7p": 59.879927590978745,
+    "pop_65p_mmi6p": 675.7463514297497,
+    "bld_mmi6p": 4054.0,
+    "built_m2_mmi6p": 358963.0,
+    "health_mmi6p": 1.0,
     "edu_mmi6p": 2.0,
-    "road_km_mmi6p": 72.66236720628474,
-    "road_km_principal_mmi6p": 10.534760128205717,
-    "bld_mmi7p": 36.0,
-    "built_m2_mmi7p": 997.0,
+    "road_km_mmi6p": 123.49216478150483,
+    "road_km_principal_mmi6p": 16.562941984180675,
+    "bld_mmi7p": 203.0,
+    "built_m2_mmi7p": 18003.0,
     "health_mmi7p": 0.0,
     "edu_mmi7p": 0.0,
     "road_km_mmi7p": 0.0,
@@ -48,19 +48,19 @@
       "adm2_id": "PA1312",
       "nombre": "Soná",
       "mmi_max": 7.0,
-      "pop_mmi7p": 37.15751776099205,
-      "pop_banda": 4214.924011982977
+      "pop_mmi7p": 658.9951356649399,
+      "pop_banda": 658.9951356649399
     },
     {
       "adm2_id": "PA1305",
       "nombre": "Las Palmas",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 4.97804594039917
+      "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA1307",
-      "nombre": "Montijo",
+      "adm2_id": "PA1308",
+      "nombre": "Río de Jesús",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -73,8 +73,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA1308",
-      "nombre": "Río de Jesús",
+      "adm2_id": "PA1307",
+      "nombre": "Montijo",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -95,14 +95,14 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 10.5,
+    "pop_discrepancia_pct": 4.1,
     "notas": []
   },
   "ground_failure_usgs": {
-    "ls_alerta_usgs": "green",
+    "ls_alerta_usgs": "yellow",
     "ls_pop_usgs": "2",
     "lq_alerta_usgs": "yellow",
-    "lq_pop_usgs": "1100"
+    "lq_pop_usgs": "1300"
   },
   "descargas": {
     "geoparquet": "",
@@ -111,6 +111,13 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v4 (us) → v5 (us)",
+    "Ground Failure: v2 (us) → v3 (us)",
+    "Epicentro: reubicado 3 km",
+    "Población en MMI≥6: 4.200 → 5.500",
+    "Población en MMI≥7: 37 → 660",
+    "Población de 65 años o más en MMI≥7: 3 → 60",
+    "Edificaciones en MMI≥7: 36 → 200",
     "ShakeMap: v3 (us) → v4 (us)",
     "Ground Failure: v1 (us) → v2 (us)",
     "Población en MMI≥6: 4.700 → 4.200",
@@ -186,6 +193,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-13T01:40:52Z",
+  "generado_utc": "2026-10-23T10:27:57Z",
   "pipeline_version": "0.1.0"
 }

@@ -2,14 +2,14 @@
   "usgs_id": "us6000u1wn",
   "estado": "publicado",
   "mag": 6.1,
-  "lon": -81.4896,
-  "lat": 7.6896,
+  "lon": -81.4715,
+  "lat": 7.7098,
   "depth_km": 11.0,
-  "lugar": "17 km al O de Río Grande, Panamá",
+  "lugar": "15 km al O de Río Grande, Panamá",
   "origen_utc": "2026-10-12T23:20:36Z",
   "versiones_procesadas": {
-    "shakemap": 4,
-    "groundfailure": 2,
+    "shakemap": 5,
+    "groundfailure": 3,
     "shakemap_fuente": "us",
     "groundfailure_fuente": "us"
   },
@@ -18,7 +18,7 @@
     "detectado": "2026-10-12T23:35:22Z",
     "preliminar": "2026-10-12T23:35:58Z",
     "publicado": "2026-10-12T23:40:50Z",
-    "publicado_ultimo": "2026-10-13T01:40:55Z",
+    "publicado_ultimo": "2026-10-23T10:27:59Z",
     "usgs_origen": "2026-10-12T23:20:36Z"
   },
   "hashes": {},
@@ -29,6 +29,7 @@
     "ShakeMap v0 -> v1 (us)",
     "ShakeMap v1 (us) -> v2 (us)",
     "ShakeMap v2 (us) -> v3 (us)",
-    "ShakeMap v3 (us) -> v4 (us)"
+    "ShakeMap v3 (us) -> v4 (us)",
+    "ShakeMap v4 (us) -> v5 (us)"
   ]
 }
