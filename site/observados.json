@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-23T03:00:26Z",
+  "generado_utc": "2026-10-23T15:40:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -124,17 +124,6 @@
       "origen_utc": "2026-10-18T16:12:55Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u36d",
-      "mag": 4.7,
-      "lon": -63.0065,
-      "lat": 17.2531,
-      "depth_km": 150.0,
-      "lugar": "20 km al SO de Sandy Point Town, Saint Kitts and Nevis",
-      "origen_utc": "2026-10-18T15:35:47Z",
-      "razon": "M4.7 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
