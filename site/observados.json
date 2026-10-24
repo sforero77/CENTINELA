@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-24T07:35:18Z",
+  "generado_utc": "2026-10-24T14:50:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -80,17 +80,6 @@
       "origen_utc": "2026-10-20T17:05:48Z",
       "razon": "M5.4 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us6000u3cu",
-      "mag": 4.6,
-      "lon": -91.373,
-      "lat": 14.4536,
-      "depth_km": 109.7,
-      "lugar": "5 km al E de San José El Ídolo, Guatemala",
-      "origen_utc": "2026-10-19T14:47:45Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "GTM"
     }
   ]
 }
