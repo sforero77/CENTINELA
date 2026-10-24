@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-23T16:15:27Z",
+  "generado_utc": "2026-10-24T05:20:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -102,17 +102,6 @@
       "origen_utc": "2026-10-19T07:33:35Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "ARG"
-    },
-    {
-      "usgs_id": "us6000u3a8",
-      "mag": 4.9,
-      "lon": -86.4815,
-      "lat": 11.1229,
-      "depth_km": 44.0,
-      "lugar": "68 km al OSO de San Juan del Sur, Nicaragua",
-      "origen_utc": "2026-10-19T05:18:36Z",
-      "razon": "M4.9 < umbral M5.5",
-      "iso3": "NIC"
     }
   ]
 }
