@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-26T19:55:19Z",
+  "generado_utc": "2026-10-26T22:10:20Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000ttc8",
+      "mag": 4.6,
+      "lon": -71.3014,
+      "lat": -32.2811,
+      "depth_km": 47.7,
+      "lugar": "20 km al NNO de La Ligua, Chile",
+      "origen_utc": "2026-10-26T20:52:11Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "CHL"
+    },
     {
       "usgs_id": "us7000ttbh",
       "mag": 4.9,
