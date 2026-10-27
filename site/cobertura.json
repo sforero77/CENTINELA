@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-27T12:49:59Z",
+  "generado_utc": "2026-10-27T13:08:42Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -11,7 +11,7 @@
       "iso3": "ARG",
       "nombre": "Argentina",
       "construido": true,
-      "manifest_id": "arg-v0.4",
+      "manifest_id": "arg-v0.5",
       "poblacion_medida": 46284585,
       "poblacion_referencia": 45851378,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
