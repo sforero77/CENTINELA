@@ -10,7 +10,7 @@
 # disco. Las cifras vivas estan en `medicion.json`, publicado en el Release al
 # lado del parquet — aqui no se repiten a mano.
 
-manifest_id: bra-v0.4
+manifest_id: bra-v0.5
 iso3: BRA
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -119,9 +119,9 @@ sources:
 
   - id: overture_buildings
     layer: buildings
-    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=buildings/type=building
+    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=buildings/type=building
     license: ODbL-1.0
-    vintage: "2026-09-23.1"
+    vintage: "2026-10-21.0"
     insumos_sha256: ""
     notes: >-
       No se descarga: DuckDB lee los parquet en remoto podando por la columna
@@ -131,9 +131,9 @@ sources:
 
   - id: overture_transportation
     layer: roads
-    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=transportation/type=segment
+    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=transportation/type=segment
     license: ODbL-1.0
-    vintage: "2026-09-23.1"
+    vintage: "2026-10-21.0"
     insumos_sha256: ""
     notes: >-
       `type=segment` es la geometria lineal; `type=connector` son nodos. Se
@@ -141,9 +141,9 @@ sources:
 
   - id: overture_divisions
     layer: divisions
-    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=divisions/type=division_area
+    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=divisions/type=division_area
     license: ODbL-1.0
-    vintage: "2026-09-23.1"
+    vintage: "2026-10-21.0"
     insumos_sha256: ""
     notes: >-
       SE CONSUMIA SIN DECLARARSE. `load_country_neighbours` baja este tema en
@@ -180,7 +180,7 @@ sources:
     hdx_dataset: hotosm_bra_health_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    insumos_sha256: "46210816bae2fb9e77be1e3b301b6eaf973bb7ec697422220aa0d2219a01e9c6"
+    insumos_sha256: "094128e2cd100e4ece2befa902ed3e403d13e1b3b858d32a876fc0d1f8a52f18"
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: existe, es ODbL y publica
       Geopackage. El extracto mezcla POINT, POLYGON y MULTIPOLYGON —un hospital
@@ -196,7 +196,7 @@ sources:
     hdx_dataset: hotosm_bra_education_facilities
     license: ODbL-1.0
     vintage: "2026-08-23"
-    insumos_sha256: "22d19930d13a20f67371ec9504d758cb5f7d6d05c3d39024f05a3efe16d976bf"
+    insumos_sha256: "5523aa96889535ae591b9788745dae263b9d8de03e3a0dd4f48ac2b016412d62"
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover
