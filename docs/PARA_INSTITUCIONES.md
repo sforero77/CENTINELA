@@ -58,7 +58,7 @@ bien enrutado, cuando lo que pasaba es que la sacudida se quedó mar adentro. El
 reporte salió cuando se arregló esa distinción. Horas después llegó el segundo,
 un M5,9 en la dorsal del Pacífico Oriental (`us7000tdms`).
 
-**La latencia medida está en [`/status`](https://sforero77.github.io/CENTINELA/status.html),
+**La latencia medida está en [`/status`](https://centinela.geoailatam.terrnova.com/status.html),
 y aquí no se copia a mano.** Se mueve con cada evento (ya caducó dos veces en un
 día) y ahora mismo está **por encima del objetivo**, porque lo que cronometró no
 fue la cadena en régimen sino lo que tardó en arreglarse un fallo que sólo podía
@@ -316,7 +316,7 @@ Nada obligatorio. Lo que más valor añadiría, en orden:
 
 *Código, datos y el registro completo de verificaciones:*
 <https://github.com/sforero77/CENTINELA> · *Reportes:*
-<https://sforero77.github.io/CENTINELA/>
+<https://centinela.geoailatam.terrnova.com/>
 
 ---
 
