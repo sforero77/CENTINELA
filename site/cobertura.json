@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-27T13:15:25Z",
+  "generado_utc": "2026-10-27T13:17:47Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -44,7 +44,7 @@
       "iso3": "CHL",
       "nombre": "Chile",
       "construido": true,
-      "manifest_id": "chl-v0.4",
+      "manifest_id": "chl-v0.5",
       "poblacion_medida": 19690592,
       "poblacion_referencia": 19859921,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
