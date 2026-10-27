@@ -74,7 +74,8 @@ def pager() -> dict[float, int]:
 #: que el proximo lector tiene que descartar a mano.
 #:
 #: El margen nuevo es estrecho y conviene decirlo: 4.936 personas por encima del
-#: piso, un 0,07 %. Si otro ShakeMap lo empuja abajo, las dos pruebas de este
+#: piso, un 0,07 %, con el v10. El v11 lo ensancho a 43.268 (0,61 %), que sigue
+#: siendo poco. Si otro ShakeMap lo empuja abajo, las dos pruebas de este
 #: fichero se ponen en rojo y hay que reescribir §5 del documento. Que eso sea
 #: exactamente lo que debe pasar es la razon de no dejar el `if` puesto.
 
@@ -248,7 +249,8 @@ def test_la_cifra_cae_en_el_cuarto_inferior_del_intervalo(
 
     Con el v10 las tres caen holgadamente en la mitad baja —`pop_mmi6p` al 0 %,
     `pop_mmi7p` al 14 %, `pop_mmi8p` al 0 %— y por primera vez desde el v8 las
-    tres pasan por este mismo assert, sin caso especial.
+    tres pasan por este mismo assert, sin caso especial. Con el v11 siguen ahi:
+    `pop_mmi6p` al 2 %, `pop_mmi7p` al 14 %, `pop_mmi8p` al 0 %.
     """
     nuestra = centinela[campo]
     piso, techo = pager[umbral_inferior], pager[umbral_superior]

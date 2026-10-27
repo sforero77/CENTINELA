@@ -266,8 +266,20 @@ def _reporte_publicado() -> dict[str, Any]:
 #: sedes educativas— porque el area total de MMI≥7 se redistribuye, no se
 #: encoge. La unica que cae fuerte es sedes de salud (-48,2 %, de 971 a 503), y
 #: es la misma historia: 486 de esas 971 eran de Cali.
-POP_MMI7P_ESPERADO = 2_389_895.6842751526
-SHAKEMAP_DEL_ANCLA = 10
+#:
+#: REANCLADO AL v11 EL 27-OCT-2026. USGS publico el ShakeMap v11 el 11-oct
+#: (07:32 UTC), el reporte se re-emitio solo ese dia y la prueba se quedo en
+#: rojo hasta hoy. `pop_mmi7p` paso de 2.389.896 a 2.434.710, un **+1,88 %**:
+#: poco, pero casi cuatro veces la tolerancia, y por eso no se absorbe.
+#:
+#: Medido municipio a municipio contra `adm2.csv` del v10: los 44.814 de mas
+#: salen de cinco municipios que ya estaban en MMI 7 y ganan area dentro de la
+#: banda —Sevilla +9.439, Apia +8.932, Medio San Juan +8.747, Caicedonia
+#: +4.526, Rio Iro +2.470—; ninguno cambia de `mmi_max`. Las demas capas suben
+#: lo mismo (edificaciones +2,3 %, sedes de salud de 503 a 517, educativas
+#: +2,2 %, vias +1,9 %) y el top 5 no se mueve. No hay codigo nuevo en medio.
+POP_MMI7P_ESPERADO = 2_434_710.057361298
+SHAKEMAP_DEL_ANCLA = 11
 TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
 
 #: El v9 metio a **Santiago de Cali** (76001) en el primer puesto con 772.110
