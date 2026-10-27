@@ -129,8 +129,8 @@ con prisa, y es lo único que este proyecto no automatiza.
 
 Es la primera objeción que recibe este proyecto, y conviene resolverla antes de
 que la haga nadie: **para el sismo del Chocó, PAGER (USGS) publica 7.089.614
-personas en su fila «7» y CENTINELA publica 2.389.896 en MMI≥7.** Un factor de
-3,0. Leídas de frente, parece que CENTINELA subcuenta.
+personas en su fila «7» y CENTINELA publica 2.434.710 en MMI≥7.** Un factor de
+2,9. Leídas de frente, parece que CENTINELA subcuenta.
 
 **Las dos no tabulan igual.** PAGER agrupa por MMI *redondeado*: su fila «7» es
 todo lo que cae entre 6,5 y 7,49. CENTINELA publica bandas *literales*: MMI≥7 es
@@ -141,28 +141,29 @@ comparación que las dos convenciones admiten. **Las tres lo hacen.**
 > **Las dos columnas ya no son del mismo ShakeMap, y esta vez no se puede
 > arreglar.** Dos veces hubo que refrescar la fixture de PAGER porque se había
 > quedado en una versión anterior a la del reporte: el 6-sep-2026 (v7 contra v8)
-> y el 8-sep (v8 contra v9). El 18-sep el reporte se re-emitió con el **v10** y
-> refrescar dejó de servir: **USGS no ha vuelto a publicar PAGER desde el v9.**
-> Comprobado contra ComCat el 21-sep-2026: el producto `losspager` tiene diez
-> entregas y la última es del 7-sep 22:58 UTC —la que acompañó al ShakeMap v9—,
-> mientras que el v10 es del 18-sep 19:49 UTC. La fixture congelada es byte a
+> y el 8-sep (v8 contra v9). El 18-sep el reporte se re-emitió con el **v10**, el
+> 11-oct con el **v11**, y refrescar dejó de servir:
+> **USGS no ha vuelto a publicar PAGER desde el v9.** Comprobado contra ComCat el 21-sep-2026 y otra vez
+> el 27-oct-2026: el producto `losspager` tiene diez entregas y la última es del
+> 7-sep 22:58 UTC —la que acompañó al ShakeMap v9—, mientras que el v10 es del
+> 18-sep 19:49 UTC y el v11 del 11-oct 07:32 UTC. La fixture congelada es byte a
 > byte idéntica a esa última PAGER viva, así que no hay nada que traer. La tabla
-> de abajo compara, por tanto, **CENTINELA v10 contra PAGER v9**, y los
+> de abajo compara, por tanto, **CENTINELA v11 contra PAGER v9**, y los
 > encabezados lo dicen. La procedencia, con la URL exacta del producto, está en
 > `pager_exposures.origen.json`.
 
-| Umbral literal | PAGER (ShakeMap v9) | CENTINELA (ShakeMap v10) |
+| Umbral literal | PAGER (ShakeMap v9) | CENTINELA (ShakeMap v11) |
 |---|---:|---:|
 | MMI ≥ 5,5 | 9.329.268 | — |
-| MMI ≥ 6,0 | — | **7.094.550** |
+| MMI ≥ 6,0 | — | **7.132.882** |
 | MMI ≥ 6,5 | 7.089.614 | — |
-| MMI ≥ 7,0 | — | **2.389.896** |
+| MMI ≥ 7,0 | — | **2.434.710** |
 | MMI ≥ 7,5 | 1.647.927 | — |
 | MMI ≥ 8,0 | — | **0** |
 
-Léase por parejas. 2.389.896 (≥7,0) tiene que quedar **entre** 1.647.927 (≥7,5)
-y 7.089.614 (≥6,5), y queda, al 14 % contando desde abajo. 7.094.550 (≥6,0)
-tiene que quedar entre 7.089.614 (≥6,5) y 9.329.268 (≥5,5), y queda, al 0,2 %.
+Léase por parejas. 2.434.710 (≥7,0) tiene que quedar **entre** 1.647.927 (≥7,5)
+y 7.089.614 (≥6,5), y queda, al 14 % contando desde abajo. 7.132.882 (≥6,0)
+tiene que quedar entre 7.089.614 (≥6,5) y 9.329.268 (≥5,5), y queda, al 1,9 %.
 Y 0 (≥8,0) queda entre 0 (≥8,5) y 1.647.927 (≥7,5). Las tres caen por debajo del
 punto medio de su intervalo, que es donde han caído siempre que acotaron.
 
@@ -180,9 +181,9 @@ Lo que lo cerró no fue una corrección nuestra: fue un insumo nuevo. El contorn
 de MMI 6 del v10 se ensancha hacia el oriente —entra Guadalajara de Buga con
 131.984 personas, Quinchía con 23.937, Ginebra con 14.320— y `pop_mmi6p` sube de
 6.840.603 a 7.094.550, por encima del piso. **Eso retira el desvío, no lo
-explica.** La causa nunca se supo, y el margen de hoy es estrecho: 4.936
-personas, un 0,07 %. Si otro ShakeMap lo empuja abajo, volverá a salirse y
-habrá que reescribir este apartado.
+explica.** La causa nunca se supo, y el margen quedó estrecho: 4.936 personas, un
+0,07 %. El v11 lo ensanchó a 43.268 (0,6 %), que sigue siendo poco. Si otro
+ShakeMap lo empuja abajo, volverá a salirse y habrá que reescribir este apartado.
 
 **Y la cifra principal se movió un 22 %, por una sola razón.** El v10 retiró el
 contorno de MMI 7 de Santiago de Cali: el municipio baja de MMI 7,0 a 6,5 y con
@@ -193,6 +194,13 @@ Comprobado municipio a municipio y contra los contornos del propio v10.
 Las demás capas suben entre un 3 % y un 6 %, porque el área de MMI≥7 se
 redistribuye en vez de encogerse; la excepción son las sedes de salud, que caen
 de 971 a 503 porque 486 de ellas eran de Cali.
+
+**El v11 (11-oct) la movió poco, y en la otra dirección.** `pop_mmi7p` sube de
+2.389.896 a 2.434.710, un 1,9 %. Los 44.814 de más salen de cinco municipios que
+ya estaban en MMI 7 y ganan área dentro de la banda —Sevilla, Apía, Medio San
+Juan, Caicedonia y Río Iró—; ninguno cambia de intensidad máxima, y los cinco
+primeros del reporte siguen siendo los mismos. Las demás capas suben en la misma
+proporción.
 
 Lo que el sistema afirma de su propio muestreo lo imprime cada reporte: «el sesgo
 que introduce no está medido: puede quedarse corto o pasarse». Es el primer sitio
