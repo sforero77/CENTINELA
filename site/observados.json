@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-27T12:05:24Z",
+  "generado_utc": "2026-10-27T12:25:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000ttfx",
+      "mag": 4.6,
+      "lon": -93.817,
+      "lat": 16.3977,
+      "depth_km": 140.3,
+      "lugar": "5 km al ENE de Tierra y Libertad, México",
+      "origen_utc": "2026-10-27T12:01:11Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "MEX"
+    },
     {
       "usgs_id": "us7000ttfs",
       "mag": 4.6,
