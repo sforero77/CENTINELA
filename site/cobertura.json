@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-27T13:12:17Z",
+  "generado_utc": "2026-10-27T13:15:25Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -77,7 +77,7 @@
       "iso3": "CUB",
       "nombre": "Cuba",
       "construido": true,
-      "manifest_id": "cub-v0.4",
+      "manifest_id": "cub-v0.5",
       "poblacion_medida": 11152627,
       "poblacion_referencia": 10937203,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
