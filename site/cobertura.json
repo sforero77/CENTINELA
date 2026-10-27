@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-27T13:18:23Z",
+  "generado_utc": "2026-10-27T13:23:11Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -110,7 +110,7 @@
       "iso3": "GTM",
       "nombre": "Guatemala",
       "construido": true,
-      "manifest_id": "gtm-v0.4",
+      "manifest_id": "gtm-v0.5",
       "poblacion_medida": 18622441,
       "poblacion_referencia": 18687881,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
