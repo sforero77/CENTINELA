@@ -96,7 +96,7 @@ gh workflow run site.yml
 gh run watch
 ```
 
-**Cómo comprobarlo:** `https://sforero77.github.io/CENTINELA/` muestra el
+**Cómo comprobarlo:** `https://centinela.geoailatam.terrnova.com/` muestra el
 visor y `/status.html` la página de estado. Después, `frescura.yml` vigila sola
 que la página no se quede detrás del repositorio.
 

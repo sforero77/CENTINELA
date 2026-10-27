@@ -108,7 +108,7 @@ jobs:
           usgs = ultimo["usgs_id"]
           mag = str(ultimo.get("mag", "")).replace(".", ",")
           lugar = ultimo.get("lugar", "")
-          base = "https://sforero77.github.io/CENTINELA"
+          base = "https://centinela.geoailatam.terrnova.com"
 
           p = "_site/index.html"
           s = io.open(p, encoding="utf-8").read()

@@ -12,9 +12,9 @@ municipio y por celda, con los datos descargables y en español.
 > geológicos ni a las unidades de gestión del riesgo. Ver
 > [`DISCLAIMER.md`](DISCLAIMER.md).
 
-**[Ver el visor](https://sforero77.github.io/CENTINELA/)** · [un reporte de
-ejemplo](https://sforero77.github.io/CENTINELA/?evento=us6000tjl2) ·
-[estado del sistema](https://sforero77.github.io/CENTINELA/status.html)
+**[Ver el visor](https://centinela.geoailatam.terrnova.com/)** · [un reporte de
+ejemplo](https://centinela.geoailatam.terrnova.com/?evento=us6000tjl2) ·
+[estado del sistema](https://centinela.geoailatam.terrnova.com/status.html)
 
 ## Dos conceptos
 

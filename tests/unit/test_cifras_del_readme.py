@@ -115,7 +115,7 @@ def test_la_portada_enlaza_el_visor_antes_de_la_mitad(readme: str) -> None:
     Un sistema que publica una pagina y no la enlaza hasta el ultimo tercio
     obliga a leerse el argumento entero para llegar al producto.
     """
-    enlace = readme.find("https://sforero77.github.io/CENTINELA/")
+    enlace = readme.find("https://centinela.geoailatam.terrnova.com/")
     assert enlace > 0, "el README no enlaza el visor"
     assert enlace < len(readme) // 3, (
         "el enlace al visor queda pasado el primer tercio del documento"

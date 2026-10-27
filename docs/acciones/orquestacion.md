@@ -36,7 +36,7 @@ flowchart TB
   FRE -->|"si hay desfase"| SIT
 
   SIT["<b>site.yml</b><br/>GitHub Pages"]
-  SIT --> PAGES(["sforero77.github.io/CENTINELA"])
+  SIT --> PAGES(["centinela.geoailatam.terrnova.com"])
 
   IMP -.->|"si falta el activo<br/>· sólo lo sugiere"| EXQ["exposure_quarterly.yml<br/>P0"]
   CQ --> EXQ

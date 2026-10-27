@@ -220,7 +220,7 @@ flowchart TB
   PREP --> OG["Reescribir og:image<br/>al evento más reciente"]
   OG --> ART["upload-pages-artifact"]
   ART --> DEP["deploy-pages"]
-  DEP --> PAGES(["sforero77.github.io/CENTINELA"])
+  DEP --> PAGES(["centinela.geoailatam.terrnova.com"])
 
   COB & PREP & OG & ART & DEP --> AV{"<b>job: avisar</b><br/>¿publicar salió bien?"}
   AV -->|sí| CIERRA["cerrar la incidencia<br/>si había una abierta"]
