@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-27T13:33:16Z",
+  "generado_utc": "2026-10-27T13:34:37Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -154,7 +154,7 @@
       "iso3": "PAN",
       "nombre": "Panamá",
       "construido": true,
-      "manifest_id": "pan-v0.4",
+      "manifest_id": "pan-v0.5",
       "poblacion_medida": 4590423,
       "poblacion_referencia": 4571189,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
