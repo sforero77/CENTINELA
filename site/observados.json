@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-28T00:10:23Z",
+  "generado_utc": "2026-10-28T02:50:25Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -80,17 +80,6 @@
       "origen_utc": "2026-10-25T07:11:49Z",
       "razon": "M4.6 < umbral M5.5",
       "iso3": "PER"
-    },
-    {
-      "usgs_id": "us6000u49c",
-      "mag": 4.5,
-      "lon": -66.5795,
-      "lat": -21.3469,
-      "depth_km": 235.8,
-      "lugar": "58 km al SO de Atocha, Bolivia",
-      "origen_utc": "2026-10-23T02:45:41Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "BOL"
     }
   ]
 }
