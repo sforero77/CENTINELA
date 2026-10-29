@@ -15,13 +15,15 @@
     "despachado": "2026-10-29T08:10:23Z",
     "detectado": "2026-10-29T08:09:30Z",
     "preliminar": "2026-10-29T08:09:59Z",
-    "preliminar_ultimo": "2026-10-29T08:10:02Z",
+    "preliminar_ultimo": "2026-10-29T08:11:01Z",
     "usgs_origen": "2026-10-29T07:49:50Z"
   },
   "hashes": {},
-  "intentos_preliminar": 2,
+  "intentos_preliminar": 4,
   "backtest": false,
   "notas": [
+    "sin ShakeMap disponible aun",
+    "sin ShakeMap disponible aun",
     "sin ShakeMap disponible aun",
     "sin ShakeMap disponible aun"
   ]

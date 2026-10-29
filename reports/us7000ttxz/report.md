@@ -27,7 +27,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se calcula en un reporte preliminar*
 - ShakeMap consumido: **ninguno** (no publicado aún)
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`chl-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-29T08:10:03Z
+- Pipeline: `0.1.0` · Generado: 2026-10-29T08:11:02Z
 
 ## Advertencias
 
