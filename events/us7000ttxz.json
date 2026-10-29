@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000ttxz",
-  "estado": "preliminar",
+  "estado": "publicado",
   "mag": 6.4,
   "lon": -98.0489,
   "lat": -36.4058,
@@ -8,14 +8,16 @@
   "lugar": "Al sureste de la isla de Pascua",
   "origen_utc": "2026-10-29T07:49:50Z",
   "versiones_procesadas": {
-    "shakemap": 0,
-    "groundfailure": 0
+    "shakemap": 1,
+    "groundfailure": 0,
+    "shakemap_fuente": "us"
   },
   "timestamps": {
     "despachado": "2026-10-29T08:30:26Z",
     "detectado": "2026-10-29T08:09:30Z",
     "preliminar": "2026-10-29T08:09:59Z",
     "preliminar_ultimo": "2026-10-29T08:11:01Z",
+    "publicado": "2026-10-29T08:31:05Z",
     "usgs_origen": "2026-10-29T07:49:50Z"
   },
   "hashes": {},
@@ -25,6 +27,7 @@
     "sin ShakeMap disponible aun",
     "sin ShakeMap disponible aun",
     "sin ShakeMap disponible aun",
-    "sin ShakeMap disponible aun"
+    "sin ShakeMap disponible aun",
+    "ShakeMap v0 -> v1 (us)"
   ]
 }
