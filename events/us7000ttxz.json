@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000ttxz",
-  "estado": "detectado",
+  "estado": "preliminar",
   "mag": 6.4,
   "lon": -98.0489,
   "lat": -36.4058,
@@ -13,10 +13,15 @@
   },
   "timestamps": {
     "detectado": "2026-10-29T08:09:30Z",
+    "preliminar": "2026-10-29T08:09:59Z",
+    "preliminar_ultimo": "2026-10-29T08:10:02Z",
     "usgs_origen": "2026-10-29T07:49:50Z"
   },
   "hashes": {},
-  "intentos_preliminar": 0,
+  "intentos_preliminar": 2,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "sin ShakeMap disponible aun",
+    "sin ShakeMap disponible aun"
+  ]
 }

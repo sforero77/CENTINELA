@@ -1,5 +1,20 @@
 [
   {
+    "usgs_id": "us7000ttxz",
+    "mag": 6.4,
+    "lugar": "Al sureste de la isla de Pascua",
+    "iso3": "CHL",
+    "lon": -98.0489,
+    "lat": -36.4058,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2026-10-29T07:49:50Z",
+    "shakemap_version": 0,
+    "preliminar": true,
+    "backtest": false,
+    "generado_utc": "2026-10-29T08:10:03Z"
+  },
+  {
     "usgs_id": "us6000u1wn",
     "mag": 6.1,
     "lugar": "15 km al O de Río Grande, Panamá",
