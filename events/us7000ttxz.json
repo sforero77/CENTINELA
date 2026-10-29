@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us7000ttxz",
+  "estado": "detectado",
+  "mag": 6.4,
+  "lon": -98.0489,
+  "lat": -36.4058,
+  "depth_km": 10.0,
+  "lugar": "Al sureste de la isla de Pascua",
+  "origen_utc": "2026-10-29T07:49:50Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-10-29T08:09:30Z",
+    "usgs_origen": "2026-10-29T07:49:50Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
