@@ -48,6 +48,8 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v1 (us) → v2 (us)
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v0 → v1 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
 
@@ -58,10 +60,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v1** de `us`
+- ShakeMap consumido: **v2** de `us`
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`chl-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-29T08:31:03Z
+- Pipeline: `0.1.0` · Generado: 2026-10-29T09:56:00Z
 
 ## Advertencias
 
