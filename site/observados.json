@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-30T07:00:28Z",
+  "generado_utc": "2026-10-30T07:15:27Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -90,17 +90,6 @@
       "lugar": "19 km al NE de Atico, Perú",
       "origen_utc": "2026-10-25T17:11:49Z",
       "razon": "M4.7 < umbral M5.5",
-      "iso3": "PER"
-    },
-    {
-      "usgs_id": "us6000u4t4",
-      "mag": 4.6,
-      "lon": -74.747,
-      "lat": -16.0676,
-      "depth_km": 26.5,
-      "lugar": "50 km al SO de Atiquipa, Perú",
-      "origen_utc": "2026-10-25T07:11:49Z",
-      "razon": "M4.6 < umbral M5.5",
       "iso3": "PER"
     }
   ]
