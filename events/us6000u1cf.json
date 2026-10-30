@@ -2,14 +2,14 @@
   "usgs_id": "us6000u1cf",
   "estado": "publicado",
   "mag": 6.0,
-  "lon": -80.5985,
-  "lat": 7.5068,
+  "lon": -80.5728,
+  "lat": 7.4777,
   "depth_km": 10.0,
-  "lugar": "7 km al N de La Tronosa, Panamá",
+  "lugar": "4 km al NNE de La Tronosa, Panamá",
   "origen_utc": "2026-10-10T04:14:01Z",
   "versiones_procesadas": {
-    "shakemap": 4,
-    "groundfailure": 3,
+    "shakemap": 5,
+    "groundfailure": 4,
     "shakemap_fuente": "us",
     "groundfailure_fuente": "us"
   },
@@ -18,7 +18,7 @@
     "detectado": "2026-10-10T04:30:22Z",
     "preliminar": "2026-10-10T04:30:52Z",
     "publicado": "2026-10-10T04:35:58Z",
-    "publicado_ultimo": "2026-10-11T11:21:06Z",
+    "publicado_ultimo": "2026-10-30T11:34:41Z",
     "usgs_origen": "2026-10-10T04:14:01Z"
   },
   "hashes": {},
@@ -29,6 +29,7 @@
     "ShakeMap v0 -> v1 (us)",
     "ShakeMap v1 (us) -> v2 (us)",
     "ShakeMap v2 (us) -> v3 (us)",
-    "ShakeMap v3 (us) -> v4 (us)"
+    "ShakeMap v3 (us) -> v4 (us)",
+    "ShakeMap v4 (us) -> v5 (us)"
   ]
 }

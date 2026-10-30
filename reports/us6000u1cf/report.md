@@ -1,4 +1,4 @@
-# Exposición sísmica: M6,0 · 7 km al N de La Tronosa, Panamá
+# Exposición sísmica: M6,0 · 4 km al NNE de La Tronosa, Panamá
 
 **Evento USGS:** `us6000u1cf` · **Origen:** 2026-10-10T04:14:01Z UTC · **Profundidad:** 10,0 km
 
@@ -6,28 +6,28 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 12 mil |
-| Población en MMI≥7 | 1.500 |
+| Población en MMI≥6 | 10 mil |
+| Población en MMI≥7 | 1.700 |
 | Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥7 | 1.000 |
+| Edificaciones en MMI≥7 | 1.200 |
 | Sedes de salud en MMI≥7 | 0 |
 | Sedes educativas en MMI≥7 | 1 |
-| Vías primarias y secundarias en MMI≥7 | 16 km |
-| Vías locales en MMI≥7 | 48 km |
+| Vías primarias y secundarias en MMI≥7 | 18 km |
+| Vías locales en MMI≥7 | 57 km |
 | Superficie construida en MMI≥7 | 0,2 km² |
 
-El satélite detecta **1,7 veces** más superficie construida de la que explicarían las 1.000 edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,7 veces** más superficie construida de la que explicarían las 1.200 edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **290** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **340** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Tonosí | `PA0907` | 7,0 | 1.300 |
-| 2 | Macaracas | `PA0904` | 7,0 | 150 |
+| 1 | Tonosí | `PA0907` | 7,0 | 1.700 |
+| 2 | Macaracas | `PA0904` | 7,0 | 57 |
 
 ## Deslizamiento y licuefacción
 
@@ -38,7 +38,7 @@ Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No s
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v3), dominio público.
+Fuente: producto *Ground Failure* de USGS (v4), dominio público.
 
 ## Referencia cruzada
 
@@ -48,10 +48,17 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,7 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **10,8 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v4 (us) → v5 (us)
+- Ground Failure: v3 (us) → v4 (us)
+- Epicentro: reubicado 4 km
+- Población en MMI≥6: 12 mil → 10 mil
+- Población en MMI≥7: 1.500 → 1.700
+- Población de 65 años o más en MMI≥7: 290 → 340
+- Edificaciones en MMI≥7: 1.000 → 1.200
 - ShakeMap: v3 (us) → v4 (us)
 - Ground Failure: v2 (us) → v3 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
@@ -75,10 +82,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,7 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v4** de `us`
-- Ground Failure consumido: **v3** de `us`
-- Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-11T11:21:04Z
+- ShakeMap consumido: **v5** de `us`
+- Ground Failure consumido: **v4** de `us`
+- Manifiesto de exposición: [`pan-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-10-30T11:34:39Z
 
 ## Advertencias
 
