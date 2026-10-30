@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-30T17:15:23Z",
+  "generado_utc": "2026-10-30T23:15:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tufp",
+      "mag": 4.6,
+      "lon": -69.4844,
+      "lat": -16.5439,
+      "depth_km": 194.8,
+      "lugar": "33 km al NE de Mazo Cruz, Perú",
+      "origen_utc": "2026-10-30T22:46:57Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "PER"
+    },
     {
       "usgs_id": "us7000ttyw",
       "mag": 4.7,
