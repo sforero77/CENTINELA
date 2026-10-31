@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-10-31T03:00:26Z",
+  "generado_utc": "2026-10-31T16:10:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tujf",
+      "mag": 5.2,
+      "lon": -80.2547,
+      "lat": 7.5692,
+      "depth_km": 10.0,
+      "lugar": "4 km al S de Bajo Corral, Panamá",
+      "origen_utc": "2026-10-31T15:50:18Z",
+      "razon": "M5.2 < umbral M5.5",
+      "iso3": "PAN"
+    },
     {
       "usgs_id": "us7000tugs",
       "mag": 4.5,
