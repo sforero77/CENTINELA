@@ -14,8 +14,8 @@
 | Población en MMI≥7 | 910 mil |
 | Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥7 | 330 mil |
-| Sedes de salud en MMI≥7 | 152 |
-| Sedes educativas en MMI≥7 | 3.132 |
+| Sedes de salud en MMI≥7 | 155 |
+| Sedes educativas en MMI≥7 | 3.295 |
 | Vías primarias y secundarias en MMI≥7 | 650 km |
 | Vías locales en MMI≥7 | 4.200 km |
 | Superficie construida en MMI≥7 | 46,8 km² |
@@ -54,6 +54,12 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **9,9 %**.
 
+## Cambios frente a la versión anterior
+
+- Recálculo con el mismo ShakeMap v7 (us) (cambió el cálculo o el activo de exposición, no USGS)
+- Sedes de salud en MMI≥7: 150 → 160
+- Sedes educativas en MMI≥7: 3.100 → 3.300
+
 ## Descargas
 
 - [CSV por municipio](adm2.csv)
@@ -61,10 +67,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **9,9 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v7**
-- Ground Failure consumido: **v3**
-- Manifiesto de exposición: [`mex-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-28T15:45:03Z
+- ShakeMap consumido: **v7** de `us`
+- Ground Failure consumido: **v3** de `us`
+- Manifiesto de exposición: [`mex-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-11-02T17:21:41Z
 
 ## Advertencias
 
