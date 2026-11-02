@@ -13,9 +13,11 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 0,
-    "exposure_manifest": "gtm-v0.4",
+    "exposure_manifest": "gtm-v0.5",
     "modelo_deslizamiento": "",
-    "modelo_licuefaccion": ""
+    "modelo_licuefaccion": "",
+    "shakemap_fuente": "atlas",
+    "groundfailure_fuente": ""
   },
   "preliminar": false,
   "radios": [],
@@ -25,13 +27,13 @@
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 94443.82884727027,
+    "pop_65p_mmi6p": 94443.8288472701,
     "bld_mmi6p": 896896.0,
     "built_m2_mmi6p": 108509238.0,
-    "health_mmi6p": 178.0,
-    "edu_mmi6p": 231.0,
-    "road_km_mmi6p": 10894.758245006835,
-    "road_km_principal_mmi6p": 724.945009153065,
+    "health_mmi6p": 179.0,
+    "edu_mmi6p": 233.0,
+    "road_km_mmi6p": 10894.249431462877,
+    "road_km_principal_mmi6p": 724.9450091530648,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -219,6 +221,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-28T15:40:22Z",
+  "generado_utc": "2026-11-02T17:16:42Z",
   "pipeline_version": "0.1.0"
 }
