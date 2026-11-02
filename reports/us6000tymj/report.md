@@ -63,8 +63,8 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 - ShakeMap consumido: **v7** de `us`
 - Ground Failure consumido: **ninguno** (no publicado aún)
-- Manifiesto de exposición: [`cri-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CRI.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-08T12:01:12Z
+- Manifiesto de exposición: [`cri-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CRI.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-11-02T17:19:52Z
 
 ## Advertencias
 
