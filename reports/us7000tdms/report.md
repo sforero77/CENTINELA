@@ -1,4 +1,4 @@
-# Exposición sísmica: M5,9 · southern East Pacific Rise
+# Exposición sísmica: M5,9 · Sur de la dorsal del Pacífico Oriental
 
 **Evento USGS:** `us7000tdms` · **Origen:** 2026-09-02T12:35:56Z UTC · **Profundidad:** 10,0 km
 
@@ -53,10 +53,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v4**
+- ShakeMap consumido: **v4** de `us`
 - Ground Failure consumido: **ninguno** (no publicado aún)
-- Manifiesto de exposición: [`chl-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-28T15:46:52Z
+- Manifiesto de exposición: [`chl-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-11-02T17:23:08Z
 
 ## Advertencias
 

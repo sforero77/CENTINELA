@@ -5,16 +5,17 @@
   "lon": -109.0117,
   "lat": -34.8796,
   "depth_km": 10.0,
-  "lugar": "southern East Pacific Rise",
+  "lugar": "Sur de la dorsal del Pacífico Oriental",
   "origen_utc": "2026-09-02T12:35:56Z",
   "versiones_procesadas": {
     "shakemap": 4,
-    "groundfailure": 0
+    "groundfailure": 0,
+    "shakemap_fuente": "us"
   },
   "timestamps": {
     "detectado": "2026-09-02T13:00:25Z",
     "publicado": "2026-09-02T14:11:03Z",
-    "publicado_ultimo": "2026-09-28T15:46:55Z",
+    "publicado_ultimo": "2026-11-02T17:23:10Z",
     "usgs_origen": "2026-09-02T12:35:56Z"
   },
   "hashes": {},
@@ -29,6 +30,7 @@
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "ShakeMap v3 -> v4",
+    "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }

@@ -5,7 +5,7 @@
     "mag": 5.9,
     "depth_km": 10.0,
     "utc": "2026-09-02T12:35:56Z",
-    "lugar": "southern East Pacific Rise",
+    "lugar": "Sur de la dorsal del Pacífico Oriental",
     "pager_alert": "green",
     "lon": -109.0117,
     "lat": -34.8796
@@ -13,9 +13,11 @@
   "inputs": {
     "shakemap_version": 4,
     "groundfailure_version": 0,
-    "exposure_manifest": "chl-v0.4",
+    "exposure_manifest": "chl-v0.5",
     "modelo_deslizamiento": "",
-    "modelo_licuefaccion": ""
+    "modelo_licuefaccion": "",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": ""
   },
   "preliminar": false,
   "radios": [
@@ -128,6 +130,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-28T15:46:52Z",
+  "generado_utc": "2026-11-02T17:23:08Z",
   "pipeline_version": "0.1.0"
 }

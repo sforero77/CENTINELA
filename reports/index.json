@@ -122,7 +122,7 @@
   {
     "usgs_id": "us7000tdms",
     "mag": 5.9,
-    "lugar": "southern East Pacific Rise",
+    "lugar": "Sur de la dorsal del Pacífico Oriental",
     "iso3": "CHL",
     "lon": -109.0117,
     "lat": -34.8796,
@@ -132,7 +132,7 @@
     "shakemap_version": 4,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-09-28T15:46:52Z"
+    "generado_utc": "2026-11-02T17:23:08Z"
   },
   {
     "usgs_id": "us7000tdmp",
