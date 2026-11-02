@@ -1,8 +1,10 @@
 usgs_id,shakemap_version,adm2_id,nombre,lon,lat,mmi_max,pop_mmi6p,pop_mmi7p,pop_mmi8p,pop_65p_mmi7p,pop_65p_mmi6p,bld_mmi6p,built_m2_mmi6p,health_mmi6p,edu_mmi6p,road_km_mmi6p,road_km_principal_mmi6p,bld_mmi7p,built_m2_mmi7p,health_mmi7p,edu_mmi7p,road_km_mmi7p,road_km_principal_mmi7p,ls_pop_expuesta_mmi6p,lq_pop_expuesta_mmi6p,flags_calidad
 #meta+id+event,#meta+version,#adm2+code,#adm2+name,#geo+lon,#geo+lat,#indicator+mmi+max,#population+mmi6,#population+mmi7,#population+mmi8,#population+age65+mmi7,#population+age65+mmi6,#infra+buildings+mmi6,#infra+built+area+mmi6,#infra+health+mmi6,#infra+education+mmi6,#infra+roads+km+mmi6,#infra+roads+km+primary+mmi6,#infra+buildings+mmi7,#infra+built+area+mmi7,#infra+health+mmi7,#infra+education+mmi7,#infra+roads+km+mmi7,#infra+roads+km+primary+mmi7,#population+landslide+mmi6,#population+liquefaction+mmi6,#meta+flags
-us6000u18x,3,PA0907,Tonosí,-80.504297,7.405068,7.0,6462.712455754168,2816.9774997588247,0.0,410.01589865526745,1052.6055130486502,5115.0,969485.0,0,1,281.443161243406,31.727754674180154,1731.0,440626.0,0,1,60.42333197947981,13.258088129883989,0.0,3747.271874143742,"construido_no_mapeado,discrepancia_poblacional"
-us6000u18x,3,PA0902,Las Tablas,-80.30572,7.639485,6.5,174.79235930461437,0.0,0.0,0.0,49.17805335551665,306.0,28312.0,0,0,43.85617288254805,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
-us6000u18x,3,PA0905,Pedasí,-80.107084,7.50738,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us6000u18x,3,PA0904,Macaracas,-80.54715,7.635934,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us6000u18x,3,PA0901,Guararé,-80.350432,7.77241,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
-us6000u18x,3,PA0906,Pocrí,-80.156852,7.630439,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u18x,4,PA0907,Tonosí,-80.504297,7.405068,7.0,6742.221172570251,413.13725887797773,0.0,49.469967182825414,1121.1996635434991,5103.0,995500.0,0,2,281.99397556854785,41.07238371218428,382.0,73424.0,0,0,20.78216853403258,4.450005060328339,0.0,3453.532503916882,"discrepancia_poblacional,construido_no_mapeado"
+us6000u18x,4,PA0902,Las Tablas,-80.30572,7.639485,6.5,254.44057415239513,0.0,0.0,0.0,63.38173685285682,302.0,33877.0,0,0,47.21358807616245,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,"discrepancia_poblacional,construido_no_mapeado"
+us6000u18x,4,PA0904,Macaracas,-80.54715,7.635934,6.0,168.00401785131544,0.0,0.0,0.0,37.57400168688348,150.0,17166.0,0,0,11.603595034452466,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u18x,4,PA0901,Guararé,-80.350432,7.77241,5.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u18x,4,PA0903,Los Santos,-80.434334,7.859833,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u18x,4,PA0905,Pedasí,-80.107084,7.50738,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,
+us6000u18x,4,PA0703,Los Pozos,-80.677787,7.670757,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,discrepancia_poblacional
+us6000u18x,4,PA0906,Pocrí,-80.156852,7.630439,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,0,0,0.0,0.0,0.0,0.0,

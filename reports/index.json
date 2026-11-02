@@ -62,17 +62,17 @@
   {
     "usgs_id": "us6000u18x",
     "mag": 5.8,
-    "lugar": "1 km al S de El Cacao, Panamá",
+    "lugar": "4 km al O de Flores, Panamá",
     "iso3": "PAN",
-    "lon": -80.4012,
-    "lat": 7.4362,
-    "pop_mmi7p": 2816.9774997588247,
-    "pop_mmi6p": 6637.504815058783,
+    "lon": -80.451,
+    "lat": 7.4835,
+    "pop_mmi7p": 413.13725887797773,
+    "pop_mmi6p": 7164.6657645739615,
     "utc": "2026-10-09T18:37:46Z",
-    "shakemap_version": 3,
+    "shakemap_version": 4,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-11T11:21:10Z"
+    "generado_utc": "2026-11-02T12:01:29Z"
   },
   {
     "usgs_id": "us6000u18t",

@@ -2,14 +2,14 @@
   "usgs_id": "us6000u18x",
   "estado": "publicado",
   "mag": 5.8,
-  "lon": -80.4012,
-  "lat": 7.4362,
+  "lon": -80.451,
+  "lat": 7.4835,
   "depth_km": 10.0,
-  "lugar": "1 km al S de El Cacao, Panamá",
+  "lugar": "4 km al O de Flores, Panamá",
   "origen_utc": "2026-10-09T18:37:46Z",
   "versiones_procesadas": {
-    "shakemap": 3,
-    "groundfailure": 3,
+    "shakemap": 4,
+    "groundfailure": 4,
     "shakemap_fuente": "us",
     "groundfailure_fuente": "us"
   },
@@ -18,7 +18,7 @@
     "detectado": "2026-10-09T18:50:22Z",
     "preliminar": "2026-10-09T18:50:55Z",
     "publicado": "2026-10-09T18:55:55Z",
-    "publicado_ultimo": "2026-10-11T11:21:13Z",
+    "publicado_ultimo": "2026-11-02T12:01:32Z",
     "usgs_origen": "2026-10-09T18:37:46Z"
   },
   "hashes": {},
@@ -29,6 +29,7 @@
     "ShakeMap v0 -> v1 (us)",
     "Ground Failure v0 -> v1 (us)",
     "ShakeMap v1 (us) -> v2 (us)",
-    "ShakeMap v2 (us) -> v3 (us)"
+    "ShakeMap v2 (us) -> v3 (us)",
+    "ShakeMap v3 (us) -> v4 (us)"
   ]
 }

@@ -1,7 +1,7 @@
-1/4 Sismo M5,8 · 1 km al S de El Cacao, Panamá (2026-10-09 18:37 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+1/4 Sismo M5,8 · 4 km al O de Flores, Panamá (2026-10-09 18:37 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
-2/4 Personas dentro de intensidad MMI≥6: 6.600. Dentro de MMI≥7: 2.800. Edificaciones en MMI≥7: 1.700.
+2/4 Personas dentro de intensidad MMI≥6: 7.200. Dentro de MMI≥7: 410. Edificaciones en MMI≥7: 380.
 
 3/4 Municipios más expuestos (MMI≥7): Tonosí.
 
-4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=us6000u18x
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://centinela.geoailatam.terrnova.com/?evento=us6000u18x

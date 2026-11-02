@@ -1,4 +1,4 @@
-# Exposición sísmica: M5,8 · 1 km al S de El Cacao, Panamá
+# Exposición sísmica: M5,8 · 4 km al O de Flores, Panamá
 
 **Evento USGS:** `us6000u18x` · **Origen:** 2026-10-09T18:37:46Z UTC · **Profundidad:** 10,0 km
 
@@ -6,38 +6,38 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 6.600 |
-| Población en MMI≥7 | 2.800 |
+| Población en MMI≥6 | 7.200 |
+| Población en MMI≥7 | 410 |
 | Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥7 | 1.700 |
+| Edificaciones en MMI≥7 | 380 |
 | Sedes de salud en MMI≥7 | 0 |
-| Sedes educativas en MMI≥7 | 1 |
-| Vías primarias y secundarias en MMI≥7 | 13 km |
-| Vías locales en MMI≥7 | 47 km |
-| Superficie construida en MMI≥7 | 0,4 km² |
+| Sedes educativas en MMI≥7 | 0 |
+| Vías primarias y secundarias en MMI≥7 | 4 km |
+| Vías locales en MMI≥7 | 16 km |
+| Superficie construida en MMI≥7 | 0,1 km² |
 
-El satélite detecta **2,5 veces** más superficie construida de la que explicarían las 1.700 edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,9 veces** más superficie construida de la que explicarían las 380 edificaciones registradas en MMI≥7. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **410** personas tienen 65 años o más.
+De la población en intensidad MMI≥7, alrededor de **49** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥7
 
 | # | Municipio | Código | MMI max | Población MMI≥7 |
 |---:|---|---|---:|---:|
-| 1 | Tonosí | `PA0907` | 7,0 | 2.800 |
+| 1 | Tonosí | `PA0907` | 7,0 | 410 |
 
 ## Deslizamiento y licuefacción
 
 - **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **3.700**. USGS declara para este evento alerta **amarilla**, con 550 expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **3.500**. USGS declara para este evento alerta **amarilla**, con 540 expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v3), dominio público.
+Fuente: producto *Ground Failure* de USGS (v4), dominio público.
 
 ## Referencia cruzada
 
@@ -47,10 +47,19 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,3 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,8 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v3 (us) → v4 (us)
+- Ground Failure: v3 (us) → v4 (us)
+- Epicentro: reubicado 8 km
+- Población en MMI≥6: 6.600 → 7.200
+- Población en MMI≥7: 2.800 → 410
+- Población de 65 años o más en MMI≥7: 410 → 49
+- Edificaciones en MMI≥7: 1.700 → 380
+- Sedes educativas en MMI≥7: 1 → 0
+- Población en cobertura areal alta por licuefacción: 3.700 → 3.500
 - ShakeMap: v2 (us) → v3 (us)
 - Ground Failure: v2 (us) → v3 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
@@ -73,10 +82,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **0,3 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v3** de `us`
-- Ground Failure consumido: **v3** de `us`
-- Manifiesto de exposición: [`pan-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-11T11:21:10Z
+- ShakeMap consumido: **v4** de `us`
+- Ground Failure consumido: **v4** de `us`
+- Manifiesto de exposición: [`pan-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-11-02T12:01:29Z
 
 ## Advertencias
 

@@ -5,15 +5,15 @@
     "mag": 5.8,
     "depth_km": 10.0,
     "utc": "2026-10-09T18:37:46Z",
-    "lugar": "1 km al S de El Cacao, Panamá",
+    "lugar": "4 km al O de Flores, Panamá",
     "pager_alert": "yellow",
-    "lon": -80.4012,
-    "lat": 7.4362
+    "lon": -80.451,
+    "lat": 7.4835
   },
   "inputs": {
-    "shakemap_version": 3,
-    "groundfailure_version": 3,
-    "exposure_manifest": "pan-v0.4",
+    "shakemap_version": 4,
+    "groundfailure_version": 4,
+    "exposure_manifest": "pan-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
     "shakemap_fuente": "us",
@@ -23,33 +23,33 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 6637.504815058783,
-    "pop_mmi7p": 2816.9774997588247,
+    "pop_mmi6p": 7164.6657645739615,
+    "pop_mmi7p": 413.13725887797773,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 410.01589865526745,
-    "pop_65p_mmi6p": 1101.783566404167,
-    "bld_mmi6p": 5421.0,
-    "built_m2_mmi6p": 997797.0,
+    "pop_65p_mmi7p": 49.469967182825414,
+    "pop_65p_mmi6p": 1222.155402083239,
+    "bld_mmi6p": 5555.0,
+    "built_m2_mmi6p": 1046543.0,
     "health_mmi6p": 0.0,
-    "edu_mmi6p": 1.0,
-    "road_km_mmi6p": 325.29933412595403,
-    "road_km_principal_mmi6p": 31.727754674180154,
-    "bld_mmi7p": 1731.0,
-    "built_m2_mmi7p": 440626.0,
+    "edu_mmi6p": 2.0,
+    "road_km_mmi6p": 340.81115867916304,
+    "road_km_principal_mmi6p": 41.07238371218428,
+    "bld_mmi7p": 382.0,
+    "built_m2_mmi7p": 73424.0,
     "health_mmi7p": 0.0,
-    "edu_mmi7p": 1.0,
-    "road_km_mmi7p": 60.42333197947981,
-    "road_km_principal_mmi7p": 13.258088129883989,
+    "edu_mmi7p": 0.0,
+    "road_km_mmi7p": 20.78216853403258,
+    "road_km_principal_mmi7p": 4.450005060328339,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 3747.271874143742
+    "pop_lq_alta": 3453.532503916882
   },
   "top_municipios": [
     {
       "adm2_id": "PA0907",
       "nombre": "Tonosí",
       "mmi_max": 7.0,
-      "pop_mmi7p": 2816.9774997588247,
-      "pop_banda": 2816.9774997588247
+      "pop_mmi7p": 413.13725887797773,
+      "pop_banda": 413.13725887797773
     },
     {
       "adm2_id": "PA0902",
@@ -59,16 +59,30 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA0905",
-      "nombre": "Pedasí",
+      "adm2_id": "PA0904",
+      "nombre": "Macaracas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0901",
+      "nombre": "Guararé",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA0904",
-      "nombre": "Macaracas",
-      "mmi_max": 5.5,
+      "adm2_id": "PA0703",
+      "nombre": "Los Pozos",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA0905",
+      "nombre": "Pedasí",
+      "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
@@ -80,22 +94,22 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA0901",
-      "nombre": "Guararé",
+      "adm2_id": "PA0903",
+      "nombre": "Los Santos",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 0.3,
+    "pop_discrepancia_pct": 3.8,
     "notas": []
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "green",
-    "ls_pop_usgs": "1",
+    "ls_pop_usgs": "2",
     "lq_alerta_usgs": "yellow",
-    "lq_pop_usgs": "550"
+    "lq_pop_usgs": "540"
   },
   "descargas": {
     "geoparquet": "",
@@ -104,6 +118,15 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v3 (us) → v4 (us)",
+    "Ground Failure: v3 (us) → v4 (us)",
+    "Epicentro: reubicado 8 km",
+    "Población en MMI≥6: 6.600 → 7.200",
+    "Población en MMI≥7: 2.800 → 410",
+    "Población de 65 años o más en MMI≥7: 410 → 49",
+    "Edificaciones en MMI≥7: 1.700 → 380",
+    "Sedes educativas en MMI≥7: 1 → 0",
+    "Población en cobertura areal alta por licuefacción: 3.700 → 3.500",
     "ShakeMap: v2 (us) → v3 (us)",
     "Ground Failure: v2 (us) → v3 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
@@ -173,6 +196,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-11T11:21:10Z",
+  "generado_utc": "2026-11-02T12:01:29Z",
   "pipeline_version": "0.1.0"
 }
