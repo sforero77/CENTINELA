@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-02T12:01:21Z",
+  "generado_utc": "2026-11-02T12:01:27Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -70,8 +70,8 @@
       "publicado_utc": "2026-10-09T18:41:09Z",
       "minutos": 18.9,
       "backtest": false,
-      "shakemap": 3,
-      "actualizado_utc": "2026-10-11T11:21:07Z"
+      "shakemap": 4,
+      "actualizado_utc": "2026-11-02T12:01:26Z"
     },
     {
       "usgs_id": "pt26282000",

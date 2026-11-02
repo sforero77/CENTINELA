@@ -77,17 +77,17 @@
   {
     "usgs_id": "us6000u18t",
     "mag": 5.5,
-    "lugar": "3 km al SO de Bajo Corral, Panamá",
+    "lugar": "1 km al E de La Miel, Panamá",
     "iso3": "PAN",
-    "lon": -80.2885,
-    "lat": 7.586,
+    "lon": -80.3171,
+    "lat": 7.561,
     "pop_mmi7p": 0.0,
-    "pop_mmi6p": 2495.5526316384785,
+    "pop_mmi6p": 1527.0027425317094,
     "utc": "2026-10-09T18:22:15Z",
-    "shakemap_version": 3,
+    "shakemap_version": 4,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-11T11:21:05Z"
+    "generado_utc": "2026-11-02T12:01:25Z"
   },
   {
     "usgs_id": "pt26282000",

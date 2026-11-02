@@ -5,15 +5,15 @@
     "mag": 5.5,
     "depth_km": 10.0,
     "utc": "2026-10-09T18:22:15Z",
-    "lugar": "3 km al SO de Bajo Corral, Panamá",
+    "lugar": "1 km al E de La Miel, Panamá",
     "pager_alert": "green",
-    "lon": -80.2885,
-    "lat": 7.586
+    "lon": -80.3171,
+    "lat": 7.561
   },
   "inputs": {
-    "shakemap_version": 3,
-    "groundfailure_version": 3,
-    "exposure_manifest": "pan-v0.4",
+    "shakemap_version": 4,
+    "groundfailure_version": 4,
+    "exposure_manifest": "pan-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
     "shakemap_fuente": "us",
@@ -23,16 +23,16 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 2495.5526316384785,
+    "pop_mmi6p": 1527.0027425317094,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 704.3957019341815,
-    "bld_mmi6p": 2827.0,
-    "built_m2_mmi6p": 411267.0,
+    "pop_65p_mmi6p": 420.03222475276976,
+    "bld_mmi6p": 1859.0,
+    "built_m2_mmi6p": 232748.0,
     "health_mmi6p": 0.0,
     "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 205.2455867914055,
+    "road_km_mmi6p": 157.52715224511306,
     "road_km_principal_mmi6p": 0.0,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
@@ -47,23 +47,23 @@
     {
       "adm2_id": "PA0902",
       "nombre": "Las Tablas",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 1995.1566779189743
-    },
-    {
-      "adm2_id": "PA0906",
-      "nombre": "Pocrí",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 485.4420666825026
+      "pop_banda": 1453.8324790121987
     },
     {
       "adm2_id": "PA0907",
       "nombre": "Tonosí",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 14.95388703700155
+      "pop_banda": 73.17026351951063
+    },
+    {
+      "adm2_id": "PA0906",
+      "nombre": "Pocrí",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
     },
     {
       "adm2_id": "PA0905",
@@ -88,14 +88,14 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 11.5,
+    "pop_discrepancia_pct": 9.6,
     "notas": []
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "green",
     "ls_pop_usgs": "0",
-    "lq_alerta_usgs": "green",
-    "lq_pop_usgs": "150"
+    "lq_alerta_usgs": "yellow",
+    "lq_pop_usgs": "180"
   },
   "descargas": {
     "geoparquet": "",
@@ -104,6 +104,10 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v3 (us) → v4 (us)",
+    "Ground Failure: v3 (us) → v4 (us)",
+    "Epicentro: reubicado 4 km",
+    "Población en MMI≥6: 2.500 → 1.500",
     "ShakeMap: v2 (us) → v3 (us)",
     "Ground Failure: v2 (us) → v3 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
@@ -167,6 +171,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-11T11:21:05Z",
+  "generado_utc": "2026-11-02T12:01:25Z",
   "pipeline_version": "0.1.0"
 }
