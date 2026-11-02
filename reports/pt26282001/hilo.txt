@@ -4,4 +4,4 @@
 
 3/4 Municipios más expuestos (MMI≥6): Soná, Las Palmas.
 
-4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://sforero77.github.io/CENTINELA/?evento=pt26282001
+4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://centinela.geoailatam.terrnova.com/?evento=pt26282001
