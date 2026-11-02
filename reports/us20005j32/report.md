@@ -15,7 +15,7 @@
 | Población en MMI≥8 | 110 mil |
 | Edificaciones en MMI≥7 | 990 mil |
 | Sedes de salud en MMI≥7 | 568 |
-| Sedes educativas en MMI≥7 | 2.444 |
+| Sedes educativas en MMI≥7 | 2.445 |
 | Vías primarias y secundarias en MMI≥7 | 2.600 km |
 | Vías locales en MMI≥7 | 34 mil km |
 | Superficie construida en MMI≥7 | 131,0 km² |
@@ -77,10 +77,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v1**
-- Ground Failure consumido: **v1**
-- Manifiesto de exposición: [`ecu-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ECU.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-28T15:40:19Z
+- ShakeMap consumido: **v1** de `atlas`
+- Ground Failure consumido: **v1** de `us`
+- Manifiesto de exposición: [`ecu-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/ECU.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-11-02T17:16:32Z
 
 ## Advertencias
 
