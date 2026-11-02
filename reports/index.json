@@ -187,12 +187,12 @@
     "lon": -68.5564,
     "lat": 10.3713,
     "pop_mmi7p": 491580.875195766,
-    "pop_mmi6p": 2771861.4076254987,
+    "pop_mmi6p": 2771861.4076254996,
     "utc": "2026-06-24T22:04:31Z",
     "shakemap_version": 9,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-09-28T15:43:00Z"
+    "generado_utc": "2026-11-02T17:19:14Z"
   },
   {
     "usgs_id": "pr2025175000",

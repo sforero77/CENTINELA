@@ -70,10 +70,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **27,0 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v9**
-- Ground Failure consumido: **v7**
-- Manifiesto de exposición: [`ven-v0.4`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-09-28T15:43:00Z
+- ShakeMap consumido: **v9** de `us`
+- Ground Failure consumido: **v7** de `us`
+- Manifiesto de exposición: [`ven-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
+- Pipeline: `0.1.0` · Generado: 2026-11-02T17:19:14Z
 
 ## Advertencias
 
