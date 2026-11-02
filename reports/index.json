@@ -92,17 +92,17 @@
   {
     "usgs_id": "pt26282000",
     "mag": 7.7,
-    "lugar": "12 km al OSO de Pitaloza Arriba, Panamá",
+    "lugar": "10 km al OSO de Pitaloza Arriba, Panamá",
     "iso3": "PAN",
-    "lon": -80.769,
-    "lat": 7.5868,
-    "pop_mmi7p": 20243.876037549227,
-    "pop_mmi6p": 289561.7129876425,
+    "lon": -80.7566,
+    "lat": 7.6069,
+    "pop_mmi7p": 20079.587912683375,
+    "pop_mmi6p": 295777.77794844494,
     "utc": "2026-10-09T17:56:08Z",
-    "shakemap_version": 12,
+    "shakemap_version": 14,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-30T11:34:48Z"
+    "generado_utc": "2026-11-02T12:01:19Z"
   },
   {
     "usgs_id": "us6000tymj",

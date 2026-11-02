@@ -3,16 +3,16 @@
   "event": {
     "usgs_id": "pt26282000",
     "mag": 7.7,
-    "depth_km": 12.647,
+    "depth_km": 10.0,
     "utc": "2026-10-09T17:56:08Z",
-    "lugar": "12 km al OSO de Pitaloza Arriba, Panamá",
+    "lugar": "10 km al OSO de Pitaloza Arriba, Panamá",
     "pager_alert": "orange",
-    "lon": -80.769,
-    "lat": 7.5868
+    "lon": -80.7566,
+    "lat": 7.6069
   },
   "inputs": {
-    "shakemap_version": 12,
-    "groundfailure_version": 12,
+    "shakemap_version": 14,
+    "groundfailure_version": 14,
     "exposure_manifest": "pan-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -23,54 +23,47 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 289561.7129876425,
-    "pop_mmi7p": 20243.876037549227,
+    "pop_mmi6p": 295777.77794844494,
+    "pop_mmi7p": 20079.587912683375,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 3046.294622129355,
-    "pop_65p_mmi6p": 41448.66036310339,
-    "bld_mmi6p": 206777.0,
-    "built_m2_mmi6p": 38762641.0,
-    "health_mmi6p": 213.0,
-    "edu_mmi6p": 554.0,
-    "road_km_mmi6p": 7274.671471569743,
-    "road_km_principal_mmi6p": 702.9456472707749,
-    "bld_mmi7p": 16921.0,
-    "built_m2_mmi7p": 2333585.0,
+    "pop_65p_mmi7p": 3026.0452581523723,
+    "pop_65p_mmi6p": 42280.951920840926,
+    "bld_mmi6p": 209983.0,
+    "built_m2_mmi6p": 39393984.0,
+    "health_mmi6p": 231.0,
+    "edu_mmi6p": 579.0,
+    "road_km_mmi6p": 7342.194727509564,
+    "road_km_principal_mmi6p": 715.8468336327963,
+    "bld_mmi7p": 16771.0,
+    "built_m2_mmi7p": 2317003.0,
     "health_mmi7p": 6.0,
-    "edu_mmi7p": 18.0,
-    "road_km_mmi7p": 862.7143315940045,
-    "road_km_principal_mmi7p": 110.03708316484371,
-    "pop_ls_alta": 35.748493725433946,
-    "pop_lq_alta": 48755.40582376043
+    "edu_mmi7p": 17.0,
+    "road_km_mmi7p": 853.9097981025247,
+    "road_km_principal_mmi7p": 110.37767698044742,
+    "pop_ls_alta": 34.06986062787473,
+    "pop_lq_alta": 49967.831327310065
   },
   "top_municipios": [
     {
       "adm2_id": "PA0907",
       "nombre": "Tonosí",
       "mmi_max": 7.5,
-      "pop_mmi7p": 8710.456238619052,
-      "pop_banda": 8710.456238619052
+      "pop_mmi7p": 8713.73250337597,
+      "pop_banda": 8713.73250337597
     },
     {
       "adm2_id": "PA1312",
       "nombre": "Soná",
       "mmi_max": 7.5,
-      "pop_mmi7p": 5879.21823759377,
-      "pop_banda": 5879.21823759377
+      "pop_mmi7p": 5911.267340946943,
+      "pop_banda": 5911.267340946943
     },
     {
       "adm2_id": "PA1306",
       "nombre": "Mariato",
       "mmi_max": 7.5,
-      "pop_mmi7p": 3741.874811324291,
-      "pop_banda": 3741.874811324291
-    },
-    {
-      "adm2_id": "PA0905",
-      "nombre": "Pedasí",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 801.6945590795949,
-      "pop_banda": 801.6945590795949
+      "pop_mmi7p": 3599.807183854282,
+      "pop_banda": 3599.807183854282
     },
     {
       "adm2_id": "PA1307",
@@ -80,22 +73,29 @@
       "pop_banda": 801.6747010927647
     },
     {
+      "adm2_id": "PA0905",
+      "nombre": "Pedasí",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 797.8964978577569,
+      "pop_banda": 797.8964978577569
+    },
+    {
       "adm2_id": "PA0902",
       "nombre": "Las Tablas",
       "mmi_max": 7.0,
-      "pop_mmi7p": 171.61414674017578,
-      "pop_banda": 171.61414674017578
+      "pop_mmi7p": 174.15417015645653,
+      "pop_banda": 174.15417015645653
     },
     {
       "adm2_id": "PA1311",
       "nombre": "Santiago",
       "mmi_max": 7.0,
-      "pop_mmi7p": 137.34334309957922,
-      "pop_banda": 137.34334309957922
+      "pop_mmi7p": 81.0555153992027,
+      "pop_banda": 81.0555153992027
     },
     {
-      "adm2_id": "PA0703",
-      "nombre": "Los Pozos",
+      "adm2_id": "PA1308",
+      "nombre": "Río de Jesús",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -108,15 +108,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA0702",
-      "nombre": "Las Minas",
+      "adm2_id": "PA0704",
+      "nombre": "Ocú",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA1308",
-      "nombre": "Río de Jesús",
+      "adm2_id": "PA0702",
+      "nombre": "Las Minas",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -129,8 +129,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA0704",
-      "nombre": "Ocú",
+      "adm2_id": "PA0901",
+      "nombre": "Guararé",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -143,22 +143,22 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA0901",
-      "nombre": "Guararé",
+      "adm2_id": "PA0903",
+      "nombre": "Los Santos",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 22.9,
+    "pop_discrepancia_pct": 22.5,
     "notas": []
   },
   "ground_failure_usgs": {
     "ls_alerta_usgs": "orange",
     "ls_pop_usgs": "230",
     "lq_alerta_usgs": "orange",
-    "lq_pop_usgs": "52000"
+    "lq_pop_usgs": "51000"
   },
   "descargas": {
     "geoparquet": "",
@@ -167,6 +167,14 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v12 (us) → v14 (us)",
+    "Ground Failure: v12 (us) → v14 (us)",
+    "Profundidad: 13 → 10 km",
+    "Epicentro: reubicado 3 km",
+    "Población en MMI≥6: 290 mil → 300 mil",
+    "Sedes educativas en MMI≥7: 18 → 17",
+    "Población en probabilidad alta de deslizamiento: 36 → 34",
+    "Población en cobertura areal alta por licuefacción: 49 mil → 50 mil",
     "ShakeMap: v11 (us) → v12 (us)",
     "Ground Failure: v11 (us) → v12 (us)",
     "Población en MMI≥6: 420 mil → 290 mil",
@@ -326,6 +334,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-30T11:34:48Z",
+  "generado_utc": "2026-11-02T12:01:19Z",
   "pipeline_version": "0.1.0"
 }

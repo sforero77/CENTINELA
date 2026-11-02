@@ -1,19 +1,19 @@
-# Exposición sísmica: M7,7 · 12 km al OSO de Pitaloza Arriba, Panamá
+# Exposición sísmica: M7,7 · 10 km al OSO de Pitaloza Arriba, Panamá
 
-**Evento USGS:** `pt26282000` · **Origen:** 2026-10-09T17:56:08Z UTC · **Profundidad:** 12,6 km
+**Evento USGS:** `pt26282000` · **Origen:** 2026-10-09T17:56:08Z UTC · **Profundidad:** 10,0 km
 
 ## Exposición estimada
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 290 mil |
+| Población en MMI≥6 | 300 mil |
 | Población en MMI≥7 | 20 mil |
 | Población en MMI≥8 | el evento no llegó a esta banda |
 | Edificaciones en MMI≥7 | 17 mil |
 | Sedes de salud en MMI≥7 | 6 |
-| Sedes educativas en MMI≥7 | 18 |
+| Sedes educativas en MMI≥7 | 17 |
 | Vías primarias y secundarias en MMI≥7 | 110 km |
-| Vías locales en MMI≥7 | 750 km |
+| Vías locales en MMI≥7 | 740 km |
 | Superficie construida en MMI≥7 | 2,3 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
@@ -26,22 +26,22 @@ De la población en intensidad MMI≥7, alrededor de **3.000** personas tienen 6
 |---:|---|---|---:|---:|
 | 1 | Tonosí | `PA0907` | 7,5 | 8.700 |
 | 2 | Soná | `PA1312` | 7,5 | 5.900 |
-| 3 | Mariato | `PA1306` | 7,5 | 3.700 |
-| 4 | Pedasí | `PA0905` | 7,0 | 800 |
-| 5 | Montijo | `PA1307` | 7,5 | 800 |
+| 3 | Mariato | `PA1306` | 7,5 | 3.600 |
+| 4 | Montijo | `PA1307` | 7,5 | 800 |
+| 5 | Pedasí | `PA0905` | 7,0 | 800 |
 | 6 | Las Tablas | `PA0902` | 7,0 | 170 |
-| 7 | Santiago | `PA1311` | 7,0 | 140 |
+| 7 | Santiago | `PA1311` | 7,0 | 81 |
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **36**. USGS declara para este evento alerta **naranja**, con 230 expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **49 mil**. USGS declara para este evento alerta **naranja**, con 52 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **34**. USGS declara para este evento alerta **naranja**, con 230 expuestas.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **50 mil**. USGS declara para este evento alerta **naranja**, con 51 mil expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v12), dominio público.
+Fuente: producto *Ground Failure* de USGS (v14), dominio público.
 
 ## Referencia cruzada
 
@@ -51,10 +51,18 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **22,9 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **22,5 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v12 (us) → v14 (us)
+- Ground Failure: v12 (us) → v14 (us)
+- Profundidad: 13 → 10 km
+- Epicentro: reubicado 3 km
+- Población en MMI≥6: 290 mil → 300 mil
+- Sedes educativas en MMI≥7: 18 → 17
+- Población en probabilidad alta de deslizamiento: 36 → 34
+- Población en cobertura areal alta por licuefacción: 49 mil → 50 mil
 - ShakeMap: v11 (us) → v12 (us)
 - Ground Failure: v11 (us) → v12 (us)
 - Población en MMI≥6: 420 mil → 290 mil
@@ -167,10 +175,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **22,9 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v12** de `us`
-- Ground Failure consumido: **v12** de `us`
+- ShakeMap consumido: **v14** de `us`
+- Ground Failure consumido: **v14** de `us`
 - Manifiesto de exposición: [`pan-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-30T11:34:48Z
+- Pipeline: `0.1.0` · Generado: 2026-11-02T12:01:19Z
 
 ## Advertencias
 
