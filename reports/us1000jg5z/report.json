@@ -13,9 +13,11 @@
   "inputs": {
     "shakemap_version": 5,
     "groundfailure_version": 3,
-    "exposure_manifest": "bol-v0.4",
+    "exposure_manifest": "bol-v0.5",
     "modelo_deslizamiento": "nowicki_2014_global_model.tif",
-    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
   "preliminar": false,
   "radios": [
@@ -128,6 +130,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-28T15:39:45Z",
+  "generado_utc": "2026-11-02T17:15:54Z",
   "pipeline_version": "0.1.0"
 }
