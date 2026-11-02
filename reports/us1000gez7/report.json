@@ -13,9 +13,11 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 1,
-    "exposure_manifest": "ven-v0.4",
+    "exposure_manifest": "ven-v0.5",
     "modelo_deslizamiento": "nowicki_2014_global_model.tif",
-    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "atlas",
+    "groundfailure_fuente": "us"
   },
   "preliminar": false,
   "radios": [],
@@ -25,13 +27,13 @@
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 284.71419088047764,
+    "pop_65p_mmi6p": 284.71419088047753,
     "bld_mmi6p": 1117.0,
     "built_m2_mmi6p": 117250.0,
     "health_mmi6p": 0.0,
     "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 32.40478922258245,
-    "road_km_principal_mmi6p": 3.0513037859569945,
+    "road_km_mmi6p": 32.404789222582444,
+    "road_km_principal_mmi6p": 3.051303785956994,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -71,15 +73,15 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE1903",
-      "nombre": "Arismendi",
+      "adm2_id": "VE1913",
+      "nombre": "Ribero",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE1913",
-      "nombre": "Ribero",
+      "adm2_id": "VE1903",
+      "nombre": "Arismendi",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -92,29 +94,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE1915",
-      "nombre": "Valdez",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "VE1608",
       "nombre": "Maturín",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1610",
-      "nombre": "Punceres",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1901",
-      "nombre": "Andrés Eloy Blanco",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -127,8 +108,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE2501",
-      "nombre": "Dependencias Federales",
+      "adm2_id": "VE1901",
+      "nombre": "Andrés Eloy Blanco",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -141,8 +122,29 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "VE1601",
-      "nombre": "Acosta",
+      "adm2_id": "VE1610",
+      "nombre": "Punceres",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE2501",
+      "nombre": "Dependencias Federales",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1915",
+      "nombre": "Valdez",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "VE1711",
+      "nombre": "Villalba",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -219,6 +221,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-28T15:39:19Z",
+  "generado_utc": "2026-11-02T17:15:38Z",
   "pipeline_version": "0.1.0"
 }
