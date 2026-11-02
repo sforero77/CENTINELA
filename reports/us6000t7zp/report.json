@@ -13,31 +13,33 @@
   "inputs": {
     "shakemap_version": 16,
     "groundfailure_version": 13,
-    "exposure_manifest": "ven-v0.4",
+    "exposure_manifest": "ven-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
-    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
   "preliminar": false,
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 7471691.358112411,
-    "pop_mmi7p": 2575684.6887503443,
+    "pop_mmi6p": 7471691.358112415,
+    "pop_mmi7p": 2575684.688750345,
     "pop_mmi8p": 704244.7487885547,
-    "pop_65p_mmi7p": 315900.7078476153,
-    "pop_65p_mmi6p": 900379.1340067553,
+    "pop_65p_mmi7p": 315900.7078476146,
+    "pop_65p_mmi6p": 900379.1340067539,
     "bld_mmi6p": 1826288.0,
     "built_m2_mmi6p": 282576434.0,
-    "health_mmi6p": 1279.0,
-    "edu_mmi6p": 2062.0,
-    "road_km_mmi6p": 25886.42527349836,
-    "road_km_principal_mmi6p": 3482.5702252730393,
+    "health_mmi6p": 1284.0,
+    "edu_mmi6p": 2066.0,
+    "road_km_mmi6p": 25888.23811595527,
+    "road_km_principal_mmi6p": 3485.805024435246,
     "bld_mmi7p": 564532.0,
     "built_m2_mmi7p": 85418853.0,
     "health_mmi7p": 770.0,
     "edu_mmi7p": 1034.0,
-    "road_km_mmi7p": 7904.748673607046,
-    "road_km_principal_mmi7p": 1238.5011150727976,
+    "road_km_mmi7p": 7906.131362192575,
+    "road_km_principal_mmi7p": 1238.5011975823893,
     "pop_ls_alta": 29040.718691240996,
     "pop_lq_alta": 349395.96439122246
   },
@@ -219,6 +221,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-28T15:43:23Z",
+  "generado_utc": "2026-11-02T17:19:41Z",
   "pipeline_version": "0.1.0"
 }
