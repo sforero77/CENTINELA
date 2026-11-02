@@ -13,7 +13,7 @@
   "inputs": {
     "shakemap_version": 5,
     "groundfailure_version": 3,
-    "exposure_manifest": "pan-v0.4",
+    "exposure_manifest": "pan-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
     "shakemap_fuente": "us",
@@ -26,14 +26,14 @@
     "pop_mmi6p": 5460.2867960855365,
     "pop_mmi7p": 658.9951356649399,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 59.879927590978745,
-    "pop_65p_mmi6p": 675.7463514297497,
+    "pop_65p_mmi7p": 59.87992759097875,
+    "pop_65p_mmi6p": 675.7463514297499,
     "bld_mmi6p": 4054.0,
     "built_m2_mmi6p": 358963.0,
     "health_mmi6p": 1.0,
     "edu_mmi6p": 2.0,
-    "road_km_mmi6p": 123.49216478150483,
-    "road_km_principal_mmi6p": 16.562941984180675,
+    "road_km_mmi6p": 123.4921647815048,
+    "road_km_principal_mmi6p": 16.56294198418067,
     "bld_mmi7p": 203.0,
     "built_m2_mmi7p": 18003.0,
     "health_mmi7p": 0.0,
@@ -73,13 +73,6 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "PA1307",
-      "nombre": "Montijo",
-      "mmi_max": 5.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
       "adm2_id": "PA1311",
       "nombre": "Santiago",
       "mmi_max": 5.0,
@@ -89,6 +82,13 @@
     {
       "adm2_id": "PA0213",
       "nombre": "Tolé",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PA1307",
+      "nombre": "Montijo",
       "mmi_max": 5.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -193,6 +193,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-23T10:27:57Z",
+  "generado_utc": "2026-11-02T17:20:15Z",
   "pipeline_version": "0.1.0"
 }
