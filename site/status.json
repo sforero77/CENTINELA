@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-02T17:23:13Z",
+  "generado_utc": "2026-11-02T17:23:43Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -323,7 +323,7 @@
       "minutos": 7710830.4,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-09-28T15:47:17Z"
+      "actualizado_utc": "2026-11-02T17:23:41Z"
     }
   ],
   "cadencia": {
