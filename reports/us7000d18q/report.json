@@ -13,9 +13,11 @@
   "inputs": {
     "shakemap_version": 8,
     "groundfailure_version": 4,
-    "exposure_manifest": "arg-v0.4",
+    "exposure_manifest": "arg-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
-    "modelo_licuefaccion": "zhu_2017_general_model.tif"
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
   "preliminar": false,
   "radios": [],
@@ -25,13 +27,13 @@
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 65801.23203075062,
+    "pop_65p_mmi6p": 65801.23203075069,
     "bld_mmi6p": 410512.0,
     "built_m2_mmi6p": 45801579.0,
-    "health_mmi6p": 358.0,
-    "edu_mmi6p": 1360.0,
-    "road_km_mmi6p": 4392.3267743226825,
-    "road_km_principal_mmi6p": 606.494258913125,
+    "health_mmi6p": 371.0,
+    "edu_mmi6p": 1343.0,
+    "road_km_mmi6p": 4397.0210311255605,
+    "road_km_principal_mmi6p": 608.804382990394,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -127,8 +129,8 @@
       "pop_banda": 4.8950633481144905
     },
     {
-      "adm2_id": "AR070021",
-      "nombre": "Calingasta",
+      "adm2_id": "AR070035",
+      "nombre": "Caucete",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -141,8 +143,8 @@
       "pop_banda": 0.0
     },
     {
-      "adm2_id": "AR050049",
-      "nombre": "Las Heras",
+      "adm2_id": "AR070021",
+      "nombre": "Calingasta",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -219,6 +221,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-28T15:44:44Z",
+  "generado_utc": "2026-11-02T17:21:32Z",
   "pipeline_version": "0.1.0"
 }
