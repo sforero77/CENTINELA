@@ -13,9 +13,11 @@
   "inputs": {
     "shakemap_version": 1,
     "groundfailure_version": 0,
-    "exposure_manifest": "hnd-v0.4",
+    "exposure_manifest": "hnd-v0.5",
     "modelo_deslizamiento": "",
-    "modelo_licuefaccion": ""
+    "modelo_licuefaccion": "",
+    "shakemap_fuente": "atlas",
+    "groundfailure_fuente": ""
   },
   "preliminar": false,
   "radios": [
@@ -148,6 +150,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-09-28T15:38:48Z",
+  "generado_utc": "2026-11-02T17:15:09Z",
   "pipeline_version": "0.1.0"
 }
