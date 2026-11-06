@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-06T05:35:22Z",
+  "generado_utc": "2026-11-06T23:20:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -58,17 +58,6 @@
       "origen_utc": "2026-11-02T15:28:13Z",
       "razon": "M5.1 < umbral M5.5",
       "iso3": "PER"
-    },
-    {
-      "usgs_id": "us7000tus5",
-      "mag": 4.5,
-      "lon": -66.523,
-      "lat": -22.5661,
-      "depth_km": 243.6,
-      "lugar": "86 km al ONO de Abra Pampa, Argentina",
-      "origen_utc": "2026-11-01T23:18:05Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "ARG"
     }
   ]
 }
