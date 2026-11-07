@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us7000twun",
+  "estado": "detectado",
+  "mag": 5.9,
+  "lon": -36.9727,
+  "lat": 7.3411,
+  "depth_km": 10.0,
+  "lugar": "Centro de la dorsal mesoatlántica",
+  "origen_utc": "2026-11-07T23:17:06Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-11-07T23:40:23Z",
+    "usgs_origen": "2026-11-07T23:17:06Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
