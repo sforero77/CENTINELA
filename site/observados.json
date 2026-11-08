@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-08T17:25:19Z",
+  "generado_utc": "2026-11-08T18:30:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -113,28 +113,6 @@
       "origen_utc": "2026-11-04T19:55:26Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "NIC"
-    },
-    {
-      "usgs_id": "ew1793730460",
-      "mag": 5.0,
-      "lon": -115.1786,
-      "lat": 32.4216,
-      "depth_km": 9.0,
-      "lugar": "1 km al NE de Ejido Nuevo León, México",
-      "origen_utc": "2026-11-03T18:27:32Z",
-      "razon": "M5.0 < umbral M5.5",
-      "iso3": "MEX"
-    },
-    {
-      "usgs_id": "ci41572064",
-      "mag": 4.69788320837842,
-      "lon": -115.1798,
-      "lat": 32.44,
-      "depth_km": 15.8,
-      "lugar": "10 km al N de Delta, B.C., MX",
-      "origen_utc": "2026-11-03T18:27:31Z",
-      "razon": "M4.69788320837842 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
