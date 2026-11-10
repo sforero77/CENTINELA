@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us7000txb8",
+  "estado": "detectado",
+  "mag": 5.6,
+  "lon": -90.8798,
+  "lat": 13.5381,
+  "depth_km": 35.0,
+  "lugar": "43 km al S de Puerto San José, Guatemala",
+  "origen_utc": "2026-11-10T14:54:17Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-11-10T15:15:56Z",
+    "usgs_origen": "2026-11-10T14:54:17Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
