@@ -8,7 +8,7 @@
   "lugar": "43 km al S de Puerto San José, Guatemala",
   "origen_utc": "2026-11-10T14:54:17Z",
   "versiones_procesadas": {
-    "shakemap": 1,
+    "shakemap": 2,
     "groundfailure": 0,
     "shakemap_fuente": "us"
   },
@@ -17,6 +17,7 @@
     "detectado": "2026-11-10T15:15:56Z",
     "preliminar": "2026-11-10T15:16:33Z",
     "publicado": "2026-11-10T15:21:13Z",
+    "publicado_ultimo": "2026-11-10T15:40:57Z",
     "usgs_origen": "2026-11-10T14:54:17Z"
   },
   "hashes": {},
@@ -24,6 +25,7 @@
   "backtest": false,
   "notas": [
     "sin ShakeMap disponible aun",
-    "ShakeMap v0 -> v1 (us)"
+    "ShakeMap v0 -> v1 (us)",
+    "ShakeMap v1 (us) -> v2 (us)"
   ]
 }
