@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-10T15:40:23Z",
+  "generado_utc": "2026-11-10T15:50:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000txbc",
+      "mag": 4.8,
+      "lon": -90.819,
+      "lat": 13.6155,
+      "depth_km": 58.5,
+      "lugar": "34 km al S de Puerto San José, Guatemala",
+      "origen_utc": "2026-11-10T15:23:58Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "GTM"
+    },
     {
       "usgs_id": "us7000tx38",
       "mag": 5.3,
