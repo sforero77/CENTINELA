@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-11T11:50:23Z",
+  "generado_utc": "2026-11-11T11:55:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000txis",
+      "mag": 5.1,
+      "lon": -69.1693,
+      "lat": -22.5427,
+      "depth_km": 91.3,
+      "lugar": "27 km al OSO de Calama, Chile",
+      "origen_utc": "2026-11-11T11:36:51Z",
+      "razon": "M5.1 < umbral M5.5",
+      "iso3": "CHL"
+    },
     {
       "usgs_id": "us7000txbc",
       "mag": 4.8,
