@@ -1,6 +1,6 @@
-# Exposición sísmica: M5,6 · 43 km al S de Puerto San José, Guatemala
+# Exposición sísmica: M5,5 · 40 km al S de Puerto San José, Guatemala
 
-**Evento USGS:** `us7000txb8` · **Origen:** 2026-11-10T14:54:17Z UTC · **Profundidad:** 35,0 km
+**Evento USGS:** `us7000txb8` · **Origen:** 2026-11-10T14:54:17Z UTC · **Profundidad:** 59,7 km
 
 ## Exposición estimada
 
@@ -25,8 +25,8 @@ Ninguna banda de intensidad alcanza población, así que la única cifra que dim
 | Radio desde el epicentro | Población |
 |---|---:|
 | 25 km | 0 |
-| 50 km | 72 mil |
-| 100 km | 1 millón |
+| 50 km | 78 mil |
+| 100 km | 1,2 millones |
 
 Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
 
@@ -44,10 +44,15 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentro de las bandas publicadas tiene población de WorldPop con la que contrastar.
 
-- El epicentro está a 41 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
+- El epicentro está a 39 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v3 (us) → v6 (us)
+- Magnitud: M5,6 → M5,5
+- Profundidad: 35 → 60 km
+- Epicentro: reubicado 4 km
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v2 (us) → v3 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v1 (us) → v2 (us)
@@ -62,10 +67,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v3** de `us`
+- ShakeMap consumido: **v6** de `us`
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`gtm-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/GTM.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-10T17:11:06Z
+- Pipeline: `0.1.0` · Generado: 2026-11-12T12:56:05Z
 
 ## Advertencias
 

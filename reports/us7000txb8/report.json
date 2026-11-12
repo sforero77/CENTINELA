@@ -2,16 +2,16 @@
   "schema": "centinela/report/1.0",
   "event": {
     "usgs_id": "us7000txb8",
-    "mag": 5.6,
-    "depth_km": 35.0,
+    "mag": 5.5,
+    "depth_km": 59.652,
     "utc": "2026-11-10T14:54:17Z",
-    "lugar": "43 km al S de Puerto San José, Guatemala",
+    "lugar": "40 km al S de Puerto San José, Guatemala",
     "pager_alert": "green",
-    "lon": -90.8798,
-    "lat": 13.5381
+    "lon": -90.8534,
+    "lat": 13.5622
   },
   "inputs": {
-    "shakemap_version": 3,
+    "shakemap_version": 6,
     "groundfailure_version": 0,
     "exposure_manifest": "gtm-v0.5",
     "modelo_deslizamiento": "",
@@ -27,11 +27,11 @@
     },
     {
       "radio_km": 50,
-      "pop": 71649.2516139904
+      "pop": 78291.32579237409
     },
     {
       "radio_km": 100,
-      "pop": 1007820.9679856244
+      "pop": 1155247.070263017
     }
   ],
   "backtest": false,
@@ -60,7 +60,7 @@
   "incertidumbre": {
     "pop_discrepancia_pct": null,
     "notas": [
-      "El epicentro está a 41 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
+      "El epicentro está a 39 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
     ]
   },
   "ground_failure_usgs": {
@@ -76,6 +76,11 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v3 (us) → v6 (us)",
+    "Magnitud: M5,6 → M5,5",
+    "Profundidad: 35 → 60 km",
+    "Epicentro: reubicado 4 km",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v2 (us) → v3 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v1 (us) → v2 (us)",
@@ -137,6 +142,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-10T17:11:06Z",
+  "generado_utc": "2026-11-12T12:56:05Z",
   "pipeline_version": "0.1.0"
 }

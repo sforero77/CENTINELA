@@ -1,4 +1,4 @@
-1/4 Sismo M5,6 · 43 km al S de Puerto San José, Guatemala (2026-11-10 14:54 UTC, 35 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
+1/4 Sismo M5,5 · 40 km al S de Puerto San José, Guatemala (2026-11-10 14:54 UTC, 60 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
 2/4 Ninguna persona del país queda dentro de MMI≥6. No es que falte el dato: la intensidad que el ShakeMap dibuja para este evento no alcanza esa banda sobre territorio habitado.
 
