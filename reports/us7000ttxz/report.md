@@ -44,10 +44,13 @@ Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGE
 
 Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentro de las bandas publicadas tiene población de WorldPop con la que contrastar.
 
-- El epicentro está a 1.479 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
+- El epicentro está a 1.486 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v3 (us) → v4 (us)
+- Epicentro: reubicado 7 km
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v2 (us) → v3 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v1 (us) → v2 (us)
@@ -62,10 +65,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v3** de `us`
+- ShakeMap consumido: **v4** de `us`
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`chl-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-10-30T11:34:38Z
+- Pipeline: `0.1.0` · Generado: 2026-11-12T12:56:10Z
 
 ## Advertencias
 

@@ -7,11 +7,11 @@
     "utc": "2026-10-29T07:49:50Z",
     "lugar": "Al sureste de la isla de Pascua",
     "pager_alert": "green",
-    "lon": -98.0489,
-    "lat": -36.4058
+    "lon": -98.0105,
+    "lat": -36.4649
   },
   "inputs": {
-    "shakemap_version": 3,
+    "shakemap_version": 4,
     "groundfailure_version": 0,
     "exposure_manifest": "chl-v0.5",
     "modelo_deslizamiento": "",
@@ -60,7 +60,7 @@
   "incertidumbre": {
     "pop_discrepancia_pct": null,
     "notas": [
-      "El epicentro está a 1.479 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
+      "El epicentro está a 1.486 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado."
     ]
   },
   "ground_failure_usgs": {
@@ -76,6 +76,9 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v3 (us) → v4 (us)",
+    "Epicentro: reubicado 7 km",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v2 (us) → v3 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v1 (us) → v2 (us)",
@@ -137,6 +140,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-10-30T11:34:38Z",
+  "generado_utc": "2026-11-12T12:56:10Z",
   "pipeline_version": "0.1.0"
 }

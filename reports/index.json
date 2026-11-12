@@ -19,15 +19,15 @@
     "mag": 6.4,
     "lugar": "Al sureste de la isla de Pascua",
     "iso3": "CHL",
-    "lon": -98.0489,
-    "lat": -36.4058,
+    "lon": -98.0105,
+    "lat": -36.4649,
     "pop_mmi7p": 0.0,
     "pop_mmi6p": 0.0,
     "utc": "2026-10-29T07:49:50Z",
-    "shakemap_version": 3,
+    "shakemap_version": 4,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-30T11:34:38Z"
+    "generado_utc": "2026-11-12T12:56:10Z"
   },
   {
     "usgs_id": "us6000u1wn",
