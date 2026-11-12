@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-11T22:15:24Z",
+  "generado_utc": "2026-11-12T10:55:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -146,17 +146,6 @@
       "origen_utc": "2026-11-07T16:01:52Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "us7000twrp",
-      "mag": 4.5,
-      "lon": -68.6413,
-      "lat": -21.6011,
-      "depth_km": 110.7,
-      "lugar": "57 km al SO de Ollagüe, Chile",
-      "origen_utc": "2026-11-07T10:53:12Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "CHL"
     }
   ]
 }
