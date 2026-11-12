@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-12T17:20:26Z",
+  "generado_utc": "2026-11-12T19:55:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -113,17 +113,6 @@
       "origen_utc": "2026-11-07T23:17:06Z",
       "razon": "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos",
       "iso3": ""
-    },
-    {
-      "usgs_id": "us7000twtv",
-      "mag": 4.5,
-      "lon": -87.0544,
-      "lat": 11.526,
-      "depth_km": 37.1,
-      "lugar": "65 km al OSO de Masachapa, Nicaragua",
-      "origen_utc": "2026-11-07T19:55:10Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "NIC"
     }
   ]
 }
