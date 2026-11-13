@@ -32,13 +32,25 @@ Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, sol
 
 ## Deslizamiento y licuefacción
 
-USGS no ha publicado el producto *Ground Failure* para este evento. La sección se omite; el reporte se re-emite automáticamente si aparece.
+- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**.
+- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **0**.
+
+Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
+
+**Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
+
+Fuente: producto *Ground Failure* de USGS (v1), dominio público.
 
 ## Incertidumbre y calidad
 
 Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentro de las bandas publicadas tiene población de WorldPop con la que contrastar.
 
 - El epicentro está a 28 km de la población más cercana del país con la que se comparó. La sacudida no alcanzó territorio habitado.
+
+## Cambios frente a la versión anterior
+
+- Ground Failure: v0 → v1 (us)
+- Ninguna cifra publicada cambia frente a la versión anterior.
 
 ## Descargas
 
@@ -48,9 +60,9 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 ## Procedencia
 
 - ShakeMap consumido: **v1** de `us`
-- Ground Failure consumido: **ninguno** (no publicado aún)
+- Ground Failure consumido: **v1** de `us`
 - Manifiesto de exposición: [`per-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-13T17:06:05Z
+- Pipeline: `0.1.0` · Generado: 2026-11-13T17:11:04Z
 
 ## Advertencias
 

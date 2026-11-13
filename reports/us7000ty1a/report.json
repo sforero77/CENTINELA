@@ -12,12 +12,12 @@
   },
   "inputs": {
     "shakemap_version": 1,
-    "groundfailure_version": 0,
+    "groundfailure_version": 1,
     "exposure_manifest": "per-v0.5",
-    "modelo_deslizamiento": "",
-    "modelo_licuefaccion": "",
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
     "shakemap_fuente": "us",
-    "groundfailure_fuente": ""
+    "groundfailure_fuente": "us"
   },
   "preliminar": false,
   "radios": [
@@ -64,10 +64,10 @@
     ]
   },
   "ground_failure_usgs": {
-    "ls_alerta_usgs": "",
-    "ls_pop_usgs": "",
-    "lq_alerta_usgs": "",
-    "lq_pop_usgs": ""
+    "ls_alerta_usgs": "green",
+    "ls_pop_usgs": "0",
+    "lq_alerta_usgs": "green",
+    "lq_pop_usgs": "0"
   },
   "descargas": {
     "geoparquet": "",
@@ -75,7 +75,10 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Ground Failure: v0 → v1 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior."
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -130,6 +133,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-13T17:06:05Z",
+  "generado_utc": "2026-11-13T17:11:04Z",
   "pipeline_version": "0.1.0"
 }
