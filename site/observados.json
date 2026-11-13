@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-13T14:35:37Z",
+  "generado_utc": "2026-11-13T16:35:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -80,17 +80,6 @@
       "origen_utc": "2026-11-09T10:23:53Z",
       "razon": "M5.3 < umbral M5.5",
       "iso3": "PER"
-    },
-    {
-      "usgs_id": "us7000twyc",
-      "mag": 4.8,
-      "lon": -36.9451,
-      "lat": 7.703,
-      "depth_km": 10.0,
-      "lugar": "Centro de la dorsal mesoatlántica",
-      "origen_utc": "2026-11-08T16:33:24Z",
-      "razon": "M4.8 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
