@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-13T08:40:26Z",
+  "generado_utc": "2026-11-13T12:00:27Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -80,17 +80,6 @@
       "origen_utc": "2026-11-08T16:33:24Z",
       "razon": "M4.8 < umbral M5.5",
       "iso3": ""
-    },
-    {
-      "usgs_id": "us7000twxf",
-      "mag": 4.7,
-      "lon": -70.0603,
-      "lat": -19.6811,
-      "depth_km": 68.8,
-      "lugar": "46 km al NO de Huara, Chile",
-      "origen_utc": "2026-11-08T11:58:32Z",
-      "razon": "M4.7 < umbral M5.5",
-      "iso3": "CHL"
     }
   ]
 }
