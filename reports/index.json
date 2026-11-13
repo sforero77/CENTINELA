@@ -1,5 +1,20 @@
 [
   {
+    "usgs_id": "us7000ty1a",
+    "mag": 5.8,
+    "lugar": "79 km al OSO de Changuillo, Perú",
+    "iso3": "PER",
+    "lon": -75.8807,
+    "lat": -14.9934,
+    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 0.0,
+    "utc": "2026-11-13T16:43:02Z",
+    "shakemap_version": 1,
+    "preliminar": false,
+    "backtest": false,
+    "generado_utc": "2026-11-13T17:06:05Z"
+  },
+  {
     "usgs_id": "us7000txb8",
     "mag": 5.5,
     "lugar": "40 km al S de Puerto San José, Guatemala",

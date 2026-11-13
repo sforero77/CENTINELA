@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000ty1a",
-  "estado": "detectado",
+  "estado": "publicado",
   "mag": 5.8,
   "lon": -75.8807,
   "lat": -14.9934,
@@ -8,15 +8,19 @@
   "lugar": "79 km al OSO de Changuillo, Perú",
   "origen_utc": "2026-11-13T16:43:02Z",
   "versiones_procesadas": {
-    "shakemap": 0,
-    "groundfailure": 0
+    "shakemap": 1,
+    "groundfailure": 0,
+    "shakemap_fuente": "us"
   },
   "timestamps": {
     "detectado": "2026-11-13T17:05:23Z",
+    "publicado": "2026-11-13T17:06:07Z",
     "usgs_origen": "2026-11-13T16:43:02Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "ShakeMap v0 -> v1 (us)"
+  ]
 }
