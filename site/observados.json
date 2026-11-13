@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-12T23:25:21Z",
+  "generado_utc": "2026-11-13T06:30:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -80,17 +80,6 @@
       "origen_utc": "2026-11-08T11:58:32Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": "CHL"
-    },
-    {
-      "usgs_id": "us7000twwc",
-      "mag": 4.5,
-      "lon": -67.8523,
-      "lat": 19.2047,
-      "depth_km": 30.4,
-      "lugar": "90 km al NE de Punta Cana, República Dominicana",
-      "origen_utc": "2026-11-08T06:30:19Z",
-      "razon": "M4.5 < umbral M5.5",
-      "iso3": "DOM"
     }
   ]
 }
