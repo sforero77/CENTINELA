@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000ty84",
-  "estado": "detectado",
+  "estado": "descartado",
   "mag": 5.5,
   "lon": -42.6346,
   "lat": 30.122,
@@ -12,11 +12,14 @@
     "groundfailure": 0
   },
   "timestamps": {
+    "descartado": "2026-11-14T09:45:50Z",
     "detectado": "2026-11-14T09:45:23Z",
     "usgs_origen": "2026-11-14T09:26:13Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos"
+  ]
 }
