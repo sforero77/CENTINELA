@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-14T18:20:23Z",
+  "generado_utc": "2026-11-14T23:20:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tyay",
+      "mag": 4.7,
+      "lon": -99.113,
+      "lat": 3.7323,
+      "depth_km": 10.0,
+      "lugar": "east central Pacific Ocean",
+      "origen_utc": "2026-11-14T22:23:46Z",
+      "razon": "M4.7 < umbral M5.5",
+      "iso3": ""
+    },
     {
       "usgs_id": "us7000ty9z",
       "mag": 4.7,
