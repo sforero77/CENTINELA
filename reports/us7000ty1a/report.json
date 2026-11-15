@@ -6,13 +6,13 @@
     "depth_km": 10.0,
     "utc": "2026-11-13T16:43:02Z",
     "lugar": "79 km al OSO de Changuillo, Perú",
-    "pager_alert": "",
+    "pager_alert": "green",
     "lon": -75.8807,
     "lat": -14.9934
   },
   "inputs": {
-    "shakemap_version": 2,
-    "groundfailure_version": 2,
+    "shakemap_version": 3,
+    "groundfailure_version": 3,
     "exposure_manifest": "per-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -76,6 +76,9 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v2 (us) → v3 (us)",
+    "Ground Failure: v2 (us) → v3 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v1 (us) → v2 (us)",
     "Ground Failure: v1 (us) → v2 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
@@ -136,6 +139,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-13T19:01:14Z",
+  "generado_utc": "2026-11-15T12:31:16Z",
   "pipeline_version": "0.1.0"
 }

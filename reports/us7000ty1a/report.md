@@ -39,7 +39,13 @@ Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No s
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v2), dominio público.
+Fuente: producto *Ground Failure* de USGS (v3), dominio público.
+
+## Referencia cruzada
+
+PAGER (USGS) estima para este evento una alerta **verde**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
+
+Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
@@ -49,6 +55,9 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v2 (us) → v3 (us)
+- Ground Failure: v2 (us) → v3 (us)
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v1 (us) → v2 (us)
 - Ground Failure: v1 (us) → v2 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
@@ -62,10 +71,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v2** de `us`
-- Ground Failure consumido: **v2** de `us`
+- ShakeMap consumido: **v3** de `us`
+- Ground Failure consumido: **v3** de `us`
 - Manifiesto de exposición: [`per-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-13T19:01:14Z
+- Pipeline: `0.1.0` · Generado: 2026-11-15T12:31:16Z
 
 ## Advertencias
 
