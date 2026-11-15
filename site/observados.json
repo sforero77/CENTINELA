@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-14T23:20:24Z",
+  "generado_utc": "2026-11-15T04:20:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us7000tybx",
+      "mag": 4.8,
+      "lon": -68.6822,
+      "lat": -31.3221,
+      "depth_km": 108.9,
+      "lugar": "19 km al NO de Albardón, Argentina",
+      "origen_utc": "2026-11-15T03:59:59Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "ARG"
+    },
     {
       "usgs_id": "us7000tyay",
       "mag": 4.7,
