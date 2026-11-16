@@ -47,7 +47,7 @@ def test_el_sello_se_toma_antes_de_revisar_el_feed() -> None:
 
 def _freno() -> str:
     """El bloque del workflow que decide, hasta el `exit 0` del freno."""
-    run = _paso("Publicar estado y latido")["run"]
+    run = str(_paso("Publicar estado y latido")["run"])
     inicio = run.index("ULTIMO=0")
     fin = run.index("exit 0", inicio) + len("exit 0")
     return run[inicio:fin] + "\nfi\necho PUBLICA\n"
