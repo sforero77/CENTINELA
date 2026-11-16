@@ -9,7 +9,7 @@
 # publica en `medicion.json`; volcarlos aqui es un paso explicito,
 # `centinela fijar-insumos COL`, y el lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.7
+manifest_id: col-v0.8
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -179,10 +179,24 @@ sources:
 
   - id: dane_mgn_2025
     layer: divisions
-    url: https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_MPIO_GRAFICO.zip
+    url: https://github.com/sforero77/CENTINELA/releases/download/insumo-col-dane-mgn-2025/MGN2025_MPIO_GRAFICO.zip
     license: CC-BY-4.0
     vintage: MGN-2025
-    insumos_sha256: "19d45b7fa15c9da203f0812633439f3e95d712c0763b317792030379c024a3a4"
+    insumos_sha256: "a3c01393059be8f2947de5e0a828faa4c7a43119819a667a8124854340bc141f"
+    # SE LEE DE UN ESPEJO, NO DEL GEOPORTAL. Desde el 27-oct-2026 el geoportal
+    # corta el TLS a las IP de GitHub Actions ("unexpected eof while reading",
+    # comprobado el 16-nov desde un runner de Azure centralus) mientras contesta
+    # normal desde Colombia: el activo de COL llevaba tres semanas sin
+    # reconstruirse (#189). El fichero se bajo de
+    # https://geoportal.dane.gov.co/descargas/mgn_2025/MGN2025_MPIO_GRAFICO.zip
+    # el 16-nov, dos veces con el mismo digest, y se publico tal cual en el
+    # release `insumo-col-dane-mgn-2025` (CC BY 4.0 permite redistribuir citando
+    # al DANE). Ese dia el DANE servia OTROS bytes otra vez —mismo tamaño, otro
+    # digest que el del 7-sep—: 1.122 municipios, mismo esquema, WGS84, fechas
+    # internas del ZIP del 5-dic-2025. Para una edicion nueva del MGN, bajarla
+    # desde Colombia y publicarla en un release nuevo.
+    #
+    # Historia del digest anterior (19d45b7f...):
     # DANE RE-SIRVIO OTROS BYTES BAJO EL MISMO SELLO. Comprobado el 7-sep-2026
     # antes de re-fijar: el servidor sigue declarando `Last-Modified: 26 Mar
     # 2026` y un ETag que codifica esa fecha, pero el fichero que entrega hoy no
