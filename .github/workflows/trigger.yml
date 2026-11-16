@@ -160,6 +160,10 @@ jobs:
           fi
           [ "${n:-0}" -ge 1 ] || n=1
           echo "n=$n" >> "$GITHUB_OUTPUT"
+          # El freno del latido de «Publicar estado y latido» necesita ESTE
+          # sello, el de antes de revisar: `centinela trigger` anade el latido
+          # nuevo a `status.json`, y leerlo despues siempre da «hace 4 s».
+          echo "ultimo_utc=$desde" >> "$GITHUB_OUTPUT"
           echo "revisiones desde el ultimo latido: $n"
 
       - name: Revisar el feed
@@ -304,6 +308,7 @@ jobs:
           EVENTOS: ${{ steps.trigger.outputs.eventos }}
           HAY_TRABAJO: ${{ steps.trigger.outputs.hay_trabajo }}
           OBSERVADOS_CAMBIO: ${{ steps.trigger.outputs.observados_cambio }}
+          ULTIMO_UTC: ${{ steps.revisiones.outputs.ultimo_utc }}
         run: |
           git config user.name "centinela-bot"
           git config user.email "noreply@users.noreply.github.com"
@@ -321,7 +326,13 @@ jobs:
           # ultimo commit de CUALQUIER tipo, asi que una PR humana reiniciaba el
           # freno del latido. Los dos huecos de 85 y 105 min de la serie
           # publicada coinciden con PRs.
-          ULTIMO_UTC=$(jq -r '.latidos[-1].utc // empty' site/status.json 2>/dev/null || echo "")
+          #
+          # Y EL SELLO ES EL DE ANTES DE REVISAR. Se leia aqui de
+          # `site/status.json`, que `centinela trigger` acaba de reescribir con
+          # el latido de esta misma corrida: la edad salia siempre en segundos y
+          # el latido solo se publicaba cuando habia sismo u observados nuevos.
+          # El 16-nov-2026 `status.json` llego a 13,6 h sin publicarse y la
+          # frescura del visor abrio #218. Lo vigila `test_freno_del_latido.py`.
           ULTIMO=0
           if [ -n "$ULTIMO_UTC" ]; then
             ULTIMO=$(date -u -d "$ULTIMO_UTC" +%s 2>/dev/null || echo 0)
