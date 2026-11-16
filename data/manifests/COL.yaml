@@ -9,7 +9,7 @@
 # publica en `medicion.json`; volcarlos aqui es un paso explicito,
 # `centinela fijar-insumos COL`, y el lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.8
+manifest_id: col-v0.9
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -125,9 +125,9 @@ sources:
 
   - id: overture_buildings
     layer: buildings
-    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=buildings/type=building
+    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=buildings/type=building
     license: ODbL-1.0
-    vintage: "2026-09-23.1"
+    vintage: "2026-10-21.0"
     insumos_sha256: ""
     notes: >-
       512 ficheros, 277 GB, 2.529 millones de edificaciones en total (2026-08-19.0);
@@ -141,17 +141,17 @@ sources:
 
   - id: overture_transportation
     layer: roads
-    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=transportation/type=segment
+    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=transportation/type=segment
     license: ODbL-1.0
-    vintage: "2026-09-23.1"
+    vintage: "2026-10-21.0"
     insumos_sha256: ""
     notes: "`type=segment` es la geometria lineal; `type=connector` son nodos."
 
   - id: overture_divisions
     layer: divisions
-    url: s3://overturemaps-us-west-2/release/2026-09-23.1/theme=divisions/type=division_area
+    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=divisions/type=division_area
     license: ODbL-1.0
-    vintage: "2026-09-23.1"
+    vintage: "2026-10-21.0"
     insumos_sha256: ""
     notes: "`type=division_area` trae los poligonos; `division` son puntos."
 
@@ -182,7 +182,7 @@ sources:
     url: https://github.com/sforero77/CENTINELA/releases/download/insumo-col-dane-mgn-2025/MGN2025_MPIO_GRAFICO.zip
     license: CC-BY-4.0
     vintage: MGN-2025
-    insumos_sha256: "a3c01393059be8f2947de5e0a828faa4c7a43119819a667a8124854340bc141f"
+    insumos_sha256: "19d45b7fa15c9da203f0812633439f3e95d712c0763b317792030379c024a3a4"
     # SE LEE DE UN ESPEJO, NO DEL GEOPORTAL. Desde el 27-oct-2026 el geoportal
     # corta el TLS a las IP de GitHub Actions ("unexpected eof while reading",
     # comprobado el 16-nov desde un runner de Azure centralus) mientras contesta
@@ -234,7 +234,7 @@ sources:
     hdx_dataset: hotosm_col_health_facilities
     license: ODbL-1.0
     vintage: "2026-09-06"
-    insumos_sha256: "a81c64d1550a5ddff091f88ccd83d1d25db442ac1b89968c7f6d0294d469a125"
+    insumos_sha256: "ae6bfd34f13572950d51dc4607b02d86196afa9faaf4db9bd8d377dc7391cd85"
     notes: >-
       Extracto OSM de HOT, GeoPackage de ~1 MB, con geometria. Sustituye al REPS
       como fuente de conteo por celda: es la que si trae coordenadas. La URL de
@@ -269,7 +269,7 @@ sources:
     hdx_dataset: hotosm_col_education_facilities
     license: ODbL-1.0
     vintage: "2026-09-06"
-    insumos_sha256: "adfe198ef544cd9fa1c9d88cd42cd382f9ee31c1e2e6c7278ac3c256bb3b2887"
+    insumos_sha256: "6d00a841ba4dcd621feab6e62256474c05b8051f0477129ced802a6c48720aa3"
     notes: >-
       Extracto OSM de HOT, GeoPackage de ~5 MB, con geometria. Sustituye al
       directorio del MEN por la misma razon que arriba.
@@ -297,7 +297,7 @@ sources:
     # `columnas=()` y `requerida=False`, y `build.py` no la nombra ni una vez.
     # Un cambio silencioso aguas arriba no puede mover ninguna cifra publicada
     # porque ninguna cifra publicada sale de aqui.
-    insumos_sha256: "d518086324ed4a527c36c28853b593937174d6a3ca031707570c4a7b8a901715"
+    insumos_sha256: "1d3ca6ae54797da52404c89d3ad09a8c9ff0c474ba522a9a71c02c57c3dd1510"
     # ESTE DIGEST CADUCA SOLO, Y NO COMPRA NADA. `airports.csv` es el CSV global
     # de OurAirports y se reescribe **a diario** con las ediciones de cualquier
     # aeropuerto del mundo, asi que fijarlo significa que Colombia no puede
