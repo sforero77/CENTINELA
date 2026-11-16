@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-10-27T14:01:30Z",
+  "generado_utc": "2026-11-16T03:45:11Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -55,7 +55,7 @@
       "iso3": "COL",
       "nombre": "Colombia",
       "construido": true,
-      "manifest_id": "col-v0.7",
+      "manifest_id": "col-v0.8",
       "poblacion_medida": 52620429,
       "poblacion_referencia": 53000000,
       "fuente_referencia": "DANE, proyecciones de poblacion CNPV-2018 actualizadas (nota tecnica jul-2025)",
