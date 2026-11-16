@@ -2,7 +2,8 @@
 
 Se leen los CSV regionales de 24 h, que estan **abiertos y no piden `MAP_KEY`**
 — verificado el 26-ago-2026: HTTP 200 para las seis combinaciones de tres
-satelites VIIRS por dos regiones. La API por bbox si exige clave y ademas
+satelites VIIRS por dos regiones. Hoy son dos satelites: Suomi-NPP se retiro
+el 1-nov-2026. La API por bbox si exige clave y ademas
 raciona a 5.000 peticiones por diez minutos; estos ficheros son un GET plano.
 
 Medido ese mismo dia, antes del pico de la temporada de quemas:
@@ -11,16 +12,16 @@ Medido ese mismo dia, antes del pico de la temporada de quemas:
     2,9 detecciones por celda (los tres satelites ven el mismo fuego)
 
 Esa ultima linea es la que fija el vocabulario de todo el modulo. Lo que se
-cuenta son **detecciones**, no incendios: tres satelites sobrevolando el mismo
-fuego producen tres filas. Llamarlas "focos" invitaria a leer el numero como
-cantidad de fuegos, que es tres veces mas de los que hay.
+cuenta son **detecciones**, no incendios: varios satelites sobrevolando el mismo
+fuego producen una fila cada uno. Llamarlas "focos" invitaria a leer el numero
+como cantidad de fuegos, que son bastantes menos.
 """
 
 from __future__ import annotations
 
 import csv
 import io
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Final
 
 from ..common.http import Fetcher
@@ -39,16 +40,18 @@ _BASE: Final[str] = "https://firms.modaps.eosdis.nasa.gov/data/active_fire"
 #: p5-incendios.md` ya lo decia bien; alguien corrigio el doc y no volvio al
 #: codigo.
 #:
-#: Lo que aportan de verdad: se pasa de 2 miradas al dia a **6** (tres de dia,
-#: tres de noche), todas agrupadas en esas dos ventanas. Eso son mas
+#: Lo que aportan de verdad: mas miradas al dia —dos por satelite, una de dia y
+#: una de noche—, todas agrupadas en esas dos ventanas. Eso son mas
 #: oportunidades de atravesar nube y humo y de atrapar un fuego corto, no
 #: cobertura horaria: sigue habiendo un hueco ciego de unas 11 h en cada mitad
 #: del dia. Fuente: NOAA VLAB TOWR-S, VIIRS Imagery.
+#:
+#: SUOMI-NPP SE RETIRO. NASA lo apago el 1-nov-2026 y desde entonces FIRMS
+#: sirvio sus dos ficheros con HTTP 200 y cero filas. Nada lo dijo durante dos
+#: semanas: la corrida seguia verde con cuatro de seis ficheros. Se quito el
+#: 15-nov-2026, y desde entonces un satelite mudo abre incidencia (ver
+#: `Lectura.mudos` e `incendios.yml`). Quedan dos miradas por ventana, no tres.
 SATELITES: Final[tuple[tuple[str, str], ...]] = (
-    # NASA cesa Suomi-NPP el 1-nov-2026 a las 13:00 UTC. Cuando deje de
-    # responder hay que quitarlo de aqui y corregir la documentacion de P5,
-    # que afirma que se usan tres satelites.
-    ("suomi-npp-viirs-c2", "SUOMI_VIIRS_C2"),
     ("noaa-20-viirs-c2", "J1_VIIRS_C2"),
     ("noaa-21-viirs-c2", "J2_VIIRS_C2"),
 )
@@ -179,6 +182,11 @@ class Lectura:
     #: un HTTP 200 con el cuerpo vacio, o con la cabecera renombrada, se
     #: descarga sin error y se parsea a cero filas.
     leidos: int = 0
+    #: Satelites que no trajeron ni una deteccion en ninguna region, como
+    #: "J1_VIIRS_C2". Un satelite entero sin fuego en 24 h sobre dos continentes
+    #: no es un dia tranquilo: es un satelite que dejo de entregar. Asi se
+    #: retiro Suomi-NPP y la corrida siguio verde dos semanas.
+    mudos: list[str] = field(default_factory=list)
 
     @property
     def ciego(self) -> bool:
@@ -216,8 +224,10 @@ def fetch_focos(
     fallidos: list[str] = []
     vacios: list[str] = []
     leidos = 0
+    mudos: list[str] = []
 
     for satelite in satelites:
+        leidos_antes = leidos
         for region in regiones:
             url = feed_url(satelite, region, ventana)
             nombre = f"{satelite[1]}/{region}"
@@ -239,6 +249,8 @@ def fetch_focos(
             else:
                 vacios.append(nombre)
             todos.extend(leidas)
+        if regiones and leidos == leidos_antes:
+            mudos.append(satelite[1])
 
     # LAS DOS REGIONES DE FIRMS SE SOLAPAN Y SE CONCATENABAN SIN MAS.
     #
@@ -271,14 +283,21 @@ def fetch_focos(
                 "ficheros_vacios": vacios,
                 "ficheros_leidos": leidos,
                 "ficheros_pedidos": len(satelites) * len(regiones),
+                "satelites_mudos": mudos,
             }
         },
     )
+    if mudos:
+        _log.warning(
+            "satelite de FIRMS sin una sola deteccion en ninguna region",
+            extra={"context": {"satelites": mudos}},
+        )
     return Lectura(
         focos=todos,
         fallidos=fallidos,
         pedidos=len(satelites) * len(regiones),
         leidos=leidos,
+        mudos=mudos,
     )
 
 

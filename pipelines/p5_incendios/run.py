@@ -162,6 +162,7 @@ def run_incendios(
             "ficheros_pedidos": lectura.pedidos,
             "ficheros_leidos": lectura.leidos,
             "ficheros_fallidos": list(lectura.fallidos),
+            "satelites_mudos": list(lectura.mudos),
             "paises_cruzados": list(result.paises),
         },
         descarte_baja=descarte_de_baja(conexion),

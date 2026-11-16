@@ -298,7 +298,7 @@ las últimas 24 h.
 ```mermaid
 flowchart TB
   R(["cron 40 */6 · o el vigía a las 6 h"]) --> BAJA["gh release download<br/>los activos publicados"]
-  BAJA --> FIRMS["<b>centinela incendios</b><br/>NASA FIRMS · 3 satélites VIIRS<br/>SUOMI · NOAA-20 · NOAA-21"]
+  BAJA --> FIRMS["<b>centinela incendios</b><br/>NASA FIRMS · 2 satélites VIIRS<br/>NOAA-20 · NOAA-21"]
 
   FIRMS --> AGG["agrupar por celda H3 r8<br/><i>confianza baja se cuenta aparte</i>"]
   AGG --> JOIN["LEFT JOIN contra exposure_h3"]

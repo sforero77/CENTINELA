@@ -22,6 +22,7 @@ import pytest
 
 from pipelines.p5_incendios.firms import (
     REGIONES,
+    SATELITES,
     VENTANA,
     Foco,
     clave_de_deteccion,
@@ -59,7 +60,7 @@ def test_la_misma_deteccion_en_dos_regiones_cuenta_una_vez() -> None:
     class _Solapado:
         """Sirve la misma deteccion a las dos regiones de cada satelite.
 
-        La columna `satellite` sale del propio fichero, como en FIRMS: los tres
+        La columna `satellite` sale del propio fichero, como en FIRMS: los
         satelites publican nombres distintos y las dos regiones del mismo
         satelite publican el mismo. Es justo lo que hace que el duplicado sea
         indistinguible de una deteccion buena si no se mira la clave entera.
@@ -74,13 +75,50 @@ def test_la_misma_deteccion_en_dos_regiones_cuenta_una_vez() -> None:
 
     lectura = fetch_focos(_Solapado())
 
-    assert lectura.pedidos == 6, "tres satelites por dos regiones"
-    # Tres satelites ven el mismo fuego: son tres detecciones de verdad. Lo que
-    # no puede es haber seis.
-    assert len(lectura.focos) == 3, (
-        f"la deteccion se cuenta {len(lectura.focos)} veces; hay tres satelites "
-        f"y {len(REGIONES)} regiones solapadas"
+    assert lectura.pedidos == len(SATELITES) * len(REGIONES)
+    # Cada satelite que ve el mismo fuego es una deteccion de verdad. Lo que
+    # no puede es contarse una vez por region.
+    assert len(lectura.focos) == len(SATELITES), (
+        f"la deteccion se cuenta {len(lectura.focos)} veces; hay {len(SATELITES)} "
+        f"satelites y {len(REGIONES)} regiones solapadas"
     )
+    assert lectura.mudos == []
+
+
+def test_un_satelite_sin_ninguna_deteccion_queda_marcado_como_mudo() -> None:
+    """Asi se retiro Suomi-NPP: HTTP 200, cero filas, y la corrida en verde.
+
+    Dos semanas sin que nada lo dijera (1 al 15-nov-2026).
+    """
+
+    class _UnoMudo:
+        def get_bytes(self, url: str) -> bytes:
+            if "noaa-21" in url:
+                return CABECERA.encode("utf-8")
+            return (CABECERA + _fila(10.5, -74.8, "1830", sat="N20")).encode("utf-8")
+
+        def get_json(self, url: str) -> dict[str, object]:  # pragma: no cover
+            raise NotImplementedError
+
+    lectura = fetch_focos(_UnoMudo())
+
+    assert lectura.mudos == ["J2_VIIRS_C2"]
+    assert not lectura.ciego, "uno mudo no deja la capa ciega: se publica con el resto"
+
+
+def test_un_satelite_que_solo_ve_una_region_no_esta_mudo() -> None:
+    """Sin fuego en Centroamerica un dia lluvioso es posible; mudo es en todas."""
+
+    class _MediaMirada:
+        def get_bytes(self, url: str) -> bytes:
+            if "Central_America" in url:
+                return CABECERA.encode("utf-8")
+            return (CABECERA + _fila(-10.5, -60.8, "1830", sat="N20")).encode("utf-8")
+
+        def get_json(self, url: str) -> dict[str, object]:  # pragma: no cover
+            raise NotImplementedError
+
+    assert fetch_focos(_MediaMirada()).mudos == []
 
 
 def test_dos_satelites_sobre_el_mismo_fuego_siguen_contando_dos_veces() -> None:

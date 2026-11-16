@@ -50,7 +50,7 @@ Los duplicados entre ambos se descartan por `usgs_id`.
 
 ```mermaid
 flowchart LR
-  F1[("FIRMS<br/>3 satélites VIIRS<br/>× 2 regiones")] -->|"CSV 24 h<br/>sin MAP_KEY"| F2["parseo<br/>detecciones"]
+  F1[("FIRMS<br/>2 satélites VIIRS<br/>× 2 regiones")] -->|"CSV 24 h<br/>sin MAP_KEY"| F2["parseo<br/>detecciones"]
   F2 --> F3["agregación<br/>a celda H3 r8"]
   F3 --> F4{"⋈ activo<br/>de exposición"}
   F4 --> F5["recorte<br/>4.000 celdas"]
@@ -60,8 +60,9 @@ flowchart LR
   style F4 fill:#f4e8e8,stroke:#8c1d64,color:#1c1b1a
 ```
 
-Lo que se cuenta son **detecciones, no incendios**: los tres satélites
-sobrevuelan el mismo fuego y producen tres filas. Medido el 26-ago-2026, antes
+Lo que se cuenta son **detecciones, no incendios**: cada satélite que
+sobrevuela el mismo fuego produce una fila. Medido el 26-ago-2026, con tres
+satélites (Suomi-NPP se retiró el 1-nov-2026), antes
 del pico de temporada: 66.806 detecciones en 24 h → 22.701 celdas, o sea 2,9
 detecciones por celda. Llamarlas "focos" invitaría a leer el número como
 cantidad de fuegos, que es el triple de los que hay.

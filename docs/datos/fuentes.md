@@ -23,8 +23,8 @@ sistema declara públicamente sobre ella.
 
 | | |
 |---|---|
-| **Fuente** | CSV regionales de 24 h, tres satélites VIIRS |
-| **Satélites** | Suomi-NPP, NOAA-20 (J1), NOAA-21 (J2) |
+| **Fuente** | CSV regionales de 24 h, dos satélites VIIRS |
+| **Satélites** | NOAA-20 (J1), NOAA-21 (J2). Suomi-NPP se retiró el 1-nov-2026 |
 | **Resolución** | 375 m |
 | **Licencia** | Dominio público / uso abierto |
 | **Cadencia** | Se consume cada 6 h |

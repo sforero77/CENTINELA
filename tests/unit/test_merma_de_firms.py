@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-from pipelines.p5_incendios.firms import Lectura
+from pipelines.p5_incendios.firms import REGIONES, SATELITES, Lectura
 from pipelines.p5_incendios.run import IncendiosResult
 
 CABECERA = "latitude,longitude,bright_ti4,acq_date,acq_time,satellite,confidence,frp\n"
@@ -79,7 +79,7 @@ def test_un_csv_con_solo_cabecera_no_cuenta_como_leido() -> None:
     from pipelines.p5_incendios.firms import fetch_focos
 
     lectura = fetch_focos(_FetcherFalso([CABECERA]))
-    assert lectura.pedidos == 6
+    assert lectura.pedidos == len(SATELITES) * len(REGIONES)
     assert lectura.fallidos == []
     assert lectura.leidos == 0
     assert lectura.ciego, "seis cabeceras sin filas se colaban como corrida sana"
@@ -89,7 +89,7 @@ def test_un_csv_con_filas_si_cuenta() -> None:
     from pipelines.p5_incendios.firms import fetch_focos
 
     lectura = fetch_focos(_FetcherFalso([CABECERA + FILA]))
-    assert lectura.leidos == 6
+    assert lectura.leidos == len(SATELITES) * len(REGIONES)
     assert not lectura.ciego
 
 
