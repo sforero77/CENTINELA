@@ -16,6 +16,8 @@ on:
 
 permissions:
   contents: write
+  # Para abrir y cerrar la incidencia de un satelite mudo.
+  issues: write
   # Para republicar el visor tras el push. Ver "Republicar el visor".
   actions: write
 
@@ -79,6 +81,45 @@ jobs:
             echo "### Focos activos recortados" >> "$GITHUB_STEP_SUMMARY"
             echo "$MENSAJE Los totales del fichero si son de todas las celdas." >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      # UN SATELITE MUDO ABRE INCIDENCIA.
+      #
+      # Suomi-NPP se retiro el 1-nov-2026 y FIRMS siguio sirviendo sus ficheros
+      # con HTTP 200 y cero filas: dos semanas en verde con un tercio menos de
+      # miradas. El aviso viaja en `incendios.json`; esto lo lleva a una
+      # incidencia, que es lo que llega al correo. Se cierra sola al volver.
+      - name: Avisar si un satelite dejo de entregar
+        if: always() && steps.incendios.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TITULO: Un satelite de FIRMS dejo de entregar detecciones
+          CORRIDA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          MUDOS=$(jq -r '(.lectura.satelites_mudos // []) | join(", ")' site/incendios.json)
+          ABIERTA=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$TITULO\") | .number" | head -1)
+          if [ -z "$MUDOS" ]; then
+            if [ -n "$ABIERTA" ]; then
+              gh issue close "$ABIERTA" --reason completed --comment "Todos los satelites volvieron a entregar. Corrida: $CORRIDA"
+            fi
+            exit 0
+          fi
+          echo "::warning title=Satelite mudo::$MUDOS sin una sola deteccion en 24 h"
+          if [ -n "$ABIERTA" ]; then
+            gh issue comment "$ABIERTA" --body "Sigue mudo: $MUDOS ($(date -u +%Y-%m-%d\ %H:%M) UTC). Corrida: $CORRIDA"
+            exit 0
+          fi
+          gh label create automatico --color BFD4F2 --force >/dev/null 2>&1 || true
+          CUERPO="FIRMS respondio, pero estos satelites no trajeron ni una deteccion en ninguna region en la ventana de 24 h: **$MUDOS**.
+
+          Lo mas probable es que el satelite se haya retirado o este en mantenimiento (asi paso con Suomi-NPP el 1-nov-2026). Si es definitivo, hay que quitarlo de \`SATELITES\` en \`pipelines/p5_incendios/firms.py\` y corregir la documentacion de P5.
+
+          La capa se sigue publicando con los demas. Esta incidencia se cierra sola cuando todos vuelvan a entregar.
+
+          Corrida: $CORRIDA"
+          gh issue create --title "$TITULO" --label automatico --body "$CUERPO" \
+            || gh issue create --title "$TITULO" --body "$CUERPO"
 
       - name: Publicar
         id: publicar

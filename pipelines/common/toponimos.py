@@ -131,6 +131,11 @@ RASGOS: dict[str, tuple[str, str]] = {
     "gulf of california": ("el", "golfo de California"),
     "gulf of mexico": ("el", "golfo de México"),
     "gulf of honduras": ("el", "golfo de Honduras"),
+    "pacific ocean": ("el", "océano Pacífico"),
+    "atlantic ocean": ("el", "océano Atlántico"),
+    "south pacific ocean": ("el", "Pacífico Sur"),
+    "south atlantic ocean": ("el", "Atlántico Sur"),
+    "north atlantic ocean": ("el", "Atlántico Norte"),
     "central america": ("", "Centroamérica"),
     "south america": ("", "Sudamérica"),
 }
@@ -148,6 +153,20 @@ _MODIFICADORES: dict[str, str] = {
     "northwestern": "noroeste",
     "southeastern": "sureste",
     "southwestern": "suroeste",
+}
+
+#: ``east central Pacific Ocean`` (us7000ty1a, 15-nov-2026): las regiones
+#: oceanicas de Flinn-Engdahl llevan dos palabras delante. Salio en ingles y
+#: puso en rojo la guardia de los datos.
+_MODIFICADORES_DOBLES: dict[str, str] = {
+    "north central": "centro-norte",
+    "south central": "centro-sur",
+    "east central": "centro-este",
+    "west central": "centro-oeste",
+    "northeast central": "centro-noreste",
+    "northwest central": "centro-noroeste",
+    "southeast central": "centro-sureste",
+    "southwest central": "centro-suroeste",
 }
 
 #: ``south of Panama``: los cuatro puntos cardinales en palabras.
@@ -243,7 +262,7 @@ def huellas_en_ingles(texto: str) -> list[str]:
     """Las palabras inglesas evidentes que quedan en un lugar, en orden.
 
     >>> huellas_en_ingles("southern East Pacific Rise")
-    ['southern', 'Rise']
+    ['southern', 'East', 'Rise']
     >>> huellas_en_ingles("20 km al O de Catia La Mar, Venezuela")
     []
     """
@@ -280,6 +299,13 @@ def _zona(texto: str) -> tuple[str, str] | None:
         rasgo, pais_es = _zona(cabeza), _zona(pais)
         if rasgo is not None and pais_es is not None:
             return rasgo[0], f"{rasgo[1]}, {pais_es[1]}"
+    palabras = texto.split(" ", 2)
+    if len(palabras) == 3:
+        doble = f"{palabras[0]} {palabras[1]}".lower()
+        if doble in _MODIFICADORES_DOBLES:
+            interior = _zona(palabras[2])
+            if interior is not None:
+                return "el", f"{_MODIFICADORES_DOBLES[doble]} {_de(*interior)}"
     primera, _, resto = texto.partition(" ")
     if primera.lower() in _MODIFICADORES and resto:
         interior = _zona(resto)

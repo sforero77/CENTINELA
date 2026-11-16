@@ -11,13 +11,11 @@ de exposición que usa P2.
 ```mermaid
 flowchart TB
   subgraph fuente["NASA FIRMS · sin MAP_KEY"]
-    S1["SUOMI_VIIRS_C2"]
     S2["J1_VIIRS_C2<br/><i>NOAA-20</i>"]
     S3["J2_VIIRS_C2<br/><i>NOAA-21</i>"]
   end
 
-  S1 --> CSV["CSV regionales<br/>24 h · 2 regiones"]
-  S2 --> CSV
+  S2 --> CSV["CSV regionales<br/>24 h · 2 regiones"]
   S3 --> CSV
 
   CSV --> PARSE["<b>parseo</b><br/>una fila = una detección"]
@@ -34,14 +32,21 @@ flowchart TB
 
 ## Detecciones, no incendios
 
-Los tres satélites llevan el mismo sensor VIIRS a 375 m. **No se reparten las
-horas del día**: van en el mismo plano heliosíncrono, separados unos 50 minutos
-en órbita, así que sus pasadas caen casi a la misma hora solar. Lo que aportan
-los tres no es cobertura horaria sino más oportunidades de ver el mismo fuego
-(y de que una nube no lo tape en las tres). Y significa que el mismo fuego
-produce varias filas.
+Los dos satélites —NOAA-20 y NOAA-21— llevan el mismo sensor VIIRS a 375 m.
+**No se reparten las horas del día**: van en el mismo plano heliosíncrono,
+separados un cuarto de órbita, así que sus pasadas caen casi a la misma hora
+solar. Lo que aportan no es cobertura horaria sino más oportunidades de ver el
+mismo fuego (y de que una nube no lo tape en las dos). Y significa que el mismo
+fuego produce varias filas.
 
-Medido el 26-ago-2026, antes del pico de temporada:
+**Suomi-NPP se retiró.** Hasta el 1-nov-2026 eran tres; NASA apagó Suomi-NPP y
+FIRMS siguió sirviendo sus ficheros con HTTP 200 y cero filas. La corrida siguió
+en verde dos semanas con un tercio menos de miradas. Se quitó el 15-nov-2026, y
+desde entonces un satélite que no trae ni una detección en ninguna región sale
+en `lectura.satelites_mudos`, como aviso en el visor, y abre una incidencia que
+se cierra sola cuando vuelve.
+
+Medido el 26-ago-2026 con tres satélites, antes del pico de temporada:
 
 ```
 66.806 detecciones en LATAM en 24 h  →  22.701 celdas H3 r8
@@ -49,7 +54,7 @@ Medido el 26-ago-2026, antes del pico de temporada:
 ```
 
 > Llamarlas "focos" invitaría a leer el número como cantidad de fuegos, que es
-> tres veces más de los que hay.
+> bastantes más de los que hay.
 
 Y por eso el fichero publicado lleva una `nota` obligatoria:
 
@@ -67,7 +72,8 @@ Y por eso el fichero publicado lleva una `nota` obligatoria:
 | Forma | un GET plano | consulta parametrizada |
 
 Verificado el 26-ago-2026: HTTP 200 para las seis combinaciones de tres
-satélites por dos regiones. Sin llave de API, que es la restricción D6.
+satélites por dos regiones (hoy cuatro: dos satélites). Sin llave de API, que
+es la restricción D6.
 
 ## El recorte: primero la gente
 

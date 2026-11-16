@@ -116,20 +116,21 @@ def test_la_url_es_la_del_fichero_abierto() -> None:
     La API por bbox si exige clave y raciona a 5.000 peticiones cada diez
     minutos; estos ficheros son un GET plano.
     """
-    url = feed_url(("suomi-npp-viirs-c2", "SUOMI_VIIRS_C2"), "South_America")
+    url = feed_url(("noaa-20-viirs-c2", "J1_VIIRS_C2"), "South_America")
 
     assert url == (
         "https://firms.modaps.eosdis.nasa.gov/data/active_fire/"
-        "suomi-npp-viirs-c2/csv/SUOMI_VIIRS_C2_South_America_24h.csv"
+        "noaa-20-viirs-c2/csv/J1_VIIRS_C2_South_America_24h.csv"
     )
 
 
-def test_se_leen_los_tres_satelites() -> None:
-    """No es redundancia: los tres VIIRS se reparten las horas de paso.
+def test_se_leen_los_satelites_vivos() -> None:
+    """NOAA-20 y NOAA-21. Suomi-NPP se retiro el 1-nov-2026.
 
-    Con uno solo, media jornada queda sin cobertura.
+    No se reparten las horas de paso —van en el mismo plano—; lo que aportan es
+    mas miradas para atravesar nube y humo. Ver el comentario de `SATELITES`.
     """
-    assert len(SATELITES) == 3
+    assert [s[1] for s in SATELITES] == ["J1_VIIRS_C2", "J2_VIIRS_C2"]
     assert len(REGIONES) == 2
 
 
@@ -172,14 +173,15 @@ def test_un_fichero_caido_no_se_lleva_los_otros_cinco() -> None:
 
     lectura = fetch_focos(firms)
 
-    assert len(firms.pedidas) == 6
-    assert len(lectura.focos) == 5, "las cinco que si respondieron"
+    pedidos = len(SATELITES) * len(REGIONES)
+    assert len(firms.pedidas) == pedidos
+    assert len(lectura.focos) == pedidos - 1, "las que si respondieron"
     assert lectura.fallidos == ["J1_VIIRS_C2/South_America"], (
         "la merma tiene que salir del log: sin esto, quien mira la corrida no "
         "sabe que se publico con cinco sextos del dato"
     )
-    assert lectura.pedidos == 6
-    assert not lectura.ciego, "cinco de seis no es quedarse a ciegas"
+    assert lectura.pedidos == pedidos
+    assert not lectura.ciego, "uno caido no es quedarse a ciegas"
 
 
 def test_si_fallan_todos_los_ficheros_la_corrida_no_sale_en_verde() -> None:
@@ -201,8 +203,8 @@ def test_si_fallan_todos_los_ficheros_la_corrida_no_sale_en_verde() -> None:
     lectura = fetch_focos(firms)
 
     assert lectura.focos == []
-    assert len(lectura.fallidos) == 6
-    assert lectura.ciego, "seis de seis es quedarse a ciegas"
+    assert len(lectura.fallidos) == len(SATELITES) * len(REGIONES)
+    assert lectura.ciego, "todos caidos es quedarse a ciegas"
 
 
 def test_la_confianza_baja_se_distingue_de_la_util() -> None:

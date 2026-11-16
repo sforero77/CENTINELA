@@ -139,6 +139,8 @@ def test_los_lugares_se_traducen_al_entrar_al_sistema() -> None:
         ("West Chile Rise", "Dorsal de Chile"),
         ("Central East Pacific Rise", "Centro de la dorsal del Pacífico Oriental"),
         ("Drake Passage", "Pasaje de Drake"),
+        ("east central Pacific Ocean", "Centro-este del océano Pacífico"),
+        ("South Pacific Ocean", "Pacífico Sur"),
         ("Easter Island region", "Región de la isla de Pascua"),
         ("Galapagos Islands, Ecuador region", "Región de las islas Galápagos, Ecuador"),
         ("south of Panama", "Al sur de Panamá"),

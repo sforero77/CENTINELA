@@ -6471,7 +6471,7 @@ function abrirFoco(foco) {
       : "");
 
   $("fuego-apostilla").textContent =
-    `Una detección no es un incendio: tres satélites sobre el mismo fuego producen tres ` +
+    `Una detección no es un incendio: dos satélites sobre el mismo fuego producen dos ` +
     `detecciones. No se estima área quemada — el propio FIRMS lo desaconseja.` +
     (foco.deteccionesBaja > 0
       ? ` ${numero(foco.deteccionesBaja)} detecciones de baja confianza no se cuentan.`

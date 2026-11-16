@@ -481,6 +481,12 @@ def write_incendios(
                 f"No se pudieron leer {len(fallidos)} de los {pedidos} ficheros de FIRMS "
                 f"({', '.join(fallidos)}): esta capa no es todo el fuego de la ventana.",
             ]
+        if mudos := lectura.get("satelites_mudos") or []:
+            datos["avisos"] = [
+                *datos.get("avisos", []),
+                f"{len(mudos)} satélite(s) de FIRMS no entregaron ni una detección "
+                f"({', '.join(mudos)}): esta capa tiene menos miradas que de costumbre.",
+            ]
     # SIN SANGRIA, y no por tacaneria: con todas las celdas dentro, `indent=2`
     # son unos 2 MB de espacios en un fichero que **ninguna persona lee** —lo
     # consume el visor—. El diff de git tampoco pierde nada: este fichero se
