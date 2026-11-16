@@ -15,7 +15,7 @@
   },
   "timestamps": {
     "publicado": "2026-09-03T03:25:32Z",
-    "publicado_ultimo": "2026-10-11T11:21:35Z",
+    "publicado_ultimo": "2026-11-16T17:10:57Z",
     "usgs_origen": "2026-08-10T12:34:28Z"
   },
   "hashes": {},
@@ -35,6 +35,7 @@
     "Ground Failure v9 -> v10",
     "ShakeMap v9 -> v10",
     "reproceso forzado: el pipeline cambio, no los productos",
-    "ShakeMap v10 -> v11 (us)"
+    "ShakeMap v10 -> v11 (us)",
+    "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }
