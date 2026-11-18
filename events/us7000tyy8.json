@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000tyy8",
-  "estado": "detectado",
+  "estado": "preliminar",
   "mag": 5.9,
   "lon": -75.9238,
   "lat": -15.1438,
@@ -13,10 +13,13 @@
   },
   "timestamps": {
     "detectado": "2026-11-18T06:25:19Z",
+    "preliminar": "2026-11-18T06:25:45Z",
     "usgs_origen": "2026-11-18T06:07:42Z"
   },
   "hashes": {},
-  "intentos_preliminar": 0,
+  "intentos_preliminar": 1,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "sin ShakeMap disponible aun"
+  ]
 }
