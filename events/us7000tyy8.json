@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us7000tyy8",
+  "estado": "detectado",
+  "mag": 5.9,
+  "lon": -75.9238,
+  "lat": -15.1438,
+  "depth_km": 21.895,
+  "lugar": "85 km al ONO de San Juan, Perú",
+  "origen_utc": "2026-11-18T06:07:42Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-11-18T06:25:19Z",
+    "usgs_origen": "2026-11-18T06:07:42Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
