@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-18T23:35:22Z",
+  "generado_utc": "2026-11-18T23:55:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -146,17 +146,6 @@
       "origen_utc": "2026-11-14T03:18:26Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": "ARG"
-    },
-    {
-      "usgs_id": "us7000ty59",
-      "mag": 4.6,
-      "lon": -74.7229,
-      "lat": -37.922,
-      "depth_km": 10.0,
-      "lugar": "100 km al OSO de Lebu, Chile",
-      "origen_utc": "2026-11-13T23:55:15Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "CHL"
     }
   ]
 }
