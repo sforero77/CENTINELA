@@ -11,7 +11,7 @@
     "lat": 7.6069
   },
   "inputs": {
-    "shakemap_version": 14,
+    "shakemap_version": 15,
     "groundfailure_version": 14,
     "exposure_manifest": "pan-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
@@ -167,6 +167,8 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v14 (us) → v15 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v12 (us) → v14 (us)",
     "Ground Failure: v12 (us) → v14 (us)",
     "Profundidad: 13 → 10 km",
@@ -334,6 +336,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T12:01:19Z",
+  "generado_utc": "2026-11-18T14:30:14Z",
   "pipeline_version": "0.1.0"
 }

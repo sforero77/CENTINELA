@@ -144,10 +144,10 @@
     "pop_mmi7p": 20079.587912683375,
     "pop_mmi6p": 295777.77794844494,
     "utc": "2026-10-09T17:56:08Z",
-    "shakemap_version": 14,
+    "shakemap_version": 15,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-11-02T12:01:19Z"
+    "generado_utc": "2026-11-18T14:30:14Z"
   },
   {
     "usgs_id": "us6000tymj",

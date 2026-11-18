@@ -55,6 +55,8 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **22,5 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v14 (us) → v15 (us)
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v12 (us) → v14 (us)
 - Ground Failure: v12 (us) → v14 (us)
 - Profundidad: 13 → 10 km
@@ -175,10 +177,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **22,5 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v14** de `us`
+- ShakeMap consumido: **v15** de `us`
 - Ground Failure consumido: **v14** de `us`
 - Manifiesto de exposición: [`pan-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-02T12:01:19Z
+- Pipeline: `0.1.0` · Generado: 2026-11-18T14:30:14Z
 
 ## Advertencias
 
