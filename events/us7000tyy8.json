@@ -8,7 +8,7 @@
   "lugar": "85 km al ONO de San Juan, Perú",
   "origen_utc": "2026-11-18T06:07:42Z",
   "versiones_procesadas": {
-    "shakemap": 2,
+    "shakemap": 3,
     "groundfailure": 0,
     "shakemap_fuente": "us"
   },
@@ -17,6 +17,7 @@
     "detectado": "2026-11-18T06:25:19Z",
     "preliminar": "2026-11-18T06:25:45Z",
     "publicado": "2026-11-18T06:31:05Z",
+    "publicado_ultimo": "2026-11-18T08:16:03Z",
     "usgs_origen": "2026-11-18T06:07:42Z"
   },
   "hashes": {},
@@ -24,6 +25,7 @@
   "backtest": false,
   "notas": [
     "sin ShakeMap disponible aun",
-    "ShakeMap v0 -> v2 (us)"
+    "ShakeMap v0 -> v2 (us)",
+    "ShakeMap v2 (us) -> v3 (us)"
   ]
 }
