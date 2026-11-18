@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-18T21:00:33Z",
+  "generado_utc": "2026-11-18T21:20:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -157,17 +157,6 @@
       "origen_utc": "2026-11-13T23:55:15Z",
       "razon": "M4.6 < umbral M5.5",
       "iso3": "CHL"
-    },
-    {
-      "usgs_id": "us7000ty4n",
-      "mag": 4.6,
-      "lon": -89.4564,
-      "lat": 13.2186,
-      "depth_km": 59.1,
-      "lugar": "33 km al SSO de La Libertad, El Salvador",
-      "origen_utc": "2026-11-13T21:19:55Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "SLV"
     }
   ]
 }
