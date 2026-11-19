@@ -11,7 +11,7 @@
     "lat": -15.1438
   },
   "inputs": {
-    "shakemap_version": 3,
+    "shakemap_version": 4,
     "groundfailure_version": 0,
     "exposure_manifest": "per-v0.5",
     "modelo_deslizamiento": "",
@@ -76,6 +76,8 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v3 (us) → v4 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v2 (us) → v3 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v0 → v2 (us)",
@@ -135,6 +137,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-18T08:16:01Z",
+  "generado_utc": "2026-11-19T14:31:16Z",
   "pipeline_version": "0.1.0"
 }

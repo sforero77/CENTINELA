@@ -48,6 +48,8 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v3 (us) → v4 (us)
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v2 (us) → v3 (us)
 - Ninguna cifra publicada cambia frente a la versión anterior.
 - ShakeMap: v0 → v2 (us)
@@ -60,10 +62,10 @@ Discrepancia entre GHS-POP y WorldPop: **no se pudo medir**. Ninguna celda dentr
 
 ## Procedencia
 
-- ShakeMap consumido: **v3** de `us`
+- ShakeMap consumido: **v4** de `us`
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`per-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-18T08:16:01Z
+- Pipeline: `0.1.0` · Generado: 2026-11-19T14:31:16Z
 
 ## Advertencias
 
