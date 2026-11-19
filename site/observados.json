@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-19T16:00:30Z",
+  "generado_utc": "2026-11-19T16:40:27Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -135,17 +135,6 @@
       "origen_utc": "2026-11-14T18:04:01Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": "BOL"
-    },
-    {
-      "usgs_id": "us7000ty9n",
-      "mag": 4.6,
-      "lon": -66.9029,
-      "lat": -24.049,
-      "depth_km": 197.6,
-      "lugar": "62 km al ONO de San Antonio de los Cobres, Argentina",
-      "origen_utc": "2026-11-14T16:36:19Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "ARG"
     }
   ]
 }
