@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-19T14:31:18Z",
+  "generado_utc": "2026-11-19T14:31:26Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -34,8 +34,8 @@
       "publicado_utc": "2026-11-13T17:06:07Z",
       "minutos": 23.1,
       "backtest": false,
-      "shakemap": 3,
-      "actualizado_utc": "2026-11-15T12:31:18Z"
+      "shakemap": 4,
+      "actualizado_utc": "2026-11-19T14:31:25Z"
     },
     {
       "usgs_id": "us7000txb8",
