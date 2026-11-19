@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-19T06:10:22Z",
+  "generado_utc": "2026-11-19T06:35:21Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -145,17 +145,6 @@
       "lugar": "Norte de la dorsal mesoatlántica",
       "origen_utc": "2026-11-14T09:26:13Z",
       "razon": "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos",
-      "iso3": ""
-    },
-    {
-      "usgs_id": "us7000ty7b",
-      "mag": 4.8,
-      "lon": -97.9575,
-      "lat": -36.4613,
-      "depth_km": 10.0,
-      "lugar": "Dorsal de Chile",
-      "origen_utc": "2026-11-14T06:33:19Z",
-      "razon": "M4.8 < umbral M5.5",
       "iso3": ""
     }
   ]
