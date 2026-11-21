@@ -88,7 +88,12 @@ _ALLOWED_TRANSITIONS: dict[EventStatus, frozenset[EventStatus]] = {
     EventStatus.SIN_ALCANCE: frozenset(
         {EventStatus.SIN_ALCANCE, EventStatus.PUBLICADO, EventStatus.DESCARTADO}
     ),
-    EventStatus.DESCARTADO: frozenset(),
+    # TERMINAL PARA EL VIGIA, NO PARA QUIEN OPERA. P1, el repaso y `decide`
+    # lo ignoran (`_TERMINAL`, `_SIN_REPASO`, OMITIR), asi que solo sale de
+    # aqui un reproceso forzado —`centinela impact --reprocesar`—, que es el
+    # rescate que `decide` promete. Con `frozenset()` ese rescate calculaba el
+    # impacto entero y reventaba al guardar el estado.
+    EventStatus.DESCARTADO: frozenset({EventStatus.PUBLICADO, EventStatus.SIN_ALCANCE}),
 }
 
 

@@ -64,10 +64,24 @@ def test_publicado_puede_republicarse() -> None:
     assert publicado.transition(EventStatus.PUBLICADO).estado is EventStatus.PUBLICADO
 
 
-def test_descartado_es_terminal() -> None:
+def test_descartado_es_terminal_para_el_vigia() -> None:
+    """Ni P1 ni el repaso lo reabren: solo un reproceso forzado lo saca."""
+    from pipelines.p1_trigger.repaso import _SIN_REPASO
+    from pipelines.p1_trigger.run import _TERMINAL
+
+    assert EventStatus.DESCARTADO in _TERMINAL
+    assert EventStatus.DESCARTADO in _SIN_REPASO
     descartado = _estado(estado=EventStatus.DESCARTADO)
-    with pytest.raises(InvalidTransitionError):
-        descartado.transition(EventStatus.PUBLICADO)
+    for otro in (EventStatus.DETECTADO, EventStatus.PRELIMINAR, EventStatus.DEGRADADO):
+        with pytest.raises(InvalidTransitionError):
+            descartado.transition(otro)
+
+
+def test_el_rescate_forzado_de_un_descartado_puede_guardarse() -> None:
+    """`decide(forzar=True)` lo promete; la transicion tenia que permitirlo."""
+    descartado = _estado(estado=EventStatus.DESCARTADO)
+    assert descartado.transition(EventStatus.PUBLICADO).estado is EventStatus.PUBLICADO
+    assert descartado.transition(EventStatus.SIN_ALCANCE).estado is EventStatus.SIN_ALCANCE
 
 
 _US = {"shakemap_fuente": "us", "groundfailure_fuente": "us"}
