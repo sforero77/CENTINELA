@@ -11,8 +11,8 @@
     "lat": -10.8548
   },
   "inputs": {
-    "shakemap_version": 1,
-    "groundfailure_version": 1,
+    "shakemap_version": 2,
+    "groundfailure_version": 2,
     "exposure_manifest": "per-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -110,6 +110,9 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v1 (us) → v2 (us)",
+    "Ground Failure: v1 (us) → v2 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v0 → v1 (us)",
     "Ground Failure: v0 → v1 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior."
@@ -168,6 +171,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-21T00:46:02Z",
+  "generado_utc": "2026-11-21T02:31:03Z",
   "pipeline_version": "0.1.0"
 }
