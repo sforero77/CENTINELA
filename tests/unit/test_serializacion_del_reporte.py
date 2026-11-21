@@ -123,7 +123,7 @@ def test_todo_reporte_publicado_cumple_el_esquema() -> None:
 
     # Cada reporte contra el esquema que declara: los `1.0` siguen publicados
     # hasta que se reemitan, y no por eso dejan de tener contrato.
-    def validador(datos: dict) -> Draft202012Validator:
+    def validador(datos: dict[str, Any]) -> Draft202012Validator:
         version = str(datos.get("schema", "")).rsplit("/", 1)[-1]
         ruta = RAIZ / "schemas" / f"report-{version}.schema.json"
         return Draft202012Validator(json.loads(ruta.read_text(encoding="utf-8")))
