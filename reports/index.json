@@ -111,13 +111,13 @@
     "iso3": "COL",
     "lon": -76.2558,
     "lat": 4.8601,
-    "pop_mmi7p": 2434710.057361298,
-    "pop_mmi6p": 7132881.885651891,
+    "pop_mmi7p": 6389281.248894794,
+    "pop_mmi6p": 7948989.6265410455,
     "utc": "2026-08-10T12:34:28Z",
     "shakemap_version": 11,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-16T17:10:54Z"
+    "generado_utc": "2026-11-21T16:29:19Z"
   },
   {
     "usgs_id": "us6000t7zp",
