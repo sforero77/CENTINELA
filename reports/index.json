@@ -36,13 +36,13 @@
     "iso3": "PAN",
     "lon": -80.5728,
     "lat": 7.4777,
-    "pop_mmi7p": 1729.8265856597573,
-    "pop_mmi6p": 10191.903860664926,
+    "pop_mmi7p": 5605.908589266241,
+    "pop_mmi6p": 20177.970495875925,
     "utc": "2026-10-10T04:14:01Z",
     "shakemap_version": 5,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-10-30T11:34:39Z"
+    "generado_utc": "2026-11-21T16:28:36Z"
   },
   {
     "usgs_id": "pt26282001",
@@ -51,13 +51,13 @@
     "iso3": "PAN",
     "lon": -81.4515,
     "lat": 7.676,
-    "pop_mmi7p": 3063.6381340660155,
-    "pop_mmi6p": 24097.664407161996,
+    "pop_mmi7p": 8223.793668789789,
+    "pop_mmi6p": 47690.66886872053,
     "utc": "2026-10-09T20:25:40Z",
     "shakemap_version": 7,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-11-05T13:21:15Z"
+    "generado_utc": "2026-11-21T16:28:41Z"
   },
   {
     "usgs_id": "us6000u18x",
@@ -66,13 +66,13 @@
     "iso3": "PAN",
     "lon": -80.451,
     "lat": 7.4835,
-    "pop_mmi7p": 413.13725887797773,
-    "pop_mmi6p": 7164.6657645739615,
+    "pop_mmi7p": 4936.621721749194,
+    "pop_mmi6p": 11927.43067164626,
     "utc": "2026-10-09T18:37:46Z",
     "shakemap_version": 4,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-11-02T12:01:29Z"
+    "generado_utc": "2026-11-21T16:28:45Z"
   },
   {
     "usgs_id": "us6000u18t",
@@ -82,12 +82,12 @@
     "lon": -80.3171,
     "lat": 7.561,
     "pop_mmi7p": 0.0,
-    "pop_mmi6p": 1527.0027425317094,
+    "pop_mmi6p": 7932.270026732236,
     "utc": "2026-10-09T18:22:15Z",
     "shakemap_version": 4,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-11-02T12:01:25Z"
+    "generado_utc": "2026-11-21T16:28:49Z"
   },
   {
     "usgs_id": "pt26282000",

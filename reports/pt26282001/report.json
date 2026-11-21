@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "pt26282001",
     "mag": 6.6,
@@ -23,40 +23,40 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 24097.664407161996,
-    "pop_mmi7p": 3063.6381340660155,
-    "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 331.2308938133559,
-    "pop_65p_mmi6p": 3193.929415444763,
-    "bld_mmi6p": 14959.0,
-    "built_m2_mmi6p": 1868680.0,
-    "health_mmi6p": 4.0,
-    "edu_mmi6p": 8.0,
-    "road_km_mmi6p": 432.26057248116183,
-    "road_km_principal_mmi6p": 54.429472215325156,
-    "bld_mmi7p": 2086.0,
-    "built_m2_mmi7p": 183014.0,
-    "health_mmi7p": 0.0,
-    "edu_mmi7p": 2.0,
-    "road_km_mmi7p": 43.51553651420193,
-    "road_km_principal_mmi7p": 7.603891725212361,
+    "pop_mmi6p": 47690.66886872053,
+    "pop_mmi7p": 8223.793668789789,
+    "pop_mmi8p": 82.84287416934967,
+    "pop_65p_mmi7p": 1081.945162878021,
+    "pop_65p_mmi6p": 6729.060850781499,
+    "bld_mmi6p": 35064.0,
+    "built_m2_mmi6p": 4303086.0,
+    "health_mmi6p": 10.0,
+    "edu_mmi6p": 68.0,
+    "road_km_mmi6p": 1055.9953302298113,
+    "road_km_principal_mmi6p": 171.26103251941367,
+    "bld_mmi7p": 5785.0,
+    "built_m2_mmi7p": 609827.0,
+    "health_mmi7p": 3.0,
+    "edu_mmi7p": 3.0,
+    "road_km_mmi7p": 183.01194126943358,
+    "road_km_principal_mmi7p": 21.152972451891394,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 11176.151558168698
+    "pop_lq_alta": 13806.135984849185
   },
   "top_municipios": [
     {
       "adm2_id": "PA1312",
       "nombre": "Soná",
       "mmi_max": 7.5,
-      "pop_mmi7p": 3063.6381340660155,
-      "pop_banda": 3063.6381340660155
+      "pop_mmi7p": 8218.81562284939,
+      "pop_banda": 8218.81562284939
     },
     {
       "adm2_id": "PA1305",
       "nombre": "Las Palmas",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_mmi7p": 4.97804594039917,
+      "pop_banda": 4.97804594039917
     },
     {
       "adm2_id": "PA1307",
@@ -151,7 +151,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 5.9,
+    "pop_discrepancia_pct": 13.5,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -167,6 +167,16 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Recálculo con el mismo ShakeMap v7 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 24 mil → 48 mil",
+    "Población en MMI≥VII: 3.100 → 8.200",
+    "Población en MMI≥VIII: 0 → 83",
+    "Población de 65 años o más en MMI≥VII: 330 → 1.100",
+    "Edificaciones en MMI≥VII: 2.100 → 5.800",
+    "Sedes de salud en MMI≥VII: 0 → 3",
+    "Sedes educativas en MMI≥VII: 2 → 3",
+    "Población en cobertura areal alta por licuefacción: 11 mil → 14 mil",
     "ShakeMap: v5 (us) → v7 (us)",
     "Ground Failure: v4 (us) → v5 (us)",
     "Profundidad: 24 → 10 km",
@@ -256,6 +266,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-05T13:21:15Z",
+  "generado_utc": "2026-11-21T16:28:41Z",
   "pipeline_version": "0.1.0"
 }

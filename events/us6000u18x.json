@@ -18,7 +18,7 @@
     "detectado": "2026-10-09T18:50:22Z",
     "preliminar": "2026-10-09T18:50:55Z",
     "publicado": "2026-10-09T18:55:55Z",
-    "publicado_ultimo": "2026-11-02T12:01:32Z",
+    "publicado_ultimo": "2026-11-21T16:28:46Z",
     "usgs_origen": "2026-10-09T18:37:46Z"
   },
   "hashes": {},
@@ -30,6 +30,7 @@
     "Ground Failure v0 -> v1 (us)",
     "ShakeMap v1 (us) -> v2 (us)",
     "ShakeMap v2 (us) -> v3 (us)",
-    "ShakeMap v3 (us) -> v4 (us)"
+    "ShakeMap v3 (us) -> v4 (us)",
+    "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }
