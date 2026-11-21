@@ -1,0 +1,22 @@
+{
+  "usgs_id": "pt26325050",
+  "estado": "detectado",
+  "mag": 6.9,
+  "lon": -76.319,
+  "lat": -10.98,
+  "depth_km": 142.1,
+  "lugar": "22 km al ONO de Ondores, Perú",
+  "origen_utc": "2026-11-21T00:09:17Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-11-21T00:20:31Z",
+    "usgs_origen": "2026-11-21T00:09:17Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
