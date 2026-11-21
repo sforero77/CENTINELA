@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "pt26282000",
     "mag": 7.7,
@@ -23,135 +23,135 @@
   "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 295777.77794844494,
-    "pop_mmi7p": 20079.587912683375,
-    "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 3026.0452581523723,
-    "pop_65p_mmi6p": 42280.951920840926,
-    "bld_mmi6p": 209983.0,
-    "built_m2_mmi6p": 39393984.0,
-    "health_mmi6p": 231.0,
-    "edu_mmi6p": 579.0,
-    "road_km_mmi6p": 7342.194727509564,
-    "road_km_principal_mmi6p": 715.8468336327963,
-    "bld_mmi7p": 16771.0,
-    "built_m2_mmi7p": 2317003.0,
-    "health_mmi7p": 6.0,
-    "edu_mmi7p": 17.0,
-    "road_km_mmi7p": 853.9097981025247,
-    "road_km_principal_mmi7p": 110.37767698044742,
+    "pop_mmi6p": 543449.0714812388,
+    "pop_mmi7p": 70465.59893494844,
+    "pop_mmi8p": 9018.35054968018,
+    "pop_65p_mmi7p": 11539.934863298851,
+    "pop_65p_mmi6p": 73034.12502031474,
+    "bld_mmi6p": 346310.0,
+    "built_m2_mmi6p": 66016424.0,
+    "health_mmi6p": 269.0,
+    "edu_mmi6p": 810.0,
+    "road_km_mmi6p": 12308.061386056306,
+    "road_km_principal_mmi6p": 1298.0565127631742,
+    "bld_mmi7p": 56292.0,
+    "built_m2_mmi7p": 8637203.0,
+    "health_mmi7p": 15.0,
+    "edu_mmi7p": 76.0,
+    "road_km_mmi7p": 2434.9058530240422,
+    "road_km_principal_mmi7p": 233.17988925431553,
     "pop_ls_alta": 34.06986062787473,
-    "pop_lq_alta": 49967.831327310065
+    "pop_lq_alta": 78378.47316265875
   },
   "top_municipios": [
-    {
-      "adm2_id": "PA0907",
-      "nombre": "Tonosí",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 8713.73250337597,
-      "pop_banda": 8713.73250337597
-    },
     {
       "adm2_id": "PA1312",
       "nombre": "Soná",
       "mmi_max": 7.5,
-      "pop_mmi7p": 5911.267340946943,
-      "pop_banda": 5911.267340946943
-    },
-    {
-      "adm2_id": "PA1306",
-      "nombre": "Mariato",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 3599.807183854282,
-      "pop_banda": 3599.807183854282
-    },
-    {
-      "adm2_id": "PA1307",
-      "nombre": "Montijo",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 801.6747010927647,
-      "pop_banda": 801.6747010927647
-    },
-    {
-      "adm2_id": "PA0905",
-      "nombre": "Pedasí",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 797.8964978577569,
-      "pop_banda": 797.8964978577569
+      "pop_mmi7p": 21738.365646839608,
+      "pop_banda": 21738.365646839608
     },
     {
       "adm2_id": "PA0902",
       "nombre": "Las Tablas",
       "mmi_max": 7.0,
-      "pop_mmi7p": 174.15417015645653,
-      "pop_banda": 174.15417015645653
+      "pop_mmi7p": 11970.008732450195,
+      "pop_banda": 11970.008732450195
     },
     {
-      "adm2_id": "PA1311",
-      "nombre": "Santiago",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 81.0555153992027,
-      "pop_banda": 81.0555153992027
-    },
-    {
-      "adm2_id": "PA1308",
-      "nombre": "Río de Jesús",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA0906",
-      "nombre": "Pocrí",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA0704",
-      "nombre": "Ocú",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA0702",
-      "nombre": "Las Minas",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA1304",
-      "nombre": "La Mesa",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA0901",
-      "nombre": "Guararé",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PA0904",
-      "nombre": "Macaracas",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "adm2_id": "PA0907",
+      "nombre": "Tonosí",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 9717.322486060672,
+      "pop_banda": 9717.322486060672
     },
     {
       "adm2_id": "PA0903",
       "nombre": "Los Santos",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_mmi7p": 6226.283345398027,
+      "pop_banda": 6226.283345398027
+    },
+    {
+      "adm2_id": "PA1306",
+      "nombre": "Mariato",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 5121.918394671753,
+      "pop_banda": 5121.918394671753
+    },
+    {
+      "adm2_id": "PA1308",
+      "nombre": "Río de Jesús",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 4947.36571883969,
+      "pop_banda": 4947.36571883969
+    },
+    {
+      "adm2_id": "PA0905",
+      "nombre": "Pedasí",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 4150.974400614388,
+      "pop_banda": 4150.974400614388
+    },
+    {
+      "adm2_id": "PA1307",
+      "nombre": "Montijo",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 2114.848850653507,
+      "pop_banda": 2114.848850653507
+    },
+    {
+      "adm2_id": "PA0906",
+      "nombre": "Pocrí",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 1944.32911213208,
+      "pop_banda": 1944.32911213208
+    },
+    {
+      "adm2_id": "PA1311",
+      "nombre": "Santiago",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 1037.698218120262,
+      "pop_banda": 1037.698218120262
+    },
+    {
+      "adm2_id": "PA0901",
+      "nombre": "Guararé",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 649.5434614587575,
+      "pop_banda": 649.5434614587575
+    },
+    {
+      "adm2_id": "PA0904",
+      "nombre": "Macaracas",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 342.68510319758207,
+      "pop_banda": 342.68510319758207
+    },
+    {
+      "adm2_id": "PA0702",
+      "nombre": "Las Minas",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 286.5797597244382,
+      "pop_banda": 286.5797597244382
+    },
+    {
+      "adm2_id": "PA0704",
+      "nombre": "Ocú",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 210.01997159980237,
+      "pop_banda": 210.01997159980237
+    },
+    {
+      "adm2_id": "PA1304",
+      "nombre": "La Mesa",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 7.655733187682927,
+      "pop_banda": 7.655733187682927
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 22.5,
+    "pop_discrepancia_pct": 14.2,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -167,6 +167,16 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Recálculo con el mismo ShakeMap v15 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 300 mil → 540 mil",
+    "Población en MMI≥VII: 20 mil → 70 mil",
+    "Población en MMI≥VIII: 0 → 9.000",
+    "Población de 65 años o más en MMI≥VII: 3.000 → 12 mil",
+    "Edificaciones en MMI≥VII: 17 mil → 56 mil",
+    "Sedes de salud en MMI≥VII: 6 → 15",
+    "Sedes educativas en MMI≥VII: 17 → 76",
+    "Población en cobertura areal alta por licuefacción: 50 mil → 78 mil",
     "ShakeMap: v14 (us) → v15 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
     "ShakeMap: v12 (us) → v14 (us)",
@@ -336,6 +346,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-18T14:30:14Z",
+  "generado_utc": "2026-11-21T16:28:56Z",
   "pipeline_version": "0.1.0"
 }

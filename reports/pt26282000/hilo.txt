@@ -1,7 +1,7 @@
 1/4 Sismo M7,7 · 10 km al OSO de Pitaloza Arriba, Panamá (2026-10-09 17:56 UTC, 10 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
-2/4 Personas dentro de intensidad MMI≥6: 300 mil. Dentro de MMI≥7: 20 mil. Edificaciones en MMI≥7: 17 mil.
+2/4 Personas dentro de intensidad MMI≥VI: 540 mil. Dentro de MMI≥VII: 70 mil. Edificaciones en MMI≥VII: 56 mil.
 
-3/4 Municipios más expuestos (MMI≥7): Tonosí, Soná, Mariato.
+3/4 Municipios más expuestos (MMI≥VII): Soná, Las Tablas, Tonosí.
 
 4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://centinela.geoailatam.terrnova.com/?evento=pt26282000
