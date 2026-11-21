@@ -6,20 +6,20 @@
     "depth_km": 107.991,
     "utc": "2026-11-21T00:09:17Z",
     "lugar": "9 km al NE de Carhuamayo, Perú",
-    "pager_alert": "",
+    "pager_alert": "green",
     "lon": -75.9779,
     "lat": -10.8548
   },
   "inputs": {
-    "shakemap_version": 0,
-    "groundfailure_version": 0,
+    "shakemap_version": 1,
+    "groundfailure_version": 1,
     "exposure_manifest": "per-v0.5",
-    "modelo_deslizamiento": "",
-    "modelo_licuefaccion": "",
-    "shakemap_fuente": "",
-    "groundfailure_fuente": ""
+    "modelo_deslizamiento": "jessee_2018_model.tif",
+    "modelo_licuefaccion": "zhu_2017_general_model.tif",
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
-  "preliminar": true,
+  "preliminar": false,
   "radios": [
     {
       "radio_km": 25,
@@ -56,24 +56,64 @@
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 0.0
   },
-  "top_municipios": [],
+  "top_municipios": [
+    {
+      "adm2_id": "PE1205",
+      "nombre": "Junin",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE1901",
+      "nombre": "Pasco",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE1207",
+      "nombre": "Tarma",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE1902",
+      "nombre": "Daniel Alcides Carrion",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE1208",
+      "nombre": "Yauli",
+      "mmi_max": 5.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    }
+  ],
   "incertidumbre": {
     "pop_discrepancia_pct": null,
     "notas": []
   },
   "ground_failure_usgs": {
-    "ls_alerta_usgs": "",
-    "ls_pop_usgs": "",
-    "lq_alerta_usgs": "",
-    "lq_pop_usgs": ""
+    "ls_alerta_usgs": "green",
+    "ls_pop_usgs": "1",
+    "lq_alerta_usgs": "yellow",
+    "lq_pop_usgs": "300"
   },
   "descargas": {
     "geoparquet": "",
     "pmtiles": "",
-    "csv_adm2": "",
-    "mapa_png": ""
+    "csv_adm2": "adm2.csv",
+    "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "ShakeMap: v0 → v1 (us)",
+    "Ground Failure: v0 → v1 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior."
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -128,6 +168,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-21T00:26:00Z",
+  "generado_utc": "2026-11-21T00:46:02Z",
   "pipeline_version": "0.1.0"
 }

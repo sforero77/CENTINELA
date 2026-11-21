@@ -1,6 +1,6 @@
 {
   "usgs_id": "pt26325050",
-  "estado": "preliminar",
+  "estado": "publicado",
   "mag": 6.7,
   "lon": -75.9779,
   "lat": -10.8548,
@@ -8,14 +8,17 @@
   "lugar": "9 km al NE de Carhuamayo, Perú",
   "origen_utc": "2026-11-21T00:09:17Z",
   "versiones_procesadas": {
-    "shakemap": 0,
-    "groundfailure": 0
+    "shakemap": 1,
+    "groundfailure": 1,
+    "shakemap_fuente": "us",
+    "groundfailure_fuente": "us"
   },
   "timestamps": {
     "despachado": "2026-11-21T00:45:22Z",
     "detectado": "2026-11-21T00:20:31Z",
     "preliminar": "2026-11-21T00:21:02Z",
     "preliminar_ultimo": "2026-11-21T00:25:59Z",
+    "publicado": "2026-11-21T00:46:05Z",
     "usgs_origen": "2026-11-21T00:09:17Z"
   },
   "hashes": {},
@@ -23,6 +26,7 @@
   "backtest": false,
   "notas": [
     "sin ShakeMap disponible aun",
-    "sin ShakeMap disponible aun"
+    "sin ShakeMap disponible aun",
+    "ShakeMap v0 -> v1 (us)"
   ]
 }
