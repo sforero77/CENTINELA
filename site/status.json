@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-21T03:25:22Z",
+  "generado_utc": "2026-11-21T16:10:27Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -367,274 +367,10 @@
     "p50_min": 5.0,
     "p90_min": 5.0,
     "peor_min": 5.2,
-    "revisiones": 1739,
+    "revisiones": 1084,
     "latidos": 201
   },
   "latidos": [
-    {
-      "utc": "2026-11-15T15:25:20Z",
-      "revisados": 10,
-      "relevantes": 0,
-      "revisiones": 134
-    },
-    {
-      "utc": "2026-11-16T06:05:28Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 179
-    },
-    {
-      "utc": "2026-11-16T07:05:49Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-16T08:10:28Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-16T09:10:38Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-16T10:15:26Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-16T11:15:38Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-16T11:40:34Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 5
-    },
-    {
-      "utc": "2026-11-16T12:45:24Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-16T13:45:28Z",
-      "revisados": 8,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-16T14:45:38Z",
-      "revisados": 7,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-16T15:50:28Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-16T16:35:24Z",
-      "revisados": 10,
-      "relevantes": 0,
-      "revisiones": 9
-    },
-    {
-      "utc": "2026-11-16T17:30:31Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-16T18:30:29Z",
-      "revisados": 10,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-16T19:25:27Z",
-      "revisados": 10,
-      "relevantes": 0,
-      "revisiones": 11
-    },
-    {
-      "utc": "2026-11-16T20:30:26Z",
-      "revisados": 10,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-16T20:45:28Z",
-      "revisados": 10,
-      "relevantes": 0,
-      "revisiones": 3
-    },
-    {
-      "utc": "2026-11-16T21:45:25Z",
-      "revisados": 9,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-16T22:35:32Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 10
-    },
-    {
-      "utc": "2026-11-16T23:40:21Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-17T00:40:22Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T01:40:21Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-17T02:40:23Z",
-      "revisados": 12,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T03:40:23Z",
-      "revisados": 12,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T04:40:29Z",
-      "revisados": 12,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T05:45:20Z",
-      "revisados": 12,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-17T06:45:22Z",
-      "revisados": 12,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T07:45:20Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T08:45:19Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T09:45:21Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-17T10:45:21Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T11:45:30Z",
-      "revisados": 13,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T12:50:23Z",
-      "revisados": 13,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-17T13:50:32Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-17T14:55:21Z",
-      "revisados": 13,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-17T15:55:23Z",
-      "revisados": 13,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T16:55:25Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T17:55:23Z",
-      "revisados": 13,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T18:55:24Z",
-      "revisados": 13,
-      "relevantes": 0,
-      "revisiones": 13
-    },
-    {
-      "utc": "2026-11-17T19:55:21Z",
-      "revisados": 12,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T20:55:23Z",
-      "revisados": 13,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T21:55:22Z",
-      "revisados": 12,
-      "relevantes": 0,
-      "revisiones": 12
-    },
-    {
-      "utc": "2026-11-17T22:55:29Z",
-      "revisados": 11,
-      "relevantes": 0,
-      "revisiones": 12
-    },
     {
       "utc": "2026-11-18T00:00:28Z",
       "revisados": 11,
@@ -1568,6 +1304,270 @@
     {
       "utc": "2026-11-21T03:25:21Z",
       "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T03:40:25Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T04:00:33Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T04:20:19Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T04:35:21Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T04:50:22Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T05:10:23Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T05:25:33Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T05:45:24Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T06:00:25Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T06:15:25Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T06:30:29Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T06:45:30Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T07:05:30Z",
+      "revisados": 14,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T07:25:20Z",
+      "revisados": 14,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T07:40:23Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T08:00:28Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T08:20:29Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T08:40:23Z",
+      "revisados": 15,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T09:00:24Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T09:20:25Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T09:40:21Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T09:55:26Z",
+      "revisados": 14,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T10:15:20Z",
+      "revisados": 14,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T10:30:24Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T10:50:24Z",
+      "revisados": 11,
+      "relevantes": 1,
+      "revisiones": 5
+    },
+    {
+      "utc": "2026-11-21T11:10:30Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T11:30:26Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T11:50:23Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T12:10:20Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T12:25:20Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T12:40:26Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T13:00:27Z",
+      "revisados": 13,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T13:20:21Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T13:40:23Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T14:00:24Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T14:15:24Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T14:35:24Z",
+      "revisados": 11,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T14:50:25Z",
+      "revisados": 11,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T15:05:19Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T15:10:28Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 1
+    },
+    {
+      "utc": "2026-11-21T15:30:25Z",
+      "revisados": 11,
+      "relevantes": 1,
+      "revisiones": 4
+    },
+    {
+      "utc": "2026-11-21T15:45:23Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 3
+    },
+    {
+      "utc": "2026-11-21T15:50:29Z",
+      "revisados": 12,
+      "relevantes": 1,
+      "revisiones": 1
+    },
+    {
+      "utc": "2026-11-21T16:10:27Z",
+      "revisados": 12,
       "relevantes": 1,
       "revisiones": 4
     }
