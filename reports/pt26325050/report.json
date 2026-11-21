@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "pt26325050",
     "mag": 6.7,
@@ -20,33 +20,20 @@
     "groundfailure_fuente": "us"
   },
   "preliminar": false,
-  "radios": [
-    {
-      "radio_km": 25,
-      "pop": 36114.43809743831
-    },
-    {
-      "radio_km": 50,
-      "pop": 187792.49126480892
-    },
-    {
-      "radio_km": 100,
-      "pop": 692472.3872399558
-    }
-  ],
+  "radios": [],
   "backtest": false,
   "totales": {
-    "pop_mmi6p": 0.0,
+    "pop_mmi6p": 1787.167554935906,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 0.0,
-    "bld_mmi6p": 0.0,
-    "built_m2_mmi6p": 0.0,
-    "health_mmi6p": 0.0,
-    "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 0.0,
-    "road_km_principal_mmi6p": 0.0,
+    "pop_65p_mmi6p": 198.02680417872955,
+    "bld_mmi6p": 3195.0,
+    "built_m2_mmi6p": 392310.0,
+    "health_mmi6p": 2.0,
+    "edu_mmi6p": 7.0,
+    "road_km_mmi6p": 102.63342189661797,
+    "road_km_principal_mmi6p": 12.829646165748,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -54,22 +41,22 @@
     "road_km_mmi7p": 0.0,
     "road_km_principal_mmi7p": 0.0,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 0.0
+    "pop_lq_alta": 11.296311978716403
   },
   "top_municipios": [
-    {
-      "adm2_id": "PE1205",
-      "nombre": "Junin",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
     {
       "adm2_id": "PE1901",
       "nombre": "Pasco",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 1584.3084915298969
+    },
+    {
+      "adm2_id": "PE1205",
+      "nombre": "Junin",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 202.85906340600923
     },
     {
       "adm2_id": "PE1207",
@@ -94,7 +81,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": null,
+    "pop_discrepancia_pct": 30.7,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -110,6 +97,10 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Recálculo con el mismo ShakeMap v2 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 0 → 1.800",
+    "Población en cobertura areal alta por licuefacción: 0 → 11",
     "ShakeMap: v1 (us) → v2 (us)",
     "Ground Failure: v1 (us) → v2 (us)",
     "Ninguna cifra publicada cambia frente a la versión anterior.",
@@ -171,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-21T02:31:03Z",
+  "generado_utc": "2026-11-21T16:28:18Z",
   "pipeline_version": "0.1.0"
 }

@@ -19,7 +19,7 @@
     "preliminar": "2026-11-21T00:21:02Z",
     "preliminar_ultimo": "2026-11-21T00:25:59Z",
     "publicado": "2026-11-21T00:46:05Z",
-    "publicado_ultimo": "2026-11-21T02:31:06Z",
+    "publicado_ultimo": "2026-11-21T16:28:19Z",
     "usgs_origen": "2026-11-21T00:09:17Z"
   },
   "hashes": {},
@@ -29,6 +29,7 @@
     "sin ShakeMap disponible aun",
     "sin ShakeMap disponible aun",
     "ShakeMap v0 -> v1 (us)",
-    "ShakeMap v1 (us) -> v2 (us)"
+    "ShakeMap v1 (us) -> v2 (us)",
+    "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }

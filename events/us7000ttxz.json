@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000ttxz",
-  "estado": "publicado",
+  "estado": "sin_alcance",
   "mag": 6.4,
   "lon": -98.0105,
   "lat": -36.4649,
@@ -19,6 +19,7 @@
     "preliminar_ultimo": "2026-10-29T08:11:01Z",
     "publicado": "2026-10-29T08:31:05Z",
     "publicado_ultimo": "2026-11-12T12:56:12Z",
+    "sin_alcance": "2026-11-21T16:28:27Z",
     "usgs_origen": "2026-10-29T07:49:50Z"
   },
   "hashes": {},
@@ -32,6 +33,7 @@
     "ShakeMap v0 -> v1 (us)",
     "ShakeMap v1 (us) -> v2 (us)",
     "ShakeMap v2 (us) -> v3 (us)",
-    "ShakeMap v3 (us) -> v4 (us)"
+    "ShakeMap v3 (us) -> v4 (us)",
+    "reproceso forzado: el pipeline cambio, no los productos; sin alcance: la poblacion mas cercana esta a 1486 km del epicentro, bajo la clase VI (5,5)"
   ]
 }
