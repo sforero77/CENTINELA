@@ -1,15 +1,16 @@
 {
   "usgs_id": "us7000tdmp",
-  "estado": "descartado",
+  "estado": "sin_alcance",
   "mag": 5.6,
-  "lon": -93.0157,
-  "lat": 14.3228,
+  "lon": -93.2663,
+  "lat": 14.2517,
   "depth_km": 11.0,
-  "lugar": "77 km al SO de Puerto Madero, México",
+  "lugar": "104 km al OSO de Puerto Madero, México",
   "origen_utc": "2026-09-02T12:28:31Z",
   "versiones_procesadas": {
-    "shakemap": 6,
-    "groundfailure": 0
+    "shakemap": 7,
+    "groundfailure": 0,
+    "shakemap_fuente": "us"
   },
   "timestamps": {
     "descartado": "2026-10-05T16:11:59Z",
@@ -17,6 +18,7 @@
     "preliminar": "2026-09-02T12:50:54Z",
     "publicado": "2026-09-02T13:57:37Z",
     "publicado_ultimo": "2026-09-25T10:31:00Z",
+    "sin_alcance": "2026-11-21T16:29:03Z",
     "usgs_origen": "2026-09-02T12:28:31Z"
   },
   "hashes": {},
@@ -32,6 +34,7 @@
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "ShakeMap v4 -> v6",
-    "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos"
+    "epicentro en mar abierto, fuera de la caja de todos los paises cubiertos",
+    "reproceso forzado: el pipeline cambio, no los productos; sin alcance: la poblacion mas cercana esta a 101 km del epicentro, bajo la clase VI (5,5)"
   ]
 }

@@ -47,8 +47,12 @@ def _cifra(fila: dict[str, str], banda: int) -> float:
 
 
 def test_hay_reportes_que_comprobar() -> None:
-    """Si el glob se queda vacio, todo lo de abajo pasa sin mirar nada."""
-    assert len(REPORTES) >= 27
+    """Si el glob se queda vacio, todo lo de abajo pasa sin mirar nada.
+
+    Eran 27; desde `report/2.0` los sismos sin nadie en la clase VI no tienen
+    reporte y el catalogo quedo en 25.
+    """
+    assert len(REPORTES) >= 20
 
 
 @pytest.mark.parametrize("reporte", REPORTES, ids=_ids)

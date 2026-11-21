@@ -1,7 +1,7 @@
 1/4 Sismo M8,2 · Terremoto de Tehuantepec, México (2017) (2017-09-08 04:49 UTC, 47 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
 
-2/4 Personas dentro de intensidad MMI≥6: 760 mil. Edificaciones en MMI≥6: 450 mil.
+2/4 Personas dentro de intensidad MMI≥VI: 1,5 millones. Dentro de MMI≥VII: 65 mil. Edificaciones en MMI≥VII: 46 mil.
 
-3/4 Municipios más expuestos (MMI≥6): Heroica Ciudad de Juchitán de Zaragoza, Salina Cruz, Tonalá.
+3/4 Municipios más expuestos (MMI≥VII): Pijijiapan, San Francisco Ixhuatán, San Pedro Tapanatepec.
 
 4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://centinela.geoailatam.terrnova.com/?evento=us2000ahv0

@@ -2473,52 +2473,31 @@ def test_los_sismos_menores_obedecen_al_filtro_de_pais(pagina: Any) -> None:
     )
 
 
-def test_un_evento_sin_banda_ensena_radios_y_no_una_pared_de_ceros(pagina: Any) -> None:
+def test_un_sismo_sin_alcance_es_estrella_gris_y_no_una_pared_de_ceros(pagina: Any) -> None:
     """Puerto Madero (M5,6 a 71 km mar adentro) salia con todo en cero.
 
-    Personas, mayores, sedes de salud, educativas, edificaciones, vias: cero.
-    Y en el mismo `report.json` viajaban 614.310 personas a 100 km, que el
-    panel no enseñaba. En Bani eran **6.935.082**.
-
-    El panel ya tenia escrito el principio que incumplia, tres lineas encima de
-    la condicion mala: «Enseñar "MMI>=7: 0" seria una cifra falsa y creible».
-    Lo cumplia solo para el preliminar. `markdown.py` ya lo tenia arreglado
-    para los dos casos.
+    Personas, mayores, sedes de salud, educativas, edificaciones, vias: cero. El
+    arreglo de entonces fue enseñar los radios en vez de la pared de ceros.
+    Desde `report/2.0` (21-nov-2026) un sismo sin nadie en la clase VI no tiene
+    reporte: no esta en el selector, y su estrella gris dice que si se midio y
+    hasta donde llego. Es el caso que hizo cambiar la regla, con el M6,7 de
+    Carhuamayo.
     """
-    pagina.select_option("select", "us7000tdmp")
-    pagina.wait_for_timeout(1500)
+    sin_alcance = json.loads((RAIZ / "site" / "sin_alcance.json").read_text(encoding="utf-8"))
+    ids = {e["usgs_id"] for e in sin_alcance["eventos"]}
+    assert "us7000tdmp" in ids, "Puerto Madero ya no esta en sin_alcance: este caso dejo de servir"
 
-    titulo = pagina.locator("#titulo-metricas").inner_text()
-    assert "radio" in titulo.lower(), (
-        f"un evento sin banda deberia titular por radios y dice {titulo!r}"
-    )
+    opciones = pagina.locator("#selector-evento option").evaluate_all("os => os.map(o => o.value)")
+    assert "us7000tdmp" not in opciones, "un sismo sin alcance sigue ofreciendose como reporte"
 
-    # La cifra sale del reporte y no del dia en que se escribio la prueba: USGS
-    # relocalizo este epicentro 7 km mar adentro el 25-sep, el reporte se
-    # re-emitio con 206.583 a 100 km, y un "614" fijo dejo `visor.yml` en rojo
-    # seis dias con el panel ensenando exactamente lo que el dato dice.
-    radios = json.loads(
-        (RAIZ / "reports" / "us7000tdmp" / "report.json").read_text(encoding="utf-8")
-    )["radios"]
-    esperado = next(r["pop"] for r in radios if r["radio_km"] == 100)
-    assert esperado > 0, "el reporte ya no trae gente a 100 km: este caso dejo de servir"
-
-    detalle = pagina.locator("#detalle-metricas").inner_text()
-    encaje = re.search(r"([\d.,]+)\s*\n?\s*A 100 KM", detalle, re.IGNORECASE)
-    assert encaje, f"no aparece la poblacion dentro de los 100 km: {detalle!r}"
-    mostrado = int(re.sub(r"[.,]", "", encaje.group(1)))
-    assert abs(mostrado - esperado) <= max(1000, 0.01 * esperado), (
-        f"el panel dice {mostrado} a 100 km y el reporte {esperado:.0f}"
+    _esperar_capa(pagina, "observados")
+    pagina.wait_for_selector("#menores:not([hidden])", timeout=ESPERA_MS)
+    pagina.evaluate(
+        "() => { const d = document.querySelector('#menores details'); if (d) d.open = true; }"
     )
-    assert "sedes de salud" not in detalle, (
-        "sigue pintando las cifras de MMI>=7, que aqui son ceros inventados"
-    )
-
-    subtitulo = pagina.locator("#subtitulo-metricas").inner_text()
-    assert "no son bandas de intensidad" in subtitulo, (
-        "los radios se dan sin avisar de que no son intensidad: "
-        "un sismo hondo y uno superficial tienen el mismo circulo"
-    )
+    texto = pagina.locator("#lista-menores").inner_text()
+    assert "Sin alcance" in texto, f"la lista no distingue a los medidos sin alcance: {texto!r}"
+    assert "personas" not in texto, "la lista de sin alcance imprime una cifra de personas"
 
 
 def test_sin_ground_failure_el_terreno_lo_dice_en_vez_de_poner_cero(pagina: Any) -> None:
@@ -2528,7 +2507,9 @@ def test_sin_ground_failure_el_terreno_lo_dice_en_vez_de_poner_cero(pagina: Any)
     Se lee como "se miro y no hay nadie sobre suelo licuable". Lo que pasa es
     que no hubo con que mirar. Son siete reportes finales publicados.
     """
-    pagina.select_option("select", "us7000tdmp")
+    # Chiloe 2016: el ShakeMap es anterior al producto Ground Failure. Era
+    # Puerto Madero, que desde `report/2.0` no tiene reporte (sin_alcance).
+    pagina.select_option("select", "us10007mn3")
     pagina.wait_for_timeout(1500)
     pagina.evaluate("() => { document.getElementById('detalle-tecnico').open = true; }")
 
@@ -3384,7 +3365,9 @@ def test_un_evento_que_no_llega_a_mmi7_si_lo_dice(pagina: Any) -> None:
     """Y el caso para el que la nota se escribio sigue teniendola."""
     _esperar_capa(pagina, "epicentros")
     marca = _ahora(pagina)
-    pagina.select_option("select", "us2000ahv0")  # Tehuantepec: nadie en MMI≥7
+    # San Pablo, Guatemala: 3,7 M en la clase VI y nadie en la VII. Era
+    # Tehuantepec, que con la clase VII desde 6,5 (`report/2.0`) si la alcanza.
+    pagina.select_option("select", "us20009mbt")
     _esperar_capa(pagina, "celdas", desde=marca)
     pagina.wait_for_timeout(800)
 
@@ -3417,8 +3400,13 @@ def test_los_municipios_mas_expuestos_lo_estan(pagina: Any) -> None:
     valores = pagina.locator("#detalle-barras .barra-valor").all_inner_texts()
     assert all(v.strip() != "0" for v in valores), f"hay municipios en cero: {valores}"
 
-    # Y el primero es el que de verdad tiene mas gente dentro.
-    assert "Portoviejo" in filas[0], f"el mas expuesto no encabeza la lista: {filas[0]!r}"
+    # Y el primero es el que de verdad tiene mas gente dentro: el que encabeza
+    # el ranking del propio reporte (Portoviejo con las bandas literales de la
+    # 1.0; Santo Domingo con la clase VII desde 6,5).
+    primero = json.loads(
+        (RAIZ / "reports" / "us20005j32" / "report.json").read_text(encoding="utf-8")
+    )["top_municipios"][0]["nombre"]
+    assert primero in filas[0], f"el mas expuesto no encabeza la lista: {filas[0]!r}"
 
     # El titulo dice en que banda ordena. El `.md` siempre lo decia y el visor no.
     assert "MMI≥VII" in pagina.locator("#titulo-municipios").inner_text().upper()
@@ -4099,7 +4087,11 @@ def test_un_reporte_sin_reproceso_no_enseña_el_bloque(pagina: Any) -> None:
         for p in sorted((RAIZ / "reports").glob("*/report.json"))
         if not json.loads(p.read_text(encoding="utf-8")).get("changelog")
     ]
-    assert sin_cambios, "todos los reportes traen changelog: no hay caso que comprobar"
+    if not sin_cambios:
+        # Desde la reemision `report/2.0` del 21-nov-2026 los veinticinco traen
+        # changelog (el cambio de convencion). El caso vuelve con el primer
+        # reporte nuevo que se publique en vivo.
+        pytest.skip("todos los reportes publicados traen changelog tras la reemision 2.0")
 
     marca = _ahora(pagina)
     pagina.select_option("select", sin_cambios[0])

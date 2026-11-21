@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us6000tjl2",
     "mag": 7.4,
@@ -23,47 +23,68 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 7132881.885651891,
-    "pop_mmi7p": 2434710.057361298,
-    "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 297535.2836371795,
-    "pop_65p_mmi6p": 841100.4405862468,
-    "bld_mmi6p": 1268652.0,
-    "built_m2_mmi6p": 193996103.0,
-    "health_mmi6p": 1968.0,
-    "edu_mmi6p": 2556.0,
-    "road_km_mmi6p": 47028.54305176862,
-    "road_km_principal_mmi6p": 4658.743751850024,
-    "bld_mmi7p": 618471.0,
-    "built_m2_mmi7p": 76733321.0,
-    "health_mmi7p": 516.0,
-    "edu_mmi7p": 1145.0,
-    "road_km_mmi7p": 17286.108756238194,
-    "road_km_principal_mmi7p": 1909.4701142332908,
-    "pop_ls_alta": 0.0,
-    "pop_lq_alta": 1819146.2378107868
+    "pop_mmi6p": 7948989.6265410455,
+    "pop_mmi7p": 6389281.248894794,
+    "pop_mmi8p": 888979.97855845,
+    "pop_65p_mmi7p": 758477.7670031163,
+    "pop_65p_mmi6p": 930551.1412536987,
+    "bld_mmi6p": 1582509.0,
+    "built_m2_mmi6p": 225187751.0,
+    "health_mmi6p": 2050.0,
+    "edu_mmi6p": 3610.0,
+    "road_km_mmi6p": 60103.14915284459,
+    "road_km_principal_mmi6p": 5624.427248496018,
+    "bld_mmi7p": 1003011.0,
+    "built_m2_mmi7p": 164662691.0,
+    "health_mmi7p": 1860.0,
+    "edu_mmi7p": 2087.0,
+    "road_km_mmi7p": 32945.5071369769,
+    "road_km_principal_mmi7p": 3778.8982905931066,
+    "pop_ls_alta": 25.737434685230255,
+    "pop_lq_alta": 1859701.0139655443
   },
   "top_municipios": [
+    {
+      "adm2_id": "76001",
+      "nombre": "Santiago de Cali",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 2522563.0818931125,
+      "pop_banda": 2522563.0818931125
+    },
     {
       "adm2_id": "66001",
       "nombre": "Pereira",
       "mmi_max": 7.5,
-      "pop_mmi7p": 509366.9467531424,
-      "pop_banda": 509366.9467531424
+      "pop_mmi7p": 509828.57973875385,
+      "pop_banda": 509828.57973875385
     },
     {
       "adm2_id": "76109",
       "nombre": "Buenaventura",
       "mmi_max": 7.0,
-      "pop_mmi7p": 443852.2384215249,
-      "pop_banda": 443852.2384215249
+      "pop_mmi7p": 448693.3672702396,
+      "pop_banda": 448693.3672702396
+    },
+    {
+      "adm2_id": "17001",
+      "nombre": "Manizales",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 395822.74431854207,
+      "pop_banda": 395822.74431854207
     },
     {
       "adm2_id": "63001",
       "nombre": "Armenia",
       "mmi_max": 7.5,
-      "pop_mmi7p": 333333.3656698363,
-      "pop_banda": 333333.3656698363
+      "pop_mmi7p": 339900.03362934757,
+      "pop_banda": 339900.03362934757
+    },
+    {
+      "adm2_id": "76834",
+      "nombre": "Tuluá",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 268469.1486631017,
+      "pop_banda": 268469.1486631017
     },
     {
       "adm2_id": "66170",
@@ -71,6 +92,13 @@
       "mmi_max": 7.5,
       "pop_mmi7p": 181223.86692177504,
       "pop_banda": 181223.86692177504
+    },
+    {
+      "adm2_id": "76111",
+      "nombre": "Guadalajara de Buga",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 131890.47710520215,
+      "pop_banda": 131890.47710520215
     },
     {
       "adm2_id": "76147",
@@ -83,15 +111,29 @@
       "adm2_id": "27001",
       "nombre": "Quibdó",
       "mmi_max": 7.0,
-      "pop_mmi7p": 111316.16220397316,
-      "pop_banda": 111316.16220397316
+      "pop_mmi7p": 112309.14755431283,
+      "pop_banda": 112309.14755431283
     },
     {
       "adm2_id": "66682",
       "nombre": "Santa Rosa de Cabal",
       "mmi_max": 7.5,
-      "pop_mmi7p": 72566.73802877497,
-      "pop_banda": 72566.73802877497
+      "pop_mmi7p": 73091.07095898781,
+      "pop_banda": 73091.07095898781
+    },
+    {
+      "adm2_id": "63130",
+      "nombre": "Calarcá",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 72836.02777123824,
+      "pop_banda": 72836.02777123824
+    },
+    {
+      "adm2_id": "76892",
+      "nombre": "Yumbo",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 61028.68845421355,
+      "pop_banda": 61028.68845421355
     },
     {
       "adm2_id": "63401",
@@ -101,57 +143,15 @@
       "pop_banda": 54278.832213515416
     },
     {
-      "adm2_id": "76895",
-      "nombre": "Zarzal",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 39669.865389760584,
-      "pop_banda": 39669.865389760584
-    },
-    {
-      "adm2_id": "76020",
-      "nombre": "Alcalá",
+      "adm2_id": "17873",
+      "nombre": "Villamaría",
       "mmi_max": 7.0,
-      "pop_mmi7p": 37139.00253418367,
-      "pop_banda": 37139.00253418367
-    },
-    {
-      "adm2_id": "76400",
-      "nombre": "La Unión",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 34822.47236200515,
-      "pop_banda": 34822.47236200515
-    },
-    {
-      "adm2_id": "63470",
-      "nombre": "Montenegro",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 31681.55454718042,
-      "pop_banda": 31681.55454718042
-    },
-    {
-      "adm2_id": "63594",
-      "nombre": "Quimbaya",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 31506.350372412242,
-      "pop_banda": 31506.350372412242
-    },
-    {
-      "adm2_id": "17174",
-      "nombre": "Chinchiná",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 30360.095054543577,
-      "pop_banda": 30360.095054543577
-    },
-    {
-      "adm2_id": "63130",
-      "nombre": "Calarcá",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 26804.844380717725,
-      "pop_banda": 26804.844380717725
+      "pop_mmi7p": 53899.4139127247,
+      "pop_banda": 53899.4139127247
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 2.5,
+    "pop_discrepancia_pct": 0.2,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -167,6 +167,17 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Recálculo con el mismo ShakeMap v11 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 7,1 millones → 7,9 millones",
+    "Población en MMI≥VII: 2,4 millones → 6,4 millones",
+    "Población en MMI≥VIII: 0 → 890 mil",
+    "Población de 65 años o más en MMI≥VII: 300 mil → 760 mil",
+    "Edificaciones en MMI≥VII: 620 mil → 1 millón",
+    "Sedes de salud en MMI≥VII: 520 → 1.900",
+    "Sedes educativas en MMI≥VII: 1.100 → 2.100",
+    "Población en probabilidad alta de deslizamiento: 0 → 26",
+    "Población en cobertura areal alta por licuefacción: 1,8 millones → 1,9 millones",
     "ShakeMap: v10 → v11 (us)",
     "Profundidad: 108 → 116 km",
     "Epicentro: reubicado 5 km",
@@ -244,6 +255,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-16T17:10:54Z",
+  "generado_utc": "2026-11-21T16:29:19Z",
   "pipeline_version": "0.1.0"
 }

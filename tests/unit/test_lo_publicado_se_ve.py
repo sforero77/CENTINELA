@@ -104,16 +104,18 @@ def _eventos_sin_malla() -> list[str]:
 # --- Que haya con que comprobar ---------------------------------------------
 
 
-def test_hay_eventos_sin_malla_en_el_catalogo() -> None:
-    """Sin ellos, todo lo de abajo pasaria en vacio y nadie lo notaria.
+def test_ningun_reporte_publicado_se_queda_sin_malla() -> None:
+    """La premisa se invirtio el 21-nov-2026 (`report/2.0`).
 
-    Es el modo de fallo que este proyecto persigue: un guardia que no falla
-    porque no mira nada. Si algun dia el catalogo no tiene ni uno sera porque
-    cambio el catalogo, no porque el problema desaparezca — basta un sismo mar
-    adentro, que en esta region es la mitad.
+    Esta prueba exigia lo contrario —que hubiera eventos sin malla, para que las
+    de abajo no pasaran en vacio—, porque un sismo mar adentro publicaba un
+    reporte de ceros con isolineas y ni un hexagono. Desde la 2.0 ese sismo no
+    tiene reporte: pasa a `sin_alcance` y se enseña como estrella gris. Un
+    reporte publicado sin malla es ahora el fallo, no el caso a vigilar. Las
+    pruebas parametrizadas de abajo quedan sin casos, que es lo correcto.
     """
-    assert _eventos_sin_malla(), (
-        "ningun reporte publicado se quedo sin malla: estas pruebas no estan comprobando nada"
+    assert not _eventos_sin_malla(), (
+        "hay reportes publicados sin una celda: deberian estar en sin_alcance"
     )
 
 

@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us7000nr0v",
     "mag": 6.8,
@@ -23,47 +23,47 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 173017.51925783232,
-    "pop_mmi7p": 3291.1863567195833,
+    "pop_mmi6p": 683306.3180096708,
+    "pop_mmi7p": 28744.9690137133,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 520.7828947336084,
-    "pop_65p_mmi6p": 27391.58132363326,
-    "bld_mmi6p": 96169.0,
-    "built_m2_mmi6p": 3579186.0,
-    "health_mmi6p": 28.0,
-    "edu_mmi6p": 99.0,
-    "road_km_mmi6p": 2926.6490569264583,
-    "road_km_principal_mmi6p": 266.64621956303074,
-    "bld_mmi7p": 2054.0,
-    "built_m2_mmi7p": 149238.0,
-    "health_mmi7p": 1.0,
-    "edu_mmi7p": 7.0,
-    "road_km_mmi7p": 77.5681451639133,
-    "road_km_principal_mmi7p": 35.49399415004538,
+    "pop_65p_mmi7p": 4550.8856313201995,
+    "pop_65p_mmi6p": 108190.35694712398,
+    "bld_mmi6p": 261896.0,
+    "built_m2_mmi6p": 15255041.0,
+    "health_mmi6p": 97.0,
+    "edu_mmi6p": 325.0,
+    "road_km_mmi6p": 6389.414907728938,
+    "road_km_principal_mmi6p": 612.1609147021233,
+    "bld_mmi7p": 10980.0,
+    "built_m2_mmi7p": 1086149.0,
+    "health_mmi7p": 8.0,
+    "edu_mmi7p": 19.0,
+    "road_km_mmi7p": 369.8882146999849,
+    "road_km_principal_mmi7p": 67.65676980405267,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 36844.000733979046
+    "pop_lq_alta": 37430.25855095498
   },
   "top_municipios": [
     {
       "adm2_id": "CU0511",
       "nombre": "Pilón",
       "mmi_max": 7.0,
-      "pop_mmi7p": 2960.987789724022,
-      "pop_banda": 2960.987789724022
+      "pop_mmi7p": 28165.160403616726,
+      "pop_banda": 28165.160403616726
     },
     {
       "adm2_id": "CU1502",
       "nombre": "Guamá",
       "mmi_max": 7.0,
-      "pop_mmi7p": 275.445321418345,
-      "pop_banda": 275.445321418345
+      "pop_mmi7p": 511.2650096863508,
+      "pop_banda": 511.2650096863508
     },
     {
       "adm2_id": "CU0501",
       "nombre": "Bartolomé Masó",
       "mmi_max": 7.0,
-      "pop_mmi7p": 54.75324557721615,
-      "pop_banda": 54.75324557721615
+      "pop_mmi7p": 68.54360041022301,
+      "pop_banda": 68.54360041022301
     },
     {
       "adm2_id": "CU0504",
@@ -151,7 +151,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 0.8,
+    "pop_discrepancia_pct": 5.1,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -167,6 +167,14 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Recálculo con el mismo ShakeMap v9 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 170 mil → 680 mil",
+    "Población en MMI≥VII: 3.300 → 29 mil",
+    "Población de 65 años o más en MMI≥VII: 520 → 4.600",
+    "Edificaciones en MMI≥VII: 2.100 → 11 mil",
+    "Sedes de salud en MMI≥VII: 1 → 8",
+    "Sedes educativas en MMI≥VII: 7 → 19",
     "Edificaciones en MMI≥7: 2.000 → 2.100"
   ],
   "licencia": {
@@ -223,6 +231,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:22:54Z",
+  "generado_utc": "2026-11-21T16:29:49Z",
   "pipeline_version": "0.1.0"
 }

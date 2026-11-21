@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us60003sc0",
     "mag": 8.0,
@@ -23,96 +23,96 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 1051686.814353569,
-    "pop_mmi7p": 247720.08142531104,
-    "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 14581.08284770895,
-    "pop_65p_mmi6p": 68753.60166817889,
-    "bld_mmi6p": 563575.0,
-    "built_m2_mmi6p": 37740751.0,
-    "health_mmi6p": 461.0,
-    "edu_mmi6p": 4416.0,
-    "road_km_mmi6p": 11234.89771014458,
-    "road_km_principal_mmi6p": 1358.4708114202076,
-    "bld_mmi7p": 131581.0,
-    "built_m2_mmi7p": 8296037.0,
-    "health_mmi7p": 125.0,
-    "edu_mmi7p": 1343.0,
-    "road_km_mmi7p": 2199.5383576165927,
-    "road_km_principal_mmi7p": 189.6586678996764,
+    "pop_mmi6p": 2069062.3598551652,
+    "pop_mmi7p": 523031.4563072156,
+    "pop_mmi8p": 88007.06057507824,
+    "pop_65p_mmi7p": 31216.694570815165,
+    "pop_65p_mmi6p": 141382.3519519631,
+    "bld_mmi6p": 992099.0,
+    "built_m2_mmi6p": 69436184.0,
+    "health_mmi6p": 713.0,
+    "edu_mmi6p": 6977.0,
+    "road_km_mmi6p": 19071.116285839726,
+    "road_km_principal_mmi6p": 2187.1532980234138,
+    "bld_mmi7p": 261485.0,
+    "built_m2_mmi7p": 17525946.0,
+    "health_mmi7p": 239.0,
+    "edu_mmi7p": 2440.0,
+    "road_km_mmi7p": 5279.297197833183,
+    "road_km_principal_mmi7p": 570.8919793362425,
     "pop_ls_alta": 35.836039489135146,
-    "pop_lq_alta": 334307.7655900852
+    "pop_lq_alta": 336715.50639472203
   },
   "top_municipios": [
     {
       "adm2_id": "PE1602",
       "nombre": "Alto Amazonas",
       "mmi_max": 7.5,
-      "pop_mmi7p": 113962.07581926323,
-      "pop_banda": 113962.07581926323
-    },
-    {
-      "adm2_id": "PE1606",
-      "nombre": "Ucayali",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 38301.13002568111,
-      "pop_banda": 38301.13002568111
-    },
-    {
-      "adm2_id": "PE1605",
-      "nombre": "Requena",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 29286.416522487998,
-      "pop_banda": 29286.416522487998
-    },
-    {
-      "adm2_id": "PE1607",
-      "nombre": "Datem del Marañon",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 23584.02925195545,
-      "pop_banda": 23584.02925195545
-    },
-    {
-      "adm2_id": "PE1603",
-      "nombre": "Loreto",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 16519.64585837722,
-      "pop_banda": 16519.64585837722
+      "pop_mmi7p": 128401.71614774503,
+      "pop_banda": 128401.71614774503
     },
     {
       "adm2_id": "PE2209",
       "nombre": "San Martin",
       "mmi_max": 7.5,
-      "pop_mmi7p": 14642.728215608746,
-      "pop_banda": 14642.728215608746
+      "pop_mmi7p": 76387.48615792952,
+      "pop_banda": 76387.48615792952
     },
     {
-      "adm2_id": "PE2205",
-      "nombre": "Lamas",
+      "adm2_id": "PE1606",
+      "nombre": "Ucayali",
       "mmi_max": 7.5,
-      "pop_mmi7p": 11424.05573193729,
-      "pop_banda": 11424.05573193729
+      "pop_mmi7p": 73503.8545941282,
+      "pop_banda": 73503.8545941282
     },
     {
-      "adm2_id": "PE2203",
-      "nombre": "El Dorado",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "PE2202",
-      "nombre": "Bellavista",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "adm2_id": "PE1605",
+      "nombre": "Requena",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 63356.76556152478,
+      "pop_banda": 63356.76556152478
     },
     {
       "adm2_id": "PE2207",
       "nombre": "Picota",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_mmi7p": 52341.351441005245,
+      "pop_banda": 52341.351441005245
+    },
+    {
+      "adm2_id": "PE1607",
+      "nombre": "Datem del Marañon",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 39593.741833459586,
+      "pop_banda": 39593.741833459586
+    },
+    {
+      "adm2_id": "PE2202",
+      "nombre": "Bellavista",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 36035.57964023389,
+      "pop_banda": 36035.57964023389
+    },
+    {
+      "adm2_id": "PE1603",
+      "nombre": "Loreto",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 30976.655625993386,
+      "pop_banda": 30976.655625993386
+    },
+    {
+      "adm2_id": "PE2205",
+      "nombre": "Lamas",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 16989.666351808235,
+      "pop_banda": 16989.666351808235
+    },
+    {
+      "adm2_id": "PE2203",
+      "nombre": "El Dorado",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 5444.638953387737,
+      "pop_banda": 5444.638953387737
     },
     {
       "adm2_id": "PE2501",
@@ -151,7 +151,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 2.8,
+    "pop_discrepancia_pct": 6.7,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -166,7 +166,18 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 1,1 millones → 2,1 millones",
+    "Población en MMI≥VII: 250 mil → 520 mil",
+    "Población en MMI≥VIII: 0 → 88 mil",
+    "Población de 65 años o más en MMI≥VII: 15 mil → 31 mil",
+    "Edificaciones en MMI≥VII: 130 mil → 260 mil",
+    "Sedes de salud en MMI≥VII: 120 → 240",
+    "Sedes educativas en MMI≥VII: 1.300 → 2.400",
+    "Población en cobertura areal alta por licuefacción: 330 mil → 340 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -221,6 +232,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:18:58Z",
+  "generado_utc": "2026-11-21T16:30:57Z",
   "pipeline_version": "0.1.0"
 }

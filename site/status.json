@@ -1,21 +1,21 @@
 {
-  "generado_utc": "2026-11-21T16:50:28Z",
+  "generado_utc": "2026-11-21T16:51:36Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
     "medido_contra": "desde_deteccion"
   },
   "medido": {
-    "eventos_publicados": 13,
-    "backtests_excluidos": 25,
-    "p50_min": 23.4,
-    "p95_min": 62.8,
-    "peor_min": 95.1,
+    "eventos_publicados": 7,
+    "backtests_excluidos": 18,
+    "p50_min": 21.9,
+    "p95_min": 36.3,
+    "peor_min": 36.8,
     "desde_deteccion": {
-      "eventos": 13,
-      "p50_min": 5.7,
-      "p95_min": 43.8,
-      "peor_min": 70.6
+      "eventos": 7,
+      "p50_min": 5.6,
+      "p95_min": 25.8,
+      "peor_min": 25.9
     }
   },
   "eventos": [
@@ -26,43 +26,7 @@
       "minutos": 36.8,
       "backtest": false,
       "shakemap": 2,
-      "actualizado_utc": "2026-11-21T02:31:06Z"
-    },
-    {
-      "usgs_id": "us7000tyy8",
-      "origen_utc": "2026-11-18T06:07:42Z",
-      "publicado_utc": "2026-11-18T06:31:05Z",
-      "minutos": 23.4,
-      "backtest": false,
-      "shakemap": 4,
-      "actualizado_utc": "2026-11-19T14:31:18Z"
-    },
-    {
-      "usgs_id": "us7000ty1a",
-      "origen_utc": "2026-11-13T16:43:02Z",
-      "publicado_utc": "2026-11-13T17:06:07Z",
-      "minutos": 23.1,
-      "backtest": false,
-      "shakemap": 4,
-      "actualizado_utc": "2026-11-19T14:31:25Z"
-    },
-    {
-      "usgs_id": "us7000txb8",
-      "origen_utc": "2026-11-10T14:54:17Z",
-      "publicado_utc": "2026-11-10T15:21:13Z",
-      "minutos": 26.9,
-      "backtest": false,
-      "shakemap": 6,
-      "actualizado_utc": "2026-11-12T12:56:07Z"
-    },
-    {
-      "usgs_id": "us7000ttxz",
-      "origen_utc": "2026-10-29T07:49:50Z",
-      "publicado_utc": "2026-10-29T08:31:05Z",
-      "minutos": 41.2,
-      "backtest": false,
-      "shakemap": 4,
-      "actualizado_utc": "2026-11-12T12:56:12Z"
+      "actualizado_utc": "2026-11-21T16:28:19Z"
     },
     {
       "usgs_id": "us6000u1wn",
@@ -71,7 +35,7 @@
       "minutos": 20.2,
       "backtest": false,
       "shakemap": 5,
-      "actualizado_utc": "2026-11-02T17:20:17Z"
+      "actualizado_utc": "2026-11-21T16:28:32Z"
     },
     {
       "usgs_id": "us6000u1cf",
@@ -80,7 +44,7 @@
       "minutos": 21.9,
       "backtest": false,
       "shakemap": 5,
-      "actualizado_utc": "2026-10-30T11:34:41Z"
+      "actualizado_utc": "2026-11-21T16:28:37Z"
     },
     {
       "usgs_id": "pt26282001",
@@ -89,7 +53,7 @@
       "minutos": 30.3,
       "backtest": false,
       "shakemap": 7,
-      "actualizado_utc": "2026-11-05T13:21:17Z"
+      "actualizado_utc": "2026-11-21T16:28:42Z"
     },
     {
       "usgs_id": "us6000u18x",
@@ -98,7 +62,7 @@
       "minutos": 18.1,
       "backtest": false,
       "shakemap": 4,
-      "actualizado_utc": "2026-11-02T12:01:32Z"
+      "actualizado_utc": "2026-11-21T16:28:46Z"
     },
     {
       "usgs_id": "us6000u18t",
@@ -107,7 +71,7 @@
       "minutos": 18.9,
       "backtest": false,
       "shakemap": 4,
-      "actualizado_utc": "2026-11-02T12:01:26Z"
+      "actualizado_utc": "2026-11-21T16:28:50Z"
     },
     {
       "usgs_id": "pt26282000",
@@ -116,25 +80,7 @@
       "minutos": 35.2,
       "backtest": false,
       "shakemap": 15,
-      "actualizado_utc": "2026-11-18T14:30:17Z"
-    },
-    {
-      "usgs_id": "us6000tymj",
-      "origen_utc": "2026-09-30T21:55:27Z",
-      "publicado_utc": "2026-09-30T22:16:01Z",
-      "minutos": 20.6,
-      "backtest": false,
-      "shakemap": 7,
-      "actualizado_utc": "2026-11-02T17:19:53Z"
-    },
-    {
-      "usgs_id": "us7000tdms",
-      "origen_utc": "2026-09-02T12:35:56Z",
-      "publicado_utc": "2026-09-02T14:11:03Z",
-      "minutos": 95.1,
-      "backtest": false,
-      "shakemap": 4,
-      "actualizado_utc": "2026-11-02T17:23:10Z"
+      "actualizado_utc": "2026-11-21T16:28:57Z"
     },
     {
       "usgs_id": "us6000tjl2",
@@ -143,7 +89,7 @@
       "minutos": 34011.1,
       "backtest": true,
       "shakemap": 11,
-      "actualizado_utc": "2026-11-16T17:10:57Z"
+      "actualizado_utc": "2026-11-21T16:29:20Z"
     },
     {
       "usgs_id": "us6000t7zp",
@@ -152,7 +98,7 @@
       "minutos": 101120.6,
       "backtest": true,
       "shakemap": 16,
-      "actualizado_utc": "2026-11-02T17:19:44Z"
+      "actualizado_utc": "2026-11-21T16:29:31Z"
     },
     {
       "usgs_id": "us6000t7zc",
@@ -161,25 +107,7 @@
       "minutos": 101120.8,
       "backtest": true,
       "shakemap": 9,
-      "actualizado_utc": "2026-11-02T17:19:18Z"
-    },
-    {
-      "usgs_id": "pr2025175000",
-      "origen_utc": "2025-06-24T02:45:43Z",
-      "publicado_utc": "2026-09-04T20:30:15Z",
-      "minutos": 630344.5,
-      "backtest": true,
-      "shakemap": 8,
-      "actualizado_utc": "2026-11-02T17:14:00Z"
-    },
-    {
-      "usgs_id": "pr2025056002",
-      "origen_utc": "2025-02-25T05:48:55Z",
-      "publicado_utc": "2026-09-04T20:30:12Z",
-      "minutos": 801521.3,
-      "backtest": true,
-      "shakemap": 11,
-      "actualizado_utc": "2026-11-02T17:13:43Z"
+      "actualizado_utc": "2026-11-21T16:29:40Z"
     },
     {
       "usgs_id": "us7000nr0v",
@@ -188,16 +116,7 @@
       "minutos": 952476.1,
       "backtest": true,
       "shakemap": 9,
-      "actualizado_utc": "2026-11-02T17:22:55Z"
-    },
-    {
-      "usgs_id": "us7000kg9g",
-      "origen_utc": "2023-07-17T03:05:11Z",
-      "publicado_utc": "2026-09-05T01:25:42Z",
-      "minutos": 1650140.5,
-      "backtest": true,
-      "shakemap": 11,
-      "actualizado_utc": "2026-11-02T17:22:34Z"
+      "actualizado_utc": "2026-11-21T16:29:50Z"
     },
     {
       "usgs_id": "us7000jl3s",
@@ -206,16 +125,7 @@
       "minutos": 1820773.0,
       "backtest": true,
       "shakemap": 7,
-      "actualizado_utc": "2026-11-02T17:22:05Z"
-    },
-    {
-      "usgs_id": "us6000hf75",
-      "origen_utc": "2022-04-21T07:42:46Z",
-      "publicado_utc": "2026-09-03T03:25:11Z",
-      "minutos": 2297982.4,
-      "backtest": true,
-      "shakemap": 6,
-      "actualizado_utc": "2026-11-02T17:19:14Z"
+      "actualizado_utc": "2026-11-21T16:30:00Z"
     },
     {
       "usgs_id": "us7000f93v",
@@ -224,7 +134,7 @@
       "minutos": 2622338.0,
       "backtest": true,
       "shakemap": 7,
-      "actualizado_utc": "2026-11-02T17:21:42Z"
+      "actualizado_utc": "2026-11-21T16:30:10Z"
     },
     {
       "usgs_id": "us7000d18q",
@@ -233,7 +143,7 @@
       "minutos": 2956359.3,
       "backtest": true,
       "shakemap": 8,
-      "actualizado_utc": "2026-11-02T17:21:35Z"
+      "actualizado_utc": "2026-11-21T16:30:16Z"
     },
     {
       "usgs_id": "us7000455l",
@@ -242,7 +152,7 @@
       "minutos": 3781321.7,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:21:01Z"
+      "actualizado_utc": "2026-11-21T16:30:21Z"
     },
     {
       "usgs_id": "us70003t2n",
@@ -251,7 +161,7 @@
       "minutos": 3819982.0,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:20:40Z"
+      "actualizado_utc": "2026-11-21T16:30:27Z"
     },
     {
       "usgs_id": "us60003sc0",
@@ -260,16 +170,7 @@
       "minutos": 3825824.5,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:19:00Z"
-    },
-    {
-      "usgs_id": "us1000jg5z",
-      "origen_utc": "2019-03-15T05:03:50Z",
-      "publicado_utc": "2026-09-05T01:25:36Z",
-      "minutos": 3932421.8,
-      "backtest": true,
-      "shakemap": 5,
-      "actualizado_utc": "2026-11-02T17:15:56Z"
+      "actualizado_utc": "2026-11-21T16:30:58Z"
     },
     {
       "usgs_id": "us2000j6hy",
@@ -278,7 +179,7 @@
       "minutos": 4007632.3,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:18:04Z"
+      "actualizado_utc": "2026-11-21T16:31:10Z"
     },
     {
       "usgs_id": "us1000gez7",
@@ -287,7 +188,7 @@
       "minutos": 4225312.8,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:15:40Z"
+      "actualizado_utc": "2026-11-21T16:31:20Z"
     },
     {
       "usgs_id": "us2000cjfy",
@@ -296,16 +197,7 @@
       "minutos": 4541406.2,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:17:40Z"
-    },
-    {
-      "usgs_id": "us1000c2zy",
-      "origen_utc": "2018-01-10T02:51:33Z",
-      "publicado_utc": "2026-09-03T03:24:18Z",
-      "minutos": 4547552.8,
-      "backtest": true,
-      "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:15:12Z"
+      "actualizado_utc": "2026-11-21T16:31:24Z"
     },
     {
       "usgs_id": "us2000bmhe",
@@ -314,7 +206,7 @@
       "minutos": 4631096.3,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:17:21Z"
+      "actualizado_utc": "2026-11-21T16:31:32Z"
     },
     {
       "usgs_id": "us2000ahv0",
@@ -323,7 +215,7 @@
       "minutos": 4725995.7,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:17:12Z"
+      "actualizado_utc": "2026-11-21T16:31:46Z"
     },
     {
       "usgs_id": "us20009mbt",
@@ -332,7 +224,7 @@
       "minutos": 4849675.6,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:16:45Z"
+      "actualizado_utc": "2026-11-21T16:31:50Z"
     },
     {
       "usgs_id": "us10007mn3",
@@ -341,7 +233,7 @@
       "minutos": 5095501.8,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:14:47Z"
+      "actualizado_utc": "2026-11-21T16:31:54Z"
     },
     {
       "usgs_id": "us20005j32",
@@ -350,16 +242,7 @@
       "minutos": 5459246.2,
       "backtest": true,
       "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:16:34Z"
-    },
-    {
-      "usgs_id": "usp000jd2q",
-      "origen_utc": "2012-01-05T09:35:32Z",
-      "publicado_utc": "2026-09-03T03:25:58Z",
-      "minutos": 7710830.4,
-      "backtest": true,
-      "shakemap": 1,
-      "actualizado_utc": "2026-11-02T17:23:41Z"
+      "actualizado_utc": "2026-11-21T16:32:11Z"
     }
   ],
   "cadencia": {
@@ -367,8 +250,8 @@
     "p50_min": 5.0,
     "p90_min": 5.0,
     "peor_min": 5.2,
-    "revisiones": 1042,
-    "latidos": 201
+    "revisiones": 1054,
+    "latidos": 202
   },
   "latidos": [
     {

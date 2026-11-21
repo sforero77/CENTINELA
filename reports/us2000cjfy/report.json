@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us2000cjfy",
     "mag": 7.1,
@@ -23,23 +23,23 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 36933.04225536436,
-    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 54551.06368667912,
+    "pop_mmi7p": 9593.219939038157,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 3059.6393280048005,
-    "bld_mmi6p": 40910.0,
-    "built_m2_mmi6p": 2493102.0,
-    "health_mmi6p": 13.0,
-    "edu_mmi6p": 71.0,
-    "road_km_mmi6p": 1698.6734140263245,
-    "road_km_principal_mmi6p": 337.692243692116,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
-    "health_mmi7p": 0.0,
-    "edu_mmi7p": 0.0,
-    "road_km_mmi7p": 0.0,
-    "road_km_principal_mmi7p": 0.0,
+    "pop_65p_mmi7p": 994.9199770534559,
+    "pop_65p_mmi6p": 4393.920414509998,
+    "bld_mmi6p": 73790.0,
+    "built_m2_mmi6p": 4010646.0,
+    "health_mmi6p": 26.0,
+    "edu_mmi6p": 151.0,
+    "road_km_mmi6p": 3735.572385020403,
+    "road_km_principal_mmi6p": 630.0924874936701,
+    "bld_mmi7p": 13133.0,
+    "built_m2_mmi7p": 710243.0,
+    "health_mmi7p": 5.0,
+    "edu_mmi7p": 17.0,
+    "road_km_mmi7p": 492.24180039863234,
+    "road_km_principal_mmi7p": 155.50505078888384,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 0.0
   },
@@ -48,19 +48,12 @@
       "adm2_id": "PE0403",
       "nombre": "Caraveli",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 24069.96234550327
+      "pop_mmi7p": 9593.219939038157,
+      "pop_banda": 9593.219939038157
     },
     {
       "adm2_id": "PE1103",
       "nombre": "Nasca",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 12863.079909861088
-    },
-    {
-      "adm2_id": "PE0507",
-      "nombre": "Parinacochas",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -68,6 +61,13 @@
     {
       "adm2_id": "PE0506",
       "nombre": "Lucanas",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "PE0507",
+      "nombre": "Parinacochas",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
       "pop_banda": 0.0
@@ -88,7 +88,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 11.7,
+    "pop_discrepancia_pct": 16.8,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -103,7 +103,16 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 37 mil → 55 mil",
+    "Población en MMI≥VII: 0 → 9.600",
+    "Población de 65 años o más en MMI≥VII: 0 → 990",
+    "Edificaciones en MMI≥VII: 0 → 13 mil",
+    "Sedes de salud en MMI≥VII: 0 → 5",
+    "Sedes educativas en MMI≥VII: 0 → 17"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -158,6 +167,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:17:39Z",
+  "generado_utc": "2026-11-21T16:31:24Z",
   "pipeline_version": "0.1.0"
 }

@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us2000ahv0",
     "mag": 8.2,
@@ -23,135 +23,135 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 760856.2383539008,
-    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 1475537.9253813361,
+    "pop_mmi7p": 65293.23618813697,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 71430.6313938922,
-    "bld_mmi6p": 451565.0,
-    "built_m2_mmi6p": 71886869.0,
-    "health_mmi6p": 231.0,
-    "edu_mmi6p": 334.0,
-    "road_km_mmi6p": 10458.772576290885,
-    "road_km_principal_mmi6p": 894.7984190106822,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
-    "health_mmi7p": 0.0,
-    "edu_mmi7p": 0.0,
-    "road_km_mmi7p": 0.0,
-    "road_km_principal_mmi7p": 0.0,
-    "pop_ls_alta": 2061.6080413851887,
-    "pop_lq_alta": 360767.28644302784
+    "pop_65p_mmi7p": 6479.027841335215,
+    "pop_65p_mmi6p": 135089.16797748354,
+    "bld_mmi6p": 887631.0,
+    "built_m2_mmi6p": 140887086.0,
+    "health_mmi6p": 251.0,
+    "edu_mmi6p": 421.0,
+    "road_km_mmi6p": 21126.61314078321,
+    "road_km_principal_mmi6p": 1896.888489678164,
+    "bld_mmi7p": 45728.0,
+    "built_m2_mmi7p": 7485340.0,
+    "health_mmi7p": 5.0,
+    "edu_mmi7p": 8.0,
+    "road_km_mmi7p": 1300.974224578381,
+    "road_km_principal_mmi7p": 65.62680603962133,
+    "pop_ls_alta": 3726.6235851335805,
+    "pop_lq_alta": 549345.9026963722
   },
   "top_municipios": [
-    {
-      "adm2_id": "MX20043",
-      "nombre": "Heroica Ciudad de Juchitán de Zaragoza",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 109669.97918312269
-    },
-    {
-      "adm2_id": "MX20079",
-      "nombre": "Salina Cruz",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 102644.90687105703
-    },
-    {
-      "adm2_id": "MX07097",
-      "nombre": "Tonalá",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 77304.43236512115
-    },
-    {
-      "adm2_id": "MX20515",
-      "nombre": "Santo Domingo Tehuantepec",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 71151.23822873516
-    },
     {
       "adm2_id": "MX07069",
       "nombre": "Pijijiapan",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 64443.639377167914
+      "pop_mmi7p": 52002.476116472855,
+      "pop_banda": 52002.476116472855
     },
     {
-      "adm2_id": "MX07051",
-      "nombre": "Mapastepec",
+      "adm2_id": "MX20143",
+      "nombre": "San Francisco Ixhuatán",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 54492.09950208943
-    },
-    {
-      "adm2_id": "MX07009",
-      "nombre": "Arriaga",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 51136.6636810638
-    },
-    {
-      "adm2_id": "MX07003",
-      "nombre": "Acapetahua",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 37567.410551016685
-    },
-    {
-      "adm2_id": "MX20124",
-      "nombre": "San Blas Atempa",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 19976.17078799894
-    },
-    {
-      "adm2_id": "MX20248",
-      "nombre": "San Mateo del Mar",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 18218.377668433823
-    },
-    {
-      "adm2_id": "MX20557",
-      "nombre": "Unión Hidalgo",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 17354.592344975856
+      "pop_mmi7p": 3502.919740100624,
+      "pop_banda": 3502.919740100624
     },
     {
       "adm2_id": "MX20327",
       "nombre": "San Pedro Tapanatepec",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 17121.510841130046
+      "pop_mmi7p": 3155.077550993301,
+      "pop_banda": 3155.077550993301
     },
     {
-      "adm2_id": "MX20413",
-      "nombre": "Santa María Huatulco",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 14375.726882462623
+      "adm2_id": "MX07051",
+      "nombre": "Mapastepec",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 2765.630858765915,
+      "pop_banda": 2765.630858765915
     },
     {
-      "adm2_id": "MX20025",
-      "nombre": "Chahuites",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 13942.13852614304
+      "adm2_id": "MX07009",
+      "nombre": "Arriaga",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 2007.732931050472,
+      "pop_banda": 2007.732931050472
+    },
+    {
+      "adm2_id": "MX20141",
+      "nombre": "San Francisco del Mar",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 1859.3989907538053,
+      "pop_banda": 1859.3989907538053
     },
     {
       "adm2_id": "MX20525",
       "nombre": "Santo Domingo Zanatepec",
       "mmi_max": 6.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 13577.815242281882
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX20043",
+      "nombre": "Heroica Ciudad de Juchitán de Zaragoza",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX20421",
+      "nombre": "Santa María Mixtequilla",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX07097",
+      "nombre": "Tonalá",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX20130",
+      "nombre": "San Dionisio del Mar",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX20515",
+      "nombre": "Santo Domingo Tehuantepec",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX20079",
+      "nombre": "Salina Cruz",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX20505",
+      "nombre": "Santo Domingo Ingenio",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
+    },
+    {
+      "adm2_id": "MX07032",
+      "nombre": "Escuintla",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 0.0
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 12.0,
+    "pop_discrepancia_pct": 13.1,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -166,7 +166,18 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 760 mil → 1,5 millones",
+    "Población en MMI≥VII: 0 → 65 mil",
+    "Población de 65 años o más en MMI≥VII: 0 → 6.500",
+    "Edificaciones en MMI≥VII: 0 → 46 mil",
+    "Sedes de salud en MMI≥VII: 0 → 5",
+    "Sedes educativas en MMI≥VII: 0 → 8",
+    "Población en probabilidad alta de deslizamiento: 2.100 → 3.700",
+    "Población en cobertura areal alta por licuefacción: 360 mil → 550 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -221,6 +232,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:17:10Z",
+  "generado_utc": "2026-11-21T16:31:45Z",
   "pipeline_version": "0.1.0"
 }

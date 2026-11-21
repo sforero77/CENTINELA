@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us7000d18q",
     "mag": 6.4,
@@ -23,22 +23,22 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 583082.6162497867,
-    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 720133.9257900603,
+    "pop_mmi7p": 328.0431949002668,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 65801.23203075069,
-    "bld_mmi6p": 410512.0,
-    "built_m2_mmi6p": 45801579.0,
-    "health_mmi6p": 371.0,
-    "edu_mmi6p": 1343.0,
-    "road_km_mmi6p": 4397.0210311255605,
-    "road_km_principal_mmi6p": 608.804382990394,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
+    "pop_65p_mmi7p": 27.728736499692452,
+    "pop_65p_mmi6p": 79102.56803977165,
+    "bld_mmi6p": 503507.0,
+    "built_m2_mmi6p": 59504375.0,
+    "health_mmi6p": 449.0,
+    "edu_mmi6p": 1945.0,
+    "road_km_mmi6p": 7456.412671870918,
+    "road_km_principal_mmi6p": 938.4876751069596,
+    "bld_mmi7p": 67.0,
+    "built_m2_mmi7p": 48747.0,
     "health_mmi7p": 0.0,
     "edu_mmi7p": 0.0,
-    "road_km_mmi7p": 0.0,
+    "road_km_mmi7p": 83.94516264766226,
     "road_km_principal_mmi7p": 0.0,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 0.0
@@ -63,14 +63,14 @@
       "nombre": "Chimbas",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 95694.02289914805
+      "pop_banda": 100165.69208843261
     },
     {
       "adm2_id": "AR070084",
       "nombre": "Rivadavia",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 95172.8727248921
+      "pop_banda": 95418.21055215271
     },
     {
       "adm2_id": "AR070070",
@@ -84,74 +84,74 @@
       "nombre": "Santa Lucía",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 51343.15113552939
-    },
-    {
-      "adm2_id": "AR070105",
-      "nombre": "Sarmiento",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 20898.23771486897
-    },
-    {
-      "adm2_id": "AR070063",
-      "nombre": "9 de Julio",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 7463.2202634187415
-    },
-    {
-      "adm2_id": "AR070126",
-      "nombre": "25 de Mayo",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 671.9175411388278
-    },
-    {
-      "adm2_id": "AR070133",
-      "nombre": "Zonda",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 652.3880682764575
-    },
-    {
-      "adm2_id": "AR070112",
-      "nombre": "Ullum",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 9.705695120152086
-    },
-    {
-      "adm2_id": "AR070007",
-      "nombre": "Albardón",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 4.8950633481144905
+      "pop_banda": 53414.77661350742
     },
     {
       "adm2_id": "AR070035",
       "nombre": "Caucete",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 42554.28950151894
+    },
+    {
+      "adm2_id": "AR070007",
+      "nombre": "Albardón",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 28231.33986348845
+    },
+    {
+      "adm2_id": "AR070105",
+      "nombre": "Sarmiento",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 233.39326245617121,
+      "pop_banda": 26082.37897263188
+    },
+    {
+      "adm2_id": "AR070126",
+      "nombre": "25 de Mayo",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 19216.19817686826
     },
     {
       "adm2_id": "AR070091",
       "nombre": "San Martín",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 12874.769434391521
     },
     {
-      "adm2_id": "AR070021",
-      "nombre": "Calingasta",
+      "adm2_id": "AR070063",
+      "nombre": "9 de Julio",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 10893.119698277675
+    },
+    {
+      "adm2_id": "AR070014",
+      "nombre": "Angaco",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 9176.896854775026
+    },
+    {
+      "adm2_id": "AR070133",
+      "nombre": "Zonda",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 94.64993244409561,
+      "pop_banda": 5729.591516172513
+    },
+    {
+      "adm2_id": "AR070112",
+      "nombre": "Ullum",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 5001.433329189662
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 3.4,
+    "pop_discrepancia_pct": 4.0,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -166,7 +166,14 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v8 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 580 mil → 720 mil",
+    "Población en MMI≥VII: 0 → 330",
+    "Población de 65 años o más en MMI≥VII: 0 → 28",
+    "Edificaciones en MMI≥VII: 0 → 67"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -221,6 +228,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:21:32Z",
+  "generado_utc": "2026-11-21T16:30:15Z",
   "pipeline_version": "0.1.0"
 }

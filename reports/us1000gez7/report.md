@@ -10,33 +10,45 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 3.400 |
-| Población en MMI≥7 | el evento no llegó a esta banda |
-| Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥6 | 1.100 |
-| Sedes de salud en MMI≥6 | 0 |
-| Sedes educativas en MMI≥6 | 0 |
-| Vías primarias y secundarias en MMI≥6 | 3 km |
-| Vías locales en MMI≥6 | 29 km |
-| Superficie construida en MMI≥6 | 0,1 km² |
+| Población en MMI≥VI | 500 mil |
+| Población en MMI≥VII | el evento no llegó a esta banda |
+| Población en MMI≥VIII | el evento no llegó a esta banda |
+| Edificaciones en MMI≥VI | 210 mil |
+| Sedes de salud en MMI≥VI | 54 |
+| Sedes educativas en MMI≥VI | 243 |
+| Vías primarias y secundarias en MMI≥VI | 580 km |
+| Vías locales en MMI≥VI | 3.200 km |
+| Superficie construida en MMI≥VI | 26,0 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥6, alrededor de **280** personas tienen 65 años o más.
+De la población en intensidad MMI≥VI, alrededor de **41 mil** personas tienen 65 años o más.
 
-## Municipios más expuestos, por población en MMI≥6
+## Municipios más expuestos, por población en MMI≥VI
 
-| # | Municipio | Código | MMI max | Población MMI≥6 |
+| # | Municipio | Código | MMI max | Población MMI≥VI |
 |---:|---|---|---:|---:|
-| 1 | Cajigal | `VE1907` | 6,0 | 2.500 |
-| 2 | Libertador | `VE1909` | 6,0 | 950 |
+| 1 | Bermúdez | `VE1905` | 5,5 | 160 mil |
+| 2 | Arismendi | `VE1903` | 5,5 | 52 mil |
+| 3 | Bolívar | `VE1603` | 5,5 | 45 mil |
+| 4 | Valdez | `VE1915` | 5,5 | 40 mil |
+| 5 | Ribero | `VE1913` | 5,5 | 39 mil |
+| 6 | Andrés Eloy Blanco | `VE1901` | 5,5 | 38 mil |
+| 7 | Punceres | `VE1610` | 5,5 | 26 mil |
+| 8 | Cajigal | `VE1907` | 6,0 | 23 mil |
+| 9 | Benítez | `VE1904` | 6,0 | 22 mil |
+| 10 | Mariño | `VE1910` | 5,5 | 22 mil |
+| 11 | Libertador | `VE1909` | 6,0 | 18 mil |
+| 12 | Andrés Mata | `VE1902` | 5,5 | 10 mil |
+| 13 | Maturín | `VE1608` | 5,5 | 3.200 |
+| 14 | Dependencias Federales | `VE2501` | 5,5 | 1.300 |
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **0**.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **31**. USGS declara para este evento alerta **roja**, con 28 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥VI donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **51 mil**.
+- **Licuefacción.** Población en celdas de MMI≥VI donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **7.500**. USGS declara para este evento alerta **roja**, con 28 mil expuestas.
 
-Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
+Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥VI). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
@@ -46,11 +58,19 @@ Fuente: producto *Ground Failure* de USGS (v1), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **amarilla**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras usan **la misma convención**: las clases de intensidad del USGS en números romanos (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5). Lo que puede separarlas es el insumo: este reporte declara en «Procedencia» qué versión del ShakeMap consumió, PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo, y los dos usan modelos de población distintos (GHS-POP aquí, LandScan en PAGER). El contraste clase a clase, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **414,9 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **87,8 %**.
+
+## Cambios frente a la versión anterior
+
+- Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)
+- Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.
+- Población en MMI≥VI: 3.400 → 500 mil
+- Población en probabilidad alta de deslizamiento: 0 → 51 mil
+- Población en cobertura areal alta por licuefacción: 31 → 7.500
 
 ## Descargas
 
@@ -62,7 +82,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **414,9 %**.
 - ShakeMap consumido: **v1** de `atlas`
 - Ground Failure consumido: **v1** de `us`
 - Manifiesto de exposición: [`ven-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/VEN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-02T17:15:38Z
+- Pipeline: `0.1.0` · Generado: 2026-11-21T16:31:19Z
 
 ## Advertencias
 

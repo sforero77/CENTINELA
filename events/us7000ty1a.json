@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000ty1a",
-  "estado": "publicado",
+  "estado": "sin_alcance",
   "mag": 5.8,
   "lon": -75.8807,
   "lat": -14.9934,
@@ -18,6 +18,7 @@
     "detectado": "2026-11-13T17:05:23Z",
     "publicado": "2026-11-13T17:06:07Z",
     "publicado_ultimo": "2026-11-19T14:31:25Z",
+    "sin_alcance": "2026-11-21T16:28:24Z",
     "usgs_origen": "2026-11-13T16:43:02Z"
   },
   "hashes": {},
@@ -28,6 +29,7 @@
     "Ground Failure v0 -> v1 (us)",
     "ShakeMap v1 (us) -> v2 (us)",
     "ShakeMap v2 (us) -> v3 (us)",
-    "ShakeMap v3 (us) -> v4 (us)"
+    "ShakeMap v3 (us) -> v4 (us)",
+    "reproceso forzado: el pipeline cambio, no los productos; sin alcance: la poblacion mas cercana esta a 28 km del epicentro, bajo la clase VI (5,5)"
   ]
 }

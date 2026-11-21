@@ -10,39 +10,39 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 1,8 millones |
-| Población en MMI≥7 | el evento no llegó a esta banda |
-| Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥6 | 900 mil |
-| Sedes de salud en MMI≥6 | 179 |
-| Sedes educativas en MMI≥6 | 233 |
-| Vías primarias y secundarias en MMI≥6 | 720 km |
-| Vías locales en MMI≥6 | 10 mil km |
-| Superficie construida en MMI≥6 | 108,5 km² |
+| Población en MMI≥VI | 3,7 millones |
+| Población en MMI≥VII | el evento no llegó a esta banda |
+| Población en MMI≥VIII | el evento no llegó a esta banda |
+| Edificaciones en MMI≥VI | 1,9 millones |
+| Sedes de salud en MMI≥VI | 377 |
+| Sedes educativas en MMI≥VI | 451 |
+| Vías primarias y secundarias en MMI≥VI | 1.400 km |
+| Vías locales en MMI≥VI | 24 mil km |
+| Superficie construida en MMI≥VI | 243,4 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥6, alrededor de **94 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥VI, alrededor de **190 mil** personas tienen 65 años o más.
 
-## Municipios más expuestos, por población en MMI≥6
+## Municipios más expuestos, por población en MMI≥VI
 
-| # | Municipio | Código | MMI max | Población MMI≥6 |
+| # | Municipio | Código | MMI max | Población MMI≥VI |
 |---:|---|---|---:|---:|
-| 1 | Quetzaltenango | `GT0901` | 6,0 | 190 mil |
-| 2 | Coatepeque | `GT0920` | 6,0 | 170 mil |
-| 3 | Malacatán | `GT1215` | 6,0 | 130 mil |
-| 4 | San Pedro Sacatepéquez | `GT1202` | 6,0 | 70 mil |
-| 5 | San Marcos | `GT1201` | 6,0 | 63 mil |
-| 6 | San Pablo | `GT1219` | 6,0 | 62 mil |
-| 7 | Comitancillo | `GT1204` | 6,0 | 57 mil |
-| 8 | Ostuncalco | `GT0909` | 6,0 | 55 mil |
-| 9 | El Asintal | `GT1109` | 6,0 | 51 mil |
-| 10 | Ayutla | `GT1217` | 6,0 | 50 mil |
-| 11 | Génova | `GT0921` | 6,0 | 48 mil |
-| 12 | Colomba | `GT0917` | 6,0 | 48 mil |
-| 13 | Catarina | `GT1216` | 6,0 | 47 mil |
-| 14 | El Tumbador | `GT1213` | 6,0 | 47 mil |
-| 15 | La Blanca | `GT1230` | 6,0 | 41 mil |
+| 1 | Quetzaltenango | `GT0901` | 6,0 | 210 mil |
+| 2 | Momostenango | `GT0805` | 5,5 | 170 mil |
+| 3 | Coatepeque | `GT0920` | 6,0 | 170 mil |
+| 4 | Malacatán | `GT1215` | 6,0 | 130 mil |
+| 5 | Mazatenango | `GT1001` | 5,5 | 120 mil |
+| 6 | Retalhuleu | `GT1101` | 6,0 | 110 mil |
+| 7 | Tacaná | `GT1207` | 5,5 | 90 mil |
+| 8 | San Francisco el Alto | `GT0803` | 6,0 | 84 mil |
+| 9 | San Marcos | `GT1201` | 6,0 | 73 mil |
+| 10 | Comitancillo | `GT1204` | 6,0 | 73 mil |
+| 11 | San Pedro Sacatepéquez | `GT1202` | 6,0 | 73 mil |
+| 12 | Tajumulco | `GT1209` | 6,0 | 71 mil |
+| 13 | San Pablo | `GT1219` | 6,0 | 68 mil |
+| 14 | Concepción Tutuapa | `GT1206` | 6,0 | 67 mil |
+| 15 | Totonicapán | `GT0801` | 5,5 | 61 mil |
 
 ## Deslizamiento y licuefacción
 
@@ -52,11 +52,17 @@ USGS no ha publicado el producto *Ground Failure* para este evento. La sección 
 
 PAGER (USGS) estima para este evento una alerta **amarilla**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras usan **la misma convención**: las clases de intensidad del USGS en números romanos (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5). Lo que puede separarlas es el insumo: este reporte declara en «Procedencia» qué versión del ShakeMap consumió, PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo, y los dos usan modelos de población distintos (GHS-POP aquí, LandScan en PAGER). El contraste clase a clase, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **1,8 %**.
+
+## Cambios frente a la versión anterior
+
+- Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)
+- Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.
+- Población en MMI≥VI: 1,8 millones → 3,7 millones
 
 ## Descargas
 
@@ -68,7 +74,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **3,1 %**.
 - ShakeMap consumido: **v1** de `atlas`
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`gtm-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/GTM.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-02T17:16:42Z
+- Pipeline: `0.1.0` · Generado: 2026-11-21T16:31:49Z
 
 ## Advertencias
 

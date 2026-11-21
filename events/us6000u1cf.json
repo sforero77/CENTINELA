@@ -18,7 +18,7 @@
     "detectado": "2026-10-10T04:30:22Z",
     "preliminar": "2026-10-10T04:30:52Z",
     "publicado": "2026-10-10T04:35:58Z",
-    "publicado_ultimo": "2026-10-30T11:34:41Z",
+    "publicado_ultimo": "2026-11-21T16:28:37Z",
     "usgs_origen": "2026-10-10T04:14:01Z"
   },
   "hashes": {},
@@ -30,6 +30,7 @@
     "ShakeMap v1 (us) -> v2 (us)",
     "ShakeMap v2 (us) -> v3 (us)",
     "ShakeMap v3 (us) -> v4 (us)",
-    "ShakeMap v4 (us) -> v5 (us)"
+    "ShakeMap v4 (us) -> v5 (us)",
+    "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }

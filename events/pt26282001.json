@@ -19,7 +19,7 @@
     "preliminar": "2026-10-09T20:36:01Z",
     "preliminar_ultimo": "2026-10-09T20:40:57Z",
     "publicado": "2026-10-09T20:55:59Z",
-    "publicado_ultimo": "2026-11-05T13:21:17Z",
+    "publicado_ultimo": "2026-11-21T16:28:42Z",
     "usgs_origen": "2026-10-09T20:25:40Z"
   },
   "hashes": {},
@@ -33,6 +33,7 @@
     "ShakeMap v3 (us) -> v4 (us)",
     "ShakeMap v4 (us) -> v5 (us)",
     "reproceso forzado: el pipeline cambio, no los productos",
-    "ShakeMap v5 (us) -> v7 (us)"
+    "ShakeMap v5 (us) -> v7 (us)",
+    "reproceso forzado: el pipeline cambio, no los productos"
   ]
 }

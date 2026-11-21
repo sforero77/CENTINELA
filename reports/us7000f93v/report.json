@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us7000f93v",
     "mag": 7.0,
@@ -23,68 +23,68 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 1115170.9964241658,
-    "pop_mmi7p": 910714.4594508423,
-    "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 89222.18038079068,
-    "pop_65p_mmi6p": 109026.04858172424,
-    "bld_mmi6p": 450332.0,
-    "built_m2_mmi6p": 60445589.0,
-    "health_mmi6p": 187.0,
-    "edu_mmi6p": 3407.0,
-    "road_km_mmi6p": 7667.610666119936,
-    "road_km_principal_mmi6p": 981.4568128137711,
-    "bld_mmi7p": 328858.0,
-    "built_m2_mmi7p": 46815101.0,
-    "health_mmi7p": 155.0,
-    "edu_mmi7p": 3295.0,
-    "road_km_mmi7p": 4884.614337063209,
-    "road_km_principal_mmi7p": 645.0970550572148,
-    "pop_ls_alta": 2383.0424382408382,
-    "pop_lq_alta": 66511.65147162467
+    "pop_mmi6p": 1307893.0816742068,
+    "pop_mmi7p": 1006653.0645814235,
+    "pop_mmi8p": 60256.5972105714,
+    "pop_65p_mmi7p": 99211.67386792105,
+    "pop_65p_mmi6p": 126978.12380648727,
+    "bld_mmi6p": 564330.0,
+    "built_m2_mmi6p": 73160547.0,
+    "health_mmi6p": 194.0,
+    "edu_mmi6p": 3457.0,
+    "road_km_mmi6p": 10155.991300595328,
+    "road_km_principal_mmi6p": 1276.5301755042356,
+    "bld_mmi7p": 385434.0,
+    "built_m2_mmi7p": 53338476.0,
+    "health_mmi7p": 176.0,
+    "edu_mmi7p": 3383.0,
+    "road_km_mmi7p": 6123.300595698125,
+    "road_km_principal_mmi7p": 842.1851094879922,
+    "pop_ls_alta": 2668.9061822016956,
+    "pop_lq_alta": 73235.68414269114
   },
   "top_municipios": [
     {
       "adm2_id": "MX12001",
       "nombre": "Acapulco de Juárez",
       "mmi_max": 7.5,
-      "pop_mmi7p": 876143.8713419174,
-      "pop_banda": 876143.8713419174
+      "pop_mmi7p": 880198.9725385159,
+      "pop_banda": 880198.9725385159
     },
     {
       "adm2_id": "MX12021",
       "nombre": "Coyuca de Benítez",
       "mmi_max": 7.0,
-      "pop_mmi7p": 29502.848212338053,
-      "pop_banda": 29502.848212338053
+      "pop_mmi7p": 64367.36258701142,
+      "pop_banda": 64367.36258701142
     },
     {
       "adm2_id": "MX12053",
       "nombre": "San Marcos",
       "mmi_max": 7.0,
-      "pop_mmi7p": 5063.2659500993905,
-      "pop_banda": 5063.2659500993905
+      "pop_mmi7p": 33287.30122121266,
+      "pop_banda": 33287.30122121266
     },
     {
       "adm2_id": "MX12039",
       "nombre": "Juan R. Escudero",
       "mmi_max": 7.0,
-      "pop_mmi7p": 4.473946487531066,
-      "pop_banda": 4.473946487531066
+      "pop_mmi7p": 24263.545852859505,
+      "pop_banda": 24263.545852859505
     },
     {
       "adm2_id": "MX12056",
       "nombre": "Tecoanapa",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_mmi7p": 3437.5868926756084,
+      "pop_banda": 3437.5868926756084
     },
     {
       "adm2_id": "MX12029",
       "nombre": "Chilpancingo de los Bravo",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_mmi7p": 1098.2954891482368,
+      "pop_banda": 1098.2954891482368
     },
     {
       "adm2_id": "MX12012",
@@ -151,7 +151,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 9.9,
+    "pop_discrepancia_pct": 10.2,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -167,6 +167,17 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Recálculo con el mismo ShakeMap v7 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 1,1 millones → 1,3 millones",
+    "Población en MMI≥VII: 910 mil → 1 millón",
+    "Población en MMI≥VIII: 0 → 60 mil",
+    "Población de 65 años o más en MMI≥VII: 89 mil → 99 mil",
+    "Edificaciones en MMI≥VII: 330 mil → 390 mil",
+    "Sedes de salud en MMI≥VII: 160 → 180",
+    "Sedes educativas en MMI≥VII: 3.300 → 3.400",
+    "Población en probabilidad alta de deslizamiento: 2.400 → 2.700",
+    "Población en cobertura areal alta por licuefacción: 67 mil → 73 mil",
     "Recálculo con el mismo ShakeMap v7 (us) (cambió el cálculo o el activo de exposición, no USGS)",
     "Sedes de salud en MMI≥7: 150 → 160",
     "Sedes educativas en MMI≥7: 3.100 → 3.300"
@@ -225,6 +236,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:21:41Z",
+  "generado_utc": "2026-11-21T16:30:09Z",
   "pipeline_version": "0.1.0"
 }
