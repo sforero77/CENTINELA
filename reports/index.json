@@ -1,18 +1,18 @@
 [
   {
     "usgs_id": "pt26325050",
-    "mag": 6.9,
-    "lugar": "22 km al ONO de Ondores, Perú",
+    "mag": 6.7,
+    "lugar": "9 km al NE de Carhuamayo, Perú",
     "iso3": "PER",
-    "lon": -76.319,
-    "lat": -10.98,
+    "lon": -75.9779,
+    "lat": -10.8548,
     "pop_mmi7p": 0.0,
     "pop_mmi6p": 0.0,
     "utc": "2026-11-21T00:09:17Z",
     "shakemap_version": 0,
     "preliminar": true,
     "backtest": false,
-    "generado_utc": "2026-11-21T00:21:03Z"
+    "generado_utc": "2026-11-21T00:26:00Z"
   },
   {
     "usgs_id": "us7000tyy8",

@@ -2,13 +2,13 @@
   "schema": "centinela/report/1.0",
   "event": {
     "usgs_id": "pt26325050",
-    "mag": 6.9,
-    "depth_km": 142.1,
+    "mag": 6.7,
+    "depth_km": 107.991,
     "utc": "2026-11-21T00:09:17Z",
-    "lugar": "22 km al ONO de Ondores, Perú",
+    "lugar": "9 km al NE de Carhuamayo, Perú",
     "pager_alert": "",
-    "lon": -76.319,
-    "lat": -10.98
+    "lon": -75.9779,
+    "lat": -10.8548
   },
   "inputs": {
     "shakemap_version": 0,
@@ -23,15 +23,15 @@
   "radios": [
     {
       "radio_km": 25,
-      "pop": 20530.395432560705
+      "pop": 36114.43809743831
     },
     {
       "radio_km": 50,
-      "pop": 152767.76635942888
+      "pop": 187792.49126480892
     },
     {
       "radio_km": 100,
-      "pop": 561464.67680655
+      "pop": 692472.3872399558
     }
   ],
   "backtest": false,
@@ -128,6 +128,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-21T00:21:03Z",
+  "generado_utc": "2026-11-21T00:26:00Z",
   "pipeline_version": "0.1.0"
 }

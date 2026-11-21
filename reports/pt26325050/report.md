@@ -1,6 +1,6 @@
-# Exposición sísmica: M6,9 · 22 km al ONO de Ondores, Perú
+# Exposición sísmica: M6,7 · 9 km al NE de Carhuamayo, Perú
 
-**Evento USGS:** `pt26325050` · **Origen:** 2026-11-21T00:09:17Z UTC · **Profundidad:** 142,1 km
+**Evento USGS:** `pt26325050` · **Origen:** 2026-11-21T00:09:17Z UTC · **Profundidad:** 108,0 km
 
 > **Reporte preliminar sin ShakeMap.** El corte es por radios alrededor del epicentro, no por intensidad modelada. Se actualiza automáticamente en cuanto USGS publique el ShakeMap del evento.
 
@@ -8,9 +8,9 @@
 
 | Radio desde el epicentro | Población |
 |---|---:|
-| 25 km | 21 mil |
-| 50 km | 150 mil |
-| 100 km | 560 mil |
+| 25 km | 36 mil |
+| 50 km | 190 mil |
+| 100 km | 690 mil |
 
 Los radios **no son bandas de intensidad**. Aquí no hay modelo de sacudida, solo distancia: un sismo superficial y uno profundo de la misma magnitud tienen el mismo circulo y no se parecen en nada. La cifra sirve para dimensionar, no para priorizar.
 
@@ -27,7 +27,7 @@ Discrepancia entre GHS-POP y WorldPop: **no se calcula en un reporte preliminar*
 - ShakeMap consumido: **ninguno** (no publicado aún)
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`per-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-21T00:21:03Z
+- Pipeline: `0.1.0` · Generado: 2026-11-21T00:26:00Z
 
 ## Advertencias
 
