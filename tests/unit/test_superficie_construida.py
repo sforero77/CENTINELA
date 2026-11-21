@@ -61,7 +61,7 @@ def test_sin_dato_de_satelite_no_aparece_la_fila(reporte: Report) -> None:
 def test_con_dato_aparece_en_km2(reporte: Report) -> None:
     """m² por pais son numeros ilegibles; el reporte se lee en km²."""
     md = render_markdown(_con(reporte, built_m2_mmi7p=12_500_000.0, bld_mmi7p=200_000.0))
-    assert "Superficie construida en MMI≥7" in md
+    assert "Superficie construida en MMI≥VII" in md
     assert "12,5 km²" in md
 
 
@@ -109,9 +109,9 @@ def test_la_advertencia_dice_donde_esta_el_hueco(reporte: Report) -> None:
 def test_con_desglose_se_publican_dos_filas(reporte: Report) -> None:
     """No es lo mismo que quede cortada una troncal que una calle de barrio."""
     md = render_markdown(_con(reporte, road_km_mmi7p=1000.0, road_km_principal_mmi7p=300.0))
-    assert "Vías primarias y secundarias en MMI≥7" in md
-    assert "Vías locales en MMI≥7" in md
-    assert "Kilómetros de vía en MMI≥7" not in md
+    assert "Vías primarias y secundarias en MMI≥VII" in md
+    assert "Vías locales en MMI≥VII" in md
+    assert "Kilómetros de vía en MMI≥VII" not in md
 
 
 def test_la_via_local_es_el_resto(reporte: Report) -> None:
@@ -122,11 +122,11 @@ def test_la_via_local_es_el_resto(reporte: Report) -> None:
 def test_un_activo_sin_desglose_publica_el_total(reporte: Report) -> None:
     """Compatibilidad: un reporte anterior no tiene la columna nueva."""
     md = render_markdown(_con(reporte, road_km_mmi7p=1000.0, road_km_principal_mmi7p=0.0))
-    assert "Kilómetros de vía en MMI≥7" in md
+    assert "Kilómetros de vía en MMI≥VII" in md
     assert "Vías locales" not in md
 
 
 def test_la_local_nunca_sale_negativa(reporte: Report) -> None:
     """Si por redondeo la principal supera al total, no se publica un negativo."""
     md = render_markdown(_con(reporte, road_km_mmi7p=100.0, road_km_principal_mmi7p=120.0))
-    assert "-" not in md.split("Vías locales en MMI≥7")[1].split("|")[1]
+    assert "-" not in md.split("Vías locales en MMI≥VII")[1].split("|")[1]

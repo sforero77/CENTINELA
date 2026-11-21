@@ -47,8 +47,10 @@ agujero para el nivel 7, no una región nueva). De eso se ocupa
 Aun cerradas, son órdenes de magnitud menos geometría que la malla, así que se
 convierten a H3 con polyfill directamente.
 
-**Se rellena desde MMI 5,0**, no desde 6. El reporte publica desde MMI 6, pero
-rellenar un nivel más abajo cuesta poco y evita perder el borde. Rellenar
+**Se rellena desde MMI 5,0**, no desde 5,5. El reporte publica desde la clase
+VI del USGS (MMI ≥ 5,5, `report/2.0`; en la 1.0 era 6,0 literal), pero
+rellenar un nivel más abajo cuesta poco y evita perder el borde. Esas celdas
+de 5,0 son también las que dan `mmi_max_poblado` a un evento `sin_alcance`. Rellenar
 niveles aún más bajos multiplicaría las celdas sin cambiar una sola cifra
 publicada.
 

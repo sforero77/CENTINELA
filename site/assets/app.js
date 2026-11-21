@@ -11,6 +11,9 @@ const INDICE_REPORTES = "reports/index.json";
 const COBERTURA = "cobertura.json";
 //: Sismos vistos y no despachados, ventana movil de cinco dias.
 const OBSERVADOS = "observados.json";
+//: Sismos MEDIDOS sin nadie en la clase VI (`report/2.0`): no tienen reporte y
+//: se pintan con la misma estrella gris que los observados, con su razon.
+const SIN_ALCANCE = "sin_alcance.json";
 //: Focos activos de las ultimas 24 h, cruzados con la exposicion.
 const INCENDIOS = "incendios.json";
 
@@ -283,19 +286,33 @@ const VUELO = REDUCIR_MOVIMIENTO ? 0 : 800;
 //: diga.
 const EPOCA_POBLACION = "La población es GHS-POP época 2025";
 
+//: CLASES DE INTENSIDAD USGS (`report/2.0`, 21-nov-2026).
+//:
+//: Las bandas del reporte —`pop_mmi6p`, `pop_mmi7p`, `pop_mmi8p`— son clases en
+//: numeros romanos, como las nombra el USGS: VI empieza en 5,5, VII en 6,5,
+//: VIII en 7,5. Hasta la 1.0 eran decimales literales (6,0 / 7,0 / 8,0) y un
+//: M6,7 cuyo ShakeMap llegaba a 5,7 salia sin un hexagono. Toda comparacion de
+//: una celda o de una isolinea contra una banda pasa por aqui.
+//:
+//: Es la misma tabla que `UMBRAL_CLASE` en `pipelines/common/constants.py`, y
+//: `test_banda_titular.py` vigila que las dos digan lo mismo.
+const UMBRAL_CLASE = { 6: 5.5, 7: 6.5, 8: 7.5 };
+const ROMANO_CLASE = { 6: "VI", 7: "VII", 8: "VIII" };
+const etiquetaClase = (clase) => `MMI≥${ROMANO_CLASE[clase]}`;
+
 const CAPAS = {
   mmi: {
     titulo: "Intensidad",
     columna: "mmi",
     exacto: true,
-    cortes: [6, 6.5, 7, 7.5, 8, 8.5],
-    colores: ["#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#b30000", "#7f0000"],
+    cortes: [5.5, 6, 6.5, 7, 7.5, 8, 8.5],
+    colores: ["#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#b30000", "#7f0000"],
     nota:
       "Mercalli modificada, en pasos de media. Los hexágonos llegan hasta donde " +
       "hay algo expuesto: el hueco no es ausencia de sacudida, es ausencia de " +
       "gente y de infraestructura. Las líneas son los contornos del ShakeMap y " +
       "sí marcan hasta dónde llegó el sismo, sobre tierra y sobre mar; en gris, " +
-      "los niveles por debajo de 6, que se sienten y que este sistema no cuantifica.",
+      "los niveles por debajo de 5,5 (clase VI), que se sienten y que este sistema no cuantifica.",
   },
   pop: {
     titulo: "Población",
@@ -1070,7 +1087,7 @@ function pintarPanorama(eventos) {
     (mayor
       ? `<div class="metrica"><span class="cabeza">${iconoSvg("personas")}` +
         `<span class="valor">${comoConteo(mayor[clave])}</span></span>` +
-        `<span class="etiqueta">mayor exposición en ${NOMBRE_BANDA[bandaMayor]} (MMI≥${bandaMayor})</span>` +
+        `<span class="etiqueta">mayor exposición en ${NOMBRE_BANDA[bandaMayor]} (${etiquetaClase(bandaMayor)})</span>` +
         `<span class="apunte">M${String(mayor.mag).replace(".", ",")} · ${escapar(mayor.lugar)}</span></div>`
       : "") +
     (paises > 1
@@ -1575,7 +1592,7 @@ function pintarArea(reporte, celdas) {
   // Misma regla que `pintarMunicipios`: MMI≥7, y solo se baja a 6 cuando el
   // evento no llego a 7 sobre poblacion.
   const titular = bandaPublicada(reporte.totales);
-  const dentro = reparto.bandas.filter((b) => b.banda >= titular);
+  const dentro = reparto.bandas.filter((b) => b.banda >= UMBRAL_CLASE[titular]);
   const km2Titular = dentro.reduce((a, b) => a + b.km2, 0);
   const celdasTitular = dentro.reduce((a, b) => a + b.celdas, 0);
 
@@ -1592,7 +1609,7 @@ function pintarArea(reporte, celdas) {
 
   $("detalle-area").innerHTML =
     `<p class="area-total"><strong>${miles(km2Titular)} km²</strong>` +
-    `<span>dentro de MMI≥${numero(titular, 1)}</span></p>` +
+    `<span>dentro de ${etiquetaClase(titular)}</span></p>` +
     `<p class="area-apunte">${miles(celdasTitular)} celdas de ${numero(AREA_CELDA_KM2, 1)} km² · ` +
     `${miles(reparto.totalKm2)} km² en toda la malla del evento</p>` +
     `<ul class="area-franjas">${filas}</ul>`;
@@ -1607,9 +1624,9 @@ function pintarFranjas(reporte) {
   }
   bloque.hidden = false;
   const franjas = [
-    { nombre: "MMI≥6", valor: t.pop_mmi6p, color: CAPAS.mmi.colores[0] },
-    { nombre: "MMI≥7", valor: t.pop_mmi7p, color: CAPAS.mmi.colores[2] },
-    { nombre: "MMI≥8", valor: t.pop_mmi8p, color: CAPAS.mmi.colores[4] },
+    { nombre: "MMI≥VI", valor: t.pop_mmi6p, color: CAPAS.mmi.colores[0] },
+    { nombre: "MMI≥VII", valor: t.pop_mmi7p, color: CAPAS.mmi.colores[2] },
+    { nombre: "MMI≥VIII", valor: t.pop_mmi8p, color: CAPAS.mmi.colores[4] },
   ];
   const maximo = Math.max(...franjas.map((f) => f.valor || 0), 1);
   $("detalle-franjas").innerHTML = franjas
@@ -1816,53 +1833,64 @@ function pintarMetricas(reporte) {
   const soloSeis = banda === 6;
   $("titulo-metricas").textContent = banda
     ? soloSeis
-      ? "En sacudida fuerte · MMI≥6"
+      ? "En sacudida fuerte · MMI≥VI"
       : banda === 8
-        ? "En sacudida severa y muy fuerte · MMI≥8 y MMI≥7"
-        : "En sacudida muy fuerte · MMI≥7"
-    : "En sacudida muy fuerte · MMI≥7";
+        ? "En sacudida severa y muy fuerte · MMI≥VIII y MMI≥VII"
+        : "En sacudida muy fuerte · MMI≥VII"
+    : "En sacudida muy fuerte · MMI≥VII";
   // Y el subtitulo, que tambien hablaba siempre de MMI 7. En un evento que no
   // llego a 7 sobre poblacion, «esto es lo que quedó dentro de esa franja»
   // describe una franja vacia.
   const subtitulo = $("subtitulo-metricas");
   if (subtitulo) {
     subtitulo.textContent = soloSeis
-      ? "MMI 6 se siente en todas partes y mueve objetos; el daño estructural " +
+      ? "La intensidad VI se siente en todas partes y mueve objetos; el daño estructural " +
         "empieza más arriba. Esto es lo que quedó dentro de esa franja, no lo que se dañó."
-      : "MMI 7 es la sacudida que asusta a todo el mundo y agrieta construcción " +
+      : "La intensidad VII es la sacudida que asusta a todo el mundo y agrieta construcción " +
         "corriente. Esto es lo que quedó dentro de esa franja, no lo que se dañó.";
   }
 
-  const km2 = Number.isFinite(t.built_m2_mmi7p) ? t.built_m2_mmi7p / 1e6 : null;
-  const principal = t.road_km_principal_mmi7p;
+  // EL RESTO DEL BLOQUE VA EN LA MISMA BANDA QUE LAS PERSONAS (21-nov-2026).
+  //
+  // En un evento que no llega a la clase VII, las tarjetas leian siempre las
+  // columnas `_mmi7p` y salian todas en cero —«0 edificaciones, 0 sedes de
+  // salud»— con una frase que decia que no aplicaban. El reporte si las tiene
+  // en la clase VI (`bld_mmi6p`, `health_mmi6p`...), y el `report.md` ya las
+  // publicaba ahi: el M6,7 de Carhuamayo tiene 3.195 edificaciones y dos
+  // sedes de salud dentro de MMI≥VI que el panel escondia.
+  const enBanda = (campo) => t[`${campo}_mmi${soloSeis ? 6 : 7}p`];
+  const romano = soloSeis ? "VI" : "VII";
+  const builtM2 = enBanda("built_m2");
+  const km2 = Number.isFinite(builtM2) ? builtM2 / 1e6 : null;
+  const principal = enBanda("road_km_principal");
 
   const tarjetas = [
     soloSeis
       ? {
           clave: "personas",
           valor: t.pop_mmi6p,
-          etiqueta: "personas en sacudida fuerte (MMI≥6)",
+          etiqueta: "personas en sacudida fuerte (MMI≥VI)",
           apunte:
-            "La sacudida no alcanzó MMI 7 sobre población: ninguna de las cifras de abajo, " +
-            "que se cuentan en MMI≥7, aplica a este evento.",
+            "La sacudida no alcanzó la intensidad VII sobre población: las cifras de abajo " +
+            "se cuentan en MMI≥VI.",
           ancha: true,
         }
-      : { clave: "personas", valor: t.pop_mmi7p, etiqueta: "personas en sacudida muy fuerte (MMI≥7)" },
+      : { clave: "personas", valor: t.pop_mmi7p, etiqueta: "personas en sacudida muy fuerte (MMI≥VII)" },
     // La banda alta, cuando existe, va inmediatamente detras y rotulada. Antes
     // era la unica que se enseñaba, y el resto del bloque —mayores, salud,
     // edificaciones— se contaba en MMI≥7 sin que nada lo dijera: se leia
     // "108.000 personas" seguido de "174.000 de 65 años o más", que es un
     // subconjunto mas grande que su conjunto.
     ...(banda === 8
-      ? [{ clave: "personas", valor: t.pop_mmi8p, etiqueta: "de ellas, en sacudida severa (MMI≥8)" }]
+      ? [{ clave: "personas", valor: t.pop_mmi8p, etiqueta: "de ellas, en sacudida severa (MMI≥VIII)" }]
       : []),
     {
       clave: "mayores",
-      valor: t.pop_65p_mmi7p,
+      valor: enBanda("pop_65p"),
       etiqueta: "de 65 años o más",
       apunte: (() => {
-        const cuota = cuotaDe(t.pop_65p_mmi7p, t.pop_mmi7p);
-        return cuota ? `El ${cuota} de los expuestos a MMI≥7.` : null;
+        const cuota = cuotaDe(enBanda("pop_65p"), enBanda("pop"));
+        return cuota ? `El ${cuota} de los expuestos a MMI≥${romano}.` : null;
       })(),
     },
     // Salud y educacion **antes** que edificaciones y superficie.
@@ -1874,9 +1902,9 @@ function pintarMetricas(reporte) {
     // esas dos cifras caian por debajo del pliegue.
     //
     // El orden de un tablero lo fija para que sirve, no cuanto abulta.
-    { clave: "salud", valor: t.health_mmi7p, etiqueta: "sedes de salud" },
-    { clave: "educacion", valor: t.edu_mmi7p, etiqueta: "sedes educativas" },
-    { clave: "edificaciones", valor: t.bld_mmi7p, etiqueta: "edificaciones" },
+    { clave: "salud", valor: enBanda("health"), etiqueta: "sedes de salud" },
+    { clave: "educacion", valor: enBanda("edu"), etiqueta: "sedes educativas" },
+    { clave: "edificaciones", valor: enBanda("bld"), etiqueta: "edificaciones" },
     {
       clave: "superficie",
       valor: km2,
@@ -1886,10 +1914,10 @@ function pintarMetricas(reporte) {
     },
     {
       clave: "vias",
-      valor: t.road_km_mmi7p,
+      valor: enBanda("road_km"),
       // `miles` y no `numero`: 8.503 km, en la misma columna tipografica que
       // el resto de cifras grandes del panel.
-      texto: `${miles(t.road_km_mmi7p)} km`,
+      texto: `${miles(enBanda("road_km"))} km`,
       etiqueta: "de vía",
       apunte: Number.isFinite(principal)
         ? `De ellos ${numero(principal)} km son primarias y secundarias; el resto es red local.`
@@ -1954,7 +1982,7 @@ function pintarTerreno(reporte) {
         const cuota = cuotaDe(f.valor, t.pop_mmi6p);
         return (
           `<li><span>${iconoSvg(f.icono)}${f.etiqueta}` +
-          (cuota ? ` <span class="cuota-apunte">· <strong>${cuota}</strong> de los expuestos en MMI≥6</span>` : "") +
+          (cuota ? ` <span class="cuota-apunte">· <strong>${cuota}</strong> de los expuestos en MMI≥VI</span>` : "") +
           `</span><span class="cifra${(f.valor || 0) > 0 ? "" : " cero"}">` +
           `${comoConteo(f.valor)}</span></li>` +
           contrasteDeTerreno(reporte, f.tipo, f.valor)
@@ -2063,7 +2091,7 @@ function pintarMunicipios(reporte, municipios) {
   // —«top 15, por población en MMI≥8»— y el visor no, asi que la misma lista
   // salia sin marco en la pantalla que mas gente mira.
   const titulo = $("titulo-municipios");
-  if (titulo) titulo.textContent = `Municipios más expuestos · MMI≥${bandaMostrada}`;
+  if (titulo) titulo.textContent = `Municipios más expuestos · ${etiquetaClase(bandaMostrada)}`;
 
   // Sin ninguna fila con gente, el bloque entero sobra: es el caso de los tres
   // eventos que no dejaron a nadie dentro, y ahi ya lo dice el panel de arriba.
@@ -2112,7 +2140,7 @@ function pintarContraste(usgsId, totales) {
   const pct = ((100 * c.danadas) / c.evaluadas).toFixed(2).replace(".", ",");
   $("detalle-contraste").innerHTML =
     `Este reporte publica <strong>${comoConteo(totales.bld_mmi7p)} edificaciones ` +
-    `expuestas</strong> a MMI≥7 en todo el país. En ${c.zona}, ${c.fuente} evaluó ` +
+    `expuestas</strong> a MMI≥VII en todo el país. En ${c.zona}, ${c.fuente} evaluó ` +
     `${numero(c.evaluadas)} por imagen satelital y detectó daño en ` +
     `<strong>${numero(c.danadas)} (${pct} %)</strong>. Son dos preguntas distintas: ` +
     `exposición es quién quedó dentro de la franja; daño es a quién le pasó algo.`;
@@ -3015,10 +3043,10 @@ function dibujarContornos(m, datos, antes) {
       // "aquí hay algo que contar" de "aquí no".
       "line-width": [
         "interpolate", ["linear"], ["zoom"],
-        4, ["case", [">=", ["get", "mmi"], 6], 1.6, 0.7],
-        9, ["case", [">=", ["get", "mmi"], 6], 3.2, 1.4],
+        4, ["case", [">=", ["get", "mmi"], UMBRAL_CLASE[6]], 1.6, 0.7],
+        9, ["case", [">=", ["get", "mmi"], UMBRAL_CLASE[6]], 3.2, 1.4],
       ],
-      "line-opacity": ["case", [">=", ["get", "mmi"], 6], 0.95, 0.6],
+      "line-opacity": ["case", [">=", ["get", "mmi"], UMBRAL_CLASE[6]], 0.95, 0.6],
     },
   }, antes);
 }
@@ -3069,12 +3097,12 @@ function pintarLeyendaDeContornos(contornos) {
   $("leyenda-titulo").textContent = "Intensidad (isolíneas)";
   // Dos notas porque son dos situaciones distintas, y confundirlas seria
   // contestar mal la pregunta que trae al lector a este mapa.
-  $("leyenda-nota").textContent = niveles.some((v) => v >= 6)
+  $("leyenda-nota").textContent = niveles.some((v) => v >= UMBRAL_CLASE[6])
     ? "Los contornos del ShakeMap, sin malla debajo. La sacudida sí alcanzó " +
-      "MMI≥6, pero no sobre población del país: no hay nadie dentro que contar, " +
-      "y por eso las tablas van en cero. En gris, los niveles por debajo de 6, " +
+      "la intensidad VI, pero no sobre población del país: no hay nadie dentro que contar, " +
+      "y por eso las tablas van en cero. En gris, los niveles por debajo de 5,5, " +
       "que se sienten y que este sistema no cuantifica."
-    : "Los contornos del ShakeMap. Este evento no alcanza MMI 6 en ningún punto, " +
+    : "Los contornos del ShakeMap. Este evento no alcanza la intensidad VI (MMI 5,5) en ningún punto, " +
       "que es el umbral desde el que este sistema publica cifras: por eso las " +
       "tablas van en cero. En gris, los niveles que se sienten y que no se " +
       "cuantifican.";
@@ -3177,7 +3205,7 @@ function margenDeEncuadre(base) {
 function encuadrarSinMalla(m, reporte, contornos) {
   const lons = [];
   const lats = [];
-  for (const minimo of [6, -Infinity]) {
+  for (const minimo of [UMBRAL_CLASE[6], -Infinity]) {
     const borde = extremosDeContorno(contornos, minimo);
     if (borde.lons.length) {
       lons.push(...borde.lons);
@@ -3259,7 +3287,7 @@ function dibujarPerimetro(m, datos, reporte, antes) {
   // perimetro de otra pondria en el mapa un area que ninguna cifra nombra, y es
   // lo que hacia: `bandaDeTotales` llega a 8, asi que en Muisne el panel decia
   // «25.251 km² dentro de MMI≥7» y el mapa rodeaba los 2.002 km² de MMI≥8.
-  const minimo = bandaPublicada(reporte.totales);
+  const minimo = UMBRAL_CLASE[bandaPublicada(reporte.totales)];
   const per = perimetroDeCeldas(datos, minimo);
   if (!per) {
     anotarPintado("perimetro", 0);
@@ -3461,7 +3489,7 @@ function dibujarCeldas(m, datos, reporte, contornos) {
   // Y el área que el sistema cuantifica, que se sale de la malla en cuanto la
   // sacudida cruza agua o despoblado: Guayaquil llega al golfo, y encuadrar
   // solo los hexágonos dejaba fuera la mitad del contorno de MMI 6.
-  const borde = extremosDeContorno(contornos, 6);
+  const borde = extremosDeContorno(contornos, UMBRAL_CLASE[6]);
   lons.push(...borde.lons);
   lats.push(...borde.lats);
 
@@ -3634,8 +3662,8 @@ function rotularEpicentro(m, rasgo) {
   cerrarRotuloDeEpicentro();
   const banda = Number(p.banda) || 0;
   const cifra = banda
-    ? `${comoConteo(Number(p.pop) || 0)} en MMI≥${banda}`
-    : "sin población en MMI≥6";
+    ? `${comoConteo(Number(p.pop) || 0)} en ${etiquetaClase(banda)}`
+    : "sin población en MMI≥VI";
   rotuloEpicentro = new maplibregl.Popup({
     closeButton: false,
     closeOnClick: false,
@@ -4801,7 +4829,29 @@ async function cargarObservados() {
     anotarFallo("observados", "observados.json sin lista de eventos");
     return;
   }
-  const eventos = datos.eventos;
+  // LOS MEDIDOS SIN ALCANCE VAN EN LA MISMA CAPA (21-nov-2026).
+  //
+  // Un M6,7 a 108 km de profundidad salia como reporte completo con todas sus
+  // cifras en cero, y en el mapa se leia como un reporte roto. Desde la 2.0 no
+  // tiene reporte: es un sismo visto, como los de por debajo de M5,5, con una
+  // diferencia que la razon dice —este si se midio—. Un fichero que falta no
+  // tumba la capa: los observados se siguen pintando.
+  let medidos = [];
+  try {
+    const sinAlcance = await json(SIN_ALCANCE);
+    if (sinAlcance && Array.isArray(sinAlcance.eventos)) medidos = sinAlcance.eventos;
+  } catch (error) {
+    console.warn("sin_alcance:", error);
+  }
+  // Un id que ya tiene reporte no se pinta dos veces —estrella roja y gris en
+  // el mismo punto— aunque un fichero vaya un paso por detras del otro.
+  const conReporte = new Set((estado.eventos || []).map((e) => e.usgs_id));
+  const vistos = new Set();
+  const eventos = [...medidos.map((e) => ({ ...e, medido: true })), ...datos.eventos].filter((e) => {
+    if (conReporte.has(e.usgs_id) || vistos.has(e.usgs_id)) return false;
+    vistos.add(e.usgs_id);
+    return true;
+  });
   estado.vivo.ventanaSismos = datos.ventana_dias || 5;
   estado.observadosVentanaDias = datos.ventana_dias || 5;
   estado.vivo.sismosUtc = datos.generado_utc || null;
@@ -4833,8 +4883,9 @@ function pintarListaMenores(eventos, ventanaDias) {
   const lema = $("lema-menores");
   if (lema) {
     lema.textContent =
-      `Los ${eventos.length} de los últimos ${ventanaDias || 5} días que quedaron ` +
-      `por debajo del umbral de reporte. Se vieron; no se midió su impacto.`;
+      `Los ${eventos.length} que quedaron por debajo del umbral de reporte: los de ` +
+      `menos de M5,5 de los últimos ${ventanaDias || 5} días, que se vieron y no se ` +
+      `midieron, y los medidos en los que nadie llegó a la intensidad VI.`;
   }
 
   lista.replaceChildren(...eventos
@@ -4914,8 +4965,11 @@ function filaMenor(e) {
   const sin = document.createElement("span");
   sin.className = "evento-cifra";
   sin.innerHTML =
-    `<span class="sin-medicion">Sin medición</span>` +
-    `<small>${escapar(conComaDecimal(e.razon || "bajo el umbral"))}</small>`;
+    (e.medido
+      ? `<span class="sin-medicion">Sin alcance</span>` +
+        `<small>${escapar(e.razon || "nadie en la intensidad VI")}</small>`
+      : `<span class="sin-medicion">Sin medición</span>` +
+        `<small>${escapar(conComaDecimal(e.razon || "bajo el umbral"))}</small>`);
 
   li.append(cabecera, meta, sin);
   return li;
@@ -4973,6 +5027,7 @@ function dibujarObservados(eventos) {
             origen_utc: e.origen_utc,
             razon: e.razon,
             iso3: e.iso3 || "",
+            medido: Boolean(e.medido),
           },
         })),
       },
@@ -5014,7 +5069,10 @@ function dibujarObservados(eventos) {
           `<div class="popup-observado">` +
             `<strong>M${String(p.mag).replace(".", ",")}</strong> · ${escapar(p.lugar)}<br>` +
             `<span class="menor">${comoFecha(p.origen_utc)} · ${numero(p.depth_km)} km de profundidad</span>` +
-            `<p class="nota-observado">No se midió su impacto. ${escapar(conComaDecimal(p.razon))}.</p>` +
+            // `medido` llega como texto desde el GeoJSON de MapLibre.
+            (p.medido === true || p.medido === "true"
+              ? `<p class="nota-observado">Sin reporte: nadie quedó en la intensidad VI. ${escapar(p.razon)}.</p>`
+              : `<p class="nota-observado">No se midió su impacto. ${escapar(conComaDecimal(p.razon))}.</p>`) +
           `</div>`
         )
         .addTo(m);
@@ -5107,7 +5165,9 @@ function entradasDeLeyenda() {
   const observado = {
     sim: "sim-observado",
     titulo: "Sismo visto, sin reporte",
-    nota: "Estrella gris pequeña. Por debajo de M5,5: se vio y no se midió su impacto",
+    nota:
+      "Estrella gris pequeña. Por debajo de M5,5 —se vio y no se midió su impacto—, " +
+      "o medido sin nadie en la intensidad VI (MMI 5,5)",
   };
   const foco = {
     sim: "sim-fuego",
@@ -5187,8 +5247,9 @@ function pintarInterruptorObservados(eventos, ventanaDias) {
   const anfitrion = $("menores-controles") || $("controles-mapa") || $("mapa");
   if (!anfitrion) return;
 
-  const rotulo =
-    `(${eventos.length} en ${ventanaDias || 5} días, sin reporte)`;
+  // Sin «en 5 días»: los medidos sin alcance no caducan con la ventana de los
+  // observados, y la cifra cuenta los dos.
+  const rotulo = `(${eventos.length} sin reporte)`;
 
   // SI YA EXISTE, SE LE CAMBIA LA CIFRA. NO SE VUELVE A CREAR NI SE DEJA VIEJA.
   //

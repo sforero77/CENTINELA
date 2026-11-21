@@ -8,7 +8,7 @@ que un falso disparo silencioso, y el control editorial cuesta un clic.
 from __future__ import annotations
 
 from ..common.constants import SITIO_PUBLICADO
-from ..common.formatting import format_count_prose, format_number_es
+from ..common.formatting import etiqueta_clase, format_count_prose, format_number_es
 from .model import Report, banda_del_ranking, municipios_del_ranking
 
 #: Limite conservador por publicacion, compatible con la mayoria de redes.
@@ -57,7 +57,7 @@ def render_thread(report: Report) -> list[str]:
         # sacudida fue mar adentro. Es el mismo remedio que la linea de
         # deslizamiento ya aplica a su propio cero.
         posts.append(
-            "Ninguna persona del país queda dentro de MMI≥6. No es que falte el dato: "
+            "Ninguna persona del país queda dentro de MMI≥VI. No es que falte el dato: "
             "la intensidad que el ShakeMap dibuja para este evento no alcanza esa "
             "banda sobre territorio habitado."
         )
@@ -73,11 +73,11 @@ def render_thread(report: Report) -> list[str]:
         edificaciones = tot.bld_mmi7p if banda == 7 else tot.bld_mmi6p
         # Cuando la banda publicada ES la 6 no se repite la misma cifra dos
         # veces: "MMI≥6: 3.400. Dentro de MMI≥6: 3.400." no informa de nada.
-        dentro = f"Dentro de MMI≥7: {format_count_prose(tot.pop_mmi7p)}. " if banda == 7 else ""
+        dentro = f"Dentro de MMI≥VII: {format_count_prose(tot.pop_mmi7p)}. " if banda == 7 else ""
         posts.append(
-            f"Personas dentro de intensidad MMI≥6: {format_count_prose(tot.pop_mmi6p)}. "
+            f"Personas dentro de intensidad MMI≥VI: {format_count_prose(tot.pop_mmi6p)}. "
             f"{dentro}"
-            f"Edificaciones en MMI≥{banda}: "
+            f"Edificaciones en {etiqueta_clase(banda)}: "
             f"{format_count_prose(edificaciones)}."
         )
 
@@ -90,7 +90,9 @@ def render_thread(report: Report) -> list[str]:
     expuestos = municipios_del_ranking(report)
     if expuestos:
         nombres = ", ".join(m.nombre for m in expuestos[:3])
-        posts.append(f"Municipios más expuestos (MMI≥{banda_del_ranking(report)}): {nombres}.")
+        posts.append(
+            f"Municipios más expuestos ({etiqueta_clase(banda_del_ranking(report))}): {nombres}."
+        )
     elif not report.preliminar:
         # Y cuando no hay ninguno se dice, en vez de nombrar a los tres primeros
         # de una lista de ceros — que es lo que hacia con los sismos mar adentro.

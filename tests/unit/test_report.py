@@ -68,7 +68,7 @@ def reporte() -> Report:
 
 @pytest.fixture
 def validator() -> Draft202012Validator:
-    schema = json.loads((SCHEMAS_DIR / "report-1.0.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads((SCHEMAS_DIR / "report-2.0.schema.json").read_text(encoding="utf-8"))
     return Draft202012Validator(schema)
 
 

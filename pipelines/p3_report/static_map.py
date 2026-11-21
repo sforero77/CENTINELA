@@ -39,7 +39,8 @@ from ..common.atribucion import (
     linea_de_credito,
     para_superficie,
 )
-from ..common.formatting import format_count_prose, format_number_es, titulo_es
+from ..common.constants import UMBRAL_CLASE
+from ..common.formatting import etiqueta_clase, format_count_prose, format_number_es, titulo_es
 from ..common.logging import get_logger
 from .model import Report, banda_del_ranking
 
@@ -143,6 +144,8 @@ ATTRIBUTION_LINE = linea_de_credito(
 #: Es la misma rampa que usa el visor (`site/assets/app.js`): el mismo evento no
 #: puede salir de dos colores distintos segun se mire el PNG o la pagina.
 MMI_COLORS: dict[float, str] = {
+    # Clase VI desde 5,5 (`report/2.0`): un paso mas claro de la misma OrRd.
+    5.5: "#fdd49e",
     6.0: "#fdbb84",
     6.5: "#fc8d59",
     7.0: "#ef6548",
@@ -152,9 +155,9 @@ MMI_COLORS: dict[float, str] = {
 }
 
 #: Por debajo de esto no se **rellena** ninguna banda.
-MMI_MIN_MAPPED = 6.0
+MMI_MIN_MAPPED = UMBRAL_CLASE[6]
 
-#: El gris de las isolineas por debajo de MMI 6. Es el mismo
+#: El gris de las isolineas por debajo de la clase VI (MMI 5,5). Es el mismo
 #: `COLOR_CONTORNO_BAJO` del visor, y por el mismo motivo: son niveles que se
 #: sienten y que este sistema **no cuantifica**, asi que no llevan color de la
 #: rampa — pintarlos con ella sugeriria que si.
@@ -369,7 +372,7 @@ def render_map(
         )
     else:
         subtitulo = (
-            f"Población en MMI≥{banda} por municipio · "
+            f"Población en {etiqueta_clase(banda)} por municipio · "
             f"ShakeMap v{report.inputs.shakemap_version}"
             " · exposición estimada, no daño"
         )
@@ -395,7 +398,11 @@ def render_map(
 
     bandas, hay_bajas = _bandas_dibujadas(contornos, puntos)
     leyenda: list[Any] = [
-        Patch(facecolor=color_apilado(bandas, v), edgecolor="white", label=f"MMI {v:g}")
+        Patch(
+            facecolor=color_apilado(bandas, v),
+            edgecolor="white",
+            label=f"MMI {format_number_es(v, 1)}",
+        )
         for v in bandas
     ]
     if hay_bajas:
@@ -408,7 +415,7 @@ def render_map(
                 [],
                 color=COLOR_CONTORNO_BAJO,
                 linewidth=1.6,
-                label="MMI < 6 · no se cuantifica",
+                label=f"MMI < {format_number_es(UMBRAL_CLASE[6], 1)} · no se cuantifica",
             )
         )
     if anillos:

@@ -72,7 +72,8 @@ Contrato formal: [`schemas/event-state.schema.json`](../../schemas/event-state.s
 
 > **Contar filas del `adm2.csv` no da «municipios expuestos».** `SQL_IMPACT_ADM2`
 > agrega desde MMI 5,0 —el suelo del relleno de contornos— y las cifras se
-> cuentan desde MMI≥6, así que un municipio alcanzado solo por debajo de esa
+> cuentan desde la clase VI (MMI≥5,5 desde `report/2.0`; MMI≥6 en la 1.0, que es
+> la de las cifras de abajo), así que un municipio alcanzado solo por debajo de esa
 > banda aparece con su `mmi_max` y el resto de columnas en cero. De las 299
 > filas de `us6000tjl2`, **188 están enteras en cero**: 109 municipios tienen
 > población en MMI≥6 y 44 en MMI≥7. El README publicaba «Municipios alcanzados:

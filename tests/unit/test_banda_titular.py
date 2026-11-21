@@ -10,7 +10,7 @@ El producto entero titulaba con MMI≥7. Para esos ocho eventos eso significaba:
 * una cifra grande que decia **0 personas**,
 * una tabla de "municipios mas expuestos" ordenada por una columna de ceros, o
   sea en orden alfabetico,
-* y una columna rotulada "Población MMI≥7" con quince ceros debajo.
+* y una columna rotulada "Población MMI≥VII" con quince ceros debajo.
 
 Tehuantepec 2017 —M8,2, 98 muertos— se publicaba asi. Un cero es cierto y se lee
 como que el sistema fallo, o como que el sismo no fue nada.
@@ -41,7 +41,7 @@ def test_un_sismo_que_no_alcanza_poblacion_no_tiene_banda() -> None:
     """Masachapa 2022: M6,6 a 55 km mar adentro, cero en todas las bandas.
 
     Tambien es un resultado. Devolver 6 aqui haria que el visor titulara "0
-    personas en MMI≥6", que es la frase que este arreglo existe para evitar.
+    personas en MMI≥VI", que es la frase que este arreglo existe para evitar.
     """
     assert Totales().banda_titular == 0
 
@@ -83,8 +83,8 @@ def test_la_tabla_se_rotula_con_la_banda_alcanzada() -> None:
 
     texto = render_markdown(reporte)
 
-    assert "Población MMI≥6" in texto
-    assert "por población en MMI≥6" in texto
+    assert "Población MMI≥VI" in texto
+    assert "por población en MMI≥VI" in texto
     assert "41 mil" in texto, "la tabla tiene que traer la cifra de la banda, no el cero"
 
 
@@ -97,7 +97,7 @@ def test_un_evento_que_si_llega_a_siete_no_cambia() -> None:
 
     texto = render_markdown(reporte)
 
-    assert "Población MMI≥7" in texto
+    assert "Población MMI≥VII" in texto
     assert "500 mil" in texto
 
 
@@ -196,8 +196,10 @@ def test_la_tabla_no_se_queda_en_una_fila_por_cuatro_personas() -> None:
 
     texto = render_markdown(reporte)
 
-    assert "por población en MMI≥6" in texto
-    assert "Juchitán" in texto, "el municipio mas expuesto salia de la tabla por no estar en MMI≥7"
+    assert "por población en MMI≥VI" in texto
+    assert "Juchitán" in texto, (
+        "el municipio mas expuesto salia de la tabla por no estar en MMI≥VII"
+    )
 
 
 def test_el_visor_aplica_el_mismo_suelo() -> None:
@@ -246,7 +248,7 @@ def test_el_visor_usa_la_misma_regla_que_el_reporte() -> None:
     app = (Path(__file__).parent.parent.parent / "site" / "assets" / "app.js").read_text("utf-8")
 
     assert "function bandaPublicada(" in app
-    assert "pop_mmi6p" in app, "el visor no puede bajar de banda sin la cifra de MMI≥6"
+    assert "pop_mmi6p" in app, "el visor no puede bajar de banda sin la cifra de MMI≥VI"
 
 
 def test_el_visor_no_decide_la_banda_en_tres_sitios() -> None:
@@ -290,3 +292,32 @@ def test_el_indice_publica_las_dos_bandas() -> None:
 
     assert '"pop_mmi6p"' in fuente
     assert '"pop_mmi7p"' in fuente
+
+
+def test_el_visor_corta_cada_clase_donde_el_reporte() -> None:
+    """`UMBRAL_CLASE` esta dos veces, en Python y en `site/assets/app.js`.
+
+    El visor compara celdas e isolineas contra la banda publicada: con un
+    corte distinto al del SQL, el perimetro y el area de "dentro de MMI≥VI"
+    rodearian otras celdas que las que el reporte cuenta.
+    """
+    import re
+    from pathlib import Path
+
+    from pipelines.common.constants import ROMANO_CLASE, UMBRAL_CLASE
+
+    app = (Path(__file__).parent.parent.parent / "site" / "assets" / "app.js").read_text("utf-8")
+    umbral = re.search(r"^const UMBRAL_CLASE = \{([^}]*)\};", app, re.M)
+    romano = re.search(r"^const ROMANO_CLASE = \{([^}]*)\};", app, re.M)
+    assert umbral and romano, "el visor no declara UMBRAL_CLASE / ROMANO_CLASE"
+    leido = {int(k): float(v) for k, v in re.findall(r"(\d+):\s*([0-9.]+)", umbral[1])}
+    leido_romano = {int(k): v for k, v in re.findall(r'(\d+):\s*"([IVX]+)"', romano[1])}
+    assert leido == UMBRAL_CLASE
+    assert leido_romano == ROMANO_CLASE
+
+
+def test_las_clases_son_las_del_usgs() -> None:
+    """VI empieza en 5,5: la fila «VI» de PAGER, no el decimal 6,0."""
+    from pipelines.common.constants import UMBRAL_CLASE
+
+    assert UMBRAL_CLASE == {6: 5.5, 7: 6.5, 8: 7.5}

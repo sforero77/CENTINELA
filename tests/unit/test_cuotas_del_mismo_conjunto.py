@@ -51,7 +51,7 @@ def test_la_cuota_de_terreno_se_divide_por_su_propia_banda() -> None:
 
 def test_la_etiqueta_nombra_el_universo_de_la_cuota() -> None:
     """Una cuota sin su universo escrito al lado es media cifra."""
-    assert "de los expuestos en MMI≥6" in APP
+    assert "de los expuestos en MMI≥VI" in APP
 
 
 @pytest.mark.parametrize("reporte", REPORTES, ids=_ids)
@@ -75,7 +75,11 @@ def test_ninguna_cuota_publicada_pasa_del_cien_por_cien(reporte: Path) -> None:
 
 def test_el_conteo_de_terreno_sale_de_la_banda_seis() -> None:
     """La premisa del arreglo, leida del SQL que produce la cifra."""
-    from pipelines.common.constants import GROUND_FAILURE_HIGH_PROB, MMI_BAND_AGE_BREAKDOWN
+    from pipelines.common.constants import (
+        GROUND_FAILURE_HIGH_PROB,
+        MMI_BAND_AGE_BREAKDOWN,
+        UMBRAL_CLASE,
+    )
     from pipelines.p2_impact.pipeline import SQL_TOTALES
 
     sql = SQL_TOTALES.format(edad=MMI_BAND_AGE_BREAKDOWN, gf=GROUND_FAILURE_HIGH_PROB)
@@ -84,8 +88,8 @@ def test_el_conteo_de_terreno_sale_de_la_banda_seis() -> None:
         # La expresion ocupa dos lineas; se busca el `WHEN` de la anterior.
         indice = sql.splitlines().index(linea)
         expresion = "\n".join(sql.splitlines()[max(0, indice - 1) : indice + 1])
-        assert "mmi_max >= 6" in expresion, (
-            f"{alias} ya no se cuenta sobre MMI>=6; la cuota del visor divide por esa banda"
+        assert f"mmi_max >= {UMBRAL_CLASE[6]}" in expresion, (
+            f"{alias} ya no se cuenta sobre la clase VI; la cuota del visor divide por esa banda"
         )
 
 
@@ -99,4 +103,4 @@ def test_el_reporte_dice_sobre_que_banda_cuenta() -> None:
         inputs=Inputs(shakemap_version=1, groundfailure_version=1, exposure_manifest="x"),
         totales=Totales(pop_mmi6p=1000.0, pop_lq_alta=100.0),
     )
-    assert "celdas de MMI≥6" in _linea_ground_failure(reporte, "lq", 100.0)
+    assert "celdas de MMI≥VI" in _linea_ground_failure(reporte, "lq", 100.0)

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import math
 
-from .constants import PROSE_SIGNIFICANT_DIGITS
+from .constants import PROSE_SIGNIFICANT_DIGITS, ROMANO_CLASE, UMBRAL_CLASE
 
 
 def round_significant(value: float, digits: int = PROSE_SIGNIFICANT_DIGITS) -> float:
@@ -133,3 +133,20 @@ def titulo_es(nombre: str) -> str:
         baja = palabra.lower()
         salida.append(baja if i and baja in _ATONAS else baja.capitalize())
     return " ".join(salida)
+
+
+def etiqueta_clase(clase: int) -> str:
+    """Rotulo corto de una banda publicada: ``"MMI≥VI"``.
+
+    Desde `report/2.0` las bandas son clases USGS en numeros romanos, no
+    decimales literales: "MMI≥6" se leia como 6,0 o mas y la clase VI empieza en
+    5,5. El romano es la forma en que el USGS, PAGER y la prensa la nombran.
+    """
+    return f"MMI≥{ROMANO_CLASE[clase]}"
+
+
+def explicacion_clase(clase: int) -> str:
+    """Rotulo con su corte numerico: ``"intensidad VI o más (MMI≥5,5)"``."""
+    return (
+        f"intensidad {ROMANO_CLASE[clase]} o más (MMI≥{format_number_es(UMBRAL_CLASE[clase], 1)})"
+    )

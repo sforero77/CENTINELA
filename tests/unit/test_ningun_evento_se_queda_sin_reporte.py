@@ -83,6 +83,10 @@ def test_ningun_evento_en_vuelo_lleva_horas_sin_reporte() -> None:
         # podia cerrar. Que solo lo escriba ese comando lo vigila la prueba de
         # abajo.
         and d["estado"] != "descartado"
+        # `sin_alcance` tampoco: se midio con su ShakeMap y nadie llego a la
+        # clase VI. No tener reporte ES el resultado (`report/2.0`), y el
+        # evento se enseña en `site/sin_alcance.json`.
+        and d["estado"] != "sin_alcance"
         and not _tiene_reporte(eid)
         and _horas(d["origen_utc"]) > MAX_HORAS_SIN_REPORTE
     ]

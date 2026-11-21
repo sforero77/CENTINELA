@@ -33,6 +33,7 @@ from ..common.constants import (
     MMI_BAND_AGE_BREAKDOWN,
     PRELIMINARY_RADII_KM,
     TOP_ADM2_COUNT,
+    UMBRAL_CLASE,
 )
 from ..common.formatting import titulo_es
 from ..common.geo import haversine_km
@@ -65,7 +66,24 @@ from .shakemap import contours_to_h3, parse_contours
 
 _log = get_logger(__name__)
 
-#: Banda MMI minima que se rellena. El reporte publica desde MMI 6; rellenar
+
+def _con_umbrales(plantilla: str) -> str:
+    """Escribe en el SQL el corte de cada clase USGS (`{{c6}}` -> 5.5, ...).
+
+    LAS BANDAS SON CLASES DESDE `report/2.0`. El SQL decia `mmi_max >= 6`
+    literal: la clase VI del USGS empieza en 5,5 y un sismo cuyo ShakeMap
+    llegaba a 5,7 salia con cero personas donde PAGER contaba miles. El corte
+    sale de `UMBRAL_CLASE` y se escribe aqui una vez; `{gf}` y `{edad}` siguen
+    siendo los parametros de siempre (`edad` ya va escrito: es la clase VII).
+    """
+    return plantilla.format(
+        c6=UMBRAL_CLASE[6],
+        c7=UMBRAL_CLASE[7],
+        c8=UMBRAL_CLASE[8],
+    )
+
+
+#: Banda MMI minima que se rellena. El reporte publica desde la clase VI (5,5); rellenar
 #: los niveles bajos multiplica las celdas sin cambiar una sola cifra.
 MMI_MIN_POLYFILL = 5.0
 
@@ -356,45 +374,45 @@ LEFT JOIN gf_cells AS g USING (h3_08)
 #: daba mas que la cifra nacional del mismo evento, las dos positivas y del orden
 #: correcto, asi que ninguna prueba lo veia. El corte va en los dos sitios y en
 #: el nombre de la columna.
-SQL_IMPACT_ADM2 = """
+SQL_IMPACT_ADM2 = _con_umbrales("""
 CREATE OR REPLACE TABLE impact_adm2 AS
 SELECT
     usgs_id, shakemap_version, adm2_id,
     MAX(mmi_max) AS mmi_max,
-    SUM(CASE WHEN mmi_max >= 6 THEN pop_total ELSE 0 END) AS pop_mmi6p,
-    SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END) AS pop_mmi7p,
-    SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END) AS pop_mmi8p,
-    SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END) AS pop_65p_mmi7p,
-    SUM(CASE WHEN mmi_max >= 6 THEN pop_65p ELSE 0 END) AS pop_65p_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 THEN bld_count ELSE 0 END) AS bld_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 THEN built_m2 ELSE 0 END) AS built_m2_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 THEN health_count ELSE 0 END) AS health_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 THEN edu_count ELSE 0 END) AS edu_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6
+    SUM(CASE WHEN mmi_max >= {c6} THEN pop_total ELSE 0 END) AS pop_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN pop_total ELSE 0 END) AS pop_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c8} THEN pop_total ELSE 0 END) AS pop_mmi8p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN pop_65p ELSE 0 END) AS pop_65p_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN pop_65p ELSE 0 END) AS pop_65p_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN bld_count ELSE 0 END) AS bld_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN built_m2 ELSE 0 END) AS built_m2_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN health_count ELSE 0 END) AS health_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN edu_count ELSE 0 END) AS edu_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6}
              THEN road_km_primary + road_km_secondary + road_km_other
              ELSE 0 END) AS road_km_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6
+    SUM(CASE WHEN mmi_max >= {c6}
              THEN road_km_primary + road_km_secondary
              ELSE 0 END) AS road_km_principal_mmi6p,
-    SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END) AS bld_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END) AS built_m2_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END) AS health_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END) AS edu_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7
+    SUM(CASE WHEN mmi_max >= {c7} THEN bld_count ELSE 0 END) AS bld_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN built_m2 ELSE 0 END) AS built_m2_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN health_count ELSE 0 END) AS health_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN edu_count ELSE 0 END) AS edu_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c7}
              THEN road_km_primary + road_km_secondary + road_km_other
              ELSE 0 END) AS road_km_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7
+    SUM(CASE WHEN mmi_max >= {c7}
              THEN road_km_primary + road_km_secondary
              ELSE 0 END) AS road_km_principal_mmi7p,
-    SUM(CASE WHEN mmi_max >= 6 AND ls_prob >= {gf}
+    SUM(CASE WHEN mmi_max >= {c6} AND ls_prob >= {{gf}}
              THEN pop_total ELSE 0 END) AS ls_pop_expuesta_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 AND lq_prob >= {gf}
+    SUM(CASE WHEN mmi_max >= {c6} AND lq_prob >= {{gf}}
              THEN pop_total ELSE 0 END) AS lq_pop_expuesta_mmi6p,
     NULLIF(STRING_AGG(DISTINCT flags_calidad, ','), '') AS flags_calidad
 FROM impact_h3
 GROUP BY ALL
 ORDER BY pop_mmi7p DESC
-"""
+""")
 
 #: Cifras nacionales del evento. **Cada expresion lleva el nombre del campo de
 #: :class:`ImpactTotals` al que va**, y el dataclass se construye por ese nombre.
@@ -404,42 +422,42 @@ ORDER BY pop_mmi7p DESC
 #: dejaba la suite entera en verde y publicaba "1.003 sedes de salud" donde hay
 #: 516. Es un fallo que no se puede ver leyendo ninguno de los dos ficheros por
 #: separado, porque los dos son correctos; lo que estaba mal era la costura.
-SQL_TOTALES = """
+SQL_TOTALES = _con_umbrales("""
 SELECT
-    SUM(CASE WHEN mmi_max >= 6 THEN pop_total ELSE 0 END)      AS pop_mmi6p,
-    SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END)      AS pop_mmi7p,
-    SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END)      AS pop_mmi8p,
-    SUM(CASE WHEN mmi_max >= {edad} THEN pop_65p ELSE 0 END)   AS pop_65p_mmi7p,
-    SUM(CASE WHEN mmi_max >= 6 THEN pop_65p ELSE 0 END)        AS pop_65p_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 THEN bld_count ELSE 0 END)      AS bld_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 THEN built_m2 ELSE 0 END)       AS built_m2_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 THEN health_count ELSE 0 END)   AS health_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6 THEN edu_count ELSE 0 END)      AS edu_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6
+    SUM(CASE WHEN mmi_max >= {c6} THEN pop_total ELSE 0 END)      AS pop_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN pop_total ELSE 0 END)      AS pop_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c8} THEN pop_total ELSE 0 END)      AS pop_mmi8p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN pop_65p ELSE 0 END)   AS pop_65p_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN pop_65p ELSE 0 END)        AS pop_65p_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN bld_count ELSE 0 END)      AS bld_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN built_m2 ELSE 0 END)       AS built_m2_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN health_count ELSE 0 END)   AS health_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6} THEN edu_count ELSE 0 END)      AS edu_mmi6p,
+    SUM(CASE WHEN mmi_max >= {c6}
              THEN road_km_primary + road_km_secondary + road_km_other
              ELSE 0 END)                                       AS road_km_mmi6p,
-    SUM(CASE WHEN mmi_max >= 6
+    SUM(CASE WHEN mmi_max >= {c6}
              THEN road_km_primary + road_km_secondary
              ELSE 0 END)                                       AS road_km_principal_mmi6p,
-    SUM(CASE WHEN mmi_max >= 7 THEN bld_count ELSE 0 END)      AS bld_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7 THEN built_m2 ELSE 0 END)       AS built_m2_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7 THEN health_count ELSE 0 END)   AS health_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7 THEN edu_count ELSE 0 END)      AS edu_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7
+    SUM(CASE WHEN mmi_max >= {c7} THEN bld_count ELSE 0 END)      AS bld_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN built_m2 ELSE 0 END)       AS built_m2_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN health_count ELSE 0 END)   AS health_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c7} THEN edu_count ELSE 0 END)      AS edu_mmi7p,
+    SUM(CASE WHEN mmi_max >= {c7}
              THEN road_km_primary + road_km_secondary + road_km_other
              ELSE 0 END)                                       AS road_km_mmi7p,
-    SUM(CASE WHEN mmi_max >= 7
+    SUM(CASE WHEN mmi_max >= {c7}
              THEN road_km_primary + road_km_secondary
              ELSE 0 END)                                       AS road_km_principal_mmi7p,
-    SUM(CASE WHEN mmi_max >= 6 AND ls_prob >= {gf} THEN pop_total ELSE 0 END)
+    SUM(CASE WHEN mmi_max >= {c6} AND ls_prob >= {{gf}} THEN pop_total ELSE 0 END)
                                                                AS pop_ls_alta,
-    SUM(CASE WHEN mmi_max >= 6 AND lq_prob >= {gf} THEN pop_total ELSE 0 END)
+    SUM(CASE WHEN mmi_max >= {c6} AND lq_prob >= {{gf}} THEN pop_total ELSE 0 END)
                                                                AS pop_lq_alta,
     100 * abs(SUM(pop_total) - SUM(pop_alt_worldpop))
         / NULLIF(SUM(pop_alt_worldpop), 0)                     AS discrepancia_pct
 FROM impact_h3
-WHERE mmi_max >= 6
-"""
+WHERE mmi_max >= {c6}
+""")
 
 
 def leer_totales(con: Any, *, columnas_ausentes: tuple[str, ...] = ()) -> ImpactTotals:

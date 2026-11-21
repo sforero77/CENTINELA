@@ -127,6 +127,13 @@ con prisa, y es lo único que este proyecto no automatiza.
 
 ## 5. Contraste con PAGER, en las mismas bandas
 
+> **Desde `report/2.0` (21-nov-2026) las bandas de CENTINELA son las mismas
+> clases que las de PAGER**: VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5. La
+> tabla de abajo es la comparación hecha con el reporte `1.0` del Chocó, cuando
+> CENTINELA cortaba en 6,0 / 7,0 / 8,0 literales y su cifra caía *entre* dos
+> filas de PAGER. Al reemitir ese reporte con la 2.0, la comparación pasa a ser
+> fila contra fila y esta sección se reescribe con sus cifras.
+
 Es la primera objeción que recibe este proyecto, y conviene resolverla antes de
 que la haga nadie: **para el sismo del Chocó, PAGER (USGS) publica 7.089.614
 personas en su fila «7» y CENTINELA publica 2.434.710 en MMI≥7.** Un factor de

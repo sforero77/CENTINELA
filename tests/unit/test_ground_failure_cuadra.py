@@ -24,12 +24,12 @@ from pipelines.p2_impact.pipeline import SQL_IMPACT_ADM2, SQL_TOTALES
 pytestmark = pytest.mark.geo
 
 #: Tres celdas del mismo municipio, todas con licuefaccion por encima del
-#: umbral. La primera esta **por debajo** de MMI 6: es la que separaba las dos
-#: cifras.
+#: umbral. La primera esta **por debajo** de la clase VI (MMI 5,0 < 5,5): es la
+#: que separaba las dos cifras.
 FIXTURE = """
 CREATE OR REPLACE TABLE impact_h3 AS
 SELECT * FROM (VALUES
-    (1::UBIGINT, 'ev', 7, '05001', 5.5, 5.5, 1000.0, 900.0, 100.0,
+    (1::UBIGINT, 'ev', 7, '05001', 5.0, 5.0, 1000.0, 900.0, 100.0,
      10.0, 5000.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.30, 0.30, NULL),
     (2::UBIGINT, 'ev', 7, '05001', 6.5, 6.5, 2000.0, 1900.0, 200.0,
      20.0, 9000.0, 2.0, 3.0, 2.0, 2.0, 2.0, 0.30, 0.30, NULL),
@@ -81,7 +81,7 @@ def test_la_suma_municipal_de_deslizamiento_es_la_cifra_nacional(con: Any) -> No
     assert municipal == pytest.approx(nacional)
 
 
-def test_la_celda_por_debajo_de_mmi6_no_entra_en_ninguna_de_las_dos(con: Any) -> None:
+def test_la_celda_por_debajo_de_la_clase_vi_no_entra_en_ninguna_de_las_dos(con: Any) -> None:
     """El contrato que el sufijo `_mmi6p` declara: 2.000, no 3.000."""
     municipal: float = con.execute("SELECT sum(lq_pop_expuesta_mmi6p) FROM impact_adm2").fetchone()[
         0

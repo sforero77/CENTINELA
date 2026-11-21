@@ -116,7 +116,7 @@ def test_la_rampa_es_monotona_en_luminosidad() -> None:
 
 
 def test_banda_por_debajo_del_minimo_cae_en_la_primera() -> None:
-    assert banda_de_mmi(5.0) == 6.0
+    assert banda_de_mmi(5.0) == 5.5
     assert banda_de_mmi(7.4) == 7.0
 
 

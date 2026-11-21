@@ -172,7 +172,12 @@ def test_una_celda_mixta_no_cuenta_a_sus_hijas_de_otra_banda() -> None:
     for columna in ("road_km_primary", "road_km_secondary", "road_km_other"):
         con.execute(f"ALTER TABLE impact_h3 ADD COLUMN {columna} DOUBLE DEFAULT 0.0")
 
-    fila = con.execute(SQL_CELDAS.format(resolucion=7, mmi_minimo=6.0)).fetchone()
+    from pipelines.common.constants import UMBRAL_CLASE
+
+    sql = SQL_CELDAS.format(
+        resolucion=7, mmi_minimo=UMBRAL_CLASE[6], c7=UMBRAL_CLASE[7], c8=UMBRAL_CLASE[8]
+    )
+    fila = con.execute(sql).fetchone()
     columnas = ["h3", "mmi", "pop", "pop7", "pop8", "bld", "built_m2", "vias_km", "salud", "edu"]
     # DuckDB devuelve `round()` como DECIMAL; el fichero lo escribe como numero.
     valores = {
@@ -181,5 +186,5 @@ def test_una_celda_mixta_no_cuenta_a_sus_hijas_de_otra_banda() -> None:
 
     assert valores["mmi"] == pytest.approx(7.2), "la celda se rotula con el maximo"
     assert valores["pop"] == pytest.approx(1000), "y `pop` sigue siendo la celda entera"
-    assert valores["pop7"] == pytest.approx(100), "pero en MMI>=7 solo hay cien personas"
+    assert valores["pop7"] == pytest.approx(100), "pero en la clase VII solo hay cien personas"
     assert valores["pop8"] == pytest.approx(0)

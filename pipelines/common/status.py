@@ -383,6 +383,12 @@ def write_status(
             "fichero_apartado": historial.apartado_en,
         }
     destino.write_text(json.dumps(datos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # Los sismos medidos sin nadie en la clase VI salen de los mismos estados y
+    # se publican en el mismo paso: todo workflow que refresca la pagina de
+    # estado deja tambien al dia la capa gris del visor.
+    from .sin_alcance import write_sin_alcance
+
+    write_sin_alcance(events_dir=events_dir, site_dir=destino.parent)
     _log.info(
         "estado publicado",
         extra={

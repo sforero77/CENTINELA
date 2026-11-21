@@ -26,7 +26,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ..common.constants import H3_RES_VIEWER
+from ..common.constants import H3_RES_VIEWER, UMBRAL_CLASE
 from ..common.logging import get_logger
 
 _log = get_logger(__name__)
@@ -40,10 +40,14 @@ RES_VISOR = H3_RES_VIEWER
 
 #: Umbral de intensidad por debajo del cual la celda no se publica.
 #:
-#: El reporte no dice nada de MMI < 6 y dibujarlo llenaria el mapa de celdas
+#: Es el corte de la clase USGS VI (5,5) desde `report/2.0`: el mismo que el
+#: de `pop_mmi6p`. Con 6,0 literal un sismo cuyo ShakeMap llegaba a 5,7 —clase
+#: VI para el USGS— no dibujaba ni una celda.
+#:
+#: El reporte no dice nada por debajo de la clase VI y dibujarlo llenaria el mapa de celdas
 #: sobre las que el sistema no se pronuncia — que es justo la lectura que hay
 #: que evitar: color en el mapa se lee como "aqui pasa algo".
-MMI_MINIMO = 6.0
+MMI_MINIMO = UMBRAL_CLASE[6]
 
 #: Columnas que viajan, en orden. Son las que el visor sabe pintar.
 #:
@@ -78,8 +82,8 @@ SELECT
     h3_h3_to_string(h3_cell_to_parent(h3_08, {resolucion})) AS h3,
     round(max(mmi_max), 1)                                  AS mmi,
     round(sum(pop_total))                                   AS pop,
-    round(sum(pop_total) FILTER (WHERE mmi_max >= 7))       AS pop7,
-    round(sum(pop_total) FILTER (WHERE mmi_max >= 8))       AS pop8,
+    round(sum(pop_total) FILTER (WHERE mmi_max >= {c7}))     AS pop7,
+    round(sum(pop_total) FILTER (WHERE mmi_max >= {c8}))     AS pop8,
     round(sum(bld_count))                                   AS bld,
     round(sum(built_m2))                                    AS built_m2,
     round(sum(road_km_primary + road_km_secondary + road_km_other), 1) AS vias_km,
@@ -100,8 +104,11 @@ NOTA = (
     "es una COTA INFERIOR: lleva el valor de la isolinea que contiene el CENTRO de "
     "la celda, asi que una celda con el centro en la banda 7,0 y una esquina en la "
     "de 7,5 sale como 7,0. Nunca sobreestima. "
-    "`pop`, `pop7` y `pop8` son la poblacion de las celdas r8 con MMI>={mmi_minimo:g}, "
-    ">=7 y >=8 respectivamente: sumar `pop7` sobre todo el fichero da el "
+    "Las bandas son clases de intensidad del USGS: VI desde MMI 5,5, VII desde "
+    "6,5, VIII desde 7,5. "
+    "`pop`, `pop7` y `pop8` son la poblacion de las celdas r8 con MMI>={mmi_minimo:g} "
+    "(clase VI o mas), >=6.5 (VII o mas) y >=7.5 (VIII o mas): sumar `pop7` sobre "
+    "todo el fichero da el "
     "`pop_mmi7p` del reporte. "
     "El resto de columnas son el agregado de las celdas r8 con MMI>={mmi_minimo:g}, "
     "no de una banda concreta: no se pueden sumar filtrando por `mmi`."
@@ -121,7 +128,11 @@ def write_cells_json(
     campo en cada una de decenas de miles de celdas triplica el fichero sin
     anadir nada que el visor no sepa ya.
     """
-    filas = con.execute(SQL_CELDAS.format(resolucion=resolucion, mmi_minimo=mmi_minimo)).fetchall()
+    filas = con.execute(
+        SQL_CELDAS.format(
+            resolucion=resolucion, mmi_minimo=mmi_minimo, c7=UMBRAL_CLASE[7], c8=UMBRAL_CLASE[8]
+        )
+    ).fetchall()
 
     datos = {
         "resolucion": resolucion,

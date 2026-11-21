@@ -2357,7 +2357,7 @@ def test_el_filtro_de_pais_tambien_recorta_la_tarjeta_y_la_lista_de_menores(
     # Y el tercer sitio que cuenta lo mismo: el interruptor de la capa, que
     # congelaba su cifra en la del arranque porque solo se pintaba una vez.
     rotulo = pagina.locator("#interruptor-observados .menor").inner_text()
-    assert f"({esperados} en" in rotulo, (
+    assert f"({esperados} sin reporte)" in rotulo, (
         f"el interruptor ofrece «{rotulo}» con {iso3} puesto, y el mapa deja {esperados} estrellas"
     )
 
@@ -3371,12 +3371,12 @@ def test_un_evento_que_llega_a_mmi8_no_niega_su_mmi7(pagina: Any) -> None:
     pagina.wait_for_timeout(800)
 
     bloque = pagina.locator("#detalle-metricas").inner_text()
-    assert "no alcanzó MMI 7" not in bloque, (
+    assert "no alcanzó la intensidad VII" not in bloque, (
         f"el panel niega el MMI≥7 de un evento que lo tiene: {bloque!r}"
     )
     # Y las dos bandas se enseñan rotuladas, para que "174.000 de 65 años o mas"
     # no quede debajo de una cifra menor que el.
-    assert "MMI≥7" in bloque and "MMI≥8" in bloque, f"falta alguna banda: {bloque!r}"
+    assert "MMI≥VII" in bloque and "MMI≥VIII" in bloque, f"falta alguna banda: {bloque!r}"
 
 
 @pytest.mark.visor
@@ -3390,8 +3390,8 @@ def test_un_evento_que_no_llega_a_mmi7_si_lo_dice(pagina: Any) -> None:
 
     # El CSS pone el titulo en versalitas: se compara en mayusculas.
     titulo = pagina.locator("#titulo-metricas").inner_text().upper()
-    assert "MMI≥6" in titulo and "SACUDIDA FUERTE" in titulo, titulo
-    assert "no alcanzó MMI 7" in pagina.locator("#detalle-metricas").inner_text()
+    assert "MMI≥VI" in titulo and "SACUDIDA FUERTE" in titulo, titulo
+    assert "no alcanzó la intensidad VII" in pagina.locator("#detalle-metricas").inner_text()
 
 
 @pytest.mark.visor
@@ -3421,7 +3421,7 @@ def test_los_municipios_mas_expuestos_lo_estan(pagina: Any) -> None:
     assert "Portoviejo" in filas[0], f"el mas expuesto no encabeza la lista: {filas[0]!r}"
 
     # El titulo dice en que banda ordena. El `.md` siempre lo decia y el visor no.
-    assert "MMI≥7" in pagina.locator("#titulo-municipios").inner_text().upper()
+    assert "MMI≥VII" in pagina.locator("#titulo-municipios").inner_text().upper()
 
 
 @pytest.mark.visor

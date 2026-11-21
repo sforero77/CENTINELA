@@ -253,8 +253,8 @@ centinela/
 - **RF-01** El sistema detecta todo evento M≥5.5 dentro del bbox LATAM (12°N ampliado a 33°N para MX; −56°S; −118°O; −34°E) en ≤ 30 min p95 desde su aparición en el feed.
 - **RF-02** Deduplica por `usgs_id`; tolera reinicios (idempotencia por `(usgs_id, shakemap_version)`).
 - **RF-03** Si no hay ShakeMap disponible aún, publica reporte "preliminar sin ShakeMap" (solo epicentro + exposición en radios de 25/50/100 km) y reintenta cada 30 min hasta 6 h.
-- **RF-04** Al detectar nueva versión de ShakeMap o Ground Failure, re-emite el reporte con número de versión incremental y changelog de deltas ("pop MMI≥7: 340k → 355k").
-- **RF-05** Todo reporte incluye: totales por banda MMI (≥6, ≥7, ≥8), desglose etario en MMI≥7, top-15 municipios, exposición a deslizamiento/licuefacción (Ground Failure), referencia PAGER, banda de discrepancia poblacional, versiones y vintages, disclaimers fijos, y enlaces de descarga.
+- **RF-04** Al detectar nueva versión de ShakeMap o Ground Failure, re-emite el reporte con número de versión incremental y changelog de deltas ("pop MMI≥VII: 340k → 355k"). Si con la versión nueva nadie queda en la clase VI, el reporte se retira y el evento pasa a `sin_alcance` (no terminal).
+- **RF-05** Todo reporte incluye: totales por clase de intensidad USGS (VI ≥5,5, VII ≥6,5, VIII ≥7,5 — desde `report/2.0`; en la 1.0 eran ≥6, ≥7, ≥8 literales), desglose etario en MMI≥VII, top-15 municipios, exposición a deslizamiento/licuefacción (Ground Failure), referencia PAGER, banda de discrepancia poblacional, versiones y vintages, disclaimers fijos, y enlaces de descarga.
 - **RF-06** Reporte en español neutro con topónimos oficiales del país; cifras redondeadas con regla explícita (2 cifras significativas en prosa; exactas en CSV/parquet).
 - **RF-07** El hilo para redes se genera como borrador; su publicación requiere acción humana (control editorial, evita alarmar con falsos disparos).
 - **RF-08** `make country ISO=XXX` reconstruye el activo de exposición del país end-to-end desde URLs públicas del manifest.
@@ -299,7 +299,7 @@ centinela/
 - Sin celdas con `pop_total < 0` ni `NULL` en columnas NOT NULL; `bld_count=0 ∧ pop_total>500` → flag `revisar` (posible hueco de Overture en asentamiento informal, se publica el flag, no se oculta).
 - Discrepancia GHS-POP vs WorldPop por celda > 200% → flag.
 - Totales país vs. referencia oficial del manifest (±1%).
-- `impact_adm2`: todo municipio con `mmi_max≥6` existe en `admin_lookup` (crosswalk completo).
+- `impact_adm2`: todo municipio con `mmi_max≥5,5` (clase VI) existe en `admin_lookup` (crosswalk completo).
 
 ### 6.5 Operacionales / caos
 

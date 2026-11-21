@@ -98,21 +98,41 @@ hereda la desagregación de la fuente en vez de inventar la suya.
 
 ```mermaid
 flowchart TB
-  CELDAS[("celdas del corte<br/>impact_h3")] --> B6["Σ donde mmi ≥ 6"]
-  CELDAS --> B7["Σ donde mmi ≥ 7"]
-  CELDAS --> B8["Σ donde mmi ≥ 8"]
+  CELDAS[("celdas del corte<br/>impact_h3")] --> B6["Σ donde mmi ≥ 5,5<br/>(clase VI)"]
+  CELDAS --> B7["Σ donde mmi ≥ 6,5<br/>(clase VII)"]
+  CELDAS --> B8["Σ donde mmi ≥ 7,5<br/>(clase VIII)"]
   CELDAS --> ADM["GROUP BY adm2_id<br/>→ top 15 municipios"]
-  B7 --> EDAD["desglose etario<br/><i>sólo para MMI ≥ 7</i>"]
+  B7 --> EDAD["desglose etario<br/><i>clases VI y VII</i>"]
 
   style EDAD fill:#f4f1e8,stroke:#8a8578,color:#1c1b1a
 ```
 
-**Las bandas son acumulativas**: "personas en MMI ≥ 7" incluye a las de MMI 8.
+**Las bandas son acumulativas**: "personas en MMI≥VII" incluye a las de la
+clase VIII.
+
+### Clases del USGS, no decimales literales (`report/2.0`, 21-nov-2026)
+
+Hasta la versión 1.0 del reporte las bandas eran literales: `pop_mmi6p` contaba
+las celdas con MMI ≥ 6,0. El USGS —PAGER, la Mercalli abreviada— nombra la
+intensidad en números romanos y redondea: la clase VI empieza en **5,5**. Con
+el corte literal, el M6,7 de Carhuamayo (`pt26325050`, 108 km de profundidad),
+cuyo ShakeMap llega a 5,7, salía con cero personas mientras PAGER contaba 5.398
+en intensidad VI; quince de treinta y nueve reportes publicados estaban en cero.
+
+Desde la 2.0 cada banda es una clase con el corte del USGS: VI ≥ 5,5, VII ≥ 6,5,
+VIII ≥ 7,5 (`UMBRAL_CLASE` en `pipelines/common/constants.py`). Los nombres de
+columna se conservan —`pop_mmi6p` es «clase VI o más»— y el cambio lo anuncian
+la versión del esquema y una línea del changelog de cada reporte reemitido.
+
+**Sin nadie en la clase VI no hay reporte.** El evento pasa al estado
+`sin_alcance`, se retira lo que tuviera publicado y aparece en
+`site/sin_alcance.json`, que el visor pinta como «sismo visto, sin reporte» con
+la intensidad alcanzada. No es terminal: un ShakeMap nuevo lo vuelve a medir.
 
 ### En qué banda se publica cada cosa, y por qué
 
-Población en **MMI ≥ 6, ≥ 7 y ≥ 8**. Equipamiento (edificaciones, superficie
-construida, salud, educación, vías) y desglose etario en **MMI ≥ 6 y ≥ 7**
+Población en las clases **VI, VII y VIII o más**. Equipamiento (edificaciones, superficie
+construida, salud, educación, vías) y desglose etario en las clases **VI y VII o más**
 (sección «Bandas de intensidad publicadas» de `pipelines/common/constants.py`:
 no son una constante, van en el nombre de cada columna, `*_mmi6p` y `*_mmi7p`).
 

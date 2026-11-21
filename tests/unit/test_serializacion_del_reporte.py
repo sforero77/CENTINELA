@@ -32,7 +32,7 @@ import pytest
 from pipelines.p3_report.model import Evento, Inputs, MunicipioTop, Totales
 
 RAIZ = Path(__file__).parent.parent.parent
-ESQUEMA = json.loads((RAIZ / "schemas" / "report-1.0.schema.json").read_text(encoding="utf-8"))
+ESQUEMA = json.loads((RAIZ / "schemas" / "report-2.0.schema.json").read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize("clase", [Totales, Evento, Inputs, MunicipioTop])
@@ -121,15 +121,19 @@ def test_todo_reporte_publicado_cumple_el_esquema() -> None:
     """
     from jsonschema import Draft202012Validator
 
-    validador = Draft202012Validator(ESQUEMA)
+    # Cada reporte contra el esquema que declara: los `1.0` siguen publicados
+    # hasta que se reemitan, y no por eso dejan de tener contrato.
+    def validador(datos: dict[str, Any]) -> Draft202012Validator:
+        version = str(datos.get("schema", "")).rsplit("/", 1)[-1]
+        ruta = RAIZ / "schemas" / f"report-{version}.schema.json"
+        return Draft202012Validator(json.loads(ruta.read_text(encoding="utf-8")))
+
     publicados = sorted((RAIZ / "reports").glob("*/report.json"))
     assert publicados, "no se encontro ningun reporte publicado que validar"
-    fuera = {
-        p.parent.name: sorted(
-            e.message for e in validador.iter_errors(json.loads(p.read_text("utf-8")))
-        )
-        for p in publicados
-    }
+    fuera: dict[str, list[str]] = {}
+    for p in publicados:
+        datos = json.loads(p.read_text("utf-8"))
+        fuera[p.parent.name] = sorted(e.message for e in validador(datos).iter_errors(datos))
     assert not {k: v for k, v in fuera.items() if v}
 
 
