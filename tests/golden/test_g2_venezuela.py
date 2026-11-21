@@ -145,8 +145,10 @@ POP_MMI7P_ESPERADO: dict[str, float] = {
     # Reanclado al ShakeMap v16 el 8-sep-2026, cuando el repaso empezo a incluir
     # los backtests y re-emitio este reporte desde el v15. Insumo nuevo, no
     # deriva de codigo.
-    CATIA_LA_MAR: 2_575_684.688750344,
-    SAN_FELIPE: 491_580.875195766,
+    # Reanclado el 21-nov-2026 por la regla, no por el insumo: `report/2.0`
+    # cuenta la clase VII desde 6,5 (antes 7,0), con el mismo ShakeMap.
+    CATIA_LA_MAR: 4_466_837.57396888,
+    SAN_FELIPE: 975_261.8690220417,
 }
 TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
 

@@ -1,6 +1,6 @@
 {
   "usgs_id": "us7000kg9g",
-  "estado": "publicado",
+  "estado": "sin_alcance",
   "mag": 6.6,
   "lon": -70.4427,
   "lat": -38.1862,
@@ -17,6 +17,7 @@
     "detectado": "2026-08-25T19:03:55Z",
     "publicado": "2026-09-05T01:25:42Z",
     "publicado_ultimo": "2026-11-02T17:22:34Z",
+    "sin_alcance": "2026-11-21T16:29:53Z",
     "usgs_origen": "2023-07-17T03:05:11Z"
   },
   "hashes": {},
@@ -28,6 +29,7 @@
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
-    "reproceso forzado: el pipeline cambio, no los productos"
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos; sin alcance: la poblacion mas cercana esta a 4 km del epicentro, bajo la clase VI (5,5)"
   ]
 }

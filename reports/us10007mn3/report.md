@@ -10,26 +10,27 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 200 mil |
-| Población en MMI≥7 | 57 mil |
-| Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥7 | 46 mil |
-| Sedes de salud en MMI≥7 | 23 |
-| Sedes educativas en MMI≥7 | 50 |
-| Vías primarias y secundarias en MMI≥7 | 110 km |
-| Vías locales en MMI≥7 | 1.700 km |
-| Superficie construida en MMI≥7 | 4,2 km² |
+| Población en MMI≥VI | 220 mil |
+| Población en MMI≥VII | 92 mil |
+| Población en MMI≥VIII | 490 |
+| Edificaciones en MMI≥VII | 95 mil |
+| Sedes de salud en MMI≥VII | 39 |
+| Sedes educativas en MMI≥VII | 92 |
+| Vías primarias y secundarias en MMI≥VII | 170 km |
+| Vías locales en MMI≥VII | 3.300 km |
+| Superficie construida en MMI≥VII | 8,9 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥7, alrededor de **5.800** personas tienen 65 años o más.
+De la población en intensidad MMI≥VII, alrededor de **11 mil** personas tienen 65 años o más.
 
-## Municipios más expuestos, por población en MMI≥7
+## Municipios más expuestos, por población en MMI≥VII
 
-| # | Municipio | Código | MMI max | Población MMI≥7 |
+| # | Municipio | Código | MMI max | Población MMI≥VII |
 |---:|---|---|---:|---:|
-| 1 | Chiloe | `CL102` | 7,5 | 54 mil |
-| 2 | Aysén | `CL112` | 7,0 | 2.300 |
+| 1 | Chiloe | `CL102` | 7,5 | 89 mil |
+| 2 | Aysén | `CL112` | 7,0 | 2.600 |
+| 3 | Palena | `CL104` | 6,5 | 340 |
 
 ## Deslizamiento y licuefacción
 
@@ -39,14 +40,23 @@ USGS no ha publicado el producto *Ground Failure* para este evento. La sección 
 
 PAGER (USGS) estima para este evento una alerta **amarilla**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras usan **la misma convención**: las clases de intensidad del USGS en números romanos (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5). Lo que puede separarlas es el insumo: este reporte declara en «Procedencia» qué versión del ShakeMap consumió, PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo, y los dos usan modelos de población distintos (GHS-POP aquí, LandScan en PAGER). El contraste clase a clase, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **36,2 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **33,5 %**.
 
 ## Cambios frente a la versión anterior
 
+- Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)
+- Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.
+- Población en MMI≥VI: 200 mil → 220 mil
+- Población en MMI≥VII: 57 mil → 92 mil
+- Población en MMI≥VIII: 0 → 490
+- Población de 65 años o más en MMI≥VII: 5.800 → 11 mil
+- Edificaciones en MMI≥VII: 46 mil → 95 mil
+- Sedes de salud en MMI≥VII: 23 → 39
+- Sedes educativas en MMI≥VII: 50 → 92
 - Edificaciones en MMI≥7: 45 mil → 46 mil
 
 ## Descargas
@@ -59,7 +69,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **36,2 %**.
 - ShakeMap consumido: **v1** de `atlas`
 - Ground Failure consumido: **ninguno** (no publicado aún)
 - Manifiesto de exposición: [`chl-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/CHL.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-02T17:14:45Z
+- Pipeline: `0.1.0` · Generado: 2026-11-21T16:31:53Z
 
 ## Advertencias
 

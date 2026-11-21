@@ -10,48 +10,39 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥6 | 760 mil |
-| Población en MMI≥7 | el evento no llegó a esta banda |
-| Población en MMI≥8 | el evento no llegó a esta banda |
-| Edificaciones en MMI≥6 | 450 mil |
-| Sedes de salud en MMI≥6 | 231 |
-| Sedes educativas en MMI≥6 | 334 |
-| Vías primarias y secundarias en MMI≥6 | 890 km |
-| Vías locales en MMI≥6 | 9.600 km |
-| Superficie construida en MMI≥6 | 71,9 km² |
+| Población en MMI≥VI | 1,5 millones |
+| Población en MMI≥VII | 65 mil |
+| Población en MMI≥VIII | el evento no llegó a esta banda |
+| Edificaciones en MMI≥VII | 46 mil |
+| Sedes de salud en MMI≥VII | 5 |
+| Sedes educativas en MMI≥VII | 8 |
+| Vías primarias y secundarias en MMI≥VII | 66 km |
+| Vías locales en MMI≥VII | 1.200 km |
+| Superficie construida en MMI≥VII | 7,5 km² |
 
-El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 450 mil edificaciones registradas en MMI≥6. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+El satélite detecta **1,6 veces** más superficie construida de la que explicarían las 46 mil edificaciones registradas en MMI≥VII. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥6, alrededor de **71 mil** personas tienen 65 años o más.
+De la población en intensidad MMI≥VII, alrededor de **6.500** personas tienen 65 años o más.
 
-## Municipios más expuestos, por población en MMI≥6
+## Municipios más expuestos, por población en MMI≥VII
 
-| # | Municipio | Código | MMI max | Población MMI≥6 |
+| # | Municipio | Código | MMI max | Población MMI≥VII |
 |---:|---|---|---:|---:|
-| 1 | Heroica Ciudad de Juchitán de Zaragoza | `MX20043` | 6,5 | 110 mil |
-| 2 | Salina Cruz | `MX20079` | 6,0 | 100 mil |
-| 3 | Tonalá | `MX07097` | 6,0 | 77 mil |
-| 4 | Santo Domingo Tehuantepec | `MX20515` | 6,0 | 71 mil |
-| 5 | Pijijiapan | `MX07069` | 6,5 | 64 mil |
-| 6 | Mapastepec | `MX07051` | 6,5 | 54 mil |
-| 7 | Arriaga | `MX07009` | 6,5 | 51 mil |
-| 8 | Acapetahua | `MX07003` | 6,0 | 38 mil |
-| 9 | San Blas Atempa | `MX20124` | 6,0 | 20 mil |
-| 10 | San Mateo del Mar | `MX20248` | 6,0 | 18 mil |
-| 11 | Unión Hidalgo | `MX20557` | 6,0 | 17 mil |
-| 12 | San Pedro Tapanatepec | `MX20327` | 6,5 | 17 mil |
-| 13 | Santa María Huatulco | `MX20413` | 6,0 | 14 mil |
-| 14 | Chahuites | `MX20025` | 6,0 | 14 mil |
-| 15 | Santo Domingo Zanatepec | `MX20525` | 6,5 | 14 mil |
+| 1 | Pijijiapan | `MX07069` | 6,5 | 52 mil |
+| 2 | San Francisco Ixhuatán | `MX20143` | 6,5 | 3.500 |
+| 3 | San Pedro Tapanatepec | `MX20327` | 6,5 | 3.200 |
+| 4 | Mapastepec | `MX07051` | 6,5 | 2.800 |
+| 5 | Arriaga | `MX07009` | 6,5 | 2.000 |
+| 6 | San Francisco del Mar | `MX20141` | 6,5 | 1.900 |
 
 ## Deslizamiento y licuefacción
 
-- **Deslizamiento.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **2.100**. USGS declara para este evento alerta **naranja**, con 210 expuestas.
-- **Licuefacción.** Población en celdas de MMI≥6 donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **360 mil**. USGS declara para este evento alerta **roja**, con 150 mil expuestas.
+- **Deslizamiento.** Población en celdas de MMI≥VI donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `nowicki_2014_global_model.tif`: **3.700**. USGS declara para este evento alerta **naranja**, con 210 expuestas.
+- **Licuefacción.** Población en celdas de MMI≥VI donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **550 mil**. USGS declara para este evento alerta **roja**, con 150 mil expuestas.
 
-Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
+Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥VI). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
@@ -61,11 +52,24 @@ Fuente: producto *Ground Failure* de USGS (v1), dominio público.
 
 PAGER (USGS) estima para este evento una alerta **roja**. CENTINELA no estima víctimas; la cifra se incluye solo como contraste.
 
-Las dos cifras **no se tabulan igual** y no se pueden leer una contra otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. Puede además que no hablen del mismo ShakeMap: este reporte declara en «Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
+Las dos cifras usan **la misma convención**: las clases de intensidad del USGS en números romanos (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5). Lo que puede separarlas es el insumo: este reporte declara en «Procedencia» qué versión del ShakeMap consumió, PAGER pudo correr sobre otra versión o sobre otro producto del mismo sismo, y los dos usan modelos de población distintos (GHS-POP aquí, LandScan en PAGER). El contraste clase a clase, hecho y comprobado para el sismo de San José del Palmar, está en `docs/PARA_INSTITUCIONES.md`.
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,0 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **13,1 %**.
+
+## Cambios frente a la versión anterior
+
+- Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)
+- Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.
+- Población en MMI≥VI: 760 mil → 1,5 millones
+- Población en MMI≥VII: 0 → 65 mil
+- Población de 65 años o más en MMI≥VII: 0 → 6.500
+- Edificaciones en MMI≥VII: 0 → 46 mil
+- Sedes de salud en MMI≥VII: 0 → 5
+- Sedes educativas en MMI≥VII: 0 → 8
+- Población en probabilidad alta de deslizamiento: 2.100 → 3.700
+- Población en cobertura areal alta por licuefacción: 360 mil → 550 mil
 
 ## Descargas
 
@@ -77,7 +81,7 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **12,0 %**.
 - ShakeMap consumido: **v1** de `atlas`
 - Ground Failure consumido: **v1** de `us`
 - Manifiesto de exposición: [`mex-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/MEX.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-02T17:17:10Z
+- Pipeline: `0.1.0` · Generado: 2026-11-21T16:31:45Z
 
 ## Advertencias
 

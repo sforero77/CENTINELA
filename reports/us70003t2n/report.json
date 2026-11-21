@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us70003t2n",
     "mag": 6.6,
@@ -23,135 +23,135 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 66269.33582028653,
+    "pop_mmi6p": 1436538.931302594,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 4250.669961259775,
-    "bld_mmi6p": 34213.0,
-    "built_m2_mmi6p": 4887326.0,
-    "health_mmi6p": 2.0,
-    "edu_mmi6p": 3.0,
-    "road_km_mmi6p": 782.9937263449594,
-    "road_km_principal_mmi6p": 58.06079856497583,
+    "pop_65p_mmi6p": 129818.88612825087,
+    "bld_mmi6p": 540554.0,
+    "built_m2_mmi6p": 76789486.0,
+    "health_mmi6p": 499.0,
+    "edu_mmi6p": 604.0,
+    "road_km_mmi6p": 6446.797663518038,
+    "road_km_principal_mmi6p": 823.2607380210054,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
     "edu_mmi7p": 0.0,
     "road_km_mmi7p": 0.0,
     "road_km_principal_mmi7p": 0.0,
-    "pop_ls_alta": 1122.8564099725336,
-    "pop_lq_alta": 21098.49125910923
+    "pop_ls_alta": 2988.887261306867,
+    "pop_lq_alta": 54008.13333079405
   },
   "top_municipios": [
-    {
-      "adm2_id": "SV06003",
-      "nombre": "La Paz Oeste",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 45419.331734268926
-    },
-    {
-      "adm2_id": "SV05002",
-      "nombre": "La Libertad Costa",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 9970.592273000628
-    },
-    {
-      "adm2_id": "SV06001",
-      "nombre": "La Paz Centro",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 7390.775697121397
-    },
-    {
-      "adm2_id": "SV10005",
-      "nombre": "San Salvador Sur",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 3488.636115895584
-    },
     {
       "adm2_id": "SV10001",
       "nombre": "San Salvador Centro",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV06002",
-      "nombre": "La Paz Este",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 378279.60910077766
     },
     {
       "adm2_id": "SV04002",
       "nombre": "Cuscatlán Sur",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 164365.91744679585
+    },
+    {
+      "adm2_id": "SV06001",
+      "nombre": "La Paz Centro",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 142959.05572394934
+    },
+    {
+      "adm2_id": "SV10005",
+      "nombre": "San Salvador Sur",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 138495.15893562813
+    },
+    {
+      "adm2_id": "SV06003",
+      "nombre": "La Paz Oeste",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 126199.29664089996
     },
     {
       "adm2_id": "SV05003",
       "nombre": "La Libertad Este",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 120528.91946190386
     },
     {
-      "adm2_id": "SV02002",
-      "nombre": "Cabañas Oeste",
+      "adm2_id": "SV06002",
+      "nombre": "La Paz Este",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 107289.6348206792
     },
     {
       "adm2_id": "SV10002",
       "nombre": "San Salvador Este",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 98700.66591330338
     },
     {
-      "adm2_id": "SV10899",
-      "nombre": "Lago de Llopango",
-      "mmi_max": 5.5,
+      "adm2_id": "SV05002",
+      "nombre": "La Libertad Costa",
+      "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV11001",
-      "nombre": "San Vicente Norte",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "SV04001",
-      "nombre": "Cuscatlán Norte",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 87585.25122580677
     },
     {
       "adm2_id": "SV11002",
       "nombre": "San Vicente Sur",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 22060.628575193696
+    },
+    {
+      "adm2_id": "SV11001",
+      "nombre": "San Vicente Norte",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 20451.935639216565
     },
     {
       "adm2_id": "SV05006",
       "nombre": "La Libertad Sur",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 19562.757612998597
+    },
+    {
+      "adm2_id": "SV04001",
+      "nombre": "Cuscatlán Norte",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 6637.090177088976
+    },
+    {
+      "adm2_id": "SV14003",
+      "nombre": "Usulután Oeste",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 1770.8269052691758
+    },
+    {
+      "adm2_id": "SV02002",
+      "nombre": "Cabañas Oeste",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 1631.4550439184532
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 13.1,
+    "pop_discrepancia_pct": 6.1,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -166,7 +166,13 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 66 mil → 1,4 millones",
+    "Población en probabilidad alta de deslizamiento: 1.100 → 3.000",
+    "Población en cobertura areal alta por licuefacción: 21 mil → 54 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -221,6 +227,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:20:37Z",
+  "generado_utc": "2026-11-21T16:30:26Z",
   "pipeline_version": "0.1.0"
 }

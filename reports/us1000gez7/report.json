@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us1000gez7",
     "mag": 7.3,
@@ -23,124 +23,124 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 3416.044249188155,
+    "pop_mmi6p": 496711.2467246223,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 284.71419088047753,
-    "bld_mmi6p": 1117.0,
-    "built_m2_mmi6p": 117250.0,
-    "health_mmi6p": 0.0,
-    "edu_mmi6p": 0.0,
-    "road_km_mmi6p": 32.404789222582444,
-    "road_km_principal_mmi6p": 3.051303785956994,
+    "pop_65p_mmi6p": 41367.63326493286,
+    "bld_mmi6p": 214483.0,
+    "built_m2_mmi6p": 25998999.0,
+    "health_mmi6p": 54.0,
+    "edu_mmi6p": 243.0,
+    "road_km_mmi6p": 3832.410076807881,
+    "road_km_principal_mmi6p": 583.0950676585389,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
     "edu_mmi7p": 0.0,
     "road_km_mmi7p": 0.0,
     "road_km_principal_mmi7p": 0.0,
-    "pop_ls_alta": 0.0,
-    "pop_lq_alta": 31.124547377228737
+    "pop_ls_alta": 50994.777876207605,
+    "pop_lq_alta": 7469.065159631893
   },
   "top_municipios": [
     {
-      "adm2_id": "VE1907",
-      "nombre": "Cajigal",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 2469.6878992654383
-    },
-    {
-      "adm2_id": "VE1909",
-      "nombre": "Libertador",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 946.3563499227166
-    },
-    {
-      "adm2_id": "VE1904",
-      "nombre": "Benítez",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1910",
-      "nombre": "Mariño",
+      "adm2_id": "VE1905",
+      "nombre": "Bermúdez",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1913",
-      "nombre": "Ribero",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 156415.6859627487
     },
     {
       "adm2_id": "VE1903",
       "nombre": "Arismendi",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1905",
-      "nombre": "Bermúdez",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1608",
-      "nombre": "Maturín",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1902",
-      "nombre": "Andrés Mata",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1901",
-      "nombre": "Andrés Eloy Blanco",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 51785.845775017515
     },
     {
       "adm2_id": "VE1603",
       "nombre": "Bolívar",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE1610",
-      "nombre": "Punceres",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE2501",
-      "nombre": "Dependencias Federales",
-      "mmi_max": 5.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 44643.04712391645
     },
     {
       "adm2_id": "VE1915",
       "nombre": "Valdez",
       "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_banda": 40444.354093967006
+    },
+    {
+      "adm2_id": "VE1913",
+      "nombre": "Ribero",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 39168.28351206891
+    },
+    {
+      "adm2_id": "VE1901",
+      "nombre": "Andrés Eloy Blanco",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 37650.56645312533
+    },
+    {
+      "adm2_id": "VE1610",
+      "nombre": "Punceres",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 26470.630070343614
+    },
+    {
+      "adm2_id": "VE1907",
+      "nombre": "Cajigal",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 23331.006205176935
+    },
+    {
+      "adm2_id": "VE1904",
+      "nombre": "Benítez",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 22388.88946426101
+    },
+    {
+      "adm2_id": "VE1910",
+      "nombre": "Mariño",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 21714.644668241963
+    },
+    {
+      "adm2_id": "VE1909",
+      "nombre": "Libertador",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 17838.906128231436
+    },
+    {
+      "adm2_id": "VE1902",
+      "nombre": "Andrés Mata",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 10400.078481926583
+    },
+    {
+      "adm2_id": "VE1608",
+      "nombre": "Maturín",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 3155.659707946703
+    },
+    {
+      "adm2_id": "VE2501",
+      "nombre": "Dependencias Federales",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 1303.6490776501596
     },
     {
       "adm2_id": "VE1711",
@@ -151,7 +151,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 414.9,
+    "pop_discrepancia_pct": 87.8,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -166,7 +166,13 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 3.400 → 500 mil",
+    "Población en probabilidad alta de deslizamiento: 0 → 51 mil",
+    "Población en cobertura areal alta por licuefacción: 31 → 7.500"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -221,6 +227,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:15:38Z",
+  "generado_utc": "2026-11-21T16:31:19Z",
   "pipeline_version": "0.1.0"
 }

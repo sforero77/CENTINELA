@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us2000bmhe",
     "mag": 6.5,
@@ -23,47 +23,47 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 28246.993986844085,
-    "pop_mmi7p": 7400.7181151825935,
+    "pop_mmi6p": 54548.26389950048,
+    "pop_mmi7p": 19751.90225534793,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 795.5214395336698,
-    "pop_65p_mmi6p": 3135.422586455932,
-    "bld_mmi6p": 21079.0,
-    "built_m2_mmi6p": 3495185.0,
-    "health_mmi6p": 13.0,
-    "edu_mmi6p": 71.0,
-    "road_km_mmi6p": 928.7347102056706,
-    "road_km_principal_mmi6p": 82.91258425599209,
-    "bld_mmi7p": 4444.0,
-    "built_m2_mmi7p": 859920.0,
-    "health_mmi7p": 4.0,
-    "edu_mmi7p": 8.0,
-    "road_km_mmi7p": 116.16438328133623,
-    "road_km_principal_mmi7p": 9.368577098838802,
+    "pop_65p_mmi7p": 2159.490476845648,
+    "pop_65p_mmi6p": 5148.781383425122,
+    "bld_mmi6p": 38646.0,
+    "built_m2_mmi6p": 6421673.0,
+    "health_mmi6p": 35.0,
+    "edu_mmi6p": 117.0,
+    "road_km_mmi6p": 1575.4426450020203,
+    "road_km_principal_mmi6p": 116.93737259099495,
+    "bld_mmi7p": 13082.0,
+    "built_m2_mmi7p": 2347692.0,
+    "health_mmi7p": 6.0,
+    "edu_mmi7p": 36.0,
+    "road_km_mmi7p": 511.81957377428444,
+    "road_km_principal_mmi7p": 46.297688076364274,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 13254.762669994496
+    "pop_lq_alta": 23376.99173382856
   },
   "top_municipios": [
     {
       "adm2_id": "CR609",
       "nombre": "Parrita",
       "mmi_max": 7.0,
-      "pop_mmi7p": 7400.7181151825935,
-      "pop_banda": 7400.7181151825935
+      "pop_mmi7p": 18966.20294391457,
+      "pop_banda": 18966.20294391457
     },
     {
       "adm2_id": "CR104",
       "nombre": "Puriscal",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_mmi7p": 785.4008250515908,
+      "pop_banda": 785.4008250515908
     },
     {
       "adm2_id": "CR116",
       "nombre": "Turrubares",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_mmi7p": 0.2984863817691803,
+      "pop_banda": 0.2984863817691803
     },
     {
       "adm2_id": "CR606",
@@ -144,7 +144,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 1.7,
+    "pop_discrepancia_pct": 6.4,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -159,7 +159,17 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 28 mil → 55 mil",
+    "Población en MMI≥VII: 7.400 → 20 mil",
+    "Población de 65 años o más en MMI≥VII: 800 → 2.200",
+    "Edificaciones en MMI≥VII: 4.400 → 13 mil",
+    "Sedes de salud en MMI≥VII: 4 → 6",
+    "Sedes educativas en MMI≥VII: 8 → 36",
+    "Población en cobertura areal alta por licuefacción: 13 mil → 23 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -214,6 +224,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:17:19Z",
+  "generado_utc": "2026-11-21T16:31:31Z",
   "pipeline_version": "0.1.0"
 }

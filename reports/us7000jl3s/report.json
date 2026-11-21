@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us7000jl3s",
     "mag": 6.8,
@@ -23,135 +23,135 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 4750724.875813367,
-    "pop_mmi7p": 0.0,
+    "pop_mmi6p": 6128237.5388336545,
+    "pop_mmi7p": 745340.7991143554,
     "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 360346.9994846941,
-    "bld_mmi6p": 1094926.0,
-    "built_m2_mmi6p": 177456832.0,
-    "health_mmi6p": 1781.0,
-    "edu_mmi6p": 1667.0,
-    "road_km_mmi6p": 25359.377060142968,
-    "road_km_principal_mmi6p": 2303.9558158438103,
-    "bld_mmi7p": 0.0,
-    "built_m2_mmi7p": 0.0,
-    "health_mmi7p": 0.0,
-    "edu_mmi7p": 0.0,
-    "road_km_mmi7p": 0.0,
-    "road_km_principal_mmi7p": 0.0,
+    "pop_65p_mmi7p": 55325.92054371805,
+    "pop_65p_mmi6p": 479794.7928367358,
+    "bld_mmi6p": 1596461.0,
+    "built_m2_mmi6p": 244915201.0,
+    "health_mmi6p": 2516.0,
+    "edu_mmi6p": 2382.0,
+    "road_km_mmi6p": 38689.939272809956,
+    "road_km_principal_mmi6p": 3451.789268208924,
+    "bld_mmi7p": 250965.0,
+    "built_m2_mmi7p": 38111499.0,
+    "health_mmi7p": 279.0,
+    "edu_mmi7p": 240.0,
+    "road_km_mmi7p": 8582.815819232661,
+    "road_km_principal_mmi7p": 578.569439086413,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 495964.05150999734
+    "pop_lq_alta": 495967.3657059879
   },
   "top_municipios": [
-    {
-      "adm2_id": "EC0901",
-      "nombre": "Guayaquil",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 3097690.9360329895
-    },
-    {
-      "adm2_id": "EC0907",
-      "nombre": "Durán",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 293068.93598122336
-    },
     {
       "adm2_id": "EC0701",
       "nombre": "Machala",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
+      "pop_mmi7p": 290022.6315193232,
       "pop_banda": 290022.6315193232
     },
     {
-      "adm2_id": "EC0910",
-      "nombre": "Milagro",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 206816.14947658777
+      "adm2_id": "EC0901",
+      "nombre": "Guayaquil",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 113419.3897329364,
+      "pop_banda": 113419.3897329364
     },
     {
       "adm2_id": "EC0911",
       "nombre": "Naranjal",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 88517.58366055228
-    },
-    {
-      "adm2_id": "EC0709",
-      "nombre": "Pasaje",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 82000.12141954899
-    },
-    {
-      "adm2_id": "EC0920",
-      "nombre": "San Jacinto de Yaguachi",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 74539.90179289039
-    },
-    {
-      "adm2_id": "EC0916",
-      "nombre": "Samborondón",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 74165.42159074545
+      "pop_mmi7p": 83497.71575766988,
+      "pop_banda": 83497.71575766988
     },
     {
       "adm2_id": "EC0712",
       "nombre": "Santa Rosa",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 74070.57189168502
+      "pop_mmi7p": 65795.70661734417,
+      "pop_banda": 65795.70661734417
     },
     {
-      "adm2_id": "EC0707",
-      "nombre": "Huaquillas",
+      "adm2_id": "EC0709",
+      "nombre": "Pasaje",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 60443.76373657817
-    },
-    {
-      "adm2_id": "EC0909",
-      "nombre": "El Triunfo",
-      "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 60177.37784834951
+      "pop_mmi7p": 65213.17403529491,
+      "pop_banda": 65213.17403529491
     },
     {
       "adm2_id": "EC0706",
       "nombre": "El Guabo",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 57273.17647451069
+      "pop_mmi7p": 54768.13827409968,
+      "pop_banda": 54768.13827409968
+    },
+    {
+      "adm2_id": "EC0903",
+      "nombre": "Balao",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 26008.84350014478,
+      "pop_banda": 26008.84350014478
+    },
+    {
+      "adm2_id": "EC0702",
+      "nombre": "Arenillas",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 24459.708568153437,
+      "pop_banda": 24459.708568153437
+    },
+    {
+      "adm2_id": "EC0115",
+      "nombre": "Camilo Ponce Enríquez",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 15621.572200840339,
+      "pop_banda": 15621.572200840339
+    },
+    {
+      "adm2_id": "EC0907",
+      "nombre": "Durán",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 1580.0150715969503,
+      "pop_banda": 1580.0150715969503
+    },
+    {
+      "adm2_id": "EC0101",
+      "nombre": "Cuenca",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 1409.152512665838,
+      "pop_banda": 1409.152512665838
+    },
+    {
+      "adm2_id": "EC0909",
+      "nombre": "El Triunfo",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 1198.2984984768555,
+      "pop_banda": 1198.2984984768555
     },
     {
       "adm2_id": "EC0304",
       "nombre": "La Troncal",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 55231.466600103304
+      "pop_mmi7p": 1128.2386055765674,
+      "pop_banda": 1128.2386055765674
     },
     {
-      "adm2_id": "EC0921",
-      "nombre": "Playas",
+      "adm2_id": "EC0108",
+      "nombre": "Santa Isabel",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 54366.44140038453
+      "pop_mmi7p": 605.1112942062318,
+      "pop_banda": 605.1112942062318
     },
     {
-      "adm2_id": "EC0912",
-      "nombre": "Naranjito",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 45723.51596469898
+      "adm2_id": "EC0920",
+      "nombre": "San Jacinto de Yaguachi",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 331.2245225543156,
+      "pop_banda": 331.2245225543156
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 0.4,
+    "pop_discrepancia_pct": 0.7,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -166,7 +166,16 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v7 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 4,8 millones → 6,1 millones",
+    "Población en MMI≥VII: 0 → 750 mil",
+    "Población de 65 años o más en MMI≥VII: 0 → 55 mil",
+    "Edificaciones en MMI≥VII: 0 → 250 mil",
+    "Sedes de salud en MMI≥VII: 0 → 280",
+    "Sedes educativas en MMI≥VII: 0 → 240"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -221,6 +230,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:22:03Z",
+  "generado_utc": "2026-11-21T16:29:59Z",
   "pipeline_version": "0.1.0"
 }

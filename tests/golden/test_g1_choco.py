@@ -278,7 +278,12 @@ def _reporte_publicado() -> dict[str, Any]:
 #: +4.526, Rio Iro +2.470—; ninguno cambia de `mmi_max`. Las demas capas suben
 #: lo mismo (edificaciones +2,3 %, sedes de salud de 503 a 517, educativas
 #: +2,2 %, vias +1,9 %) y el top 5 no se mueve. No hay codigo nuevo en medio.
-POP_MMI7P_ESPERADO = 2_434_710.057361298
+#:
+#: REANCLADO EL 21-NOV-2026 POR LA REGLA, NO POR EL INSUMO (`report/2.0`). Mismo
+#: ShakeMap v11; las bandas pasan a ser clases USGS y la clase VII empieza en
+#: 6,5, no en 7,0. La cifra sube de 2.434.710 a 6.389.281, y queda a un 2 % de la
+#: fila VII+ de PAGER (6.514.486) en vez de a casi un factor de tres.
+POP_MMI7P_ESPERADO = 6_389_281.248894794
 SHAKEMAP_DEL_ANCLA = 11
 TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
 
@@ -292,7 +297,10 @@ TOLERANCIA_POP = 0.005  # ±0,5 % (§6.3)
 #: ninguna de las tres versiones: los mas expuestos estan en el Valle y el Eje
 #: Cafetero, no en el Choco. Lo que cambia son los nombres, y por eso esto se
 #: fija con una lista y no con una descripcion.
-TOP5_ESPERADO = ["66001", "76109", "63001", "66170", "76147"]
+#:
+#: Con la clase VII desde 6,5 (`report/2.0`) Cali vuelve, primera: su `mmi_max`
+#: es 6,5 y ahora cuenta. Detras, Pereira, Buga, Manizales (17001) y Armenia.
+TOP5_ESPERADO = ["76001", "66001", "76109", "17001", "63001"]
 
 
 def test_el_ancla_describe_la_version_publicada() -> None:

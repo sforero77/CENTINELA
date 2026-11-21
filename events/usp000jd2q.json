@@ -1,6 +1,6 @@
 {
   "usgs_id": "usp000jd2q",
-  "estado": "publicado",
+  "estado": "sin_alcance",
   "mag": 5.5,
   "lon": -70.361,
   "lat": 18.325,
@@ -16,6 +16,7 @@
     "detectado": "2026-08-25T19:05:57Z",
     "publicado": "2026-09-03T03:25:58Z",
     "publicado_ultimo": "2026-11-02T17:23:41Z",
+    "sin_alcance": "2026-11-21T16:32:14Z",
     "usgs_origen": "2012-01-05T09:35:32Z"
   },
   "hashes": {},
@@ -30,6 +31,8 @@
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
     "reproceso forzado: el pipeline cambio, no los productos",
-    "reproceso forzado: el pipeline cambio, no los productos"
-  ]
+    "reproceso forzado: el pipeline cambio, no los productos",
+    "reproceso forzado: el pipeline cambio, no los productos; sin alcance: la poblacion llego a MMI 5.0, bajo la clase VI (5,5)"
+  ],
+  "mmi_max_poblado": 5.0
 }

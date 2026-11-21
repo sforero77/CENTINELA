@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us10007mn3",
     "mag": 7.6,
@@ -23,23 +23,23 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 198283.5895812628,
-    "pop_mmi7p": 56588.415672381874,
-    "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 5764.662677096634,
-    "pop_65p_mmi6p": 26813.643759451057,
-    "bld_mmi6p": 180606.0,
-    "built_m2_mmi6p": 17868286.0,
-    "health_mmi6p": 78.0,
-    "edu_mmi6p": 213.0,
-    "road_km_mmi6p": 5801.6146428261345,
-    "road_km_principal_mmi6p": 345.34069724961756,
-    "bld_mmi7p": 45705.0,
-    "built_m2_mmi7p": 4202947.0,
-    "health_mmi7p": 23.0,
-    "edu_mmi7p": 50.0,
-    "road_km_mmi7p": 1856.428456655429,
-    "road_km_principal_mmi7p": 108.39491896922844,
+    "pop_mmi6p": 218267.84278726764,
+    "pop_mmi7p": 91797.95397270424,
+    "pop_mmi8p": 494.4258448537439,
+    "pop_65p_mmi7p": 11172.070004539157,
+    "pop_65p_mmi6p": 29962.03619558707,
+    "bld_mmi6p": 215937.0,
+    "built_m2_mmi6p": 20978360.0,
+    "health_mmi6p": 96.0,
+    "edu_mmi6p": 260.0,
+    "road_km_mmi6p": 7621.845416008721,
+    "road_km_principal_mmi6p": 687.6996020121802,
+    "bld_mmi7p": 94983.0,
+    "built_m2_mmi7p": 8932428.0,
+    "health_mmi7p": 39.0,
+    "edu_mmi7p": 92.0,
+    "road_km_mmi7p": 3452.331209248993,
+    "road_km_principal_mmi7p": 169.45042156323882,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 0.0
   },
@@ -48,22 +48,22 @@
       "adm2_id": "CL102",
       "nombre": "Chiloe",
       "mmi_max": 7.5,
-      "pop_mmi7p": 54311.665505310055,
-      "pop_banda": 54311.665505310055
+      "pop_mmi7p": 88873.8835984352,
+      "pop_banda": 88873.8835984352
     },
     {
       "adm2_id": "CL112",
       "nombre": "Aysén",
       "mmi_max": 7.0,
-      "pop_mmi7p": 2276.7501670718193,
-      "pop_banda": 2276.7501670718193
+      "pop_mmi7p": 2579.6061275079846,
+      "pop_banda": 2579.6061275079846
     },
     {
       "adm2_id": "CL104",
       "nombre": "Palena",
       "mmi_max": 6.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
+      "pop_mmi7p": 344.4642467610538,
+      "pop_banda": 344.4642467610538
     },
     {
       "adm2_id": "CL101",
@@ -81,7 +81,7 @@
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 36.2,
+    "pop_discrepancia_pct": 33.5,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -97,6 +97,15 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 200 mil → 220 mil",
+    "Población en MMI≥VII: 57 mil → 92 mil",
+    "Población en MMI≥VIII: 0 → 490",
+    "Población de 65 años o más en MMI≥VII: 5.800 → 11 mil",
+    "Edificaciones en MMI≥VII: 46 mil → 95 mil",
+    "Sedes de salud en MMI≥VII: 23 → 39",
+    "Sedes educativas en MMI≥VII: 50 → 92",
     "Edificaciones en MMI≥7: 45 mil → 46 mil"
   ],
   "licencia": {
@@ -153,6 +162,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:14:45Z",
+  "generado_utc": "2026-11-21T16:31:53Z",
   "pipeline_version": "0.1.0"
 }

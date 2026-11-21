@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us6000t7zc",
     "mag": 7.2,
@@ -23,40 +23,54 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 2771861.4076254996,
-    "pop_mmi7p": 491580.875195766,
-    "pop_mmi8p": 233421.8223408031,
-    "pop_65p_mmi7p": 41274.31631749175,
-    "pop_65p_mmi6p": 274241.5644855368,
-    "bld_mmi6p": 970018.0,
-    "built_m2_mmi6p": 145385586.0,
-    "health_mmi6p": 229.0,
-    "edu_mmi6p": 736.0,
-    "road_km_mmi6p": 14919.589051721965,
-    "road_km_principal_mmi6p": 1608.1063833483838,
-    "bld_mmi7p": 193715.0,
-    "built_m2_mmi7p": 23632205.0,
-    "health_mmi7p": 32.0,
-    "edu_mmi7p": 92.0,
-    "road_km_mmi7p": 3140.4744788733137,
-    "road_km_principal_mmi7p": 535.4744621904217,
+    "pop_mmi6p": 5184764.89021501,
+    "pop_mmi7p": 975261.8690220417,
+    "pop_mmi8p": 392162.9765950551,
+    "pop_65p_mmi7p": 87231.30514917555,
+    "pop_65p_mmi6p": 506268.74421239004,
+    "bld_mmi6p": 1837333.0,
+    "built_m2_mmi6p": 275888162.0,
+    "health_mmi6p": 429.0,
+    "edu_mmi6p": 1376.0,
+    "road_km_mmi6p": 27244.17657200204,
+    "road_km_principal_mmi6p": 2776.3687928558124,
+    "bld_mmi7p": 332025.0,
+    "built_m2_mmi7p": 42348643.0,
+    "health_mmi7p": 49.0,
+    "edu_mmi7p": 175.0,
+    "road_km_mmi7p": 6038.384631081864,
+    "road_km_principal_mmi7p": 839.6462111617553,
     "pop_ls_alta": 0.0,
-    "pop_lq_alta": 287308.6002515801
+    "pop_lq_alta": 332450.1234927287
   },
   "top_municipios": [
+    {
+      "adm2_id": "VE0811",
+      "nombre": "Puerto Cabello",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 193144.11712365318,
+      "pop_banda": 193144.11712365318
+    },
     {
       "adm2_id": "VE2211",
       "nombre": "San Felipe",
       "mmi_max": 8.0,
-      "pop_mmi7p": 134194.50676600868,
-      "pop_banda": 134194.50676600868
+      "pop_mmi7p": 135247.57142168516,
+      "pop_banda": 135247.57142168516
     },
     {
       "adm2_id": "VE2214",
       "nombre": "Veroes",
       "mmi_max": 8.0,
-      "pop_mmi7p": 101251.28157760017,
-      "pop_banda": 101251.28157760017
+      "pop_mmi7p": 101400.31401313655,
+      "pop_banda": 101400.31401313655
+    },
+    {
+      "adm2_id": "VE1302",
+      "nombre": "Crespo",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 63033.62858733721,
+      "pop_banda": 63033.62858733721
     },
     {
       "adm2_id": "VE0805",
@@ -69,8 +83,36 @@
       "adm2_id": "VE2203",
       "nombre": "Bruzual",
       "mmi_max": 7.0,
-      "pop_mmi7p": 44033.2049280568,
-      "pop_banda": 44033.2049280568
+      "pop_mmi7p": 50430.54150550719,
+      "pop_banda": 50430.54150550719
+    },
+    {
+      "adm2_id": "VE2206",
+      "nombre": "José Antonio Páez",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 49068.560730077326,
+      "pop_banda": 49068.560730077326
+    },
+    {
+      "adm2_id": "VE2213",
+      "nombre": "Urachiche",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 47570.257937863935,
+      "pop_banda": 47570.257937863935
+    },
+    {
+      "adm2_id": "VE2209",
+      "nombre": "Nirgua",
+      "mmi_max": 7.5,
+      "pop_mmi7p": 38121.11206747871,
+      "pop_banda": 38121.11206747871
+    },
+    {
+      "adm2_id": "VE2202",
+      "nombre": "Bolívar",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 32131.147787816823,
+      "pop_banda": 32131.147787816823
     },
     {
       "adm2_id": "VE2205",
@@ -78,6 +120,13 @@
       "mmi_max": 8.0,
       "pop_mmi7p": 30384.867612460046,
       "pop_banda": 30384.867612460046
+    },
+    {
+      "adm2_id": "VE1116",
+      "nombre": "Palmasola",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 30202.04029917065,
+      "pop_banda": 30202.04029917065
     },
     {
       "adm2_id": "VE2201",
@@ -90,8 +139,8 @@
       "adm2_id": "VE2212",
       "nombre": "Sucre",
       "mmi_max": 7.5,
-      "pop_mmi7p": 26627.09749570489,
-      "pop_banda": 26627.09749570489
+      "pop_mmi7p": 26788.975109589286,
+      "pop_banda": 26788.975109589286
     },
     {
       "adm2_id": "VE2204",
@@ -99,59 +148,10 @@
       "mmi_max": 7.5,
       "pop_mmi7p": 24954.645382418064,
       "pop_banda": 24954.645382418064
-    },
-    {
-      "adm2_id": "VE2207",
-      "nombre": "La Trinidad",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 24800.116239912808,
-      "pop_banda": 24800.116239912808
-    },
-    {
-      "adm2_id": "VE0811",
-      "nombre": "Puerto Cabello",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 15496.421104748733,
-      "pop_banda": 15496.421104748733
-    },
-    {
-      "adm2_id": "VE1116",
-      "nombre": "Palmasola",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 1674.0007273815572,
-      "pop_banda": 1674.0007273815572
-    },
-    {
-      "adm2_id": "VE1120",
-      "nombre": "Silva",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 1585.1530282101594,
-      "pop_banda": 1585.1530282101594
-    },
-    {
-      "adm2_id": "VE0801",
-      "nombre": "Bejuma",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 1497.8345866203308,
-      "pop_banda": 1497.8345866203308
-    },
-    {
-      "adm2_id": "VE2209",
-      "nombre": "Nirgua",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
-    },
-    {
-      "adm2_id": "VE2202",
-      "nombre": "Bolívar",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 0.0
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 27.0,
+    "pop_discrepancia_pct": 24.4,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -166,7 +166,18 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v9 (us) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 2,8 millones → 5,2 millones",
+    "Población en MMI≥VII: 490 mil → 980 mil",
+    "Población en MMI≥VIII: 230 mil → 390 mil",
+    "Población de 65 años o más en MMI≥VII: 41 mil → 87 mil",
+    "Edificaciones en MMI≥VII: 190 mil → 330 mil",
+    "Sedes de salud en MMI≥VII: 32 → 49",
+    "Sedes educativas en MMI≥VII: 92 → 180",
+    "Población en cobertura areal alta por licuefacción: 290 mil → 330 mil"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -221,6 +232,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:19:14Z",
+  "generado_utc": "2026-11-21T16:29:39Z",
   "pipeline_version": "0.1.0"
 }

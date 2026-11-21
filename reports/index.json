@@ -126,13 +126,13 @@
     "iso3": "VEN",
     "lon": -67.2205,
     "lat": 10.5955,
-    "pop_mmi7p": 2575684.688750345,
-    "pop_mmi6p": 7471691.358112415,
+    "pop_mmi7p": 4466837.57396888,
+    "pop_mmi6p": 9618861.07470147,
     "utc": "2026-06-24T22:05:04Z",
     "shakemap_version": 16,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:19:41Z"
+    "generado_utc": "2026-11-21T16:29:30Z"
   },
   {
     "usgs_id": "us6000t7zc",
@@ -141,43 +141,13 @@
     "iso3": "VEN",
     "lon": -68.5564,
     "lat": 10.3713,
-    "pop_mmi7p": 491580.875195766,
-    "pop_mmi6p": 2771861.4076254996,
+    "pop_mmi7p": 975261.8690220417,
+    "pop_mmi6p": 5184764.89021501,
     "utc": "2026-06-24T22:04:31Z",
     "shakemap_version": 9,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:19:14Z"
-  },
-  {
-    "usgs_id": "pr2025175000",
-    "mag": 5.7,
-    "lugar": "77 km al NNE de Punta Cana, República Dominicana",
-    "iso3": "DOM",
-    "lon": -68.1103,
-    "lat": 19.2245,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 0.0,
-    "utc": "2025-06-24T02:45:43Z",
-    "shakemap_version": 8,
-    "preliminar": false,
-    "backtest": true,
-    "generado_utc": "2026-11-02T17:13:58Z"
-  },
-  {
-    "usgs_id": "pr2025056002",
-    "mag": 5.85,
-    "lugar": "102 km al NNE de Punta Cana, República Dominicana",
-    "iso3": "DOM",
-    "lon": -68.0846,
-    "lat": 19.4565,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 0.0,
-    "utc": "2025-02-25T05:48:55Z",
-    "shakemap_version": 11,
-    "preliminar": false,
-    "backtest": true,
-    "generado_utc": "2026-11-02T17:13:41Z"
+    "generado_utc": "2026-11-21T16:29:39Z"
   },
   {
     "usgs_id": "us7000nr0v",
@@ -186,28 +156,13 @@
     "iso3": "CUB",
     "lon": -77.0506,
     "lat": 19.7974,
-    "pop_mmi7p": 3291.1863567195833,
-    "pop_mmi6p": 173017.51925783232,
+    "pop_mmi7p": 28744.9690137133,
+    "pop_mmi6p": 683306.3180096708,
     "utc": "2024-11-10T16:49:50Z",
     "shakemap_version": 9,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:22:54Z"
-  },
-  {
-    "usgs_id": "us7000kg9g",
-    "mag": 6.6,
-    "lugar": "19 km al SE de Loncopué, Argentina",
-    "iso3": "ARG",
-    "lon": -70.4427,
-    "lat": -38.1862,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 0.0,
-    "utc": "2023-07-17T03:05:11Z",
-    "shakemap_version": 11,
-    "preliminar": false,
-    "backtest": true,
-    "generado_utc": "2026-11-02T17:22:31Z"
+    "generado_utc": "2026-11-21T16:29:49Z"
   },
   {
     "usgs_id": "us7000jl3s",
@@ -216,28 +171,13 @@
     "iso3": "ECU",
     "lon": -79.8518,
     "lat": -2.7834,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 4750724.875813367,
+    "pop_mmi7p": 745340.7991143554,
+    "pop_mmi6p": 6128237.5388336545,
     "utc": "2023-03-18T17:12:52Z",
     "shakemap_version": 7,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:22:03Z"
-  },
-  {
-    "usgs_id": "us6000hf75",
-    "mag": 6.6,
-    "lugar": "55 km al OSO de Masachapa, Nicaragua",
-    "iso3": "NIC",
-    "lon": -86.9604,
-    "lat": 11.5537,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 0.0,
-    "utc": "2022-04-21T07:42:46Z",
-    "shakemap_version": 6,
-    "preliminar": false,
-    "backtest": true,
-    "generado_utc": "2026-11-02T17:19:12Z"
+    "generado_utc": "2026-11-21T16:29:59Z"
   },
   {
     "usgs_id": "us7000f93v",
@@ -246,13 +186,13 @@
     "iso3": "MEX",
     "lon": -99.753,
     "lat": 16.9465,
-    "pop_mmi7p": 910714.4594508423,
-    "pop_mmi6p": 1115170.9964241658,
+    "pop_mmi7p": 1006653.0645814235,
+    "pop_mmi6p": 1307893.0816742068,
     "utc": "2021-09-08T01:47:47Z",
     "shakemap_version": 7,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:21:41Z"
+    "generado_utc": "2026-11-21T16:30:09Z"
   },
   {
     "usgs_id": "us7000d18q",
@@ -261,13 +201,13 @@
     "iso3": "ARG",
     "lon": -68.7992,
     "lat": -31.8334,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 583082.6162497867,
+    "pop_mmi7p": 328.0431949002668,
+    "pop_mmi6p": 720133.9257900603,
     "utc": "2021-01-19T02:46:22Z",
     "shakemap_version": 8,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:21:32Z"
+    "generado_utc": "2026-11-21T16:30:15Z"
   },
   {
     "usgs_id": "us7000455l",
@@ -277,12 +217,12 @@
     "lon": -82.754,
     "lat": 8.4612,
     "pop_mmi7p": 0.0,
-    "pop_mmi6p": 55329.06562968716,
+    "pop_mmi6p": 194562.37637862703,
     "utc": "2019-06-26T05:23:51Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:20:59Z"
+    "generado_utc": "2026-11-21T16:30:20Z"
   },
   {
     "usgs_id": "us70003t2n",
@@ -292,12 +232,12 @@
     "lon": -89.3056,
     "lat": 13.1994,
     "pop_mmi7p": 0.0,
-    "pop_mmi6p": 66269.33582028653,
+    "pop_mmi6p": 1436538.931302594,
     "utc": "2019-05-30T09:03:32Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:20:37Z"
+    "generado_utc": "2026-11-21T16:30:26Z"
   },
   {
     "usgs_id": "us60003sc0",
@@ -306,28 +246,13 @@
     "iso3": "PER",
     "lon": -75.2697,
     "lat": -5.8119,
-    "pop_mmi7p": 247720.08142531104,
-    "pop_mmi6p": 1051686.814353569,
+    "pop_mmi7p": 523031.4563072156,
+    "pop_mmi6p": 2069062.3598551652,
     "utc": "2019-05-26T07:41:15Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:18:58Z"
-  },
-  {
-    "usgs_id": "us1000jg5z",
-    "mag": 6.3,
-    "lugar": "31 km al SSE de Tarata, Bolivia",
-    "iso3": "BOL",
-    "lon": -65.9072,
-    "lat": -17.8744,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 0.0,
-    "utc": "2019-03-15T05:03:50Z",
-    "shakemap_version": 5,
-    "preliminar": false,
-    "backtest": true,
-    "generado_utc": "2026-11-02T17:15:54Z"
+    "generado_utc": "2026-11-21T16:30:57Z"
   },
   {
     "usgs_id": "us2000j6hy",
@@ -336,13 +261,13 @@
     "iso3": "CHL",
     "lon": -71.3815,
     "lat": -30.0404,
-    "pop_mmi7p": 467130.3538479116,
-    "pop_mmi6p": 697680.3248557751,
+    "pop_mmi7p": 560390.7610380203,
+    "pop_mmi6p": 753317.1255811434,
     "utc": "2019-01-20T01:32:52Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:18:02Z"
+    "generado_utc": "2026-11-21T16:31:09Z"
   },
   {
     "usgs_id": "us1000gez7",
@@ -352,12 +277,12 @@
     "lon": -62.9019,
     "lat": 10.7731,
     "pop_mmi7p": 0.0,
-    "pop_mmi6p": 3416.044249188155,
+    "pop_mmi6p": 496711.2467246223,
     "utc": "2018-08-21T21:31:47Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:15:38Z"
+    "generado_utc": "2026-11-21T16:31:19Z"
   },
   {
     "usgs_id": "us2000cjfy",
@@ -366,28 +291,13 @@
     "iso3": "PER",
     "lon": -74.7092,
     "lat": -15.7675,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 36933.04225536436,
+    "pop_mmi7p": 9593.219939038157,
+    "pop_mmi6p": 54551.06368667912,
     "utc": "2018-01-14T09:18:45Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:17:39Z"
-  },
-  {
-    "usgs_id": "us1000c2zy",
-    "mag": 7.5,
-    "lugar": "203 km al NNE de Barra Patuca, Honduras",
-    "iso3": "HND",
-    "lon": -83.52,
-    "lat": 17.4825,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 0.0,
-    "utc": "2018-01-10T02:51:33Z",
-    "shakemap_version": 1,
-    "preliminar": false,
-    "backtest": true,
-    "generado_utc": "2026-11-02T17:15:09Z"
+    "generado_utc": "2026-11-21T16:31:24Z"
   },
   {
     "usgs_id": "us2000bmhe",
@@ -396,13 +306,13 @@
     "iso3": "CRI",
     "lon": -84.4865,
     "lat": 9.5147,
-    "pop_mmi7p": 7400.7181151825935,
-    "pop_mmi6p": 28246.993986844085,
+    "pop_mmi7p": 19751.90225534793,
+    "pop_mmi6p": 54548.26389950048,
     "utc": "2017-11-13T02:28:23Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:17:19Z"
+    "generado_utc": "2026-11-21T16:31:31Z"
   },
   {
     "usgs_id": "us2000ahv0",
@@ -411,13 +321,13 @@
     "iso3": "MEX",
     "lon": -93.8993,
     "lat": 15.0222,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 760856.2383539008,
+    "pop_mmi7p": 65293.23618813697,
+    "pop_mmi6p": 1475537.9253813361,
     "utc": "2017-09-08T04:49:19Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:17:10Z"
+    "generado_utc": "2026-11-21T16:31:45Z"
   },
   {
     "usgs_id": "us20009mbt",
@@ -427,12 +337,12 @@
     "lon": -92.0092,
     "lat": 14.9091,
     "pop_mmi7p": 0.0,
-    "pop_mmi6p": 1810851.642125658,
+    "pop_mmi6p": 3667489.9258207306,
     "utc": "2017-06-14T07:29:04Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:16:42Z"
+    "generado_utc": "2026-11-21T16:31:49Z"
   },
   {
     "usgs_id": "us10007mn3",
@@ -441,13 +351,13 @@
     "iso3": "CHL",
     "lon": -73.9413,
     "lat": -43.4064,
-    "pop_mmi7p": 56588.415672381874,
-    "pop_mmi6p": 198283.5895812628,
+    "pop_mmi7p": 91797.95397270424,
+    "pop_mmi6p": 218267.84278726764,
     "utc": "2016-12-25T14:22:27Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:14:45Z"
+    "generado_utc": "2026-11-21T16:31:53Z"
   },
   {
     "usgs_id": "us20005j32",
@@ -456,27 +366,12 @@
     "iso3": "ECU",
     "lon": -79.9218,
     "lat": 0.3819,
-    "pop_mmi7p": 2283453.94845534,
-    "pop_mmi6p": 4311549.307839911,
+    "pop_mmi7p": 3406574.1135585005,
+    "pop_mmi6p": 8649608.295044685,
     "utc": "2016-04-16T23:58:36Z",
     "shakemap_version": 1,
     "preliminar": false,
     "backtest": true,
-    "generado_utc": "2026-11-02T17:16:32Z"
-  },
-  {
-    "usgs_id": "usp000jd2q",
-    "mag": 5.5,
-    "lugar": "5 km al NNO de Baní, República Dominicana",
-    "iso3": "DOM",
-    "lon": -70.361,
-    "lat": 18.325,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 0.0,
-    "utc": "2012-01-05T09:35:32Z",
-    "shakemap_version": 1,
-    "preliminar": false,
-    "backtest": true,
-    "generado_utc": "2026-11-02T17:23:39Z"
+    "generado_utc": "2026-11-21T16:32:10Z"
   }
 ]

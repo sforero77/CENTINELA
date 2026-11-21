@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us20005j32",
     "mag": 7.8,
@@ -23,33 +23,40 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 4311549.307839911,
-    "pop_mmi7p": 2283453.94845534,
-    "pop_mmi8p": 107904.13165850379,
-    "pop_65p_mmi7p": 175593.30156191767,
-    "pop_65p_mmi6p": 344545.81505951425,
-    "bld_mmi6p": 1734417.0,
-    "built_m2_mmi6p": 229013537.0,
-    "health_mmi6p": 998.0,
-    "edu_mmi6p": 3706.0,
-    "road_km_mmi6p": 57919.28682299074,
-    "road_km_principal_mmi6p": 5086.51395373427,
-    "bld_mmi7p": 987157.0,
-    "built_m2_mmi7p": 131022681.0,
-    "health_mmi7p": 568.0,
-    "edu_mmi7p": 2445.0,
-    "road_km_mmi7p": 36232.337725392266,
-    "road_km_principal_mmi7p": 2576.808532975174,
-    "pop_ls_alta": 206312.22301653633,
-    "pop_lq_alta": 1160483.191602271
+    "pop_mmi6p": 8649608.295044685,
+    "pop_mmi7p": 3406574.1135585005,
+    "pop_mmi8p": 1044711.9121113052,
+    "pop_65p_mmi7p": 262250.51613487763,
+    "pop_65p_mmi6p": 684895.2307203726,
+    "bld_mmi6p": 2743292.0,
+    "built_m2_mmi6p": 388436771.0,
+    "health_mmi6p": 2600.0,
+    "edu_mmi6p": 5622.0,
+    "road_km_mmi6p": 79906.283833855,
+    "road_km_principal_mmi6p": 7234.151095568547,
+    "bld_mmi7p": 1402292.0,
+    "built_m2_mmi7p": 185541932.0,
+    "health_mmi7p": 849.0,
+    "edu_mmi7p": 3323.0,
+    "road_km_mmi7p": 47989.368595657696,
+    "road_km_principal_mmi7p": 4099.129906289202,
+    "pop_ls_alta": 208952.4439104558,
+    "pop_lq_alta": 1345964.9358566166
   },
   "top_municipios": [
+    {
+      "adm2_id": "EC2301",
+      "nombre": "Santo Domingo",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 476730.31927387696,
+      "pop_banda": 476730.31927387696
+    },
     {
       "adm2_id": "EC1301",
       "nombre": "Portoviejo",
       "mmi_max": 7.5,
-      "pop_mmi7p": 333074.6068843431,
-      "pop_banda": 333074.6068843431
+      "pop_mmi7p": 333086.75041354867,
+      "pop_banda": 333086.75041354867
     },
     {
       "adm2_id": "EC0801",
@@ -62,15 +69,22 @@
       "adm2_id": "EC1308",
       "nombre": "Manta",
       "mmi_max": 7.0,
-      "pop_mmi7p": 265263.3823460443,
-      "pop_banda": 265263.3823460443
+      "pop_mmi7p": 268300.70611146744,
+      "pop_banda": 268300.70611146744
+    },
+    {
+      "adm2_id": "EC1205",
+      "nombre": "Quevedo",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 221023.37971959822,
+      "pop_banda": 221023.37971959822
     },
     {
       "adm2_id": "EC0804",
       "nombre": "Quinindé",
       "mmi_max": 7.5,
-      "pop_mmi7p": 164691.17179264408,
-      "pop_banda": 164691.17179264408
+      "pop_mmi7p": 164692.26704134326,
+      "pop_banda": 164692.26704134326
     },
     {
       "adm2_id": "EC1303",
@@ -90,15 +104,22 @@
       "adm2_id": "EC0908",
       "nombre": "El Empalme",
       "mmi_max": 7.0,
-      "pop_mmi7p": 87248.68491868488,
-      "pop_banda": 87248.68491868488
+      "pop_mmi7p": 90259.02472979762,
+      "pop_banda": 90259.02472979762
     },
     {
       "adm2_id": "EC1309",
       "nombre": "Montecristi",
       "mmi_max": 7.0,
-      "pop_mmi7p": 77992.98221841082,
-      "pop_banda": 77992.98221841082
+      "pop_mmi7p": 81162.76255037682,
+      "pop_banda": 81162.76255037682
+    },
+    {
+      "adm2_id": "EC1210",
+      "nombre": "Buena Fe",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 78267.70527231041,
+      "pop_banda": 78267.70527231041
     },
     {
       "adm2_id": "EC1314",
@@ -108,6 +129,13 @@
       "pop_banda": 68319.48796129227
     },
     {
+      "adm2_id": "EC0904",
+      "nombre": "Balzar",
+      "mmi_max": 7.0,
+      "pop_mmi7p": 66741.32766251825,
+      "pop_banda": 66741.32766251825
+    },
+    {
       "adm2_id": "EC1317",
       "nombre": "Pedernales",
       "mmi_max": 8.0,
@@ -115,43 +143,15 @@
       "pop_banda": 65950.37720756885
     },
     {
-      "adm2_id": "EC2301",
-      "nombre": "Santo Domingo",
-      "mmi_max": 7.0,
-      "pop_mmi7p": 59369.58804338612,
-      "pop_banda": 59369.58804338612
-    },
-    {
-      "adm2_id": "EC0806",
-      "nombre": "Atacames",
-      "mmi_max": 8.0,
-      "pop_mmi7p": 55224.02203127928,
-      "pop_banda": 55224.02203127928
-    },
-    {
-      "adm2_id": "EC2302",
-      "nombre": "La Concordia",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 53765.84628438018,
-      "pop_banda": 53765.84628438018
-    },
-    {
-      "adm2_id": "EC1302",
-      "nombre": "Bolívar",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 47516.014756060205,
-      "pop_banda": 47516.014756060205
-    },
-    {
-      "adm2_id": "EC1315",
-      "nombre": "Tosagua",
-      "mmi_max": 7.5,
-      "pop_mmi7p": 45943.311521184165,
-      "pop_banda": 45943.311521184165
+      "adm2_id": "EC1306",
+      "nombre": "Jipijapa",
+      "mmi_max": 6.5,
+      "pop_mmi7p": 63546.08379011694,
+      "pop_banda": 63546.08379011694
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 3.1,
+    "pop_discrepancia_pct": 2.5,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -167,6 +167,16 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 4,3 millones → 8,6 millones",
+    "Población en MMI≥VII: 2,3 millones → 3,4 millones",
+    "Población en MMI≥VIII: 110 mil → 1 millón",
+    "Población de 65 años o más en MMI≥VII: 180 mil → 260 mil",
+    "Edificaciones en MMI≥VII: 990 mil → 1,4 millones",
+    "Sedes de salud en MMI≥VII: 570 → 850",
+    "Sedes educativas en MMI≥VII: 2.400 → 3.300",
+    "Población en cobertura areal alta por licuefacción: 1,2 millones → 1,3 millones",
     "Edificaciones en MMI≥7: 1 millón → 990 mil",
     "Sedes de salud en MMI≥7: 550 → 570"
   ],
@@ -224,6 +234,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:16:32Z",
+  "generado_utc": "2026-11-21T16:32:10Z",
   "pipeline_version": "0.1.0"
 }

@@ -1,5 +1,5 @@
 {
-  "schema": "centinela/report/1.0",
+  "schema": "centinela/report/2.0",
   "event": {
     "usgs_id": "us20009mbt",
     "mag": 6.9,
@@ -23,17 +23,17 @@
   "radios": [],
   "backtest": true,
   "totales": {
-    "pop_mmi6p": 1810851.642125658,
+    "pop_mmi6p": 3667489.9258207306,
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 94443.8288472701,
-    "bld_mmi6p": 896896.0,
-    "built_m2_mmi6p": 108509238.0,
-    "health_mmi6p": 179.0,
-    "edu_mmi6p": 233.0,
-    "road_km_mmi6p": 10894.249431462877,
-    "road_km_principal_mmi6p": 724.9450091530648,
+    "pop_65p_mmi6p": 185117.90052918575,
+    "bld_mmi6p": 1907160.0,
+    "built_m2_mmi6p": 243367920.0,
+    "health_mmi6p": 377.0,
+    "edu_mmi6p": 451.0,
+    "road_km_mmi6p": 25686.062344349426,
+    "road_km_principal_mmi6p": 1428.7383125427943,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
     "health_mmi7p": 0.0,
@@ -49,7 +49,14 @@
       "nombre": "Quetzaltenango",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 188347.90364283836
+      "pop_banda": 211284.16835177178
+    },
+    {
+      "adm2_id": "GT0805",
+      "nombre": "Momostenango",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 174996.1490771342
     },
     {
       "adm2_id": "GT0920",
@@ -66,92 +73,85 @@
       "pop_banda": 130784.82469239086
     },
     {
-      "adm2_id": "GT1202",
-      "nombre": "San Pedro Sacatepéquez",
+      "adm2_id": "GT1001",
+      "nombre": "Mazatenango",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 121281.92238646932
+    },
+    {
+      "adm2_id": "GT1101",
+      "nombre": "Retalhuleu",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 69856.71024296992
+      "pop_banda": 107465.70956374332
+    },
+    {
+      "adm2_id": "GT1207",
+      "nombre": "Tacaná",
+      "mmi_max": 5.5,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 90453.62854639371
+    },
+    {
+      "adm2_id": "GT0803",
+      "nombre": "San Francisco el Alto",
+      "mmi_max": 6.0,
+      "pop_mmi7p": 0.0,
+      "pop_banda": 84414.63606055267
     },
     {
       "adm2_id": "GT1201",
       "nombre": "San Marcos",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 63173.05020730384
-    },
-    {
-      "adm2_id": "GT1219",
-      "nombre": "San Pablo",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 61898.43578879908
+      "pop_banda": 73377.05153682362
     },
     {
       "adm2_id": "GT1204",
       "nombre": "Comitancillo",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 57152.62038189359
+      "pop_banda": 73251.1384806456
     },
     {
-      "adm2_id": "GT0909",
-      "nombre": "Ostuncalco",
+      "adm2_id": "GT1202",
+      "nombre": "San Pedro Sacatepéquez",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 55241.00616754056
+      "pop_banda": 72975.34327661013
     },
     {
-      "adm2_id": "GT1109",
-      "nombre": "El Asintal",
+      "adm2_id": "GT1209",
+      "nombre": "Tajumulco",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 50873.552628465
+      "pop_banda": 71388.50620884635
     },
     {
-      "adm2_id": "GT1217",
-      "nombre": "Ayutla",
+      "adm2_id": "GT1219",
+      "nombre": "San Pablo",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 49635.31031914381
+      "pop_banda": 68371.6206784416
     },
     {
-      "adm2_id": "GT0921",
-      "nombre": "Génova",
+      "adm2_id": "GT1206",
+      "nombre": "Concepción Tutuapa",
       "mmi_max": 6.0,
       "pop_mmi7p": 0.0,
-      "pop_banda": 48033.78787005134
+      "pop_banda": 67159.09403789975
     },
     {
-      "adm2_id": "GT0917",
-      "nombre": "Colomba",
-      "mmi_max": 6.0,
+      "adm2_id": "GT0801",
+      "nombre": "Totonicapán",
+      "mmi_max": 5.5,
       "pop_mmi7p": 0.0,
-      "pop_banda": 47861.419836286455
-    },
-    {
-      "adm2_id": "GT1216",
-      "nombre": "Catarina",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 47454.29046616331
-    },
-    {
-      "adm2_id": "GT1213",
-      "nombre": "El Tumbador",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 47395.407258725725
-    },
-    {
-      "adm2_id": "GT1230",
-      "nombre": "La Blanca",
-      "mmi_max": 6.0,
-      "pop_mmi7p": 0.0,
-      "pop_banda": 41313.258501784876
+      "pop_banda": 61498.45657300856
     }
   ],
   "incertidumbre": {
-    "pop_discrepancia_pct": 3.1,
+    "pop_discrepancia_pct": 1.8,
     "notas": []
   },
   "ground_failure_usgs": {
@@ -166,7 +166,11 @@
     "csv_adm2": "adm2.csv",
     "mapa_png": "mapa_general.png"
   },
-  "changelog": [],
+  "changelog": [
+    "Recálculo con el mismo ShakeMap v1 (atlas) (cambió el cálculo o el activo de exposición, no USGS)",
+    "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
+    "Población en MMI≥VI: 1,8 millones → 3,7 millones"
+  ],
   "licencia": {
     "cubo": "odbl",
     "spdx": "ODbL-1.0",
@@ -221,6 +225,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-02T17:16:42Z",
+  "generado_utc": "2026-11-21T16:31:49Z",
   "pipeline_version": "0.1.0"
 }
