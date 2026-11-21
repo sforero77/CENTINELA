@@ -2357,7 +2357,7 @@ def test_el_filtro_de_pais_tambien_recorta_la_tarjeta_y_la_lista_de_menores(
     # Y el tercer sitio que cuenta lo mismo: el interruptor de la capa, que
     # congelaba su cifra en la del arranque porque solo se pintaba una vez.
     rotulo = pagina.locator("#interruptor-observados .menor").inner_text()
-    assert f"({esperados} en" in rotulo, (
+    assert f"({esperados} sin reporte)" in rotulo, (
         f"el interruptor ofrece «{rotulo}» con {iso3} puesto, y el mapa deja {esperados} estrellas"
     )
 
