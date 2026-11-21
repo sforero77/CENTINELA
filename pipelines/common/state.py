@@ -37,6 +37,14 @@ class EventStatus(StrEnum):
     #: leer "no hay eventos degradados" no significa nada.
     DEGRADADO = "degradado"
     DESCARTADO = "descartado"
+    #: CON SHAKEMAP, MEDIDO, Y SIN NADIE EN LA CLASE VI (21-nov-2026).
+    #:
+    #: El calculo corrio entero y ninguna celda con poblacion llego a MMI 5,5:
+    #: el sismo no tiene reporte —seria un reporte vacio, con isolineas y sin
+    #: una cifra— y se enseña como "visto, sin reporte" con su razon. **No es
+    #: terminal**: P1 y el repaso lo siguen vigilando, y una version nueva del
+    #: ShakeMap que si alcance a alguien lo promueve a `publicado`.
+    SIN_ALCANCE = "sin_alcance"
 
 
 _ALLOWED_TRANSITIONS: dict[EventStatus, frozenset[EventStatus]] = {
@@ -46,6 +54,7 @@ _ALLOWED_TRANSITIONS: dict[EventStatus, frozenset[EventStatus]] = {
             EventStatus.PUBLICADO,
             EventStatus.DEGRADADO,
             EventStatus.DESCARTADO,
+            EventStatus.SIN_ALCANCE,
         }
     ),
     EventStatus.PRELIMINAR: frozenset(
@@ -54,14 +63,30 @@ _ALLOWED_TRANSITIONS: dict[EventStatus, frozenset[EventStatus]] = {
             EventStatus.PUBLICADO,
             EventStatus.DEGRADADO,
             EventStatus.DESCARTADO,
+            EventStatus.SIN_ALCANCE,
         }
     ),
     # Un evento publicado se re-publica al aparecer ShakeMap v(n+1) (RF-04).
+    # Y baja a `sin_alcance` si la version nueva ya no alcanza a nadie en la
+    # clase VI, o si se recalcula con la regla de `report/2.0`.
     EventStatus.PUBLICADO: frozenset(
-        {EventStatus.PUBLICADO, EventStatus.DEGRADADO, EventStatus.DESCARTADO}
+        {
+            EventStatus.PUBLICADO,
+            EventStatus.DEGRADADO,
+            EventStatus.DESCARTADO,
+            EventStatus.SIN_ALCANCE,
+        }
     ),
     EventStatus.DEGRADADO: frozenset(
-        {EventStatus.PRELIMINAR, EventStatus.PUBLICADO, EventStatus.DESCARTADO}
+        {
+            EventStatus.PRELIMINAR,
+            EventStatus.PUBLICADO,
+            EventStatus.DESCARTADO,
+            EventStatus.SIN_ALCANCE,
+        }
+    ),
+    EventStatus.SIN_ALCANCE: frozenset(
+        {EventStatus.SIN_ALCANCE, EventStatus.PUBLICADO, EventStatus.DESCARTADO}
     ),
     EventStatus.DESCARTADO: frozenset(),
 }
@@ -205,6 +230,10 @@ class EventState:
     #: nada del sistema: mezclarla con las reales daria un p50 sin sentido.
     backtest: bool = False
     notas: list[str] = field(default_factory=list)
+    #: Intensidad maxima sobre una celda con poblacion, medida en el ultimo
+    #: calculo completo. Solo se escribe en `sin_alcance`: es la razon que el
+    #: visor enseña ("la poblacion llego a MMI 5,0"). ``None`` en el resto.
+    mmi_max_poblado: float | None = None
 
     # -- transiciones -------------------------------------------------------
 
@@ -283,6 +312,12 @@ class EventState:
             "intentos_preliminar": self.intentos_preliminar,
             "backtest": self.backtest,
             "notas": list(self.notas),
+            # Solo cuando existe: los estados de siempre no cambian de forma.
+            **(
+                {"mmi_max_poblado": self.mmi_max_poblado}
+                if self.mmi_max_poblado is not None
+                else {}
+            ),
         }
 
     @classmethod
@@ -302,6 +337,9 @@ class EventState:
             intentos_preliminar=int(data.get("intentos_preliminar", 0)),
             backtest=bool(data.get("backtest", False)),
             notas=list(data.get("notas", [])),
+            mmi_max_poblado=(
+                float(data["mmi_max_poblado"]) if data.get("mmi_max_poblado") is not None else None
+            ),
         )
 
     # -- persistencia -------------------------------------------------------

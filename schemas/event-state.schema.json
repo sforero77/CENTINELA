@@ -27,7 +27,8 @@
         "preliminar",
         "publicado",
         "degradado",
-        "descartado"
+        "descartado",
+        "sin_alcance"
       ]
     },
     "mag": {
@@ -96,6 +97,10 @@
     "backtest": {
       "type": "boolean",
       "description": "Reconstruccion retrospectiva, no una respuesta en vivo. Se excluye de la estadistica de latencia."
+    },
+    "mmi_max_poblado": {
+      "type": "number",
+      "description": "Intensidad maxima (MMI) sobre una celda con poblacion en el ultimo calculo completo. Solo en estado sin_alcance: ninguna celda poblada llego a la clase VI (MMI 5,5)."
     }
   }
 }

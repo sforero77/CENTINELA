@@ -22,6 +22,7 @@ import pytest
 from pipelines.common.derivados import (
     DERIVADOS,
     OBSERVADOS,
+    SIN_ALCANCE,
     ConflictoNoResolubleError,
     en_conflicto,
     resolver,
@@ -152,4 +153,4 @@ def test_sin_conflicto_no_hay_nada_que_resolver(repo: Path) -> None:
 
 
 def test_la_lista_cubre_lo_que_los_dos_workflows_reescriben() -> None:
-    assert set(DERIVADOS) == {"reports/index.json", "site/status.json", OBSERVADOS}
+    assert set(DERIVADOS) == {"reports/index.json", "site/status.json", OBSERVADOS, SIN_ALCANCE}

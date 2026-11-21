@@ -1,0 +1,5 @@
+{
+  "schema": "centinela/sin_alcance/1.0",
+  "nota": "Sismos medidos con su ShakeMap en los que ninguna zona habitada llegó a la intensidad VI (MMI 5,5), la clase desde la que este sistema publica cifras. No tienen reporte: el cálculo corrió entero y no hay nadie que contar. Se vuelven a medir si USGS publica un ShakeMap nuevo.",
+  "eventos": []
+}

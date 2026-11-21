@@ -432,7 +432,8 @@ def test_el_fuego_no_toma_prestada_la_rampa_de_mmi() -> None:
         )
     )
 
-    assert len(mmi) == 6, f"no se leyo la rampa de MMI: {mmi}"
+    # Siete desde `report/2.0`: la clase VI empieza en 5,5 y lleva su propio paso.
+    assert len(mmi) == 7, f"no se leyo la rampa de MMI: {mmi}"
     assert len(fuego) == 6, f"no se leyo la rampa del fuego: {fuego}"
     assert not (mmi & fuego), f"comparten color: {mmi & fuego}"
 
@@ -819,7 +820,9 @@ def test_las_rampas_se_distinguen_en_escala_de_grises() -> None:
         ("fuego", "const FUEGO_COLORES", ""),
     ):
         ls = [luminancia(c) for c in colores(marcador, tras)]
-        assert len(ls) == 6, f"la rampa de {nombre} no tiene seis clases"
+        # MMI tiene siete pasos desde que la clase VI empieza en 5,5.
+        esperado = 7 if nombre == "MMI" else 6
+        assert len(ls) == esperado, f"la rampa de {nombre} no tiene {esperado} clases"
         sube = all(a < b for a, b in pairwise(ls))
         baja = all(a > b for a, b in pairwise(ls))
         assert sube or baja, f"la rampa de {nombre} no es monotona en luminancia"
@@ -1187,7 +1190,7 @@ def test_se_explica_que_es_mmi_donde_se_usa() -> None:
     """
     html = (RAIZ / "site" / "index.html").read_text(encoding="utf-8")
 
-    assert "MMI 7 es la sacudida" in html
+    assert "La intensidad VII es la sacudida" in html
 
 
 def test_el_visor_ensena_los_servicios_bajo_fuego() -> None:

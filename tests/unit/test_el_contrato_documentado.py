@@ -21,7 +21,7 @@ from pipelines.p3_report.model import Report
 
 RAIZ = Path(__file__).parent.parent.parent
 CONTRATO = RAIZ / "docs" / "arquitectura" / "contratos-de-datos.md"
-ESQUEMA = RAIZ / "schemas" / "report-1.0.schema.json"
+ESQUEMA = RAIZ / "schemas" / "report-2.0.schema.json"
 
 
 def _claves_del_parrafo(despues_de: str) -> set[str]:

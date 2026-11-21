@@ -161,6 +161,11 @@ jobs:
           # siguiente puede alcanzar tierra, y solo se seguira mirando si el
           # evento esta en el catalogo. Descartarlo es dejar de mirar.
           #
+          # Desde `report/2.0` (21-nov-2026) este reintento ya no publica un
+          # reporte de ceros: `run_impact` mide, ve que nadie llega a la clase
+          # VI y deja el evento en `sin_alcance` —no terminal, sigue vigilado—
+          # con la razon que el visor enseña junto a la estrella gris.
+          #
           # Se reintenta con el primer candidato, el mejor por epicentro.
           # El primero de la lista ES el preferido: `paises-candidatos` lo pone
           # a la cabeza aplicando el desempate por toponimo. Antes esto cogia el
@@ -169,7 +174,7 @@ jobs:
           # contra el activo de Argentina.
           PRIMERO=$(echo $PAISES | awk '{print $1}')
           if [ -z "$SIN_ACTIVO" ] && [ -n "$PRIMERO" ]; then
-            echo "::notice::Ningun activo alcanza celdas para $USGS_ID: la sacudida no llego a poblacion. Se publica con ceros usando $PRIMERO."
+            echo "::notice::Ningun activo alcanza celdas para $USGS_ID: la sacudida no llego a poblacion. Se mide con $PRIMERO y queda sin reporte (sin_alcance)."
             PREFIJO="exposure-$(echo "$PRIMERO" | tr '[:upper:]' '[:lower:]')-"
             TAG=$(gh release list --limit 100 --json tagName \
                    --jq "[.[] | select(.tagName | startswith(\"$PREFIJO\"))]
@@ -254,7 +259,7 @@ jobs:
           # del runner y se perdia con el: el comando prometia «queda visible
           # en observados» y no lo veia nadie (hallazgo #154). En una corrida
           # normal no cambia y no anade nada.
-          git add site/status.json site/observados.json
+          git add site/status.json site/observados.json site/sin_alcance.json
 
           git commit -m "P3: reporte de $USGS_ID"
 

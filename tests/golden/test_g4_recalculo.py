@@ -49,24 +49,30 @@ ACTIVO = CHOCO / "exposure_recortado.parquet"
 
 #: Las diecinueve cifras nacionales, recalculadas. No se copian de ningún
 #: artefacto publicado: salen de correr el pipeline sobre la fixture.
+#:
+#: CAMBIARON EL 21-NOV-2026 POR LA REGLA, NO POR LOS DATOS (`report/2.0`): las
+#: bandas son clases USGS (VI ≥5,5, VII ≥6,5, VIII ≥7,5). Contra las filas de
+#: PAGER de `pager_exposures.json` —que usan ese mismo corte— la clase VII pasa
+#: de 2,4 a 5,2 millones (PAGER: 6,5) y Cali entra en el ranking con 1,8
+#: millones en clase VII, donde antes no figuraba.
 TOTALES_ESPERADOS: dict[str, float] = {
-    "pop_mmi6p": 6960085.743641049,
-    "pop_mmi7p": 2415793.4590726923,
-    "pop_mmi8p": 0.0,
-    "pop_65p_mmi7p": 296597.9344581852,
-    "pop_65p_mmi6p": 819854.454880361,
-    "bld_mmi6p": 1104421.0,
-    "built_m2_mmi6p": 182911753.0,
-    "health_mmi6p": 1929.0,
-    "edu_mmi6p": 2446.0,
-    "road_km_mmi6p": 26507.801479395974,
-    "road_km_principal_mmi6p": 2608.612672051196,
-    "bld_mmi7p": 444424.0,
-    "built_m2_mmi7p": 69814813.0,
-    "health_mmi7p": 516.0,
-    "edu_mmi7p": 998.0,
-    "road_km_mmi7p": 8502.889960662413,
-    "road_km_principal_mmi7p": 984.7368105680957,
+    "pop_mmi6p": 8190627.714915011,
+    "pop_mmi7p": 5164740.703187234,
+    "pop_mmi8p": 473703.2813903894,
+    "pop_65p_mmi7p": 613536.5516233541,
+    "pop_65p_mmi6p": 958813.3491521424,
+    "bld_mmi6p": 1617433.0,
+    "built_m2_mmi6p": 244725199.0,
+    "health_mmi6p": 2109.0,
+    "edu_mmi6p": 3383.0,
+    "road_km_mmi6p": 39886.73552676969,
+    "road_km_principal_mmi6p": 3853.7415012738866,
+    "bld_mmi7p": 774567.0,
+    "built_m2_mmi7p": 133639352.0,
+    "health_mmi7p": 1548.0,
+    "edu_mmi7p": 1793.0,
+    "road_km_mmi7p": 17248.555252650014,
+    "road_km_principal_mmi7p": 1911.0002640505024,
     "pop_ls_alta": 0.0,
     "pop_lq_alta": 0.0,
 }
@@ -75,21 +81,21 @@ TOTALES_ESPERADOS: dict[str, float] = {
 #: código es el identificador y el nombre depende del diccionario administrativo,
 #: que es otra pieza y tiene sus propias pruebas.
 TOP_ESPERADO: list[tuple[str, float]] = [
-    ("66001", 498099.9250317244),
-    ("76109", 401081.3250222858),
-    ("63001", 339027.23267125804),
-    ("76834", 256921.917987613),
-    ("66170", 180620.49054662883),
+    ("76001", 1803170.3542415611),
+    ("66001", 507893.18319610506),
+    ("76109", 443236.81375339534),
+    ("63001", 339900.03362934757),
+    ("17001", 305395.40249430016),
+    ("76834", 264722.73849685676),
+    ("66170", 181223.86692177504),
     ("76147", 129910.50064553693),
-    ("27001", 111742.45586497057),
-    ("66682", 67775.61170557514),
-    ("63401", 54247.76072970964),
+    ("27001", 112430.19337610714),
+    ("66682", 71016.91261530947),
+    ("63130", 54810.41255925223),
+    ("63401", 54278.832213515416),
+    ("17873", 44080.377973821014),
+    ("76130", 41716.96294990182),
     ("76895", 39669.865389760584),
-    ("76020", 37139.00253418367),
-    ("76400", 34735.664364411496),
-    ("63470", 31681.55454718042),
-    ("63594", 31506.350372412242),
-    ("17174", 29454.54325528536),
 ]
 
 CELDAS_ALCANZADAS = 69_545
@@ -184,7 +190,7 @@ def test_el_reporte_sobrevive_a_ida_y_vuelta_por_json(recalculado: Report, tmp_p
 
 def test_la_discrepancia_se_mide_y_no_es_cero(recalculado: Report) -> None:
     """`None` significa "no se pudo medir" y 0,0 "coinciden": no son lo mismo."""
-    assert recalculado.incertidumbre.pop_discrepancia_pct == pytest.approx(3.1, abs=0.05)
+    assert recalculado.incertidumbre.pop_discrepancia_pct == pytest.approx(0.4, abs=0.05)
 
 
 # --- Que este golden tenga dientes ------------------------------------------
@@ -205,8 +211,8 @@ def test_una_mutacion_del_sql_mueve_las_cifras() -> None:
     original = modulo.SQL_TOTALES
     try:
         modulo.SQL_TOTALES = original.replace(
-            "SUM(CASE WHEN mmi_max >= 7 THEN pop_total ELSE 0 END)      AS pop_mmi7p",
-            "SUM(CASE WHEN mmi_max >= 8 THEN pop_total ELSE 0 END)      AS pop_mmi7p",
+            "SUM(CASE WHEN mmi_max >= 6.5 THEN pop_total ELSE 0 END)      AS pop_mmi7p",
+            "SUM(CASE WHEN mmi_max >= 7.5 THEN pop_total ELSE 0 END)      AS pop_mmi7p",
         )
         assert original != modulo.SQL_TOTALES, "la mutación no se aplicó"
         mutado, _ = _correr()

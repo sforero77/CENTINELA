@@ -272,8 +272,8 @@ def test_el_texto_regenerado_conserva_las_cifras_del_json(tmp_path: Path) -> Non
     # La tabla publica la cifra redondeada a dos significativas, que es el
     # contrato del reporte; aquí se comprueba que **llegue**, no su forma.
     md = (directorio / "report.md").read_text(encoding="utf-8")
-    fila = next((x for x in md.splitlines() if "Población en MMI≥6" in x), "")
-    assert "millones" in fila, f"la población de MMI≥6 no llegó al texto: {fila!r}"
+    fila = next((x for x in md.splitlines() if "Población en MMI≥VI" in x), "")
+    assert "millones" in fila, f"la población de MMI≥VI no llegó al texto: {fila!r}"
 
 
 def test_un_reporte_que_no_existe_no_deja_el_lote_a_medias(tmp_path: Path) -> None:

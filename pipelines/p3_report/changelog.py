@@ -17,6 +17,7 @@ Venezuela llego a v14— y quien ya leyo la versión anterior necesita saber
 
 from __future__ import annotations
 
+from ..common.constants import REPORT_SCHEMA_ID_V1
 from ..common.formatting import (
     format_count_prose,
     format_delta_prose,
@@ -29,13 +30,13 @@ from .model import Report
 #: `Totales`: el changelog se lee durante una emergencia y trece filas de
 #: deltas no se leen. Van las que cambian una decision.
 CIFRAS_COMPARADAS: tuple[tuple[str, str], ...] = (
-    ("pop_mmi6p", "Población en MMI≥6"),
-    ("pop_mmi7p", "Población en MMI≥7"),
-    ("pop_mmi8p", "Población en MMI≥8"),
-    ("pop_65p_mmi7p", "Población de 65 años o más en MMI≥7"),
-    ("bld_mmi7p", "Edificaciones en MMI≥7"),
-    ("health_mmi7p", "Sedes de salud en MMI≥7"),
-    ("edu_mmi7p", "Sedes educativas en MMI≥7"),
+    ("pop_mmi6p", "Población en MMI≥VI"),
+    ("pop_mmi7p", "Población en MMI≥VII"),
+    ("pop_mmi8p", "Población en MMI≥VIII"),
+    ("pop_65p_mmi7p", "Población de 65 años o más en MMI≥VII"),
+    ("bld_mmi7p", "Edificaciones en MMI≥VII"),
+    ("health_mmi7p", "Sedes de salud en MMI≥VII"),
+    ("edu_mmi7p", "Sedes educativas en MMI≥VII"),
     # La palabra importa y son dos unidades distintas: deslizamiento es
     # probabilidad y licuefaccion es cobertura areal. `GF_UNIDAD` en
     # `markdown.py` ya las separa; aqui decian las dos "alto" a secas.
@@ -77,8 +78,9 @@ def _cambios_del_paso(anterior: Report, nuevo: Report) -> tuple[str, ...]:
     versiones = _cambios_de_version(anterior, nuevo)
     solucion = _cambios_de_solucion(anterior, nuevo)
     cifras = _cambios_de_cifras(anterior, nuevo)
+    convencion = _cambio_de_convencion(anterior, nuevo)
 
-    if not versiones and not solucion and not cifras:
+    if not versiones and not solucion and not cifras and not convencion:
         return ()
 
     # Un paso sin version nueva necesita su propia cabecera ahora que el
@@ -95,7 +97,7 @@ def _cambios_del_paso(anterior: Report, nuevo: Report) -> tuple[str, ...]:
             f"(cambió el cálculo o el activo de exposición, no USGS)"
         ]
 
-    versiones = [*versiones, *solucion]
+    versiones = [*versiones, *convencion, *solucion]
 
     # Una version nueva sin ninguna cifra debajo se lee como un changelog a
     # medias. Que la revision de USGS no mueva nada publicable **es** el
@@ -105,6 +107,24 @@ def _cambios_del_paso(anterior: Report, nuevo: Report) -> tuple[str, ...]:
         return (*versiones, "Ninguna cifra publicada cambia frente a la versión anterior.")
 
     return (*versiones, *cifras)
+
+
+#: La linea que acompaña a la primera emision `report/2.0` de un evento que
+#: ya tenia reporte `1.0`. Sin ella, la poblacion que sube de 0 a 5.400 en un
+#: recalculo con el mismo ShakeMap se leeria como un cambio de los datos o un
+#: error, y es un cambio de regla.
+LINEA_CONVENCION_V2 = (
+    "Cambio de convención: las franjas son ahora las clases de intensidad del "
+    "USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales "
+    "literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos."
+)
+
+
+def _cambio_de_convencion(anterior: Report, nuevo: Report) -> list[str]:
+    """La linea del cambio de bandas literales a clases USGS, una sola vez."""
+    if anterior.schema == REPORT_SCHEMA_ID_V1 and nuevo.schema != REPORT_SCHEMA_ID_V1:
+        return [LINEA_CONVENCION_V2]
+    return []
 
 
 def _cambios_de_version(anterior: Report, nuevo: Report) -> list[str]:

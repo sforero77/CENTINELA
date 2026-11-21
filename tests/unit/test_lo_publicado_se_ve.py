@@ -391,12 +391,12 @@ def test_el_visor_encuadra_por_el_contorno_y_no_por_un_zoom_a_ojo() -> None:
 
 
 def test_el_visor_y_el_png_encuadran_con_la_misma_regla() -> None:
-    """MMI 6 si existe; si no, todo. El mismo sismo no puede enmarcarse de dos
+    """La clase VI (5,5) si existe; si no, todo. El mismo sismo no puede enmarcarse de dos
     formas segun se mire el PNG o la pagina."""
     cuerpo = APP[APP.index("function encuadrarSinMalla") :]
     cuerpo = cuerpo[: cuerpo.index("\n}")]
 
-    assert "[6, -Infinity]" in cuerpo, (
+    assert MMI_MIN_MAPPED == 5.5 and "[UMBRAL_CLASE[6], -Infinity]" in cuerpo, (
         "el visor perdio el respaldo a todas las isolineas, o dejo de preferir "
         f"la de MMI {MMI_MIN_MAPPED:g}"
     )

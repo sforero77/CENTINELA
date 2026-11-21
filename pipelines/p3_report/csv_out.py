@@ -25,6 +25,10 @@ HXL_HEADERS: dict[str, str] = {
     "lon": "#geo+lon",
     "lat": "#geo+lat",
     "mmi_max": "#indicator+mmi+max",
+    # Desde `report/2.0` el sufijo `mmi6/7/8` es la CLASE de intensidad USGS
+    # (VI desde 5,5, VII desde 6,5, VIII desde 7,5), no el decimal literal. Las
+    # etiquetas se conservan: cambiarlas romperia a quien ya filtra por ellas, y
+    # el cambio de corte lo anuncia la version del esquema y el changelog.
     "pop_mmi6p": "#population+mmi6",
     "pop_mmi7p": "#population+mmi7",
     "pop_mmi8p": "#population+mmi8",

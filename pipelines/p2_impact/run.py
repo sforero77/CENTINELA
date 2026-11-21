@@ -81,6 +81,10 @@ class Action(StrEnum):
     COMPLETO = "completo"
     #: Se agoto la ventana de 6 h sin ShakeMap; se deja de reintentar.
     AGOTADO = "agotado"
+    #: Se calculo con ShakeMap y nadie quedo en la clase VI: sin reporte.
+    #: No lo elige `decide` —hace falta el calculo para saberlo— sino
+    #: `run_impact` despues de `compute_impact`.
+    SIN_ALCANCE = "sin_alcance"
 
 
 @dataclass(frozen=True, slots=True)
@@ -377,25 +381,13 @@ def run_impact(
     # docstring afirmaba que si. Van aqui, en la orquestacion, porque no
     # preguntan si el calculo salio bien —de eso se ocupa `compute_impact`—
     # sino si lo calculado se puede publicar.
-    # CUANDO NO ALCANZA, SE PUBLICA **CUANTO** NO ALCANZA.
+    # CUANDO NO ALCANZA, SE DICE **CUANTO** NO ALCANZA.
     #
-    # Un M5,6 a 85 km de la costa de Chiapas y un M5,9 a 876 km de Rapa Nui
-    # producen el mismo reporte de ceros, y no son lo mismo: el primero puede
-    # alcanzar tierra en la revision siguiente del ShakeMap y el segundo no lo
-    # hara nunca. En vez de inventar un umbral que decida por el lector, se
-    # mide la distancia a la poblacion mas cercana del pais y se publica.
-    #
-    # Se usa el propio activo, que ya esta cargado: no hace falta una linea de
-    # costa ni una fuente nueva.
-    avisos_extra: list[str] = []
-    if aunque_no_alcance and not totales.pop_mmi6p:
-        lejania = _km_a_la_poblacion_mas_cercana(con, state.lon, state.lat)
-        if lejania is not None:
-            avisos_extra.append(
-                f"El epicentro está a {lejania:,.0f} km de la población más cercana "
-                f"del país con la que se comparó. La sacudida no alcanzó territorio "
-                f"habitado.".replace(",", ".")
-            )
+    # Un M5,6 a 85 km de la costa de Chiapas y un M5,9 a 876 km de Rapa Nui no
+    # son lo mismo: el primero puede alcanzar tierra en la revision siguiente
+    # del ShakeMap y el segundo no lo hara nunca. Desde `report/2.0` ninguno de
+    # los dos tiene reporte (ver `_pasar_a_sin_alcance`), y la distancia a la
+    # poblacion mas cercana viaja en su razon.
 
     calidad = check_quality(con)
     calidad.raise_if_blocking()
@@ -403,6 +395,21 @@ def run_impact(
         _log.warning(
             "el corte pasa los asserts bloqueantes pero no esta limpio",
             extra={"context": {"usgs_id": usgs_id, "avisos": list(calidad.avisos)}},
+        )
+
+    # SIN NADIE EN LA CLASE VI NO HAY REPORTE (`report/2.0`, 21-nov-2026).
+    #
+    # Hasta aqui todo sismo con ShakeMap publicaba un reporte completo, aunque
+    # todas sus cifras fueran cero: quince de treinta y nueve. En el visor se
+    # leian como reportes rotos —ficha, isolineas, ni un hexagono— y el M6,7
+    # de Carhuamayo fue el que lo hizo evidente. La regla es la misma que
+    # decide que se dibuja: si ninguna celda poblada llega a la clase VI (MMI
+    # 5,5), el sismo se enseña como "visto, sin reporte" con la intensidad que
+    # si alcanzo, y se retira lo que hubiera publicado —el preliminar o un
+    # reporte anterior—. No es terminal: un ShakeMap nuevo lo vuelve a medir.
+    if not totales.pop_mmi6p:
+        return _pasar_a_sin_alcance(
+            con, state, products, decision, usgs_id, events_dir, reports_root
         )
 
     # EL MANIFIESTO LO DICE EL ACTIVO, NO QUIEN LLAMO AL CLI.
@@ -417,7 +424,7 @@ def run_impact(
         products,
         totales,
         manifest_id=del_activo,
-        notas=(*calidad.avisos, *avisos_extra),
+        notas=calidad.avisos,
     )
 
     # RF-04: al re-emitir por un ShakeMap nuevo hay que decir **que cambio**.
@@ -542,7 +549,7 @@ def run_impact(
         shakemap_fuente=products.shakemap_fuente,
         groundfailure_fuente=products.groundfailure_fuente,
     )
-    replace(state, versiones_procesadas=versiones).transition(
+    replace(state, versiones_procesadas=versiones, mmi_max_poblado=None).transition(
         EventStatus.PUBLICADO, nota=decision.razon
     ).save(events_dir)
 
@@ -783,6 +790,66 @@ def _enriquecer_con_admin(con: Any, filas: list[dict[str, Any]]) -> list[dict[st
         fila["lon"] = round(lon, 6)
         fila["lat"] = round(lat, 6)
     return filas
+
+
+def mmi_max_poblado(con: Any) -> float | None:
+    """La mayor intensidad sobre una celda con poblacion, o ``None`` si ninguna.
+
+    `impact_h3` solo tiene celdas desde MMI 5,0 (`MMI_MIN_POLYFILL`): ``None``
+    significa que ninguna celda poblada llego ni a 5,0.
+    """
+    fila = con.execute("SELECT max(mmi_max) FROM impact_h3 WHERE pop_total > 0").fetchone()
+    return float(fila[0]) if fila and fila[0] is not None else None
+
+
+def _pasar_a_sin_alcance(
+    con: Any,
+    state: EventState,
+    products: ProductSet,
+    decision: Decision,
+    usgs_id: str,
+    events_dir: Path | None,
+    reports_root: Path | None,
+) -> Decision:
+    """Cierra la emision sin reporte: estado `sin_alcance` y reporte retirado."""
+    from ..p3_report.run import retirar_reporte
+
+    maximo = mmi_max_poblado(con)
+    lejania = _km_a_la_poblacion_mas_cercana(con, state.lon, state.lat) if maximo is None else None
+    retirado = retirar_reporte(usgs_id, reports_root)
+    versiones = ProcessedVersions(
+        shakemap=products.shakemap_version,
+        groundfailure=products.groundfailure_version,
+        shakemap_fuente=products.shakemap_fuente,
+        groundfailure_fuente=products.groundfailure_fuente,
+    )
+    if maximo is not None:
+        alcance = f"la poblacion llego a MMI {maximo:.1f}"
+    elif lejania is not None:
+        alcance = f"la poblacion mas cercana esta a {lejania:.0f} km del epicentro"
+    else:
+        alcance = "ninguna celda poblada llego a MMI 5,0"
+    nota = f"{decision.razon}; sin alcance: {alcance}, bajo la clase VI (5,5)"
+    replace(state, versiones_procesadas=versiones, mmi_max_poblado=maximo).transition(
+        EventStatus.SIN_ALCANCE, nota=nota
+    ).save(events_dir)
+    _log.info(
+        "sin poblacion en la clase VI: sin reporte",
+        extra={
+            "context": {
+                "usgs_id": usgs_id,
+                "shakemap_version": products.shakemap_version,
+                "mmi_max_poblado": maximo,
+                "reporte_retirado": retirado,
+            }
+        },
+    )
+    return Decision(
+        Action.SIN_ALCANCE,
+        nota,
+        products.shakemap_version,
+        products.groundfailure_version,
+    )
 
 
 def _km_a_la_poblacion_mas_cercana(con: Any, lon: float, lat: float) -> float | None:

@@ -91,7 +91,7 @@ def test_lleva_el_epicentro(estado: EventState, sin_productos: ProductSet) -> No
 
 
 def test_cumple_el_schema(estado: EventState, sin_productos: ProductSet) -> None:
-    schema = json.loads((SCHEMAS_DIR / "report-1.0.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads((SCHEMAS_DIR / "report-2.0.schema.json").read_text(encoding="utf-8"))
     reporte = build_preliminary_report(estado, sin_productos, RADIOS, manifest_id="col-v0.5")
     errores = sorted(Draft202012Validator(schema).iter_errors(reporte.to_dict()), key=str)
     assert errores == [], [e.message for e in errores]

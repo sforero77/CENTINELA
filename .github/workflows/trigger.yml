@@ -343,7 +343,7 @@ jobs:
             exit 0
           fi
 
-          git add events/ site/status.json site/observados.json
+          git add events/ site/status.json site/observados.json site/sin_alcance.json
           git diff --staged --quiet && exit 0
           if [ "$HAY_TRABAJO" = "true" ]; then
             git commit -m "P1: eventos detectados $EVENTOS"

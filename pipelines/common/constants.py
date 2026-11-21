@@ -108,6 +108,30 @@ H3_RES_VIEWER: Final[int] = 7
 # El efecto: en los trece eventos sin MMI>=7, la cifra de mayores era cero por
 # construccion, justo donde una poblacion mayor expuesta es lo mas accionable.
 
+# CLASES USGS, NO DECIMALES LITERALES (21-nov-2026, schema `report/2.0`).
+#
+# Hasta la version 1.0 las bandas eran literales: "MMI>=6" era 6,0 o mas. El
+# USGS —PAGER, la Mercalli abreviada, el propio ShakeMap— nombra la intensidad
+# en numeros romanos y redondea: el grado VI empieza en **5,5**. El sismo M6,7
+# de Carhuamayo (`pt26325050`, 108 km de profundidad) lo dejo a la vista: su
+# ShakeMap llega a 5,7, PAGER cuenta 5.398 personas en intensidad VI y este
+# reporte contaba **cero**, sin malla, con isolineas y ficha. Un reporte vacio
+# de un M6,7 que el USGS si cuantifica.
+#
+# Desde la 2.0 cada banda es una CLASE: los nombres de columna se mantienen
+# (`pop_mmi6p` es "clase VI o mas") y el corte numerico sale de aqui. Las
+# celdas llevan la isolinea que contiene su centro, en pasos de 0,5, asi que
+# 5,5 / 6,5 / 7,5 son valores exactos de la malla y el corte es el mismo que el
+# de las filas de PAGER: la cifra de CENTINELA y la del USGS se comparan clase
+# contra clase.
+
+#: Clase de intensidad USGS -> MMI minimo de la isolinea que entra en ella.
+UMBRAL_CLASE: Final[dict[int, float]] = {6: 5.5, 7: 6.5, 8: 7.5}
+
+#: Numeral romano de cada clase publicada, para la prosa.
+ROMANO_CLASE: Final[dict[int, str]] = {6: "VI", 7: "VII", 8: "VIII"}
+
+
 #: Que parte de la poblacion de MMI>=6 tiene que estar en una banda mas alta
 #: para que el reporte titule y ordene por ella.
 #:
@@ -211,7 +235,10 @@ PRELIMINARY_RADII_KM: Final[tuple[int, ...]] = (25, 50, 100)
 
 # --- Reporte ---------------------------------------------------------------
 
-REPORT_SCHEMA_ID: Final[str] = "centinela/report/1.0"
+REPORT_SCHEMA_ID: Final[str] = "centinela/report/2.0"
+#: Schema anterior: bandas literales (MMI>=6,0). Se acepta al leer reportes
+#: viejos —changelog, rezago— y se nombra en el changelog de la reemision.
+REPORT_SCHEMA_ID_V1: Final[str] = "centinela/report/1.0"
 #: Municipios listados en el ranking del reporte (RF-05).
 TOP_ADM2_COUNT: Final[int] = 15
 #: Cifras significativas en prosa (RF-06). CSV/parquet van exactos.

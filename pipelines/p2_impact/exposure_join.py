@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from ..common.constants import UMBRAL_CLASE
+
 #: Extensiones que P0 y P2 requieren cargadas.
 DUCKDB_EXTENSIONS: tuple[str, ...] = ("spatial", "h3")
 
@@ -52,7 +54,7 @@ QUALITY_ASSERTIONS: tuple[tuple[str, str, bool], ...] = (
         # expuesto del evento. Los totales nacionales salen de `impact_h3` y
         # siguen siendo correctos: lo que falta es la fila, no la cifra.
         "crosswalk_incompleto",
-        "SELECT adm2_id FROM impact_adm2 WHERE mmi_max >= 6 "
+        f"SELECT adm2_id FROM impact_adm2 WHERE mmi_max >= {UMBRAL_CLASE[6]} "
         "AND adm2_id NOT IN (SELECT adm2_id FROM admin_lookup)",
         False,
     ),

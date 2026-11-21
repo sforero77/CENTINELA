@@ -14,7 +14,13 @@ from ..common.constants import (
     PROFUNDIDAD_INTERMEDIA_KM,
     TOP_ADM2_COUNT,
 )
-from ..common.formatting import cifra_con_sustantivo, format_count_prose, format_number_es
+from ..common.formatting import (
+    cifra_con_sustantivo,
+    etiqueta_clase,
+    explicacion_clase,
+    format_count_prose,
+    format_number_es,
+)
 from .model import (
     MunicipioTop,
     Report,
@@ -124,7 +130,7 @@ def render_markdown(report: Report) -> str:
     p65 = tot.pop_65p_mmi6p if banda_edad == 6 else tot.pop_65p_mmi7p
     if p65 and not report.preliminar:
         partes.append(
-            f"De la población en intensidad MMI≥{banda_edad}, alrededor de "
+            f"De la población en intensidad {etiqueta_clase(banda_edad)}, alrededor de "
             f"**{format_count_prose(p65)}** personas tienen 65 años o más."
         )
 
@@ -133,7 +139,8 @@ def render_markdown(report: Report) -> str:
         # su cuenta, que es como se llega a un titulo que promete una columna y
         # una columna que trae otra.
         partes.append(
-            f"## Municipios más expuestos, por población en MMI≥{banda_del_ranking(report)}"
+            "## Municipios más expuestos, por población en "
+            f"{etiqueta_clase(banda_del_ranking(report))}"
         )
         partes.append(_tabla_municipios(report))
 
@@ -218,12 +225,12 @@ def _tabla_totales(report: Report) -> str:
     superficie = tot.built_m2_mmi6p if seis else tot.built_m2_mmi7p
 
     filas = [
-        ("Población en MMI≥6", _celda_poblacion(tot.pop_mmi6p)),
-        ("Población en MMI≥7", _celda_poblacion(tot.pop_mmi7p)),
-        ("Población en MMI≥8", _celda_poblacion(tot.pop_mmi8p)),
-        (f"Edificaciones en MMI≥{banda}", format_count_prose(bld)),
-        (f"Sedes de salud en MMI≥{banda}", format_number_es(salud)),
-        (f"Sedes educativas en MMI≥{banda}", format_number_es(edu)),
+        ("Población en MMI≥VI", _celda_poblacion(tot.pop_mmi6p)),
+        ("Población en MMI≥VII", _celda_poblacion(tot.pop_mmi7p)),
+        ("Población en MMI≥VIII", _celda_poblacion(tot.pop_mmi8p)),
+        (f"Edificaciones en {etiqueta_clase(banda)}", format_count_prose(bld)),
+        (f"Sedes de salud en {etiqueta_clase(banda)}", format_number_es(salud)),
+        (f"Sedes educativas en {etiqueta_clase(banda)}", format_number_es(edu)),
     ]
     # Se publican por separado a proposito: no es lo mismo que quede cortada
     # una troncal que una calle de barrio, y la red principal es ademas la
@@ -233,16 +240,22 @@ def _tabla_totales(report: Report) -> str:
         local = max(via_total - via_principal, 0.0)
         filas.append(
             (
-                f"Vías primarias y secundarias en MMI≥{banda}",
+                f"Vías primarias y secundarias en {etiqueta_clase(banda)}",
                 format_count_prose(via_principal) + " km",
             )
         )
-        filas.append((f"Vías locales en MMI≥{banda}", format_count_prose(local) + " km"))
+        filas.append(
+            (f"Vías locales en {etiqueta_clase(banda)}", format_count_prose(local) + " km")
+        )
     else:
-        filas.append((f"Kilómetros de vía en MMI≥{banda}", format_count_prose(via_total) + " km"))
+        filas.append(
+            (f"Kilómetros de vía en {etiqueta_clase(banda)}", format_count_prose(via_total) + " km")
+        )
     if superficie > 0:
         km2 = superficie / 1_000_000.0
-        filas.append((f"Superficie construida en MMI≥{banda}", f"{format_number_es(km2, 1)} km²"))
+        filas.append(
+            (f"Superficie construida en {etiqueta_clase(banda)}", f"{format_number_es(km2, 1)} km²")
+        )
     lineas = ["| Indicador | Estimado |", "|---|---:|"]
     lineas += [f"| {nombre} | {valor} |" for nombre, valor in filas]
     return "\n".join(lineas) + _nota_del_muro_de_ceros(report) + _nota_superficie(report)
@@ -294,7 +307,7 @@ def _nota_superficie(report: Report) -> str:
         f"\n\nEl satélite detecta **{format_number_es(veces, 1)} veces** más superficie "
         f"construida de la que explicarían las "
         f"{cifra_con_sustantivo(edificaciones, 'edificaciones')} registradas en "
-        f"MMI≥{banda}. La diferencia suele ser asentamiento informal o zona rural "
+        f"{etiqueta_clase(banda)}. La diferencia suele ser asentamiento informal o zona rural "
         f"dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la "
         f"superficie construida no**."
     )
@@ -334,7 +347,8 @@ def _nota_del_muro_de_ceros(report: Report) -> str:
         return (
             f"{cabecera}El ShakeMap sí alcanza territorio habitado del país, con "
             f"intensidad máxima **MMI {format_number_es(alcanzada, 1)}** sobre "
-            f"municipio. Este sistema publica cifras desde MMI≥6, así que por debajo "
+            f"municipio. Este sistema publica cifras desde la {explicacion_clase(6)}, "
+            f"así que por debajo "
             f"de ese umbral las tablas van en cero. El cálculo corrió entero."
         )
 
@@ -343,13 +357,13 @@ def _nota_del_muro_de_ceros(report: Report) -> str:
             f"{cabecera}El sismo ocurrió a "
             f"**{format_number_es(report.event.depth_km, 0)} km de profundidad**: la "
             f"energía llega repartida a la superficie y la intensidad no alcanza "
-            f"MMI≥6 sobre territorio habitado, que es el umbral desde el que este "
+            f"MMI≥VI sobre territorio habitado, que es el umbral desde el que este "
             f"sistema publica cifras. El cálculo corrió entero."
         )
 
     return (
         f"{cabecera}El ShakeMap de este evento sí dibuja intensidad, pero no alcanza "
-        f"MMI≥6 sobre territorio habitado del país: la sacudida quedó mar adentro o "
+        f"MMI≥VI sobre territorio habitado del país: la sacudida quedó mar adentro o "
         f"sobre zona despoblada. El cálculo corrió entero."
     )
 
@@ -405,7 +419,7 @@ def _tabla_municipios(report: Report) -> str:
     # pero no sobre poblacion de este pais.
     if not ordenados:
         return (
-            f"Ningún municipio del país alcanza población dentro de MMI≥{banda}. "
+            f"Ningún municipio del país alcanza población dentro de {etiqueta_clase(banda)}. "
             "No es que falte el dato: la intensidad que el ShakeMap dibuja para "
             "este evento no llega a esa banda sobre territorio habitado."
         )
@@ -414,7 +428,7 @@ def _tabla_municipios(report: Report) -> str:
         return poblacion_del_ranking(report, m)
 
     lineas = [
-        f"| # | Municipio | Código | MMI max | Población MMI≥{banda} |",
+        f"| # | Municipio | Código | MMI max | Población {etiqueta_clase(banda)} |",
         "|---:|---|---|---:|---:|",
     ]
     for i, m in enumerate(ordenados[:TOP_ADM2_COUNT], start=1):
@@ -473,7 +487,7 @@ def _linea_ground_failure(report: Report, tipo: str, propia: float) -> str:
     )
     quien = f" según `{modelo}`" if modelo else ""
     linea = (
-        f"- **{etiqueta.capitalize()}.** Población en celdas de MMI≥6 donde el modelo "
+        f"- **{etiqueta.capitalize()}.** Población en celdas de MMI≥VI donde el modelo "
         f"espera ≥ {umbral} de {GF_UNIDAD[tipo]}{quien}: **{format_count_prose(propia)}**."
     )
     if not gf.alerta_viva(tipo):
@@ -496,41 +510,28 @@ def _linea_ground_failure(report: Report, tipo: str, propia: float) -> str:
     return linea + cruzada + "."
 
 
-#: LA OBJECION QUE HUNDE EL PROYECTO EN UNA REUNION, RESUELTA EN DOS LINEAS.
+#: LA MISMA CONVENCION QUE PAGER (desde `report/2.0`, 21-nov-2026).
 #:
-#: PAGER tabula su exposicion por **MMI redondeado**: su fila "7" es todo lo que
-#: cae entre 6,5 y 7,49. CENTINELA publica **bandas literales**: MMI≥7 es MMI≥7.
-#: Puestas una al lado de la otra sin decirlo, las dos cifras del mismo evento
-#: parecen contradecirse por un factor de casi tres, y la lectura por defecto es
-#: que CENTINELA subcuenta.
+#: PAGER tabula su exposicion por **MMI redondeado**: su fila "VI" es todo lo
+#: que cae entre 5,5 y 6,49. Hasta la 1.0 CENTINELA publicaba bandas literales
+#: (≥6,0), y la nota existia para explicar por que las dos cifras del mismo
+#: evento parecian contradecirse por un factor de casi tres. Con bandas
+#: literales un M6,7 de Carhuamayo (`pt26325050`, ShakeMap maximo 5,7) salia
+#: con cero personas donde PAGER contaba 5.398 en intensidad VI.
 #:
-#: No se contradicen. Para el Choco, las cifras de CENTINELA caen exactamente
-#: dentro del intervalo que las filas de PAGER acotan por arriba y por abajo:
-#: PAGER da 10.487.959 en su fila 6 (o sea ≥5,5) y 6.514.486 en la 7 (≥6,5), y
-#: CENTINELA da 6.960.086 en ≥6,0 y 2.415.793 en ≥7,0.
-#:
-#: ESO ES EL RESULTADO DE UN EVENTO, Y ESTA NOTA SALE EN TODOS. La version
-#: anterior afirmaba, sin condicion, que "cada cifra de aqui cae dentro del
-#: intervalo que las filas de PAGER acotan", en los veinte reportes con alerta
-#: PAGER. Es falso en al menos uno: `us2000ahv0` publica 0 en MMI>=7 y 760.856
-#: en MMI>=6, y los intervalos de PAGER para Mexico son 494.298-1.614.941 y
-#: 1.614.941-5.047.657. La causa no es el calculo: los dos no leyeron el mismo
-#: ShakeMap —CENTINELA consumio el Atlas v1, maximo 7,398, y PAGER corrio sobre
-#: `us` v11, maximo 8,57—, que es justo lo que la nota tiene que advertir en vez
-#: de tapar con una afirmacion que no puede comprobar al renderizar.
-#:
-#: La diferencia de convencion es un hecho y se queda. El acotamiento es una
-#: comprobacion por evento: se hace donde hay con que hacerla
-#: (`test_contraste_con_pager.py`, sobre el Choco) y se cita, no se promete.
+#: Ahora cada banda es una clase USGS con el mismo corte: `pop_mmi6p` es la
+#: suma de las filas VI, VII, VIII... de PAGER sobre el mismo ShakeMap. Lo que
+#: sigue pudiendo separarlas no es la convencion sino la version del ShakeMap
+#: y el modelo de poblacion, y eso es lo que la nota advierte.
 NOTA_BANDAS_PAGER = (
-    "Las dos cifras **no se tabulan igual** y no se pueden leer una contra "
-    "otra: PAGER agrupa por MMI redondeado (su fila «7» es todo lo que cae "
-    "entre 6,5 y 7,49) y CENTINELA usa bandas literales, donde MMI≥7 es MMI≥7. "
-    "Puede además que no hablen del mismo ShakeMap: este reporte declara en "
-    "«Procedencia» qué versión consumió, y PAGER pudo correr sobre otra versión "
-    "o sobre otro producto del mismo sismo. El contraste banda a banda, hecho y "
-    "comprobado para el sismo de San José del Palmar, está en "
-    "`docs/PARA_INSTITUCIONES.md`."
+    "Las dos cifras usan **la misma convención**: las clases de intensidad del "
+    "USGS en números romanos (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5). "
+    "Lo que puede separarlas es el insumo: este reporte declara en "
+    "«Procedencia» qué versión del ShakeMap consumió, PAGER pudo correr sobre "
+    "otra versión o sobre otro producto del mismo sismo, y los dos usan modelos "
+    "de población distintos (GHS-POP aquí, LandScan en PAGER). El contraste "
+    "clase a clase, hecho y comprobado para el sismo de San José del Palmar, "
+    "está en `docs/PARA_INSTITUCIONES.md`."
 )
 
 
@@ -549,7 +550,7 @@ def _seccion_ground_failure(report: Report) -> str:
         + "\n"
         + _linea_ground_failure(report, "lq", tot.pop_lq_alta)
         + "\n\n"
-        "Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥6). "
+        "Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥VI). "
         "**No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la "
         "población entera de toda celda por encima del umbral, y USGS pondera la "
         "población de cada celda por el valor de esa celda. Son dos preguntas "

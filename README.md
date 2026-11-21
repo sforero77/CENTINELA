@@ -23,8 +23,14 @@ lo que se sintió y lo que puede romperse allí. No es la magnitud. La magnitud 
 una sola cifra para el sismo entero; la intensidad es un mapa, y un mismo sismo
 sacude mucho más un valle cercano que una ciudad lejana. Confundir las dos es el
 error de lectura más caro que este sistema puede provocar, porque lleva a
-repartir ayuda por la cifra equivocada. Aquí las bandas se escriben literales:
-**MMI≥7** significa intensidad 7 o más, no «alrededor de 7».
+repartir ayuda por la cifra equivocada. Las bandas son las **clases de intensidad
+del USGS**, en números romanos y con su mismo corte: **MMI≥VI** es todo lo que
+llega a 5,5 o más, **MMI≥VII** a 6,5 o más, **MMI≥VIII** a 7,5 o más. Es la
+convención de PAGER, así que las dos cifras se comparan clase contra clase.
+
+Un sismo que se mide y no deja a nadie en la clase VI **no tiene reporte**: se
+enseña en el mapa como «sismo visto, sin reporte», con la intensidad que sí
+alcanzó, y se vuelve a medir si el USGS publica un ShakeMap nuevo.
 
 Un **activo de exposición** es una tabla ya construida, celda a celda, de cuánta
 gente e infraestructura hay en cada punto de un país. Es lo que permite

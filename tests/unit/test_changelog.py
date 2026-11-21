@@ -39,10 +39,10 @@ def test_una_version_nueva_de_shakemap_se_anuncia(reporte: Report) -> None:
 
 
 def test_el_delta_sale_en_la_prosa_del_ejemplo_de_la_espec(reporte: Report) -> None:
-    """RF-04 lo escribe asi: "pop MMI≥7: 340k → 355k"."""
+    """RF-04 lo escribe asi: "pop MMI≥VII: 340k → 355k"."""
     lineas = build_changelog(reporte, _con(reporte, version=8, pop_mmi7p=2_800_000))
 
-    assert "Población en MMI≥7: 2,4 millones → 2,8 millones" in lineas
+    assert "Población en MMI≥VII: 2,4 millones → 2,8 millones" in lineas
 
 
 def test_un_cambio_que_no_se_ve_publicado_no_se_anuncia(reporte: Report) -> None:
@@ -55,7 +55,7 @@ def test_un_cambio_que_no_se_ve_publicado_no_se_anuncia(reporte: Report) -> None
     """
     lineas = build_changelog(reporte, _con(reporte, version=8, pop_mmi7p=2_415_802))
 
-    assert not any("Población en MMI≥7" in linea for linea in lineas)
+    assert not any("Población en MMI≥VII" in linea for linea in lineas)
     assert lineas == (
         "ShakeMap: v7 → v8",
         "Ninguna cifra publicada cambia frente a la versión anterior.",
@@ -89,8 +89,8 @@ def test_se_listan_todas_las_cifras_que_cambiaron(reporte: Report) -> None:
 
     lineas = build_changelog(reporte, nuevo)
 
-    assert any("Población en MMI≥7" in linea for linea in lineas)
-    assert any("Edificaciones en MMI≥7" in linea for linea in lineas)
+    assert any("Población en MMI≥VII" in linea for linea in lineas)
+    assert any("Edificaciones en MMI≥VII" in linea for linea in lineas)
 
 
 def test_el_changelog_llega_al_markdown(reporte: Report) -> None:
@@ -121,14 +121,14 @@ def _publicado_con_v10(reporte: Report) -> Report:
     v9 = _con(reporte, version=9, pop_mmi7p=3_100_000)
     v10 = _con(reporte, version=10, pop_mmi7p=2_400_000)
     publicado = replace(v10, changelog=build_changelog(v9, v10))
-    assert "Población en MMI≥7: 3,1 millones → 2,4 millones" in publicado.changelog
+    assert "Población en MMI≥VII: 3,1 millones → 2,4 millones" in publicado.changelog
     return publicado
 
 
 def test_un_reproceso_sin_cambios_no_borra_el_changelog(reporte: Report) -> None:
     """El caso del Choco, `us6000tjl2`.
 
-    El 19-sep publico "ShakeMap: v9 → v10" con la poblacion en MMI≥7 bajando
+    El 19-sep publico "ShakeMap: v9 → v10" con la poblacion en MMI≥VII bajando
     de 3,1 a 2,4 millones. Cada emision reemplazaba el changelog por su propio
     diff, y el de un reproceso sin cambios es vacio: el que venga despues lo
     borra, y lo que movio las cifras de la emergencia deja de publicarse.
@@ -152,7 +152,7 @@ def test_un_reproceso_que_mueve_cifras_se_suma_al_registro(reporte: Report) -> N
     lineas = build_changelog(publicado, reproceso)
 
     assert lineas[0].startswith("Recálculo con el mismo ShakeMap v10")
-    assert any(linea.startswith("Edificaciones en MMI≥7") for linea in lineas)
+    assert any(linea.startswith("Edificaciones en MMI≥VII") for linea in lineas)
     assert lineas[-len(publicado.changelog) :] == publicado.changelog, (
         "lo ya publicado tiene que seguir en el changelog, detras de lo nuevo"
     )

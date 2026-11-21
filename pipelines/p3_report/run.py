@@ -31,7 +31,7 @@ INDEX_FILENAME = "index.json"
 
 
 class ReporteFueraDeContratoError(ValueError):
-    """El `report.json` calculado no cumple `schemas/report-1.0.schema.json`."""
+    """El `report.json` calculado no cumple su esquema (`schemas/report-<version>.schema.json`)."""
 
 
 def validar_contra_esquema(report: Report) -> None:
@@ -45,7 +45,12 @@ def validar_contra_esquema(report: Report) -> None:
 
     from ..common.paths import SCHEMAS_DIR
 
-    esquema = json.loads((SCHEMAS_DIR / "report-1.0.schema.json").read_text(encoding="utf-8"))
+    # Cada reporte valida contra el esquema que declara: los `1.0` que sigan
+    # publicados —bandas literales— no se reescriben al subir el contrato.
+    version = report.schema.rsplit("/", 1)[-1]
+    esquema = json.loads(
+        (SCHEMAS_DIR / f"report-{version}.schema.json").read_text(encoding="utf-8")
+    )
     errores = sorted(Draft202012Validator(esquema).iter_errors(report.to_dict()), key=str)
     if errores:
         detalle = "\n  - ".join(
@@ -347,6 +352,29 @@ class Indice:
 
     def __str__(self) -> str:
         return str(self.ruta)
+
+
+def retirar_reporte(usgs_id: str, reports_root: Path | None = None) -> bool:
+    """Quita `reports/<id>/` y rehace el indice. Devuelve si habia algo que quitar.
+
+    LA PRIMERA VEZ QUE UN REPORTE SE RETIRA (21-nov-2026). Hasta aqui nada
+    borraba una carpeta de reportes: un evento publicado lo seguia estando
+    aunque su estado cambiara. Desde `report/2.0` un sismo cuyo ShakeMap no
+    alcanza a nadie en la clase VI no tiene reporte —seria uno de ceros, con
+    isolineas y sin malla— y pasa a `sin_alcance`. El preliminar que se
+    publico antes del ShakeMap, o el reporte `1.0` que salia con ceros, se
+    retiran aqui; el indice se reconstruye desde disco, asi que el visor deja
+    de listarlo en la misma emision.
+    """
+    import shutil
+
+    root = reports_root or REPORTS_DIR
+    directorio = root / validate_usgs_id(usgs_id)
+    if not directorio.exists():
+        return False
+    shutil.rmtree(directorio)
+    rebuild_index(root)
+    return True
 
 
 def rebuild_index(reports_root: Path | None = None) -> Indice:

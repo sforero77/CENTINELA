@@ -49,9 +49,10 @@ _log = get_logger(__name__)
 INDICE: Final[str] = "reports/index.json"
 ESTADO: Final[str] = "site/status.json"
 OBSERVADOS: Final[str] = "site/observados.json"
+SIN_ALCANCE: Final[str] = "site/sin_alcance.json"
 
 #: Los ficheros que dos workflows reescriben enteros y que, por tanto, chocan.
-DERIVADOS: Final[tuple[str, ...]] = (INDICE, ESTADO, OBSERVADOS)
+DERIVADOS: Final[tuple[str, ...]] = (INDICE, ESTADO, OBSERVADOS, SIN_ALCANCE)
 
 #: Lo que deja git en un fichero con conflicto. Un derivado que lo conserve no
 #: se publica, sea cual sea el motivo.
@@ -120,6 +121,13 @@ def _resolver_observados(raiz: Path) -> None:
     write_observados(podar(fusionar(remoto, propio)), site_dir=raiz / "site")
 
 
+def _resolver_sin_alcance(raiz: Path) -> None:
+    """Se rehace desde los estados ya fusionados: es determinista."""
+    from .sin_alcance import write_sin_alcance
+
+    write_sin_alcance(events_dir=raiz / "events", site_dir=raiz / "site")
+
+
 def _resolver_indice(raiz: Path) -> None:
     from ..p3_report.run import rebuild_index
 
@@ -150,7 +158,12 @@ def resolver(raiz: Path = REPO_ROOT) -> list[str]:
         )
 
     # El indice va antes que el estado: la pagina de estado cuenta los reportes.
-    reglas = {INDICE: _resolver_indice, OBSERVADOS: _resolver_observados, ESTADO: _resolver_estado}
+    reglas = {
+        INDICE: _resolver_indice,
+        OBSERVADOS: _resolver_observados,
+        SIN_ALCANCE: _resolver_sin_alcance,
+        ESTADO: _resolver_estado,
+    }
     for fichero, regla in reglas.items():
         if fichero in conflictos:
             _log.info("derivado en conflicto: se regenera", extra={"context": {"fichero": fichero}})
