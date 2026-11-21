@@ -1,6 +1,6 @@
 {
   "usgs_id": "pt26325050",
-  "estado": "detectado",
+  "estado": "preliminar",
   "mag": 6.9,
   "lon": -76.319,
   "lat": -10.98,
@@ -13,10 +13,13 @@
   },
   "timestamps": {
     "detectado": "2026-11-21T00:20:31Z",
+    "preliminar": "2026-11-21T00:21:02Z",
     "usgs_origen": "2026-11-21T00:09:17Z"
   },
   "hashes": {},
-  "intentos_preliminar": 0,
+  "intentos_preliminar": 1,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "sin ShakeMap disponible aun"
+  ]
 }
