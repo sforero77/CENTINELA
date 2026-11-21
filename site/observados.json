@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-21T16:10:27Z",
+  "generado_utc": "2026-11-21T16:20:23Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -189,17 +189,6 @@
       "lugar": "28 km al SO de Changuillo, Perú",
       "origen_utc": "2026-11-16T16:23:18Z",
       "razon": "M4.8 < umbral M5.5",
-      "iso3": "PER"
-    },
-    {
-      "usgs_id": "us7000tykh",
-      "mag": 5.4,
-      "lon": -76.0259,
-      "lat": -15.0306,
-      "depth_km": 10.0,
-      "lugar": "95 km al OSO de Changuillo, Perú",
-      "origen_utc": "2026-11-16T16:16:45Z",
-      "razon": "M5.4 < umbral M5.5",
       "iso3": "PER"
     }
   ]
