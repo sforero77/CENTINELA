@@ -32,17 +32,17 @@
   {
     "usgs_id": "us6000u1cf",
     "mag": 6.0,
-    "lugar": "4 km al NNE de La Tronosa, Panamá",
+    "lugar": "3 km al NO de La Tronosa, Panamá",
     "iso3": "PAN",
-    "lon": -80.5728,
-    "lat": 7.4777,
-    "pop_mmi7p": 5605.908589266241,
-    "pop_mmi6p": 20177.970495875925,
+    "lon": -80.6075,
+    "lat": 7.4601,
+    "pop_mmi7p": 3133.451355656609,
+    "pop_mmi6p": 19115.63314963854,
     "utc": "2026-10-10T04:14:01Z",
-    "shakemap_version": 5,
+    "shakemap_version": 6,
     "preliminar": false,
     "backtest": false,
-    "generado_utc": "2026-11-21T16:28:36Z"
+    "generado_utc": "2026-11-22T13:34:01Z"
   },
   {
     "usgs_id": "pt26282001",

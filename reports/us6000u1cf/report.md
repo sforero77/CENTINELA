@@ -1,4 +1,4 @@
-# Exposición sísmica: M6,0 · 4 km al NNE de La Tronosa, Panamá
+# Exposición sísmica: M6,0 · 3 km al NO de La Tronosa, Panamá
 
 **Evento USGS:** `us6000u1cf` · **Origen:** 2026-10-10T04:14:01Z UTC · **Profundidad:** 10,0 km
 
@@ -6,33 +6,31 @@
 
 | Indicador | Estimado |
 |---|---:|
-| Población en MMI≥VI | 20 mil |
-| Población en MMI≥VII | 5.600 |
+| Población en MMI≥VI | 19 mil |
+| Población en MMI≥VII | 3.100 |
 | Población en MMI≥VIII | el evento no llegó a esta banda |
-| Edificaciones en MMI≥VII | 4.200 |
+| Edificaciones en MMI≥VII | 2.400 |
 | Sedes de salud en MMI≥VII | 0 |
-| Sedes educativas en MMI≥VII | 3 |
-| Vías primarias y secundarias en MMI≥VII | 40 km |
-| Vías locales en MMI≥VII | 210 km |
-| Superficie construida en MMI≥VII | 0,7 km² |
-
-El satélite detecta **1,7 veces** más superficie construida de la que explicarían las 4.200 edificaciones registradas en MMI≥VII. La diferencia suele ser asentamiento informal o zona rural dispersa sin mapear: **el conteo de edificaciones se queda corto ahí, y la superficie construida no**.
+| Sedes educativas en MMI≥VII | 2 |
+| Vías primarias y secundarias en MMI≥VII | 28 km |
+| Vías locales en MMI≥VII | 160 km |
+| Superficie construida en MMI≥VII | 0,3 km² |
 
 Las cifras de esta tabla van redondeadas a dos cifras significativas, que es la precisión que un modelo de exposición sostiene. Las exactas están en el CSV municipal y en `report.json`.
 
-De la población en intensidad MMI≥VII, alrededor de **1.000** personas tienen 65 años o más.
+De la población en intensidad MMI≥VII, alrededor de **600** personas tienen 65 años o más.
 
 ## Municipios más expuestos, por población en MMI≥VII
 
 | # | Municipio | Código | MMI max | Población MMI≥VII |
 |---:|---|---|---:|---:|
-| 1 | Tonosí | `PA0907` | 7,0 | 5.100 |
-| 2 | Macaracas | `PA0904` | 7,0 | 500 |
+| 1 | Tonosí | `PA0907` | 7,0 | 2.700 |
+| 2 | Macaracas | `PA0904` | 7,0 | 400 |
 
 ## Deslizamiento y licuefacción
 
 - **Deslizamiento.** Población en celdas de MMI≥VI donde el modelo espera ≥ 0,10 de probabilidad de deslizamiento según `jessee_2018_model.tif`: **0**. USGS declara para este evento alerta **amarilla**, con 5 expuestas. El cero de arriba no dice que no haya exposición: dice que ninguna celda llega al umbral.
-- **Licuefacción.** Población en celdas de MMI≥VI donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **3.600**. USGS declara para este evento alerta **amarilla**, con 1.000 expuestas.
+- **Licuefacción.** Población en celdas de MMI≥VI donde el modelo espera ≥ 0,10 de cobertura areal por licuefacción según `zhu_2017_general_model.tif`: **3.900**. USGS declara para este evento alerta **amarilla**, con 1.000 expuestas.
 
 Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥VI). **No son las de USGS y no se pueden comparar de frente**: aquí se cuenta la población entera de toda celda por encima del umbral, y USGS pondera la población de cada celda por el valor de esa celda. Son dos preguntas distintas sobre el mismo ráster.
 
@@ -48,10 +46,18 @@ Las dos cifras usan **la misma convención**: las clases de intensidad del USGS 
 
 ## Incertidumbre y calidad
 
-Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **9,4 %**.
+Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **17,5 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v5 (us) → v6 (us)
+- Epicentro: reubicado 4 km
+- Población en MMI≥VI: 20 mil → 19 mil
+- Población en MMI≥VII: 5.600 → 3.100
+- Población de 65 años o más en MMI≥VII: 1.000 → 600
+- Edificaciones en MMI≥VII: 4.200 → 2.400
+- Sedes educativas en MMI≥VII: 3 → 2
+- Población en cobertura areal alta por licuefacción: 3.600 → 3.900
 - Recálculo con el mismo ShakeMap v5 (us) (cambió el cálculo o el activo de exposición, no USGS)
 - Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.
 - Población en MMI≥VI: 10 mil → 20 mil
@@ -90,10 +96,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **9,4 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v5** de `us`
+- ShakeMap consumido: **v6** de `us`
 - Ground Failure consumido: **v4** de `us`
 - Manifiesto de exposición: [`pan-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PAN.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-21T16:28:36Z
+- Pipeline: `0.1.0` · Generado: 2026-11-22T13:34:01Z
 
 ## Advertencias
 
