@@ -36,7 +36,7 @@ Las dos cifras se cuentan sobre las celdas del corte publicado (MMI≥VI). **No 
 
 **Y el umbral se evalúa en un solo punto por celda: su centroide.** El píxel del ráster es más pequeño que la celda, así que ese punto decide si entra la población entera de la celda o no entra ninguna. No es una estadística areal, y el sesgo que introduce no está medido: puede quedarse corto o pasarse.
 
-Fuente: producto *Ground Failure* de USGS (v2), dominio público.
+Fuente: producto *Ground Failure* de USGS (v3), dominio público.
 
 ## Referencia cruzada
 
@@ -50,6 +50,9 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **30,7 %**.
 
 ## Cambios frente a la versión anterior
 
+- ShakeMap: v2 (us) → v3 (us)
+- Ground Failure: v2 (us) → v3 (us)
+- Ninguna cifra publicada cambia frente a la versión anterior.
 - Recálculo con el mismo ShakeMap v2 (us) (cambió el cálculo o el activo de exposición, no USGS)
 - Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.
 - Población en MMI≥VI: 0 → 1.800
@@ -68,10 +71,10 @@ Discrepancia entre GHS-POP y WorldPop en las bandas MMI publicadas: **30,7 %**.
 
 ## Procedencia
 
-- ShakeMap consumido: **v2** de `us`
-- Ground Failure consumido: **v2** de `us`
+- ShakeMap consumido: **v3** de `us`
+- Ground Failure consumido: **v3** de `us`
 - Manifiesto de exposición: [`per-v0.5`](https://github.com/sforero77/CENTINELA/blob/main/data/manifests/PER.yaml)
-- Pipeline: `0.1.0` · Generado: 2026-11-21T16:28:18Z
+- Pipeline: `0.1.0` · Generado: 2026-11-22T13:34:01Z
 
 ## Advertencias
 

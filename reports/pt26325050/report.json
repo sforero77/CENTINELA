@@ -11,8 +11,8 @@
     "lat": -10.8548
   },
   "inputs": {
-    "shakemap_version": 2,
-    "groundfailure_version": 2,
+    "shakemap_version": 3,
+    "groundfailure_version": 3,
     "exposure_manifest": "per-v0.5",
     "modelo_deslizamiento": "jessee_2018_model.tif",
     "modelo_licuefaccion": "zhu_2017_general_model.tif",
@@ -27,12 +27,12 @@
     "pop_mmi7p": 0.0,
     "pop_mmi8p": 0.0,
     "pop_65p_mmi7p": 0.0,
-    "pop_65p_mmi6p": 198.02680417872955,
+    "pop_65p_mmi6p": 198.02680417872946,
     "bld_mmi6p": 3195.0,
     "built_m2_mmi6p": 392310.0,
     "health_mmi6p": 2.0,
     "edu_mmi6p": 7.0,
-    "road_km_mmi6p": 102.63342189661797,
+    "road_km_mmi6p": 102.633421896618,
     "road_km_principal_mmi6p": 12.829646165748,
     "bld_mmi7p": 0.0,
     "built_m2_mmi7p": 0.0,
@@ -97,6 +97,9 @@
     "mapa_png": "mapa_general.png"
   },
   "changelog": [
+    "ShakeMap: v2 (us) → v3 (us)",
+    "Ground Failure: v2 (us) → v3 (us)",
+    "Ninguna cifra publicada cambia frente a la versión anterior.",
     "Recálculo con el mismo ShakeMap v2 (us) (cambió el cálculo o el activo de exposición, no USGS)",
     "Cambio de convención: las franjas son ahora las clases de intensidad del USGS (VI desde MMI 5,5, VII desde 6,5, VIII desde 7,5), no decimales literales (≥6,0 / ≥7,0 / ≥8,0). Las cifras cambian por la regla, no por los datos.",
     "Población en MMI≥VI: 0 → 1.800",
@@ -162,6 +165,6 @@
     "No reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo.",
     "Fuentes, vintages y versiones consumidas: ver manifiesto enlazado."
   ],
-  "generado_utc": "2026-11-21T16:28:18Z",
+  "generado_utc": "2026-11-22T13:34:01Z",
   "pipeline_version": "0.1.0"
 }
