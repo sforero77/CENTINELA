@@ -1,15 +1,15 @@
 {
   "usgs_id": "pt26325050",
-  "estado": "publicado",
+  "estado": "sin_alcance",
   "mag": 6.7,
-  "lon": -75.9779,
-  "lat": -10.8548,
-  "depth_km": 107.991,
-  "lugar": "9 km al NE de Carhuamayo, Perú",
+  "lon": -75.966,
+  "lat": -10.8889,
+  "depth_km": 125.0,
+  "lugar": "7 km al ENE de Carhuamayo, Perú",
   "origen_utc": "2026-11-21T00:09:17Z",
   "versiones_procesadas": {
-    "shakemap": 3,
-    "groundfailure": 3,
+    "shakemap": 4,
+    "groundfailure": 4,
     "shakemap_fuente": "us",
     "groundfailure_fuente": "us"
   },
@@ -20,6 +20,7 @@
     "preliminar_ultimo": "2026-11-21T00:25:59Z",
     "publicado": "2026-11-21T00:46:05Z",
     "publicado_ultimo": "2026-11-22T13:34:04Z",
+    "sin_alcance": "2026-11-23T13:36:03Z",
     "usgs_origen": "2026-11-21T00:09:17Z"
   },
   "hashes": {},
@@ -31,6 +32,8 @@
     "ShakeMap v0 -> v1 (us)",
     "ShakeMap v1 (us) -> v2 (us)",
     "reproceso forzado: el pipeline cambio, no los productos",
-    "ShakeMap v2 (us) -> v3 (us)"
-  ]
+    "ShakeMap v2 (us) -> v3 (us)",
+    "ShakeMap v3 (us) -> v4 (us); sin alcance: la poblacion llego a MMI 5.0, bajo la clase VI (5,5)"
+  ],
+  "mmi_max_poblado": 5.0
 }

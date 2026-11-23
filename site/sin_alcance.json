@@ -3,6 +3,20 @@
   "nota": "Sismos medidos con su ShakeMap en los que ninguna zona habitada llegó a la intensidad VI (MMI 5,5), la clase desde la que este sistema publica cifras. No tienen reporte: el cálculo corrió entero y no hay nadie que contar. Se vuelven a medir si USGS publica un ShakeMap nuevo.",
   "eventos": [
     {
+      "usgs_id": "pt26325050",
+      "mag": 6.7,
+      "lon": -75.966,
+      "lat": -10.8889,
+      "depth_km": 125.0,
+      "lugar": "7 km al ENE de Carhuamayo, Perú",
+      "origen_utc": "2026-11-21T00:09:17Z",
+      "razon": "Se midió con el ShakeMap v4: la población llegó a MMI 5,0, por debajo de la intensidad VI (MMI 5,5)",
+      "iso3": "PER",
+      "mmi_max_poblado": 5.0,
+      "shakemap_version": 4,
+      "backtest": false
+    },
+    {
       "usgs_id": "us7000tyy8",
       "mag": 5.9,
       "lon": -75.9238,

@@ -1,20 +1,5 @@
 [
   {
-    "usgs_id": "pt26325050",
-    "mag": 6.7,
-    "lugar": "9 km al NE de Carhuamayo, Perú",
-    "iso3": "PER",
-    "lon": -75.9779,
-    "lat": -10.8548,
-    "pop_mmi7p": 0.0,
-    "pop_mmi6p": 1787.167554935906,
-    "utc": "2026-11-21T00:09:17Z",
-    "shakemap_version": 3,
-    "preliminar": false,
-    "backtest": false,
-    "generado_utc": "2026-11-22T13:34:01Z"
-  },
-  {
     "usgs_id": "us6000u1wn",
     "mag": 6.1,
     "lugar": "15 km al O de Río Grande, Panamá",

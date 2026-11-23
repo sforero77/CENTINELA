@@ -1,7 +1,0 @@
-1/4 Sismo M6,7 · 9 km al NE de Carhuamayo, Perú (2026-11-21 00:09 UTC, 108 km de profundidad). Reporte automático de EXPOSICIÓN estimada de CENTINELA. No es un reporte de daños.
-
-2/4 Personas dentro de intensidad MMI≥VI: 1.800. Edificaciones en MMI≥VI: 3.200.
-
-3/4 Municipios más expuestos (MMI≥VI): Pasco, Junin.
-
-4/4 Exposición no es daño. CENTINELA no es alerta temprana ni reemplaza a los servicios geológicos ni a las unidades de gestión del riesgo. Datos abiertos y metodología: https://centinela.geoailatam.terrnova.com/?evento=pt26325050
