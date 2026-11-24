@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-24T19:44:19Z",
+  "generado_utc": "2026-11-24T19:44:31Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -165,7 +165,7 @@
       "iso3": "PRY",
       "nombre": "Paraguay",
       "construido": true,
-      "manifest_id": "pry-v0.5",
+      "manifest_id": "pry-v0.6",
       "poblacion_medida": 7019484,
       "poblacion_referencia": 7013078,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
