@@ -10,7 +10,7 @@
 # build y los publica en `medicion.json`; volcarlos aqui es un paso explicito,
 # `centinela fijar-insumos VEN`.
 
-manifest_id: ven-v0.5
+manifest_id: ven-v0.6
 iso3: VEN
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -128,9 +128,9 @@ sources:
 
   - id: overture_buildings
     layer: buildings
-    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=buildings/type=building
+    url: s3://overturemaps-us-west-2/release/2026-11-18.0/theme=buildings/type=building
     license: ODbL-1.0
-    vintage: "2026-10-21.0"
+    vintage: "2026-11-18.0"
     insumos_sha256: ""
     notes: >-
       No se descarga: DuckDB lee los parquet en remoto podando por la columna
@@ -139,9 +139,9 @@ sources:
 
   - id: overture_transportation
     layer: roads
-    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=transportation/type=segment
+    url: s3://overturemaps-us-west-2/release/2026-11-18.0/theme=transportation/type=segment
     license: ODbL-1.0
-    vintage: "2026-10-21.0"
+    vintage: "2026-11-18.0"
     insumos_sha256: ""
     notes: >-
       `type=segment` es la geometria lineal; `type=connector` son nodos. Se
@@ -149,9 +149,9 @@ sources:
 
   - id: overture_divisions
     layer: divisions
-    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=divisions/type=division_area
+    url: s3://overturemaps-us-west-2/release/2026-11-18.0/theme=divisions/type=division_area
     license: ODbL-1.0
-    vintage: "2026-10-21.0"
+    vintage: "2026-11-18.0"
     insumos_sha256: ""
     notes: >-
       SE CONSUMIA SIN DECLARARSE. `load_country_neighbours` baja este tema en
@@ -189,7 +189,7 @@ sources:
     hdx_dataset: hotosm_ven_health_facilities
     license: ODbL-1.0
     vintage: "2026-09-06"
-    insumos_sha256: "1267fb19c644d8fe5cf4f5b0a8d9706a5f12a015e5c0729c30348bc6c0e73d4a"
+    insumos_sha256: "f0539183a7e99b91fbee4b86df8e38ad5383e5585585dddce86e3466e5c7d429"
     notes: >-
       Extracto OSM de HOT, con geometria. Verificado: el dataset existe, es
       ODbL y publica Geopackage. El extracto mezcla POINT, POLYGON y
@@ -202,7 +202,7 @@ sources:
     hdx_dataset: hotosm_ven_education_facilities
     license: ODbL-1.0
     vintage: "2026-09-06"
-    insumos_sha256: "d4e6ef8f5784ee00da80b734eb5a6599688d5a239045010cfec75a55cea2869c"
+    insumos_sha256: "8821ab33924fe8053baa4db142c9d1edeb3ac747ef9a12660b488bec8dc748dc"
     notes: "Extracto OSM de HOT. Verificado: existe, ODbL, con Geopackage."
   - id: worldcover-esa-2021
     layer: landcover
