@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-24T18:59:54Z",
+  "generado_utc": "2026-11-24T19:03:12Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -66,7 +66,7 @@
       "iso3": "CRI",
       "nombre": "Costa Rica",
       "construido": true,
-      "manifest_id": "cri-v0.5",
+      "manifest_id": "cri-v0.6",
       "poblacion_medida": 5280695,
       "poblacion_referencia": 5152950,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
