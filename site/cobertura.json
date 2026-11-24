@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-24T19:46:57Z",
+  "generado_utc": "2026-11-24T19:54:14Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -209,7 +209,7 @@
       "iso3": "VEN",
       "nombre": "Venezuela",
       "construido": true,
-      "manifest_id": "ven-v0.5",
+      "manifest_id": "ven-v0.6",
       "poblacion_medida": 29924658,
       "poblacion_referencia": 28516896,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
