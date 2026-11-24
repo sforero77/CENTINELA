@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-24T19:10:18Z",
+  "generado_utc": "2026-11-24T19:16:48Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -121,7 +121,7 @@
       "iso3": "HND",
       "nombre": "Honduras",
       "construido": true,
-      "manifest_id": "hnd-v0.5",
+      "manifest_id": "hnd-v0.6",
       "poblacion_medida": 10915014,
       "poblacion_referencia": 11005850,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
