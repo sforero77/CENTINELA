@@ -9,7 +9,7 @@
 # publica en `medicion.json`; volcarlos aqui es un paso explicito,
 # `centinela fijar-insumos COL`, y el lint los reporta como aviso hasta entonces.
 
-manifest_id: col-v0.9
+manifest_id: col-v0.10
 iso3: COL
 generated_utc: "2026-08-23T00:00:00Z"
 
@@ -125,9 +125,9 @@ sources:
 
   - id: overture_buildings
     layer: buildings
-    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=buildings/type=building
+    url: s3://overturemaps-us-west-2/release/2026-11-18.0/theme=buildings/type=building
     license: ODbL-1.0
-    vintage: "2026-10-21.0"
+    vintage: "2026-11-18.0"
     insumos_sha256: ""
     notes: >-
       512 ficheros, 277 GB, 2.529 millones de edificaciones en total (2026-08-19.0);
@@ -141,17 +141,17 @@ sources:
 
   - id: overture_transportation
     layer: roads
-    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=transportation/type=segment
+    url: s3://overturemaps-us-west-2/release/2026-11-18.0/theme=transportation/type=segment
     license: ODbL-1.0
-    vintage: "2026-10-21.0"
+    vintage: "2026-11-18.0"
     insumos_sha256: ""
     notes: "`type=segment` es la geometria lineal; `type=connector` son nodos."
 
   - id: overture_divisions
     layer: divisions
-    url: s3://overturemaps-us-west-2/release/2026-10-21.0/theme=divisions/type=division_area
+    url: s3://overturemaps-us-west-2/release/2026-11-18.0/theme=divisions/type=division_area
     license: ODbL-1.0
-    vintage: "2026-10-21.0"
+    vintage: "2026-11-18.0"
     insumos_sha256: ""
     notes: "`type=division_area` trae los poligonos; `division` son puntos."
 
@@ -297,7 +297,7 @@ sources:
     # `columnas=()` y `requerida=False`, y `build.py` no la nombra ni una vez.
     # Un cambio silencioso aguas arriba no puede mover ninguna cifra publicada
     # porque ninguna cifra publicada sale de aqui.
-    insumos_sha256: "1d3ca6ae54797da52404c89d3ad09a8c9ff0c474ba522a9a71c02c57c3dd1510"
+    insumos_sha256: "52414b4e2da8ae7b6bcdc5d3fe4b088539a948681d9fd3f2bdbe3f3824213cd2"
     # ESTE DIGEST CADUCA SOLO, Y NO COMPRA NADA. `airports.csv` es el CSV global
     # de OurAirports y se reescribe **a diario** con las ediciones de cualquier
     # aeropuerto del mundo, asi que fijarlo significa que Colombia no puede
