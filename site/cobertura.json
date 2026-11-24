@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-16T04:56:19Z",
+  "generado_utc": "2026-11-24T18:31:16Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -22,7 +22,7 @@
       "iso3": "BOL",
       "nombre": "Bolivia",
       "construido": true,
-      "manifest_id": "bol-v0.5",
+      "manifest_id": "bol-v0.6",
       "poblacion_medida": 12804991,
       "poblacion_referencia": 12581843,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
