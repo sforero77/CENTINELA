@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-24T19:44:31Z",
+  "generado_utc": "2026-11-24T19:46:57Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -198,7 +198,7 @@
       "iso3": "URY",
       "nombre": "Uruguay",
       "construido": true,
-      "manifest_id": "ury-v0.5",
+      "manifest_id": "ury-v0.6",
       "poblacion_medida": 3429034,
       "poblacion_referencia": 3384688,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
