@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-24T19:43:30Z",
+  "generado_utc": "2026-11-24T19:44:19Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -99,7 +99,7 @@
       "iso3": "SLV",
       "nombre": "El Salvador",
       "construido": true,
-      "manifest_id": "slv-v0.5",
+      "manifest_id": "slv-v0.6",
       "poblacion_medida": 6442983,
       "poblacion_referencia": 6365503,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
