@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-24T19:10:35Z",
+  "generado_utc": "2026-11-24T20:10:30Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -157,28 +157,6 @@
       "origen_utc": "2026-11-20T02:57:18Z",
       "razon": "M4.8 < umbral M5.5",
       "iso3": "ARG"
-    },
-    {
-      "usgs_id": "us6000uc2q",
-      "mag": 5.3,
-      "lon": -33.5069,
-      "lat": -55.0035,
-      "depth_km": 10.0,
-      "lugar": "Región de la isla Georgia del Sur",
-      "origen_utc": "2026-11-19T20:07:49Z",
-      "razon": "M5.3 < umbral M5.5",
-      "iso3": ""
-    },
-    {
-      "usgs_id": "us6000uc2t",
-      "mag": 5.0,
-      "lon": -109.9127,
-      "lat": -9.1894,
-      "depth_km": 10.0,
-      "lugar": "Centro de la dorsal del Pacífico Oriental",
-      "origen_utc": "2026-11-19T20:07:09Z",
-      "razon": "M5.0 < umbral M5.5",
-      "iso3": ""
     }
   ]
 }
