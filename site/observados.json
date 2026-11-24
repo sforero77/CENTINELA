@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-24T17:55:27Z",
+  "generado_utc": "2026-11-24T18:10:32Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -179,17 +179,6 @@
       "origen_utc": "2026-11-19T20:07:09Z",
       "razon": "M5.0 < umbral M5.5",
       "iso3": ""
-    },
-    {
-      "usgs_id": "us6000uc1x",
-      "mag": 5.1,
-      "lon": -72.1843,
-      "lat": -31.8465,
-      "depth_km": 10.0,
-      "lugar": "99 km al OSO de Illapel, Chile",
-      "origen_utc": "2026-11-19T18:09:46Z",
-      "razon": "M5.1 < umbral M5.5",
-      "iso3": "CHL"
     }
   ]
 }
