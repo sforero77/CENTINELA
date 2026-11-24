@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-24T05:20:23Z",
+  "generado_utc": "2026-11-24T05:50:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -179,17 +179,6 @@
       "origen_utc": "2026-11-19T09:08:13Z",
       "razon": "M4.7 < umbral M5.5",
       "iso3": "PER"
-    },
-    {
-      "usgs_id": "us6000uby4",
-      "mag": 4.8,
-      "lon": -79.8204,
-      "lat": -2.4019,
-      "depth_km": 69.5,
-      "lugar": "23 km al SSE de Guayaquil, Ecuador",
-      "origen_utc": "2026-11-19T05:49:26Z",
-      "razon": "M4.8 < umbral M5.5",
-      "iso3": "ECU"
     }
   ]
 }
