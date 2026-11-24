@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-24T13:10:36Z",
+  "generado_utc": "2026-11-24T13:45:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000ud7h",
+      "mag": 4.8,
+      "lon": -71.4886,
+      "lat": -28.6118,
+      "depth_km": 33.4,
+      "lugar": "71 km al O de Vallenar, Chile",
+      "origen_utc": "2026-11-24T13:22:38Z",
+      "razon": "M4.8 < umbral M5.5",
+      "iso3": "CHL"
+    },
     {
       "usgs_id": "us6000ud6z",
       "mag": 5.2,
