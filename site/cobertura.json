@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-24T19:54:14Z",
+  "generado_utc": "2026-11-24T19:55:36Z",
   "resumen": {
     "paises_con_manifest": 19,
     "paises_construidos": 19,
@@ -132,7 +132,7 @@
       "iso3": "MEX",
       "nombre": "México",
       "construido": true,
-      "manifest_id": "mex-v0.5",
+      "manifest_id": "mex-v0.6",
       "poblacion_medida": 130288322,
       "poblacion_referencia": 131946900,
       "fuente_referencia": "ONU, World Population Prospects (UN Population Division), serie SP.POP.TOTL",
