@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-25T04:00:25Z",
+  "generado_utc": "2026-11-25T04:55:18Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000udcc",
+      "mag": 4.5,
+      "lon": -75.766,
+      "lat": -15.3841,
+      "depth_km": 10.0,
+      "lugar": "64 km al O de San Juan, Perú",
+      "origen_utc": "2026-11-24T22:36:30Z",
+      "razon": "M4.5 < umbral M5.5",
+      "iso3": "PER"
+    },
     {
       "usgs_id": "us6000udb8",
       "mag": 4.6,
