@@ -1,9 +1,20 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-26T04:25:21Z",
+  "generado_utc": "2026-11-26T04:30:24Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
+    {
+      "usgs_id": "us6000udki",
+      "mag": 4.6,
+      "lon": -93.126,
+      "lat": 14.164,
+      "depth_km": 10.0,
+      "lugar": "97 km al SO de Puerto Madero, México",
+      "origen_utc": "2026-11-26T03:30:28Z",
+      "razon": "M4.6 < umbral M5.5",
+      "iso3": "MEX"
+    },
     {
       "usgs_id": "us6000udcc",
       "mag": 4.5,
