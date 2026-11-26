@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-26T04:30:24Z",
+  "generado_utc": "2026-11-26T05:15:22Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -146,17 +146,6 @@
       "origen_utc": "2026-11-21T15:00:12Z",
       "razon": "M4.8 < umbral M5.5",
       "iso3": "DOM"
-    },
-    {
-      "usgs_id": "us6000uchd",
-      "mag": 5.0,
-      "lon": -76.0308,
-      "lat": -10.913,
-      "depth_km": 110.9,
-      "lugar": "0 km al NE de Carhuamayo, Perú",
-      "origen_utc": "2026-11-21T05:12:04Z",
-      "razon": "M5.0 < umbral M5.5",
-      "iso3": "PER"
     }
   ]
 }
