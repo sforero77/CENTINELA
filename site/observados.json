@@ -1,6 +1,6 @@
 {
   "schema": "centinela/observados/1.0",
-  "generado_utc": "2026-11-26T14:25:22Z",
+  "generado_utc": "2026-11-26T15:00:27Z",
   "ventana_dias": 5,
   "nota": "Sismos vistos por el vigía y no despachados: por debajo del umbral de reporte. No se midió su impacto: esto no es una estimación de cero, es la ausencia de una medición.",
   "eventos": [
@@ -124,28 +124,6 @@
       "origen_utc": "2026-11-21T17:14:21Z",
       "razon": "M4.5 < umbral M5.5",
       "iso3": "PAN"
-    },
-    {
-      "usgs_id": "pr2026325000",
-      "mag": 4.6,
-      "lon": -68.8265,
-      "lat": 18.3416,
-      "depth_km": 104.0,
-      "lugar": "18 km al ESE de La Romana, República Dominicana",
-      "origen_utc": "2026-11-21T15:00:13Z",
-      "razon": "M4.6 < umbral M5.5",
-      "iso3": "DOM"
-    },
-    {
-      "usgs_id": "pt26325053",
-      "mag": 4.8,
-      "lon": -68.78,
-      "lat": 18.608,
-      "depth_km": 106.2,
-      "lugar": "7 km al O de Salvaleón de Higüey, República Dominicana",
-      "origen_utc": "2026-11-21T15:00:12Z",
-      "razon": "M4.8 < umbral M5.5",
-      "iso3": "DOM"
     }
   ]
 }
