@@ -1,6 +1,6 @@
 {
   "usgs_id": "us6000udq5",
-  "estado": "detectado",
+  "estado": "sin_alcance",
   "mag": 5.7,
   "lon": -109.2958,
   "lat": 19.8135,
@@ -8,15 +8,19 @@
   "lugar": "Región de las islas Revillagigedo",
   "origen_utc": "2026-11-26T15:26:44Z",
   "versiones_procesadas": {
-    "shakemap": 0,
-    "groundfailure": 0
+    "shakemap": 1,
+    "groundfailure": 0,
+    "shakemap_fuente": "us"
   },
   "timestamps": {
     "detectado": "2026-11-26T15:50:25Z",
+    "sin_alcance": "2026-11-26T15:51:07Z",
     "usgs_origen": "2026-11-26T15:26:44Z"
   },
   "hashes": {},
   "intentos_preliminar": 0,
   "backtest": false,
-  "notas": []
+  "notas": [
+    "ShakeMap v0 -> v1 (us); sin alcance: la poblacion mas cercana esta a 342 km del epicentro, bajo la clase VI (5,5)"
+  ]
 }
