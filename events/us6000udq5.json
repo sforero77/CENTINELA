@@ -1,0 +1,22 @@
+{
+  "usgs_id": "us6000udq5",
+  "estado": "detectado",
+  "mag": 5.7,
+  "lon": -109.2958,
+  "lat": 19.8135,
+  "depth_km": 10.0,
+  "lugar": "Región de las islas Revillagigedo",
+  "origen_utc": "2026-11-26T15:26:44Z",
+  "versiones_procesadas": {
+    "shakemap": 0,
+    "groundfailure": 0
+  },
+  "timestamps": {
+    "detectado": "2026-11-26T15:50:25Z",
+    "usgs_origen": "2026-11-26T15:26:44Z"
+  },
+  "hashes": {},
+  "intentos_preliminar": 0,
+  "backtest": false,
+  "notas": []
+}
