@@ -10,10 +10,10 @@
       "depth_km": 10.0,
       "lugar": "Región de las islas Revillagigedo",
       "origen_utc": "2026-11-26T15:26:44Z",
-      "razon": "Se midió con el ShakeMap v2: la sacudida no llegó a zonas habitadas con intensidad VI (MMI 5,5)",
+      "razon": "Se midió con el ShakeMap v3: la sacudida no llegó a zonas habitadas con intensidad VI (MMI 5,5)",
       "iso3": "",
       "mmi_max_poblado": null,
-      "shakemap_version": 2,
+      "shakemap_version": 3,
       "backtest": false
     },
     {

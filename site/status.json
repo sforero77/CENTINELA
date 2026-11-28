@@ -1,5 +1,5 @@
 {
-  "generado_utc": "2026-11-28T13:30:24Z",
+  "generado_utc": "2026-11-28T14:28:56Z",
   "objetivo": {
     "p50_min": 60,
     "p95_min": 90,
@@ -241,8 +241,8 @@
     "p50_min": 5.0,
     "p90_min": 5.0,
     "peor_min": 20.1,
-    "revisiones": 1559,
-    "latidos": 201
+    "revisiones": 1549,
+    "latidos": 200
   },
   "latidos": [
     {
